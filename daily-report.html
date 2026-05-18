@@ -1,0 +1,1939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement Ltd – Daily Production Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ════════════════════════════════════════════════════════════════
+       DAILY REPORT — Page-specific design tokens & components
+       Data-type palette:
+         Manual  → amber  #FFFBEB / #B45309
+         System  → blue   #EFF6FF / #1D4ED8
+         Formula → green  #F0FDF4 / #15803D
+    ════════════════════════════════════════════════════════════════ */
+
+    :root {
+      --m-bg : #FFFBEB; --m-fg : #B45309; --m-bd : #FDE68A; /* manual  */
+      --s-bg : #EFF6FF; --s-fg : #1D4ED8; --s-bd : #BFDBFE; /* system  */
+      --f-bg : #F0FDF4; --f-fg : #15803D; --f-bd : #BBF7D0; /* formula */
+    }
+
+    /* ── layout ─────────────────────────────────────────────────── */
+    body { display: flex; flex-direction: column; min-height: 100vh; background: var(--off-white); }
+
+    .dr-main {
+      flex: 1;
+      padding: 0 24px 48px;
+      max-width: 1640px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* ── toolbar ─────────────────────────────────────────────────── */
+    .toolbar {
+      background: white;
+      border: 1px solid var(--border);
+      border-top: none;
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .tb-group { display: flex; align-items: center; gap: 8px; }
+
+    .tb-sep { width: 1px; height: 28px; background: var(--border); }
+
+    .tb-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .tb-ctl {
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      background: var(--off-white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 5px 10px;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+    }
+
+    .tb-ctl:focus { border-color: var(--orange); background: white; }
+
+    input[type="date"].tb-ctl { min-width: 148px; cursor: text; }
+
+    /* shift segmented control */
+    .seg-ctrl {
+      display: flex;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--off-white);
+    }
+    .seg-btn {
+      padding: 5px 13px;
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-right: 1px solid var(--border);
+      transition: all .15s;
+    }
+    .seg-btn:last-child { border-right: none; }
+    .seg-btn.on { background: var(--navy); color: white; }
+    .seg-btn:not(.on):hover { color: var(--orange); }
+
+    /* report status pill */
+    .rpt-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #FFF3E0;
+      color: var(--orange);
+      border: 1px solid #FDE68A;
+    }
+    .rpt-status.submitted { background: var(--green-bg); color: var(--green); border-color: var(--green-cell); }
+    .rpt-status::before {
+      content: '';
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* action buttons */
+    .btn {
+      padding: 6px 16px;
+      border-radius: var(--radius);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .btn-save    { background: var(--orange); color: white; border-color: var(--orange); }
+    .btn-save:hover { background: #C56208; }
+    .btn-submit  { background: var(--navy); color: white; border-color: var(--navy); }
+    .btn-submit:hover { background: var(--navy-light); }
+    .btn-outline { background: transparent; color: var(--navy); border-color: #CBD5E1; }
+    .btn-outline:hover { border-color: var(--navy); }
+    .btn-grp { display: flex; gap: 6px; margin-left: auto; }
+
+    /* ── legend bar ──────────────────────────────────────────────── */
+    .legend-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin: 14px 0 10px;
+      flex-wrap: wrap;
+    }
+    .leg-lbl {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: var(--text-muted);
+      margin-right: 6px;
+    }
+    .leg-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 11px 3px 7px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .leg-chip::before { content: ''; width: 8px; height: 8px; border-radius: 2px; background: currentColor; opacity: 0.6; }
+    .leg-m { background: var(--m-bg); color: var(--m-fg); border: 1px solid var(--m-bd); }
+    .leg-s { background: var(--s-bg); color: var(--s-fg); border: 1px solid var(--s-bd); }
+    .leg-f { background: var(--f-bg); color: var(--f-fg); border: 1px solid var(--f-bd); }
+
+    .leg-note {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* ── summary KPI strip ───────────────────────────────────────── */
+    .kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .kpi-tile {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 13px 15px 11px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .kpi-tile::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+    .kt-m::before { background: var(--m-fg); }
+    .kt-s::before { background: var(--s-fg); }
+    .kt-f::before { background: var(--f-fg); }
+
+    .kt-badge {
+      position: absolute;
+      top: 8px; right: 8px;
+      font-size: 8px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .kt-m .kt-badge { background: var(--m-bg); color: var(--m-fg); border: 1px solid var(--m-bd); }
+    .kt-s .kt-badge { background: var(--s-bg); color: var(--s-fg); border: 1px solid var(--s-bd); }
+    .kt-f .kt-badge { background: var(--f-bg); color: var(--f-fg); border: 1px solid var(--f-bd); }
+
+    .kt-label {
+      font-size: 9.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+      padding-right: 40px;
+    }
+    .kt-value {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--navy);
+      line-height: 1;
+    }
+    .kt-unit { font-size: 10px; color: var(--text-muted); font-weight: 500; margin-top: 2px; }
+    .kt-vs   { margin-top: 7px; font-size: 10px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+    .vs-ok   { color: var(--green); }
+    .vs-ng   { color: var(--red); }
+    .vs-warn { color: var(--orange); }
+
+    /* ── section layout ──────────────────────────────────────────── */
+    .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .full-col  { margin-bottom: 14px; }
+
+    /* ── report card ─────────────────────────────────────────────── */
+    .rcard {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .rcard-hdr {
+      background: var(--navy);
+      padding: 9px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .rcard-title { color: white; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; }
+    .rcard-sub   { color: rgba(255,255,255,.5); font-size: 10px; font-weight: 500; }
+    .rcard-chips { display: flex; gap: 6px; align-items: center; }
+    .rcard-chip  { padding: 2px 9px; border-radius: 10px; font-size: 9px; font-weight: 700; background: rgba(255,255,255,.15); color: white; text-transform: uppercase; letter-spacing: 0.3px; }
+    .rcard-chip.orange { background: var(--orange); }
+
+    /* ── data table ──────────────────────────────────────────────── */
+    .dt {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .dt thead th {
+      background: #F1F5FB;
+      color: var(--navy);
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 7px 10px;
+      border-bottom: 2px solid var(--border);
+      text-align: center;
+      white-space: nowrap;
+    }
+    .dt thead th.tl { text-align: left; }
+
+    /* column group headers */
+    .dt thead .col-grp {
+      background: var(--navy-light);
+      color: rgba(255,255,255,.8);
+      font-size: 9px;
+      letter-spacing: 0.8px;
+    }
+
+    .dt tbody td { border-bottom: 1px solid var(--border); padding: 0; vertical-align: middle; }
+    .dt tbody tr:last-child td { border-bottom: none; }
+    .dt tbody tr:hover td { filter: brightness(0.975); }
+
+    /* sub-section header row */
+    .sub-hdr td {
+      background: var(--section-bg);
+      padding: 5px 12px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--navy-mid);
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* total row */
+    .tot-row td { background: #E8EDF5; border-top: 2px solid #C8D4E8; }
+    .tot-row .tp  { font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.3px; color: var(--navy); }
+    .tot-row td.cf { background: var(--navy); }
+    .tot-row td.cf .cv { color: white; }
+
+    /* cell padding types */
+    .tp  { padding: 8px 12px; font-weight: 500; color: var(--text-main); font-size: 12px; white-space: nowrap; min-width: 180px; }
+    .tu  { padding: 5px 8px; color: var(--text-muted); font-size: 10px; font-weight: 700; text-align: center; white-space: nowrap; }
+    .tgt { padding: 5px 10px; color: var(--navy); font-weight: 700; font-size: 12px; text-align: center; background: #F5F8FF; }
+
+    /* data-type cells */
+    td.cm { background: var(--m-bg); }
+    td.cs { background: var(--s-bg); }
+    td.cf { background: var(--f-bg); }
+
+    /* cell input */
+    .ci {
+      display: block;
+      width: 100%;
+      border: none;
+      background: transparent;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      padding: 8px 8px;
+      outline: none;
+      min-width: 78px;
+    }
+    td.cm .ci { color: var(--m-fg); }
+    td.cs .ci { color: var(--s-fg); pointer-events: none; cursor: default; }
+    td.cf .ci { color: var(--f-fg); pointer-events: none; cursor: default; }
+
+    td.cm .ci:focus {
+      background: rgba(253,230,138,0.5);
+      box-shadow: inset 0 0 0 2px var(--m-bd);
+      border-radius: 3px;
+    }
+
+    /* displayed value (read-only) */
+    .cv {
+      padding: 8px 10px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    td.cs .cv { color: var(--s-fg); }
+    td.cf .cv { color: var(--f-fg); }
+
+    /* variance cell */
+    .tvar { padding: 5px 8px; text-align: center; font-weight: 700; font-size: 11px; white-space: nowrap; }
+    .vg { color: var(--green); } .vr { color: var(--red); } .vo { color: var(--orange); }
+
+    /* remarks */
+    .tr  { min-width: 130px; }
+    .ri  {
+      display: block; width: 100%;
+      border: none; background: transparent;
+      font-family: var(--font); font-size: 11px; color: var(--text-muted);
+      padding: 7px 10px; outline: none;
+    }
+    .ri::placeholder { color: #CBD5E0; font-style: italic; }
+    .ri:focus { background: #FAFBFF; }
+
+    /* ── quality grid ────────────────────────────────────────────── */
+    .qual-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+
+    .qual-blk { border-right: 1px solid var(--border); }
+    .qual-blk:last-child { border-right: none; }
+
+    .qual-blk-hdr {
+      background: var(--navy-light);
+      color: rgba(255,255,255,.85);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 6px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── downtime log ────────────────────────────────────────────── */
+    .dt-log { padding: 0; }
+    .dt-log-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto auto;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+    }
+    .dt-log-row:last-child { border-bottom: none; }
+    .dtl-cell {
+      padding: 7px 12px;
+      font-size: 11px;
+      border-right: 1px solid var(--border);
+    }
+    .dtl-cell:last-child { border-right: none; }
+    .dtl-in {
+      border: none; background: var(--m-bg);
+      font-family: var(--font); font-size: 11px; font-weight: 600;
+      color: var(--m-fg); padding: 7px 10px; outline: none; width: 100%;
+    }
+    .dtl-in:focus { background: rgba(253,230,138,0.6); }
+    .dtl-in::placeholder { color: #D0C090; font-weight: 400; font-style: italic; }
+
+    /* add-row button */
+    .add-row-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 9px 14px;
+      font-family: var(--font); font-size: 11px; font-weight: 600;
+      color: var(--text-muted); background: none; border: none; cursor: pointer;
+      width: 100%; border-top: 1px dashed var(--border);
+      transition: color .15s;
+    }
+    .add-row-btn:hover { color: var(--orange); }
+
+    /* ── sign-off strip ──────────────────────────────────────────── */
+    .signoff {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+    }
+    .so-cell {
+      padding: 18px 20px;
+      border-right: 1px solid var(--border);
+      text-align: center;
+    }
+    .so-cell:last-child { border-right: none; }
+    .so-role {
+      font-size: 9px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.7px;
+      color: var(--text-muted); margin-bottom: 14px;
+    }
+    .so-in {
+      border: none; border-bottom: 1.5px solid var(--border);
+      width: 100%; font-family: var(--font);
+      font-size: 12px; font-weight: 600;
+      text-align: center; padding: 4px 0 6px;
+      outline: none; background: transparent; color: var(--text-main);
+      margin-bottom: 6px; display: block;
+    }
+    .so-in:focus { border-bottom-color: var(--orange); }
+    .so-in::placeholder { color: #C8D0DD; font-weight: 400; }
+    .so-time {
+      font-size: 10px; color: var(--text-muted);
+      border: none; border-bottom: 1px dashed var(--border);
+      width: 80%; font-family: var(--font);
+      text-align: center; padding: 3px 0;
+      background: transparent; outline: none; margin: 0 auto; display: block;
+    }
+    .so-time::placeholder { color: #C8D0DD; }
+
+    /* pill helpers */
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+    .pg { background: var(--green-bg); color: var(--green); }
+    .pr { background: var(--red-bg);   color: var(--red);   }
+    .po { background: #FFF3E0;         color: var(--orange); }
+
+    /* icon helper */
+    .ic { font-size: 13px; }
+
+    /* print */
+    @media print {
+      .toolbar, .dept-nav { display: none !important; }
+      .dr-main { padding: 0; }
+      .rcard { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════ TOP HEADER ══════════════════════════════ -->
+  <header class="top-header">
+    <div class="header-left">
+      <div class="logo-block">
+        <div class="logo-badge">LC</div>
+        <div class="logo-text">
+          <span class="company-name">LAKE CEMENT LTD.</span>
+          <span class="company-sub">Daily Operations Reports</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-center">
+      <span class="dash-title">DAILY PRODUCTION REPORT</span>
+    </div>
+    <div class="header-right">
+      <div class="brand-tag">
+        <span class="brand-name">NYATI CEMENT</span>
+        <span class="brand-slogan">Hushika Haraka • Hudumu Zaidi</span>
+      </div>
+      <div class="header-meta" id="live-date"></div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════ PAGE NAV ══════════════════════════════ -->
+  <nav class="dept-nav">
+    <div class="nav-inner">
+      <span class="nav-label">REPORTS</span>
+      <button class="nav-btn active"><span class="nav-icon">📋</span> Daily Report</button>
+      <button class="nav-btn" onclick="location.href='index.html'"><span class="nav-icon">📊</span> Monthly KPIs</button>
+      <div class="nav-divider"></div>
+      <span class="nav-label" style="margin-left:4px">DEPARTMENT</span>
+      <button class="nav-btn active" data-dept="production">🏭 Production</button>
+      <button class="nav-btn" data-dept="mining">⛏ Mining</button>
+      <button class="nav-btn" data-dept="powerplant">⚙️ Power Plant</button>
+      <button class="nav-btn" data-dept="packing">📦 Packing Plant</button>
+      <button class="nav-btn" data-dept="mechanical">🔧 Mechanical</button>
+      <div class="nav-divider"></div>
+      <button class="nav-btn secondary" onclick="window.print()"><span class="nav-icon">🖨</span> Print / PDF</button>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════ STICKY TOOLBAR ══════════════════════════════ -->
+  <div class="toolbar">
+    <!-- date -->
+    <div class="tb-group">
+      <span class="tb-label">Date</span>
+      <input type="date" class="tb-ctl" value="2026-02-19" />
+    </div>
+    <div class="tb-sep"></div>
+    <!-- shift toggle -->
+    <div class="tb-group">
+      <span class="tb-label">Shift View</span>
+      <div class="seg-ctrl">
+        <button class="seg-btn on">All Shifts</button>
+        <button class="seg-btn">Day (06:00–18:00)</button>
+        <button class="seg-btn">Night (18:00–06:00)</button>
+      </div>
+    </div>
+    <div class="tb-sep"></div>
+    <!-- department -->
+    <div class="tb-group">
+      <span class="tb-label">Department</span>
+      <select class="tb-ctl">
+        <option selected>Production</option>
+        <option>Mining</option>
+        <option>Power Plant</option>
+        <option>Packing Plant</option>
+        <option>Mechanical</option>
+      </select>
+    </div>
+    <div class="tb-sep"></div>
+    <!-- report officer -->
+    <div class="tb-group">
+      <span class="tb-label">Report By</span>
+      <input type="text" class="tb-ctl" placeholder="Officer name…" style="min-width:160px" />
+    </div>
+    <!-- status -->
+    <span class="rpt-status">DRAFT</span>
+    <!-- actions -->
+    <div class="btn-grp">
+      <button class="btn btn-outline">↩ Reset</button>
+      <button class="btn btn-outline">📥 Load Previous</button>
+      <button class="btn btn-save">💾 Save Draft</button>
+      <button class="btn btn-submit">✔ Submit Report</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ MAIN CONTENT ══════════════════════════════ -->
+  <main class="dr-main">
+
+    <!-- ── LEGEND ─────────────────────────────────────────────────────────── -->
+    <div class="legend-bar">
+      <span class="leg-lbl">Data Source</span>
+      <span class="leg-chip leg-m">✏️ Manual Entry — type directly into cell</span>
+      <span class="leg-chip leg-s">⚙️ System / Auto — fetched from DCS / ERP</span>
+      <span class="leg-chip leg-f">∑ Formula / Calculated — computed automatically</span>
+      <span class="leg-note">Fields highlighted in amber require manual input. Blue &amp; green cells are read-only.</span>
+    </div>
+
+    <!-- ── SUMMARY KPI STRIP ───────────────────────────────────────────────── -->
+    <div class="kpi-strip">
+
+      <div class="kpi-tile kt-f">
+        <span class="kt-badge">Formula</span>
+        <div class="kt-label">Total Clinker Produced</div>
+        <div class="kt-value">1,240</div>
+        <div class="kt-unit">MT / Day</div>
+        <div class="kt-vs vs-ok">▲ +3.3% vs Target (1,200 MT)</div>
+      </div>
+
+      <div class="kpi-tile kt-f">
+        <span class="kt-badge">Formula</span>
+        <div class="kt-label">Total Cement Produced</div>
+        <div class="kt-value">980</div>
+        <div class="kt-unit">MT / Day</div>
+        <div class="kt-vs vs-ng">▼ −2.0% vs Target (1,000 MT)</div>
+      </div>
+
+      <div class="kpi-tile kt-s">
+        <span class="kt-badge">System</span>
+        <div class="kt-label">Total Bags Packed</div>
+        <div class="kt-value">17,400</div>
+        <div class="kt-unit">NOS (50 kg)</div>
+        <div class="kt-vs vs-warn">▼ −13% vs Target (20,000)</div>
+      </div>
+
+      <div class="kpi-tile kt-f">
+        <span class="kt-badge">Formula</span>
+        <div class="kt-label">Kiln Availability</div>
+        <div class="kt-value">96.5<span style="font-size:16px;font-weight:600">%</span></div>
+        <div class="kt-unit">Running Hours Basis</div>
+        <div class="kt-vs vs-ok">▲ Target ≥ 90%</div>
+      </div>
+
+      <div class="kpi-tile kt-f">
+        <span class="kt-badge">Formula</span>
+        <div class="kt-label">Specific Power</div>
+        <div class="kt-value">112</div>
+        <div class="kt-unit">kWh / MT Cement</div>
+        <div class="kt-vs vs-ok">▲ Target ≤ 120 kWh/MT</div>
+      </div>
+
+      <div class="kpi-tile kt-s">
+        <span class="kt-badge">System</span>
+        <div class="kt-label">Total Power Import</div>
+        <div class="kt-value">109,760</div>
+        <div class="kt-unit">kWh / Day</div>
+        <div class="kt-vs vs-ok">— Within budget</div>
+      </div>
+
+    </div><!-- /kpi-strip -->
+
+    <!-- ════════════════════════════════════════════════════════════════
+         ROW 1: KILN & CLINKER  |  RAW MILL
+    ════════════════════════════════════════════════════════════════ -->
+    <div class="two-col">
+
+      <!-- ── KILN & CLINKER PRODUCTION ─── -->
+      <div class="rcard">
+        <div class="rcard-hdr">
+          <div>
+            <div class="rcard-title">🔥 Kiln &amp; Clinker Production</div>
+            <div class="rcard-sub">Pyro-processing Section</div>
+          </div>
+          <div class="rcard-chips">
+            <span class="rcard-chip">Target: 1,200 MT/Day</span>
+            <span class="rcard-chip orange">RUNNING</span>
+          </div>
+        </div>
+        <table class="dt">
+          <thead>
+            <tr>
+              <th class="tl" rowspan="2">Parameter</th>
+              <th rowspan="2">Unit</th>
+              <th rowspan="2">Target</th>
+              <th class="col-grp" colspan="2">Day Shift</th>
+              <th class="col-grp" colspan="2">Night Shift</th>
+              <th rowspan="2">Daily Total</th>
+              <th rowspan="2">vs Target</th>
+              <th rowspan="2">Remarks</th>
+            </tr>
+            <tr>
+              <th class="col-grp">06–12</th>
+              <th class="col-grp">12–18</th>
+              <th class="col-grp">18–00</th>
+              <th class="col-grp">00–06</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr class="sub-hdr"><td colspan="10">Running Hours &amp; Availability</td></tr>
+
+            <tr>
+              <td class="tp">Kiln Running Hours</td>
+              <td class="tu">HRS</td>
+              <td class="tgt">6.0</td>
+              <td class="cs"><div class="cv">5.8</div></td>
+              <td class="cs"><div class="cv">5.7</div></td>
+              <td class="cs"><div class="cv">6.0</div></td>
+              <td class="cs"><div class="cv">5.6</div></td>
+              <td class="cf"><div class="cv">23.1</div></td>
+              <td class="tvar"><span class="pill pg">+1h</span></td>
+              <td class="tr"><input class="ri" placeholder="Add note…" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Kiln Stops (NOS)</td>
+              <td class="tu">NOS</td>
+              <td class="tgt">0</td>
+              <td class="cm"><input class="ci" type="number" placeholder="0" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="0" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="0" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="0" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="Reason for stop…" /></td>
+            </tr>
+
+            <tr class="sub-hdr"><td colspan="10">Production</td></tr>
+
+            <tr>
+              <td class="tp">Clinker Production</td>
+              <td class="tu">MT</td>
+              <td class="tgt">300</td>
+              <td class="cs"><div class="cv">298</div></td>
+              <td class="cs"><div class="cv">312</div></td>
+              <td class="cs"><div class="cv">318</div></td>
+              <td class="cs"><div class="cv">312</div></td>
+              <td class="cf"><div class="cv">1,240</div></td>
+              <td class="tvar"><span class="pill pg">+3.3%</span></td>
+              <td class="tr"><input class="ri" placeholder="Add note…" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Kiln Feed Rate</td>
+              <td class="tu">TPH</td>
+              <td class="tgt">210</td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Clinker Factor</td>
+              <td class="tu">—</td>
+              <td class="tgt">1.56</td>
+              <td class="cf" colspan="4"><div class="cv">1.54</div></td>
+              <td class="cf"><div class="cv">1.54</div></td>
+              <td class="tvar"><span class="pill pg">OK</span></td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr class="sub-hdr"><td colspan="10">Fuel &amp; Heat</td></tr>
+
+            <tr>
+              <td class="tp">Coal Feed Rate</td>
+              <td class="tu">TPH</td>
+              <td class="tgt">18.0</td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Total Coal Consumed</td>
+              <td class="tu">MT</td>
+              <td class="tgt">—</td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Sp. Heat Consumption</td>
+              <td class="tu">kcal/kg</td>
+              <td class="tgt">800</td>
+              <td class="cf" colspan="4"><div class="cv">792</div></td>
+              <td class="cf"><div class="cv">792</div></td>
+              <td class="tvar"><span class="pill pg">−8</span></td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr class="sub-hdr"><td colspan="10">Key Temperatures (°C)</td></tr>
+
+            <tr>
+              <td class="tp">Kiln Inlet Temp</td>
+              <td class="tu">°C</td>
+              <td class="tgt">900–1050</td>
+              <td class="cs"><div class="cv">968</div></td>
+              <td class="cs"><div class="cv">975</div></td>
+              <td class="cs"><div class="cv">981</div></td>
+              <td class="cs"><div class="cv">970</div></td>
+              <td class="cf"><div class="cv">973 avg</div></td>
+              <td class="tvar"><span class="pill pg">OK</span></td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Kiln Outlet (Hood) Temp</td>
+              <td class="tu">°C</td>
+              <td class="tgt">1350–1450</td>
+              <td class="cs"><div class="cv">1,412</div></td>
+              <td class="cs"><div class="cv">1,425</div></td>
+              <td class="cs"><div class="cv">1,418</div></td>
+              <td class="cs"><div class="cv">1,408</div></td>
+              <td class="cf"><div class="cv">1,416 avg</div></td>
+              <td class="tvar"><span class="pill pg">OK</span></td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Tertiary Air Temp</td>
+              <td class="tu">°C</td>
+              <td class="tgt">≥ 850</td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr class="tot-row">
+              <td class="tp">CLINKER TOTAL (DAY)</td>
+              <td class="tu">MT</td>
+              <td class="tgt">1,200</td>
+              <td class="cf" colspan="4"><div class="cv">1,240</div></td>
+              <td class="cf"><div class="cv">1,240</div></td>
+              <td class="tvar"><span class="pill pg">+3.3%</span></td>
+              <td class="tr"></td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div><!-- /kiln card -->
+
+      <!-- ── RAW MILL OPERATION ─── -->
+      <div class="rcard">
+        <div class="rcard-hdr">
+          <div>
+            <div class="rcard-title">⚙️ Raw Mill Operation</div>
+            <div class="rcard-sub">Raw Meal Preparation</div>
+          </div>
+          <div class="rcard-chips">
+            <span class="rcard-chip">Target: 1,800 MT/Day</span>
+            <span class="rcard-chip orange">RUNNING</span>
+          </div>
+        </div>
+        <table class="dt">
+          <thead>
+            <tr>
+              <th class="tl" rowspan="2">Parameter</th>
+              <th rowspan="2">Unit</th>
+              <th rowspan="2">Target</th>
+              <th class="col-grp" colspan="2">Day Shift</th>
+              <th class="col-grp" colspan="2">Night Shift</th>
+              <th rowspan="2">Daily Total</th>
+              <th rowspan="2">vs Target</th>
+              <th rowspan="2">Remarks</th>
+            </tr>
+            <tr>
+              <th class="col-grp">06–12</th>
+              <th class="col-grp">12–18</th>
+              <th class="col-grp">18–00</th>
+              <th class="col-grp">00–06</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr class="sub-hdr"><td colspan="10">Running Hours</td></tr>
+
+            <tr>
+              <td class="tp">Raw Mill Running Hours</td>
+              <td class="tu">HRS</td>
+              <td class="tgt">6.0</td>
+              <td class="cs"><div class="cv">5.5</div></td>
+              <td class="cs"><div class="cv">6.0</div></td>
+              <td class="cs"><div class="cv">6.0</div></td>
+              <td class="cs"><div class="cv">5.8</div></td>
+              <td class="cf"><div class="cv">23.3</div></td>
+              <td class="tvar"><span class="pill po">−42 min</span></td>
+              <td class="tr"><input class="ri" placeholder="Add note…" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Mill Stops (NOS)</td>
+              <td class="tu">NOS</td>
+              <td class="tgt">0</td>
+              <td class="cm"><input class="ci" type="number" placeholder="0" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="0" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="0" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="0" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="Reason…" /></td>
+            </tr>
+
+            <tr class="sub-hdr"><td colspan="10">Production</td></tr>
+
+            <tr>
+              <td class="tp">Raw Meal Production</td>
+              <td class="tu">MT</td>
+              <td class="tgt">450</td>
+              <td class="cs"><div class="cv">438</div></td>
+              <td class="cs"><div class="cv">460</div></td>
+              <td class="cs"><div class="cv">452</div></td>
+              <td class="cs"><div class="cv">444</div></td>
+              <td class="cf"><div class="cv">1,794</div></td>
+              <td class="tvar"><span class="pill po">−0.3%</span></td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Feed Rate</td>
+              <td class="tu">TPH</td>
+              <td class="tgt">380</td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr class="sub-hdr"><td colspan="10">Power</td></tr>
+
+            <tr>
+              <td class="tp">Raw Mill Power</td>
+              <td class="tu">kWh</td>
+              <td class="tgt">—</td>
+              <td class="cs"><div class="cv">8,420</div></td>
+              <td class="cs"><div class="cv">9,100</div></td>
+              <td class="cs"><div class="cv">8,870</div></td>
+              <td class="cs"><div class="cv">8,610</div></td>
+              <td class="cf"><div class="cv">35,000</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Sp. Power (Raw Mill)</td>
+              <td class="tu">kWh/MT</td>
+              <td class="tgt">≤ 20</td>
+              <td class="cf" colspan="4"><div class="cv">19.5</div></td>
+              <td class="cf"><div class="cv">19.5</div></td>
+              <td class="tvar"><span class="pill pg">OK</span></td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr class="sub-hdr"><td colspan="10">Quality Parameters (Lab)</td></tr>
+
+            <tr>
+              <td class="tp">LSF (Lime Saturation Factor)</td>
+              <td class="tu">—</td>
+              <td class="tgt">96 ± 2</td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="Lab result" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">SM (Silica Modulus)</td>
+              <td class="tu">—</td>
+              <td class="tgt">2.4 ± 0.1</td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="Lab result" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">90 μ Residue</td>
+              <td class="tu">%</td>
+              <td class="tgt">≤ 12</td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Raw Meal Moisture</td>
+              <td class="tu">%</td>
+              <td class="tgt">≤ 1.0</td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr class="tot-row">
+              <td class="tp">RAW MEAL TOTAL (DAY)</td>
+              <td class="tu">MT</td>
+              <td class="tgt">1,800</td>
+              <td class="cf" colspan="4"><div class="cv">1,794</div></td>
+              <td class="cf"><div class="cv">1,794</div></td>
+              <td class="tvar"><span class="pill po">−0.3%</span></td>
+              <td class="tr"></td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div><!-- /raw mill card -->
+
+    </div><!-- /two-col row 1 -->
+
+    <!-- ════════════════════════════════════════════════════════════════
+         ROW 2: CEMENT MILL  |  PACKING & DISPATCH
+    ════════════════════════════════════════════════════════════════ -->
+    <div class="two-col">
+
+      <!-- ── CEMENT MILL ─── -->
+      <div class="rcard">
+        <div class="rcard-hdr">
+          <div>
+            <div class="rcard-title">🏗️ Cement Mill Operation</div>
+            <div class="rcard-sub">Finish Grinding — CM-1 &amp; CM-2</div>
+          </div>
+          <div class="rcard-chips">
+            <span class="rcard-chip">Target: 1,000 MT/Day</span>
+            <span class="rcard-chip orange">RUNNING</span>
+          </div>
+        </div>
+        <table class="dt">
+          <thead>
+            <tr>
+              <th class="tl" rowspan="2">Parameter</th>
+              <th rowspan="2">Unit</th>
+              <th rowspan="2">Target</th>
+              <th class="col-grp" colspan="2">Day Shift</th>
+              <th class="col-grp" colspan="2">Night Shift</th>
+              <th rowspan="2">Daily Total</th>
+              <th rowspan="2">vs Target</th>
+              <th rowspan="2">Remarks</th>
+            </tr>
+            <tr>
+              <th class="col-grp">06–12</th><th class="col-grp">12–18</th>
+              <th class="col-grp">18–00</th><th class="col-grp">00–06</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr class="sub-hdr"><td colspan="10">CM-1</td></tr>
+
+            <tr>
+              <td class="tp">CM-1 Running Hours</td>
+              <td class="tu">HRS</td><td class="tgt">6.0</td>
+              <td class="cs"><div class="cv">6.0</div></td>
+              <td class="cs"><div class="cv">6.0</div></td>
+              <td class="cs"><div class="cv">5.5</div></td>
+              <td class="cs"><div class="cv">6.0</div></td>
+              <td class="cf"><div class="cv">23.5</div></td>
+              <td class="tvar"><span class="pill po">−30 min</span></td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">OPC Production (CM-1)</td>
+              <td class="tu">MT</td><td class="tgt">120</td>
+              <td class="cs"><div class="cv">118</div></td>
+              <td class="cs"><div class="cv">124</div></td>
+              <td class="cs"><div class="cv">108</div></td>
+              <td class="cs"><div class="cv">122</div></td>
+              <td class="cf"><div class="cv">472</div></td>
+              <td class="tvar"><span class="pill po">−1.7%</span></td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">PPC Production (CM-1)</td>
+              <td class="tu">MT</td><td class="tgt">—</td>
+              <td class="cs"><div class="cv">0</div></td>
+              <td class="cs"><div class="cv">0</div></td>
+              <td class="cs"><div class="cv">0</div></td>
+              <td class="cs"><div class="cv">0</div></td>
+              <td class="cf"><div class="cv">0</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Feed Rate (CM-1)</td>
+              <td class="tu">TPH</td><td class="tgt">80</td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Fly Ash Addition %</td>
+              <td class="tu">%</td><td class="tgt">—</td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr class="sub-hdr"><td colspan="10">CM-2</td></tr>
+
+            <tr>
+              <td class="tp">CM-2 Running Hours</td>
+              <td class="tu">HRS</td><td class="tgt">6.0</td>
+              <td class="cs"><div class="cv">6.0</div></td>
+              <td class="cs"><div class="cv">5.8</div></td>
+              <td class="cs"><div class="cv">6.0</div></td>
+              <td class="cs"><div class="cv">6.0</div></td>
+              <td class="cf"><div class="cv">23.8</div></td>
+              <td class="tvar"><span class="pill po">−12 min</span></td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">OPC Production (CM-2)</td>
+              <td class="tu">MT</td><td class="tgt">130</td>
+              <td class="cs"><div class="cv">128</div></td>
+              <td class="cs"><div class="cv">122</div></td>
+              <td class="cs"><div class="cv">131</div></td>
+              <td class="cs"><div class="cv">127</div></td>
+              <td class="cf"><div class="cv">508</div></td>
+              <td class="tvar"><span class="pill pg">+1.6%</span></td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Feed Rate (CM-2)</td>
+              <td class="tu">TPH</td><td class="tgt">85</td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr class="sub-hdr"><td colspan="10">Quality (Lab) — Cement Mill</td></tr>
+
+            <tr>
+              <td class="tp">Blaine (cm²/g)</td>
+              <td class="tu">cm²/g</td><td class="tgt">3200–3600</td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="Lab result" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">45 μ Residue</td>
+              <td class="tu">%</td><td class="tgt">≤ 10</td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cm"><input class="ci" placeholder="—" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="Lab result" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Sp. Power (Cement Mill)</td>
+              <td class="tu">kWh/MT</td><td class="tgt">≤ 36</td>
+              <td class="cf" colspan="4"><div class="cv">34.8</div></td>
+              <td class="cf"><div class="cv">34.8</div></td>
+              <td class="tvar"><span class="pill pg">OK</span></td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr class="tot-row">
+              <td class="tp">CEMENT TOTAL OPC (DAY)</td>
+              <td class="tu">MT</td><td class="tgt">1,000</td>
+              <td class="cf" colspan="4"><div class="cv">980</div></td>
+              <td class="cf"><div class="cv">980</div></td>
+              <td class="tvar"><span class="pill pr">−2.0%</span></td>
+              <td class="tr"></td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div><!-- /cement mill card -->
+
+      <!-- ── PACKING & DISPATCH ─── -->
+      <div class="rcard">
+        <div class="rcard-hdr">
+          <div>
+            <div class="rcard-title">📦 Packing Plant &amp; Dispatch</div>
+            <div class="rcard-sub">Bagging Lines BL-1 &amp; BL-2</div>
+          </div>
+          <div class="rcard-chips">
+            <span class="rcard-chip">Target: 20,000 bags/Day</span>
+            <span class="rcard-chip orange">RUNNING</span>
+          </div>
+        </div>
+        <table class="dt">
+          <thead>
+            <tr>
+              <th class="tl" rowspan="2">Parameter</th>
+              <th rowspan="2">Unit</th>
+              <th rowspan="2">Target</th>
+              <th class="col-grp" colspan="2">Day Shift</th>
+              <th class="col-grp" colspan="2">Night Shift</th>
+              <th rowspan="2">Daily Total</th>
+              <th rowspan="2">vs Target</th>
+              <th rowspan="2">Remarks</th>
+            </tr>
+            <tr>
+              <th class="col-grp">06–12</th><th class="col-grp">12–18</th>
+              <th class="col-grp">18–00</th><th class="col-grp">00–06</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr class="sub-hdr"><td colspan="10">BL-1 — Bagging Line 1</td></tr>
+
+            <tr>
+              <td class="tp">BL-1 Running Hours</td>
+              <td class="tu">HRS</td><td class="tgt">6.0</td>
+              <td class="cs"><div class="cv">5.8</div></td>
+              <td class="cs"><div class="cv">6.0</div></td>
+              <td class="cs"><div class="cv">6.0</div></td>
+              <td class="cs"><div class="cv">5.5</div></td>
+              <td class="cf"><div class="cv">23.3</div></td>
+              <td class="tvar"><span class="pill po">−42 min</span></td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">50 kg Bags Packed (BL-1)</td>
+              <td class="tu">NOS</td><td class="tgt">5,000</td>
+              <td class="cs"><div class="cv">4,620</div></td>
+              <td class="cs"><div class="cv">4,980</div></td>
+              <td class="cs"><div class="cv">4,890</div></td>
+              <td class="cs"><div class="cv">4,510</div></td>
+              <td class="cf"><div class="cv">19,000</div></td>
+              <td class="tvar"><span class="pill pr">−5.0%</span></td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Bags Rejected (BL-1)</td>
+              <td class="tu">NOS</td><td class="tgt">0</td>
+              <td class="cm"><input class="ci" type="number" placeholder="0" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="0" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="0" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="0" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="Reason…" /></td>
+            </tr>
+
+            <tr class="sub-hdr"><td colspan="10">BL-2 — Bagging Line 2</td></tr>
+
+            <tr>
+              <td class="tp">BL-2 Running Hours</td>
+              <td class="tu">HRS</td><td class="tgt">6.0</td>
+              <td class="cs"><div class="cv">6.0</div></td>
+              <td class="cs"><div class="cv">5.5</div></td>
+              <td class="cs"><div class="cv">6.0</div></td>
+              <td class="cs"><div class="cv">6.0</div></td>
+              <td class="cf"><div class="cv">23.5</div></td>
+              <td class="tvar"><span class="pill po">−30 min</span></td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">50 kg Bags Packed (BL-2)</td>
+              <td class="tu">NOS</td><td class="tgt">5,000</td>
+              <td class="cs"><div class="cv">4,200</div></td>
+              <td class="cs"><div class="cv">4,100</div></td>
+              <td class="cs"><div class="cv">4,600</div></td>
+              <td class="cs"><div class="cv">4,500</div></td>
+              <td class="cf"><div class="cv">17,400</div></td>
+              <td class="tvar"><span class="pill pr">−13%</span></td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Bags Rejected (BL-2)</td>
+              <td class="tu">NOS</td><td class="tgt">0</td>
+              <td class="cm"><input class="ci" type="number" placeholder="0" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="0" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="0" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="0" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="Reason…" /></td>
+            </tr>
+
+            <tr class="sub-hdr"><td colspan="10">Bulk &amp; Clinker Dispatch</td></tr>
+
+            <tr>
+              <td class="tp">Bulk Cement Dispatched</td>
+              <td class="tu">MT</td><td class="tgt">—</td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="Trucks/vessels" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Clinker Dispatched</td>
+              <td class="tu">MT</td><td class="tgt">—</td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cm"><input class="ci" type="number" placeholder="—" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr class="sub-hdr"><td colspan="10">Silo &amp; Stock Levels</td></tr>
+
+            <tr>
+              <td class="tp">Clinker Silo Level</td>
+              <td class="tu">MT</td><td class="tgt">—</td>
+              <td class="cm" colspan="2"><input class="ci" placeholder="Opening stock" /></td>
+              <td class="cf" colspan="2"><div class="cv">—</div></td>
+              <td class="cm"><input class="ci" placeholder="Closing" /></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Cement Silo Level</td>
+              <td class="tu">MT</td><td class="tgt">—</td>
+              <td class="cm" colspan="2"><input class="ci" placeholder="Opening stock" /></td>
+              <td class="cf" colspan="2"><div class="cv">—</div></td>
+              <td class="cm"><input class="ci" placeholder="Closing" /></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr class="tot-row">
+              <td class="tp">TOTAL BAGS PACKED (DAY)</td>
+              <td class="tu">NOS</td><td class="tgt">20,000</td>
+              <td class="cf" colspan="4"><div class="cv">17,400</div></td>
+              <td class="cf"><div class="cv">17,400</div></td>
+              <td class="tvar"><span class="pill pr">−13%</span></td>
+              <td class="tr"></td>
+            </tr>
+
+            <tr class="tot-row">
+              <td class="tp">TOTAL DISPATCHED (MT)</td>
+              <td class="tu">MT</td><td class="tgt">—</td>
+              <td class="cf" colspan="4"><div class="cv">870</div></td>
+              <td class="cf"><div class="cv">870</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"></td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div><!-- /packing card -->
+
+    </div><!-- /two-col row 2 -->
+
+    <!-- ════════════════════════════════════════════════════════════════
+         ROW 3: POWER CONSUMPTION (full-width)
+    ════════════════════════════════════════════════════════════════ -->
+    <div class="full-col">
+      <div class="rcard">
+        <div class="rcard-hdr">
+          <div>
+            <div class="rcard-title">⚡ Power Consumption Summary</div>
+            <div class="rcard-sub">Section-wise daily electrical energy</div>
+          </div>
+          <div class="rcard-chips">
+            <span class="rcard-chip">Target SP: ≤ 120 kWh/MT</span>
+            <span class="rcard-chip orange">GRID + CAPTIVE</span>
+          </div>
+        </div>
+        <table class="dt">
+          <thead>
+            <tr>
+              <th class="tl" rowspan="2">Section / Area</th>
+              <th rowspan="2">Unit</th>
+              <th rowspan="2">Target</th>
+              <th class="col-grp" colspan="2">Day Shift (kWh)</th>
+              <th class="col-grp" colspan="2">Night Shift (kWh)</th>
+              <th rowspan="2">Day Total kWh</th>
+              <th rowspan="2">SP (kWh/MT)</th>
+              <th rowspan="2">vs Budget</th>
+              <th rowspan="2">Remarks</th>
+            </tr>
+            <tr>
+              <th class="col-grp">06–12</th><th class="col-grp">12–18</th>
+              <th class="col-grp">18–00</th><th class="col-grp">00–06</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr class="sub-hdr"><td colspan="11">Grid &amp; Captive Supply</td></tr>
+
+            <tr>
+              <td class="tp">Grid Import (Tanesco/National)</td>
+              <td class="tu">kWh</td><td class="tgt">—</td>
+              <td class="cs"><div class="cv">22,400</div></td>
+              <td class="cs"><div class="cv">24,100</div></td>
+              <td class="cs"><div class="cv">32,800</div></td>
+              <td class="cs"><div class="cv">30,460</div></td>
+              <td class="cf"><div class="cv">109,760</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Captive Power Generated</td>
+              <td class="tu">kWh</td><td class="tgt">—</td>
+              <td class="cs"><div class="cv">0</div></td>
+              <td class="cs"><div class="cv">0</div></td>
+              <td class="cs"><div class="cv">0</div></td>
+              <td class="cs"><div class="cv">0</div></td>
+              <td class="cf"><div class="cv">0</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="Generator status" /></td>
+            </tr>
+
+            <tr class="sub-hdr"><td colspan="11">Section-wise Consumption</td></tr>
+
+            <tr>
+              <td class="tp">Kiln Section</td>
+              <td class="tu">kWh</td><td class="tgt">—</td>
+              <td class="cs"><div class="cv">8,200</div></td>
+              <td class="cs"><div class="cv">8,600</div></td>
+              <td class="cs"><div class="cv">8,800</div></td>
+              <td class="cs"><div class="cv">8,400</div></td>
+              <td class="cf"><div class="cv">34,000</div></td>
+              <td class="cf"><div class="cv">27.4</div></td>
+              <td class="tvar"><span class="pill pg">OK</span></td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Raw Mill Section</td>
+              <td class="tu">kWh</td><td class="tgt">—</td>
+              <td class="cs"><div class="cv">8,420</div></td>
+              <td class="cs"><div class="cv">9,100</div></td>
+              <td class="cs"><div class="cv">8,870</div></td>
+              <td class="cs"><div class="cv">8,610</div></td>
+              <td class="cf"><div class="cv">35,000</div></td>
+              <td class="cf"><div class="cv">19.5</div></td>
+              <td class="tvar"><span class="pill pg">OK</span></td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Cement Mill Section</td>
+              <td class="tu">kWh</td><td class="tgt">—</td>
+              <td class="cs"><div class="cv">8,280</div></td>
+              <td class="cs"><div class="cv">8,500</div></td>
+              <td class="cs"><div class="cv">8,100</div></td>
+              <td class="cs"><div class="cv">8,260</div></td>
+              <td class="cf"><div class="cv">33,140</div></td>
+              <td class="cf"><div class="cv">33.8</div></td>
+              <td class="tvar"><span class="pill pg">OK</span></td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Packing Plant Section</td>
+              <td class="tu">kWh</td><td class="tgt">—</td>
+              <td class="cs"><div class="cv">850</div></td>
+              <td class="cs"><div class="cv">920</div></td>
+              <td class="cs"><div class="cv">1,020</div></td>
+              <td class="cs"><div class="cv">880</div></td>
+              <td class="cf"><div class="cv">3,670</div></td>
+              <td class="cf"><div class="cv">2.1</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Utilities / General</td>
+              <td class="tu">kWh</td><td class="tgt">—</td>
+              <td class="cs"><div class="cv">650</div></td>
+              <td class="cs"><div class="cv">680</div></td>
+              <td class="cs"><div class="cv">510</div></td>
+              <td class="cs"><div class="cv">310</div></td>
+              <td class="cf"><div class="cv">2,150</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="tvar">—</td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr>
+              <td class="tp">Unaccounted / Losses</td>
+              <td class="tu">kWh</td><td class="tgt">≤ 2%</td>
+              <td class="cf" colspan="4"><div class="cv">1,800</div></td>
+              <td class="cf"><div class="cv">1,800</div></td>
+              <td class="cf"><div class="cv">1.6%</div></td>
+              <td class="tvar"><span class="pill pg">OK</span></td>
+              <td class="tr"><input class="ri" placeholder="" /></td>
+            </tr>
+
+            <tr class="tot-row">
+              <td class="tp">TOTAL POWER CONSUMED</td>
+              <td class="tu">kWh</td><td class="tgt">—</td>
+              <td class="cf" colspan="4"><div class="cv">109,760</div></td>
+              <td class="cf"><div class="cv">109,760</div></td>
+              <td class="cf"><div class="cv" style="color:white">112 kWh/MT</div></td>
+              <td class="tvar"><span class="pill pg">≤ 120 ✓</span></td>
+              <td class="tr"></td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </div><!-- /power full-col -->
+
+    <!-- ════════════════════════════════════════════════════════════════
+         ROW 4: QUALITY PARAMETERS (full-width, 3-block)
+    ════════════════════════════════════════════════════════════════ -->
+    <div class="full-col">
+      <div class="rcard">
+        <div class="rcard-hdr">
+          <div>
+            <div class="rcard-title">🔬 Quality Control — Lab Results</div>
+            <div class="rcard-sub">All values entered manually from laboratory</div>
+          </div>
+          <div class="rcard-chips">
+            <span class="rcard-chip leg-m" style="background:var(--m-bg);color:var(--m-fg);border:1px solid var(--m-bd)">✏️ All Manual Entry</span>
+          </div>
+        </div>
+        <div class="qual-cols">
+
+          <!-- CLINKER quality -->
+          <div class="qual-blk">
+            <div class="qual-blk-hdr">Clinker Quality (Bogue)</div>
+            <table class="dt">
+              <thead>
+                <tr>
+                  <th class="tl">Parameter</th>
+                  <th>Unit</th>
+                  <th>Spec</th>
+                  <th>Day Shift</th>
+                  <th>Night Shift</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="tp">C₃S</td><td class="tu">%</td><td class="tgt">60–65</td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="tvar">—</td>
+                </tr>
+                <tr>
+                  <td class="tp">C₂S</td><td class="tu">%</td><td class="tgt">15–20</td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="tvar">—</td>
+                </tr>
+                <tr>
+                  <td class="tp">C₃A</td><td class="tu">%</td><td class="tgt">≤ 10</td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="tvar">—</td>
+                </tr>
+                <tr>
+                  <td class="tp">Free Lime (f-CaO)</td><td class="tu">%</td><td class="tgt">≤ 1.5</td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="tvar">—</td>
+                </tr>
+                <tr>
+                  <td class="tp">LSF</td><td class="tu">—</td><td class="tgt">98±2</td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="tvar">—</td>
+                </tr>
+                <tr>
+                  <td class="tp">Clinker Litre Weight</td><td class="tu">g/L</td><td class="tgt">≥ 1,200</td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="tvar">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- CEMENT quality -->
+          <div class="qual-blk">
+            <div class="qual-blk-hdr">Cement Quality (OPC 42.5)</div>
+            <table class="dt">
+              <thead>
+                <tr>
+                  <th class="tl">Parameter</th>
+                  <th>Unit</th>
+                  <th>Spec</th>
+                  <th>Day Shift</th>
+                  <th>Night Shift</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="tp">Blaine Fineness</td><td class="tu">cm²/g</td><td class="tgt">3200–3600</td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="tvar">—</td>
+                </tr>
+                <tr>
+                  <td class="tp">45 μ Residue</td><td class="tu">%</td><td class="tgt">≤ 10</td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="tvar">—</td>
+                </tr>
+                <tr>
+                  <td class="tp">Initial Setting Time</td><td class="tu">min</td><td class="tgt">≥ 45</td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="tvar">—</td>
+                </tr>
+                <tr>
+                  <td class="tp">Final Setting Time</td><td class="tu">min</td><td class="tgt">≤ 600</td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="tvar">—</td>
+                </tr>
+                <tr>
+                  <td class="tp">Soundness (Le Chatelier)</td><td class="tu">mm</td><td class="tgt">≤ 10</td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="tvar">—</td>
+                </tr>
+                <tr>
+                  <td class="tp">SO₃ Content</td><td class="tu">%</td><td class="tgt">≤ 3.0</td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="tvar">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- COMPRESSIVE STRENGTH -->
+          <div class="qual-blk">
+            <div class="qual-blk-hdr">Compressive Strength (MPa)</div>
+            <table class="dt">
+              <thead>
+                <tr>
+                  <th class="tl">Age / Grade</th>
+                  <th>Unit</th>
+                  <th>Min Spec</th>
+                  <th>Day Result</th>
+                  <th>Night Result</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="tp">1-Day Strength (OPC)</td><td class="tu">MPa</td><td class="tgt">≥ 10</td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="tvar">—</td>
+                </tr>
+                <tr>
+                  <td class="tp">3-Day Strength (OPC)</td><td class="tu">MPa</td><td class="tgt">≥ 20</td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="tvar">—</td>
+                </tr>
+                <tr>
+                  <td class="tp">7-Day Strength (OPC)</td><td class="tu">MPa</td><td class="tgt">≥ 32.5</td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="tvar">—</td>
+                </tr>
+                <tr>
+                  <td class="tp">28-Day Strength (OPC)</td><td class="tu">MPa</td><td class="tgt">≥ 42.5</td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="tvar">—</td>
+                </tr>
+                <tr>
+                  <td class="tp">7-Day Strength (PPC)</td><td class="tu">MPa</td><td class="tgt">≥ 22.0</td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="tvar">—</td>
+                </tr>
+                <tr>
+                  <td class="tp">28-Day Strength (PPC)</td><td class="tu">MPa</td><td class="tgt">≥ 32.5</td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="cm"><input class="ci" placeholder="—" /></td>
+                  <td class="tvar">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div><!-- /qual-cols -->
+      </div>
+    </div><!-- /quality full-col -->
+
+    <!-- ════════════════════════════════════════════════════════════════
+         ROW 5: DOWNTIME / BREAKDOWN LOG (full-width)
+    ════════════════════════════════════════════════════════════════ -->
+    <div class="full-col">
+      <div class="rcard">
+        <div class="rcard-hdr">
+          <div>
+            <div class="rcard-title">🛑 Downtime &amp; Breakdown Log</div>
+            <div class="rcard-sub">Record all stoppages — planned &amp; unplanned</div>
+          </div>
+          <div class="rcard-chips">
+            <span class="rcard-chip leg-m" style="background:var(--m-bg);color:var(--m-fg);border:1px solid var(--m-bd)">✏️ Manual Entry</span>
+          </div>
+        </div>
+
+        <table class="dt">
+          <thead>
+            <tr>
+              <th class="tl">Equipment / Area</th>
+              <th>Shift</th>
+              <th>Start Time</th>
+              <th>End Time</th>
+              <th>Duration (HRS)</th>
+              <th class="tl">Reason / Description</th>
+              <th class="tl">Action Taken</th>
+              <th>Type</th>
+              <th>Dept Responsible</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cm"><input class="ci" style="text-align:left;padding-left:10px" placeholder="e.g. Kiln Burner" /></td>
+              <td class="cm">
+                <select class="ci" style="background:var(--m-bg)">
+                  <option>Day</option>
+                  <option>Night</option>
+                </select>
+              </td>
+              <td class="cm"><input class="ci" type="time" placeholder="HH:MM" /></td>
+              <td class="cm"><input class="ci" type="time" placeholder="HH:MM" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cm"><input class="ci" style="text-align:left;padding-left:10px" placeholder="Describe the issue…" /></td>
+              <td class="cm"><input class="ci" style="text-align:left;padding-left:10px" placeholder="Corrective action…" /></td>
+              <td class="cm">
+                <select class="ci" style="background:var(--m-bg)">
+                  <option>Unplanned</option>
+                  <option>Planned</option>
+                  <option>External</option>
+                </select>
+              </td>
+              <td class="cm">
+                <select class="ci" style="background:var(--m-bg)">
+                  <option>Production</option>
+                  <option>Mechanical</option>
+                  <option>Electrical</option>
+                  <option>External</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td class="cm"><input class="ci" style="text-align:left;padding-left:10px" placeholder="Equipment name" /></td>
+              <td class="cm">
+                <select class="ci" style="background:var(--m-bg)">
+                  <option>Day</option><option>Night</option>
+                </select>
+              </td>
+              <td class="cm"><input class="ci" type="time" placeholder="HH:MM" /></td>
+              <td class="cm"><input class="ci" type="time" placeholder="HH:MM" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cm"><input class="ci" style="text-align:left;padding-left:10px" placeholder="Describe the issue…" /></td>
+              <td class="cm"><input class="ci" style="text-align:left;padding-left:10px" placeholder="Corrective action…" /></td>
+              <td class="cm">
+                <select class="ci" style="background:var(--m-bg)">
+                  <option>Unplanned</option><option>Planned</option><option>External</option>
+                </select>
+              </td>
+              <td class="cm">
+                <select class="ci" style="background:var(--m-bg)">
+                  <option>Production</option><option>Mechanical</option><option>Electrical</option><option>External</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td class="cm"><input class="ci" style="text-align:left;padding-left:10px" placeholder="Equipment name" /></td>
+              <td class="cm">
+                <select class="ci" style="background:var(--m-bg)">
+                  <option>Day</option><option>Night</option>
+                </select>
+              </td>
+              <td class="cm"><input class="ci" type="time" placeholder="HH:MM" /></td>
+              <td class="cm"><input class="ci" type="time" placeholder="HH:MM" /></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cm"><input class="ci" style="text-align:left;padding-left:10px" placeholder="Describe the issue…" /></td>
+              <td class="cm"><input class="ci" style="text-align:left;padding-left:10px" placeholder="Corrective action…" /></td>
+              <td class="cm">
+                <select class="ci" style="background:var(--m-bg)">
+                  <option>Unplanned</option><option>Planned</option><option>External</option>
+                </select>
+              </td>
+              <td class="cm">
+                <select class="ci" style="background:var(--m-bg)">
+                  <option>Production</option><option>Mechanical</option><option>Electrical</option><option>External</option>
+                </select>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <button class="add-row-btn">+ Add Downtime Entry</button>
+
+      </div>
+    </div><!-- /downtime full-col -->
+
+    <!-- ════════════════════════════════════════════════════════════════
+         ROW 6: REMARKS / ISSUES / NEXT SHIFT  (full-width)
+    ════════════════════════════════════════════════════════════════ -->
+    <div class="full-col">
+      <div class="rcard">
+        <div class="rcard-hdr">
+          <div class="rcard-title">📝 General Remarks &amp; Shift Handover Notes</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;">
+
+          <div style="padding:14px 16px;border-right:1px solid var(--border)">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-muted);margin-bottom:8px">
+              🔴 Issues / Problems Faced
+            </div>
+            <textarea class="ri" rows="5" placeholder="Describe any issues faced during the shift…" style="width:100%;resize:vertical;border:1.5px dashed var(--border);border-radius:4px;font-family:var(--font);font-size:12px;padding:10px;outline:none;color:var(--text-main);background:var(--m-bg)"></textarea>
+          </div>
+
+          <div style="padding:14px 16px;border-right:1px solid var(--border)">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-muted);margin-bottom:8px">
+              🟡 Pending Actions / Follow-ups
+            </div>
+            <textarea class="ri" rows="5" placeholder="List pending items for next shift or management…" style="width:100%;resize:vertical;border:1.5px dashed var(--border);border-radius:4px;font-family:var(--font);font-size:12px;padding:10px;outline:none;color:var(--text-main);background:var(--m-bg)"></textarea>
+          </div>
+
+          <div style="padding:14px 16px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-muted);margin-bottom:8px">
+              🟢 Shift Handover Notes
+            </div>
+            <textarea class="ri" rows="5" placeholder="Key information for the incoming shift…" style="width:100%;resize:vertical;border:1.5px dashed var(--border);border-radius:4px;font-family:var(--font);font-size:12px;padding:10px;outline:none;color:var(--text-main);background:var(--m-bg)"></textarea>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         ROW 7: SIGN-OFF (full-width)
+    ════════════════════════════════════════════════════════════════ -->
+    <div class="full-col">
+      <div class="rcard">
+        <div class="rcard-hdr">
+          <div class="rcard-title">✍️ Report Sign-off &amp; Approval</div>
+        </div>
+        <div class="signoff">
+          <div class="so-cell">
+            <div class="so-role">Shift Supervisor (Day)</div>
+            <input class="so-in" placeholder="Full name…" />
+            <input class="so-time" placeholder="Time signed" />
+          </div>
+          <div class="so-cell">
+            <div class="so-role">Shift Supervisor (Night)</div>
+            <input class="so-in" placeholder="Full name…" />
+            <input class="so-time" placeholder="Time signed" />
+          </div>
+          <div class="so-cell">
+            <div class="so-role">Production Manager / HOD</div>
+            <input class="so-in" placeholder="Full name…" />
+            <input class="so-time" placeholder="Time reviewed" />
+          </div>
+          <div class="so-cell">
+            <div class="so-role">General Manager</div>
+            <input class="so-in" placeholder="Full name…" />
+            <input class="so-time" placeholder="Time approved" />
+          </div>
+        </div>
+        <!-- submit row -->
+        <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:11px;color:var(--text-muted)">
+            Report status: <strong style="color:var(--orange)">DRAFT</strong> &nbsp;·&nbsp;
+            Last saved: <span style="font-weight:600">Not saved yet</span> &nbsp;·&nbsp;
+            Report date: <span style="font-weight:600">19 February 2026</span>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-outline">💾 Save Draft</button>
+            <button class="btn btn-submit">✔ Submit &amp; Lock Report</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ══════════════════════════════ FOOTER ══════════════════════════════ -->
+  <footer class="dash-footer">
+    <span>Lake Cement Ltd. © 2026 &nbsp;|&nbsp; NYATI CEMENT &nbsp;•&nbsp; Hushika Haraka &nbsp;•&nbsp; Hudumu Zaidi</span>
+    <span>Daily Production Report — <span id="footer-date"></span></span>
+  </footer>
+
+  <script>
+    // Live date
+    const now = new Date();
+    const opts = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+    const str = now.toLocaleDateString('en-GB', opts);
+    ['live-date', 'footer-date'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = str;
+    });
+  </script>
+</body>
+</html>

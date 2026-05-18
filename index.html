@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement Ltd – Operations KPI Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════ TOP HEADER ═══════════════════════════════════════ -->
+  <header class="top-header">
+    <div class="header-left">
+      <div class="logo-block">
+        <div class="logo-badge">LC</div>
+        <div class="logo-text">
+          <span class="company-name">LAKE CEMENT LTD.</span>
+          <span class="company-sub">Operations Dashboard</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-center">
+      <span class="dash-title">KEY PERFORMANCE INDICATORS</span>
+    </div>
+    <div class="header-right">
+      <div class="brand-tag">
+        <span class="brand-name">NYATI CEMENT</span>
+        <span class="brand-slogan">Hushika Haraka • Hudumu Zaidi</span>
+      </div>
+      <div class="header-meta">
+        <span id="live-date"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════ NAV BAR ═══════════════════════════════════════ -->
+  <nav class="dept-nav">
+    <div class="nav-inner">
+      <span class="nav-label">DEPARTMENT</span>
+      <button class="nav-btn active" data-dept="ei" onclick="switchDept('ei')">
+        <span class="nav-icon">⚡</span> E &amp; I
+      </button>
+      <button class="nav-btn" data-dept="production" onclick="switchDept('production')">
+        <span class="nav-icon">🏭</span> Production
+      </button>
+      <button class="nav-btn" data-dept="mining" onclick="switchDept('mining')">
+        <span class="nav-icon">⛏</span> Mining
+      </button>
+      <button class="nav-btn" data-dept="mines" onclick="switchDept('mines')">
+        <span class="nav-icon">🪨</span> Mines
+      </button>
+      <button class="nav-btn" data-dept="mechanical" onclick="switchDept('mechanical')">
+        <span class="nav-icon">🔧</span> Mechanical
+      </button>
+      <button class="nav-btn" data-dept="powerplant" onclick="switchDept('powerplant')">
+        <span class="nav-icon">⚙️</span> Power Plant
+      </button>
+      <button class="nav-btn" data-dept="packing" onclick="switchDept('packing')">
+        <span class="nav-icon">📦</span> Packing Plant
+      </button>
+      <button class="nav-btn" data-dept="stores" onclick="switchDept('stores')">
+        <span class="nav-icon">🏪</span> Stores
+      </button>
+      <button class="nav-btn" data-dept="minesworkshop" onclick="switchDept('minesworkshop')">
+        <span class="nav-icon">🚜</span> Mines Workshop
+      </button>
+      <div class="nav-divider"></div>
+      <button class="nav-btn secondary" onclick="location.href='daily-report.html'" style="background:rgba(232,117,10,.15);border-color:rgba(232,117,10,.4)">
+        <span class="nav-icon">📋</span> Daily Reports
+      </button>
+      <button class="nav-btn secondary" onclick="window.print()">
+        <span class="nav-icon">🖨</span> Print / PDF
+      </button>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════ FILTER BAR ═══════════════════════════════════════ -->
+  <section class="filter-bar">
+    <div class="filter-inner">
+      <div class="filter-group">
+        <div class="filter-card">
+          <label>Department</label>
+          <select id="dept-select" onchange="syncDeptSelect()">
+            <option value="ei">Electrical &amp; Instrumentation</option>
+            <option value="production">Production</option>
+            <option value="mining">Mining</option>
+            <option value="mines">Mines</option>
+            <option value="mechanical">Mechanical</option>
+            <option value="powerplant">Power Plant</option>
+            <option value="packing">Packing Plant</option>
+            <option value="stores">Stores</option>
+            <option value="minesworkshop">Mines Workshop</option>
+          </select>
+        </div>
+        <div class="filter-card">
+          <label>Month</label>
+          <select id="month-select" onchange="applyFilters()">
+            <option value="1">January</option>
+            <option value="2" selected>February</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+        </div>
+        <div class="filter-card">
+          <label>Year</label>
+          <select id="year-select" onchange="applyFilters()">
+            <option value="2025">2025</option>
+            <option value="2026" selected>2026</option>
+          </select>
+        </div>
+        <div class="filter-card">
+          <label>View</label>
+          <select id="view-select" onchange="applyFilters()">
+            <option value="month">Current Month</option>
+            <option value="ytd">Year to Date</option>
+            <option value="full">Full Year</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filter-summary">
+        <div class="summary-chip achieved"><span id="sum-achieved">—</span> Achieved</div>
+        <div class="summary-chip not-achieved"><span id="sum-not">—</span> Not Achieved</div>
+        <div class="summary-chip rate"><span id="sum-rate">—</span>% Achievement</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════ DEPT CONTEXT ═══════════════════════════════════════ -->
+  <div class="dept-context" id="dept-context">
+    <div class="ctx-left">
+      <div class="ctx-dept" id="ctx-dept-name">E &amp; I — Electrical &amp; Instrumentation</div>
+      <div class="ctx-resp" id="ctx-resp">Responsibility: Mr. Ramesh Patel &amp; Team</div>
+    </div>
+    <div class="ctx-right">
+      <div class="ctx-tracker">Full Year KPI Tracker — <span id="ctx-period">February 2026</span></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ MAIN CONTENT ═══════════════════════════════════════ -->
+  <main class="dashboard-main">
+
+    <!-- ─────────── E&I DEPARTMENT ─────────── -->
+    <section class="dept-section" id="dept-ei">
+      <div class="table-wrapper">
+        <table class="kpi-table">
+          <thead>
+            <tr class="thead-row">
+              <th class="col-kpi">KPI</th>
+              <th class="col-unit">UNIT</th>
+              <th class="col-sign">Signage</th>
+              <th class="col-target">TARGET</th>
+              <th class="col-actual highlight-col">Current Month<br>ACTUAL</th>
+              <th class="col-remarks">REMARKS</th>
+              <th class="col-month">Jan</th>
+              <th class="col-month">Feb</th>
+              <th class="col-month">Mar</th>
+              <th class="col-month">April</th>
+              <th class="col-month">May</th>
+              <th class="col-month">June</th>
+              <th class="col-month">July</th>
+              <th class="col-month">Aug</th>
+              <th class="col-month">Sept</th>
+              <th class="col-month">Oct</th>
+              <th class="col-month">Nov</th>
+              <th class="col-month">Dec</th>
+              <th class="col-status">STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <!-- ── SECTION: HEALTH & SAFETY ── -->
+            <tr class="section-row"><td colspan="19">HEALTH &amp; SAFETY</td></tr>
+
+            <tr class="data-row achieved-row">
+              <td>Fatality</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>LTI</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>MTI</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Hazards Reported</td><td>NOS</td><td class="sign">&gt;</td><td class="target">4</td>
+              <td class="actual green">10</td><td></td>
+              <td>10</td><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+
+            <!-- ── SECTION: STACK EMISSION ── -->
+            <tr class="section-row"><td colspan="19">STACK EMISSION</td></tr>
+
+            <tr class="data-row achieved-row">
+              <td>i) GBH Stack</td><td>mg/m³</td><td class="sign">&lt;</td><td class="target">50</td>
+              <td class="actual green">31</td><td></td>
+              <td>31</td><td>60</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>ii) Coal Mill BH</td><td>mg/m³</td><td class="sign">&lt;</td><td class="target">50</td>
+              <td class="actual red">50</td><td></td>
+              <td>50</td><td>45</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>iii) Cooler ESP</td><td>mg/m³</td><td class="sign">&lt;</td><td class="target">50</td>
+              <td class="actual green">30</td><td></td>
+              <td>30</td><td>42</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>iv) Cement Mill</td><td>mg/m³</td><td class="sign">&lt;</td><td class="target">50</td>
+              <td class="actual green">20.0</td><td></td>
+              <td>20.0</td><td>25.0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+
+            <!-- ── SECTION: OPERATIONAL ── -->
+            <tr class="section-row"><td colspan="19">OPERATIONAL</td></tr>
+
+            <tr class="data-row achieved-row">
+              <td>NAI Kiln</td><td>%</td><td class="sign">&gt;</td><td class="target">90</td>
+              <td class="actual green">99.5</td><td class="remark-cell">—</td>
+              <td>99.5</td><td>99.9</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>NAI VRM</td><td>%</td><td class="sign">&gt;</td><td class="target">90</td>
+              <td class="actual green">98.6</td><td class="remark-cell">Rawmill MCC tripped – Earth Fault, Reason identified and rectified.</td>
+              <td>98.6</td><td>97.9</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>NAI Cement Mill 1</td><td>%</td><td class="sign">&gt;</td><td class="target">92</td>
+              <td class="actual red">99.5</td><td class="remark-cell">FN6 tripping with ACS temp. Cooling arrangement done and IGBT card replaced.</td>
+              <td>99.5</td><td>99.4</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>NAI Cement Mill 2</td><td>%</td><td class="sign">&gt;</td><td class="target">92</td>
+              <td class="actual green">99.5</td><td></td>
+              <td>99.5</td><td>99.3</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>MTBF Kiln</td><td>HRS</td><td class="sign">&gt;</td><td class="target">400</td>
+              <td class="actual red">180.0</td><td></td>
+              <td>180.0</td><td>604.6</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>MTBF Cement Mill 1</td><td>HRS</td><td class="sign">&gt;</td><td class="target">225</td>
+              <td class="actual red">121.6</td><td class="remark-cell">FN6 tripping with ACS temp. Cooling arrangement done and IGBT card replaced.</td>
+              <td>121.6</td><td>125.0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>MTBF Cement Mill 2</td><td>HRS</td><td class="sign">&gt;</td><td class="target">225</td>
+              <td class="actual green">355.2</td><td></td>
+              <td>355.2</td><td>120.0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Specific Power Consumption – Clinker</td><td>KWH/T Clinker</td><td class="sign">&lt;</td><td class="target">60.5</td>
+              <td class="actual red">79.12</td><td></td>
+              <td>79.12</td><td>74.05</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Specific Power Consumption – Cement Grinding</td><td>KWH/T Cement</td><td class="sign">&lt;</td><td class="target">35.0</td>
+              <td class="actual red">37.38</td><td></td>
+              <td>37.38</td><td>38.48</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Specific Power Consumption – Utilities</td><td>KWH/T</td><td class="sign">&lt;</td><td class="target">3.5</td>
+              <td class="actual green">2.37</td><td></td>
+              <td>2.37</td><td>2.47</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Specific Power Consumption – Total</td><td>KWH/T Cement</td><td class="sign">&lt;</td><td class="target">90.0</td>
+              <td class="actual red">118.00</td><td></td>
+              <td>118.00</td><td>115.00</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Cost per unit – TANESCO Power</td><td>Tsh/KWH</td><td class="sign">&lt;</td><td class="target">195.0</td>
+              <td class="actual green">192.00</td><td></td>
+              <td>192.00</td><td>191.00</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+
+            <!-- ── SECTION: FINANCIAL ── -->
+            <tr class="section-row"><td colspan="19">FINANCIAL</td></tr>
+            <tr class="data-row achieved-row">
+              <td>Compliance Bag Weight</td><td>%</td><td class="sign">=</td><td class="target">100</td>
+              <td class="actual green">100</td><td></td>
+              <td>100</td><td>100</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Regular Random Verification of Bag Weight</td><td>Gms</td><td class="sign">&lt;</td><td class="target">+/- 50</td>
+              <td class="actual green">GR 42.5: (+) 55 Gms<br>GR 32.5: (+)</td><td></td>
+              <td>GR 42.5: (+) 55Gms, GR 32.5: (+)</td><td>GR 42.5: (+) 45Gms, GR 32.5: (+)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Calibration of Weighfeeders, Weighbridges, Rotoscales</td><td>—</td><td class="sign">=</td><td class="target">Per Frequency</td>
+              <td class="actual green">DONE</td><td></td>
+              <td>DONE</td><td>DONE</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ─────────── PRODUCTION DEPARTMENT ─────────── -->
+    <section class="dept-section hidden" id="dept-production">
+      <div class="table-wrapper">
+        <table class="kpi-table">
+          <thead>
+            <tr class="thead-row">
+              <th class="col-kpi">KPI</th>
+              <th class="col-unit">UNIT</th>
+              <th class="col-sign">Signage</th>
+              <th class="col-target">TARGET</th>
+              <th class="col-actual highlight-col">Current Month<br>ACTUAL</th>
+              <th class="col-remarks">REMARKS</th>
+              <th class="col-month">Jan</th>
+              <th class="col-month">Feb</th>
+              <th class="col-month">Mar</th>
+              <th class="col-month">April</th>
+              <th class="col-month">May</th>
+              <th class="col-month">June</th>
+              <th class="col-month">July</th>
+              <th class="col-month">Aug</th>
+              <th class="col-month">Sept</th>
+              <th class="col-month">Oct</th>
+              <th class="col-month">Nov</th>
+              <th class="col-month">Dec</th>
+              <th class="col-status">STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr class="section-row"><td colspan="19">HEALTH &amp; SAFETY</td></tr>
+            <tr class="data-row achieved-row">
+              <td>Fatality</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>LTI</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>MTI</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Hazards Reported</td><td>NOS</td><td class="sign">&gt;</td><td class="target">4</td>
+              <td class="actual red">0</td><td></td>
+              <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Stack Emission</td><td>mg/m³</td><td class="sign">&lt;</td><td class="target">50</td>
+              <td class="actual red">95</td><td></td>
+              <td>95</td><td>95</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+
+            <tr class="section-row"><td colspan="19">KILN &amp; MILL OUTPUT</td></tr>
+            <tr class="data-row not-achieved-row">
+              <td>Kiln Output</td><td>TPD</td><td class="sign">&gt;=</td><td class="target">2000</td>
+              <td class="actual red">1678</td><td></td>
+              <td>1483</td><td>1678</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>VRM Output</td><td>TPH</td><td class="sign">&gt;=</td><td class="target">145</td>
+              <td class="actual red">138</td><td></td>
+              <td>122</td><td>138</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Raw Mill 2 Output</td><td>TPH</td><td class="sign">&gt;=</td><td class="target">16</td>
+              <td class="actual red">10</td><td></td>
+              <td>6</td><td>10</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Cement Mill 1 Output</td><td>TPH</td><td class="sign">&gt;=</td><td class="target">65</td>
+              <td class="actual red">65</td><td></td>
+              <td>65</td><td>65</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Cement Mill 2 Output</td><td>TPH</td><td class="sign">&gt;=</td><td class="target">55</td>
+              <td class="actual green">62</td><td></td>
+              <td>63</td><td>62</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Coal Mill Output</td><td>TPH</td><td class="sign">&gt;=</td><td class="target">17</td>
+              <td class="actual green">17</td><td></td>
+              <td>16</td><td>17</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Despatch / Day</td><td>MT</td><td class="sign">&gt;</td><td class="target">2700</td>
+              <td class="actual green">2738</td><td></td>
+              <td>2777</td><td>2738</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+
+            <tr class="section-row"><td colspan="19">SPECIFIC POWER CONSUMPTION</td></tr>
+            <tr class="data-row not-achieved-row">
+              <td>Specific Power Consumption – Up to Clinker</td><td>KWH/T</td><td class="sign">&lt;</td><td class="target">61</td>
+              <td class="actual red">79</td><td></td>
+              <td>83</td><td>79</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Specific Power Consumption – Cement Grinding</td><td>KWH/T</td><td class="sign">&lt;</td><td class="target">35</td>
+              <td class="actual red">39</td><td></td>
+              <td>39</td><td>39</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Specific Power Consumption – Utilities</td><td>KWH/T</td><td class="sign">&lt;</td><td class="target">4</td>
+              <td class="actual green">2</td><td></td>
+              <td>2</td><td>2</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Specific Power Consumption – Total</td><td>KWH/T</td><td class="sign">&lt;</td><td class="target">90</td>
+              <td class="actual red">104</td><td></td>
+              <td>109</td><td>104</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Specific Thermal Energy Consumption</td><td>KCal/Kg Clinker</td><td class="sign">&lt;</td><td class="target">780</td>
+              <td class="actual red">816</td><td></td>
+              <td>826</td><td>816</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+
+            <tr class="section-row"><td colspan="19">QUALITY</td></tr>
+            <tr class="data-row not-achieved-row">
+              <td>Clinker Free Lime</td><td>%</td><td class="sign">&lt;</td><td class="target">3</td>
+              <td class="actual red">3</td><td></td>
+              <td>4</td><td>3</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Clinker C3S</td><td>%</td><td class="sign">&gt;</td><td class="target">50</td>
+              <td class="actual green">51</td><td></td>
+              <td>51</td><td>51</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Cement Residue on 45 Micron</td><td>%</td><td class="sign">&lt;</td><td class="target">10</td>
+              <td class="actual green">9</td><td></td>
+              <td>9</td><td>9</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+
+            <tr class="section-row"><td colspan="19">FINANCIAL &amp; MATERIALS</td></tr>
+            <tr class="data-row achieved-row">
+              <td>Grinding Media Consumption</td><td>GMS/MT</td><td class="sign">&lt;</td><td class="target">53</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Physical Stock of Raw Material</td><td>—</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual red">0</td><td></td>
+              <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ─────────── MINING DEPARTMENT ─────────── -->
+    <section class="dept-section hidden" id="dept-mining">
+      <div class="table-wrapper">
+        <table class="kpi-table">
+          <thead>
+            <tr class="thead-row">
+              <th class="col-kpi">KPI</th>
+              <th class="col-unit">UNIT</th>
+              <th class="col-sign">Signage</th>
+              <th class="col-target">TARGET</th>
+              <th class="col-actual highlight-col">Current Month<br>ACTUAL</th>
+              <th class="col-remarks">REMARKS</th>
+              <th class="col-month">Jan</th>
+              <th class="col-month">Feb</th>
+              <th class="col-month">Mar</th>
+              <th class="col-month">April</th>
+              <th class="col-month">May</th>
+              <th class="col-month">June</th>
+              <th class="col-month">July</th>
+              <th class="col-month">Aug</th>
+              <th class="col-month">Sept</th>
+              <th class="col-month">Oct</th>
+              <th class="col-month">Nov</th>
+              <th class="col-month">Dec</th>
+              <th class="col-status">STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr class="section-row"><td colspan="19">HEALTH &amp; SAFETY</td></tr>
+            <tr class="data-row achieved-row">
+              <td>Fatality</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>LTI</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>MTI</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Hazards Reported</td><td>NOS</td><td class="sign">&gt;</td><td class="target">4</td>
+              <td class="actual red">2</td><td></td>
+              <td>3</td><td>2</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+
+            <tr class="section-row"><td colspan="19">RUNNING HOURS – MONTH</td></tr>
+            <tr class="data-row achieved-row">
+              <td>Equipment Availability</td><td>%</td><td class="sign">&gt;</td><td class="target">1</td>
+              <td class="actual green">1</td><td></td>
+              <td>0</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>1</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Production Rate / Running Hours</td><td>MT</td><td class="sign">&lt;</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Utilization Rate</td><td>%</td><td class="sign">&gt;</td><td class="target">1</td>
+              <td class="actual green">1</td><td></td>
+              <td></td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td></td><td></td><td>1</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Work Order Cycle Time</td><td>HRS</td><td class="sign">&lt;</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Maintenance Downtime</td><td>HRS</td><td class="sign">&lt;</td><td class="target">60</td>
+              <td class="actual green">60</td><td></td>
+              <td>60</td><td>250</td><td>60</td><td>16</td><td>60</td><td>26</td><td>60</td><td>30</td><td>60</td><td>15</td><td>60</td><td>250</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Maintenance Cost / Running Hours</td><td>TSH</td><td class="sign">&lt;</td><td class="target">4,000</td>
+              <td class="actual green">4,000</td><td></td>
+              <td>0</td><td>4000</td><td>455</td><td>2083</td><td>0</td><td>2083</td><td>2123</td><td>4000</td><td>727</td><td>4000</td><td></td><td>1000</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Tyre / Track Cost / Running Hours</td><td>TSH</td><td class="sign">&lt;</td><td class="target">4,000</td>
+              <td class="actual green">4,000</td><td></td>
+              <td></td><td>4000</td><td>2662</td><td>2083</td><td>0</td><td>2083</td><td>0</td><td>4000</td><td>8661</td><td>4000</td><td></td><td>1000</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Fuel Consumption / Running Hours</td><td>LPH</td><td class="sign">&lt;</td><td class="target">80</td>
+              <td class="actual green">30</td><td></td>
+              <td></td><td>30</td><td>31</td><td>15</td><td>17</td><td>15</td><td>12</td><td>2</td><td>4</td><td>2</td><td></td><td>2</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Lubrication Consumption / Running Hours</td><td>LTRS</td><td class="sign">&lt;</td><td class="target">1</td>
+              <td class="actual green">0</td><td></td>
+              <td></td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td></td><td>25</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Hydraulic Oil Consumption / Running Hours</td><td>LTRS</td><td class="sign">&lt;</td><td class="target">1</td>
+              <td class="actual green">0</td><td></td>
+              <td></td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td></td><td>0</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+
+            <tr class="section-row"><td colspan="19">MONTHLY KEY PERFORMANCE INDICATORS – PLANT EQUIPMENT</td></tr>
+            <tr class="data-row not-achieved-row">
+              <td>Running Hours – Cumulative</td><td>HRS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual red">117</td><td></td>
+              <td>0</td><td>117</td><td>0</td><td>166</td><td>0</td><td>177</td><td>0</td><td>426</td><td>0</td><td>286</td><td>0</td><td>0</td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Total Available Time – Month</td><td>HRS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual red">244</td><td></td>
+              <td>0</td><td>244</td><td>0</td><td>228</td><td>0</td><td>210</td><td>0</td><td>204</td><td>0</td><td>220</td><td>0</td><td>0</td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Running Hours – Month</td><td>HRS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual red">65</td><td></td>
+              <td>0</td><td>65</td><td>0</td><td>79</td><td>0</td><td>90</td><td>0</td><td>201</td><td>0</td><td>147</td><td>0</td><td>0</td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Maintenance Downtime</td><td>HRS</td><td class="sign">&lt;</td><td class="target">250</td>
+              <td class="actual green">6</td><td></td>
+              <td>0</td><td>6</td><td>0</td><td>22</td><td>0</td><td>40</td><td>0</td><td>46</td><td>0</td><td>30</td><td>0</td><td>0</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>MTBF</td><td>HRS</td><td class="sign">&lt;</td><td class="target">0</td>
+              <td class="actual red">65</td><td></td>
+              <td>0</td><td>65</td><td>0</td><td>87</td><td>0</td><td>43</td><td>0</td><td>46</td><td>0</td><td>70</td><td>0</td><td>0</td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Maintenance Cost / Running Hours</td><td>TSH</td><td class="sign">&lt;</td><td class="target">—</td>
+              <td class="actual red">15,429</td><td></td>
+              <td>0</td><td>15429</td><td>0</td><td>0</td><td>0</td><td>787</td><td>0</td><td>365</td><td>0</td><td>16338</td><td>0</td><td>0</td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Fuel Consumption / Running Hours</td><td>—</td><td class="sign">&lt;</td><td class="target">0</td>
+              <td class="actual red">0</td><td></td>
+              <td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>2</td><td>0</td><td>7</td><td>0</td><td>7</td><td>0</td><td>0</td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Lubrication Consumption / Running Hours</td><td>LPH</td><td class="sign">&lt;</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ─────────── MINES DEPARTMENT ─────────── -->
+    <section class="dept-section hidden" id="dept-mines">
+      <div class="table-wrapper">
+        <table class="kpi-table">
+          <thead>
+            <tr class="thead-row">
+              <th class="col-kpi">KPI</th>
+              <th class="col-unit">UNIT</th>
+              <th class="col-sign">Signage</th>
+              <th class="col-target">TARGET</th>
+              <th class="col-actual highlight-col">Current Month<br>ACTUAL</th>
+              <th class="col-remarks">REMARKS</th>
+              <th class="col-month">Jan</th>
+              <th class="col-month">Feb</th>
+              <th class="col-month">Mar</th>
+              <th class="col-month">April</th>
+              <th class="col-month">May</th>
+              <th class="col-month">June</th>
+              <th class="col-month">July</th>
+              <th class="col-month">Aug</th>
+              <th class="col-month">Sept</th>
+              <th class="col-month">Oct</th>
+              <th class="col-month">Nov</th>
+              <th class="col-month">Dec</th>
+              <th class="col-status">STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr class="section-row"><td colspan="19">HEALTH &amp; SAFETY</td></tr>
+
+            <tr class="data-row achieved-row">
+              <td>Fatality</td><td>NOS</td><td class="sign">=</td><td class="target">0.0</td>
+              <td class="actual green">0.0</td><td></td>
+              <td>0.0</td><td>0.0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>LTI</td><td>NOS</td><td class="sign">=</td><td class="target">0.0</td>
+              <td class="actual green">0.0</td><td></td>
+              <td>0.0</td><td>0.0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>MTI</td><td>NOS</td><td class="sign">=</td><td class="target">0.0</td>
+              <td class="actual green">0.0</td><td></td>
+              <td>0.0</td><td>0.0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Hazards Reported</td><td>NOS</td><td class="sign">&gt;</td><td class="target">5.0</td>
+              <td class="actual green">5.0</td><td></td>
+              <td>5.0</td><td>5.0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Compliance to Legal Requirements</td><td>↑</td><td class="sign">=</td><td class="target">100%</td>
+              <td class="actual red">1.0</td><td></td>
+              <td>1.0</td><td>1.0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+
+            <tr class="section-row"><td colspan="19">OPERATIONAL</td></tr>
+
+            <tr class="data-row not-achieved-row">
+              <td>Raising of HG Limestone Per Month</td><td>MT</td><td class="sign">&gt;</td><td class="target">85,000</td>
+              <td class="actual red">68,476</td><td></td>
+              <td>90,032</td><td>68,476</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>High Grade / SPG</td><td>MT</td><td class="sign"></td><td class="target">40,000</td>
+              <td class="actual red">32,396</td><td></td>
+              <td>57,042</td><td>32,396</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>High MgO / TG</td><td>MT</td><td class="sign"></td><td class="target">18,000</td>
+              <td class="actual red">0</td><td></td>
+              <td>0</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Low Grade</td><td>MT</td><td class="sign"></td><td class="target">27,000</td>
+              <td class="actual green">36,079</td><td></td>
+              <td>32,930</td><td>36,079</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Consumption of High MgO</td><td>↑</td><td class="sign">&gt;</td><td class="target">25%</td>
+              <td class="actual green">–</td><td></td>
+              <td>–</td><td>–</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>MTBF of Surface Miner_1</td><td>HOURS</td><td class="sign">&gt;</td><td class="target">400</td>
+              <td class="actual green">660</td><td></td>
+              <td>710</td><td>660</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>MTBF of Surface Miner_2</td><td>HOURS</td><td class="sign">&gt;</td><td class="target">400</td>
+              <td class="actual red">0.0</td>
+              <td class="remark-cell">Engine under breakdown and discussion under progress with OG for free replacement.</td>
+              <td>0.0</td><td>0.0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Compliance to Internal Quality Norms</td><td>↑</td><td class="sign">&gt;</td><td class="target">95</td>
+              <td class="actual green">100</td><td></td>
+              <td>100</td><td>100</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Crusher Output</td><td>TPH</td><td class="sign">&gt;</td><td class="target">350</td>
+              <td class="actual red">190</td>
+              <td class="remark-cell">Due jamming in Hopper Crusher output reduced, working to reduce moisture in lime stone.</td>
+              <td>207</td><td>190</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Specific Diesel Consumption</td><td>LTRS/TON</td><td class="sign">&lt;</td><td class="target">0.15</td>
+              <td class="actual red">0.17</td>
+              <td class="remark-cell">Higher due to surface miners breakdown.</td>
+              <td>0.22</td><td>0.17</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+
+            <tr class="section-row"><td colspan="19">FINANCIAL</td></tr>
+
+            <tr class="data-row not-achieved-row">
+              <td>Mines Maintenance Cost</td><td>TSH/TON OF RM</td><td class="sign">&lt;</td><td class="target">175</td>
+              <td class="actual red">194</td><td></td>
+              <td>198</td><td>194</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Mines Operational Cost</td><td>TSH/TON OF RM</td><td class="sign">&lt;</td><td class="target">4,350</td>
+              <td class="actual red">4,388</td><td></td>
+              <td>4,497</td><td>4,388</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ─────────── MECHANICAL DEPARTMENT ─────────── -->
+    <section class="dept-section hidden" id="dept-mechanical">
+      <div class="table-wrapper">
+        <table class="kpi-table">
+          <thead>
+            <tr class="thead-row">
+              <th class="col-kpi">KPI</th>
+              <th class="col-unit">UNIT</th>
+              <th class="col-sign">Signage</th>
+              <th class="col-target">TARGET</th>
+              <th class="col-actual highlight-col">Current Month<br>ACTUAL</th>
+              <th class="col-remarks">REMARKS</th>
+              <th class="col-month">Jan</th>
+              <th class="col-month">Feb</th>
+              <th class="col-month">Mar</th>
+              <th class="col-month">April</th>
+              <th class="col-month">May</th>
+              <th class="col-month">June</th>
+              <th class="col-month">July</th>
+              <th class="col-month">Aug</th>
+              <th class="col-month">Sept</th>
+              <th class="col-month">Oct</th>
+              <th class="col-month">Nov</th>
+              <th class="col-month">Dec</th>
+              <th class="col-status">STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr class="section-row"><td colspan="19">HEALTH &amp; SAFETY</td></tr>
+
+            <tr class="data-row achieved-row">
+              <td>Fatality</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>LTI</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>MTI</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Hazards Reported</td><td>NOS</td><td class="sign">&gt;</td><td class="target">4</td>
+              <td class="actual red">4</td><td></td>
+              <td>6</td><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Stack Emission</td><td>mg/m³</td><td class="sign">&lt;</td><td class="target">50</td>
+              <td class="actual red">60</td><td></td>
+              <td>60</td><td>60</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+
+            <tr class="section-row"><td colspan="19">OPERATIONAL</td></tr>
+
+            <tr class="data-row achieved-row">
+              <td>NAI Kiln</td><td>%</td><td class="sign">&gt;</td><td class="target">92</td>
+              <td class="actual green">98.05</td><td></td>
+              <td>98</td><td>98</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>NAI Cement Mill 1</td><td>%</td><td class="sign">&gt;</td><td class="target">92</td>
+              <td class="actual green">98.48</td><td></td>
+              <td>98</td><td>98</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>NAI Cement Mill 2</td><td>%</td><td class="sign">&gt;</td><td class="target">92</td>
+              <td class="actual green">96.24</td><td></td>
+              <td>99</td><td>96</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>MTBF Kiln</td><td>HOURS</td><td class="sign">&gt;</td><td class="target">400</td>
+              <td class="actual red">100</td>
+              <td class="remark-cell">Kiln support roller bearing Inspection.</td>
+              <td>180</td><td>100</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>MTBF Cement Mill 1</td><td>HOURS</td><td class="sign">&gt;</td><td class="target">225</td>
+              <td class="actual red">208</td><td></td>
+              <td>120</td><td>208</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>MTBF Cement Mill 2</td><td>HOURS</td><td class="sign">&gt;</td><td class="target">225</td>
+              <td class="actual red">75</td>
+              <td class="remark-cell">Outlet Slide shoe bearing temp high.</td>
+              <td>120</td><td>75</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Output of Raw Mill 1</td><td>TPH</td><td class="sign">&gt;</td><td class="target">145</td>
+              <td class="actual red">138</td>
+              <td class="remark-cell">Moisture in lime stone &amp; Hopper Jamming.</td>
+              <td>122</td><td>138</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Output of Raw Mill 2</td><td>TPH</td><td class="sign">&gt;</td><td class="target">20</td>
+              <td class="actual red">10</td>
+              <td class="remark-cell">Jamming of hopper, Insufficient hot gases.</td>
+              <td>6</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+
+            <tr class="section-row"><td colspan="19">FINANCIAL</td></tr>
+
+            <tr class="data-row achieved-row">
+              <td>Maintenance Materials Cost</td><td>TSH</td><td class="sign">&lt;</td><td class="target">5,400</td>
+              <td class="actual green">4,644.0</td>
+              <td class="remark-cell">Clinker 422m³. Total cost 5,663,423. Out of which major expenses: Chain for bridge lune scrapper 42,649,193; Belt conveyor 800.</td>
+              <td>2,416</td><td>4,644</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Wear Parts Cost</td><td>TSH</td><td class="sign">&lt;</td><td class="target">4,320</td>
+              <td class="actual green">55</td><td></td>
+              <td>NIL</td><td>55</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Third Party Cost</td><td>TSH</td><td class="sign">&lt;</td><td class="target">900</td>
+              <td class="actual green">326</td><td></td>
+              <td>1,522</td><td>326</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ─────────── POWER PLANT DEPARTMENT ─────────── -->
+    <section class="dept-section hidden" id="dept-powerplant">
+      <div class="table-wrapper">
+        <table class="kpi-table">
+          <thead>
+            <tr class="thead-row">
+              <th class="col-kpi">KPI</th>
+              <th class="col-unit">UNIT</th>
+              <th class="col-sign">Signage</th>
+              <th class="col-target">TARGET</th>
+              <th class="col-actual highlight-col">Current Month<br>ACTUAL</th>
+              <th class="col-remarks">REMARKS</th>
+              <th class="col-month">Jan</th>
+              <th class="col-month">Feb</th>
+              <th class="col-month">Mar</th>
+              <th class="col-month">April</th>
+              <th class="col-month">May</th>
+              <th class="col-month">June</th>
+              <th class="col-month">July</th>
+              <th class="col-month">Aug</th>
+              <th class="col-month">Sept</th>
+              <th class="col-month">Oct</th>
+              <th class="col-month">Nov</th>
+              <th class="col-month">Dec</th>
+              <th class="col-status">STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr class="section-row"><td colspan="19">HEALTH &amp; SAFETY</td></tr>
+
+            <tr class="data-row achieved-row">
+              <td>Fatality</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>LTI</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>MTI</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Hazards Reported</td><td>NOS</td><td class="sign">&gt;</td><td class="target">4</td>
+              <td class="actual red">1</td><td></td>
+              <td>2</td><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Compliance to Legal Requirement</td><td>%</td><td class="sign">=</td><td class="target">100</td>
+              <td class="actual green">100</td><td></td>
+              <td>100</td><td>100</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+
+            <tr class="section-row"><td colspan="19">OPERATIONAL</td></tr>
+
+            <tr class="data-row not-achieved-row">
+              <td>Auxiliary Power Consumption</td><td>%</td><td class="sign">&lt;</td><td class="target">10.0</td>
+              <td class="actual red">10.93</td>
+              <td class="remark-cell">Optimisation of drives was done so the auxiliary power will start to decrease gradually below 10% during gradual increase of average threshold power of 7 MWhr and above consumption.</td>
+              <td>10.15</td><td>10.93</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Heat Rate</td><td>KCal/KWH</td><td class="sign">&lt;</td><td class="target">3800</td>
+              <td class="actual red">3888</td>
+              <td class="remark-cell">Average Load achieved in Feb 2026 was 6.56 MW (MTD) and less load resulted to use the steam directly from boiler for feed water heating to reduce the steam venting.</td>
+              <td>3837</td><td>3888</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Unburnt Coal</td><td>%</td><td class="sign">&lt;</td><td class="target">24</td>
+              <td class="actual green">18.1</td><td></td>
+              <td>19</td><td>18.1</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Unplanned Stop in a Year (Cumulative)</td><td>#</td><td class="sign">&lt;</td><td class="target">2</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Emission from ESP Stack</td><td>mg/m³</td><td class="sign">&lt;</td><td class="target">100</td>
+              <td class="actual green">3.0</td><td></td>
+              <td>3.0</td><td>3.0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+
+            <tr class="section-row"><td colspan="19">FINANCIAL</td></tr>
+
+            <tr class="data-row achieved-row">
+              <td>Maintenance Cost</td><td>TSH/MT Clinker</td><td class="sign"></td><td class="target">1695</td>
+              <td class="actual green">410</td><td></td>
+              <td>1120</td><td>410</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Total Generation Cost (Net)</td><td>TSH/KWH</td><td class="sign">&lt;</td><td class="target">200</td>
+              <td class="actual red">228</td><td></td>
+              <td>221</td><td>228</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ─────────── PACKING PLANT DEPARTMENT ─────────── -->
+    <section class="dept-section hidden" id="dept-packing">
+      <div class="table-wrapper">
+        <table class="kpi-table">
+          <thead>
+            <tr class="thead-row">
+              <th class="col-kpi">KPI</th>
+              <th class="col-unit">UNIT</th>
+              <th class="col-sign">Signage</th>
+              <th class="col-target">TARGET</th>
+              <th class="col-actual highlight-col">Current Month<br>ACTUAL</th>
+              <th class="col-remarks">REMARKS</th>
+              <th class="col-month">Jan</th>
+              <th class="col-month">Feb</th>
+              <th class="col-month">Mar</th>
+              <th class="col-month">April</th>
+              <th class="col-month">May</th>
+              <th class="col-month">June</th>
+              <th class="col-month">July</th>
+              <th class="col-month">Aug</th>
+              <th class="col-month">Sept</th>
+              <th class="col-month">Oct</th>
+              <th class="col-month">Nov</th>
+              <th class="col-month">Dec</th>
+              <th class="col-status">STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr class="section-row"><td colspan="19">HEALTH &amp; SAFETY</td></tr>
+
+            <tr class="data-row achieved-row">
+              <td>Fatality</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>LTI</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>MTI</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Hazards Reported</td><td>NOS</td><td class="sign">&gt;</td><td class="target">2</td>
+              <td class="actual green">4</td><td></td>
+              <td>4</td><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Compliance to Legal Requirements</td><td>%</td><td class="sign">=</td><td class="target">100%</td>
+              <td class="actual green">100%</td><td></td>
+              <td>100%</td><td>100%</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+
+            <tr class="section-row"><td colspan="19">OPERATIONAL</td></tr>
+
+            <tr class="data-row achieved-row">
+              <td>Despatch / Day</td><td>MT</td><td class="sign">&gt;</td><td class="target">2700</td>
+              <td class="actual green">2738</td>
+              <td class="remark-cell">February month was short, had 28 days instead of 30/31 days. Third week of the month lost 4 days due to less availability of Trucks. Second &amp; Third week impacted.</td>
+              <td>2738</td><td>2738</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Compliance Bag Weight</td><td>%</td><td class="sign">=</td><td class="target">100</td>
+              <td class="actual red">95%</td><td></td>
+              <td>95%</td><td>95%</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Burst Bag Generation</td><td>%</td><td class="sign">&lt;</td><td class="target">0.30%</td>
+              <td class="actual red">0.50%</td>
+              <td class="remark-cell">Due to Conveyor is 0.2% and due to Manufacturer is 0.3%. This month had issues with A to Z bags and East Africa. Both Parties came to visit and insured better quality from next batches. If they don't meet our standards then will reject whole batch.</td>
+              <td>0.50%</td><td>0.50%</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Bags Inventory</td><td>MIL TSH</td><td class="sign">&lt;</td><td class="target">500</td>
+              <td class="actual red">607</td>
+              <td class="remark-cell">50 kg bags is 552,622,733.17 Tzs and Big Bags (42.5N) is 54,853,399.25 Tzs.</td>
+              <td>607</td><td>607</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ─────────── STORES DEPARTMENT ─────────── -->
+    <section class="dept-section hidden" id="dept-stores">
+      <div class="table-wrapper">
+        <table class="kpi-table">
+          <thead>
+            <tr class="thead-row">
+              <th class="col-kpi">KPI</th>
+              <th class="col-unit">UNIT</th>
+              <th class="col-sign">Signage</th>
+              <th class="col-target">TARGET</th>
+              <th class="col-actual highlight-col">Current Month<br>ACTUAL</th>
+              <th class="col-remarks">REMARKS</th>
+              <th class="col-month">Jan</th>
+              <th class="col-month">Feb</th>
+              <th class="col-month">Mar</th>
+              <th class="col-month">April</th>
+              <th class="col-month">May</th>
+              <th class="col-month">June</th>
+              <th class="col-month">July</th>
+              <th class="col-month">Aug</th>
+              <th class="col-month">Sept</th>
+              <th class="col-month">Oct</th>
+              <th class="col-month">Nov</th>
+              <th class="col-month">Dec</th>
+              <th class="col-status">STATUS</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr class="section-row"><td colspan="19">HEALTH &amp; SAFETY</td></tr>
+
+            <tr class="data-row achieved-row">
+              <td>Fatality</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>LTI</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>MTI</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
+              <td class="actual green">0</td><td></td>
+              <td>0</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Hazards Reported</td><td>NOS</td><td class="sign">&gt;</td><td class="target">2</td>
+              <td class="actual red">0</td><td></td>
+              <td>0</td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Compliance to Legal Requirements</td><td>%</td><td class="sign">=</td><td class="target">100</td>
+              <td class="actual green">100</td>
+              <td class="remark-cell">Complied with regulatory bodies MINALEMURA.</td>
+              <td>100</td><td>100</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+
+            <tr class="section-row"><td colspan="19">OPERATIONAL</td></tr>
+
+            <tr class="data-row achieved-row">
+              <td>Same Day GRN Posting</td><td>DAYS</td><td class="sign">=</td><td class="target">1</td>
+              <td class="actual green">1</td>
+              <td class="remark-cell">Daily posting is done; very rare pending in case on receipt of non-conformance materials.</td>
+              <td>1</td><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>MRQ Posting</td><td>DAYS</td><td class="sign">&lt;</td><td class="target">2</td>
+              <td class="actual green">1</td>
+              <td class="remark-cell">Very rarely delaying in Posting in case of emergency Stores opening and materials issued. Manual requisition in case of approval pending in second level.</td>
+              <td>1</td><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Accurate Issue &amp; Posting in System</td><td>SAME DAY %</td><td class="sign">=</td><td class="target">100</td>
+              <td class="actual red">95</td>
+              <td class="remark-cell">Very rarely delaying in Posting in case of emergency Stores opening and materials issued. Manual requisition in case of approval pending in second level.</td>
+              <td>95</td><td>95</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Clearance of GRN After Material / Invoice Receipt</td><td>DAYS</td><td class="sign">&lt;</td><td class="target">5</td>
+              <td class="actual green">1</td><td></td>
+              <td>1</td><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Monthly Audit Verification of Stock<br>– A Class: 100%<br>– B Class: 1000 Items/Month</td><td>VARIANCE</td><td class="sign">&lt;</td><td class="target">2%</td>
+              <td class="actual green">0.18%</td>
+              <td class="remark-cell">Stock taking of 560 items in Feb 2026, classes A, B &amp; C. Only 1 item shortage: Bolt Allen HT m20×50.</td>
+              <td>0.00%</td><td>0.18%</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Material Code Creation</td><td>DAYS</td><td class="sign">=</td><td class="target">1</td>
+              <td class="actual green">1</td>
+              <td class="remark-cell">Rarely delayed if authorised personnel are on leave; no delay if User dept provided full correct details.</td>
+              <td>1</td><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Rejected Local Material Return to Vendor</td><td>DAYS</td><td class="sign">&lt;</td><td class="target">10</td>
+              <td class="actual green">1</td>
+              <td class="remark-cell">HARD DISK 1TB rejected by user 24.02.2026 (Rejection form No. 02) – From Masumin Printways &amp; Stationaries Ltd, invoice SINV-JC-19628 Dated 16.02.2026.</td>
+              <td>1</td><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Monitoring of Stock Out in Consumable Items</td><td>%</td><td class="sign">&lt;</td><td class="target">2</td>
+              <td class="actual red">2</td>
+              <td class="remark-cell">We ensure Min/Max of consumables.</td>
+              <td>2</td><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Material Preservation As per Best Practices</td><td>—</td><td class="sign">=</td><td class="target">100</td>
+              <td class="actual red">80</td>
+              <td class="remark-cell">Dust proof room for bearings &amp; excessive heat is needed. Also concrete floor is needed in the stores yard.</td>
+              <td>80</td><td>80</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Monthly Monitoring of Service / Jobwork RGP &amp; NRGP</td><td>MONTHLY BASIS</td><td class="sign">=</td><td class="target">100</td>
+              <td class="actual green">100</td><td></td>
+              <td>100</td><td>100</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Monitoring / Storage of Returned Items (R Code)</td><td>MONTHLY BASIS</td><td class="sign">=</td><td class="target">100</td>
+              <td class="actual red">80</td>
+              <td class="remark-cell">More space is required to keep all refurbished items – on going job.</td>
+              <td>80</td><td>80</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+            <tr class="data-row not-achieved-row">
+              <td>Material Shelf Life (Expiry) Monitoring</td><td>%</td><td class="sign">=</td><td class="target">100</td>
+              <td class="actual red">90</td>
+              <td class="remark-cell">FIFO principle is being applied.</td>
+              <td>90</td><td>90</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status not-tag">Not Achieved</td>
+            </tr>
+
+            <tr class="section-row"><td colspan="19">FINANCIAL</td></tr>
+
+            <tr class="data-row achieved-row">
+              <td>Total Inventory Value</td><td>MIL TSH</td><td class="sign">&lt;</td><td class="target">—</td>
+              <td class="actual green">13,136</td>
+              <td class="remark-cell">Excludes Raw materials, semi-finished goods, finished goods (Cement) and quarry material.</td>
+              <td>13,303</td><td>13,136</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+            <tr class="data-row achieved-row">
+              <td>Scrap Sale Value (Monthly)</td><td>MIL TSH</td><td class="sign">&gt;</td><td class="target">10</td>
+              <td class="actual green">50</td>
+              <td class="remark-cell">MS Steel Scrap 37,273,840/= Tsh; Damage bags 420,000/=; Used Batteries 2,860,000/=; Used Grinding Media 7,809,000/=; Used Grease 1,800,000/= Tsh.</td>
+              <td>85</td><td>50</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+              <td class="status achieved-tag">Achieved</td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ═══ MINES WORKSHOP ═══ -->
+    <section class="dept-section hidden" id="dept-minesworkshop">
+      <div class="table-wrapper" style="overflow-x:auto;">
+
+        <!-- ── MINES EQUIPMENT ───────────────────────────────────── -->
+        <table class="kpi-table mw-table" style="min-width:1800px;font-size:11px;">
+          <thead>
+            <tr class="thead-row">
+              <th rowspan="2" class="col-kpi" style="min-width:200px">MONTHLY KEY PERFORMANCE INDICATOR</th>
+              <th rowspan="2" class="col-unit" style="min-width:50px">UNIT</th>
+              <th rowspan="2" class="col-sign" style="min-width:32px">▲▼</th>
+              <th colspan="2" style="background:var(--navy)">L&amp;T SM-1</th>
+              <th colspan="2" style="background:var(--navy)">L&amp;T SM-2</th>
+              <th colspan="2" style="background:var(--navy)">XCMG EXC-1</th>
+              <th colspan="2" style="background:var(--navy)">VL-1</th>
+              <th colspan="2" style="background:var(--navy)">VL-2</th>
+              <th colspan="2" style="background:var(--navy)">FAV TR-1</th>
+              <th colspan="2" style="background:var(--navy)">FAV TR-2</th>
+              <th colspan="2" style="background:var(--navy)">NOVO TR-1</th>
+              <th colspan="2" style="background:var(--navy)">NOVO TR-2</th>
+              <th colspan="2" style="background:var(--navy)">NOVO TR-3</th>
+            </tr>
+            <tr class="thead-row" style="font-size:10px">
+              <th>TARGET</th><th>ACTUAL</th>
+              <th>TARGET</th><th>ACTUAL</th>
+              <th>TARGET</th><th>ACTUAL</th>
+              <th>TARGET</th><th>ACTUAL</th>
+              <th>TARGET</th><th>ACTUAL</th>
+              <th>TARGET</th><th>ACTUAL</th>
+              <th>TARGET</th><th>ACTUAL</th>
+              <th>TARGET</th><th>ACTUAL</th>
+              <th>TARGET</th><th>ACTUAL</th>
+              <th>TARGET</th><th>ACTUAL</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="section-row"><td colspan="23">MINES EQUIPMENT</td></tr>
+
+            <!-- Eq. Availability -->
+            <tr class="data-row">
+              <td>Eq. Availability</td><td>%</td><td class="sign">&gt;</td>
+              <td class="target">100%</td><td class="actual orange">82%</td>
+              <td class="target">100%</td><td class="actual red">0%</td>
+              <td class="target">100%</td><td class="actual green">94%</td>
+              <td class="target">100%</td><td class="actual green">95%</td>
+              <td class="target">100%</td><td class="actual green">94%</td>
+              <td class="target">100%</td><td class="actual green">94%</td>
+              <td class="target">100%</td><td class="actual red">0%</td>
+              <td class="target">100%</td><td class="actual green">100%</td>
+              <td class="target">100%</td><td class="actual red">0%</td>
+              <td class="target">100%</td><td class="actual green">98%</td>
+            </tr>
+
+            <!-- Production Rate / Running Hrs -->
+            <tr class="data-row">
+              <td>Production Rate / Running Hrs</td><td>MT</td><td class="sign">&lt;</td>
+              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual">—</td>
+            </tr>
+
+            <!-- Utilization Rate -->
+            <tr class="data-row">
+              <td>Utilization Rate</td><td>%</td><td class="sign">&gt;</td>
+              <td class="target">100.0%</td><td class="actual orange">72.7%</td>
+              <td class="target">100.0%</td><td class="actual">—</td>
+              <td class="target">100.0%</td><td class="actual green">94.0%</td>
+              <td class="target">100.0%</td><td class="actual orange">58.8%</td>
+              <td class="target">100.0%</td><td class="actual green">104.9%</td>
+              <td class="target">100.0%</td><td class="actual orange">69.4%</td>
+              <td class="target">100.0%</td><td class="actual">—</td>
+              <td class="target">100.0%</td><td class="actual orange">83.6%</td>
+              <td class="target">100.0%</td><td class="actual">—</td>
+              <td class="target">100.0%</td><td class="actual orange">49.5%</td>
+            </tr>
+
+            <!-- Work Order Cycle Time -->
+            <tr class="data-row">
+              <td>Work Order Cycle Time</td><td>HRS</td><td class="sign">&lt;</td>
+              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual">—</td>
+            </tr>
+
+            <!-- Maintenance Downtime -->
+            <tr class="data-row">
+              <td>Maintenance Downtime</td><td>HRS</td><td class="sign">&lt;</td>
+              <td class="target">60</td><td class="actual green">45.0</td>
+              <td class="target">60.0</td><td class="actual red">250.0</td>
+              <td class="target">60.0</td><td class="actual green">16.0</td>
+              <td class="target">60.0</td><td class="actual green">26.0</td>
+              <td class="target">60.0</td><td class="actual green">30.0</td>
+              <td class="target">60.0</td><td class="actual green">15.0</td>
+              <td class="target">60.0</td><td class="actual red">250.0</td>
+              <td class="target">60.0</td><td class="actual green">2.0</td>
+              <td class="target">60.0</td><td class="actual red">500.0</td>
+              <td class="target">60.0</td><td class="actual green">18.0</td>
+            </tr>
+
+            <!-- MTBF -->
+            <tr class="data-row">
+              <td>Mean Time Between Failure (MTBF)</td><td>HRS</td><td class="sign">&gt;</td>
+              <td class="target">250</td><td class="actual red">40.3</td>
+              <td class="target">250.0</td><td class="actual red">Nil</td>
+              <td class="target">250.0</td><td class="actual orange">215.9</td>
+              <td class="target">250.0</td><td class="actual orange">168.2</td>
+              <td class="target">250.0</td><td class="actual green">505.2</td>
+              <td class="target">480.0</td><td class="actual orange">54.4</td>
+              <td class="target">480.0</td><td class="actual orange">18.7</td>
+              <td class="target">480.0</td><td class="actual green">480.0</td>
+              <td class="target">255.0</td><td class="actual">—</td>
+              <td class="target">480.0</td><td class="actual orange">256.8</td>
+            </tr>
+
+            <!-- Maintenance Cost / Running Hrs -->
+            <tr class="data-row">
+              <td>Maintenance Cost / Running Hrs</td><td>TSH</td><td class="sign">&lt;</td>
+              <td class="target">TSh4,000</td><td class="actual red">TSh14,961</td>
+              <td class="target">TSh4,000</td><td class="actual green">TSh0</td>
+              <td class="target">TSh4,000</td><td class="actual green">TSh455</td>
+              <td class="target">TSh2,083</td><td class="actual green">TSh0</td>
+              <td class="target">TSh2,083</td><td class="actual red">TSh2,123</td>
+              <td class="target">TSh4,000</td><td class="actual green">TSh727</td>
+              <td class="target">TSh4,000</td><td class="actual">—</td>
+              <td class="target">TSh1,000</td><td class="actual green">TSh0</td>
+              <td class="target">TSh2,000</td><td class="actual green">TSh0</td>
+              <td class="target">TSh1,000</td><td class="actual green">TSh0</td>
+            </tr>
+
+            <!-- Tyre / Track Cost -->
+            <tr class="data-row">
+              <td>Tyre / Track Cost / Running Hrs</td><td>TSH</td><td class="sign">&lt;</td>
+              <td class="target">TSh4,000</td><td class="actual green">TSh0</td>
+              <td class="target">TSh4,000</td><td class="actual green">TSh0</td>
+              <td class="target">TSh4,000</td><td class="actual green">TSh2,662</td>
+              <td class="target">TSh2,083</td><td class="actual green">TSh0</td>
+              <td class="target">TSh2,083</td><td class="actual green">TSh0</td>
+              <td class="target">TSh4,000</td><td class="actual red">TSh8,661</td>
+              <td class="target">TSh4,000</td><td class="actual green">TSh0</td>
+              <td class="target">TSh1,000</td><td class="actual red">TSh2,578</td>
+              <td class="target">TSh2,000</td><td class="actual green">TSh0</td>
+              <td class="target">TSh1,000</td><td class="actual green">TSh0</td>
+            </tr>
+
+            <!-- Fuel Consumption -->
+            <tr class="data-row">
+              <td>Fuel Consumption / Running Hrs</td><td>LPH</td><td class="sign">&lt;</td>
+              <td class="target">80.00</td><td class="actual red">93.90</td>
+              <td class="target">80.00</td><td class="actual red">3140</td>
+              <td class="target">30.00</td><td class="actual red">31.40</td>
+              <td class="target">15.00</td><td class="actual red">17.12</td>
+              <td class="target">15.00</td><td class="actual green">12.39</td>
+              <td class="target">2.00</td><td class="actual red">4.43</td>
+              <td class="target">2.00</td><td class="actual">—</td>
+              <td class="target">2.00</td><td class="actual green">0.27</td>
+              <td class="target">2.00</td><td class="actual">—</td>
+              <td class="target">2.00</td><td class="actual green">0.21</td>
+            </tr>
+
+            <!-- Lubrication Consumption -->
+            <tr class="data-row">
+              <td>Lubrication Consumption / Running Hrs</td><td>LTRS</td><td class="sign">&lt;</td>
+              <td class="target">0.60</td><td class="actual red">1.34</td>
+              <td class="target">0.60</td><td class="actual green">0.18</td>
+              <td class="target">0.60</td><td class="actual green">0.00</td>
+              <td class="target">0.29</td><td class="actual green">0.22</td>
+              <td class="target">0.08</td><td class="actual red">0.13</td>
+              <td class="target">0.10</td><td class="actual red">0.18</td>
+              <td class="target">0.10</td><td class="actual">—</td>
+              <td class="target">25.00</td><td class="actual green">0.04</td>
+              <td class="target">0.05</td><td class="actual">—</td>
+              <td class="target">0.03</td><td class="actual red">0.06</td>
+            </tr>
+
+            <!-- Hydraulic Oil Consumption -->
+            <tr class="data-row">
+              <td>Hydraulic Oil Consumption / Running Hrs</td><td>LTRS</td><td class="sign">&lt;</td>
+              <td class="target">0.8</td><td class="actual red">1.01</td>
+              <td class="target">0.4</td><td class="actual">—</td>
+              <td class="target">0.4</td><td class="actual green">0.37</td>
+              <td class="target">0.1</td><td class="actual">—</td>
+              <td class="target">0.08</td><td class="actual red">0.13</td>
+              <td class="target">0.04</td><td class="actual green">0.00</td>
+              <td class="target">0.04</td><td class="actual green">0.01</td>
+              <td class="target">0.04</td><td class="actual green">0.00</td>
+              <td class="target">0.02</td><td class="actual green">0.00</td>
+              <td class="target">0.01</td><td class="actual green">0.00</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ── PLANT EQUIPMENT ───────────────────────────────────── -->
+      <div class="table-wrapper" style="overflow-x:auto; margin-top:24px;">
+        <table class="kpi-table mw-table" style="min-width:1600px;font-size:11px;">
+          <thead>
+            <tr class="thead-row">
+              <th rowspan="2" class="col-kpi" style="min-width:220px">MONTHLY KEY PERFORMANCE INDICATOR</th>
+              <th rowspan="2" class="col-unit" style="min-width:50px">UNIT</th>
+              <th rowspan="2" class="col-sign" style="min-width:32px">▲▼</th>
+              <th style="background:var(--navy)">ZOOMLION 180T</th>
+              <th style="background:var(--navy)">ZOOMLION 70T</th>
+              <th style="background:var(--navy)">ESCORT 13T-1</th>
+              <th style="background:var(--navy)">ESCORT 13T-2</th>
+              <th style="background:var(--navy)">ESCORT 13T-3</th>
+              <th style="background:var(--navy)">JCB BACKHOE</th>
+              <th style="background:var(--navy)">ACE BACKHOE</th>
+              <th style="background:var(--navy)">UTILITY VEHICLE</th>
+              <th style="background:var(--navy)">GODREJ FORKLIFT</th>
+              <th style="background:var(--navy)">3 COMPAC</th>
+              <th style="background:var(--navy)">MAHINDRA TTR-1</th>
+            </tr>
+            <tr class="thead-row" style="font-size:10px">
+              <th>ACTUAL</th><th>ACTUAL</th><th>ACTUAL</th><th>ACTUAL</th><th>ACTUAL</th>
+              <th>ACTUAL</th><th>ACTUAL</th><th>ACTUAL</th><th>ACTUAL</th><th>ACTUAL</th><th>ACTUAL</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="section-row"><td colspan="14">PLANT EQUIPMENT</td></tr>
+
+            <tr class="data-row">
+              <td>Running Hours – Cumulative</td><td>HRS</td><td class="sign">&gt;</td>
+              <td class="actual">0</td><td class="actual">133</td><td class="actual">117.3</td>
+              <td class="actual">165.8</td><td class="actual">176.7</td><td class="actual">426.3</td>
+              <td class="actual">286</td><td class="actual">—</td><td class="actual">106.4</td>
+              <td class="actual">6</td><td class="actual">156</td>
+            </tr>
+            <tr class="data-row">
+              <td>Total Available Time – Month</td><td>HRS</td><td class="sign">&gt;</td>
+              <td class="actual">0</td><td class="actual">230</td><td class="actual">244</td>
+              <td class="actual">228</td><td class="actual">210</td><td class="actual">204</td>
+              <td class="actual">220</td><td class="actual">220</td><td class="actual">240</td>
+              <td class="actual">250</td><td class="actual">226</td>
+            </tr>
+            <tr class="data-row">
+              <td>Running Hours – Month</td><td>HRS</td><td class="sign">&gt;</td>
+              <td class="actual">0</td><td class="actual">70</td><td class="actual">65</td>
+              <td class="actual">79</td><td class="actual">90</td><td class="actual">201</td>
+              <td class="actual">147</td><td class="actual">—</td><td class="actual">89</td>
+              <td class="actual">5</td><td class="actual">64.2</td>
+            </tr>
+            <tr class="data-row">
+              <td>Maintenance Downtime</td><td>HRS</td><td class="sign">&lt;</td>
+              <td class="actual">250</td><td class="actual">20</td><td class="actual">6</td>
+              <td class="actual">22</td><td class="actual">40</td><td class="actual">46</td>
+              <td class="actual">30</td><td class="actual">—</td><td class="actual">10</td>
+              <td class="actual">0</td><td class="actual">24</td>
+            </tr>
+            <tr class="data-row">
+              <td>NAI</td><td>HRS</td><td class="sign">&gt;</td>
+              <td class="actual">—</td><td class="actual">—</td><td class="actual">—</td>
+              <td class="actual">—</td><td class="actual">—</td><td class="actual">—</td>
+              <td class="actual">—</td><td class="actual">—</td><td class="actual">—</td>
+              <td class="actual">—</td><td class="actual">—</td>
+            </tr>
+            <tr class="data-row">
+              <td>MTBF</td><td>HRS</td><td class="sign">&gt;</td>
+              <td class="actual">0</td><td class="actual">63</td><td class="actual">65</td>
+              <td class="actual">86.8</td><td class="actual">43.35</td><td class="actual">46.2</td>
+              <td class="actual">69.9</td><td class="actual">NIL</td><td class="actual">NIL</td>
+              <td class="actual">NIL</td><td class="actual">91.8</td>
+            </tr>
+            <tr class="data-row">
+              <td>Maintenance Cost / Running Hrs</td><td>TSH</td><td class="sign">&lt;</td>
+              <td class="actual">—</td><td class="actual">TSh210.8</td><td class="actual">TSh15,429.4</td>
+              <td class="actual">TSh0.0</td><td class="actual">TSh787.4</td><td class="actual">TSh364.9</td>
+              <td class="actual">TSh16,338.0</td><td class="actual">—</td><td class="actual">TSh0.0</td>
+              <td class="actual">TSh0.0</td><td class="actual">TSh850.7</td>
+            </tr>
+            <tr class="data-row">
+              <td>Fuel Consumption / Running Hrs</td><td>LPH</td><td class="sign">&lt;</td>
+              <td class="actual">0.00</td><td class="actual">2.86</td><td class="actual">0.46</td>
+              <td class="actual">1.14</td><td class="actual">1.67</td><td class="actual">7.19</td>
+              <td class="actual">6.80</td><td class="actual">—</td><td class="actual">0.54</td>
+              <td class="actual">18.00</td><td class="actual">0.47</td>
+            </tr>
+            <tr class="data-row">
+              <td>Lubrication Consumption / Running Hrs</td><td>LPH</td><td class="sign">&lt;</td>
+              <td class="actual">0.00</td><td class="actual">1.14</td><td class="actual">0.00</td>
+              <td class="actual">0.00</td><td class="actual">0.19</td><td class="actual">0.09</td>
+              <td class="actual">0.00</td><td class="actual">—</td><td class="actual">0.00</td>
+              <td class="actual">0.00</td><td class="actual">0.16</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════ FOOTER ═══════════════════════════════════════ -->
+  <footer class="dash-footer">
+    <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; NYATI CEMENT &nbsp;•&nbsp; Hushika Haraka &nbsp;•&nbsp; Hudumu Zaidi</span>
+    <span>Report generated: <span id="footer-date"></span></span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
