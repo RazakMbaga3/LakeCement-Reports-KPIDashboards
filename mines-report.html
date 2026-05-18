@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – Mines Daily Material Movement Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ══════════════════════════════════════════════════════════════
+       MINES DAILY MATERIAL MOVEMENT REPORT — page-specific styles
+       Color legend (matches actual Excel colour coding):
+         Manual  (Red    in Excel) → Amber  #FFFBEB / #B45309
+         System  (Yellow in Excel) → Blue   #EFF6FF / #1D4ED8
+         Formula (Blue   in Excel) → Green  #F0FDF4 / #15803D
+    ══════════════════════════════════════════════════════════════ */
+    :root {
+      --m-bg:#FFFBEB; --m-fg:#B45309; --m-bd:#FDE68A;
+      --s-bg:#EFF6FF; --s-fg:#1D4ED8; --s-bd:#BFDBFE;
+      --f-bg:#F0FDF4; --f-fg:#15803D; --f-bd:#BBF7D0;
+    }
+    body { display:flex; flex-direction:column; min-height:100vh; background:var(--off-white); }
+
+    /* ── toolbar ── */
+    .toolbar {
+      background:white; border:1px solid var(--border); border-top:none;
+      padding:9px 24px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+      box-shadow:var(--shadow-sm);
+    }
+    .tb-sep { width:1px; height:26px; background:var(--border); }
+    .tb-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--text-muted); }
+    .tb-ctl {
+      font-family:var(--font); font-size:12px; font-weight:600; color:var(--text-main);
+      background:var(--off-white); border:1.5px solid var(--border); border-radius:var(--radius);
+      padding:5px 10px; outline:none; cursor:pointer;
+    }
+    .tb-ctl:focus { border-color:var(--orange); background:white; }
+    input[type="date"].tb-ctl { min-width:148px; }
+    .btn { padding:6px 16px; border-radius:var(--radius); font-family:var(--font); font-size:12px; font-weight:700; cursor:pointer; border:1.5px solid transparent; }
+    .btn-save   { background:var(--orange); color:white; border-color:var(--orange); }
+    .btn-sub    { background:var(--navy);   color:white; border-color:var(--navy); }
+
+    /* ── legend chips ── */
+    .leg { display:flex; align-items:center; gap:5px; font-size:10px; color:var(--text-muted); }
+    .ld  { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+
+    /* ── page body ── */
+    .page-body { flex:1; padding:16px 24px 32px; display:flex; flex-direction:column; gap:20px; }
+
+    /* ── section card ── */
+    .sc { background:#fff; border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-sm); overflow:hidden; }
+    .sc-hdr { background:var(--navy); color:#fff; padding:9px 16px; display:flex; align-items:center; justify-content:space-between; }
+    .sc-hdr h3 { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin:0; }
+    .sc-note { font-size:9px; color:rgba(255,255,255,.55); }
+
+    /* ── scrollable table wrapper ── */
+    .tbl-scroll { overflow-x:auto; }
+
+    /* ══ MINES MATRIX TABLE ══════════════════════════════════════ */
+    .mt { border-collapse:collapse; font-size:10px; white-space:nowrap; min-width:3200px; }
+    .mt th, .mt td {
+      padding:4px 5px; border:1px solid #C8D6E5;
+      text-align:center; vertical-align:middle; min-width:58px;
+    }
+
+    /* Group-header row colours (match Excel band colours) */
+    .gh-hs   { background:#B71C1C; color:#fff; font-size:9px; font-weight:700; letter-spacing:.5px; }
+    .gh-lg1  { background:#BF360C; color:#fff; font-size:9px; font-weight:700; letter-spacing:.5px; }
+    .gh-ob   { background:#4E342E; color:#fff; font-size:9px; font-weight:700; letter-spacing:.5px; }
+    .gh-mghg { background:#0D47A1; color:#fff; font-size:9px; font-weight:700; letter-spacing:.5px; }
+    .gh-mglg { background:#1B5E20; color:#fff; font-size:9px; font-weight:700; letter-spacing:.5px; }
+    .gh-oth  { background:#4A148C; color:#fff; font-size:9px; font-weight:700; letter-spacing:.5px; }
+    .gh-tot  { background:#0D2B4E; color:#fff; font-size:9px; font-weight:700; letter-spacing:.5px; }
+
+    /* Sub-header row */
+    .mt .sh th { background:#1A4070; color:rgba(255,255,255,.85); font-size:8.5px; font-weight:600; padding:3px 5px; }
+    .mt .sh .sh-m { background:#7F1D1D; }
+    .mt .sh .sh-s { background:#1E3A8A; }
+    .mt .sh .sh-f { background:#14532D; }
+
+    /* Row number */
+    .rn { min-width:30px !important; max-width:30px; background:#F7F8FA !important; color:var(--text-muted) !important; font-weight:700; font-size:9px; border:1px solid #C8D6E5 !important; }
+
+    /* Data cell types */
+    .cm { background:var(--m-bg); color:var(--m-fg); }
+    .cs { background:var(--s-bg); color:var(--s-fg); }
+    .cf { background:var(--f-bg); color:var(--f-fg); }
+    .ci {
+      width:54px; border:none; background:transparent;
+      font-size:10px; font-family:var(--font); color:inherit;
+      text-align:right; padding:1px 2px;
+    }
+    .cv { font-weight:600; }
+
+    /* Empty / zero cell */
+    .ed { color:#CBD5E1; font-size:9px; }
+
+    /* Total row */
+    .mt .trow td { background:#E8F0FA; color:var(--navy); font-weight:700; border-top:2px solid #0D2B4E; font-size:10px; }
+    .mt .trow td.cf { background:var(--f-bg); color:var(--f-fg); font-weight:700; }
+    .mt .trow td.rn { background:#0D2B4E !important; color:#fff !important; }
+
+    /* Hover */
+    .mt tbody tr:hover td { filter:brightness(.97); }
+
+    /* ══ SUMMARY SECTION ═════════════════════════════════════════ */
+    .sum-layout { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:#C8D6E5; }
+    .sum-panel { background:#fff; padding:0; }
+
+    .sum-tbl { border-collapse:collapse; width:100%; font-size:11px; }
+    .sum-tbl td { padding:6px 14px; border-bottom:1px solid #DDE3EC; }
+    .sl { font-weight:500; color:var(--text-main); background:var(--s-bg); }
+    .sv { font-weight:700; color:var(--s-fg); background:var(--s-bg); text-align:right; min-width:110px; }
+    .sl.f, .sv.f { background:var(--f-bg); color:var(--f-fg); }
+    .sl.m, .sv.m { background:var(--m-bg); color:var(--m-fg); }
+    .sum-grp td { background:#0D2B4E; color:#fff; font-weight:700; font-size:9px; letter-spacing:1px; text-transform:uppercase; }
+    .sum-tot td { background:var(--orange); color:#fff; font-weight:800; font-size:12px; }
+    .sum-tbl .dash { color:#CBD5E1; font-weight:400; }
+
+    /* ══ CONTRACTOR BREAKDOWN ════════════════════════════════════ */
+    .contr-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; padding:16px; }
+    .contr-card {
+      border:1.5px solid var(--border); border-radius:var(--radius);
+      padding:12px 14px; background:var(--off-white);
+    }
+    .contr-card.active { border-color:var(--orange); background:#FFF8F0; }
+    .cc-name { font-size:10px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:var(--navy); margin-bottom:6px; }
+    .cc-val { font-size:20px; font-weight:800; color:var(--orange); line-height:1; }
+    .cc-unit { font-size:9px; color:var(--text-muted); margin-top:2px; }
+    .cc-royalty { font-size:10px; font-weight:600; color:var(--green); margin-top:6px; padding-top:6px; border-top:1px solid var(--border); }
+
+    /* ══ SIGN-OFF ════════════════════════════════════════════════ */
+    .signoff { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:20px 24px; background:var(--white); border-top:1px solid var(--border); }
+    .sign-slot { border-top:2px solid var(--navy); padding-top:8px; }
+    .sign-slot label { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:6px; }
+    .sign-slot input { width:100%; border:1.5px solid var(--border); border-radius:var(--radius); padding:6px 10px; font-size:12px; font-family:var(--font); color:var(--text-main); background:var(--off-white); }
+
+    /* ══ FOOTER ══════════════════════════════════════════════════ */
+    .dash-footer { background:var(--navy); color:rgba(255,255,255,.5); font-size:10px; display:flex; justify-content:space-between; align-items:center; padding:10px 24px; letter-spacing:.3px; }
+  </style>
+</head>
+<body>
+
+  <!-- ══ TOP HEADER ══════════════════════════════════════════════ -->
+  <header class="top-header">
+    <div class="header-left">
+      <div class="logo-block">
+        <div class="logo-badge">LC</div>
+        <div class="logo-text">
+          <span class="company-name">LAKE CEMENT LTD</span>
+          <span class="company-sub">NYATI CEMENT</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-center">
+      <div class="dash-title">MINES — DAILY MATERIAL MOVEMENT REPORT</div>
+    </div>
+    <div class="header-right">
+      <div class="brand-tag">
+        <span class="brand-name">NYATI CEMENT</span>
+        <span class="brand-slogan">STRENGTH YOU CAN TRUST</span>
+      </div>
+      <span class="header-meta">Mines &amp; Quarry Operations · MIS Report</span>
+    </div>
+  </header>
+
+  <!-- ══ DEPT NAV ════════════════════════════════════════════════ -->
+  <nav class="dept-nav">
+    <div class="nav-inner">
+      <span class="nav-label">DAILY REPORTS</span>
+      <button class="nav-btn" onclick="location.href='daily-report.html'"><span class="nav-icon">🏭</span> Production</button>
+      <button class="nav-btn" onclick="location.href='power-plant-report.html'"><span class="nav-icon">⚡</span> Power Plant (CPP)</button>
+      <button class="nav-btn active"><span class="nav-icon">⛏</span> Mines</button>
+      <div class="nav-divider"></div>
+      <span class="nav-label">VIEWS</span>
+      <button class="nav-btn" onclick="location.href='index.html'"><span class="nav-icon">📊</span> Monthly KPIs</button>
+      <div class="nav-divider"></div>
+      <button class="nav-btn secondary" onclick="window.print()"><span class="nav-icon">🖨</span> Print / PDF</button>
+    </div>
+  </nav>
+
+  <!-- ══ TOOLBAR ═════════════════════════════════════════════════ -->
+  <div class="toolbar">
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <span class="tb-lbl">Report Date</span>
+      <input type="date" class="tb-ctl" value="2026-05-19" />
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <span class="tb-lbl">Month</span>
+      <input type="text" class="tb-ctl" value="May 2026" style="width:88px" />
+    </div>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <span class="tb-lbl">Report By</span>
+      <input type="text" class="tb-ctl" placeholder="Mines Engineer / Supervisor" style="width:210px" />
+    </div>
+    <div class="tb-sep"></div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <div class="leg"><div class="ld" style="background:#FDE68A;border:1px solid #B45309"></div>Manual Entry</div>
+      <div class="leg"><div class="ld" style="background:#BFDBFE;border:1px solid #1D4ED8"></div>System / Odoo</div>
+      <div class="leg"><div class="ld" style="background:#BBF7D0;border:1px solid #15803D"></div>Formula</div>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="btn btn-save">💾 Save Draft</button>
+      <button class="btn btn-sub">✓ Submit Report</button>
+    </div>
+  </div>
+
+  <!-- ══ PAGE BODY ═══════════════════════════════════════════════ -->
+  <div class="page-body">
+
+    <!-- ── SECTION 1: MATERIAL MOVEMENT MATRIX ─────────────────── -->
+    <div class="sc">
+      <div class="sc-hdr">
+        <h3>⛏ Material Movement Matrix — Blasting &amp; Hauling Records</h3>
+        <span class="sc-note">Tonnage data auto-fetched from Odoo weighbridge · Amber cells = manual corrections</span>
+      </div>
+      <div class="tbl-scroll">
+        <table class="mt">
+          <thead>
+            <!-- GROUP HEADER ROW -->
+            <tr>
+              <th rowspan="2" class="gh-tot rn" style="min-width:30px">#</th>
+              <!-- HS Limestone -->
+              <th colspan="3" class="gh-hs">HS from South</th>
+              <th colspan="3" class="gh-hs">HS from North</th>
+              <th colspan="3" class="gh-hs">HS from Stock</th>
+              <!-- LG1 Limestone -->
+              <th colspan="3" class="gh-lg1">LG1 from South</th>
+              <th colspan="3" class="gh-lg1">LG1 from North</th>
+              <th colspan="3" class="gh-lg1">LG1 from Stock</th>
+              <th colspan="2" class="gh-lg1">LIMESTONE SPS</th>
+              <!-- Overburden -->
+              <th colspan="3" class="gh-ob">OB from South</th>
+              <th colspan="3" class="gh-ob">OB from North</th>
+              <th colspan="3" class="gh-ob">OB from Stock</th>
+              <!-- MG High Grade -->
+              <th colspan="3" class="gh-mghg">MG-HG from South</th>
+              <th colspan="2" class="gh-mghg">MC HG</th>
+              <!-- MG Low Grade -->
+              <th colspan="3" class="gh-mglg">MG-LG from South</th>
+              <th colspan="1" class="gh-mglg">MG US Stock</th>
+              <!-- Other Materials -->
+              <th colspan="1" class="gh-oth">Gypsum</th>
+              <th colspan="3" class="gh-oth">Id Clay</th>
+              <!-- Grand Totals -->
+              <th colspan="5" class="gh-tot">TOTALS</th>
+            </tr>
+            <!-- SUB-HEADER ROW -->
+            <tr class="sh">
+              <!-- HS South -->
+              <th class="sh-m">Crusher</th><th class="sh-s">D. to Pile</th><th class="sh-s">Stock</th>
+              <!-- HS North -->
+              <th class="sh-m">Crusher</th><th class="sh-s">D. to Pile</th><th class="sh-s">Stock</th>
+              <!-- HS Stock -->
+              <th class="sh-m">Crusher</th><th class="sh-s">D. to Pile</th><th class="sh-s">Stock</th>
+              <!-- LG1 South -->
+              <th class="sh-m">Crusher</th><th class="sh-s">D. to Pile</th><th class="sh-s">Stock</th>
+              <!-- LG1 North -->
+              <th class="sh-m">Crusher</th><th class="sh-s">D. to Pile</th><th class="sh-s">Stock</th>
+              <!-- LG1 Stock -->
+              <th class="sh-m">Crusher</th><th class="sh-s">D. to Pile</th><th class="sh-s">Stock</th>
+              <!-- LIMESTONE SPS -->
+              <th class="sh-m">Crusher</th><th class="sh-s">Direct(lcl)</th>
+              <!-- OB South -->
+              <th class="sh-m">Crusher</th><th class="sh-s">D. to Pile</th><th class="sh-m">W. Dump</th>
+              <!-- OB North -->
+              <th class="sh-m">Crusher</th><th class="sh-s">W. Dump</th><th class="sh-s">Stock</th>
+              <!-- OB Stock -->
+              <th class="sh-f">Crusher</th><th class="sh-s">Other</th><th class="sh-s">D. to Pile</th>
+              <!-- MG-HG South -->
+              <th class="sh-m">Crusher</th><th class="sh-s">D. to Pile</th><th class="sh-s">Stock</th>
+              <!-- MC HG -->
+              <th class="sh-s">S. to Pile</th><th class="sh-s">S. to Crush.</th>
+              <!-- MG-LG South -->
+              <th class="sh-m">Crusher</th><th class="sh-s">D. to Pile</th><th class="sh-s">Stock</th>
+              <!-- MG US Stock -->
+              <th class="sh-s">S. to Crush.</th>
+              <!-- Gypsum -->
+              <th class="sh-m">Crusher</th>
+              <!-- Id Clay -->
+              <th class="sh-s">Other</th><th class="sh-s">S. to Pile</th><th class="sh-s">Kijaka</th>
+              <!-- Grand Totals -->
+              <th class="sh-f">Total TMH</th>
+              <th class="sh-f">w/o OB</th>
+              <th class="sh-f">LG1 LCL</th>
+              <th class="sh-f">Via Crusher</th>
+              <th class="sh-f">TOTAL</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <!-- ── SAMPLE DATA ROWS (Odoo-fetched, system blue) ── -->
+            <tr>
+              <td class="rn">1</td>
+              <td class="cs"><span class="cv">349.41</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td>
+              <td class="cm ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cf cv">349.41</td><td class="cf cv">349.41</td><td class="cf ed">—</td><td class="cf cv">349.41</td><td class="cf cv">349.41</td>
+            </tr>
+
+            <tr>
+              <td class="rn">2</td>
+              <td class="cs"><span class="cv">586.44</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs"><span class="cv">240.76</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td>
+              <td class="cm ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cf cv">827.20</td><td class="cf cv">827.20</td><td class="cf ed">—</td><td class="cf cv">827.20</td><td class="cf cv">827.20</td>
+            </tr>
+
+            <tr>
+              <td class="rn">3</td>
+              <td class="cs"><span class="cv">723.34</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs"><span class="cv">907.20</span></td><td class="cs ed">—</td>
+              <td class="cs"><span class="cv">581.16</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td>
+              <td class="cm ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cf cv">2,211.70</td><td class="cf cv">2,211.70</td><td class="cf ed">—</td><td class="cf cv">2,211.70</td><td class="cf cv">2,211.70</td>
+            </tr>
+
+            <tr>
+              <td class="rn">4</td>
+              <td class="cs"><span class="cv">109.05</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs"><span class="cv">118.68</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs"><span class="cv">125.42</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs"><span class="cv">425.40</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs"><span class="cv">553.52</span></td><td class="cs"><span class="cv">486.30</span></td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td>
+              <td class="cm ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cf cv">1,818.37</td><td class="cf cv">1,818.37</td><td class="cf cv">486.30</td><td class="cf cv">1,332.07</td><td class="cf cv">1,818.37</td>
+            </tr>
+
+            <tr>
+              <td class="rn">5</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs"><span class="cv">107.00</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs"><span class="cv">331.34</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs"><span class="cv">1,109.18</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs"><span class="cv">624.90</span></td><td class="cs"><span class="cv">795.90</span></td><td class="cs"><span class="cv">80.10</span></td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td>
+              <td class="cm ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cf cv">3,048.42</td><td class="cf cv">3,048.42</td><td class="cf cv">876.00</td><td class="cf cv">2,172.42</td><td class="cf cv">3,048.42</td>
+            </tr>
+
+            <tr>
+              <td class="rn">6</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs"><span class="cv">622.48</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs"><span class="cv">657.98</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td>
+              <td class="cm ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cf cv">1,280.46</td><td class="cf cv">1,280.46</td><td class="cf ed">—</td><td class="cf cv">1,280.46</td><td class="cf cv">1,280.46</td>
+            </tr>
+
+            <tr>
+              <td class="rn">7</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs"><span class="cv">392.70</span></td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td>
+              <td class="cm ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cf cv">392.70</td><td class="cf ed">—</td><td class="cf ed">—</td><td class="cf ed">—</td><td class="cf cv">392.70</td>
+            </tr>
+
+            <tr>
+              <td class="rn">8</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cs ed">—</td>
+              <td class="cm ed">—</td>
+              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
+              <td class="cf cv">1,321.52</td><td class="cf cv">1,321.52</td><td class="cf ed">—</td><td class="cf cv">1,321.52</td><td class="cf cv">1,321.52</td>
+            </tr>
+
+            <!-- ── JS-generated empty rows appended here ── -->
+
+          </tbody>
+          <tfoot>
+            <!-- TOTALS ROW -->
+            <tr class="trow">
+              <td class="rn" style="font-size:8px;text-transform:uppercase;letter-spacing:.5px">TOT</td>
+              <!-- HS South -->
+              <td class="cf cv">1,768.24</td><td class="cf ed">—</td><td class="cf ed">—</td>
+              <!-- HS North -->
+              <td class="cf cv">1,266.44</td><td class="cf cv">907.20</td><td class="cf ed">—</td>
+              <!-- HS Stock -->
+              <td class="cf cv">2,037.92</td><td class="cf ed">—</td><td class="cf ed">—</td>
+              <!-- LG1 South -->
+              <td class="cf cv">1,534.58</td><td class="cf ed">—</td><td class="cf ed">—</td>
+              <!-- LG1 North -->
+              <td class="cf cv">1,178.42</td><td class="cf cv">1,282.20</td><td class="cf cv">80.10</td>
+              <!-- LG1 Stock -->
+              <td class="cf ed">—</td><td class="cf ed">—</td><td class="cf ed">—</td>
+              <!-- LIMESTONE SPS -->
+              <td class="cf ed">—</td><td class="cf ed">—</td>
+              <!-- OB South -->
+              <td class="cf ed">—</td><td class="cf ed">—</td><td class="cf ed">—</td>
+              <!-- OB North -->
+              <td class="cf ed">—</td><td class="cf ed">—</td><td class="cf ed">—</td>
+              <!-- OB Stock -->
+              <td class="cf cv">392.70</td><td class="cf ed">—</td><td class="cf ed">—</td>
+              <!-- MG-HG South -->
+              <td class="cf cv">622.48</td><td class="cf ed">—</td><td class="cf ed">—</td>
+              <!-- MC HG -->
+              <td class="cf ed">—</td><td class="cf cv">609.42</td>
+              <!-- MG-LG South -->
+              <td class="cf cv">657.98</td><td class="cf ed">—</td><td class="cf ed">—</td>
+              <!-- MG US Stock -->
+              <td class="cf ed">—</td>
+              <!-- Gypsum -->
+              <td class="cf ed">—</td>
+              <!-- Id Clay -->
+              <td class="cf ed">—</td><td class="cf ed">—</td><td class="cf ed">—</td>
+              <!-- Grand Totals -->
+              <td class="cf cv" style="font-size:11px">13,249.78</td>
+              <td class="cf cv">13,249.78</td>
+              <td class="cf cv">1,362.30</td>
+              <td class="cf cv">8,573.02</td>
+              <td class="cf cv" style="font-size:11px">13,249.78</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div><!-- /tbl-scroll -->
+    </div><!-- /section-card -->
+
+    <!-- ── SECTION 2: SUMMARY + CONTRACTOR BREAKDOWN ───────────── -->
+    <div class="sc">
+      <div class="sc-hdr">
+        <h3>📊 Summary — Tonnage, Royalty &amp; Contractor Breakdown</h3>
+        <span class="sc-note">Formula values auto-calculated from movement matrix above</span>
+      </div>
+      <div class="sum-layout">
+
+        <!-- LEFT: Summary Metrics -->
+        <div class="sum-panel">
+          <table class="sum-tbl">
+            <tr class="sum-grp"><td colspan="2">Tonnage Summary</td></tr>
+            <tr><td class="sl f">Total Tonnage VIA Odoo</td><td class="sv f">13,249.78</td></tr>
+            <tr><td class="sl f">Tonnage Exclusive Waste</td><td class="sv f">13,249.78</td></tr>
+
+            <tr class="sum-grp"><td colspan="2">Limestone Royalty (Kimbiji)</td></tr>
+            <tr><td class="sl f">KIMBIJI ROYALTY</td><td class="sv f">8,652.36</td></tr>
+            <tr><td class="sl f">Lime Consumption (MT)</td><td class="sv f">8,180.32</td></tr>
+
+            <tr class="sum-grp"><td colspan="2">OB / Clay Royalty</td></tr>
+            <tr><td class="sl f">OB/CLAY ROYALTY</td><td class="sv f dash">—</td></tr>
+            <tr><td class="sl f">OB/CLAY Consumption (MT)</td><td class="sv f">392.70</td></tr>
+
+            <tr class="sum-grp"><td colspan="2">Kijaka (ID Clay)</td></tr>
+            <tr><td class="sl f">Kijaka Tonnage (MT)</td><td class="sv f dash">—</td></tr>
+            <tr><td class="sl f">Kijaka Royalty</td><td class="sv f dash">—</td></tr>
+
+            <tr class="sum-grp"><td colspan="2">Waste Disposal</td></tr>
+            <tr><td class="sl m">Waste to Dump — Remieli</td><td class="sv m dash">—</td></tr>
+            <tr><td class="sl m">Waste to Dump — Amin</td><td class="sv m dash">—</td></tr>
+            <tr><td class="sl m">Waste to Dump — Digalla</td><td class="sv m dash">—</td></tr>
+            <tr><td class="sl f">Hauled by LCL Truck</td><td class="sv f dash">—</td></tr>
+          </table>
+        </div>
+
+        <!-- RIGHT: Contractor Tonnage -->
+        <div class="sum-panel">
+          <table class="sum-tbl">
+            <tr class="sum-grp"><td colspan="2">Tonnage by Contractor</td></tr>
+            <tr><td class="sl f">Total Tonnage by Remieli</td><td class="sv f">13,249.78</td></tr>
+            <tr><td class="sl f">Total Tonnage by Amin</td><td class="sv f dash">—</td></tr>
+            <tr><td class="sl f">Total Tonnage by Digalla</td><td class="sv f dash">—</td></tr>
+            <tr class="sum-tot"><td colspan="2" style="text-align:center">Total Tonnage in Month &nbsp;·&nbsp; 13,249.78 MT</td></tr>
+
+            <tr class="sum-grp"><td colspan="2">Material Source Breakdown</td></tr>
+            <tr><td class="sl f">HS Limestone (South + North + Stock)</td><td class="sv f">4,979.80</td></tr>
+            <tr><td class="sl f">LG1 Limestone (South + North + Stock)</td><td class="sv f">4,075.30</td></tr>
+            <tr><td class="sl f">Overburden (OB) Total</td><td class="sv f">392.70</td></tr>
+            <tr><td class="sl f">MG-HG (Mine Grade High)</td><td class="sv f">1,231.90</td></tr>
+            <tr><td class="sl f">MG-LG (Mine Grade Low)</td><td class="sv f">657.98</td></tr>
+            <tr><td class="sl f">LIMESTONE SPS</td><td class="sv f dash">—</td></tr>
+            <tr><td class="sl f">Gypsum to Crusher</td><td class="sv f dash">—</td></tr>
+            <tr><td class="sl f">Id Clay (Other + Pile + Kijaka)</td><td class="sv f dash">—</td></tr>
+
+            <tr class="sum-grp"><td colspan="2">Routing Split</td></tr>
+            <tr><td class="sl f">Via Crusher (MT)</td><td class="sv f">8,573.02</td></tr>
+            <tr><td class="sl f">Via LG1 LCL Truck (MT)</td><td class="sv f">1,362.30</td></tr>
+            <tr><td class="sl f">Without Overburden (MT)</td><td class="sv f">13,249.78</td></tr>
+          </table>
+        </div>
+      </div><!-- /sum-layout -->
+    </div><!-- /section summary -->
+
+    <!-- ── SECTION 3: CONTRACTOR TILES ─────────────────────────── -->
+    <div class="sc">
+      <div class="sc-hdr">
+        <h3>🚛 Contractor Daily Tonnage Overview</h3>
+        <span class="sc-note">System-fetched from Odoo contractor records</span>
+      </div>
+      <div class="contr-grid">
+        <div class="contr-card active">
+          <div class="cc-name">Remieli</div>
+          <div class="cc-val">13,249.78</div>
+          <div class="cc-unit">MT hauled today</div>
+          <div class="cc-royalty">Royalty: TZS 8,652.36</div>
+        </div>
+        <div class="contr-card">
+          <div class="cc-name">Amin</div>
+          <div class="cc-val" style="color:var(--text-muted)">—</div>
+          <div class="cc-unit">No activity today</div>
+          <div class="cc-royalty" style="color:var(--text-muted)">Royalty: —</div>
+        </div>
+        <div class="contr-card">
+          <div class="cc-name">Digalla</div>
+          <div class="cc-val" style="color:var(--text-muted)">—</div>
+          <div class="cc-unit">No activity today</div>
+          <div class="cc-royalty" style="color:var(--text-muted)">Royalty: —</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SIGN-OFF ──────────────────────────────────────────────── -->
+    <div class="sc" style="overflow:visible">
+      <div class="sc-hdr"><h3>✍ Report Sign-Off</h3></div>
+      <div class="signoff">
+        <div class="sign-slot">
+          <label>Mines Shift Supervisor</label>
+          <input type="text" placeholder="Name &amp; Signature" />
+        </div>
+        <div class="sign-slot">
+          <label>Mines Engineer</label>
+          <input type="text" placeholder="Name &amp; Signature" />
+        </div>
+        <div class="sign-slot">
+          <label>Mines Manager / HOD</label>
+          <input type="text" placeholder="Name &amp; Signature" />
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-body -->
+
+  <!-- ══ FOOTER ═════════════════════════════════════════════════ -->
+  <footer class="dash-footer">
+    <span>Lake Cement Ltd · Mines Daily Material Movement Report</span>
+    <span id="fts"></span>
+    <span>NYATI CEMENT — Strength You Can Trust</span>
+  </footer>
+
+  <script>
+    /* ── timestamp ── */
+    document.getElementById('fts').textContent =
+      'Generated: ' + new Date().toLocaleString('en-GB', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+    /* ── generate empty data rows ── */
+    (function() {
+      const COLS = 44; /* data columns before the 5 total cols */
+      const tbody = document.querySelector('.mt tbody');
+      for (let i = 9; i <= 25; i++) {
+        const tr = document.createElement('tr');
+        const rn = document.createElement('td');
+        rn.className = 'rn'; rn.textContent = i;
+        tr.appendChild(rn);
+        for (let c = 0; c < COLS; c++) {
+          const td = document.createElement('td');
+          td.className = 'cs ed'; td.textContent = '—';
+          tr.appendChild(td);
+        }
+        /* 5 total formula cells */
+        const totClasses = ['cf','cf','cf','cf','cf'];
+        totClasses.forEach(cls => {
+          const td = document.createElement('td');
+          td.className = cls + ' ed'; td.textContent = '—';
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      }
+    })();
+  </script>
+
+</body>
+</html>
