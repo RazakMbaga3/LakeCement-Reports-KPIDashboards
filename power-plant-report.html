@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – Power Plant (CPP) Daily Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ══════════════════════════════════════════════════════════════
+       CPP POWER PLANT DAILY REPORT — page-specific styles
+       Color legend (matches actual Excel colour coding):
+         Manual  (Red   in Excel) → Amber  #FFFBEB / #B45309  — On Date manual entries
+         System  (Yellow in Excel) → Blue   #EFF6FF / #1D4ED8  — Auto from DCS / sensors
+         Formula (Blue  in Excel) → Green  #F0FDF4 / #15803D  — Calculated & cumulative
+    ══════════════════════════════════════════════════════════════ */
+    :root {
+      --m-bg:#FFFBEB; --m-fg:#B45309; --m-bd:#FDE68A;
+      --s-bg:#EFF6FF; --s-fg:#1D4ED8; --s-bd:#BFDBFE;
+      --f-bg:#F0FDF4; --f-fg:#15803D; --f-bd:#BBF7D0;
+    }
+    body { display:flex; flex-direction:column; min-height:100vh; background:var(--off-white); }
+
+    /* toolbar */
+    .toolbar {
+      background:white; border:1px solid var(--border); border-top:none;
+      padding:9px 24px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+      box-shadow:var(--shadow-sm); position:sticky; top:0; z-index:50;
+    }
+    .tb-sep { width:1px; height:26px; background:var(--border); }
+    .tb-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--text-muted); }
+    .tb-ctl {
+      font-family:var(--font); font-size:12px; font-weight:600; color:var(--text-main);
+      background:var(--off-white); border:1.5px solid var(--border); border-radius:var(--radius);
+      padding:5px 10px; outline:none; cursor:pointer; appearance:none;
+    }
+    .tb-ctl:focus { border-color:var(--orange); background:white; }
+    input[type="date"].tb-ctl { min-width:148px; cursor:text; }
+    .rpt-pill { display:flex; align-items:center; gap:5px; padding:4px 12px; border-radius:20px; font-size:11px; font-weight:700; background:#FFF3E0; color:var(--orange); border:1px solid #FDE68A; }
+    .rpt-pill::before { content:''; width:7px; height:7px; border-radius:50%; background:currentColor; }
+    .btn { padding:6px 16px; border-radius:var(--radius); font-family:var(--font); font-size:12px; font-weight:700; cursor:pointer; border:1.5px solid transparent; transition:all .15s; }
+    .btn-save  { background:var(--orange); color:white; border-color:var(--orange); }
+    .btn-save:hover { background:#C56208; }
+    .btn-sub   { background:var(--navy); color:white; border-color:var(--navy); }
+    .btn-sub:hover { background:var(--navy-light); }
+    .btn-out   { background:transparent; color:var(--navy); border-color:#CBD5E1; }
+    .btn-out:hover { border-color:var(--navy); }
+    .btn-grp   { display:flex; gap:6px; margin-left:auto; }
+
+    /* main */
+    .dr-main { flex:1; padding:0 24px 48px; max-width:1400px; margin:0 auto; width:100%; }
+
+    /* legend */
+    .legend-bar {
+      display:flex; align-items:center; gap:6px; padding:8px 16px;
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      margin:14px 0 10px; flex-wrap:wrap;
+    }
+    .leg-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--text-muted); margin-right:6px; }
+    .leg-chip { display:inline-flex; align-items:center; gap:5px; padding:3px 11px 3px 7px; border-radius:12px; font-size:11px; font-weight:600; }
+    .leg-chip::before { content:''; width:8px; height:8px; border-radius:2px; background:currentColor; opacity:.6; }
+    .leg-m { background:var(--m-bg); color:var(--m-fg); border:1px solid var(--m-bd); }
+    .leg-s { background:var(--s-bg); color:var(--s-fg); border:1px solid var(--s-bd); }
+    .leg-f { background:var(--f-bg); color:var(--f-fg); border:1px solid var(--f-bd); }
+
+    /* summary strip */
+    .kpi-strip { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:16px; }
+    .kt {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:12px 14px 10px; position:relative; overflow:hidden; box-shadow:var(--shadow-sm);
+    }
+    .kt::before { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; border-radius:0 0 var(--radius) var(--radius); }
+    .kt-m::before { background:var(--m-fg); }
+    .kt-s::before { background:var(--s-fg); }
+    .kt-f::before { background:var(--f-fg); }
+    .kt-badge { position:absolute; top:7px; right:7px; font-size:8px; font-weight:800; padding:2px 6px; border-radius:3px; text-transform:uppercase; letter-spacing:.4px; }
+    .kt-m .kt-badge { background:var(--m-bg); color:var(--m-fg); border:1px solid var(--m-bd); }
+    .kt-s .kt-badge { background:var(--s-bg); color:var(--s-fg); border:1px solid var(--s-bd); }
+    .kt-f .kt-badge { background:var(--f-bg); color:var(--f-fg); border:1px solid var(--f-bd); }
+    .kt-lbl  { font-size:9.5px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); margin-bottom:4px; padding-right:38px; }
+    .kt-val  { font-size:22px; font-weight:800; color:var(--navy); line-height:1.1; }
+    .kt-unit { font-size:10px; color:var(--text-muted); margin-top:2px; }
+    .kt-vs   { margin-top:5px; font-size:10px; font-weight:700; }
+    .vs-ok { color:var(--green); } .vs-ng { color:var(--red); } .vs-wa { color:var(--orange); }
+
+    /* report card */
+    .rcard { background:white; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow-sm); margin-bottom:14px; }
+    .rcard-hdr { background:var(--navy); padding:9px 16px; display:flex; align-items:center; justify-content:space-between; }
+    .rcard-title { color:white; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; }
+    .rcard-sub   { color:rgba(255,255,255,.5); font-size:10px; }
+    .rcard-chips { display:flex; gap:6px; }
+    .rcard-chip  { padding:2px 9px; border-radius:10px; font-size:9px; font-weight:700; background:rgba(255,255,255,.15); color:white; text-transform:uppercase; }
+    .rcard-chip.orange { background:var(--orange); }
+
+    /* report table */
+    .rt { width:100%; border-collapse:collapse; font-size:11.5px; }
+    .rt thead th {
+      background:#F1F5FB; color:var(--navy); font-size:9px; font-weight:700;
+      text-transform:uppercase; letter-spacing:.5px; padding:6px 10px;
+      border-bottom:2px solid var(--border); text-align:center;
+    }
+    .rt thead th.tl { text-align:left; }
+    .rt thead .grp { background:var(--navy-light); color:rgba(255,255,255,.85); font-size:9px; letter-spacing:.7px; }
+    .rt tbody td { border-bottom:1px solid var(--border); padding:0; vertical-align:middle; }
+    .rt tbody tr:last-child td { border-bottom:none; }
+    .rt tbody tr:hover td { filter:brightness(.975); }
+
+    /* section label row */
+    .srow td { background:var(--section-bg); padding:5px 12px; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--navy-mid); border-bottom:1px solid var(--border); }
+
+    /* total row */
+    .trow td { background:#E8EDF5; border-top:2px solid #C8D4E8 !important; }
+    .trow .tp { font-weight:700; text-transform:uppercase; font-size:10px; color:var(--navy); }
+    .trow td.cf { background:var(--navy); }
+    .trow td.cf .cv { color:white; }
+
+    /* formula section rows (light tint) */
+    .frow td { background:#FAFFFE; }
+
+    /* cell types */
+    td.cm { background:var(--m-bg); }
+    td.cs { background:var(--s-bg); }
+    td.cf { background:var(--f-bg); }
+
+    /* cell pads */
+    .tp { padding:7px 12px; font-weight:600; color:var(--text-main); min-width:220px; font-size:11.5px; }
+    .tu { padding:5px 10px; color:var(--text-muted); font-size:10px; font-weight:700; text-align:center; white-space:nowrap; }
+    .ts { padding:5px 8px; color:var(--text-muted); font-size:10px; font-weight:600; text-align:center; }
+
+    /* input & display */
+    .ci {
+      display:block; width:100%; border:none; background:transparent;
+      font-family:var(--font); font-size:11.5px; font-weight:700;
+      text-align:center; padding:7px 8px; outline:none; min-width:90px;
+    }
+    td.cm .ci { color:var(--m-fg); }
+    td.cs .ci { color:var(--s-fg); pointer-events:none; }
+    td.cf .ci { color:var(--f-fg); pointer-events:none; }
+    td.cm .ci:focus { background:rgba(253,230,138,.4); box-shadow:inset 0 0 0 2px var(--m-bd); border-radius:3px; }
+
+    .cv { padding:7px 10px; text-align:center; font-weight:700; font-size:11.5px; }
+    td.cs .cv { color:var(--s-fg); }
+    td.cf .cv { color:var(--f-fg); }
+
+    /* coal source grid */
+    .coal-src { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; padding:16px; }
+    .coal-tile {
+      border:1px solid var(--border); border-radius:var(--radius); padding:12px 14px;
+      text-align:center; background:var(--off-white);
+    }
+    .coal-tile-src { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); margin-bottom:6px; }
+    .coal-tile-val { font-size:22px; font-weight:800; color:var(--navy); }
+    .coal-tile-unit { font-size:10px; color:var(--text-muted); }
+    .coal-tile.active { background:var(--m-bg); border-color:var(--m-bd); }
+    .coal-tile.active .coal-tile-val { color:var(--m-fg); }
+
+    /* sign-off */
+    .signoff { display:grid; grid-template-columns:repeat(4,1fr); gap:0; }
+    .so-cell { padding:16px 18px; border-right:1px solid var(--border); text-align:center; }
+    .so-cell:last-child { border-right:none; }
+    .so-role { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--text-muted); margin-bottom:12px; }
+    .so-in   { border:none; border-bottom:1.5px solid var(--border); width:100%; font-family:var(--font); font-size:12px; font-weight:600; text-align:center; padding:4px 0 5px; outline:none; background:transparent; color:var(--text-main); margin-bottom:5px; display:block; }
+    .so-in:focus { border-bottom-color:var(--orange); }
+    .so-in::placeholder { color:#C8D0DD; font-weight:400; }
+    .so-time { font-size:10px; color:var(--text-muted); border:none; border-bottom:1px dashed var(--border); width:80%; font-family:var(--font); text-align:center; padding:3px 0; background:transparent; outline:none; margin:0 auto; display:block; }
+    .so-time::placeholder { color:#C8D0DD; }
+
+    /* two-col layout */
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+
+    @media print {
+      .toolbar, .dept-nav { display:none !important; }
+      .dr-main { padding:0; }
+      .rcard { page-break-inside:avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header class="top-header">
+  <div class="header-left">
+    <div class="logo-block">
+      <div class="logo-badge">LC</div>
+      <div class="logo-text">
+        <span class="company-name">LAKE CEMENT LTD.</span>
+        <span class="company-sub">Power Plant (CPP) Daily Report</span>
+      </div>
+    </div>
+  </div>
+  <div class="header-center"><span class="dash-title">POWER PLANT REPORT — CPP</span></div>
+  <div class="header-right">
+    <div class="brand-tag">
+      <span class="brand-name">NYATI CEMENT</span>
+      <span class="brand-slogan">Hushika Haraka • Hudumu Zaidi</span>
+    </div>
+    <div class="header-meta" id="live-date"></div>
+  </div>
+</header>
+
+<!-- ══════════════════ NAV ══════════════════ -->
+<nav class="dept-nav">
+  <div class="nav-inner">
+    <span class="nav-label">DAILY REPORTS</span>
+    <button class="nav-btn" onclick="location.href='daily-report.html'">🏭 Production</button>
+    <button class="nav-btn active">⚡ Power Plant (CPP)</button>
+    <div class="nav-divider"></div>
+    <span class="nav-label">VIEWS</span>
+    <button class="nav-btn" onclick="location.href='index.html'">📊 Monthly KPIs</button>
+    <div class="nav-divider"></div>
+    <button class="nav-btn secondary" onclick="window.print()">🖨 Print / PDF</button>
+  </div>
+</nav>
+
+<!-- ══════════════════ TOOLBAR ══════════════════ -->
+<div class="toolbar">
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="tb-lbl">Date</span>
+    <input type="date" class="tb-ctl" value="2026-05-06" />
+  </div>
+  <div class="tb-sep"></div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="tb-lbl">Report By</span>
+    <input type="text" class="tb-ctl" placeholder="CPP Officer name…" style="min-width:170px" />
+  </div>
+  <div class="tb-sep"></div>
+  <span class="rpt-pill">DRAFT</span>
+  <div class="btn-grp">
+    <button class="btn btn-out">📥 Load Previous</button>
+    <button class="btn btn-save">💾 Save Draft</button>
+    <button class="btn btn-sub">✔ Submit Report</button>
+  </div>
+</div>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<main class="dr-main">
+
+  <!-- legend -->
+  <div class="legend-bar">
+    <span class="leg-lbl">Data Source Key</span>
+    <span class="leg-chip leg-m">✏️ Manual Entry — operator enters daily (On Date)</span>
+    <span class="leg-chip leg-s">⚙️ System / Auto — from DCS / meters / sensors</span>
+    <span class="leg-chip leg-f">∑ Formula — MTD, YTD &amp; calculated ratios</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--text-muted);font-style:italic">Amber fields require manual input. Blue &amp; green cells are read-only.</span>
+  </div>
+
+  <!-- ── SUMMARY STRIP ── -->
+  <div class="kpi-strip">
+    <div class="kt kt-m">
+      <span class="kt-badge">Manual</span>
+      <div class="kt-lbl">Gross Power Generated</div>
+      <div class="kt-val">—</div>
+      <div class="kt-unit">kWh / On Date</div>
+      <div class="kt-vs vs-wa">Enter today's generation</div>
+    </div>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
+      <div class="kt-lbl">Net Power Exported</div>
+      <div class="kt-val">—</div>
+      <div class="kt-unit">kWh (Gross − Aux)</div>
+      <div class="kt-vs vs-wa">Auto-calculated</div>
+    </div>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
+      <div class="kt-lbl">Plant Load Factor</div>
+      <div class="kt-val">—</div>
+      <div class="kt-unit">% PLF</div>
+      <div class="kt-vs vs-wa">Based on running hrs &amp; cap</div>
+    </div>
+    <div class="kt kt-m">
+      <span class="kt-badge">Manual</span>
+      <div class="kt-lbl">Coal Consumed (Boiler)</div>
+      <div class="kt-val">—</div>
+      <div class="kt-unit">MT / On Date</div>
+      <div class="kt-vs vs-wa">Prev day: 144 MT (CPP share)</div>
+    </div>
+    <div class="kt kt-m">
+      <span class="kt-badge">Manual</span>
+      <div class="kt-lbl">Steam Generated</div>
+      <div class="kt-val">—</div>
+      <div class="kt-unit">MT / On Date</div>
+      <div class="kt-vs vs-wa">Enter boiler generation</div>
+    </div>
+    <div class="kt kt-m">
+      <span class="kt-badge">Manual</span>
+      <div class="kt-lbl">DM Water Produced</div>
+      <div class="kt-val">—</div>
+      <div class="kt-unit">m³ / On Date</div>
+      <div class="kt-vs vs-wa">WTP section</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       SECTION 1 — POWER PLANT OPERATION REPORT
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title">⚡ Power Plant Operation Report</div>
+        <div class="rcard-sub">Generation, Auxiliary, Steam &amp; Efficiency Parameters</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip">YTD: Apr 2026 – Mar 2027</span>
+        <span class="rcard-chip orange">CPP SECTION</span>
+      </div>
+    </div>
+    <table class="rt">
+      <thead>
+        <tr>
+          <th class="tl" style="width:28px">SN</th>
+          <th class="tl grp" style="min-width:260px">Description</th>
+          <th class="grp">Unit</th>
+          <th class="grp">On Date<br><span style="font-size:8px;font-weight:400;text-transform:none">(Manual Entry)</span></th>
+          <th class="grp">Month to Date<br><span style="font-size:8px;font-weight:400;text-transform:none">(Formula)</span></th>
+          <th class="grp">Year to Date<br><span style="font-size:8px;font-weight:400;text-transform:none">(Formula)</span></th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <tr class="srow"><td colspan="6">GENERATION &amp; AVAILABILITY</td></tr>
+
+        <tr>
+          <td class="ts">1</td>
+          <td class="tp">Gross Power Generation</td>
+          <td class="tu">kWhr</td>
+          <td class="cm"><input class="ci" type="number" placeholder="Enter value" /></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+        </tr>
+        <tr>
+          <td class="ts">2</td>
+          <td class="tp">Auxiliary Power Consumption</td>
+          <td class="tu">kWhr</td>
+          <td class="cm"><input class="ci" type="number" placeholder="Enter value" /></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+        </tr>
+        <tr class="frow">
+          <td class="ts">3</td>
+          <td class="tp">Net Power Exported</td>
+          <td class="tu">kWhr</td>
+          <td class="cf"><div class="cv">— (Gross − Aux)</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+        </tr>
+        <tr class="frow">
+          <td class="ts">4</td>
+          <td class="tp">Auxiliary Power Consumption</td>
+          <td class="tu">%</td>
+          <td class="cf"><div class="cv">— %</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+        </tr>
+        <tr class="frow">
+          <td class="ts">5</td>
+          <td class="tp">Average Power Generation</td>
+          <td class="tu">MWhr</td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+        </tr>
+        <tr>
+          <td class="ts">6</td>
+          <td class="tp">Plant Running Hours</td>
+          <td class="tu">Hrs</td>
+          <td class="cm"><input class="ci" type="number" placeholder="0.00" /></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+        </tr>
+        <tr class="frow">
+          <td class="ts">7</td>
+          <td class="tp">PLF % (Plant Load Factor)</td>
+          <td class="tu">%</td>
+          <td class="cf"><div class="cv">— %</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+        </tr>
+
+        <tr class="srow"><td colspan="6">BOILER &amp; STEAM PARAMETERS</td></tr>
+
+        <tr>
+          <td class="ts">8</td>
+          <td class="tp">Feed Water Consumption</td>
+          <td class="tu">MT</td>
+          <td class="cm"><input class="ci" type="number" placeholder="Enter MT" /></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+        </tr>
+        <tr>
+          <td class="ts">9</td>
+          <td class="tp">Boiler Steam Generation</td>
+          <td class="tu">MT</td>
+          <td class="cm"><input class="ci" type="number" placeholder="Enter MT" /></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+        </tr>
+        <tr>
+          <td class="ts">10</td>
+          <td class="tp">Bleed Steam</td>
+          <td class="tu">MT</td>
+          <td class="cm"><input class="ci" type="number" placeholder="Enter MT" /></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+        </tr>
+        <tr class="frow">
+          <td class="ts">11</td>
+          <td class="tp">Turbine Steam Consumption</td>
+          <td class="tu">MT</td>
+          <td class="cf"><div class="cv">— (Boiler − Bleed)</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+        </tr>
+        <tr>
+          <td class="ts">12</td>
+          <td class="tp">Condensate Generation</td>
+          <td class="tu">MT</td>
+          <td class="cm"><input class="ci" type="number" placeholder="Enter MT" /></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+        </tr>
+        <tr>
+          <td class="ts">13</td>
+          <td class="tp">Auxiliary Steam Consumption</td>
+          <td class="tu">MT</td>
+          <td class="cm"><input class="ci" type="number" placeholder="Enter MT" /></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+        </tr>
+
+        <tr class="srow"><td colspan="6">EFFICIENCY RATIOS</td></tr>
+
+        <tr class="frow">
+          <td class="ts">14</td>
+          <td class="tp">Specific Steam Consumption</td>
+          <td class="tu">kg / kWhr</td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+        </tr>
+        <tr class="frow">
+          <td class="ts">15</td>
+          <td class="tp">Specific Fuel Consumption</td>
+          <td class="tu">kg / kWhr</td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+        </tr>
+        <tr class="frow">
+          <td class="ts">16</td>
+          <td class="tp">Heat Rate TG 2880</td>
+          <td class="tu">kcal / kWh</td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+        </tr>
+        <tr class="frow">
+          <td class="ts">17</td>
+          <td class="tp">Heat Rate Plant 3300 @ MCR</td>
+          <td class="tu">kcal / kWh</td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+        </tr>
+
+        <tr class="srow"><td colspan="6">DG SET</td></tr>
+
+        <tr>
+          <td class="ts">18</td>
+          <td class="tp">DG Power Generation</td>
+          <td class="tu">kWhr</td>
+          <td class="cm"><input class="ci" type="number" value="0" /></td>
+          <td class="cf"><div class="cv">0</div></td>
+          <td class="cf"><div class="cv">0</div></td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       SECTION 2 — FUEL (COAL) REPORT  +  SECTION 3 — WTP
+  ════════════════════════════════════════════════ -->
+  <div class="two-col">
+
+    <!-- FUEL REPORT -->
+    <div class="rcard">
+      <div class="rcard-hdr">
+        <div>
+          <div class="rcard-title">🔥 Fuel Report — Coal</div>
+          <div class="rcard-sub">Stock movement &amp; quality parameters</div>
+        </div>
+        <div class="rcard-chips">
+          <span class="rcard-chip orange">BOILER FUEL</span>
+        </div>
+      </div>
+      <table class="rt">
+        <thead>
+          <tr>
+            <th class="tl grp" style="min-width:200px">Description</th>
+            <th class="grp">Unit</th>
+            <th class="grp">On Date</th>
+            <th class="grp">MTD</th>
+            <th class="grp">YTD</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="srow"><td colspan="5">Coal Stock Movement</td></tr>
+          <tr>
+            <td class="tp">Opening Coal Stock</td>
+            <td class="tu">MT</td>
+            <td class="cs"><div class="cv">9,959</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Coal Received</td>
+            <td class="tu">MT</td>
+            <td class="cm"><input class="ci" type="number" placeholder="Enter MT" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Coal Consumed (Boiler)</td>
+            <td class="tu">MT</td>
+            <td class="cm"><input class="ci" type="number" placeholder="Enter MT" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+          <tr class="frow">
+            <td class="tp">Closing Coal Stock</td>
+            <td class="tu">MT</td>
+            <td class="cf"><div class="cv">— (calculated)</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+
+          <tr class="srow"><td colspan="5">Coal Quality Parameters (Lab)</td></tr>
+          <tr>
+            <td class="tp">GCV / ADB</td>
+            <td class="tu">kcal / kg</td>
+            <td class="cm"><input class="ci" type="number" value="4806" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">NCV</td>
+            <td class="tu">kcal / kg</td>
+            <td class="cm"><input class="ci" type="number" placeholder="Enter NCV" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Ash Content</td>
+            <td class="tu">%</td>
+            <td class="cm"><input class="ci" type="number" placeholder="%" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Moisture Content</td>
+            <td class="tu">%</td>
+            <td class="cm"><input class="ci" type="number" placeholder="%" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Volatile Matter</td>
+            <td class="tu">%</td>
+            <td class="cm"><input class="ci" type="number" placeholder="%" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- WTP REPORT -->
+    <div class="rcard">
+      <div class="rcard-hdr">
+        <div>
+          <div class="rcard-title">💧 WTP Report — Water Treatment Plant</div>
+          <div class="rcard-sub">DM water, cooling tower &amp; fly ash parameters</div>
+        </div>
+        <div class="rcard-chips">
+          <span class="rcard-chip orange">WTP SECTION</span>
+        </div>
+      </div>
+      <table class="rt">
+        <thead>
+          <tr>
+            <th class="tl grp" style="min-width:220px">Description</th>
+            <th class="grp">Unit</th>
+            <th class="grp">On Date</th>
+            <th class="grp">MTD</th>
+            <th class="grp">YTD</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="srow"><td colspan="5">Water Production &amp; Consumption</td></tr>
+          <tr>
+            <td class="tp">DM Water Generation</td>
+            <td class="tu">m³</td>
+            <td class="cm"><input class="ci" type="number" placeholder="Enter m³" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">DM Water Consumption</td>
+            <td class="tu">m³</td>
+            <td class="cm"><input class="ci" type="number" placeholder="Enter m³" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">CT Makeup Water Consumption</td>
+            <td class="tu">m³</td>
+            <td class="cm"><input class="ci" type="number" placeholder="Enter m³" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Raw Water Consumed (Total)</td>
+            <td class="tu">m³</td>
+            <td class="cm"><input class="ci" type="number" placeholder="Enter m³" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+
+          <tr class="srow"><td colspan="5">Boiler Feed Water Quality (Lab)</td></tr>
+          <tr>
+            <td class="tp">Feed Water pH</td>
+            <td class="tu">pH</td>
+            <td class="cm"><input class="ci" placeholder="8.5–9.5" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Conductivity</td>
+            <td class="tu">μS/cm</td>
+            <td class="cm"><input class="ci" placeholder="≤ 0.2" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Total Dissolved Solids</td>
+            <td class="tu">ppm</td>
+            <td class="cm"><input class="ci" placeholder="≤ 0.1" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+
+          <tr class="srow"><td colspan="5">Fly Ash Parameters</td></tr>
+          <tr>
+            <td class="tp">Fly Ash Combustible</td>
+            <td class="tu">%</td>
+            <td class="cm"><input class="ci" type="number" placeholder="%" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Fly Ash GCV</td>
+            <td class="tu">kcal/kg</td>
+            <td class="cm"><input class="ci" type="number" placeholder="kcal/kg" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /two-col -->
+
+  <!-- ════════════════════════════════════════════════
+       SECTION 4 — FLY ASH DISPOSAL
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title">🏔️ Fly Ash Disposal Report</div>
+        <div class="rcard-sub">Daily fly ash movement — Cement Mill, Coalyard &amp; Dumpyard</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip leg-m" style="background:var(--m-bg);color:var(--m-fg);border:1px solid var(--m-bd)">✏️ All Manual Entry</span>
+      </div>
+    </div>
+    <table class="rt">
+      <thead>
+        <tr>
+          <th class="tl grp" style="min-width:240px">Description</th>
+          <th class="grp">Unit</th>
+          <th class="grp">On Date<br><span style="font-size:8px;font-weight:400;text-transform:none">(Manual)</span></th>
+          <th class="grp">MTD<br><span style="font-size:8px;font-weight:400;text-transform:none">(Formula)</span></th>
+          <th class="grp">YTD<br><span style="font-size:8px;font-weight:400;text-transform:none">(Formula)</span></th>
+          <th class="tl grp">Remarks</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="tp">Fly Ash to Cement Mill</td>
+          <td class="tu">Ton</td>
+          <td class="cm"><input class="ci" type="number" placeholder="Enter tons" /></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cm"><input class="ci" style="text-align:left;padding-left:10px" placeholder="Remarks…" /></td>
+        </tr>
+        <tr>
+          <td class="tp">Fly Ash to Coalyard</td>
+          <td class="tu">Truck NOS</td>
+          <td class="cm"><input class="ci" type="number" placeholder="No. of trucks" /></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cm"><input class="ci" style="text-align:left;padding-left:10px" placeholder="Remarks…" /></td>
+        </tr>
+        <tr>
+          <td class="tp">Fly Ash to Dumpyard</td>
+          <td class="tu">Truck NOS</td>
+          <td class="cm"><input class="ci" type="number" placeholder="No. of trucks" /></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cm"><input class="ci" style="text-align:left;padding-left:10px" placeholder="Remarks…" /></td>
+        </tr>
+        <tr class="trow">
+          <td class="tp">TOTAL FLY ASH DISPOSED</td>
+          <td class="tu">Ton + Trucks</td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td class="cf"><div class="cv">—</div></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       SECTION 5 — COAL SOURCE BREAKDOWN
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title">⛏️ Coal Source Breakdown — On Date Receipt</div>
+        <div class="rcard-sub">Quantity received from each source — enter daily tonnage</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip leg-m" style="background:var(--m-bg);color:var(--m-fg);border:1px solid var(--m-bd)">✏️ Manual Entry</span>
+      </div>
+    </div>
+
+    <div class="coal-src">
+      <div class="coal-tile">
+        <div class="coal-tile-src">Market Insight</div>
+        <input type="number" value="0" style="font-size:22px;font-weight:800;color:var(--navy);width:100%;border:none;background:transparent;text-align:center;font-family:var(--font);outline:none;" />
+        <div class="coal-tile-unit">TONS</div>
+      </div>
+      <div class="coal-tile">
+        <div class="coal-tile-src">Connect</div>
+        <input type="number" value="0" style="font-size:22px;font-weight:800;color:var(--navy);width:100%;border:none;background:transparent;text-align:center;font-family:var(--font);outline:none;" />
+        <div class="coal-tile-unit">TONS</div>
+      </div>
+      <div class="coal-tile active">
+        <div class="coal-tile-src">STAMICO</div>
+        <input type="number" value="114" style="font-size:22px;font-weight:800;color:var(--m-fg);width:100%;border:none;background:transparent;text-align:center;font-family:var(--font);outline:none;" />
+        <div class="coal-tile-unit">TONS</div>
+      </div>
+      <div class="coal-tile active">
+        <div class="coal-tile-src">Ruvuma</div>
+        <input type="number" value="10" style="font-size:22px;font-weight:800;color:var(--m-fg);width:100%;border:none;background:transparent;text-align:center;font-family:var(--font);outline:none;" />
+        <div class="coal-tile-unit">TONS</div>
+      </div>
+      <div class="coal-tile">
+        <div class="coal-tile-src">MCHEKANAI</div>
+        <input type="number" value="0" style="font-size:22px;font-weight:800;color:var(--navy);width:100%;border:none;background:transparent;text-align:center;font-family:var(--font);outline:none;" />
+        <div class="coal-tile-unit">TONS</div>
+      </div>
+    </div>
+
+    <!-- Total bar -->
+    <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:20px">
+      <span style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">Total Received Today</span>
+      <span style="font-size:18px;font-weight:800;color:var(--navy)">124 TONS</span>
+      <span style="font-size:11px;color:var(--text-muted)">(STAMICO 114 + Ruvuma 10)</span>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       SIGN-OFF
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr"><div class="rcard-title">✍️ Report Sign-off &amp; Approval</div></div>
+    <div class="signoff">
+      <div class="so-cell">
+        <div class="so-role">CPP Shift Operator</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time signed" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">CPP Engineer / Supervisor</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time reviewed" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">Power Plant HOD</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time approved" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">General Manager</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time approved" />
+      </div>
+    </div>
+    <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:11px;color:var(--text-muted)">
+        Status: <strong style="color:var(--orange)">DRAFT</strong> &nbsp;·&nbsp;
+        Date: <strong>06 May 2026</strong>
+      </span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-out">💾 Save Draft</button>
+        <button class="btn btn-sub">✔ Submit &amp; Lock</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. © 2026 &nbsp;|&nbsp; NYATI CEMENT &nbsp;•&nbsp; Hushika Haraka &nbsp;•&nbsp; Hudumu Zaidi</span>
+  <span>Power Plant (CPP) Report — <span id="footer-date"></span></span>
+</footer>
+
+<script>
+  const d = new Date();
+  const s = d.toLocaleDateString('en-GB',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
+  ['live-date','footer-date'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=s; });
+</script>
+</body>
+</html>
