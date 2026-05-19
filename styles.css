@@ -30,7 +30,7 @@
   --shadow-sm:   0 1px 4px rgba(0,0,0,.07);
   --shadow-md:   0 4px 16px rgba(0,0,0,.10);
   /* sticky header height used by child pages */
-  --header-h:    64px;
+  --header-h:    68px;
 }
 
 html { font-size: 13px; scroll-behavior: smooth; }
@@ -68,11 +68,24 @@ img { max-width: 100%; }
   align-items: center;
   justify-content: space-between;
   padding: 0 28px;
-  height: 64px;
+  height: 68px;
   box-shadow: 0 2px 12px rgba(23,49,88,.25);
   position: sticky;
   top: 0;
   z-index: 100;
+}
+/* Brand stripe sticks as bottom separator on the header */
+.top-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(
+    to right,
+    var(--navy-light) 0%, var(--navy-light) 58%,
+    var(--orange) 58%, var(--orange) 80%,
+    var(--accent-gray) 80%, var(--accent-gray) 100%
+  );
 }
 
 .header-left  { display: flex; align-items: center; gap: 14px; flex: 1; }
@@ -108,6 +121,48 @@ img { max-width: 100%; }
   color: rgba(255,255,255,.65);
 }
 
+/* ── VIEW MODE SWITCHER ─────────────────────────────────────────── */
+.view-switcher {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 9px;
+  padding: 3px;
+  gap: 2px;
+}
+.vs-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 22px;
+  border-radius: 7px;
+  text-decoration: none;
+  color: rgba(255,255,255,.5);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .2px;
+  transition: background .18s ease, color .18s ease;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+.vs-tab:hover:not(.active) {
+  color: rgba(255,255,255,.85);
+  background: rgba(255,255,255,.09);
+}
+.vs-tab.active {
+  background: var(--orange);
+  color: var(--white);
+  font-weight: 600;
+  box-shadow: 0 2px 10px rgba(244,149,69,.4);
+}
+.vs-icon {
+  width: 14px; height: 14px;
+  stroke-width: 2;
+  flex-shrink: 0;
+}
+
 .brand-tag { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
 .brand-slogan { font-size: 9px; color: rgba(255,255,255,.45); letter-spacing: .3px; }
 
@@ -119,7 +174,7 @@ img { max-width: 100%; }
 /* ── DEPT NAV ────────────────────────────────────────────────────── */
 .dept-nav {
   background: var(--navy-mid);
-  border-bottom: 3px solid var(--orange);
+  border-bottom: 1px solid rgba(255,255,255,.08);
   overflow: hidden;  /* contain the scrollable inner */
 }
 .nav-inner {
@@ -484,17 +539,21 @@ img { max-width: 100%; }
 
 /* ── MOBILE: < 768px ────────────────────────────────────────── */
 @media (max-width: 767px) {
-  :root { --header-h: 52px; }
+  :root { --header-h: 56px; }
 
-  /* Header: single row, logo + date only */
+  /* Header: logo | switcher (compact) | date */
   .top-header {
     height: auto;
-    min-height: 52px;
+    min-height: 56px;
     padding: 8px 14px;
     flex-wrap: nowrap;
     gap: 0;
   }
-  .header-center  { display: none; }
+  /* Show switcher on mobile as icon-only pills */
+  .header-center  { display: flex; justify-content: center; flex: none; }
+  .view-switcher  { padding: 2px; }
+  .vs-tab         { padding: 7px 10px; gap: 0; }
+  .vs-tab span    { display: none; }
   .header-right   { flex: none; }
   .header-left    { flex: 1; min-width: 0; }
   .nyati-logo     { height: 36px; }
@@ -584,6 +643,7 @@ img { max-width: 100%; }
 @media print {
   .dept-nav, .filter-bar, .brand-accent-bar { display: none !important; }
   .top-header { position: static !important; box-shadow: none; height: auto; padding: 10px 20px; }
+  .top-header::after { display: none !important; }
   .header-center { display: block !important; }
   .table-wrapper { box-shadow: none; border: 1px solid #ccc; overflow: visible; }
   .kpi-table { min-width: 100%; font-size: 9px; }

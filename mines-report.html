@@ -208,6 +208,7 @@
 
     @media print {
       .toolbar, .dept-nav, .brand-accent-bar { display:none !important; }
+      .top-header::after { display:none !important; }
       .top-header { position:static !important; height:auto; }
       .tbl-scroll { overflow:visible; }
       .mt { min-width:0; }
@@ -217,7 +218,6 @@
 <body>
 
   <!-- ══ TOP HEADER ══════════════════════════════════════════════ -->
-  <div class="brand-accent-bar"></div>
   <header class="top-header">
     <div class="header-left">
       <div class="logo-block">
@@ -229,10 +229,19 @@
       </div>
     </div>
     <div class="header-center">
-      <div class="dash-title">MINES — DAILY MATERIAL MOVEMENT REPORT</div>
+      <div class="view-switcher">
+        <a href="index.html" class="vs-tab">
+          <i data-lucide="bar-chart-2" class="vs-icon"></i>
+          <span>Monthly KPIs</span>
+        </a>
+        <a href="daily-report.html" class="vs-tab active">
+          <i data-lucide="clipboard-list" class="vs-icon"></i>
+          <span>Daily Reports</span>
+        </a>
+      </div>
     </div>
     <div class="header-right">
-      <span class="header-meta">MIS Report</span>
+      <div class="header-meta" id="live-date"></div>
     </div>
   </header>
 
@@ -243,9 +252,6 @@
       <button class="nav-btn" onclick="location.href='daily-report.html'"><i data-lucide="factory" class="nav-icon"></i> Production</button>
       <button class="nav-btn" onclick="location.href='power-plant-report.html'"><i data-lucide="zap" class="nav-icon"></i> Power Plant (CPP)</button>
       <button class="nav-btn active"><i data-lucide="pickaxe" class="nav-icon"></i> Mines</button>
-      <div class="nav-divider"></div>
-      <span class="nav-label">VIEWS</span>
-      <button class="nav-btn" onclick="location.href='index.html'"><i data-lucide="bar-chart-2" class="nav-icon"></i> Monthly KPIs</button>
       <div class="nav-divider"></div>
       <button class="nav-btn secondary" onclick="window.print()"><i data-lucide="printer" class="nav-icon"></i> Print / PDF</button>
     </div>
@@ -702,9 +708,13 @@
   <div class="brand-accent-bar"></div>
 
   <script>
-    /* ── timestamp ── */
+    /* ── timestamp + live header date ── */
+    const _d = new Date();
+    const _ds = _d.toLocaleDateString('en-GB',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
+    const _liveEl = document.getElementById('live-date');
+    if (_liveEl) _liveEl.textContent = _ds;
     document.getElementById('fts').textContent =
-      'Generated: ' + new Date().toLocaleString('en-GB', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      'Generated: ' + _d.toLocaleString('en-GB', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 
     /* ── generate empty data rows ── */
     (function() {

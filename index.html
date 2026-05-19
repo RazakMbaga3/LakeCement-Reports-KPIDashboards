@@ -11,7 +11,6 @@
 <body>
 
   <!-- ═══════════════════════════════════════ TOP HEADER ═══════════════════════════════════════ -->
-  <div class="brand-accent-bar"></div>
   <header class="top-header">
     <div class="header-left">
       <div class="logo-block">
@@ -23,7 +22,16 @@
       </div>
     </div>
     <div class="header-center">
-      <span class="dash-title">KEY PERFORMANCE INDICATORS</span>
+      <div class="view-switcher">
+        <a href="index.html" class="vs-tab active">
+          <i data-lucide="bar-chart-2" class="vs-icon"></i>
+          <span>Monthly KPIs</span>
+        </a>
+        <a href="daily-report.html" class="vs-tab">
+          <i data-lucide="clipboard-list" class="vs-icon"></i>
+          <span>Daily Reports</span>
+        </a>
+      </div>
     </div>
     <div class="header-right">
       <div class="header-meta">
@@ -64,15 +72,6 @@
         <i data-lucide="truck" class="nav-icon"></i> Mines Workshop
       </button>
       <div class="nav-divider"></div>
-      <button class="nav-btn secondary" onclick="location.href='daily-report.html'" style="background:rgba(244,149,69,.15);border-color:rgba(244,149,69,.4)">
-        <i data-lucide="factory" class="nav-icon"></i> Production Report
-      </button>
-      <button class="nav-btn secondary" onclick="location.href='power-plant-report.html'" style="background:rgba(244,149,69,.15);border-color:rgba(244,149,69,.4)">
-        <i data-lucide="zap" class="nav-icon"></i> Power Plant (CPP)
-      </button>
-      <button class="nav-btn secondary" onclick="location.href='mines-report.html'" style="background:rgba(244,149,69,.15);border-color:rgba(244,149,69,.4)">
-        <i data-lucide="pickaxe" class="nav-icon"></i> Mines
-      </button>
       <button class="nav-btn secondary" onclick="window.print()">
         <i data-lucide="printer" class="nav-icon"></i> Print / PDF
       </button>
