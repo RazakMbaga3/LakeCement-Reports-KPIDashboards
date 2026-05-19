@@ -3,6 +3,10 @@
    ══════════════════════════════════════════════════════════════ */
 
 const DEPT_META = {
+  summary: {
+    label: 'Executive Summary Dashboard',
+    resp:  'Cross-departmental KPI overview — all departments',
+  },
   ei: {
     label: 'E &amp; I — Electrical &amp; Instrumentation',
     resp:  'Responsibility: Mr. Ramesh Patel &amp; Team',
@@ -70,6 +74,7 @@ function switchDept(dept) {
   document.getElementById('ctx-resp').innerHTML = m.resp;
 
   updateSummary();
+  if (dept === 'summary') updateSummaryDashboard();
 }
 
 /* ─── sync dept dropdown → nav ─────────────────────────────── */
@@ -124,6 +129,7 @@ function applyFilters() {
   });
 
   updateSummary();
+  if (currentDept === 'summary') updateSummaryDashboard();
 }
 
 /* ─── compute achieved / not-achieved counts ────────────────── */
@@ -140,6 +146,52 @@ function updateSummary() {
   document.getElementById('sum-rate').textContent = rate;
 }
 
+/* ─── Summary Dashboard updater ────────────────────────────── */
+function updateSummaryDashboard() {
+  // Sync period badge
+  const mo = +document.getElementById('month-select').value;
+  const yr =  document.getElementById('year-select').value;
+  const badge = document.getElementById('smry-period-badge');
+  if (badge) badge.textContent = MONTHS[mo] + ' ' + yr;
+
+  // Sync the smry-period in context bar
+  const ctxPeriod = document.getElementById('ctx-period');
+  if (ctxPeriod) ctxPeriod.textContent = MONTHS[mo] + ' ' + yr;
+
+  // Per-dept achievement scorecard chips
+  const DEPTS = ['ei','production','mining','mines','mechanical','powerplant','packing','stores','minesworkshop'];
+  DEPTS.forEach(d => {
+    const section = document.getElementById('dept-' + d);
+    if (!section) return;
+    const achieved    = section.querySelectorAll('.achieved-tag').length;
+    const notAchieved = section.querySelectorAll('.not-tag').length;
+    const total = achieved + notAchieved;
+    const rate  = total > 0 ? Math.round((achieved / total) * 100) : 0;
+    const status = rate >= 75 ? 'on-track' : rate >= 55 ? 'watch' : 'concern';
+    const lbl    = rate >= 75 ? 'On Track' : rate >= 55 ? 'Watch'  : 'Concern';
+
+    const chip = document.querySelector(`.sc-chip[data-dept="${d}"]`);
+    if (chip) { chip.className = 'sc-chip ' + status; }
+
+    const pctEl = document.getElementById('sc-pct-' + d);
+    if (pctEl) pctEl.textContent = rate + '%';
+
+    const barEl = document.getElementById('sc-bar-' + d);
+    if (barEl) barEl.style.width = rate + '%';
+
+    const lblEl = document.getElementById('sc-lbl-' + d);
+    if (lblEl) lblEl.textContent = lbl;
+  });
+
+  // Days since last LTI (computed from Jan 1 of current year)
+  const ltiEl = document.getElementById('smry-days-lti');
+  if (ltiEl) {
+    const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+    const daysSince = Math.floor((new Date() - startOfYear) / 86400000);
+    ltiEl.textContent = daysSince;
+  }
+}
+
 /* ─── live date ─────────────────────────────────────────────── */
 function setDates() {
   const now = new Date();
@@ -154,6 +206,6 @@ function setDates() {
 /* ─── INIT ──────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   setDates();
-  switchDept('ei');
+  switchDept('summary');
   applyFilters();
 });

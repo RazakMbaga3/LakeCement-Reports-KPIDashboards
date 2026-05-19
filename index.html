@@ -43,8 +43,12 @@
   <!-- ═══════════════════════════════════════ NAV BAR ═══════════════════════════════════════ -->
   <nav class="dept-nav">
     <div class="nav-inner">
+      <button class="nav-btn active" data-dept="summary" onclick="switchDept('summary')" style="background:var(--navy-light);border-color:rgba(255,255,255,.3);font-weight:700;">
+        <i data-lucide="layout-dashboard" class="nav-icon"></i> Summary
+      </button>
+      <div class="nav-divider"></div>
       <span class="nav-label">DEPARTMENT</span>
-      <button class="nav-btn active" data-dept="ei" onclick="switchDept('ei')">
+      <button class="nav-btn" data-dept="ei" onclick="switchDept('ei')">
         <i data-lucide="zap" class="nav-icon"></i> E &amp; I
       </button>
       <button class="nav-btn" data-dept="production" onclick="switchDept('production')">
@@ -85,6 +89,7 @@
         <div class="filter-card">
           <label>Department</label>
           <select id="dept-select" onchange="syncDeptSelect()">
+            <option value="summary">— Executive Summary —</option>
             <option value="ei">Electrical &amp; Instrumentation</option>
             <option value="production">Production</option>
             <option value="mining">Mining</option>
@@ -151,6 +156,475 @@
 
   <!-- ═══════════════════════════════════════ MAIN CONTENT ═══════════════════════════════════════ -->
   <main class="dashboard-main">
+
+    <!-- ─────────── EXECUTIVE SUMMARY ─────────── -->
+    <section class="dept-section" id="dept-summary">
+
+      <!-- Header -->
+      <div class="smry-header">
+        <div>
+          <div class="smry-title">Executive Operations Summary</div>
+          <div class="smry-sub">Cross-departmental KPI highlights for managerial review — current month actuals vs. targets</div>
+        </div>
+        <div class="smry-period-badge" id="smry-period-badge">February 2026</div>
+      </div>
+
+      <!-- Alerts strip -->
+      <div class="smry-alerts">
+        <span class="smry-alert-label"><i data-lucide="alert-triangle" class="btn-icon"></i> Concerns</span>
+        <span class="smry-alert-chip red"><span class="alert-dot red"></span> Kiln Output 16% below target</span>
+        <span class="smry-alert-chip red"><span class="alert-dot red"></span> Specific Thermal Energy +4.6% over target</span>
+        <span class="smry-alert-chip red"><span class="alert-dot red"></span> Total Specific Power 115.6% of target</span>
+        <span class="smry-alert-chip red"><span class="alert-dot red"></span> MTBF Kiln only 45% of target (180/400 hrs)</span>
+        <span class="smry-alert-chip"><span class="alert-dot orange"></span> CPP Heat Rate above limit</span>
+        <span class="smry-alert-chip"><span class="alert-dot orange"></span> Burst Bag Generation above spec</span>
+      </div>
+
+      <!-- ── PRODUCTION OUTPUT ───────────────────────────────── -->
+      <div class="smry-cat">
+        <i data-lucide="factory" class="smry-cat-icon"></i>
+        <span class="smry-cat-label">Production Output</span>
+        <div class="smry-cat-line"></div>
+      </div>
+      <div class="smry-hero">
+
+        <!-- Kiln Output -->
+        <div class="sk-card concern">
+          <div class="sk-top">
+            <div class="sk-label">Kiln Output</div>
+            <span class="sk-dept-tag">Production</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">1,678</span>
+            <span class="sk-unit">TPD</span>
+            <span class="sk-delta pos">↑ +195 vs Jan</span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:83.9%"></div></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: ≥ 2,000 TPD</span>
+            <span class="sk-pct">83.9%</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Concern — 322 TPD shortfall</div>
+        </div>
+
+        <!-- Despatch / Day -->
+        <div class="sk-card on-track">
+          <div class="sk-top">
+            <div class="sk-label">Despatch / Day</div>
+            <span class="sk-dept-tag">Packing</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">2,738</span>
+            <span class="sk-unit">MT/day</span>
+            <span class="sk-delta flat">→ same as Jan</span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:100%"></div></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: &gt; 2,700 MT/day</span>
+            <span class="sk-pct">101.4%</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> On Track</div>
+        </div>
+
+        <!-- Specific Thermal Energy -->
+        <div class="sk-card concern">
+          <div class="sk-top">
+            <div class="sk-label">Specific Heat Consumption</div>
+            <span class="sk-dept-tag">Production</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">816</span>
+            <span class="sk-unit">kcal/kg</span>
+            <span class="sk-delta pos">↓ −10 vs Jan</span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:84.6%"></div></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: &lt; 780 kcal/kg</span>
+            <span class="sk-pct">+4.6% over</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Concern — improving trend</div>
+        </div>
+
+        <!-- Cement Mill 2 Output -->
+        <div class="sk-card on-track">
+          <div class="sk-top">
+            <div class="sk-label">Cement Mill 2 Output</div>
+            <span class="sk-dept-tag">Production</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">62</span>
+            <span class="sk-unit">TPH</span>
+            <span class="sk-delta neg">↓ −1 vs Jan</span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:100%"></div></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: ≥ 55 TPH</span>
+            <span class="sk-pct">112.7%</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> On Track</div>
+        </div>
+
+      </div><!-- /smry-hero -->
+
+      <!-- ── ENERGY EFFICIENCY ───────────────────────────────── -->
+      <div class="smry-cat">
+        <i data-lucide="zap" class="smry-cat-icon"></i>
+        <span class="smry-cat-label">Energy Efficiency</span>
+        <div class="smry-cat-line"></div>
+      </div>
+      <div class="smry-row smry-row-4">
+
+        <!-- SPC Total -->
+        <div class="sk-card concern">
+          <div class="sk-top">
+            <div class="sk-label">Specific Power — Total</div>
+            <span class="sk-dept-tag">Production</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">104</span>
+            <span class="sk-unit">kWh/t</span>
+            <span class="sk-delta pos">↓ −5 vs Jan</span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:86.5%"></div></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: &lt; 90 kWh/t</span>
+            <span class="sk-pct">+15.6% over</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Concern — improving</div>
+        </div>
+
+        <!-- SPC Clinker -->
+        <div class="sk-card concern">
+          <div class="sk-top">
+            <div class="sk-label">SPC — Up to Clinker</div>
+            <span class="sk-dept-tag">Production</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">79</span>
+            <span class="sk-unit">kWh/t</span>
+            <span class="sk-delta flat">→ same as Jan</span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:77.2%"></div></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: &lt; 61 kWh/t</span>
+            <span class="sk-pct">+29.5% over</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Concern</div>
+        </div>
+
+        <!-- CPP Heat Rate -->
+        <div class="sk-card watch">
+          <div class="sk-top">
+            <div class="sk-label">CPP Heat Rate</div>
+            <span class="sk-dept-tag">Power Plant</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">3,888</span>
+            <span class="sk-unit">kcal/kWh</span>
+            <span class="sk-delta neg">↑ +51 vs Jan</span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:97.7%"></div></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: &lt; 3,800 kcal/kWh</span>
+            <span class="sk-pct">+2.3% over</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Watch — low load operation</div>
+        </div>
+
+        <!-- CPP Auxiliary Power -->
+        <div class="sk-card watch">
+          <div class="sk-top">
+            <div class="sk-label">CPP Auxiliary Power</div>
+            <span class="sk-dept-tag">Power Plant</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">10.93</span>
+            <span class="sk-unit">%</span>
+            <span class="sk-delta neg">↑ +0.78pp vs Jan</span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:91.5%"></div></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: &lt; 10.0%</span>
+            <span class="sk-pct">+9.3% over</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Watch — optimisation underway</div>
+        </div>
+
+      </div><!-- /energy row -->
+
+      <!-- ── EQUIPMENT RELIABILITY ───────────────────────────── -->
+      <div class="smry-cat">
+        <i data-lucide="settings-2" class="smry-cat-icon"></i>
+        <span class="smry-cat-label">Equipment Reliability</span>
+        <div class="smry-cat-line"></div>
+      </div>
+      <div class="smry-row smry-row-4">
+
+        <!-- NAI Kiln -->
+        <div class="sk-card on-track">
+          <div class="sk-top">
+            <div class="sk-label">Network Availability — Kiln</div>
+            <span class="sk-dept-tag">E &amp; I</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">99.5</span>
+            <span class="sk-unit">%</span>
+            <span class="sk-delta flat">→ stable</span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:99.5%"></div></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: &gt; 90%</span>
+            <span class="sk-pct">99.5%</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> On Track</div>
+        </div>
+
+        <!-- MTBF Kiln -->
+        <div class="sk-card concern">
+          <div class="sk-top">
+            <div class="sk-label">MTBF — Kiln</div>
+            <span class="sk-dept-tag">E &amp; I</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">180</span>
+            <span class="sk-unit">hrs</span>
+            <span class="sk-delta flat">→ no change</span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:45%"></div></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: &gt; 400 hrs</span>
+            <span class="sk-pct">45% of target</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Concern — critical gap</div>
+        </div>
+
+        <!-- NAI Kiln Mechanical -->
+        <div class="sk-card on-track">
+          <div class="sk-top">
+            <div class="sk-label">NAI Kiln — Mechanical</div>
+            <span class="sk-dept-tag">Mechanical</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">98.05</span>
+            <span class="sk-unit">%</span>
+            <span class="sk-delta flat">→ stable</span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:98.05%"></div></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: &gt; 92%</span>
+            <span class="sk-pct">98.1%</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> On Track</div>
+        </div>
+
+        <!-- Stack Emission -->
+        <div class="sk-card concern">
+          <div class="sk-top">
+            <div class="sk-label">Stack Emission</div>
+            <span class="sk-dept-tag">Mechanical</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">60</span>
+            <span class="sk-unit">mg/m³</span>
+            <span class="sk-delta flat">→ no change</span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:83.3%"></div></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: &lt; 50 mg/m³</span>
+            <span class="sk-pct">+20% over</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Concern — regulatory risk</div>
+        </div>
+
+      </div><!-- /reliability row -->
+
+      <!-- ── SAFETY ──────────────────────────────────────────── -->
+      <div class="smry-cat">
+        <i data-lucide="shield-check" class="smry-cat-icon"></i>
+        <span class="smry-cat-label">Health &amp; Safety — Plant Wide</span>
+        <div class="smry-cat-line"></div>
+      </div>
+      <div class="smry-row smry-row-4">
+
+        <div class="sk-card on-track sk-safety">
+          <div class="sk-top">
+            <div class="sk-label">Fatalities</div>
+            <span class="sk-dept-tag">All Depts</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">0</span>
+            <span class="sk-unit">YTD</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> On Track</div>
+        </div>
+
+        <div class="sk-card on-track sk-safety">
+          <div class="sk-top">
+            <div class="sk-label">Lost Time Injuries</div>
+            <span class="sk-dept-tag">All Depts</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">0</span>
+            <span class="sk-unit">YTD</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> On Track — <span id="smry-days-lti">—</span> days since last LTI</div>
+        </div>
+
+        <div class="sk-card on-track sk-safety">
+          <div class="sk-top">
+            <div class="sk-label">Medical Treatment Injuries</div>
+            <span class="sk-dept-tag">All Depts</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">0</span>
+            <span class="sk-unit">YTD</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> On Track</div>
+        </div>
+
+        <div class="sk-card watch sk-safety">
+          <div class="sk-top">
+            <div class="sk-label">Hazards Reported</div>
+            <span class="sk-dept-tag">All Depts</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value" id="smry-hazards-total">21</span>
+            <span class="sk-unit">this month</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Watch — some depts under-reporting</div>
+        </div>
+
+      </div><!-- /safety row -->
+
+      <!-- ── PACKING & QUALITY ───────────────────────────────── -->
+      <div class="smry-cat">
+        <i data-lucide="package" class="smry-cat-icon"></i>
+        <span class="smry-cat-label">Packing &amp; Product Quality</span>
+        <div class="smry-cat-line"></div>
+      </div>
+      <div class="smry-row smry-row-3">
+
+        <div class="sk-card concern">
+          <div class="sk-top">
+            <div class="sk-label">Burst Bag Generation</div>
+            <span class="sk-dept-tag">Packing</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">0.50</span>
+            <span class="sk-unit">%</span>
+            <span class="sk-delta flat">→ same as Jan</span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:60%"></div></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: &lt; 0.30%</span>
+            <span class="sk-pct">+66.7% over</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Concern — supplier quality action taken</div>
+        </div>
+
+        <div class="sk-card on-track">
+          <div class="sk-top">
+            <div class="sk-label">Clinker C3S</div>
+            <span class="sk-dept-tag">Production</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">51</span>
+            <span class="sk-unit">%</span>
+            <span class="sk-delta flat">→ stable</span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:100%"></div></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: &gt; 50%</span>
+            <span class="sk-pct">102%</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> On Track</div>
+        </div>
+
+        <div class="sk-card concern">
+          <div class="sk-top">
+            <div class="sk-label">Clinker Free Lime</div>
+            <span class="sk-dept-tag">Production</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">3.0</span>
+            <span class="sk-unit">%</span>
+            <span class="sk-delta pos">↓ −1 vs Jan</span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:99%"></div></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: &lt; 3.0%</span>
+            <span class="sk-pct">At limit</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Concern — borderline</div>
+        </div>
+
+      </div><!-- /packing row -->
+
+      <!-- ── DEPT ACHIEVEMENT SCORECARD ─────────────────────── -->
+      <div class="smry-cat">
+        <i data-lucide="bar-chart-2" class="smry-cat-icon"></i>
+        <span class="smry-cat-label">Department Achievement Rates</span>
+        <div class="smry-cat-line"></div>
+      </div>
+      <div class="smry-scorecard" id="smry-scorecard">
+        <!-- Chips populated by JS -->
+        <div class="sc-chip" data-dept="ei"           onclick="switchDept('ei')">
+          <div class="sc-chip-name">E &amp; I</div>
+          <div class="sc-chip-pct" id="sc-pct-ei">—</div>
+          <div class="sc-chip-bar" id="sc-bar-ei"></div>
+          <div class="sc-chip-status" id="sc-lbl-ei">—</div>
+        </div>
+        <div class="sc-chip" data-dept="production"   onclick="switchDept('production')">
+          <div class="sc-chip-name">Production</div>
+          <div class="sc-chip-pct" id="sc-pct-production">—</div>
+          <div class="sc-chip-bar" id="sc-bar-production"></div>
+          <div class="sc-chip-status" id="sc-lbl-production">—</div>
+        </div>
+        <div class="sc-chip" data-dept="mining"       onclick="switchDept('mining')">
+          <div class="sc-chip-name">Mining</div>
+          <div class="sc-chip-pct" id="sc-pct-mining">—</div>
+          <div class="sc-chip-bar" id="sc-bar-mining"></div>
+          <div class="sc-chip-status" id="sc-lbl-mining">—</div>
+        </div>
+        <div class="sc-chip" data-dept="mines"        onclick="switchDept('mines')">
+          <div class="sc-chip-name">Mines</div>
+          <div class="sc-chip-pct" id="sc-pct-mines">—</div>
+          <div class="sc-chip-bar" id="sc-bar-mines"></div>
+          <div class="sc-chip-status" id="sc-lbl-mines">—</div>
+        </div>
+        <div class="sc-chip" data-dept="mechanical"   onclick="switchDept('mechanical')">
+          <div class="sc-chip-name">Mechanical</div>
+          <div class="sc-chip-pct" id="sc-pct-mechanical">—</div>
+          <div class="sc-chip-bar" id="sc-bar-mechanical"></div>
+          <div class="sc-chip-status" id="sc-lbl-mechanical">—</div>
+        </div>
+        <div class="sc-chip" data-dept="powerplant"   onclick="switchDept('powerplant')">
+          <div class="sc-chip-name">Power Plant</div>
+          <div class="sc-chip-pct" id="sc-pct-powerplant">—</div>
+          <div class="sc-chip-bar" id="sc-bar-powerplant"></div>
+          <div class="sc-chip-status" id="sc-lbl-powerplant">—</div>
+        </div>
+        <div class="sc-chip" data-dept="packing"      onclick="switchDept('packing')">
+          <div class="sc-chip-name">Packing</div>
+          <div class="sc-chip-pct" id="sc-pct-packing">—</div>
+          <div class="sc-chip-bar" id="sc-bar-packing"></div>
+          <div class="sc-chip-status" id="sc-lbl-packing">—</div>
+        </div>
+        <div class="sc-chip" data-dept="stores"       onclick="switchDept('stores')">
+          <div class="sc-chip-name">Stores</div>
+          <div class="sc-chip-pct" id="sc-pct-stores">—</div>
+          <div class="sc-chip-bar" id="sc-bar-stores"></div>
+          <div class="sc-chip-status" id="sc-lbl-stores">—</div>
+        </div>
+        <div class="sc-chip" data-dept="minesworkshop" onclick="switchDept('minesworkshop')">
+          <div class="sc-chip-name">Mines W/S</div>
+          <div class="sc-chip-pct" id="sc-pct-minesworkshop">—</div>
+          <div class="sc-chip-bar" id="sc-bar-minesworkshop"></div>
+          <div class="sc-chip-status" id="sc-lbl-minesworkshop">—</div>
+        </div>
+      </div><!-- /scorecard -->
+
+    </section><!-- /#dept-summary -->
 
     <!-- ─────────── E&I DEPARTMENT ─────────── -->
     <section class="dept-section" id="dept-ei">
