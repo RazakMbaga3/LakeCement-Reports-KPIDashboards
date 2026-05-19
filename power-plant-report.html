@@ -256,14 +256,14 @@
 <nav class="dept-nav">
   <div class="nav-inner">
     <span class="nav-label">DAILY REPORTS</span>
-    <button class="nav-btn" onclick="location.href='daily-report.html'">🏭 Production</button>
-    <button class="nav-btn active">⚡ Power Plant (CPP)</button>
-    <button class="nav-btn" onclick="location.href='mines-report.html'">⛏ Mines</button>
+    <button class="nav-btn" onclick="location.href='daily-report.html'"><i data-lucide="factory" class="nav-icon"></i> Production</button>
+    <button class="nav-btn active"><i data-lucide="zap" class="nav-icon"></i> Power Plant (CPP)</button>
+    <button class="nav-btn" onclick="location.href='mines-report.html'"><i data-lucide="pickaxe" class="nav-icon"></i> Mines</button>
     <div class="nav-divider"></div>
     <span class="nav-label">VIEWS</span>
-    <button class="nav-btn" onclick="location.href='index.html'">📊 Monthly KPIs</button>
+    <button class="nav-btn" onclick="location.href='index.html'"><i data-lucide="bar-chart-2" class="nav-icon"></i> Monthly KPIs</button>
     <div class="nav-divider"></div>
-    <button class="nav-btn secondary" onclick="window.print()">🖨 Print / PDF</button>
+    <button class="nav-btn secondary" onclick="window.print()"><i data-lucide="printer" class="nav-icon"></i> Print / PDF</button>
   </div>
 </nav>
 
@@ -281,9 +281,9 @@
   <div class="tb-sep"></div>
   <span class="rpt-pill">DRAFT</span>
   <div class="btn-grp">
-    <button class="btn btn-out">📥 Load Previous</button>
-    <button class="btn btn-save">💾 Save Draft</button>
-    <button class="btn btn-sub">✔ Submit Report</button>
+    <button class="btn btn-out"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
+    <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+    <button class="btn btn-sub"><i data-lucide="check-circle" class="btn-icon"></i> Submit Report</button>
   </div>
 </div>
 
@@ -293,8 +293,8 @@
   <!-- legend -->
   <div class="legend-bar">
     <span class="leg-lbl">Data Source Key</span>
-    <span class="leg-chip leg-m">✏️ Manual Entry — operator enters daily (On Date)</span>
-    <span class="leg-chip leg-s">⚙️ System / Auto — from DCS / meters / sensors</span>
+    <span class="leg-chip leg-m"><i data-lucide="pencil" class="btn-icon"></i> Manual Entry — operator enters daily (On Date)</span>
+    <span class="leg-chip leg-s"><i data-lucide="cpu" class="btn-icon"></i> System / Auto — from DCS / meters / sensors</span>
     <span class="leg-chip leg-f">∑ Formula — MTD, YTD &amp; calculated ratios</span>
     <span style="margin-left:auto;font-size:11px;color:var(--text-muted);font-style:italic">Amber fields require manual input. Blue &amp; green cells are read-only.</span>
   </div>
@@ -351,7 +351,7 @@
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title">⚡ Power Plant Operation Report</div>
+        <div class="rcard-title"><i data-lucide="zap" class="title-icon"></i> Power Plant Operation Report</div>
         <div class="rcard-sub">Generation, Auxiliary, Steam &amp; Efficiency Parameters</div>
       </div>
       <div class="rcard-chips">
@@ -541,7 +541,7 @@
     <div class="rcard">
       <div class="rcard-hdr">
         <div>
-          <div class="rcard-title">🔥 Fuel Report — Coal</div>
+          <div class="rcard-title"><i data-lucide="flame" class="title-icon"></i> Fuel Report — Coal</div>
           <div class="rcard-sub">Stock movement &amp; quality parameters</div>
         </div>
         <div class="rcard-chips">
@@ -633,7 +633,7 @@
     <div class="rcard">
       <div class="rcard-hdr">
         <div>
-          <div class="rcard-title">💧 WTP Report — Water Treatment Plant</div>
+          <div class="rcard-title"><i data-lucide="droplets" class="title-icon"></i> WTP Report — Water Treatment Plant</div>
           <div class="rcard-sub">DM water, cooling tower &amp; fly ash parameters</div>
         </div>
         <div class="rcard-chips">
@@ -731,11 +731,11 @@
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title">🏔️ Fly Ash Disposal Report</div>
+        <div class="rcard-title"><i data-lucide="mountain" class="title-icon"></i> Fly Ash Disposal Report</div>
         <div class="rcard-sub">Daily fly ash movement — Cement Mill, Coalyard &amp; Dumpyard</div>
       </div>
       <div class="rcard-chips">
-        <span class="rcard-chip leg-m" style="background:var(--m-bg);color:var(--m-fg);border:1px solid var(--m-bd)">✏️ All Manual Entry</span>
+        <span class="rcard-chip leg-m" style="background:var(--m-bg);color:var(--m-fg);border:1px solid var(--m-bd)"><i data-lucide="pencil" class="btn-icon"></i> All Manual Entry</span>
       </div>
     </div>
     <table class="rt">
@@ -792,11 +792,11 @@
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title">⛏️ Coal Source Breakdown — On Date Receipt</div>
+        <div class="rcard-title"><i data-lucide="pickaxe" class="title-icon"></i> Coal Source Breakdown — On Date Receipt</div>
         <div class="rcard-sub">Quantity received from each source — enter daily tonnage</div>
       </div>
       <div class="rcard-chips">
-        <span class="rcard-chip leg-m" style="background:var(--m-bg);color:var(--m-fg);border:1px solid var(--m-bd)">✏️ Manual Entry</span>
+        <span class="rcard-chip leg-m" style="background:var(--m-bg);color:var(--m-fg);border:1px solid var(--m-bd)"><i data-lucide="pencil" class="btn-icon"></i> Manual Entry</span>
       </div>
     </div>
 
@@ -840,7 +840,7 @@
        SIGN-OFF
   ════════════════════════════════════════════════ -->
   <div class="rcard">
-    <div class="rcard-hdr"><div class="rcard-title">✍️ Report Sign-off &amp; Approval</div></div>
+    <div class="rcard-hdr"><div class="rcard-title"><i data-lucide="pen-line" class="title-icon"></i> Report Sign-off &amp; Approval</div></div>
     <div class="signoff">
       <div class="so-cell">
         <div class="so-role">CPP Shift Operator</div>
@@ -869,8 +869,8 @@
         Date: <strong>06 May 2026</strong>
       </span>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-out">💾 Save Draft</button>
-        <button class="btn btn-sub">✔ Submit &amp; Lock</button>
+        <button class="btn btn-out"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+        <button class="btn btn-sub"><i data-lucide="lock" class="btn-icon"></i> Submit &amp; Lock</button>
       </div>
     </div>
   </div>
@@ -888,5 +888,7 @@
   const s = d.toLocaleDateString('en-GB',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
   ['live-date','footer-date'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=s; });
 </script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
 </body>
 </html>

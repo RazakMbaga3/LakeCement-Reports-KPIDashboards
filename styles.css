@@ -177,7 +177,38 @@ img { max-width: 100%; }
   background: rgba(255,255,255,.06);
   font-size: 11px;
 }
-.nav-icon { font-size: 13px; }
+/* ── ICON SYSTEM (Lucide SVG) ────────────────────────────────── */
+/* Nav icons — sit inside .nav-btn */
+.nav-icon {
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+/* Button icons — inside .btn toolbar controls */
+.btn-icon {
+  width: 13px;
+  height: 13px;
+  display: inline-block;
+  vertical-align: -2px;
+  margin-right: 4px;
+  stroke-width: 2.5;
+  flex-shrink: 0;
+}
+/* Section / card title icons */
+.title-icon {
+  width: 13px;
+  height: 13px;
+  display: inline-block;
+  vertical-align: -2px;
+  margin-right: 4px;
+  opacity: .85;
+  stroke-width: 2;
+}
+
 .nav-divider { width: 1px; height: 24px; background: rgba(255,255,255,.15); margin: 0 6px; }
 
 /* ── FILTER BAR ──────────────────────────────────────────────────── */

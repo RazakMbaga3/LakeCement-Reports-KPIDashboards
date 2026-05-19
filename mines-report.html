@@ -232,9 +232,6 @@
       <div class="dash-title">MINES — DAILY MATERIAL MOVEMENT REPORT</div>
     </div>
     <div class="header-right">
-      <div class="brand-tag">
-        <span class="brand-slogan">Hushika Haraka &bull; Hudumu Zaidi</span>
-      </div>
       <span class="header-meta">MIS Report</span>
     </div>
   </header>
@@ -243,14 +240,14 @@
   <nav class="dept-nav">
     <div class="nav-inner">
       <span class="nav-label">DAILY REPORTS</span>
-      <button class="nav-btn" onclick="location.href='daily-report.html'"><span class="nav-icon">🏭</span> Production</button>
-      <button class="nav-btn" onclick="location.href='power-plant-report.html'"><span class="nav-icon">⚡</span> Power Plant (CPP)</button>
-      <button class="nav-btn active"><span class="nav-icon">⛏</span> Mines</button>
+      <button class="nav-btn" onclick="location.href='daily-report.html'"><i data-lucide="factory" class="nav-icon"></i> Production</button>
+      <button class="nav-btn" onclick="location.href='power-plant-report.html'"><i data-lucide="zap" class="nav-icon"></i> Power Plant (CPP)</button>
+      <button class="nav-btn active"><i data-lucide="pickaxe" class="nav-icon"></i> Mines</button>
       <div class="nav-divider"></div>
       <span class="nav-label">VIEWS</span>
-      <button class="nav-btn" onclick="location.href='index.html'"><span class="nav-icon">📊</span> Monthly KPIs</button>
+      <button class="nav-btn" onclick="location.href='index.html'"><i data-lucide="bar-chart-2" class="nav-icon"></i> Monthly KPIs</button>
       <div class="nav-divider"></div>
-      <button class="nav-btn secondary" onclick="window.print()"><span class="nav-icon">🖨</span> Print / PDF</button>
+      <button class="nav-btn secondary" onclick="window.print()"><i data-lucide="printer" class="nav-icon"></i> Print / PDF</button>
     </div>
   </nav>
 
@@ -275,7 +272,7 @@
       <div class="leg"><div class="ld" style="background:#BBF7D0;border:1px solid #15803D"></div>Formula</div>
     </div>
     <div class="btn-grp">
-      <button class="btn btn-save">💾 Save Draft</button>
+      <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
       <button class="btn btn-sub">✓ Submit Report</button>
     </div>
   </div>
@@ -286,7 +283,7 @@
     <!-- ── SECTION 1: MATERIAL MOVEMENT MATRIX ─────────────────── -->
     <div class="sc">
       <div class="sc-hdr">
-        <h3>⛏ Material Movement Matrix — Blasting &amp; Hauling Records</h3>
+        <h3><i data-lucide="pickaxe" class="title-icon"></i> Material Movement Matrix — Blasting &amp; Hauling Records</h3>
         <span class="sc-note">Tonnage data auto-fetched from Odoo weighbridge · Amber cells = manual corrections</span>
       </div>
       <div class="tbl-scroll">
@@ -587,7 +584,7 @@
     <!-- ── SECTION 2: SUMMARY + CONTRACTOR BREAKDOWN ───────────── -->
     <div class="sc">
       <div class="sc-hdr">
-        <h3>📊 Summary — Tonnage, Royalty &amp; Contractor Breakdown</h3>
+        <h3><i data-lucide="bar-chart-2" class="title-icon"></i> Summary — Tonnage, Royalty &amp; Contractor Breakdown</h3>
         <span class="sc-note">Formula values auto-calculated from movement matrix above</span>
       </div>
       <div class="sum-layout">
@@ -650,7 +647,7 @@
     <!-- ── SECTION 3: CONTRACTOR TILES ─────────────────────────── -->
     <div class="sc">
       <div class="sc-hdr">
-        <h3>🚛 Contractor Daily Tonnage Overview</h3>
+        <h3><i data-lucide="truck" class="title-icon"></i> Contractor Daily Tonnage Overview</h3>
         <span class="sc-note">System-fetched from Odoo contractor records</span>
       </div>
       <div class="contr-grid">
@@ -677,7 +674,7 @@
 
     <!-- ── SIGN-OFF ──────────────────────────────────────────────── -->
     <div class="sc" style="overflow:visible">
-      <div class="sc-hdr"><h3>✍ Report Sign-Off</h3></div>
+      <div class="sc-hdr"><h3><i data-lucide="pen-line" class="title-icon"></i> Report Sign-Off</h3></div>
       <div class="signoff">
         <div class="sign-slot">
           <label>Mines Shift Supervisor</label>
@@ -734,6 +731,7 @@
       }
     })();
   </script>
-
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
 </body>
 </html>

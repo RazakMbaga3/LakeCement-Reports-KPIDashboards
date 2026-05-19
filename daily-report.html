@@ -286,9 +286,6 @@
   </div>
   <div class="header-center"><span class="dash-title">PRODUCTION REPORT</span></div>
   <div class="header-right">
-    <div class="brand-tag">
-      <span class="brand-slogan">Hushika Haraka &bull; Hudumu Zaidi</span>
-    </div>
     <div class="header-meta" id="live-date"></div>
   </div>
 </header>
@@ -297,14 +294,14 @@
 <nav class="dept-nav">
   <div class="nav-inner">
     <span class="nav-label">DAILY REPORTS</span>
-    <button class="nav-btn active">🏭 Production</button>
-    <button class="nav-btn" onclick="location.href='power-plant-report.html'">⚡ Power Plant (CPP)</button>
-    <button class="nav-btn" onclick="location.href='mines-report.html'">⛏ Mines</button>
+    <button class="nav-btn active"><i data-lucide="factory" class="nav-icon"></i> Production</button>
+    <button class="nav-btn" onclick="location.href='power-plant-report.html'"><i data-lucide="zap" class="nav-icon"></i> Power Plant (CPP)</button>
+    <button class="nav-btn" onclick="location.href='mines-report.html'"><i data-lucide="pickaxe" class="nav-icon"></i> Mines</button>
     <div class="nav-divider"></div>
     <span class="nav-label">VIEWS</span>
-    <button class="nav-btn" onclick="location.href='index.html'">📊 Monthly KPIs</button>
+    <button class="nav-btn" onclick="location.href='index.html'"><i data-lucide="bar-chart-2" class="nav-icon"></i> Monthly KPIs</button>
     <div class="nav-divider"></div>
-    <button class="nav-btn secondary" onclick="window.print()">🖨 Print / PDF</button>
+    <button class="nav-btn secondary" onclick="window.print()"><i data-lucide="printer" class="nav-icon"></i> Print / PDF</button>
   </div>
 </nav>
 
@@ -322,9 +319,9 @@
   <div class="tb-sep"></div>
   <span class="rpt-pill">DRAFT</span>
   <div class="btn-grp">
-    <button class="btn btn-out">📥 Load Previous</button>
-    <button class="btn btn-save">💾 Save Draft</button>
-    <button class="btn btn-sub">✔ Submit Report</button>
+    <button class="btn btn-out"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
+    <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+    <button class="btn btn-sub"><i data-lucide="check-circle" class="btn-icon"></i> Submit Report</button>
   </div>
 </div>
 
@@ -334,9 +331,9 @@
   <!-- legend -->
   <div class="legend-bar">
     <span class="leg-lbl">Data Source Key</span>
-    <span class="leg-chip leg-m">✏️ Manual Entry — operator enters daily</span>
-    <span class="leg-chip leg-s">⚙️ System / Auto — from DCS / ERP / Mining dept</span>
-    <span class="leg-chip leg-f">∑ Formula — auto-calculated / cumulative</span>
+    <span class="leg-chip leg-m"><i data-lucide="pencil" class="btn-icon"></i> Manual Entry — operator enters daily</span>
+    <span class="leg-chip leg-s"><i data-lucide="cpu" class="btn-icon"></i> System / Auto — from DCS / ERP / Mining dept</span>
+    <span class="leg-chip leg-f"><i data-lucide="sigma" class="btn-icon"></i> Formula — auto-calculated / cumulative</span>
     <span style="margin-left:auto;font-size:11px;color:var(--text-muted);font-style:italic">Amber fields require manual input. Blue &amp; green cells are read-only.</span>
   </div>
 
@@ -1129,7 +1126,7 @@
       <!-- Heat panel -->
       <div style="min-width:230px;border-left:1px solid var(--border)">
         <div class="heat-panel">
-          <div class="heat-title">⚡ Specific Heat Consumption (Kiln)</div>
+          <div class="heat-title"><i data-lucide="zap" class="title-icon"></i> Specific Heat Consumption (Kiln)</div>
           <div class="heat-row">
             <span class="heat-key">Coal Consumption, %</span>
             <span class="heat-val cf">14.83</span>
@@ -1207,7 +1204,7 @@
     <!-- DATA SOURCE NOTES -->
     <div class="rcard">
       <div class="rcard-hdr">
-        <div class="rcard-title">📋 Data Sources &amp; Department Responsibilities</div>
+        <div class="rcard-title"><i data-lucide="clipboard-list" class="title-icon"></i> Data Sources &amp; Department Responsibilities</div>
       </div>
       <div class="notes-col" style="border-right:none">
         <div class="notes-lbl">Data Origin</div>
@@ -1229,7 +1226,7 @@
        SIGN-OFF
   ════════════════════════════════════════════════ -->
   <div class="rcard" style="margin-top:14px">
-    <div class="rcard-hdr"><div class="rcard-title">✍️ Report Sign-off &amp; Approval</div></div>
+    <div class="rcard-hdr"><div class="rcard-title"><i data-lucide="pen-line" class="title-icon"></i> Report Sign-off &amp; Approval</div></div>
     <div class="signoff">
       <div class="so-cell">
         <div class="so-role">Production Head</div>
@@ -1258,8 +1255,8 @@
         Date: <strong>03 May 2026</strong>
       </span>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-out">💾 Save Draft</button>
-        <button class="btn btn-sub">✔ Submit &amp; Lock</button>
+        <button class="btn btn-out"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+        <button class="btn btn-sub"><i data-lucide="lock" class="btn-icon"></i> Submit &amp; Lock</button>
       </div>
     </div>
   </div>
@@ -1277,5 +1274,7 @@
   const s = d.toLocaleDateString('en-GB',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
   ['live-date','footer-date'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=s; });
 </script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
 </body>
 </html>

@@ -26,9 +26,6 @@
       <span class="dash-title">KEY PERFORMANCE INDICATORS</span>
     </div>
     <div class="header-right">
-      <div class="brand-tag">
-        <span class="brand-slogan">Hushika Haraka &bull; Hudumu Zaidi</span>
-      </div>
       <div class="header-meta">
         <span id="live-date"></span>
       </div>
@@ -40,44 +37,44 @@
     <div class="nav-inner">
       <span class="nav-label">DEPARTMENT</span>
       <button class="nav-btn active" data-dept="ei" onclick="switchDept('ei')">
-        <span class="nav-icon">⚡</span> E &amp; I
+        <i data-lucide="zap" class="nav-icon"></i> E &amp; I
       </button>
       <button class="nav-btn" data-dept="production" onclick="switchDept('production')">
-        <span class="nav-icon">🏭</span> Production
+        <i data-lucide="factory" class="nav-icon"></i> Production
       </button>
       <button class="nav-btn" data-dept="mining" onclick="switchDept('mining')">
-        <span class="nav-icon">⛏</span> Mining
+        <i data-lucide="pickaxe" class="nav-icon"></i> Mining
       </button>
       <button class="nav-btn" data-dept="mines" onclick="switchDept('mines')">
-        <span class="nav-icon">🪨</span> Mines
+        <i data-lucide="layers" class="nav-icon"></i> Mines
       </button>
       <button class="nav-btn" data-dept="mechanical" onclick="switchDept('mechanical')">
-        <span class="nav-icon">🔧</span> Mechanical
+        <i data-lucide="wrench" class="nav-icon"></i> Mechanical
       </button>
       <button class="nav-btn" data-dept="powerplant" onclick="switchDept('powerplant')">
-        <span class="nav-icon">⚙️</span> Power Plant
+        <i data-lucide="cog" class="nav-icon"></i> Power Plant
       </button>
       <button class="nav-btn" data-dept="packing" onclick="switchDept('packing')">
-        <span class="nav-icon">📦</span> Packing Plant
+        <i data-lucide="package" class="nav-icon"></i> Packing Plant
       </button>
       <button class="nav-btn" data-dept="stores" onclick="switchDept('stores')">
-        <span class="nav-icon">🏪</span> Stores
+        <i data-lucide="warehouse" class="nav-icon"></i> Stores
       </button>
       <button class="nav-btn" data-dept="minesworkshop" onclick="switchDept('minesworkshop')">
-        <span class="nav-icon">🚜</span> Mines Workshop
+        <i data-lucide="truck" class="nav-icon"></i> Mines Workshop
       </button>
       <div class="nav-divider"></div>
       <button class="nav-btn secondary" onclick="location.href='daily-report.html'" style="background:rgba(244,149,69,.15);border-color:rgba(244,149,69,.4)">
-        <span class="nav-icon">🏭</span> Production Report
+        <i data-lucide="factory" class="nav-icon"></i> Production Report
       </button>
       <button class="nav-btn secondary" onclick="location.href='power-plant-report.html'" style="background:rgba(244,149,69,.15);border-color:rgba(244,149,69,.4)">
-        <span class="nav-icon">⚡</span> Power Plant (CPP)
+        <i data-lucide="zap" class="nav-icon"></i> Power Plant (CPP)
       </button>
       <button class="nav-btn secondary" onclick="location.href='mines-report.html'" style="background:rgba(244,149,69,.15);border-color:rgba(244,149,69,.4)">
-        <span class="nav-icon">⛏</span> Mines
+        <i data-lucide="pickaxe" class="nav-icon"></i> Mines
       </button>
       <button class="nav-btn secondary" onclick="window.print()">
-        <span class="nav-icon">🖨</span> Print / PDF
+        <i data-lucide="printer" class="nav-icon"></i> Print / PDF
       </button>
     </div>
   </nav>
@@ -1679,5 +1676,7 @@
   <div class="brand-accent-bar"></div>
 
   <script src="app.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script>lucide.createIcons();</script>
 </body>
 </html>
