@@ -85,46 +85,74 @@ function syncDeptSelect() {
 /* ─── apply month / year filters ───────────────────────────── */
 function applyFilters() {
   const mo   = +document.getElementById('month-select').value;
-  const yr   = document.getElementById('year-select').value;
-  const view = document.getElementById('view-select').value;
+  const yr   =  document.getElementById('year-select').value;
+  const view =  document.getElementById('view-select').value;
 
-  // Update context period label
-  document.getElementById('ctx-period').textContent =
-    MONTHS[mo] + ' ' + yr;
+  document.getElementById('ctx-period').textContent = MONTHS[mo] + ' ' + yr;
 
-  // Highlight the selected month column in all tables
   document.querySelectorAll('.kpi-table').forEach(tbl => {
-    const headerCells = tbl.querySelectorAll('.thead-row th');
-    // month cols start at index 6 (Jan=6 … Dec=17)
+    // Skip tables that don't use month columns (e.g. Mines Workshop equipment table)
+    if (!tbl.querySelector('.thead-row th.col-month')) return;
+
+    // Update table class so min-width CSS rule can apply
+    tbl.classList.toggle('view-month', view === 'month');
+
+    const headerCells = Array.from(tbl.querySelectorAll('.thead-row th'));
+
+    // ── Rename the highlighted "Actual" column to the selected month name ──
+    const actualHdr = tbl.querySelector('.thead-row .highlight-col');
+    if (actualHdr) actualHdr.innerHTML = MONTHS[mo] + '<br>ACTUAL';
+
+    // ── Show / hide month header cells (indices 6–17) ──
     headerCells.forEach((th, i) => {
       th.style.background = '';
       th.style.color = '';
+
+      if (i < 6 || i > 17) return;
+      const mIdx = i - 5; // i=6 → mIdx=1 (Jan) … i=17 → mIdx=12 (Dec)
+
+      if (view === 'month') {
+        th.style.display = 'none';
+      } else if (view === 'ytd') {
+        th.style.display = (mIdx <= mo) ? '' : 'none';
+      } else {
+        // full year — show all, highlight selected
+        th.style.display = '';
+        if (mIdx === mo) { th.style.background = '#E8750A'; th.style.color = '#fff'; }
+      }
     });
 
-    // month index offset: Jan = col index 6
-    const colIdx = 6 + (mo - 1);
-
-    // highlight selected month header
-    if (headerCells[colIdx]) {
-      headerCells[colIdx].style.background = '#E8750A';
-      headerCells[colIdx].style.color = '#fff';
-    }
-
-    // dim future month columns in YTD view
-    tbl.querySelectorAll('.data-row').forEach(row => {
+    // ── Show / hide month data cells in body rows (skip section-rows) ──
+    tbl.querySelectorAll('tbody tr').forEach(row => {
+      if (row.classList.contains('section-row')) return;
       const cells = row.querySelectorAll('td');
       cells.forEach((td, i) => {
-        if (i >= 6 && i <= 17) {
-          const mIdx = i - 6 + 1; // 1=Jan
-          if (view === 'month') {
-            td.style.opacity = (mIdx === mo) ? '1' : '0.35';
-          } else if (view === 'ytd') {
-            td.style.opacity = (mIdx <= mo) ? '1' : '0.2';
-          } else {
-            td.style.opacity = '1';
-          }
+        if (i < 6 || i > 17) { td.style.opacity = '1'; return; }
+        const mIdx = i - 5;
+        if (view === 'month') {
+          td.style.display = 'none';
+          td.style.opacity  = '1';
+        } else if (view === 'ytd') {
+          td.style.display = (mIdx <= mo) ? '' : 'none';
+          td.style.opacity  = '1';
+        } else {
+          td.style.display = '';
+          td.style.opacity  = (mIdx <= mo) ? '1' : '0.2';
         }
       });
+    });
+
+    // ── Fix section-row colspans to match visible column count ──
+    tbl.querySelectorAll('tbody .section-row').forEach(row => {
+      const secTd = row.querySelector('td');
+      if (!secTd) return;
+      // Find the nearest following data-row to count its visible cells
+      let ref = row.nextElementSibling;
+      while (ref && !ref.classList.contains('data-row')) ref = ref.nextElementSibling;
+      if (!ref) return;
+      const visible = Array.from(ref.querySelectorAll('td'))
+        .filter(td => td.style.display !== 'none').length;
+      if (visible > 0) secTd.colSpan = visible;
     });
   });
 

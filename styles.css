@@ -393,7 +393,10 @@ img { max-width: 100%; }
   border-collapse: collapse;
   font-size: 11.5px;
   min-width: 1400px;
+  table-layout: auto; /* allow columns to collapse cleanly when hidden */
 }
+/* Month view: table can shrink since 12 columns are hidden */
+.kpi-table.view-month { min-width: 700px; }
 
 /* -- THEAD -- */
 .thead-row th {
