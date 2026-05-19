@@ -29,6 +29,8 @@
   --radius:      6px;
   --shadow-sm:   0 1px 4px rgba(0,0,0,.07);
   --shadow-md:   0 4px 16px rgba(0,0,0,.10);
+  /* sticky header height used by child pages */
+  --header-h:    64px;
 }
 
 html { font-size: 13px; scroll-behavior: smooth; }
@@ -39,7 +41,12 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  /* prevent body-level horizontal overflow */
+  overflow-x: hidden;
 }
+
+/* Prevent images from overflowing their container */
+img { max-width: 100%; }
 
 /* ── BRAND ACCENT BAR ────────────────────────────────────────────── */
 .brand-accent-bar {
@@ -86,6 +93,7 @@ body {
 .lc-wordmark {
   height: 14px;
   width: auto;
+  max-width: 160px;   /* prevent stretching on narrow screens */
   display: block;
   filter: brightness(0) invert(1);
   opacity: .85;
@@ -112,6 +120,7 @@ body {
 .dept-nav {
   background: var(--navy-mid);
   border-bottom: 3px solid var(--orange);
+  overflow: hidden;  /* contain the scrollable inner */
 }
 .nav-inner {
   display: flex;
@@ -119,7 +128,14 @@ body {
   gap: 4px;
   padding: 0 24px;
   height: 46px;
+  /* horizontal scroll on all screen sizes — prevents nav overflow */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  flex-wrap: nowrap;
 }
+.nav-inner::-webkit-scrollbar { display: none; }
 .nav-label {
   font-size: 9px;
   font-weight: 600;
@@ -133,7 +149,7 @@ body {
   border: 1px solid rgba(255,255,255,.15);
   color: rgba(255,255,255,.75);
   border-radius: var(--radius);
-  padding: 5px 14px;
+  padding: 6px 14px;
   font-size: 12px;
   font-weight: 500;
   font-family: var(--font);
@@ -141,6 +157,8 @@ body {
   display: flex; align-items: center; gap: 6px;
   transition: all .2s ease;
   white-space: nowrap;
+  flex-shrink: 0;         /* prevent squishing inside scroll container */
+  min-height: 34px;       /* touch-friendlier */
 }
 .nav-btn:hover {
   background: rgba(255,255,255,.12);
@@ -197,7 +215,7 @@ body {
 .filter-card select {
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
-  padding: 5px 28px 5px 10px;
+  padding: 6px 28px 6px 10px;
   font-size: 12px;
   font-family: var(--font);
   font-weight: 500;
@@ -209,6 +227,7 @@ body {
   background-repeat: no-repeat;
   background-position: right 8px center;
   transition: border-color .2s;
+  min-height: 36px;   /* touch target */
 }
 .filter-card select:focus {
   outline: none;
@@ -427,24 +446,120 @@ body {
   letter-spacing: .3px;
 }
 
-/* ── PRINT STYLES ────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE — Mobile-first
+   Breakpoints:  mobile < 768px  |  tablet 768–1023px  |  desktop 1024px+
+══════════════════════════════════════════════════════════════ */
+
+/* ── MOBILE: < 768px ────────────────────────────────────────── */
+@media (max-width: 767px) {
+  :root { --header-h: 52px; }
+
+  /* Header: single row, logo + date only */
+  .top-header {
+    height: auto;
+    min-height: 52px;
+    padding: 8px 14px;
+    flex-wrap: nowrap;
+    gap: 0;
+  }
+  .header-center  { display: none; }
+  .header-right   { flex: none; }
+  .header-left    { flex: 1; min-width: 0; }
+  .nyati-logo     { height: 36px; }
+  .lc-wordmark    { height: 11px; }
+  .logo-block     { gap: 10px; }
+  .company-sub    { font-size: 9px; }
+  .brand-slogan   { display: none; }
+  .header-meta    { font-size: 9.5px; }
+
+  /* Nav: compact horizontally-scrollable pills */
+  .nav-inner   { height: 40px; padding: 0 10px; gap: 3px; }
+  .nav-label   { display: none; }
+  .nav-divider { display: none; }
+  .nav-btn     { padding: 5px 10px; font-size: 11px; min-height: 30px; }
+  .nav-icon    { font-size: 12px; }
+  .nav-btn.secondary { margin-left: 0; }
+
+  /* Filter bar: stack + grid for selects */
+  .filter-inner   { flex-direction: column; align-items: stretch; padding: 10px 14px; gap: 10px; }
+  .filter-group   { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .filter-card select { width: 100%; font-size: 13px; min-height: 40px; }
+  .filter-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .summary-chip   { flex-direction: column; justify-content: center; padding: 6px 8px;
+                    border-radius: 8px; font-size: 9.5px; gap: 2px; text-align: center;
+                    white-space: normal; }
+  .summary-chip span { font-size: 15px; line-height: 1; }
+
+  /* Context bar: stacked */
+  .dept-context  { flex-direction: column; align-items: flex-start; gap: 4px; padding: 8px 14px; }
+  .ctx-tracker   { text-align: left; }
+  .ctx-dept      { font-size: 12px; }
+
+  /* Main content */
+  .dashboard-main { padding: 10px 10px 24px; }
+
+  /* Table: momentum scroll + sticky first column */
+  .table-wrapper  { -webkit-overflow-scrolling: touch; }
+  .kpi-table thead th:first-child,
+  .kpi-table tbody td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    box-shadow: 2px 0 5px rgba(0,0,0,.07);
+  }
+  .kpi-table thead th:first-child { z-index: 3; background: var(--navy); }
+  .kpi-table tbody td:first-child  { background: var(--white); }
+  .achieved-row     td:first-child { background: #FAFFFE !important; }
+  .not-achieved-row td:first-child { background: #FFFAFA !important; }
+  .data-row:hover   td:first-child { background: #F0F5FF !important; }
+  .section-row      td:first-child { position: sticky; left: 0; z-index: 2; background: var(--navy); }
+
+  /* Footer: stacked */
+  .dash-footer { flex-direction: column; gap: 4px; text-align: center; padding: 10px 14px; font-size: 9.5px; }
+}
+
+/* ── EXTRA SMALL: < 480px ──────────────────────────────────── */
+@media (max-width: 479px) {
+  /* Hide header-right entirely */
+  .header-right  { display: none; }
+  .nyati-logo    { height: 32px; }
+  .lc-wordmark   { height: 10px; }
+
+  /* Single-column filter group */
+  .filter-group  { grid-template-columns: 1fr 1fr; }
+  .filter-summary { grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+  .summary-chip  { padding: 5px 6px; font-size: 9px; }
+
+  .dashboard-main { padding: 8px 8px 20px; }
+}
+
+/* ── TABLET: 768px – 1023px ──────────────────────────────────── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .header-center { display: none; }
+  .dashboard-main { padding: 14px 20px 28px; }
+  .filter-inner   { padding: 10px 20px; }
+  .dept-context   { padding: 10px 20px; }
+  .dash-footer    { padding: 10px 20px; }
+  .nav-inner      { padding: 0 16px; }
+}
+
+/* ── DESKTOP: 1024px+ ─────────────────────────────────────── */
+@media (min-width: 1024px) {
+  html { font-size: 13px; }
+}
+
+/* ── PRINT ────────────────────────────────────────────────── */
 @media print {
-  .dept-nav, .filter-bar { display: none !important; }
-  .top-header { position: static !important; }
-  .table-wrapper { box-shadow: none; border: 1px solid #ccc; }
+  .dept-nav, .filter-bar, .brand-accent-bar { display: none !important; }
+  .top-header { position: static !important; box-shadow: none; height: auto; padding: 10px 20px; }
+  .header-center { display: block !important; }
+  .table-wrapper { box-shadow: none; border: 1px solid #ccc; overflow: visible; }
   .kpi-table { min-width: 100%; font-size: 9px; }
+  .kpi-table thead th:first-child,
+  .kpi-table tbody td:first-child { position: static !important; box-shadow: none; }
   .thead-row th { font-size: 8px; padding: 5px 4px; }
   .data-row td  { padding: 4px; }
   .col-kpi { min-width: 120px; }
   body { background: white; }
-}
-
-/* ── RESPONSIVE ──────────────────────────────────────────────────── */
-@media (max-width: 900px) {
-  .top-header { height: auto; padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
-  .header-center { order: 3; flex-basis: 100%; }
-  .dashboard-main { padding: 12px 12px 24px; }
-  .filter-inner { gap: 8px; }
-  .nyati-logo { height: 36px; }
-  .lc-wordmark { height: 12px; }
 }

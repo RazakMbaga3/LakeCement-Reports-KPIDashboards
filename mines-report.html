@@ -118,8 +118,8 @@
     .sum-tot td { background:var(--orange); color:#fff; font-weight:800; font-size:12px; }
     .sum-tbl .dash { color:#CBD5E1; font-weight:400; }
 
-    /* ══ CONTRACTOR BREAKDOWN ════════════════════════════════════ */
-    .contr-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; padding:16px; }
+    /* ══ CONTRACTOR BREAKDOWN — mobile-first 2 cols, 3 on desktop ═ */
+    .contr-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; padding:14px; }
     .contr-card {
       border:1.5px solid var(--border); border-radius:var(--radius);
       padding:12px 14px; background:var(--off-white);
@@ -130,14 +130,88 @@
     .cc-unit { font-size:9px; color:var(--text-muted); margin-top:2px; }
     .cc-royalty { font-size:10px; font-weight:600; color:var(--green); margin-top:6px; padding-top:6px; border-top:1px solid var(--border); }
 
-    /* ══ SIGN-OFF ════════════════════════════════════════════════ */
-    .signoff { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; padding:20px 24px; background:var(--white); border-top:1px solid var(--border); }
+    /* Toolbar button group */
+    .btn-grp { display:flex; gap:6px; margin-left:auto; }
+    .btn { padding:6px 14px; border-radius:var(--radius); font-family:var(--font); font-size:12px;
+           font-weight:700; cursor:pointer; border:1.5px solid transparent; transition:all .15s; }
+    .btn-save { background:var(--orange); color:white; border-color:var(--orange); }
+    .btn-save:hover { background:#D97F30; }
+    .btn-sub  { background:var(--navy);   color:white; border-color:var(--navy); }
+    .btn-sub:hover { background:var(--navy-light); }
+
+    /* ══ SIGN-OFF — mobile-first 2 cols, expands to 3 on desktop ═══ */
+    .signoff { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; padding:16px 20px; background:var(--white); border-top:1px solid var(--border); }
     .sign-slot { border-top:2px solid var(--navy); padding-top:8px; }
     .sign-slot label { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:6px; }
     .sign-slot input { width:100%; border:1.5px solid var(--border); border-radius:var(--radius); padding:6px 10px; font-size:12px; font-family:var(--font); color:var(--text-main); background:var(--off-white); }
 
     /* ══ FOOTER ══════════════════════════════════════════════════ */
     .dash-footer { background:var(--navy); color:rgba(255,255,255,.45); font-size:10px; display:flex; justify-content:space-between; align-items:center; padding:10px 28px; letter-spacing:.3px; }
+
+    /* ══ RESPONSIVE ════════════════════════════════════════════ */
+
+    /* Toolbar: sits below sticky header */
+    .toolbar { position:sticky; top:var(--header-h,64px); z-index:60; }
+
+    /* Mobile: < 768px */
+    @media (max-width:767px) {
+      .toolbar  { position:relative; top:auto; flex-wrap:wrap; gap:8px; padding:8px 12px; }
+      .tb-sep   { display:none; }
+      input[type="date"].tb-ctl { min-width:0; width:100%; }
+      .tb-ctl   { min-width:0; font-size:13px; min-height:38px; }
+      .btn      { font-size:11px; padding:8px 10px; min-height:40px;
+                  justify-content:center; display:flex; align-items:center; }
+
+      /* Page body */
+      .page-body { padding:10px 10px 24px; gap:14px; }
+
+      /* Section card header */
+      .sc-hdr { padding:8px 12px; }
+      .sc-hdr h3 { font-size:10px; letter-spacing:.6px; }
+
+      /* Matrix table scroll */
+      .tbl-scroll { -webkit-overflow-scrolling:touch; }
+
+      /* Summary: single column */
+      .sum-layout { grid-template-columns:1fr; gap:1px; }
+
+      /* Contractor grid: 2 columns */
+      .contr-grid { grid-template-columns:repeat(2,1fr); gap:8px; padding:12px; }
+      .cc-val     { font-size:17px; }
+
+      /* Sign-off: 2 columns */
+      .signoff { grid-template-columns:repeat(2,1fr); gap:12px; padding:14px 16px; }
+
+      /* Footer */
+      .dash-footer { flex-direction:column; gap:4px; text-align:center; padding:10px 14px; }
+    }
+
+    /* Extra small: < 480px */
+    @media (max-width:479px) {
+      .contr-grid { grid-template-columns:1fr 1fr; padding:10px; }
+      .signoff    { grid-template-columns:1fr 1fr; padding:12px; gap:10px; }
+    }
+
+    /* Tablet: 768–1023px */
+    @media (min-width:768px) and (max-width:1023px) {
+      .sum-layout  { grid-template-columns:1fr 1fr; }
+      .contr-grid  { grid-template-columns:repeat(3,1fr); }
+      .page-body   { padding:12px 16px 32px; }
+    }
+
+    /* Desktop: 3-col sign-off, 3-col contractors, 2-col summary */
+    @media (min-width:1024px) {
+      .signoff    { grid-template-columns:repeat(3,1fr); gap:20px; padding:20px 24px; }
+      .contr-grid { grid-template-columns:repeat(3,1fr); gap:12px; padding:16px; }
+      .sum-layout { grid-template-columns:1fr 1fr; }
+    }
+
+    @media print {
+      .toolbar, .dept-nav, .brand-accent-bar { display:none !important; }
+      .top-header { position:static !important; height:auto; }
+      .tbl-scroll { overflow:visible; }
+      .mt { min-width:0; }
+    }
   </style>
 </head>
 <body>
@@ -188,19 +262,19 @@
     </div>
     <div style="display:flex;flex-direction:column;gap:2px">
       <span class="tb-lbl">Month</span>
-      <input type="text" class="tb-ctl" value="May 2026" style="width:88px" />
+      <input type="text" class="tb-ctl" value="May 2026" style="min-width:80px;width:auto" />
     </div>
     <div style="display:flex;flex-direction:column;gap:2px">
       <span class="tb-lbl">Report By</span>
-      <input type="text" class="tb-ctl" placeholder="Mines Engineer / Supervisor" style="width:210px" />
+      <input type="text" class="tb-ctl" placeholder="Mines Engineer / Supervisor" style="min-width:140px;width:auto" />
     </div>
     <div class="tb-sep"></div>
-    <div style="display:flex;gap:10px;align-items:center">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <div class="leg"><div class="ld" style="background:#FDE68A;border:1px solid #B45309"></div>Manual Entry</div>
       <div class="leg"><div class="ld" style="background:#BFDBFE;border:1px solid #1D4ED8"></div>System / Odoo</div>
       <div class="leg"><div class="ld" style="background:#BBF7D0;border:1px solid #15803D"></div>Formula</div>
     </div>
-    <div style="margin-left:auto;display:flex;gap:8px">
+    <div class="btn-grp">
       <button class="btn btn-save">💾 Save Draft</button>
       <button class="btn btn-sub">✓ Submit Report</button>
     </div>
