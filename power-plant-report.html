@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lake Cement – Power Plant (CPP) Daily Report</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <style>
@@ -40,7 +41,7 @@
     .rpt-pill::before { content:''; width:7px; height:7px; border-radius:50%; background:currentColor; }
     .btn { padding:6px 16px; border-radius:var(--radius); font-family:var(--font); font-size:12px; font-weight:700; cursor:pointer; border:1.5px solid transparent; transition:all .15s; }
     .btn-save  { background:var(--orange); color:white; border-color:var(--orange); }
-    .btn-save:hover { background:#C56208; }
+    .btn-save:hover { background:#D97F30; }
     .btn-sub   { background:var(--navy); color:white; border-color:var(--navy); }
     .btn-sub:hover { background:var(--navy-light); }
     .btn-out   { background:transparent; color:var(--navy); border-color:#CBD5E1; }
@@ -178,12 +179,13 @@
 <body>
 
 <!-- ══════════════════ HEADER ══════════════════ -->
+<div class="brand-accent-bar"></div>
 <header class="top-header">
   <div class="header-left">
     <div class="logo-block">
-      <div class="logo-badge">LC</div>
+      <img class="nyati-logo" src="NYATI-LOGO.png" alt="Nyati Cement" />
       <div class="logo-text">
-        <span class="company-name">LAKE CEMENT LTD.</span>
+        <img class="lc-wordmark" src="lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
         <span class="company-sub">Power Plant (CPP) Daily Report</span>
       </div>
     </div>
@@ -191,8 +193,7 @@
   <div class="header-center"><span class="dash-title">POWER PLANT REPORT — CPP</span></div>
   <div class="header-right">
     <div class="brand-tag">
-      <span class="brand-name">NYATI CEMENT</span>
-      <span class="brand-slogan">Hushika Haraka • Hudumu Zaidi</span>
+      <span class="brand-slogan">Hushika Haraka &bull; Hudumu Zaidi</span>
     </div>
     <div class="header-meta" id="live-date"></div>
   </div>
@@ -824,9 +825,10 @@
 </main>
 
 <footer class="dash-footer">
-  <span>Lake Cement Ltd. © 2026 &nbsp;|&nbsp; NYATI CEMENT &nbsp;•&nbsp; Hushika Haraka &nbsp;•&nbsp; Hudumu Zaidi</span>
-  <span>Power Plant (CPP) Report — <span id="footer-date"></span></span>
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span>Power Plant (CPP) Report &mdash; <span id="footer-date"></span></span>
 </footer>
+<div class="brand-accent-bar"></div>
 
 <script>
   const d = new Date();

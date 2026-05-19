@@ -4,18 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lake Cement Ltd – Operations KPI Dashboard</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
   <!-- ═══════════════════════════════════════ TOP HEADER ═══════════════════════════════════════ -->
+  <div class="brand-accent-bar"></div>
   <header class="top-header">
     <div class="header-left">
       <div class="logo-block">
-        <div class="logo-badge">LC</div>
+        <img class="nyati-logo" src="NYATI-LOGO.png" alt="Nyati Cement" />
         <div class="logo-text">
-          <span class="company-name">LAKE CEMENT LTD.</span>
+          <img class="lc-wordmark" src="lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
           <span class="company-sub">Operations Dashboard</span>
         </div>
       </div>
@@ -25,8 +27,7 @@
     </div>
     <div class="header-right">
       <div class="brand-tag">
-        <span class="brand-name">NYATI CEMENT</span>
-        <span class="brand-slogan">Hushika Haraka • Hudumu Zaidi</span>
+        <span class="brand-slogan">Hushika Haraka &bull; Hudumu Zaidi</span>
       </div>
       <div class="header-meta">
         <span id="live-date"></span>
@@ -66,13 +67,13 @@
         <span class="nav-icon">🚜</span> Mines Workshop
       </button>
       <div class="nav-divider"></div>
-      <button class="nav-btn secondary" onclick="location.href='daily-report.html'" style="background:rgba(232,117,10,.15);border-color:rgba(232,117,10,.4)">
+      <button class="nav-btn secondary" onclick="location.href='daily-report.html'" style="background:rgba(244,149,69,.15);border-color:rgba(244,149,69,.4)">
         <span class="nav-icon">🏭</span> Production Report
       </button>
-      <button class="nav-btn secondary" onclick="location.href='power-plant-report.html'" style="background:rgba(232,117,10,.15);border-color:rgba(232,117,10,.4)">
+      <button class="nav-btn secondary" onclick="location.href='power-plant-report.html'" style="background:rgba(244,149,69,.15);border-color:rgba(244,149,69,.4)">
         <span class="nav-icon">⚡</span> Power Plant (CPP)
       </button>
-      <button class="nav-btn secondary" onclick="location.href='mines-report.html'" style="background:rgba(232,117,10,.15);border-color:rgba(232,117,10,.4)">
+      <button class="nav-btn secondary" onclick="location.href='mines-report.html'" style="background:rgba(244,149,69,.15);border-color:rgba(244,149,69,.4)">
         <span class="nav-icon">⛏</span> Mines
       </button>
       <button class="nav-btn secondary" onclick="window.print()">
@@ -1672,9 +1673,10 @@
 
   <!-- ═══════════════════════════════════════ FOOTER ═══════════════════════════════════════ -->
   <footer class="dash-footer">
-    <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; NYATI CEMENT &nbsp;•&nbsp; Hushika Haraka &nbsp;•&nbsp; Hudumu Zaidi</span>
+    <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
     <span>Report generated: <span id="footer-date"></span></span>
   </footer>
+  <div class="brand-accent-bar"></div>
 
   <script src="app.js"></script>
 </body>

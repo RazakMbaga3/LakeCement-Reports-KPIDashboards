@@ -1,32 +1,34 @@
 /* ══════════════════════════════════════════════════════════════════
    Lake Cement Ltd – KPI Dashboard Styles
-   Brand: Navy #0D2B4E | Orange #E8750A | Green #2E7D32 | Red #C62828
+   Nyati Cement Brand Colors (2026 Guidelines):
+     Primary   #F49545  |  Secondary #173158  |  Tertiary #239557
    ══════════════════════════════════════════════════════════════════ */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --navy:        #0D2B4E;
-  --navy-light:  #1A4070;
-  --navy-mid:    #163559;
-  --orange:      #E8750A;
-  --orange-lite: #F59332;
-  --green:       #2E7D32;
-  --green-bg:    #E8F5E9;
-  --green-cell:  #C8E6C9;
+  --navy:        #173158;
+  --navy-light:  #1E3D70;
+  --navy-mid:    #163059;
+  --orange:      #F49545;
+  --orange-lite: #F8B575;
+  --green:       #239557;
+  --green-bg:    #E8F5EE;
+  --green-cell:  #C3E8D4;
   --red:         #C62828;
   --red-bg:      #FFEBEE;
   --red-cell:    #FFCDD2;
   --white:       #FFFFFF;
   --off-white:   #F7F8FA;
   --border:      #DDE3EC;
-  --text-main:   #1A1A2E;
+  --text-main:   #111827;
   --text-muted:  #5A6270;
-  --section-bg:  #EAF0F8;
+  --section-bg:  #EEF2F8;
+  --accent-gray: #C8CDD5;
   --font:        'Inter', system-ui, sans-serif;
   --radius:      6px;
-  --shadow-sm:   0 1px 4px rgba(0,0,0,.08);
-  --shadow-md:   0 4px 16px rgba(0,0,0,.12);
+  --shadow-sm:   0 1px 4px rgba(0,0,0,.07);
+  --shadow-md:   0 4px 16px rgba(0,0,0,.10);
 }
 
 html { font-size: 13px; scroll-behavior: smooth; }
@@ -39,58 +41,77 @@ body {
   flex-direction: column;
 }
 
+/* ── BRAND ACCENT BAR ────────────────────────────────────────────── */
+.brand-accent-bar {
+  height: 4px;
+  background: linear-gradient(
+    to right,
+    var(--navy) 0%, var(--navy) 58%,
+    var(--orange) 58%, var(--orange) 80%,
+    var(--accent-gray) 80%, var(--accent-gray) 100%
+  );
+  flex-shrink: 0;
+}
+
 /* ── TOP HEADER ─────────────────────────────────────────────────── */
 .top-header {
-  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+  background: var(--navy);
   color: var(--white);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  height: 68px;
-  box-shadow: var(--shadow-md);
+  padding: 0 28px;
+  height: 64px;
+  box-shadow: 0 2px 12px rgba(23,49,88,.25);
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
-.header-left  { display: flex; align-items: center; gap: 12px; flex: 1; }
+.header-left  { display: flex; align-items: center; gap: 14px; flex: 1; }
 .header-center { flex: 1; text-align: center; }
-.header-right { flex: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.header-right { flex: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 
-.logo-block { display: flex; align-items: center; gap: 10px; }
-.logo-badge {
-  width: 40px; height: 40px;
-  background: var(--orange);
-  border-radius: var(--radius);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 15px; letter-spacing: .5px;
-  color: var(--white);
+.logo-block { display: flex; align-items: center; gap: 14px; }
+
+/* Nyati Cement logo image */
+.nyati-logo {
+  height: 46px;
+  width: auto;
+  display: block;
   flex-shrink: 0;
 }
-.logo-text { display: flex; flex-direction: column; }
-.company-name { font-weight: 700; font-size: 14px; letter-spacing: 1px; line-height: 1.2; }
-.company-sub  { font-size: 10px; color: rgba(255,255,255,.6); letter-spacing: .5px; }
 
-.dash-title {
-  font-size: 12px; font-weight: 600;
-  letter-spacing: 2px; text-transform: uppercase;
-  color: rgba(255,255,255,.7);
+/* Lake Cement Ltd wordmark (inverted to white) */
+.lc-wordmark {
+  height: 14px;
+  width: auto;
+  display: block;
+  filter: brightness(0) invert(1);
+  opacity: .85;
 }
 
-.brand-tag { display: flex; flex-direction: column; align-items: flex-end; }
-.brand-name   { font-size: 13px; font-weight: 700; color: var(--orange-lite); letter-spacing: 1px; }
-.brand-slogan { font-size: 9.5px; color: rgba(255,255,255,.55); letter-spacing: .3px; }
+.logo-text { display: flex; flex-direction: column; gap: 2px; }
+.company-sub  { font-size: 10px; color: rgba(255,255,255,.55); letter-spacing: .5px; }
+
+.dash-title {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(255,255,255,.65);
+}
+
+.brand-tag { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.brand-slogan { font-size: 9px; color: rgba(255,255,255,.45); letter-spacing: .3px; }
 
 .header-meta {
-  font-size: 10px; color: rgba(255,255,255,.45);
+  font-size: 10px; color: rgba(255,255,255,.4);
   letter-spacing: .3px;
 }
 
 /* ── DEPT NAV ────────────────────────────────────────────────────── */
 .dept-nav {
   background: var(--navy-mid);
-  border-bottom: 2px solid var(--orange);
+  border-bottom: 3px solid var(--orange);
 }
 .nav-inner {
   display: flex;
@@ -131,7 +152,7 @@ body {
   border-color: var(--orange);
   color: var(--white);
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(232,117,10,.4);
+  box-shadow: 0 2px 8px rgba(244,149,69,.4);
 }
 .nav-btn.secondary {
   margin-left: auto;
@@ -247,7 +268,7 @@ body {
 /* ── MAIN CONTENT ────────────────────────────────────────────────── */
 .dashboard-main {
   flex: 1;
-  padding: 16px 24px 24px;
+  padding: 20px 28px 32px;
 }
 
 .dept-section.hidden { display: none; }
@@ -396,12 +417,12 @@ body {
 /* ── FOOTER ──────────────────────────────────────────────────────── */
 .dash-footer {
   background: var(--navy);
-  color: rgba(255,255,255,.5);
+  color: rgba(255,255,255,.45);
   font-size: 10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 24px;
+  padding: 10px 28px;
   margin-top: auto;
   letter-spacing: .3px;
 }
@@ -422,6 +443,8 @@ body {
 @media (max-width: 900px) {
   .top-header { height: auto; padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
   .header-center { order: 3; flex-basis: 100%; }
-  .dashboard-main { padding: 10px 8px 20px; }
+  .dashboard-main { padding: 12px 12px 24px; }
   .filter-inner { gap: 8px; }
+  .nyati-logo { height: 36px; }
+  .lc-wordmark { height: 12px; }
 }

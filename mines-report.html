@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lake Cement – Mines Daily Material Movement Report</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <style>
@@ -70,7 +71,7 @@
     .gh-mghg { background:#0D47A1; color:#fff; font-size:9px; font-weight:700; letter-spacing:.5px; }
     .gh-mglg { background:#1B5E20; color:#fff; font-size:9px; font-weight:700; letter-spacing:.5px; }
     .gh-oth  { background:#4A148C; color:#fff; font-size:9px; font-weight:700; letter-spacing:.5px; }
-    .gh-tot  { background:#0D2B4E; color:#fff; font-size:9px; font-weight:700; letter-spacing:.5px; }
+    .gh-tot  { background:#173158; color:#fff; font-size:9px; font-weight:700; letter-spacing:.5px; }
 
     /* Sub-header row */
     .mt .sh th { background:#1A4070; color:rgba(255,255,255,.85); font-size:8.5px; font-weight:600; padding:3px 5px; }
@@ -96,9 +97,9 @@
     .ed { color:#CBD5E1; font-size:9px; }
 
     /* Total row */
-    .mt .trow td { background:#E8F0FA; color:var(--navy); font-weight:700; border-top:2px solid #0D2B4E; font-size:10px; }
+    .mt .trow td { background:#E8F0FA; color:var(--navy); font-weight:700; border-top:2px solid #173158; font-size:10px; }
     .mt .trow td.cf { background:var(--f-bg); color:var(--f-fg); font-weight:700; }
-    .mt .trow td.rn { background:#0D2B4E !important; color:#fff !important; }
+    .mt .trow td.rn { background:#173158 !important; color:#fff !important; }
 
     /* Hover */
     .mt tbody tr:hover td { filter:brightness(.97); }
@@ -113,7 +114,7 @@
     .sv { font-weight:700; color:var(--s-fg); background:var(--s-bg); text-align:right; min-width:110px; }
     .sl.f, .sv.f { background:var(--f-bg); color:var(--f-fg); }
     .sl.m, .sv.m { background:var(--m-bg); color:var(--m-fg); }
-    .sum-grp td { background:#0D2B4E; color:#fff; font-weight:700; font-size:9px; letter-spacing:1px; text-transform:uppercase; }
+    .sum-grp td { background:#173158; color:#fff; font-weight:700; font-size:9px; letter-spacing:1px; text-transform:uppercase; }
     .sum-tot td { background:var(--orange); color:#fff; font-weight:800; font-size:12px; }
     .sum-tbl .dash { color:#CBD5E1; font-weight:400; }
 
@@ -136,19 +137,20 @@
     .sign-slot input { width:100%; border:1.5px solid var(--border); border-radius:var(--radius); padding:6px 10px; font-size:12px; font-family:var(--font); color:var(--text-main); background:var(--off-white); }
 
     /* ══ FOOTER ══════════════════════════════════════════════════ */
-    .dash-footer { background:var(--navy); color:rgba(255,255,255,.5); font-size:10px; display:flex; justify-content:space-between; align-items:center; padding:10px 24px; letter-spacing:.3px; }
+    .dash-footer { background:var(--navy); color:rgba(255,255,255,.45); font-size:10px; display:flex; justify-content:space-between; align-items:center; padding:10px 28px; letter-spacing:.3px; }
   </style>
 </head>
 <body>
 
   <!-- ══ TOP HEADER ══════════════════════════════════════════════ -->
+  <div class="brand-accent-bar"></div>
   <header class="top-header">
     <div class="header-left">
       <div class="logo-block">
-        <div class="logo-badge">LC</div>
+        <img class="nyati-logo" src="NYATI-LOGO.png" alt="Nyati Cement" />
         <div class="logo-text">
-          <span class="company-name">LAKE CEMENT LTD</span>
-          <span class="company-sub">NYATI CEMENT</span>
+          <img class="lc-wordmark" src="lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
+          <span class="company-sub">Mines &amp; Quarry Operations</span>
         </div>
       </div>
     </div>
@@ -157,10 +159,9 @@
     </div>
     <div class="header-right">
       <div class="brand-tag">
-        <span class="brand-name">NYATI CEMENT</span>
-        <span class="brand-slogan">STRENGTH YOU CAN TRUST</span>
+        <span class="brand-slogan">Hushika Haraka &bull; Hudumu Zaidi</span>
       </div>
-      <span class="header-meta">Mines &amp; Quarry Operations · MIS Report</span>
+      <span class="header-meta">MIS Report</span>
     </div>
   </header>
 
@@ -623,10 +624,11 @@
 
   <!-- ══ FOOTER ═════════════════════════════════════════════════ -->
   <footer class="dash-footer">
-    <span>Lake Cement Ltd · Mines Daily Material Movement Report</span>
+    <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Mines Daily Material Movement Report</span>
     <span id="fts"></span>
-    <span>NYATI CEMENT — Strength You Can Trust</span>
+    <span>Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
   </footer>
+  <div class="brand-accent-bar"></div>
 
   <script>
     /* ── timestamp ── */
