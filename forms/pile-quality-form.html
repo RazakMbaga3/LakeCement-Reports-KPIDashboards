@@ -165,11 +165,13 @@
       <div class="kt-unit">MT Diff (QC vs WB)</div>
       <div class="kt-vs vs-ok">▲ No weight variance recorded</div>
     </div>
-    <div class="kt kt-f">
+    <div class="kt kt-f concern">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Avg % CaO — Day</div>
       <div class="kt-val" data-kpi="cao_avg">44.46%</div>
       <div class="kt-unit">Day Avg — Spec ≥ 45.00%</div>
+      <div class="kt-bar"><div class="kt-bar-fill" style="width:98.8%"></div></div>
+      <div class="kt-foot"><span class="kt-tgt">Spec: ≥ 45.00%</span><span class="kt-pct">98.8%</span></div>
       <div class="kt-vs vs-ng">▼ Below spec — 9 of 18 readings OOC</div>
     </div>
     <div class="kt kt-m">
@@ -841,7 +843,8 @@ initKpiLive([
                 'cao_h13','cao_h14','cao_h15','cao_h16','cao_h17','cao_h18'];
       var vals=keys.map(function(k){return f[k];}).filter(function(v){return v!==''&&!isNaN(+v);});
       return vals.length ? vals.reduce(function(a,b){return a+(+b);},0)/vals.length : null;
-  }, fmt:'pct2' }
+  }, fmt:'pct2',
+    target:45.0, sign:'>=', targetLabel:'Spec: ≥ 45.00%' }
 ]);
 </script>
 </body>

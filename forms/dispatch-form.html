@@ -101,25 +101,29 @@
 
   <!-- ══ KPI SUMMARY STRIP ════════════════════════════════════════ -->
   <div class="kpi-strip">
-    <div class="kt kt-f">
+    <div class="kt kt-f watch">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Total Dispatch — On Date</div>
       <div class="kt-val" data-kpi="dispatch_total">376.5</div>
       <div class="kt-unit">MT / Today</div>
       <div class="kt-vs vs-wa">▼ MTD pace: 81.3% of monthly target</div>
     </div>
-    <div class="kt kt-f">
+    <div class="kt kt-f watch">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">MTD Dispatch</div>
       <div class="kt-val">8,292</div>
       <div class="kt-unit">MT / Month to Date</div>
+      <div class="kt-bar"><div class="kt-bar-fill" style="width:81.3%"></div></div>
+      <div class="kt-foot"><span class="kt-tgt">Target: 10,200 MT</span><span class="kt-pct">81.3%</span></div>
       <div class="kt-vs vs-wa">▼ Target 10,200 MT — 1,908 MT behind</div>
     </div>
-    <div class="kt kt-f">
+    <div class="kt kt-f watch">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">MTD Target Achievement</div>
       <div class="kt-val">81.3%</div>
       <div class="kt-unit">% vs Monthly Plan</div>
+      <div class="kt-bar"><div class="kt-bar-fill" style="width:90.3%"></div></div>
+      <div class="kt-foot"><span class="kt-tgt">Threshold: ≥ 90%</span><span class="kt-pct">90.3%</span></div>
       <div class="kt-vs vs-wa">▼ Below 90% threshold</div>
     </div>
     <div class="kt kt-m">
@@ -129,18 +133,22 @@
       <div class="kt-unit">MT — Open Sales Orders</div>
       <div class="kt-vs vs-wa">▲ Pending fulfilment — 4.1 days at today's rate</div>
     </div>
-    <div class="kt kt-m">
+    <div class="kt kt-m on-track">
       <span class="kt-badge">Manual</span>
       <div class="kt-lbl">Bags Packed Today</div>
       <div class="kt-val" data-kpi="bags_packed">7,530</div>
       <div class="kt-unit">Bags / On Date</div>
+      <div class="kt-bar"><div class="kt-bar-fill" style="width:100%"></div></div>
+      <div class="kt-foot"><span class="kt-tgt">Target: ≥ 7,000 / day</span><span class="kt-pct">107.6%</span></div>
       <div class="kt-vs vs-ok">▲ Packing lines operational</div>
     </div>
-    <div class="kt kt-m">
+    <div class="kt kt-m concern">
       <span class="kt-badge">Manual</span>
       <div class="kt-lbl">Burst Bag Rate</div>
       <div class="kt-val" data-kpi="burst_rate">0.47%</div>
       <div class="kt-unit">% of Bags Packed</div>
+      <div class="kt-bar"><div class="kt-bar-fill" style="width:100%"></div></div>
+      <div class="kt-foot"><span class="kt-tgt">Target: ≤ 0.30%</span><span class="kt-pct">156.7%</span></div>
       <div class="kt-vs vs-ng">▲ Above 0.30% target — investigate packer</div>
     </div>
   </div>
@@ -592,13 +600,16 @@
 <script src="kpi-live.js"></script>
 <script>
 initKpiLive([
-  { kpi:'dispatch_total', compute: function(f,n){ return n(f.dispatch_425r)+n(f.dispatch_425n)+n(f.dispatch_bulker)+n(f.dispatch_bigbag); }, fmt:'n1' },
+  { kpi:'dispatch_total', compute: function(f,n){ return n(f.dispatch_425r)+n(f.dispatch_425n)+n(f.dispatch_bulker)+n(f.dispatch_bigbag); }, fmt:'n1',
+    rag: function(v){ return v>=350 ? 'on-track' : v>=250 ? 'watch' : 'concern'; } },
   { kpi:'so_pendency',    compute: function(f,n){ return n(f.so_425r)+n(f.so_425n)+n(f.so_bulker)+n(f.so_bigbag); }, fmt:'n0' },
-  { kpi:'bags_packed',    compute: function(f,n){ return n(f.bags_pl1)+n(f.bags_pl2); }, fmt:'n0' },
+  { kpi:'bags_packed',    compute: function(f,n){ return n(f.bags_pl1)+n(f.bags_pl2); }, fmt:'n0',
+    target:7000, sign:'>=', targetLabel:'Target: ≥ 7,000 / day' },
   { kpi:'burst_rate',     compute: function(f,n){
       var b1=n(f.bags_pl1), b2=n(f.bags_pl2), tot=b1+b2;
       return tot ? (n(f.burst_rate_pl1)*b1 + n(f.burst_rate_pl2)*b2) / tot : null;
-  }, fmt:'pct2' }
+  }, fmt:'pct2',
+    target:0.30, sign:'<=', targetLabel:'Target: ≤ 0.30%' }
 ]);
 </script>
 </body>

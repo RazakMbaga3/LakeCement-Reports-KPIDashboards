@@ -323,17 +323,64 @@ td.cf .cv { color:var(--f-fg); }
   padding-right:38px;
 }
 .kt-val {
-  font-size:22px; font-weight:800;
+  font-size:26px; font-weight:800;
   color:var(--navy);
-  line-height:1.1;
+  line-height:1;
+  margin:3px 0 2px;
 }
-.kt-unit { font-size:10px; color:var(--text-muted); margin-top:2px; }
-.kt-vs { margin-top:5px; font-size:10px; font-weight:700; }
+.kt-unit { font-size:10px; color:var(--text-muted); margin-top:1px; }
+.kt-vs { margin-top:4px; font-size:10px; font-weight:700; }
 .vs-ok { color:#15803D; }
 .vs-ng { color:#DC2626; }
+.vs-wa { color:var(--orange); }
+
+/* ── Phase 3: RAG status, progress bar, achievement row ── */
+.kt { transition:box-shadow .15s ease, transform .1s ease; }
+.kt:hover { box-shadow:var(--shadow-md); transform:translateY(-1px); }
+
+/* RAG top bar  (::before = bottom data-type bar; ::after = top RAG bar) */
+.kt::after {
+  content:''; position:absolute;
+  top:0; left:0; right:0; height:3px;
+  border-radius:var(--radius) var(--radius) 0 0;
+  transition:background .25s;
+}
+.kt.on-track::after { background:var(--green); }
+.kt.watch::after    { background:var(--orange); }
+.kt.concern::after  { background:var(--red); }
+
+/* Card body RAG tint */
+.kt.on-track { background:#FAFFFE; border-color:#BBEED6; }
+.kt.watch    { background:#FFFDF5; border-color:#FDE68A; }
+.kt.concern  { background:#FFFAFA; border-color:#FFCDD2; }
+
+/* Progress bar */
+.kt-bar {
+  height:4px; background:var(--section-bg);
+  border-radius:2px; overflow:hidden; margin:7px 0 3px;
+}
+.kt-bar-fill {
+  height:100%; border-radius:2px; width:0%;
+  transition:width .45s ease;
+}
+.kt.on-track .kt-bar-fill { background:var(--green); }
+.kt.watch    .kt-bar-fill { background:var(--orange); }
+.kt.concern  .kt-bar-fill { background:var(--red); }
+
+/* Target + achievement footer */
+.kt-foot {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:3px;
+}
+.kt-tgt { font-size:9px; color:var(--text-muted); font-weight:500; }
+.kt-pct { font-size:11px; font-weight:700; }
+.kt.on-track .kt-pct { color:var(--green); }
+.kt.watch    .kt-pct { color:var(--orange); }
+.kt.concern  .kt-pct { color:var(--red); }
 .vs-wa { color:#D97706; }
 
 @media (min-width:1024px) {
+  .kt-val { font-size:24px; }
   .kpi-strip {
     grid-template-columns:repeat(6,1fr);
     gap:10px;
@@ -342,7 +389,8 @@ td.cf .cv { color:var(--f-fg); }
 }
 @media (max-width:767px) {
   .kpi-strip { margin:0 12px 10px; gap:6px; }
-  .kt-val { font-size:18px; }
+  .kt-val { font-size:20px; }
+  .kt:hover { transform:none; }
 }
 
 @media print {

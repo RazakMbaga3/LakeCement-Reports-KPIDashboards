@@ -1,27 +1,16 @@
 /* ══════════════════════════════════════════════════════════════════
-   Nyati Cement — Live KPI Strip Engine  (Phase 2)
+   Nyati Cement — Live KPI Strip Engine  (Phase 3)
    ─────────────────────────────────────────────────────────────────
-   Usage on each report/form page:
-
-     <script src="kpi-live.js"></script>
-     <script>
-       initKpiLive([
-         { kpi:'coal_total', compute:(f,n)=>n(f.coal_kiln)+n(f.coal_cpp), fmt:'n0' },
-         { kpi:'free_lime',  field:'free_lime', fmt:'pct1' },
-         ...
-       ]);
-     </script>
-
-   Each rule object:
-     kpi      — matches [data-kpi="x"] on the .kt-val element
-     field    — single data-field name (use for direct 1-to-1 wiring)
-     compute  — function(fieldsDict, numHelper) → value (use for formulas)
-     fmt      — 'n0' | 'n1' | 'n2' | 'pct0' | 'pct1' | 'pct2'
-
-   Triggers:
-     • input / change on any element  → live update while typing
-     • nyati:restored custom event    → update after form-persist restores
-     • DOMContentLoaded + 60ms delay  → first paint from saved data
+   Rule object properties:
+     kpi         — matches [data-kpi="x"] on the .kt-val element
+     field       — single data-field name (1-to-1 wiring)
+     compute     — function(fieldsDict, numHelper) → value
+     fmt         — 'n0'|'n1'|'n2'|'pct0'|'pct1'|'pct2'
+     target      — numeric target for RAG + progress bar
+     sign        — '>='|'<=' direction (>= = higher is better)
+     targetLabel — static string shown in .kt-tgt element
+     rag         — function(numVal) → 'on-track'|'watch'|'concern'
+                   (overrides target/sign logic for non-linear KPIs)
    ══════════════════════════════════════════════════════════════════ */
 
 (function (global) {
@@ -59,6 +48,48 @@
     }
   }
 
+  /* ── Update RAG status, progress bar and achievement % ─────────── */
+  function _rag(el, numVal, rule) {
+    /* walk up to nearest .kt card */
+    var kt = el.parentElement;
+    while (kt && !kt.classList.contains('kt')) kt = kt.parentElement;
+    if (!kt) return;
+
+    var ragClass = null;
+    var barPct   = null;
+
+    if (typeof rule.rag === 'function') {
+      ragClass = rule.rag(numVal);
+
+    } else if (rule.target !== undefined && rule.sign) {
+      var t = +rule.target, v = numVal;
+      if (rule.sign === '>=' || rule.sign === '>') {
+        if (t > 0) {
+          barPct   = Math.min(v / t * 100, 100);
+          ragClass = v >= t ? 'on-track' : v >= t * 0.85 ? 'watch' : 'concern';
+        }
+      } else {                           /* <= or < */
+        if (t > 0) {
+          barPct   = Math.min(v / t * 100, 100);
+          ragClass = v <= t ? 'on-track' : v <= t * 1.15 ? 'watch' : 'concern';
+        } else {
+          ragClass = v === 0 ? 'on-track' : v <= 60 ? 'watch' : 'concern';
+        }
+      }
+    }
+
+    if (ragClass) {
+      kt.classList.remove('on-track', 'watch', 'concern');
+      kt.classList.add(ragClass);
+    }
+
+    var fill = kt.querySelector('.kt-bar-fill');
+    if (fill && barPct !== null) fill.style.width = barPct.toFixed(1) + '%';
+
+    var pctEl = kt.querySelector('.kt-pct');
+    if (pctEl && barPct !== null) pctEl.textContent = barPct.toFixed(1) + '%';
+  }
+
   /* ══ Public entry point ════════════════════════════════════════ */
   global.initKpiLive = function (rules) {
     function update() {
@@ -76,7 +107,10 @@
 
         if (val === null || val === undefined) return;
         const display = _fmt(val, rule.fmt || 'n0');
-        if (display !== '—') el.textContent = display;
+        if (display !== '—') {
+          el.textContent = display;
+          _rag(el, _num(val), rule);
+        }
       });
     }
 
