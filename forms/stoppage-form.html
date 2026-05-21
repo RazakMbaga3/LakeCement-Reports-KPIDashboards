@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – Sectional Stoppage Report</title>
+  <link rel="icon" type="image/png" href="../favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="forms.css" />
+  <style>
+    :root {
+      --m-bg:#FFFBEB; --m-fg:#B45309; --m-bd:#FDE68A;
+      --s-bg:#EFF6FF; --s-fg:#1D4ED8; --s-bd:#BFDBFE;
+      --f-bg:#F0FDF4; --f-fg:#15803D; --f-bd:#BBF7D0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header class="top-header">
+  <div class="header-left">
+    <div class="logo-block">
+      <img class="nyati-logo" src="../NYATI-LOGO.png" alt="Nyati Cement" />
+      <div class="logo-text">
+        <img class="lc-wordmark" src="../lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
+        <span class="company-sub">Sectional Stoppage Report</span>
+      </div>
+    </div>
+  </div>
+  <div class="header-center">
+    <div class="view-switcher">
+      <a href="../index.html" class="vs-tab">
+        <i data-lucide="bar-chart-2" class="vs-icon"></i>
+        <span>Monthly KPIs</span>
+      </a>
+      <a href="../daily-report.html" class="vs-tab active">
+        <i data-lucide="clipboard-list" class="vs-icon"></i>
+        <span>Daily Reports</span>
+      </a>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="brand-tag">
+      <span class="brand-slogan">Hushika Haraka · Hudumu Zaidi</span>
+      <span class="header-meta" id="live-date"></span>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════ NAV ══════════════════ -->
+<nav class="dept-nav">
+  <div class="nav-inner">
+    <span class="nav-label">DAILY FORMS</span>
+    <button class="nav-btn" onclick="location.href='index.html'"><i data-lucide="layout-grid" class="nav-icon"></i> All Forms</button>
+    <button class="nav-btn" onclick="location.href='dispatch-form.html'"><i data-lucide="truck" class="nav-icon"></i> Dispatch</button>
+    <button class="nav-btn active"><i data-lucide="alert-triangle" class="nav-icon"></i> Stoppages</button>
+    <button class="nav-btn" onclick="location.href='cpp-form.html'"><i data-lucide="zap" class="nav-icon"></i> CPP</button>
+    <button class="nav-btn" onclick="location.href='quality-form.html'"><i data-lucide="flask-conical" class="nav-icon"></i> Quality</button>
+    <button class="nav-btn" onclick="location.href='materials-form.html'"><i data-lucide="package" class="nav-icon"></i> Materials</button>
+    <button class="nav-btn" onclick="location.href='power-form.html'"><i data-lucide="activity" class="nav-icon"></i> Power</button>
+    <div class="nav-divider"></div>
+    <button class="nav-btn secondary" onclick="window.print()"><i data-lucide="printer" class="nav-icon"></i> Print / PDF</button>
+  </div>
+</nav>
+
+<!-- ══════════════════ TOOLBAR ══════════════════ -->
+<div class="toolbar">
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="tb-lbl">Date</span>
+    <input type="date" class="tb-ctl" value="2026-04-21" />
+  </div>
+  <div class="tb-sep"></div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="tb-lbl">Prepared By</span>
+    <input type="text" class="tb-ctl" placeholder="Mechanical / E&amp;I Head…" style="min-width:160px;width:auto" />
+  </div>
+  <div class="tb-sep"></div>
+  <span class="rpt-pill">DRAFT</span>
+  <div class="btn-grp">
+    <button class="btn btn-out"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
+    <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+    <button class="btn btn-sub"><i data-lucide="check-circle" class="btn-icon"></i> Submit Report</button>
+  </div>
+</div>
+
+<!-- ══════════════════ SECTION TAB NAV ══════════════════ -->
+<div class="sec-nav">
+  <div class="sec-nav-inner">
+    <button class="sec-tab active" onclick="showSection('summary')"><i data-lucide="layout-list" class="btn-icon"></i> Summary</button>
+    <button class="sec-tab" onclick="showSection('crusher')"><i data-lucide="layers" class="btn-icon"></i> Crusher</button>
+    <button class="sec-tab" onclick="showSection('rawmill')"><i data-lucide="wind" class="btn-icon"></i> Raw Mill</button>
+    <button class="sec-tab" onclick="showSection('coalmill')"><i data-lucide="flame" class="btn-icon"></i> Coal Mill</button>
+    <button class="sec-tab" onclick="showSection('kiln')"><i data-lucide="thermometer" class="btn-icon"></i> Kiln</button>
+    <button class="sec-tab" onclick="showSection('cm1')"><i data-lucide="cog" class="btn-icon"></i> Cement Mill-1</button>
+    <button class="sec-tab" onclick="showSection('cm2')"><i data-lucide="cog" class="btn-icon"></i> Cement Mill-2</button>
+    <button class="sec-tab" onclick="showSection('packing')"><i data-lucide="package" class="btn-icon"></i> Packing</button>
+  </div>
+</div>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<main class="fm-main">
+
+  <!-- legend -->
+  <div class="legend-bar">
+    <span class="leg-lbl">Data Source Key</span>
+    <span class="leg-chip leg-m"><i data-lucide="pencil" class="btn-icon"></i> Manual Entry</span>
+    <span class="leg-chip leg-f"><i data-lucide="sigma" class="btn-icon"></i> Cumulative / MTD</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--text-muted);font-style:italic">All durations in minutes. On Date = 21-Apr-2026.</span>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       SUMMARY TAB
+  ════════════════════════════════════════════════ -->
+  <div id="panel-summary" class="sec-panel active">
+    <div class="rcard">
+      <div class="rcard-hdr">
+        <div>
+          <div class="rcard-title"><i data-lucide="layout-list" class="title-icon"></i> Stoppage Summary — All Sections</div>
+          <div class="rcard-sub">Consolidated stoppage minutes by section and category — 21-Apr-2026</div>
+        </div>
+        <div class="rcard-chips">
+          <span class="rcard-chip">21-Apr-2026</span>
+          <span class="rcard-chip orange">MECHANICAL · E&amp;I · PRODUCTION</span>
+        </div>
+      </div>
+      <div class="tbl-scroll">
+        <table class="rt" style="min-width:900px">
+          <thead>
+            <tr>
+              <th class="tl grp-hdr" style="min-width:140px">Section</th>
+              <th class="grp-hdr">Mechanical</th>
+              <th class="grp-hdr">E&amp;I</th>
+              <th class="grp-hdr">Production</th>
+              <th class="grp-hdr">Planned<br>Maint.</th>
+              <th class="grp-hdr">Power Rest<br>(CPP)</th>
+              <th class="grp-hdr">Others</th>
+              <th class="grp-hdr">TOTAL<br>(min)</th>
+              <th class="grp-hdr">MTD Total<br>(min)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="tp">Crusher</td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cf"><div class="cv">0</div></td>
+              <td class="cf"><div class="cv">240</div></td>
+            </tr>
+            <tr>
+              <td class="tp">Raw Mill</td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="30" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cf"><div class="cv">30</div></td>
+              <td class="cf"><div class="cv">410</div></td>
+            </tr>
+            <tr>
+              <td class="tp">Coal Mill</td>
+              <td class="cm"><input class="ci" type="number" value="45" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cf"><div class="cv">45</div></td>
+              <td class="cf"><div class="cv">320</div></td>
+            </tr>
+            <tr>
+              <td class="tp">Kiln</td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cf"><div class="cv">0</div></td>
+              <td class="cf"><div class="cv">0</div></td>
+            </tr>
+            <tr>
+              <td class="tp">Cement Mill-1</td>
+              <td class="cm"><input class="ci" type="number" value="120" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="600" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cf"><div class="cv">720</div></td>
+              <td class="cf"><div class="cv">5,880</div></td>
+            </tr>
+            <tr>
+              <td class="tp">Cement Mill-2</td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cf"><div class="cv">0</div></td>
+              <td class="cf"><div class="cv">180</div></td>
+            </tr>
+            <tr>
+              <td class="tp">Packing</td>
+              <td class="cm"><input class="ci" type="number" value="85" /></td>
+              <td class="cm"><input class="ci" type="number" value="45" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cf"><div class="cv">130</div></td>
+              <td class="cf"><div class="cv">920</div></td>
+            </tr>
+            <tr class="trow">
+              <td class="tp">TOTAL</td>
+              <td class="cf"><div class="cv">250</div></td>
+              <td class="cf"><div class="cv">75</div></td>
+              <td class="cf"><div class="cv">0</div></td>
+              <td class="cf"><div class="cv">600</div></td>
+              <td class="cf"><div class="cv">0</div></td>
+              <td class="cf"><div class="cv">0</div></td>
+              <td class="cf"><div class="cv">925</div></td>
+              <td class="cf"><div class="cv">7,950</div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       CRUSHER TAB
+  ════════════════════════════════════════════════ -->
+  <div id="panel-crusher" class="sec-panel">
+    <div class="rcard">
+      <div class="rcard-hdr">
+        <div>
+          <div class="rcard-title"><i data-lucide="layers" class="title-icon"></i> Crusher — Stoppage Details</div>
+          <div class="rcard-sub">Individual stoppage events — 21-Apr-2026</div>
+        </div>
+        <div class="rcard-chips"><span class="rcard-chip orange">MECHANICAL · E&amp;I</span></div>
+      </div>
+      <div class="tbl-scroll">
+        <table class="rt" style="min-width:1000px">
+          <thead>
+            <tr>
+              <th class="grp-hdr" style="min-width:30px">SN</th>
+              <th class="tl grp-hdr" style="min-width:200px">Equipment / Description</th>
+              <th class="grp-hdr">Start</th>
+              <th class="grp-hdr">End</th>
+              <th class="grp-hdr">On Date<br>(min)</th>
+              <th class="grp-hdr">MTD<br>(min)</th>
+              <th class="grp-hdr">Category</th>
+              <th class="tl grp-hdr" style="min-width:200px">Cause / Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="ts">1</td>
+              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" placeholder="Equipment…"/></td>
+              <td class="cm"><input class="ci" type="time" /></td>
+              <td class="cm"><input class="ci" type="time" /></td>
+              <td class="cf"><div class="cv">0</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cm"><select class="ci" style="text-align:left"><option></option><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
+              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+            </tr>
+            <tr>
+              <td class="ts">2</td>
+              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+              <td class="cm"><input class="ci" type="time" /></td>
+              <td class="cm"><input class="ci" type="time" /></td>
+              <td class="cf"><div class="cv">0</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cm"><select class="ci" style="text-align:left"><option></option><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
+              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+            </tr>
+            <tr class="trow">
+              <td class="ts" colspan="4" style="text-align:right;padding-right:12px;font-weight:700">Crusher Total</td>
+              <td class="cf"><div class="cv">0</div></td>
+              <td class="cf"><div class="cv">240</div></td>
+              <td colspan="2"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       RAW MILL TAB
+  ════════════════════════════════════════════════ -->
+  <div id="panel-rawmill" class="sec-panel">
+    <div class="rcard">
+      <div class="rcard-hdr">
+        <div>
+          <div class="rcard-title"><i data-lucide="wind" class="title-icon"></i> Raw Mill — Stoppage Details</div>
+          <div class="rcard-sub">Individual stoppage events — 21-Apr-2026</div>
+        </div>
+        <div class="rcard-chips"><span class="rcard-chip orange">MECHANICAL · E&amp;I</span></div>
+      </div>
+      <div class="tbl-scroll">
+        <table class="rt" style="min-width:1000px">
+          <thead>
+            <tr>
+              <th class="grp-hdr" style="min-width:30px">SN</th>
+              <th class="tl grp-hdr" style="min-width:200px">Equipment / Description</th>
+              <th class="grp-hdr">Start</th>
+              <th class="grp-hdr">End</th>
+              <th class="grp-hdr">On Date<br>(min)</th>
+              <th class="grp-hdr">MTD<br>(min)</th>
+              <th class="grp-hdr">Category</th>
+              <th class="tl grp-hdr" style="min-width:200px">Cause / Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="ts">1</td>
+              <td class="cm"><input class="ci" type="text" value="RM separator motor trip" style="text-align:left;padding-left:8px" /></td>
+              <td class="cm"><input class="ci" type="time" value="09:10" /></td>
+              <td class="cm"><input class="ci" type="time" value="09:40" /></td>
+              <td class="cf"><div class="cv">30</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cm"><select class="ci" style="text-align:left"><option>E&amp;I</option><option>Mechanical</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
+              <td class="cm"><input class="ci" type="text" value="Overload relay reset; motor restarted" style="text-align:left;padding-left:8px" /></td>
+            </tr>
+            <tr>
+              <td class="ts">2</td>
+              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+              <td class="cm"><input class="ci" type="time" /></td>
+              <td class="cm"><input class="ci" type="time" /></td>
+              <td class="cf"><div class="cv">0</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cm"><select class="ci" style="text-align:left"><option></option><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
+              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+            </tr>
+            <tr class="trow">
+              <td class="ts" colspan="4" style="text-align:right;padding-right:12px;font-weight:700">Raw Mill Total</td>
+              <td class="cf"><div class="cv">30</div></td>
+              <td class="cf"><div class="cv">410</div></td>
+              <td colspan="2"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       COAL MILL TAB
+  ════════════════════════════════════════════════ -->
+  <div id="panel-coalmill" class="sec-panel">
+    <div class="rcard">
+      <div class="rcard-hdr">
+        <div>
+          <div class="rcard-title"><i data-lucide="flame" class="title-icon"></i> Coal Mill — Stoppage Details</div>
+          <div class="rcard-sub">Individual stoppage events — 21-Apr-2026</div>
+        </div>
+        <div class="rcard-chips"><span class="rcard-chip orange">MECHANICAL · E&amp;I</span></div>
+      </div>
+      <div class="tbl-scroll">
+        <table class="rt" style="min-width:1000px">
+          <thead>
+            <tr>
+              <th class="grp-hdr" style="min-width:30px">SN</th>
+              <th class="tl grp-hdr" style="min-width:200px">Equipment / Description</th>
+              <th class="grp-hdr">Start</th>
+              <th class="grp-hdr">End</th>
+              <th class="grp-hdr">On Date<br>(min)</th>
+              <th class="grp-hdr">MTD<br>(min)</th>
+              <th class="grp-hdr">Category</th>
+              <th class="tl grp-hdr" style="min-width:200px">Cause / Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="ts">1</td>
+              <td class="cm"><input class="ci" type="text" value="Coal mill main gearbox oil leak" style="text-align:left;padding-left:8px" /></td>
+              <td class="cm"><input class="ci" type="time" value="14:30" /></td>
+              <td class="cm"><input class="ci" type="time" value="15:15" /></td>
+              <td class="cf"><div class="cv">45</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cm"><select class="ci" style="text-align:left"><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
+              <td class="cm"><input class="ci" type="text" value="Seal replaced; oil topped up; restarted" style="text-align:left;padding-left:8px" /></td>
+            </tr>
+            <tr>
+              <td class="ts">2</td>
+              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+              <td class="cm"><input class="ci" type="time" /></td>
+              <td class="cm"><input class="ci" type="time" /></td>
+              <td class="cf"><div class="cv">0</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cm"><select class="ci" style="text-align:left"><option></option><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
+              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+            </tr>
+            <tr class="trow">
+              <td class="ts" colspan="4" style="text-align:right;padding-right:12px;font-weight:700">Coal Mill Total</td>
+              <td class="cf"><div class="cv">45</div></td>
+              <td class="cf"><div class="cv">320</div></td>
+              <td colspan="2"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       KILN TAB
+  ════════════════════════════════════════════════ -->
+  <div id="panel-kiln" class="sec-panel">
+    <div class="rcard">
+      <div class="rcard-hdr">
+        <div>
+          <div class="rcard-title"><i data-lucide="thermometer" class="title-icon"></i> Kiln — Stoppage Details</div>
+          <div class="rcard-sub">Kiln running 24 hrs — no stoppages on 21-Apr-2026</div>
+        </div>
+        <div class="rcard-chips">
+          <span class="rcard-chip" style="background:var(--green);color:white">RUNNING 24 HRS</span>
+          <span class="rcard-chip orange">PRODUCTION</span>
+        </div>
+      </div>
+      <div class="tbl-scroll">
+        <table class="rt" style="min-width:1000px">
+          <thead>
+            <tr>
+              <th class="grp-hdr" style="min-width:30px">SN</th>
+              <th class="tl grp-hdr" style="min-width:200px">Equipment / Description</th>
+              <th class="grp-hdr">Start</th>
+              <th class="grp-hdr">End</th>
+              <th class="grp-hdr">On Date<br>(min)</th>
+              <th class="grp-hdr">MTD<br>(min)</th>
+              <th class="grp-hdr">Category</th>
+              <th class="tl grp-hdr" style="min-width:200px">Cause / Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="ts">1</td>
+              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" placeholder="No stoppages today" /></td>
+              <td class="cm"><input class="ci" type="time" /></td>
+              <td class="cm"><input class="ci" type="time" /></td>
+              <td class="cf"><div class="cv">0</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cm"><select class="ci" style="text-align:left"><option></option><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
+              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+            </tr>
+            <tr class="trow">
+              <td class="ts" colspan="4" style="text-align:right;padding-right:12px;font-weight:700">Kiln Total</td>
+              <td class="cf"><div class="cv">0</div></td>
+              <td class="cf"><div class="cv">0</div></td>
+              <td colspan="2"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       CEMENT MILL-1 TAB
+  ════════════════════════════════════════════════ -->
+  <div id="panel-cm1" class="sec-panel">
+    <div class="rcard">
+      <div class="rcard-hdr">
+        <div>
+          <div class="rcard-title"><i data-lucide="cog" class="title-icon"></i> Cement Mill-1 — Stoppage Details</div>
+          <div class="rcard-sub">CM-1 under planned maintenance 21-Apr-2026</div>
+        </div>
+        <div class="rcard-chips"><span class="rcard-chip orange">MECHANICAL · PRODUCTION</span></div>
+      </div>
+      <div class="tbl-scroll">
+        <table class="rt" style="min-width:1000px">
+          <thead>
+            <tr>
+              <th class="grp-hdr" style="min-width:30px">SN</th>
+              <th class="tl grp-hdr" style="min-width:200px">Equipment / Description</th>
+              <th class="grp-hdr">Start</th>
+              <th class="grp-hdr">End</th>
+              <th class="grp-hdr">On Date<br>(min)</th>
+              <th class="grp-hdr">MTD<br>(min)</th>
+              <th class="grp-hdr">Category</th>
+              <th class="tl grp-hdr" style="min-width:200px">Cause / Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="ts">1</td>
+              <td class="cm"><input class="ci" type="text" value="CM-1 planned maintenance — liner change" style="text-align:left;padding-left:8px" /></td>
+              <td class="cm"><input class="ci" type="time" value="00:00" /></td>
+              <td class="cm"><input class="ci" type="time" value="10:00" /></td>
+              <td class="cf"><div class="cv">600</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cm"><select class="ci" style="text-align:left"><option>Planned</option><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Power</option><option>Other</option></select></td>
+              <td class="cm"><input class="ci" type="text" value="Scheduled liner change; completed 10:00" style="text-align:left;padding-left:8px" /></td>
+            </tr>
+            <tr>
+              <td class="ts">2</td>
+              <td class="cm"><input class="ci" type="text" value="CM-1 girth gear alignment check" style="text-align:left;padding-left:8px" /></td>
+              <td class="cm"><input class="ci" type="time" value="10:00" /></td>
+              <td class="cm"><input class="ci" type="time" value="12:00" /></td>
+              <td class="cf"><div class="cv">120</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cm"><select class="ci" style="text-align:left"><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
+              <td class="cm"><input class="ci" type="text" value="Alignment OK; restarted 12:00" style="text-align:left;padding-left:8px" /></td>
+            </tr>
+            <tr class="trow">
+              <td class="ts" colspan="4" style="text-align:right;padding-right:12px;font-weight:700">CM-1 Total</td>
+              <td class="cf"><div class="cv">720</div></td>
+              <td class="cf"><div class="cv">5,880</div></td>
+              <td colspan="2"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       CEMENT MILL-2 TAB
+  ════════════════════════════════════════════════ -->
+  <div id="panel-cm2" class="sec-panel">
+    <div class="rcard">
+      <div class="rcard-hdr">
+        <div>
+          <div class="rcard-title"><i data-lucide="cog" class="title-icon"></i> Cement Mill-2 — Stoppage Details</div>
+          <div class="rcard-sub">21-Apr-2026</div>
+        </div>
+        <div class="rcard-chips"><span class="rcard-chip orange">MECHANICAL · E&amp;I</span></div>
+      </div>
+      <div class="tbl-scroll">
+        <table class="rt" style="min-width:1000px">
+          <thead>
+            <tr>
+              <th class="grp-hdr">SN</th>
+              <th class="tl grp-hdr" style="min-width:200px">Equipment / Description</th>
+              <th class="grp-hdr">Start</th>
+              <th class="grp-hdr">End</th>
+              <th class="grp-hdr">On Date<br>(min)</th>
+              <th class="grp-hdr">MTD<br>(min)</th>
+              <th class="grp-hdr">Category</th>
+              <th class="tl grp-hdr" style="min-width:200px">Cause / Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="ts">1</td>
+              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" placeholder="No stoppages" /></td>
+              <td class="cm"><input class="ci" type="time" /></td>
+              <td class="cm"><input class="ci" type="time" /></td>
+              <td class="cf"><div class="cv">0</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cm"><select class="ci" style="text-align:left"><option></option><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
+              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+            </tr>
+            <tr class="trow">
+              <td class="ts" colspan="4" style="text-align:right;padding-right:12px;font-weight:700">CM-2 Total</td>
+              <td class="cf"><div class="cv">0</div></td>
+              <td class="cf"><div class="cv">180</div></td>
+              <td colspan="2"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       PACKING TAB
+  ════════════════════════════════════════════════ -->
+  <div id="panel-packing" class="sec-panel">
+    <div class="rcard">
+      <div class="rcard-hdr">
+        <div>
+          <div class="rcard-title"><i data-lucide="package" class="title-icon"></i> Packing — Stoppage Details</div>
+          <div class="rcard-sub">21-Apr-2026</div>
+        </div>
+        <div class="rcard-chips"><span class="rcard-chip orange">PACKING · E&amp;I</span></div>
+      </div>
+      <div class="tbl-scroll">
+        <table class="rt" style="min-width:1000px">
+          <thead>
+            <tr>
+              <th class="grp-hdr">SN</th>
+              <th class="tl grp-hdr" style="min-width:200px">Equipment / Description</th>
+              <th class="grp-hdr">Start</th>
+              <th class="grp-hdr">End</th>
+              <th class="grp-hdr">On Date<br>(min)</th>
+              <th class="grp-hdr">MTD<br>(min)</th>
+              <th class="grp-hdr">Category</th>
+              <th class="tl grp-hdr" style="min-width:200px">Cause / Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="ts">1</td>
+              <td class="cm"><input class="ci" type="text" value="Rotary packer #2 jam" style="text-align:left;padding-left:8px" /></td>
+              <td class="cm"><input class="ci" type="time" value="07:15" /></td>
+              <td class="cm"><input class="ci" type="time" value="08:40" /></td>
+              <td class="cf"><div class="cv">85</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cm"><select class="ci" style="text-align:left"><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
+              <td class="cm"><input class="ci" type="text" value="Belt jam cleared; packer restarted" style="text-align:left;padding-left:8px" /></td>
+            </tr>
+            <tr>
+              <td class="ts">2</td>
+              <td class="cm"><input class="ci" type="text" value="Truck weighbridge sensor fault" style="text-align:left;padding-left:8px" /></td>
+              <td class="cm"><input class="ci" type="time" value="11:00" /></td>
+              <td class="cm"><input class="ci" type="time" value="11:45" /></td>
+              <td class="cf"><div class="cv">45</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cm"><select class="ci" style="text-align:left"><option>E&amp;I</option><option>Mechanical</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
+              <td class="cm"><input class="ci" type="text" value="Sensor replaced and calibrated" style="text-align:left;padding-left:8px" /></td>
+            </tr>
+            <tr class="trow">
+              <td class="ts" colspan="4" style="text-align:right;padding-right:12px;font-weight:700">Packing Total</td>
+              <td class="cf"><div class="cv">130</div></td>
+              <td class="cf"><div class="cv">920</div></td>
+              <td colspan="2"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       SIGN-OFF
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr"><div class="rcard-title"><i data-lucide="pen-line" class="title-icon"></i> Report Sign-off &amp; Approval</div></div>
+    <div class="signoff">
+      <div class="so-cell">
+        <div class="so-role">Mechanical Head</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time signed" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">E&amp;I Head</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time signed" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">Production Head</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time approved" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">Plant Manager</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time approved" />
+      </div>
+    </div>
+    <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span style="font-size:11px;color:var(--text-muted)">
+        Status: <strong style="color:var(--orange)">DRAFT</strong> &nbsp;·&nbsp;
+        Date: <strong>21 April 2026</strong>
+      </span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-out"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+        <button class="btn btn-sub"><i data-lucide="lock" class="btn-icon"></i> Submit &amp; Lock</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span>Sectional Stoppage Report &mdash; <span id="footer-date"></span></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  lucide.createIcons();
+  const now = new Date();
+  const opts = { weekday:'short', year:'numeric', month:'short', day:'numeric' };
+  const str  = now.toLocaleDateString('en-GB', opts);
+  const el1  = document.getElementById('live-date');
+  const el2  = document.getElementById('footer-date');
+  if (el1) el1.textContent = str;
+  if (el2) el2.textContent = str;
+
+  function showSection(id) {
+    document.querySelectorAll('.sec-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sec-tab').forEach(t => t.classList.remove('active'));
+    const panel = document.getElementById('panel-' + id);
+    if (panel) panel.classList.add('active');
+    event.currentTarget.classList.add('active');
+  }
+</script>
+</body>
+</html>
