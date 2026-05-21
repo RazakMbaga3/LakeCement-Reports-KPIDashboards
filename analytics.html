@@ -13,7 +13,7 @@
       background: white;
       border-bottom: 1px solid var(--border);
       position: sticky;
-      top: 68px;
+      top: var(--header-h, 68px);
       z-index: 80;
       box-shadow: var(--shadow-sm);
     }
@@ -21,7 +21,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 9px 28px;
+      padding: 8px 28px;
       flex-wrap: wrap;
     }
     .an-period-lbl {
@@ -77,7 +77,7 @@
 
     /* ── Main layout ────────────────────────────────────────────── */
     .an-main {
-      padding: 20px 28px 48px;
+      padding: 20px var(--space-x, 28px) 48px;
       max-width: 1600px;
       margin: 0 auto;
       width: 100%;
@@ -163,19 +163,24 @@
     }
     .an-card-stats {
       display: flex;
-      gap: 14px;
+      gap: 0;
       flex-shrink: 0;
+      border-left: 1px solid var(--border);
+      margin-left: 4px;
     }
     .an-stat {
-      text-align: right;
-      min-width: 44px;
+      text-align: center;
+      padding: 0 14px;
+      border-right: 1px solid var(--border);
     }
+    .an-stat:last-child { border-right: none; }
     .an-stat-val {
       display: block;
-      font-size: 14px;
-      font-weight: 700;
+      font-size: 15px;
+      font-weight: 800;
       color: var(--navy);
       line-height: 1;
+      font-variant-numeric: tabular-nums;
     }
     .an-stat-val.ok     { color: var(--green); }
     .an-stat-val.warn   { color: #D97706; }
@@ -187,18 +192,19 @@
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: .5px;
-      margin-top: 2px;
+      margin-top: 3px;
     }
     .an-stat-trend {
       display: block;
-      font-size: 18px;
+      font-size: 16px;
       line-height: 1;
+      color: var(--text-muted);
     }
 
     .an-chart-wrap {
       flex: 1;
-      padding: 12px 14px 10px;
-      min-height: 200px;
+      padding: 14px 16px 12px;
+      min-height: 220px;
       position: relative;
     }
     .an-chart-wrap canvas { display: block; width: 100% !important; }
@@ -301,12 +307,24 @@
     .an-empty-state .es-body  { font-size: 12px; color: var(--text-muted); max-width: 380px; line-height: 1.6; }
     .an-empty-state a         { color: var(--orange); font-weight: 700; text-decoration: none; }
 
+    /* ── Section header icon colors ────────────────────────────── */
+    .an-icon-quality  { color: #239557; }
+    .an-icon-ops      { color: #F49545; }
+    .an-icon-anomaly  { color: #e53935; }
+    .an-section-title.quality  { color: #239557; }
+    .an-section-title.ops      { color: #F49545; }
+    .an-section-title.anomaly  { color: #e53935; }
+
+    /* ── Responsive grid ────────────────────────────────────────── */
+    @media (max-width: 1100px) { .an-grid { grid-template-columns: 1fr; } }
+
     /* ── Print ──────────────────────────────────────────────────── */
     @media print {
       @page { size: A4 landscape; margin: 10mm 8mm; }
-      .an-period-bar { display: none; }
-      .an-grid { grid-template-columns: repeat(3, 1fr); }
+      .an-period-bar, .dash-footer { display: none; }
+      .an-grid { grid-template-columns: repeat(2, 1fr); }
       .an-card { break-inside: avoid; box-shadow: none !important; border: 1px solid #ccc; }
+      .an-anomaly-wrap { break-inside: avoid; }
     }
   </style>
 </head>
@@ -390,8 +408,8 @@
 
       <!-- Section: Quality -->
       <div class="an-section-hdr" style="margin-top:4px">
-        <i data-lucide="flask-conical" style="width:14px;height:14px;color:#239557;stroke-width:2.2;flex-shrink:0"></i>
-        <span class="an-section-title" style="color:#239557">Quality &amp; Lab</span>
+        <i data-lucide="flask-conical" class="an-icon-quality" style="width:14px;height:14px;stroke-width:2.2;flex-shrink:0"></i>
+        <span class="an-section-title quality">Quality &amp; Lab</span>
         <div class="an-section-line"></div>
         <span class="an-section-badge" id="badge-quality">0 days</span>
       </div>
@@ -527,8 +545,8 @@
 
       <!-- Section: Operations -->
       <div class="an-section-hdr">
-        <i data-lucide="truck" style="width:14px;height:14px;color:var(--orange);stroke-width:2.2;flex-shrink:0"></i>
-        <span class="an-section-title" style="color:var(--orange)">Operations &amp; Logistics</span>
+        <i data-lucide="truck" class="an-icon-ops" style="width:14px;height:14px;stroke-width:2.2;flex-shrink:0"></i>
+        <span class="an-section-title ops">Operations &amp; Logistics</span>
         <div class="an-section-line"></div>
         <span class="an-section-badge" id="badge-operations">0 days</span>
       </div>
@@ -608,7 +626,7 @@
       <div class="an-anomaly-wrap" id="an-anomaly-wrap">
         <div class="an-anomaly-hdr">
           <div class="an-anomaly-title">
-            <i data-lucide="shield-alert" style="width:13px;height:13px;stroke-width:2.2"></i>
+            <i data-lucide="shield-alert" class="an-icon-anomaly" style="width:13px;height:13px;stroke-width:2.2;flex-shrink:0"></i>
             Flagged Readings
           </div>
           <span class="an-anomaly-count" id="an-anomaly-count">—</span>
@@ -621,8 +639,9 @@
     </div><!-- /#an-content -->
   </main>
 
-  <footer style="text-align:center;padding:18px 24px;font-size:10px;color:var(--text-muted);border-top:1px solid var(--border);margin-top:auto">
+  <footer class="dash-footer">
     <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+    <span id="footer-date"></span>
   </footer>
   <div class="brand-accent-bar"></div>
 

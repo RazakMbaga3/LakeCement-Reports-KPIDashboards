@@ -597,12 +597,13 @@
   });
 
   /* ── Live date ────────────────────────────────────────────────── */
-  var liveDate = document.getElementById('live-date');
-  if (liveDate) {
-    liveDate.textContent = new Date().toLocaleDateString('en-GB', {
-      weekday: 'short', day: 'numeric', month: 'long', year: 'numeric'
-    });
-  }
+  var _dateStr = new Date().toLocaleDateString('en-GB', {
+    weekday: 'short', day: 'numeric', month: 'long', year: 'numeric'
+  });
+  ['live-date', 'footer-date'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = _dateStr;
+  });
 
   /* ── React to form submissions in other tabs ──────────────────── */
   window.addEventListener('storage', function(e) {

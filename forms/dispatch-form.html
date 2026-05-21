@@ -8,13 +8,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
   <link rel="stylesheet" href="forms.css" />
-  <style>
-    :root {
-      --m-bg:#FFFBEB; --m-fg:#B45309; --m-bd:#FDE68A;
-      --s-bg:#EFF6FF; --s-fg:#1D4ED8; --s-bd:#BFDBFE;
-      --f-bg:#F0FDF4; --f-fg:#15803D; --f-bd:#BBF7D0;
-    }
-  </style>
 </head>
 <body>
 
@@ -73,12 +66,12 @@
 
 <!-- ══════════════════ TOOLBAR ══════════════════ -->
 <div class="toolbar">
-  <div style="display:flex;align-items:center;gap:8px">
+  <div class="tb-group">
     <span class="tb-lbl">Date</span>
     <input type="date" class="tb-ctl" value="2026-04-21" data-field="date" />
   </div>
   <div class="tb-sep"></div>
-  <div style="display:flex;align-items:center;gap:8px">
+  <div class="tb-group">
     <span class="tb-lbl">Prepared By</span>
     <input type="text" class="tb-ctl" data-field="prepared_by" placeholder="Sales / Packing Head…" style="min-width:160px;width:auto" />
   </div>
