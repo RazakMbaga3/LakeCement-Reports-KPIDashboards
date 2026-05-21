@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – Trend Analytics</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* ── Period picker bar ──────────────────────────────────────── */
+    .an-period-bar {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 68px;
+      z-index: 80;
+      box-shadow: var(--shadow-sm);
+    }
+    .an-period-inner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 9px 28px;
+      flex-wrap: wrap;
+    }
+    .an-period-lbl {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .an-pills {
+      display: flex;
+      gap: 4px;
+      background: var(--off-white);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px;
+    }
+    .an-pill {
+      padding: 5px 16px;
+      border-radius: 5px;
+      border: none;
+      background: transparent;
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .an-pill:hover  { color: var(--navy); background: rgba(23,49,88,.06); }
+    .an-pill.active { background: var(--navy); color: white; box-shadow: 0 2px 8px rgba(23,49,88,.2); }
+    .an-coverage-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-left: auto;
+    }
+    .an-cov-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600;
+      border: 1px solid transparent;
+    }
+    .an-cov-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .an-cov-good  { background: #D1FAE5; color: #065F46; border-color: #A7F3D0; }
+    .an-cov-fair  { background: #FEF3C7; color: #92400E; border-color: #FDE68A; }
+    .an-cov-none  { background: var(--section-bg); color: var(--text-muted); border-color: var(--border); }
+
+    /* ── Main layout ────────────────────────────────────────────── */
+    .an-main {
+      padding: 20px 28px 48px;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* ── Section heading ────────────────────────────────────────── */
+    .an-section-hdr {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 14px;
+    }
+    .an-section-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--navy);
+    }
+    .an-section-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .an-section-badge {
+      font-size: 10px;
+      font-weight: 700;
+      background: var(--section-bg);
+      color: var(--text-muted);
+      padding: 2px 8px;
+      border-radius: 8px;
+    }
+
+    /* ── Chart grid ─────────────────────────────────────────────── */
+    .an-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 900px) { .an-grid { grid-template-columns: 1fr; } }
+
+    /* ── Chart card ─────────────────────────────────────────────── */
+    .an-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow .15s;
+    }
+    .an-card:hover { box-shadow: var(--shadow-md); }
+
+    .an-card-hdr {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border);
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .an-card-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .an-card-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .an-card-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .an-card-stats {
+      display: flex;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+    .an-stat {
+      text-align: right;
+      min-width: 44px;
+    }
+    .an-stat-val {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--navy);
+      line-height: 1;
+    }
+    .an-stat-val.ok     { color: var(--green); }
+    .an-stat-val.warn   { color: #D97706; }
+    .an-stat-val.fail   { color: var(--red); }
+    .an-stat-lbl {
+      display: block;
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-top: 2px;
+    }
+    .an-stat-trend {
+      display: block;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .an-chart-wrap {
+      flex: 1;
+      padding: 12px 14px 10px;
+      min-height: 200px;
+      position: relative;
+    }
+    .an-chart-wrap canvas { display: block; width: 100% !important; }
+
+    .an-card-empty {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 36px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      flex: 1;
+    }
+    .an-card-empty .emp-icon { font-size: 30px; margin-bottom: 8px; opacity: .4; }
+    .an-card-empty .emp-msg  { font-size: 11px; font-weight: 600; }
+    .an-card-empty .emp-sub  { font-size: 10px; margin-top: 4px; opacity: .7; }
+
+    /* ── Anomaly panel ──────────────────────────────────────────── */
+    .an-anomaly-wrap {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .an-anomaly-hdr {
+      background: var(--navy);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .an-anomaly-title {
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .an-anomaly-count {
+      font-size: 10px;
+      font-weight: 700;
+      background: rgba(255,255,255,.15);
+      color: white;
+      padding: 2px 10px;
+      border-radius: 10px;
+    }
+    .an-anomaly-body { padding: 0; }
+    .an-atable {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11.5px;
+    }
+    .an-atable thead th {
+      background: #F1F5FB;
+      color: var(--navy);
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      padding: 6px 14px;
+      border-bottom: 2px solid var(--border);
+      text-align: left;
+    }
+    .an-atable tbody td {
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .an-atable tbody tr:last-child td { border-bottom: none; }
+    .an-atable tbody tr:hover td { background: #F8FAFE; }
+    .an-atype-spec  { background: #FFEBEE; color: #B71C1C; padding: 2px 8px; border-radius: 8px; font-size: 9px; font-weight: 700; white-space: nowrap; }
+    .an-atype-stat  { background: #EDE9FE; color: #5B21B6; padding: 2px 8px; border-radius: 8px; font-size: 9px; font-weight: 700; white-space: nowrap; }
+    .an-atype-trend { background: #FEF3C7; color: #92400E; padding: 2px 8px; border-radius: 8px; font-size: 9px; font-weight: 700; white-space: nowrap; }
+
+    .an-no-anomaly {
+      text-align: center;
+      padding: 28px 16px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .an-no-anomaly span { font-size: 20px; display: block; margin-bottom: 6px; }
+
+    /* ── Empty state (no localStorage data at all) ─────────────── */
+    .an-empty-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 32px;
+      text-align: center;
+    }
+    .an-empty-state .es-icon { font-size: 54px; margin-bottom: 16px; opacity: .35; }
+    .an-empty-state .es-title { font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+    .an-empty-state .es-body  { font-size: 12px; color: var(--text-muted); max-width: 380px; line-height: 1.6; }
+    .an-empty-state a         { color: var(--orange); font-weight: 700; text-decoration: none; }
+
+    /* ── Print ──────────────────────────────────────────────────── */
+    @media print {
+      @page { size: A4 landscape; margin: 10mm 8mm; }
+      .an-period-bar { display: none; }
+      .an-grid { grid-template-columns: repeat(3, 1fr); }
+      .an-card { break-inside: avoid; box-shadow: none !important; border: 1px solid #ccc; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════ TOP HEADER ═══════════════════ -->
+  <header class="top-header">
+    <div class="header-left">
+      <div class="logo-block">
+        <img class="nyati-logo" src="NYATI-LOGO.png" alt="Nyati Cement" />
+        <div class="logo-text">
+          <img class="lc-wordmark" src="lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
+          <span class="company-sub">Operations Dashboard</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-center">
+      <div class="view-switcher">
+        <a href="index.html" class="vs-tab">
+          <i data-lucide="bar-chart-2" class="vs-icon"></i>
+          <span>Monthly KPIs</span>
+        </a>
+        <a href="daily-report.html" class="vs-tab">
+          <i data-lucide="clipboard-list" class="vs-icon"></i>
+          <span>Daily Reports</span>
+        </a>
+        <a href="analytics.html" class="vs-tab active">
+          <i data-lucide="trending-up" class="vs-icon"></i>
+          <span>Trends</span>
+        </a>
+      </div>
+    </div>
+    <div class="header-right">
+      <a href="forms/index.html" style="display:inline-flex;align-items:center;gap:7px;padding:7px 16px;border-radius:var(--radius);background:var(--orange);color:white;font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(244,149,69,.35);white-space:nowrap;margin-bottom:4px">
+        <i data-lucide="clipboard-list" style="width:13px;height:13px;stroke-width:2.5;flex-shrink:0"></i>
+        Daily Entry Forms
+      </a>
+      <div class="header-meta">
+        <span id="live-date"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════ PERIOD BAR ═══════════════════ -->
+  <div class="an-period-bar">
+    <div class="an-period-inner">
+      <span class="an-period-lbl">Period</span>
+      <div class="an-pills">
+        <button class="an-pill" data-days="7">7 days</button>
+        <button class="an-pill active" data-days="30">30 days</button>
+        <button class="an-pill" data-days="60">60 days</button>
+        <button class="an-pill" data-days="90">90 days</button>
+      </div>
+      <div class="an-coverage-chips" id="an-cov-chips"></div>
+      <button onclick="window.print()" style="margin-left:8px;padding:5px 14px;border-radius:var(--radius);border:1.5px solid var(--border);background:transparent;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;color:var(--navy);display:flex;align-items:center;gap:5px;flex-shrink:0">
+        <i data-lucide="printer" style="width:12px;height:12px;stroke-width:2.5"></i> Export PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ MAIN ═══════════════════ -->
+  <main class="an-main" id="an-main">
+
+    <!-- Empty state shown when nothing in localStorage -->
+    <div class="an-empty-state" id="an-empty">
+      <div class="es-icon">📊</div>
+      <div class="es-title">No trend data yet</div>
+      <div class="es-body">
+        Trend charts appear automatically as daily report forms are submitted.
+        <br><br>
+        <a href="forms/index.html">Open Daily Entry Forms →</a>
+        &nbsp;&nbsp;·&nbsp;&nbsp;
+        <a href="javascript:seedDemoData()" style="color:var(--navy)">Load sample data →</a>
+        <br><br>
+        <span style="font-size:11px;opacity:.7">Or import historical Excel files using the Import Excel button on each form.</span>
+      </div>
+    </div>
+
+    <!-- Charts (hidden until data found) -->
+    <div id="an-content" style="display:none">
+
+      <!-- Section: Quality -->
+      <div class="an-section-hdr" style="margin-top:4px">
+        <i data-lucide="flask-conical" style="width:14px;height:14px;color:#239557;stroke-width:2.2;flex-shrink:0"></i>
+        <span class="an-section-title" style="color:#239557">Quality &amp; Lab</span>
+        <div class="an-section-line"></div>
+        <span class="an-section-badge" id="badge-quality">0 days</span>
+      </div>
+      <div class="an-grid" style="margin-bottom:20px">
+        <div class="an-card" id="card-free-cao">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#e53935"></span>
+                Free CaO
+              </div>
+              <div class="an-card-sub">Clinker quality &middot; Spec &le; 3.0%</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat">
+                <span class="an-stat-val" id="stat-free-cao-cur">—</span>
+                <span class="an-stat-lbl">Latest</span>
+              </div>
+              <div class="an-stat">
+                <span class="an-stat-val" id="stat-free-cao-avg">—</span>
+                <span class="an-stat-lbl">Period avg</span>
+              </div>
+              <div class="an-stat">
+                <span class="an-stat-trend" id="stat-free-cao-trend">—</span>
+                <span class="an-stat-lbl">Trend</span>
+              </div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-free-cao"></canvas></div>
+          <div class="an-card-empty" id="empty-free-cao">
+            <div class="emp-icon">🔬</div>
+            <div class="emp-msg">No quality data</div>
+            <div class="emp-sub">Submit the Quality form to see trends</div>
+          </div>
+        </div>
+
+        <div class="an-card" id="card-blaine">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#239557"></span>
+                Blaine 425R
+              </div>
+              <div class="an-card-sub">Cement fineness &middot; Spec &ge; 330 BLU/cm&sup2;</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat">
+                <span class="an-stat-val" id="stat-blaine-cur">—</span>
+                <span class="an-stat-lbl">Latest</span>
+              </div>
+              <div class="an-stat">
+                <span class="an-stat-val" id="stat-blaine-avg">—</span>
+                <span class="an-stat-lbl">Period avg</span>
+              </div>
+              <div class="an-stat">
+                <span class="an-stat-trend" id="stat-blaine-trend">—</span>
+                <span class="an-stat-lbl">Trend</span>
+              </div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-blaine"></canvas></div>
+          <div class="an-card-empty" id="empty-blaine">
+            <div class="emp-icon">🔬</div>
+            <div class="emp-msg">No quality data</div>
+            <div class="emp-sub">Submit the Quality form to see trends</div>
+          </div>
+        </div>
+
+        <div class="an-card" id="card-strength">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#4F74B2"></span>
+                28-Day Strength
+              </div>
+              <div class="an-card-sub">Compressive strength &middot; Spec &ge; 42.5 MPa</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat">
+                <span class="an-stat-val" id="stat-strength-cur">—</span>
+                <span class="an-stat-lbl">Latest</span>
+              </div>
+              <div class="an-stat">
+                <span class="an-stat-val" id="stat-strength-avg">—</span>
+                <span class="an-stat-lbl">Period avg</span>
+              </div>
+              <div class="an-stat">
+                <span class="an-stat-trend" id="stat-strength-trend">—</span>
+                <span class="an-stat-lbl">Trend</span>
+              </div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-strength"></canvas></div>
+          <div class="an-card-empty" id="empty-strength">
+            <div class="emp-icon">🔬</div>
+            <div class="emp-msg">No strength data</div>
+            <div class="emp-sub">Submit the Quality form to see trends</div>
+          </div>
+        </div>
+
+        <div class="an-card" id="card-pile-cao">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#7c3aed"></span>
+                Pile CaO Average
+              </div>
+              <div class="an-card-sub">Raw material quality &middot; Daily avg of hourly samples</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat">
+                <span class="an-stat-val" id="stat-pile-cao-cur">—</span>
+                <span class="an-stat-lbl">Latest</span>
+              </div>
+              <div class="an-stat">
+                <span class="an-stat-val" id="stat-pile-cao-avg">—</span>
+                <span class="an-stat-lbl">Period avg</span>
+              </div>
+              <div class="an-stat">
+                <span class="an-stat-trend" id="stat-pile-cao-trend">—</span>
+                <span class="an-stat-lbl">Trend</span>
+              </div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-pile-cao"></canvas></div>
+          <div class="an-card-empty" id="empty-pile-cao">
+            <div class="emp-icon">🪨</div>
+            <div class="emp-msg">No pile quality data</div>
+            <div class="emp-sub">Submit the Pile Quality form to see trends</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Operations -->
+      <div class="an-section-hdr">
+        <i data-lucide="truck" style="width:14px;height:14px;color:var(--orange);stroke-width:2.2;flex-shrink:0"></i>
+        <span class="an-section-title" style="color:var(--orange)">Operations &amp; Logistics</span>
+        <div class="an-section-line"></div>
+        <span class="an-section-badge" id="badge-operations">0 days</span>
+      </div>
+      <div class="an-grid" style="margin-bottom:20px">
+        <div class="an-card" id="card-dispatch">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#F49545"></span>
+                Daily Dispatch
+              </div>
+              <div class="an-card-sub">Total cement dispatched &middot; All product types</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat">
+                <span class="an-stat-val" id="stat-dispatch-cur">—</span>
+                <span class="an-stat-lbl">Latest MT</span>
+              </div>
+              <div class="an-stat">
+                <span class="an-stat-val" id="stat-dispatch-avg">—</span>
+                <span class="an-stat-lbl">Avg MT/day</span>
+              </div>
+              <div class="an-stat">
+                <span class="an-stat-trend" id="stat-dispatch-trend">—</span>
+                <span class="an-stat-lbl">Trend</span>
+              </div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-dispatch"></canvas></div>
+          <div class="an-card-empty" id="empty-dispatch">
+            <div class="emp-icon">🚛</div>
+            <div class="emp-msg">No dispatch data</div>
+            <div class="emp-sub">Submit the Dispatch form to see trends</div>
+          </div>
+        </div>
+
+        <div class="an-card" id="card-power">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#0d9488"></span>
+                Total Power Consumption
+              </div>
+              <div class="an-card-sub">Plant electricity &middot; All sections combined</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat">
+                <span class="an-stat-val" id="stat-power-cur">—</span>
+                <span class="an-stat-lbl">Latest kWh</span>
+              </div>
+              <div class="an-stat">
+                <span class="an-stat-val" id="stat-power-avg">—</span>
+                <span class="an-stat-lbl">Avg kWh/day</span>
+              </div>
+              <div class="an-stat">
+                <span class="an-stat-trend" id="stat-power-trend">—</span>
+                <span class="an-stat-lbl">Trend</span>
+              </div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-power"></canvas></div>
+          <div class="an-card-empty" id="empty-power">
+            <div class="emp-icon">⚡</div>
+            <div class="emp-msg">No power data</div>
+            <div class="emp-sub">Submit the Power Consumption form to see trends</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Anomaly Panel -->
+      <div class="an-section-hdr">
+        <i data-lucide="alert-triangle" style="width:14px;height:14px;color:#e53935;stroke-width:2.2;flex-shrink:0"></i>
+        <span class="an-section-title" style="color:#e53935">Anomalies &amp; Spec Violations</span>
+        <div class="an-section-line"></div>
+        <span class="an-section-badge" id="badge-anomaly">Scanning…</span>
+      </div>
+      <div class="an-anomaly-wrap" id="an-anomaly-wrap">
+        <div class="an-anomaly-hdr">
+          <div class="an-anomaly-title">
+            <i data-lucide="shield-alert" style="width:13px;height:13px;stroke-width:2.2"></i>
+            Flagged Readings
+          </div>
+          <span class="an-anomaly-count" id="an-anomaly-count">—</span>
+        </div>
+        <div class="an-anomaly-body" id="an-anomaly-body">
+          <div class="an-no-anomaly"><span>⏳</span>Scanning data…</div>
+        </div>
+      </div>
+
+    </div><!-- /#an-content -->
+  </main>
+
+  <footer style="text-align:center;padding:18px 24px;font-size:10px;color:var(--text-muted);border-top:1px solid var(--border);margin-top:auto">
+    <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  </footer>
+  <div class="brand-accent-bar"></div>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script>lucide.createIcons();</script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="analytics.js"></script>
+</body>
+</html>
