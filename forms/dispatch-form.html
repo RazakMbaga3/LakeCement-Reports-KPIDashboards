@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – Dispatch &amp; Stoppage Report</title>
+  <link rel="icon" type="image/png" href="../favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="forms.css" />
+  <style>
+    :root {
+      --m-bg:#FFFBEB; --m-fg:#B45309; --m-bd:#FDE68A;
+      --s-bg:#EFF6FF; --s-fg:#1D4ED8; --s-bd:#BFDBFE;
+      --f-bg:#F0FDF4; --f-fg:#15803D; --f-bd:#BBF7D0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header class="top-header">
+  <div class="header-left">
+    <div class="logo-block">
+      <img class="nyati-logo" src="../NYATI-LOGO.png" alt="Nyati Cement" />
+      <div class="logo-text">
+        <img class="lc-wordmark" src="../lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
+        <span class="company-sub">Dispatch &amp; Stoppage Report</span>
+      </div>
+    </div>
+  </div>
+  <div class="header-center">
+    <div class="view-switcher">
+      <a href="../index.html" class="vs-tab">
+        <i data-lucide="bar-chart-2" class="vs-icon"></i>
+        <span>Monthly KPIs</span>
+      </a>
+      <a href="../daily-report.html" class="vs-tab active">
+        <i data-lucide="clipboard-list" class="vs-icon"></i>
+        <span>Daily Reports</span>
+      </a>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="brand-tag">
+      <span class="brand-slogan">Hushika Haraka · Hudumu Zaidi</span>
+      <span class="header-meta" id="live-date"></span>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════ NAV ══════════════════ -->
+<nav class="dept-nav">
+  <div class="nav-inner">
+    <span class="nav-label">DAILY FORMS</span>
+    <button class="nav-btn" onclick="location.href='index.html'"><i data-lucide="layout-grid" class="nav-icon"></i> All Forms</button>
+    <button class="nav-btn active"><i data-lucide="truck" class="nav-icon"></i> Dispatch</button>
+    <button class="nav-btn" onclick="location.href='stoppage-form.html'"><i data-lucide="alert-triangle" class="nav-icon"></i> Stoppages</button>
+    <button class="nav-btn" onclick="location.href='cpp-form.html'"><i data-lucide="zap" class="nav-icon"></i> CPP</button>
+    <button class="nav-btn" onclick="location.href='quality-form.html'"><i data-lucide="flask-conical" class="nav-icon"></i> Quality</button>
+    <button class="nav-btn" onclick="location.href='materials-form.html'"><i data-lucide="package" class="nav-icon"></i> Materials</button>
+    <button class="nav-btn" onclick="location.href='power-form.html'"><i data-lucide="activity" class="nav-icon"></i> Power</button>
+    <div class="nav-divider"></div>
+    <button class="nav-btn secondary" onclick="window.print()"><i data-lucide="printer" class="nav-icon"></i> Print / PDF</button>
+  </div>
+</nav>
+
+<!-- ══════════════════ TOOLBAR ══════════════════ -->
+<div class="toolbar">
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="tb-lbl">Date</span>
+    <input type="date" class="tb-ctl" value="2026-04-21" />
+  </div>
+  <div class="tb-sep"></div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="tb-lbl">Prepared By</span>
+    <input type="text" class="tb-ctl" placeholder="Sales / Packing Head…" style="min-width:160px;width:auto" />
+  </div>
+  <div class="tb-sep"></div>
+  <span class="rpt-pill">DRAFT</span>
+  <div class="btn-grp">
+    <button class="btn btn-out"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
+    <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+    <button class="btn btn-sub"><i data-lucide="check-circle" class="btn-icon"></i> Submit Report</button>
+  </div>
+</div>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<main class="fm-main">
+
+  <!-- legend -->
+  <div class="legend-bar">
+    <span class="leg-lbl">Data Source Key</span>
+    <span class="leg-chip leg-m"><i data-lucide="pencil" class="btn-icon"></i> Manual Entry</span>
+    <span class="leg-chip leg-s"><i data-lucide="cpu" class="btn-icon"></i> System / ERP</span>
+    <span class="leg-chip leg-f"><i data-lucide="sigma" class="btn-icon"></i> Formula / Computed</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--text-muted);font-style:italic">Amber = manual input required.</span>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       SECTION 1 — DISPATCH MATRIX
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="truck" class="title-icon"></i> Cement Dispatch Summary</div>
+        <div class="rcard-sub">All grades — bags, bulker &amp; big-bags · Date: 21-Apr-2026</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip">21-Apr-2026</span>
+        <span class="rcard-chip orange">SALES &amp; PACKING</span>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:1200px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" rowspan="2" style="min-width:140px">Metric</th>
+            <th class="grp-hdr" colspan="3">42.5 R — Regular Bags</th>
+            <th class="grp-hdr" colspan="3">42.5 N / B-M — Bags</th>
+            <th class="grp-hdr" colspan="2">Bulker</th>
+            <th class="grp-hdr" colspan="2">Big Bags</th>
+            <th class="grp-hdr" colspan="2">TOTAL</th>
+            <th class="grp-hdr" rowspan="2">Avg Daily<br>Dispatch</th>
+          </tr>
+          <tr>
+            <th>On Date<br><small style="font-size:8px;font-weight:400;color:rgba(255,255,255,.6)">(MT)</small></th>
+            <th>MTD<br><small style="font-size:8px;font-weight:400;color:rgba(255,255,255,.6)">(MT)</small></th>
+            <th>YTD<br><small style="font-size:8px;font-weight:400;color:rgba(255,255,255,.6)">(MT)</small></th>
+            <th>On Date</th><th>MTD</th><th>YTD</th>
+            <th>On Date</th><th>MTD</th>
+            <th>On Date</th><th>MTD</th>
+            <th>On Date</th><th>MTD</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- SALES ON DATE -->
+          <tr class="srow"><td colspan="14">Sales Dispatch</td></tr>
+
+          <tr>
+            <td class="tp">Sales On Date</td>
+            <td class="cm"><input class="ci" type="number" value="346.5" /></td>
+            <td class="cf"><div class="cv">7,412</div></td>
+            <td class="cf"><div class="cv">26,890</div></td>
+            <td class="cm"><input class="ci" type="number" value="30" /></td>
+            <td class="cf"><div class="cv">880</div></td>
+            <td class="cf"><div class="cv">3,200</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">376.5</div></td>
+            <td class="cf"><div class="cv">8,292</div></td>
+            <td class="cf"><div class="cv">415.1</div></td>
+          </tr>
+
+          <tr>
+            <td class="tp">MTD Sales</td>
+            <td class="cf"><div class="cv">7,412</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">880</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">8,292</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">415.1</div></td>
+          </tr>
+
+          <tr>
+            <td class="tp">YTD Sales</td>
+            <td class="cf"><div class="cv">26,890</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">3,200</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">30,090</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">389.5</div></td>
+          </tr>
+
+          <tr class="srow"><td colspan="14">Sales Orders &amp; Pendency</td></tr>
+
+          <tr>
+            <td class="tp">SO Pendency</td>
+            <td class="cm"><input class="ci" type="number" value="1,240" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="320" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">1,560</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+          </tr>
+
+          <tr class="trow">
+            <td class="tp">Target (Month)</td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="9,000" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="1,200" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="10,200" /></td>
+            <td class="cf"><div class="cv">510.0</div></td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       SECTION 2 — VEHICLES AT 6 AM
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="truck" class="title-icon"></i> Vehicles Status @ 6:00 AM</div>
+        <div class="rcard-sub">Trucks present at plant gate / loading bay</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip orange">PACKING DEPT</span>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:700px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" style="min-width:180px">Vehicle Type</th>
+            <th class="grp-hdr">Count @ 6 AM</th>
+            <th class="grp-hdr">Loaded by EOD</th>
+            <th class="grp-hdr">Pending Loading</th>
+            <th class="grp-hdr">Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="tp">Regular Trucks (Bags)</td>
+            <td class="cm"><input class="ci" type="number" value="14" /></td>
+            <td class="cm"><input class="ci" type="number" value="14" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="text" value="All cleared" style="text-align:left;padding-left:10px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Bulker Trucks</td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:10px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Big Bag Trucks</td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:10px" /></td>
+          </tr>
+          <tr class="trow">
+            <td class="tp">TOTAL</td>
+            <td class="cf"><div class="cv">14</div></td>
+            <td class="cf"><div class="cv">14</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cs"><div class="cv" style="text-align:left;padding-left:10px">—</div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       SECTION 3 — PACKING PLANT PERFORMANCE
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="package" class="title-icon"></i> Packing Plant Performance</div>
+        <div class="rcard-sub">Bag production &amp; quality at packing lines</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip orange">PACKING DEPT</span>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:900px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" style="min-width:180px">Parameter</th>
+            <th class="grp-hdr">Packing Line 1</th>
+            <th class="grp-hdr">Packing Line 2</th>
+            <th class="grp-hdr">Total On Date</th>
+            <th class="grp-hdr">MTD</th>
+            <th class="grp-hdr">Target / Day</th>
+            <th class="grp-hdr">Burst Bag %</th>
+            <th class="grp-hdr">Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="tp">42.5 R Bags Packed</td>
+            <td class="cm"><input class="ci" type="number" value="6,930" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">6,930</div></td>
+            <td class="cf"><div class="cv">148,240</div></td>
+            <td class="cm"><input class="ci" type="number" value="7,000" /></td>
+            <td class="cm"><input class="ci" type="number" value="0.50" /></td>
+            <td class="cm"><input class="ci" type="text" value="Line 2 idle – CM2 feeding" style="text-align:left;padding-left:10px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">42.5 N / B-M Bags</td>
+            <td class="cm"><input class="ci" type="number" value="600" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">600</div></td>
+            <td class="cf"><div class="cv">17,600</div></td>
+            <td class="cm"><input class="ci" type="number" value="600" /></td>
+            <td class="cm"><input class="ci" type="number" value="0.33" /></td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:10px" /></td>
+          </tr>
+          <tr class="trow">
+            <td class="tp">TOTAL BAGS</td>
+            <td class="cf"><div class="cv">7,530</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">7,530</div></td>
+            <td class="cf"><div class="cv">165,840</div></td>
+            <td class="cf"><div class="cv">7,600</div></td>
+            <td class="cf"><div class="cv">0.47%</div></td>
+            <td class="cs"><div class="cv" style="text-align:left;padding-left:10px">—</div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       SECTION 4 — STOPPAGE LOG (PACKING)
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="alert-triangle" class="title-icon"></i> Packing / Dispatch Stoppage Log</div>
+        <div class="rcard-sub">Equipment / process stoppages affecting dispatch — 21-Apr-2026</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip orange">PACKING · E&amp;I</span>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:1100px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" style="min-width:30px">SN</th>
+            <th class="tl grp-hdr" style="min-width:140px">Section</th>
+            <th class="tl grp-hdr" style="min-width:200px">Equipment / Description</th>
+            <th class="grp-hdr">Start Time</th>
+            <th class="grp-hdr">End Time</th>
+            <th class="grp-hdr">Duration<br>(min)</th>
+            <th class="grp-hdr">Category</th>
+            <th class="tl grp-hdr" style="min-width:180px">Cause / Action Taken</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="ts">1</td>
+            <td class="tp">Packing Line 2</td>
+            <td class="cm"><input class="ci" type="text" value="Rotary packer #2 jam" style="text-align:left;padding-left:8px" /></td>
+            <td class="cm"><input class="ci" type="time" value="07:15" /></td>
+            <td class="cm"><input class="ci" type="time" value="08:40" /></td>
+            <td class="cf"><div class="cv">85</div></td>
+            <td class="cm">
+              <select class="ci" style="min-width:90px;text-align:left">
+                <option>Mechanical</option>
+                <option>E&amp;I</option>
+                <option>Production</option>
+                <option>Power</option>
+                <option>Other</option>
+              </select>
+            </td>
+            <td class="cm"><input class="ci" type="text" value="Belt jam cleared; packer restarted" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="ts">2</td>
+            <td class="tp">Loading Bay</td>
+            <td class="cm"><input class="ci" type="text" value="Truck weighbridge fault" style="text-align:left;padding-left:8px" /></td>
+            <td class="cm"><input class="ci" type="time" value="11:00" /></td>
+            <td class="cm"><input class="ci" type="time" value="11:45" /></td>
+            <td class="cf"><div class="cv">45</div></td>
+            <td class="cm">
+              <select class="ci" style="min-width:90px;text-align:left">
+                <option>E&amp;I</option>
+                <option>Mechanical</option>
+                <option>Production</option>
+                <option>Power</option>
+                <option>Other</option>
+              </select>
+            </td>
+            <td class="cm"><input class="ci" type="text" value="Sensor replaced; calibrated" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="ts">3</td>
+            <td class="tp">—</td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+            <td class="cm"><input class="ci" type="time" /></td>
+            <td class="cm"><input class="ci" type="time" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm">
+              <select class="ci" style="min-width:90px;text-align:left">
+                <option></option>
+                <option>Mechanical</option>
+                <option>E&amp;I</option>
+                <option>Production</option>
+                <option>Power</option>
+                <option>Other</option>
+              </select>
+            </td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="ts">4</td>
+            <td class="tp">—</td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+            <td class="cm"><input class="ci" type="time" /></td>
+            <td class="cm"><input class="ci" type="time" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm">
+              <select class="ci" style="min-width:90px;text-align:left">
+                <option></option>
+                <option>Mechanical</option>
+                <option>E&amp;I</option>
+                <option>Production</option>
+                <option>Power</option>
+                <option>Other</option>
+              </select>
+            </td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="ts">5</td>
+            <td class="tp">—</td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+            <td class="cm"><input class="ci" type="time" /></td>
+            <td class="cm"><input class="ci" type="time" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm">
+              <select class="ci" style="min-width:90px;text-align:left">
+                <option></option>
+                <option>Mechanical</option>
+                <option>E&amp;I</option>
+                <option>Production</option>
+                <option>Power</option>
+                <option>Other</option>
+              </select>
+            </td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr class="trow">
+            <td class="ts" colspan="5" style="text-align:right;padding-right:12px;font-weight:700">Total Stoppage Time</td>
+            <td class="cf"><div class="cv">130 min</div></td>
+            <td colspan="2" class="cs"><div class="cv" style="text-align:left;padding-left:10px">2 hrs 10 min on 21-Apr-2026</div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       SIGN-OFF
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr"><div class="rcard-title"><i data-lucide="pen-line" class="title-icon"></i> Report Sign-off &amp; Approval</div></div>
+    <div class="signoff">
+      <div class="so-cell">
+        <div class="so-role">Packing Head</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time signed" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">Sales Manager</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time reviewed" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">Plant Manager</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time approved" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">General Manager</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time approved" />
+      </div>
+    </div>
+    <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span style="font-size:11px;color:var(--text-muted)">
+        Status: <strong style="color:var(--orange)">DRAFT</strong> &nbsp;·&nbsp;
+        Date: <strong>21 April 2026</strong>
+      </span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-out"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+        <button class="btn btn-sub"><i data-lucide="lock" class="btn-icon"></i> Submit &amp; Lock</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span>Dispatch &amp; Stoppage Report &mdash; <span id="footer-date"></span></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  lucide.createIcons();
+  const now = new Date();
+  const opts = { weekday:'short', year:'numeric', month:'short', day:'numeric' };
+  const str  = now.toLocaleDateString('en-GB', opts);
+  const el1  = document.getElementById('live-date');
+  const el2  = document.getElementById('footer-date');
+  if (el1) el1.textContent = str;
+  if (el2) el2.textContent = str;
+</script>
+</body>
+</html>
