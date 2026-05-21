@@ -213,6 +213,67 @@
       .tbl-scroll { overflow:visible; }
       .mt { min-width:0; }
     }
+
+    /* ══ KPI SUMMARY STRIP ══════════════════════════════════════════ */
+    .kpi-strip {
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:8px;
+      padding:12px 24px 0;
+    }
+    .kt {
+      background:white;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:12px 14px 10px;
+      position:relative;
+      overflow:hidden;
+      box-shadow:var(--shadow-sm);
+    }
+    .kt::before {
+      content:'';
+      position:absolute;
+      bottom:0; left:0; right:0;
+      height:3px;
+      border-radius:0 0 var(--radius) var(--radius);
+    }
+    .kt-m::before { background:#B45309; }
+    .kt-s::before { background:#1D4ED8; }
+    .kt-f::before { background:#15803D; }
+    .kt-badge {
+      position:absolute;
+      top:7px; right:7px;
+      font-size:8px; font-weight:800;
+      padding:2px 6px;
+      border-radius:3px;
+      text-transform:uppercase;
+      letter-spacing:.4px;
+    }
+    .kt-m .kt-badge { background:#FDE68A; color:#92400E; }
+    .kt-s .kt-badge { background:#BFDBFE; color:#1E3A8A; }
+    .kt-f .kt-badge { background:#BBF7D0; color:#14532D; }
+    .kt-lbl {
+      font-size:9.5px; font-weight:600;
+      text-transform:uppercase; letter-spacing:.5px;
+      color:var(--text-muted);
+      margin-bottom:4px;
+      padding-right:38px;
+    }
+    .kt-val { font-size:22px; font-weight:800; color:var(--navy); line-height:1.1; }
+    .kt-unit { font-size:10px; color:var(--text-muted); margin-top:2px; }
+    .kt-vs { margin-top:5px; font-size:10px; font-weight:700; }
+    .vs-ok { color:#15803D; }
+    .vs-ng { color:#DC2626; }
+    .vs-wa { color:#D97706; }
+
+    @media (min-width:1024px) {
+      .kpi-strip { grid-template-columns:repeat(6,1fr); gap:10px; padding-bottom:4px; }
+      .page-body { padding-top:14px; }
+    }
+    @media (max-width:767px) {
+      .kpi-strip { padding:10px 12px 0; gap:6px; }
+      .kt-val { font-size:18px; }
+    }
   </style>
 </head>
 <body>
@@ -285,6 +346,52 @@
     <div class="btn-grp">
       <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
       <button class="btn btn-sub">✓ Submit Report</button>
+    </div>
+  </div>
+
+  <!-- ══ KPI SUMMARY STRIP ════════════════════════════════════════ -->
+  <div class="kpi-strip">
+    <div class="kt kt-m">
+      <span class="kt-badge">Manual</span>
+      <div class="kt-lbl">Limestone Blasted</div>
+      <div class="kt-val">4,820</div>
+      <div class="kt-unit">MT / On Date</div>
+      <div class="kt-vs vs-ok">▲ 2 faces blasted — HS South &amp; LG1 North</div>
+    </div>
+    <div class="kt kt-m">
+      <span class="kt-badge">Manual</span>
+      <div class="kt-lbl">Limestone Hauled to Crusher</div>
+      <div class="kt-val">3,976</div>
+      <div class="kt-unit">MT / On Date</div>
+      <div class="kt-vs vs-wa">▼ 82.5% of blasted — haul gap 844 MT</div>
+    </div>
+    <div class="kt kt-m">
+      <span class="kt-badge">Manual</span>
+      <div class="kt-lbl">Overburden Removed</div>
+      <div class="kt-val">1,240</div>
+      <div class="kt-unit">BCM / On Date</div>
+      <div class="kt-vs vs-ok">▲ OB:Ore ratio 0.31 — within plan</div>
+    </div>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
+      <div class="kt-lbl">Equipment Availability</div>
+      <div class="kt-val">87.5%</div>
+      <div class="kt-unit">Fleet Avg / Today</div>
+      <div class="kt-vs vs-ok">▲ Above 85% target</div>
+    </div>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
+      <div class="kt-lbl">Drilling Achieved vs Target</div>
+      <div class="kt-val">94.2%</div>
+      <div class="kt-unit">Metres / Plan</div>
+      <div class="kt-vs vs-ok">▲ 282 m of 299 m target</div>
+    </div>
+    <div class="kt kt-s">
+      <span class="kt-badge">System</span>
+      <div class="kt-lbl">Total Hauler Trips</div>
+      <div class="kt-val">148</div>
+      <div class="kt-unit">Trips / On Date</div>
+      <div class="kt-vs vs-ok">▲ 12.7 t avg payload per trip</div>
     </div>
   </div>
 
