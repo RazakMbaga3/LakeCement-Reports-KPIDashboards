@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – Daily Report Forms</title>
+  <link rel="icon" type="image/png" href="../favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="forms.css" />
+</head>
+<body>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header class="top-header">
+  <div class="header-left">
+    <div class="logo-block">
+      <img class="nyati-logo" src="../NYATI-LOGO.png" alt="Nyati Cement" />
+      <div class="logo-text">
+        <img class="lc-wordmark" src="../lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
+        <span class="company-sub">Daily Report Forms</span>
+      </div>
+    </div>
+  </div>
+  <div class="header-center">
+    <div class="view-switcher">
+      <a href="../index.html" class="vs-tab">
+        <i data-lucide="bar-chart-2" class="vs-icon"></i>
+        <span>Monthly KPIs</span>
+      </a>
+      <a href="../daily-report.html" class="vs-tab active">
+        <i data-lucide="clipboard-list" class="vs-icon"></i>
+        <span>Daily Reports</span>
+      </a>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="brand-tag">
+      <span class="brand-slogan">Hushika Haraka · Hudumu Zaidi</span>
+      <span class="header-meta" id="live-date"></span>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════ NAV ══════════════════ -->
+<nav class="dept-nav">
+  <div class="nav-inner">
+    <span class="nav-label">DAILY REPORTS</span>
+    <button class="nav-btn" onclick="location.href='../daily-report.html'"><i data-lucide="factory" class="nav-icon"></i> Production</button>
+    <button class="nav-btn" onclick="location.href='../power-plant-report.html'"><i data-lucide="zap" class="nav-icon"></i> Power Plant (CPP)</button>
+    <button class="nav-btn" onclick="location.href='../mines-report.html'"><i data-lucide="pickaxe" class="nav-icon"></i> Mines</button>
+    <div class="nav-divider"></div>
+    <span class="nav-label" style="margin-left:8px">ENTRY FORMS</span>
+    <button class="nav-btn active"><i data-lucide="layout-grid" class="nav-icon"></i> All Forms</button>
+  </div>
+</nav>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<main style="flex:1;padding:20px 0 48px">
+
+  <!-- Page header -->
+  <div style="padding:0 24px 16px;border-bottom:1px solid var(--border);margin-bottom:0">
+    <h2 style="font-size:18px;font-weight:800;color:var(--navy);margin-bottom:4px">
+      <i data-lucide="clipboard-list" style="width:18px;height:18px;vertical-align:-3px;margin-right:8px;stroke-width:2"></i>
+      Daily Report Entry Forms
+    </h2>
+    <p style="font-size:12px;color:var(--text-muted)">
+      Six daily data entry forms covering all plant operations. Pre-populated with sample data for 21-Apr-2026.
+      Amber cells require manual input; blue = system/auto; green = computed.
+    </p>
+  </div>
+
+  <!-- ═══════════════ CARDS GRID ═══════════════ -->
+  <div class="forms-grid">
+
+    <!-- Dispatch -->
+    <a href="dispatch-form.html" class="form-card">
+      <div class="fc-hdr">
+        <i data-lucide="truck" class="fc-icon"></i>
+        <div class="fc-title">Dispatch &amp; Stoppage</div>
+      </div>
+      <div class="fc-body">
+        <div class="fc-desc">
+          Cement dispatch matrix (bags, bulker, big-bags) with Sales On Date / MTD / YTD.
+          Vehicles @ 6 AM, packing plant performance &amp; packing stoppage log.
+        </div>
+        <div class="fc-meta">
+          <span class="fc-tag">Sales</span>
+          <span class="fc-tag">Packing</span>
+          <span class="fc-tag">Dispatch</span>
+        </div>
+      </div>
+      <div class="fc-footer">
+        <span class="fc-owner"><i data-lucide="user" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i> Sales &amp; Packing Head</span>
+        <span class="fc-arrow">→</span>
+      </div>
+    </a>
+
+    <!-- Stoppages -->
+    <a href="stoppage-form.html" class="form-card">
+      <div class="fc-hdr">
+        <i data-lucide="alert-triangle" class="fc-icon"></i>
+        <div class="fc-title">Sectional Stoppages</div>
+      </div>
+      <div class="fc-body">
+        <div class="fc-desc">
+          Equipment stoppage log with section tabs: Crusher, Raw Mill, Coal Mill, Kiln,
+          CM-1, CM-2, Packing. Consolidated summary with category breakdown (Mech / E&amp;I / Prod / Planned).
+        </div>
+        <div class="fc-meta">
+          <span class="fc-tag">Mechanical</span>
+          <span class="fc-tag">E&amp;I</span>
+          <span class="fc-tag">Production</span>
+        </div>
+      </div>
+      <div class="fc-footer">
+        <span class="fc-owner"><i data-lucide="user" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i> Mechanical / E&amp;I Head</span>
+        <span class="fc-arrow">→</span>
+      </div>
+    </a>
+
+    <!-- CPP -->
+    <a href="cpp-form.html" class="form-card">
+      <div class="fc-hdr">
+        <i data-lucide="zap" class="fc-icon"></i>
+        <div class="fc-title">CPP Daily Report</div>
+      </div>
+      <div class="fc-body">
+        <div class="fc-desc">
+          Captive Power Plant — generation, auxiliary, PLF, heat rate, steam parameters.
+          Fuel (coal by source), Water Treatment Plant &amp; fly ash utilisation.
+        </div>
+        <div class="fc-meta">
+          <span class="fc-tag">Power Plant</span>
+          <span class="fc-tag">CPP</span>
+          <span class="fc-tag">Energy</span>
+        </div>
+      </div>
+      <div class="fc-footer">
+        <span class="fc-owner"><i data-lucide="user" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i> CPP Head</span>
+        <span class="fc-arrow">→</span>
+      </div>
+    </a>
+
+    <!-- Quality -->
+    <a href="quality-form.html" class="form-card">
+      <div class="fc-hdr">
+        <i data-lucide="flask-conical" class="fc-icon"></i>
+        <div class="fc-title">Quality / Lab Report</div>
+      </div>
+      <div class="fc-body">
+        <div class="fc-desc">
+          Finished cement physical tests (Blaine, setting time, strength, free lime).
+          Coal mill day avg. Raw Mill, Kiln Feed &amp; Clinker 4-hour chemistry samples (6 per day).
+        </div>
+        <div class="fc-meta">
+          <span class="fc-tag">Quality</span>
+          <span class="fc-tag">Lab</span>
+          <span class="fc-tag">Chemistry</span>
+        </div>
+      </div>
+      <div class="fc-footer">
+        <span class="fc-owner"><i data-lucide="user" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i> QC Manager / Lab Officer</span>
+        <span class="fc-arrow">→</span>
+      </div>
+    </a>
+
+    <!-- Materials -->
+    <a href="materials-form.html" class="form-card">
+      <div class="fc-hdr">
+        <i data-lucide="package" class="fc-icon"></i>
+        <div class="fc-title">Raw Materials &amp; Stores</div>
+      </div>
+      <div class="fc-body">
+        <div class="fc-desc">
+          Primary materials (limestone, clay, iron ore, gypsum), coal by supplier for Kiln and CPP,
+          cement bags, grinding aid &amp; diesel — opening / received / consumption / closing stock.
+        </div>
+        <div class="fc-meta">
+          <span class="fc-tag">Stores</span>
+          <span class="fc-tag">Materials</span>
+          <span class="fc-tag">Inventory</span>
+        </div>
+      </div>
+      <div class="fc-footer">
+        <span class="fc-owner"><i data-lucide="user" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i> Stores Head</span>
+        <span class="fc-arrow">→</span>
+      </div>
+    </a>
+
+    <!-- Power -->
+    <a href="power-form.html" class="form-card">
+      <div class="fc-hdr">
+        <i data-lucide="activity" class="fc-icon"></i>
+        <div class="fc-title">Power Consumption</div>
+      </div>
+      <div class="fc-body">
+        <div class="fc-desc">
+          Section-wise power consumption (Crusher, Raw Mill, Coal Mill, Kiln, CM-1, CM-2, Packing).
+          kWh / MT vs. target with variance chips. SPC summary for management review.
+        </div>
+        <div class="fc-meta">
+          <span class="fc-tag">E&amp;I</span>
+          <span class="fc-tag">Energy</span>
+          <span class="fc-tag">SPC</span>
+        </div>
+      </div>
+      <div class="fc-footer">
+        <span class="fc-owner"><i data-lucide="user" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i> E&amp;I Head</span>
+        <span class="fc-arrow">→</span>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- Quick info bar -->
+  <div style="margin:0 24px 0;padding:12px 20px;background:var(--section-bg);border:1px solid var(--border);border-radius:var(--radius);display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <i data-lucide="info" style="width:14px;height:14px;color:var(--navy-light);flex-shrink:0"></i>
+    <span style="font-size:11.5px;color:var(--text-muted)">
+      All forms are <strong style="color:var(--navy)">pre-populated with sample data for 21-Apr-2026</strong>.
+      Source Excel files are in <code style="background:white;border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-size:11px">data/samples/2026-04-21/</code>.
+      Amber cells require manual input daily; blue and green cells are read-only (system or computed).
+    </span>
+  </div>
+
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span>Daily Report Forms &mdash; <span id="footer-date"></span></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  lucide.createIcons();
+  const now = new Date();
+  const opts = { weekday:'short', year:'numeric', month:'short', day:'numeric' };
+  const str  = now.toLocaleDateString('en-GB', opts);
+  const el1  = document.getElementById('live-date');
+  const el2  = document.getElementById('footer-date');
+  if (el1) el1.textContent = str;
+  if (el2) el2.textContent = str;
+</script>
+</body>
+</html>
