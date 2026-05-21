@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – CPP Daily Report</title>
+  <link rel="icon" type="image/png" href="../favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="forms.css" />
+  <style>
+    :root {
+      --m-bg:#FFFBEB; --m-fg:#B45309; --m-bd:#FDE68A;
+      --s-bg:#EFF6FF; --s-fg:#1D4ED8; --s-bd:#BFDBFE;
+      --f-bg:#F0FDF4; --f-fg:#15803D; --f-bd:#BBF7D0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header class="top-header">
+  <div class="header-left">
+    <div class="logo-block">
+      <img class="nyati-logo" src="../NYATI-LOGO.png" alt="Nyati Cement" />
+      <div class="logo-text">
+        <img class="lc-wordmark" src="../lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
+        <span class="company-sub">CPP Daily Report</span>
+      </div>
+    </div>
+  </div>
+  <div class="header-center">
+    <div class="view-switcher">
+      <a href="../index.html" class="vs-tab">
+        <i data-lucide="bar-chart-2" class="vs-icon"></i>
+        <span>Monthly KPIs</span>
+      </a>
+      <a href="../daily-report.html" class="vs-tab active">
+        <i data-lucide="clipboard-list" class="vs-icon"></i>
+        <span>Daily Reports</span>
+      </a>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="brand-tag">
+      <span class="brand-slogan">Hushika Haraka · Hudumu Zaidi</span>
+      <span class="header-meta" id="live-date"></span>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════ NAV ══════════════════ -->
+<nav class="dept-nav">
+  <div class="nav-inner">
+    <span class="nav-label">DAILY FORMS</span>
+    <button class="nav-btn" onclick="location.href='index.html'"><i data-lucide="layout-grid" class="nav-icon"></i> All Forms</button>
+    <button class="nav-btn" onclick="location.href='dispatch-form.html'"><i data-lucide="truck" class="nav-icon"></i> Dispatch</button>
+    <button class="nav-btn" onclick="location.href='stoppage-form.html'"><i data-lucide="alert-triangle" class="nav-icon"></i> Stoppages</button>
+    <button class="nav-btn active"><i data-lucide="zap" class="nav-icon"></i> CPP</button>
+    <button class="nav-btn" onclick="location.href='quality-form.html'"><i data-lucide="flask-conical" class="nav-icon"></i> Quality</button>
+    <button class="nav-btn" onclick="location.href='materials-form.html'"><i data-lucide="package" class="nav-icon"></i> Materials</button>
+    <button class="nav-btn" onclick="location.href='power-form.html'"><i data-lucide="activity" class="nav-icon"></i> Power</button>
+    <div class="nav-divider"></div>
+    <button class="nav-btn secondary" onclick="window.print()"><i data-lucide="printer" class="nav-icon"></i> Print / PDF</button>
+  </div>
+</nav>
+
+<!-- ══════════════════ TOOLBAR ══════════════════ -->
+<div class="toolbar">
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="tb-lbl">Date</span>
+    <input type="date" class="tb-ctl" value="2026-04-21" />
+  </div>
+  <div class="tb-sep"></div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="tb-lbl">Prepared By</span>
+    <input type="text" class="tb-ctl" placeholder="CPP Head…" style="min-width:140px;width:auto" />
+  </div>
+  <div class="tb-sep"></div>
+  <span class="rpt-pill">DRAFT</span>
+  <div class="btn-grp">
+    <button class="btn btn-out"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
+    <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+    <button class="btn btn-sub"><i data-lucide="check-circle" class="btn-icon"></i> Submit Report</button>
+  </div>
+</div>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<main class="fm-main">
+
+  <!-- legend -->
+  <div class="legend-bar">
+    <span class="leg-lbl">Data Source Key</span>
+    <span class="leg-chip leg-m"><i data-lucide="pencil" class="btn-icon"></i> Manual Entry</span>
+    <span class="leg-chip leg-s"><i data-lucide="cpu" class="btn-icon"></i> System / Meter</span>
+    <span class="leg-chip leg-f"><i data-lucide="sigma" class="btn-icon"></i> Formula / Computed</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--text-muted);font-style:italic">Date: 21-Apr-2026</span>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       COAL SOURCE CHIP STRIP
+  ════════════════════════════════════════════════ -->
+  <div class="rcard" style="margin-bottom:14px">
+    <div class="rcard-hdr">
+      <div class="rcard-title"><i data-lucide="flame" class="title-icon"></i> Coal Stock by Source — On Date (MT)</div>
+    </div>
+    <div class="coal-strip">
+      <span class="coal-lbl">Coal Sources</span>
+      <div class="coal-chip">
+        STAMICO <span>66</span> <small>MT received</small>
+      </div>
+      <div class="coal-chip">
+        Ruvuma <span>66</span> <small>MT received</small>
+      </div>
+      <div class="coal-chip">
+        Market <span>0</span> <small>MT received</small>
+      </div>
+      <div class="coal-chip">
+        Connect <span>0</span> <small>MT received</small>
+      </div>
+      <div class="coal-chip">
+        Mchekanai <span>0</span> <small>MT received</small>
+      </div>
+      <div class="coal-chip" style="margin-left:auto;border-color:var(--navy);background:var(--section-bg)">
+        Total Received <span>132</span> <small>MT today</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       BLOCK 1 — POWER GENERATION
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="zap" class="title-icon"></i> Power Generation — CPP</div>
+        <div class="rcard-sub">Generator output, auxiliary consumption &amp; grid performance — 21-Apr-2026</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip">21-Apr-2026</span>
+        <span class="rcard-chip orange">POWER PLANT</span>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:900px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" style="min-width:220px">Parameter</th>
+            <th class="grp-hdr">Unit</th>
+            <th class="grp-hdr">On Date</th>
+            <th class="grp-hdr">MTD</th>
+            <th class="grp-hdr">YTD</th>
+            <th class="grp-hdr">Target<br>(Day)</th>
+            <th class="grp-hdr">Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="srow"><td colspan="7">Generation</td></tr>
+          <tr>
+            <td class="tp">Gross Generation</td>
+            <td class="ts">kWh</td>
+            <td class="cm"><input class="ci" type="number" value="139400" /></td>
+            <td class="cf"><div class="cv">2,787,600</div></td>
+            <td class="cf"><div class="cv">9,846,200</div></td>
+            <td class="cm"><input class="ci" type="number" value="240000" /></td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Auxiliary Consumption</td>
+            <td class="ts">kWh</td>
+            <td class="cm"><input class="ci" type="number" value="17157" /></td>
+            <td class="cf"><div class="cv">347,200</div></td>
+            <td class="cf"><div class="cv">1,228,000</div></td>
+            <td class="cm"><input class="ci" type="number" value="" /></td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Net Generation</td>
+            <td class="ts">kWh</td>
+            <td class="cf"><div class="cv">122,243</div></td>
+            <td class="cf"><div class="cv">2,440,400</div></td>
+            <td class="cf"><div class="cv">8,618,200</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Auxiliary % (Aux/Gross)</td>
+            <td class="ts">%</td>
+            <td class="cf"><div class="cv">12.31%</div></td>
+            <td class="cf"><div class="cv">12.46%</div></td>
+            <td class="cf"><div class="cv">12.47%</div></td>
+            <td class="cm"><input class="ci" type="number" value="10" /></td>
+            <td class="cs"><div class="cv">Target &lt;10%</div></td>
+          </tr>
+
+          <tr class="srow"><td colspan="7">Plant Performance</td></tr>
+          <tr>
+            <td class="tp">Plant Load Factor (PLF)</td>
+            <td class="ts">%</td>
+            <td class="cf"><div class="cv">58.08%</div></td>
+            <td class="cf"><div class="cv">58.1%</div></td>
+            <td class="cf"><div class="cv">57.9%</div></td>
+            <td class="cm"><input class="ci" type="number" value="65" /></td>
+            <td class="cs"><div class="cv">Based on 10 MW installed</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Units Exported to Plant</td>
+            <td class="ts">kWh</td>
+            <td class="cs"><div class="cv">122,243</div></td>
+            <td class="cf"><div class="cv">2,440,400</div></td>
+            <td class="cf"><div class="cv">8,618,200</div></td>
+            <td class="cm"><input class="ci" type="number" value="" /></td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Grid Import (TANESCO)</td>
+            <td class="ts">kWh</td>
+            <td class="cm"><input class="ci" type="number" value="35718" /></td>
+            <td class="cf"><div class="cv">714,360</div></td>
+            <td class="cf"><div class="cv">2,523,720</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="text" value="CPP short; grid supplement" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Total Power Available</td>
+            <td class="ts">kWh</td>
+            <td class="cf"><div class="cv">157,961</div></td>
+            <td class="cf"><div class="cv">3,154,760</div></td>
+            <td class="cf"><div class="cv">11,141,920</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">CPP + TANESCO</div></td>
+          </tr>
+
+          <tr class="srow"><td colspan="7">Heat Rate &amp; Efficiency</td></tr>
+          <tr>
+            <td class="tp">CPP Heat Rate</td>
+            <td class="ts">kcal/kWh</td>
+            <td class="cf"><div class="cv">3,888</div></td>
+            <td class="cf"><div class="cv">3,902</div></td>
+            <td class="cf"><div class="cv">3,895</div></td>
+            <td class="cm"><input class="ci" type="number" value="3800" /></td>
+            <td class="cs"><div class="cv">Target ≤ 3,800</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Steam Pressure (Avg)</td>
+            <td class="ts">kg/cm²</td>
+            <td class="cm"><input class="ci" type="number" value="62" /></td>
+            <td class="cf"><div class="cv">61.8</div></td>
+            <td class="cf"><div class="cv">61.5</div></td>
+            <td class="cm"><input class="ci" type="number" value="63" /></td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Steam Temperature (Avg)</td>
+            <td class="ts">°C</td>
+            <td class="cm"><input class="ci" type="number" value="485" /></td>
+            <td class="cf"><div class="cv">484</div></td>
+            <td class="cf"><div class="cv">483</div></td>
+            <td class="cm"><input class="ci" type="number" value="490" /></td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Running Hours</td>
+            <td class="ts">hrs</td>
+            <td class="cm"><input class="ci" type="number" value="24" /></td>
+            <td class="cf"><div class="cv">504</div></td>
+            <td class="cf"><div class="cv">1,764</div></td>
+            <td class="cm"><input class="ci" type="number" value="24" /></td>
+            <td class="cm"><input class="ci" type="text" value="Full 24 hrs" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Stoppages</td>
+            <td class="ts">min</td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">120</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Availability</td>
+            <td class="ts">%</td>
+            <td class="cf"><div class="cv">100.0%</div></td>
+            <td class="cf"><div class="cv">100.0%</div></td>
+            <td class="cf"><div class="cv">99.7%</div></td>
+            <td class="cm"><input class="ci" type="number" value="98" /></td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       BLOCK 2 — FUEL CONSUMPTION
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="flame" class="title-icon"></i> Fuel Consumption — Coal</div>
+        <div class="rcard-sub">Coal consumed in boiler; calorific value &amp; specific consumption</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip orange">POWER PLANT</span>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:900px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" style="min-width:220px">Parameter</th>
+            <th class="grp-hdr">Unit</th>
+            <th class="grp-hdr">On Date</th>
+            <th class="grp-hdr">MTD</th>
+            <th class="grp-hdr">YTD</th>
+            <th class="grp-hdr">Target</th>
+            <th class="grp-hdr">Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="tp">Coal Consumed (CPP)</td>
+            <td class="ts">MT</td>
+            <td class="cm"><input class="ci" type="number" value="132" /></td>
+            <td class="cf"><div class="cv">2,640</div></td>
+            <td class="cf"><div class="cv">9,240</div></td>
+            <td class="cm"><input class="ci" type="number" value="140" /></td>
+            <td class="cm"><input class="ci" type="text" value="STAMICO + Ruvuma 66t each" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">GCV (as received)</td>
+            <td class="ts">kcal/kg</td>
+            <td class="cm"><input class="ci" type="number" value="4179" /></td>
+            <td class="cf"><div class="cv">4,185</div></td>
+            <td class="cf"><div class="cv">4,192</div></td>
+            <td class="cm"><input class="ci" type="number" value="4200" /></td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       BLOCK 3 — WATER TREATMENT PLANT (WTP)
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="droplets" class="title-icon"></i> Water Treatment Plant (WTP)</div>
+        <div class="rcard-sub">Boiler feed water quality &amp; consumption</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip orange">POWER PLANT</span>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:800px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" style="min-width:220px">Parameter</th>
+            <th class="grp-hdr">Unit</th>
+            <th class="grp-hdr">On Date</th>
+            <th class="grp-hdr">MTD Avg</th>
+            <th class="grp-hdr">Limit / Target</th>
+            <th class="grp-hdr">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="tp">Raw Water Consumed</td>
+            <td class="ts">m³</td>
+            <td class="cm"><input class="ci" type="number" value="480" /></td>
+            <td class="cf"><div class="cv">475</div></td>
+            <td class="cm"><input class="ci" type="number" value="500" /></td>
+            <td class="cf"><div class="cv" style="color:var(--f-fg)">OK</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Boiler Feed pH</td>
+            <td class="ts">—</td>
+            <td class="cm"><input class="ci" type="number" value="8.8" step="0.1" /></td>
+            <td class="cf"><div class="cv">8.7</div></td>
+            <td class="cs"><div class="cv">8.5–9.0</div></td>
+            <td class="cf"><div class="cv" style="color:var(--f-fg)">OK</div></td>
+          </tr>
+          <tr>
+            <td class="tp">TDS (Boiler Feed)</td>
+            <td class="ts">ppm</td>
+            <td class="cm"><input class="ci" type="number" value="120" /></td>
+            <td class="cf"><div class="cv">118</div></td>
+            <td class="cs"><div class="cv">&lt;150 ppm</div></td>
+            <td class="cf"><div class="cv" style="color:var(--f-fg)">OK</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Blow-down Volume</td>
+            <td class="ts">m³</td>
+            <td class="cm"><input class="ci" type="number" value="24" /></td>
+            <td class="cf"><div class="cv">22</div></td>
+            <td class="cm"><input class="ci" type="number" value="30" /></td>
+            <td class="cf"><div class="cv" style="color:var(--f-fg)">OK</div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       BLOCK 4 — FLY ASH
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="cloud" class="title-icon"></i> Fly Ash — Production &amp; Utilisation</div>
+        <div class="rcard-sub">By-product from boiler — captured in ESP &amp; bag filter</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip orange">POWER PLANT</span>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:800px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" style="min-width:220px">Parameter</th>
+            <th class="grp-hdr">Unit</th>
+            <th class="grp-hdr">On Date</th>
+            <th class="grp-hdr">MTD</th>
+            <th class="grp-hdr">YTD</th>
+            <th class="grp-hdr">Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="tp">Fly Ash Generated</td>
+            <td class="ts">MT</td>
+            <td class="cf"><div class="cv">19.8</div></td>
+            <td class="cf"><div class="cv">396</div></td>
+            <td class="cf"><div class="cv">1,386</div></td>
+            <td class="cm"><input class="ci" type="text" value="~15% of coal consumed" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Fly Ash Used (Cement)</td>
+            <td class="ts">MT</td>
+            <td class="cm"><input class="ci" type="number" value="12" /></td>
+            <td class="cf"><div class="cv">240</div></td>
+            <td class="cf"><div class="cv">840</div></td>
+            <td class="cm"><input class="ci" type="text" value="Used in CM-2 blend" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Fly Ash Stock (Silo)</td>
+            <td class="ts">MT</td>
+            <td class="cf"><div class="cv">124</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       SIGN-OFF
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr"><div class="rcard-title"><i data-lucide="pen-line" class="title-icon"></i> Report Sign-off &amp; Approval</div></div>
+    <div class="signoff">
+      <div class="so-cell">
+        <div class="so-role">CPP Head</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time signed" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">Electrical Head</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time reviewed" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">Plant Manager</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time approved" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">General Manager</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time approved" />
+      </div>
+    </div>
+    <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span style="font-size:11px;color:var(--text-muted)">
+        Status: <strong style="color:var(--orange)">DRAFT</strong> &nbsp;·&nbsp;
+        Date: <strong>21 April 2026</strong>
+      </span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-out"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+        <button class="btn btn-sub"><i data-lucide="lock" class="btn-icon"></i> Submit &amp; Lock</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span>CPP Daily Report &mdash; <span id="footer-date"></span></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  lucide.createIcons();
+  const now = new Date();
+  const opts = { weekday:'short', year:'numeric', month:'short', day:'numeric' };
+  const str  = now.toLocaleDateString('en-GB', opts);
+  const el1  = document.getElementById('live-date');
+  const el2  = document.getElementById('footer-date');
+  if (el1) el1.textContent = str;
+  if (el2) el2.textContent = str;
+</script>
+</body>
+</html>
