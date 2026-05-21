@@ -282,6 +282,7 @@
 
   /* ══ Public entry point ════════════════════════════════════════════ */
   global.initFormPersist = function (formId) {
+    global._nyatiFormId = formId;
     const body      = document.body;
     const dateInput = body.querySelector('input[type="date"]');
 
