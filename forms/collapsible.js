@@ -62,12 +62,40 @@
     });
   }
 
+  /* ── Auto-color rcard header by icon type ─────────────────── */
+  const ICON_COLOR = {
+    /* Quality / Lab */
+    'flask-conical': 'rch-green', 'test-tube': 'rch-green', 'microscope': 'rch-green',
+    /* Stoppages / Alerts */
+    'alert-triangle': 'rch-red',  'triangle-alert': 'rch-red', 'siren': 'rch-red',
+    /* Dispatch / Logistics */
+    'truck': 'rch-orange', 'box': 'rch-orange', 'shopping-cart': 'rch-orange',
+    /* Materials / Stores */
+    'package': 'rch-orange', 'warehouse': 'rch-orange',
+    /* Power / Energy */
+    'activity': 'rch-teal', 'zap': 'rch-teal', 'gauge': 'rch-teal',
+    'battery-charging': 'rch-teal', 'plug': 'rch-teal',
+    /* Pile Quality / Geology */
+    'layers': 'rch-purple', 'mountain': 'rch-purple', 'gem': 'rch-purple',
+  };
+
+  function colorHeader(rcard) {
+    const hdr  = rcard.querySelector('.rcard-hdr');
+    if (!hdr) return;
+    const icon = hdr.querySelector('[data-lucide]');
+    if (!icon) return;
+    const name = icon.getAttribute('data-lucide');
+    const cls  = ICON_COLOR[name];
+    if (cls) hdr.classList.add(cls);
+  }
+
   function init() {
     document.querySelectorAll('.rcard').forEach((rcard, i) => {
       const key  = 'rcard-' + (rcard.id || i);
       const body = wrapBody(rcard);
       if (!body) return;
       addToggle(rcard, body, key);
+      colorHeader(rcard);
 
       /* Restore previous collapse state */
       try {

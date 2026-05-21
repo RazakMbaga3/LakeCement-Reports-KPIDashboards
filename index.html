@@ -173,6 +173,11 @@
         <div class="smry-period-badge" id="smry-period-badge">February 2026</div>
       </div>
 
+      <!-- Today's report status strip (live from localStorage) -->
+      <div class="smry-ops-strip" id="smry-ops-strip">
+        <span class="smry-ops-lbl">Today's Reports</span>
+      </div>
+
       <!-- Alerts strip -->
       <div class="smry-alerts">
         <span class="smry-alert-label"><i data-lucide="alert-triangle" class="btn-icon"></i> Concerns</span>
@@ -2156,5 +2161,51 @@
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script>lucide.createIcons();</script>
   <script src="forms/nav-status.js"></script>
+  <script>
+  /* ── Today's Report Status strip ─────────────────────────────── */
+  (function () {
+    var FORMS = [
+      { id: 'production',   label: 'Production',   url: 'daily-report.html' },
+      { id: 'power-plant',  label: 'CPP',           url: 'power-plant-report.html' },
+      { id: 'mines',        label: 'Mines',         url: 'mines-report.html' },
+      { id: 'dispatch',     label: 'Dispatch',      url: 'forms/dispatch-form.html' },
+      { id: 'stoppage',     label: 'Stoppages',     url: 'forms/stoppage-form.html' },
+      { id: 'quality',      label: 'Quality',       url: 'forms/quality-form.html' },
+      { id: 'materials',    label: 'Materials',     url: 'forms/materials-form.html' },
+      { id: 'power-cons',   label: 'Power Cons.',   url: 'forms/power-form.html' },
+      { id: 'pile-quality', label: 'Pile Quality',  url: 'forms/pile-quality-form.html' },
+    ];
+    var today = new Date().toISOString().slice(0, 10);
+    var strip  = document.getElementById('smry-ops-strip');
+    if (!strip) return;
+
+    function render() {
+      var nSub = 0, nDraft = 0;
+      var chips = FORMS.map(function (f) {
+        var raw = localStorage.getItem('nyati-' + f.id + '-' + today);
+        var st  = 'empty';
+        if (raw) { try { st = JSON.parse(raw)._m.status || 'draft'; } catch (e) { st = 'draft'; } }
+        if (st === 'submitted') nSub++;
+        else if (st === 'draft') nDraft++;
+        return '<a href="' + f.url + '" class="smry-ops-chip smry-ops-' + st +
+               '" title="' + f.label + ': ' + st + '">' + f.label + '</a>';
+      }).join('');
+
+      var nTotal = FORMS.length;
+      var sumText = (nSub === nTotal)
+        ? '<span style="color:var(--green);font-weight:700">✓ All ' + nTotal + ' submitted</span>'
+        : nSub + ' submitted &nbsp;·&nbsp; ' + nDraft + ' draft &nbsp;·&nbsp; ' +
+          (nTotal - nSub - nDraft) + ' pending';
+
+      strip.innerHTML =
+        '<span class="smry-ops-lbl">Today\'s Reports &mdash; ' + today + '</span>' +
+        chips +
+        '<span class="smry-ops-sum">' + sumText + '</span>';
+    }
+
+    render();
+    window.addEventListener('storage', render);
+  }());
+  </script>
 </body>
 </html>
