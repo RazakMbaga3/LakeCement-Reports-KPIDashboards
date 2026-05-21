@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – Raw Materials &amp; Stores Report</title>
+  <link rel="icon" type="image/png" href="../favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="forms.css" />
+  <style>
+    :root {
+      --m-bg:#FFFBEB; --m-fg:#B45309; --m-bd:#FDE68A;
+      --s-bg:#EFF6FF; --s-fg:#1D4ED8; --s-bd:#BFDBFE;
+      --f-bg:#F0FDF4; --f-fg:#15803D; --f-bd:#BBF7D0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header class="top-header">
+  <div class="header-left">
+    <div class="logo-block">
+      <img class="nyati-logo" src="../NYATI-LOGO.png" alt="Nyati Cement" />
+      <div class="logo-text">
+        <img class="lc-wordmark" src="../lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
+        <span class="company-sub">Raw Materials &amp; Stores Report</span>
+      </div>
+    </div>
+  </div>
+  <div class="header-center">
+    <div class="view-switcher">
+      <a href="../index.html" class="vs-tab">
+        <i data-lucide="bar-chart-2" class="vs-icon"></i>
+        <span>Monthly KPIs</span>
+      </a>
+      <a href="../daily-report.html" class="vs-tab active">
+        <i data-lucide="clipboard-list" class="vs-icon"></i>
+        <span>Daily Reports</span>
+      </a>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="brand-tag">
+      <span class="brand-slogan">Hushika Haraka · Hudumu Zaidi</span>
+      <span class="header-meta" id="live-date"></span>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════ NAV ══════════════════ -->
+<nav class="dept-nav">
+  <div class="nav-inner">
+    <span class="nav-label">DAILY FORMS</span>
+    <button class="nav-btn" onclick="location.href='index.html'"><i data-lucide="layout-grid" class="nav-icon"></i> All Forms</button>
+    <button class="nav-btn" onclick="location.href='dispatch-form.html'"><i data-lucide="truck" class="nav-icon"></i> Dispatch</button>
+    <button class="nav-btn" onclick="location.href='stoppage-form.html'"><i data-lucide="alert-triangle" class="nav-icon"></i> Stoppages</button>
+    <button class="nav-btn" onclick="location.href='cpp-form.html'"><i data-lucide="zap" class="nav-icon"></i> CPP</button>
+    <button class="nav-btn" onclick="location.href='quality-form.html'"><i data-lucide="flask-conical" class="nav-icon"></i> Quality</button>
+    <button class="nav-btn active"><i data-lucide="package" class="nav-icon"></i> Materials</button>
+    <button class="nav-btn" onclick="location.href='power-form.html'"><i data-lucide="activity" class="nav-icon"></i> Power</button>
+    <div class="nav-divider"></div>
+    <button class="nav-btn secondary" onclick="window.print()"><i data-lucide="printer" class="nav-icon"></i> Print / PDF</button>
+  </div>
+</nav>
+
+<!-- ══════════════════ TOOLBAR ══════════════════ -->
+<div class="toolbar">
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="tb-lbl">Date</span>
+    <input type="date" class="tb-ctl" value="2026-04-21" />
+  </div>
+  <div class="tb-sep"></div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="tb-lbl">Stores Officer</span>
+    <input type="text" class="tb-ctl" placeholder="Stores Head…" style="min-width:140px;width:auto" />
+  </div>
+  <div class="tb-sep"></div>
+  <span class="rpt-pill">DRAFT</span>
+  <div class="btn-grp">
+    <button class="btn btn-out"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
+    <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+    <button class="btn btn-sub"><i data-lucide="check-circle" class="btn-icon"></i> Submit Report</button>
+  </div>
+</div>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<main class="fm-main">
+
+  <!-- legend -->
+  <div class="legend-bar">
+    <span class="leg-lbl">Data Source Key</span>
+    <span class="leg-chip leg-m"><i data-lucide="pencil" class="btn-icon"></i> Manual Entry</span>
+    <span class="leg-chip leg-s"><i data-lucide="cpu" class="btn-icon"></i> ERP / System</span>
+    <span class="leg-chip leg-f"><i data-lucide="sigma" class="btn-icon"></i> Formula / Computed</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--text-muted);font-style:italic">All quantities in MT unless noted. Date: 21-Apr-2026.</span>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       GROUP 1 — PRIMARY RAW MATERIALS
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="mountain" class="title-icon"></i> Primary Raw Materials</div>
+        <div class="rcard-sub">Limestone, clay, iron ore, gypsum — stock movement — 21-Apr-2026</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip">21-Apr-2026</span>
+        <span class="rcard-chip orange">STORES</span>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:1600px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" style="min-width:30px">SN</th>
+            <th class="tl grp-hdr" style="min-width:180px">Material</th>
+            <th class="grp-hdr">Opening<br>Stock</th>
+            <th class="grp-hdr" colspan="3">Received (MT)</th>
+            <th class="grp-hdr" colspan="3">Consumption (MT)</th>
+            <th class="grp-hdr">Closing<br>Stock</th>
+            <th class="grp-hdr">Pending<br>GRN</th>
+            <th class="grp-hdr">Rec. Min<br>(Days)</th>
+            <th class="grp-hdr">Rec. Max<br>(Days)</th>
+            <th class="grp-hdr">Variance</th>
+          </tr>
+          <tr>
+            <th class="tl grp-hdr"></th>
+            <th class="tl grp-hdr"></th>
+            <th class="grp-hdr"></th>
+            <th class="grp-hdr">On Date</th>
+            <th class="grp-hdr">MTD</th>
+            <th class="grp-hdr">YTD</th>
+            <th class="grp-hdr">On Date</th>
+            <th class="grp-hdr">MTD</th>
+            <th class="grp-hdr">YTD</th>
+            <th class="grp-hdr"></th>
+            <th class="grp-hdr"></th>
+            <th class="grp-hdr"></th>
+            <th class="grp-hdr"></th>
+            <th class="grp-hdr"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="ts">1</td>
+            <td class="tp">Limestone HG</td>
+            <td class="cs"><div class="cv">18,391</div></td>
+            <td class="cm"><input class="ci" type="number" value="2727" /></td>
+            <td class="cf"><div class="cv">57,267</div></td>
+            <td class="cf"><div class="cv">201,435</div></td>
+            <td class="cm"><input class="ci" type="number" value="2540" /></td>
+            <td class="cf"><div class="cv">53,340</div></td>
+            <td class="cf"><div class="cv">186,690</div></td>
+            <td class="cf"><div class="cv">18,578</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="number" value="5" /></td>
+            <td class="cm"><input class="ci" type="number" value="15" /></td>
+            <td class="cf"><div class="cv">+187</div></td>
+          </tr>
+          <tr>
+            <td class="ts">2</td>
+            <td class="tp">OB Clay</td>
+            <td class="cs"><div class="cv">1,909</div></td>
+            <td class="cm"><input class="ci" type="number" value="349" /></td>
+            <td class="cf"><div class="cv">7,329</div></td>
+            <td class="cf"><div class="cv">25,713</div></td>
+            <td class="cm"><input class="ci" type="number" value="74" /></td>
+            <td class="cf"><div class="cv">1,554</div></td>
+            <td class="cf"><div class="cv">5,439</div></td>
+            <td class="cf"><div class="cv">2,184</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="number" value="10" /></td>
+            <td class="cm"><input class="ci" type="number" value="30" /></td>
+            <td class="cf"><div class="cv">+275</div></td>
+          </tr>
+          <tr>
+            <td class="ts">3</td>
+            <td class="tp">ID Clay</td>
+            <td class="cs"><div class="cv">3,971</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">798</div></td>
+            <td class="cm"><input class="ci" type="number" value="54" /></td>
+            <td class="cf"><div class="cv">1,134</div></td>
+            <td class="cf"><div class="cv">3,969</div></td>
+            <td class="cf"><div class="cv">3,917</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="number" value="30" /></td>
+            <td class="cm"><input class="ci" type="number" value="60" /></td>
+            <td class="cf"><div class="cv">-54</div></td>
+          </tr>
+          <tr>
+            <td class="ts">4</td>
+            <td class="tp">Iron Ore</td>
+            <td class="cs"><div class="cv">4,479</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">1,155</div></td>
+            <td class="cm"><input class="ci" type="number" value="47" /></td>
+            <td class="cf"><div class="cv">987</div></td>
+            <td class="cf"><div class="cv">3,455</div></td>
+            <td class="cf"><div class="cv">4,432</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="number" value="60" /></td>
+            <td class="cm"><input class="ci" type="number" value="120" /></td>
+            <td class="cf"><div class="cv">-47</div></td>
+          </tr>
+          <tr>
+            <td class="ts">5</td>
+            <td class="tp">Gypsum</td>
+            <td class="cs"><div class="cv">1,240</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">420</div></td>
+            <td class="cf"><div class="cv">1,470</div></td>
+            <td class="cm"><input class="ci" type="number" value="18" /></td>
+            <td class="cf"><div class="cv">378</div></td>
+            <td class="cf"><div class="cv">1,323</div></td>
+            <td class="cf"><div class="cv">1,222</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="number" value="30" /></td>
+            <td class="cm"><input class="ci" type="number" value="60" /></td>
+            <td class="cf"><div class="cv">-18</div></td>
+          </tr>
+          <tr>
+            <td class="ts">6</td>
+            <td class="tp">Purchased Clinker</td>
+            <td class="cs"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       GROUP 2 — COAL (KILN)
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="flame" class="title-icon"></i> Coal — Kiln Consumption</div>
+        <div class="rcard-sub">Coal suppliers for kiln firing — stock movement by source — 21-Apr-2026</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip orange">STORES</span>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:1600px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" style="min-width:30px">SN</th>
+            <th class="tl grp-hdr" style="min-width:180px">Supplier / Source</th>
+            <th class="grp-hdr">Opening</th>
+            <th class="grp-hdr">Recd On Date</th>
+            <th class="grp-hdr">Recd MTD</th>
+            <th class="grp-hdr">Recd YTD</th>
+            <th class="grp-hdr">Cons On Date</th>
+            <th class="grp-hdr">Cons MTD</th>
+            <th class="grp-hdr">Cons YTD</th>
+            <th class="grp-hdr">Closing</th>
+            <th class="grp-hdr">Pending GRN</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="srow"><td colspan="11">Coal Kiln — Supplier Breakdown</td></tr>
+          <!-- Sample top suppliers; rest as blank rows for operator entry -->
+          <tr>
+            <td class="ts">1</td>
+            <td class="tp">STAMICO</td>
+            <td class="cs"><div class="cv">480</div></td>
+            <td class="cm"><input class="ci" type="number" value="66" /></td>
+            <td class="cf"><div class="cv">1,386</div></td>
+            <td class="cf"><div class="cv">4,851</div></td>
+            <td class="cm"><input class="ci" type="number" value="70" /></td>
+            <td class="cf"><div class="cv">1,470</div></td>
+            <td class="cf"><div class="cv">5,145</div></td>
+            <td class="cf"><div class="cv">476</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+          </tr>
+          <tr>
+            <td class="ts">2</td>
+            <td class="tp">Ruvuma Coal</td>
+            <td class="cs"><div class="cv">320</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">4,200</div></td>
+            <td class="cm"><input class="ci" type="number" value="50" /></td>
+            <td class="cf"><div class="cv">1,050</div></td>
+            <td class="cf"><div class="cv">3,675</div></td>
+            <td class="cf"><div class="cv">270</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+          </tr>
+          <tr>
+            <td class="ts">3</td>
+            <td class="tp">Market Coal</td>
+            <td class="cs"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+          </tr>
+          <tr>
+            <td class="ts">4</td>
+            <td class="tp">Connect Energy</td>
+            <td class="cs"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+          </tr>
+          <tr>
+            <td class="ts">5</td>
+            <td class="tp">Mchekanai</td>
+            <td class="cs"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+          </tr>
+          <tr class="trow">
+            <td class="ts" colspan="2" style="text-align:right;padding-right:12px">KILN COAL TOTAL</td>
+            <td class="cf"><div class="cv">800</div></td>
+            <td class="cf"><div class="cv">66</div></td>
+            <td class="cf"><div class="cv">1,386</div></td>
+            <td class="cf"><div class="cv">9,051</div></td>
+            <td class="cf"><div class="cv">120</div></td>
+            <td class="cf"><div class="cv">2,520</div></td>
+            <td class="cf"><div class="cv">8,820</div></td>
+            <td class="cf"><div class="cv">746</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       GROUP 3 — COAL (CPP)
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="zap" class="title-icon"></i> Coal — CPP Consumption</div>
+        <div class="rcard-sub">Coal suppliers for CPP boiler — stock movement by source — 21-Apr-2026</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip orange">STORES · POWER PLANT</span>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:1600px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" style="min-width:30px">SN</th>
+            <th class="tl grp-hdr" style="min-width:180px">Supplier / Source</th>
+            <th class="grp-hdr">Opening</th>
+            <th class="grp-hdr">Recd On Date</th>
+            <th class="grp-hdr">Recd MTD</th>
+            <th class="grp-hdr">Recd YTD</th>
+            <th class="grp-hdr">Cons On Date</th>
+            <th class="grp-hdr">Cons MTD</th>
+            <th class="grp-hdr">Cons YTD</th>
+            <th class="grp-hdr">Closing</th>
+            <th class="grp-hdr">Pending GRN</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="srow"><td colspan="11">Coal CPP — Supplier Breakdown</td></tr>
+          <tr>
+            <td class="ts">1</td>
+            <td class="tp">STAMICO (CPP)</td>
+            <td class="cs"><div class="cv">280</div></td>
+            <td class="cm"><input class="ci" type="number" value="66" /></td>
+            <td class="cf"><div class="cv">1,386</div></td>
+            <td class="cf"><div class="cv">4,851</div></td>
+            <td class="cm"><input class="ci" type="number" value="66" /></td>
+            <td class="cf"><div class="cv">1,386</div></td>
+            <td class="cf"><div class="cv">4,851</div></td>
+            <td class="cf"><div class="cv">280</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+          </tr>
+          <tr>
+            <td class="ts">2</td>
+            <td class="tp">Ruvuma (CPP)</td>
+            <td class="cs"><div class="cv">190</div></td>
+            <td class="cm"><input class="ci" type="number" value="66" /></td>
+            <td class="cf"><div class="cv">1,386</div></td>
+            <td class="cf"><div class="cv">4,851</div></td>
+            <td class="cm"><input class="ci" type="number" value="66" /></td>
+            <td class="cf"><div class="cv">1,386</div></td>
+            <td class="cf"><div class="cv">4,851</div></td>
+            <td class="cf"><div class="cv">190</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+          </tr>
+          <tr>
+            <td class="ts">3</td>
+            <td class="tp">Market (CPP)</td>
+            <td class="cs"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+          </tr>
+          <tr class="trow">
+            <td class="ts" colspan="2" style="text-align:right;padding-right:12px">CPP COAL TOTAL</td>
+            <td class="cf"><div class="cv">470</div></td>
+            <td class="cf"><div class="cv">132</div></td>
+            <td class="cf"><div class="cv">2,772</div></td>
+            <td class="cf"><div class="cv">9,702</div></td>
+            <td class="cf"><div class="cv">132</div></td>
+            <td class="cf"><div class="cv">2,772</div></td>
+            <td class="cf"><div class="cv">9,702</div></td>
+            <td class="cf"><div class="cv">470</div></td>
+            <td class="cf"><div class="cv">0</div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       GROUP 4 — CEMENT BAGS, GRINDING AID, DIESEL
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="package" class="title-icon"></i> Packaging, Grinding Aid &amp; Diesel</div>
+        <div class="rcard-sub">Consumables — stock &amp; usage — 21-Apr-2026</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip orange">STORES</span>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:1400px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" style="min-width:30px">SN</th>
+            <th class="tl grp-hdr" style="min-width:200px">Item</th>
+            <th class="grp-hdr">Unit</th>
+            <th class="grp-hdr">Opening</th>
+            <th class="grp-hdr">Recd On Date</th>
+            <th class="grp-hdr">Recd MTD</th>
+            <th class="grp-hdr">Issued On Date</th>
+            <th class="grp-hdr">Issued MTD</th>
+            <th class="grp-hdr">Closing</th>
+            <th class="grp-hdr">Pending GRN</th>
+            <th class="grp-hdr">Rec. Min</th>
+            <th class="grp-hdr">Rec. Max</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="srow"><td colspan="12">Cement Bags</td></tr>
+          <tr>
+            <td class="ts">1</td>
+            <td class="tp">PP Bags — 42.5 R (50 kg)</td>
+            <td class="ts">No.</td>
+            <td class="cs"><div class="cv">42,000</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">420,000</div></td>
+            <td class="cm"><input class="ci" type="number" value="6,930" /></td>
+            <td class="cf"><div class="cv">145,530</div></td>
+            <td class="cf"><div class="cv">35,070</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="number" value="50000" /></td>
+            <td class="cm"><input class="ci" type="number" value="150000" /></td>
+          </tr>
+          <tr>
+            <td class="ts">2</td>
+            <td class="tp">PP Bags — 42.5 N (50 kg)</td>
+            <td class="ts">No.</td>
+            <td class="cs"><div class="cv">8,400</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">84,000</div></td>
+            <td class="cm"><input class="ci" type="number" value="600" /></td>
+            <td class="cf"><div class="cv">12,600</div></td>
+            <td class="cf"><div class="cv">7,800</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="number" value="10000" /></td>
+            <td class="cm"><input class="ci" type="number" value="30000" /></td>
+          </tr>
+
+          <tr class="srow"><td colspan="12">Grinding Aid</td></tr>
+          <tr>
+            <td class="ts">3</td>
+            <td class="tp">Grinding Aid (SIKA / equiv.)</td>
+            <td class="ts">Kg</td>
+            <td class="cs"><div class="cv">2,400</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="60" /></td>
+            <td class="cf"><div class="cv">1,260</div></td>
+            <td class="cf"><div class="cv">2,340</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="number" value="1000" /></td>
+            <td class="cm"><input class="ci" type="number" value="5000" /></td>
+          </tr>
+
+          <tr class="srow"><td colspan="12">Diesel</td></tr>
+          <tr>
+            <td class="ts">4</td>
+            <td class="tp">Diesel (Plant vehicles &amp; equip)</td>
+            <td class="ts">Litres</td>
+            <td class="cs"><div class="cv">12,800</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">42,000</div></td>
+            <td class="cm"><input class="ci" type="number" value="620" /></td>
+            <td class="cf"><div class="cv">13,020</div></td>
+            <td class="cf"><div class="cv">12,180</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="number" value="10000" /></td>
+            <td class="cm"><input class="ci" type="number" value="30000" /></td>
+          </tr>
+          <tr>
+            <td class="ts">5</td>
+            <td class="tp">Diesel (Mines dump trucks)</td>
+            <td class="ts">Litres</td>
+            <td class="cs"><div class="cv">8,400</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">21,000</div></td>
+            <td class="cm"><input class="ci" type="number" value="840" /></td>
+            <td class="cf"><div class="cv">17,640</div></td>
+            <td class="cf"><div class="cv">7,560</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="number" value="5000" /></td>
+            <td class="cm"><input class="ci" type="number" value="20000" /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SIGN-OFF -->
+  <div class="rcard">
+    <div class="rcard-hdr"><div class="rcard-title"><i data-lucide="pen-line" class="title-icon"></i> Report Sign-off &amp; Approval</div></div>
+    <div class="signoff">
+      <div class="so-cell">
+        <div class="so-role">Stores Head</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time signed" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">Production Head</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time reviewed" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">Plant Manager</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time approved" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">General Manager</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time approved" />
+      </div>
+    </div>
+    <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span style="font-size:11px;color:var(--text-muted)">
+        Status: <strong style="color:var(--orange)">DRAFT</strong> &nbsp;·&nbsp;
+        Date: <strong>21 April 2026</strong>
+      </span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-out"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+        <button class="btn btn-sub"><i data-lucide="lock" class="btn-icon"></i> Submit &amp; Lock</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span>Raw Materials &amp; Stores Report &mdash; <span id="footer-date"></span></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  lucide.createIcons();
+  const now = new Date();
+  const opts = { weekday:'short', year:'numeric', month:'short', day:'numeric' };
+  const str  = now.toLocaleDateString('en-GB', opts);
+  const el1  = document.getElementById('live-date');
+  const el2  = document.getElementById('footer-date');
+  if (el1) el1.textContent = str;
+  if (el2) el2.textContent = str;
+</script>
+</body>
+</html>
