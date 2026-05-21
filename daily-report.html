@@ -370,7 +370,7 @@
     <div class="kt kt-m">
       <span class="kt-badge">Manual</span>
       <div class="kt-lbl">Total Coal Consumed</div>
-      <div class="kt-val">409</div>
+      <div class="kt-val" data-kpi="coal_total">409</div>
       <div class="kt-unit">MT / On Date (Kiln + CPP)</div>
       <div class="kt-vs vs-ok">NCV: 5,385 kcal/kg</div>
     </div>
@@ -537,7 +537,7 @@
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cf"><div class="cv">0</div></td>
             <td class="cf"><div class="cv">182</div></td>
-            <td class="cm"><input class="ci" type="number" value="265" /></td>
+            <td class="cm"><input class="ci" type="number" value="265" data-field="coal_kiln" /></td>
             <td class="cf"><div class="cv">587</div></td>
             <td class="cf"><div class="cv">7,424</div></td>
             <td class="cf"><div class="cv">7,466</div></td>
@@ -555,7 +555,7 @@
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cf"><div class="cv">64</div></td>
             <td class="cf"><div class="cv">219</div></td>
-            <td class="cm"><input class="ci" type="number" value="144" /></td>
+            <td class="cm"><input class="ci" type="number" value="144" data-field="coal_cpp" /></td>
             <td class="cf"><div class="cv">375</div></td>
             <td class="cf"><div class="cv">4,244</div></td>
             <td class="cf"><div class="cv">9,887</div></td>
@@ -1292,5 +1292,11 @@
 <script>lucide.createIcons();</script>
 <script src="forms/form-persist.js"></script>
 <script>initFormPersist('production');</script>
+<script src="forms/kpi-live.js"></script>
+<script>
+initKpiLive([
+  { kpi:'coal_total', compute: function(f,n){ return n(f.coal_kiln)+n(f.coal_cpp); }, fmt:'n0' }
+]);
+</script>
 </body>
 </html>

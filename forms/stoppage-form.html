@@ -117,42 +117,42 @@
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Total Stoppage — Today</div>
-      <div class="kt-val">925</div>
+      <div class="kt-val" data-kpi="stop_total">925</div>
       <div class="kt-unit">Minutes / On Date</div>
       <div class="kt-vs vs-ng">▼ 15.4 hrs downtime across all sections</div>
     </div>
     <div class="kt kt-m">
       <span class="kt-badge">Manual</span>
       <div class="kt-lbl">Kiln Stoppage</div>
-      <div class="kt-val">0</div>
+      <div class="kt-val" data-kpi="stop_kiln">0</div>
       <div class="kt-unit">Minutes / On Date</div>
       <div class="kt-vs vs-ok">▲ Kiln ran continuously — 24.0 hrs</div>
     </div>
     <div class="kt kt-m">
       <span class="kt-badge">Manual</span>
       <div class="kt-lbl">Planned Maintenance</div>
-      <div class="kt-val">600</div>
+      <div class="kt-val" data-kpi="stop_planned">600</div>
       <div class="kt-unit">Minutes / On Date</div>
       <div class="kt-vs vs-wa">▲ 64.9% of total stoppage time</div>
     </div>
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Mechanical Breakdown</div>
-      <div class="kt-val">250</div>
+      <div class="kt-val" data-kpi="stop_mech">250</div>
       <div class="kt-unit">Minutes / On Date</div>
       <div class="kt-vs vs-ng">▼ 27.0% of total — CM-1 vibration fault</div>
     </div>
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">E&amp;I Breakdown</div>
-      <div class="kt-val">75</div>
+      <div class="kt-val" data-kpi="stop_ei">75</div>
       <div class="kt-unit">Minutes / On Date</div>
       <div class="kt-vs vs-wa">▼ 8.1% — conveyor sensor trip</div>
     </div>
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Kiln Availability</div>
-      <div class="kt-val">100%</div>
+      <div class="kt-val" data-kpi="kiln_avail">100%</div>
       <div class="kt-unit">% / On Date</div>
       <div class="kt-vs vs-ok">▲ No kiln downtime recorded today</div>
     </div>
@@ -191,78 +191,78 @@
           <tbody>
             <tr>
               <td class="tp">Crusher</td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_crusher_mech" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_crusher_ei" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_crusher_prod" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_crusher_planned" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_crusher_power" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_crusher_other" /></td>
               <td class="cf"><div class="cv">0</div></td>
               <td class="cf"><div class="cv">240</div></td>
             </tr>
             <tr>
               <td class="tp">Raw Mill</td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="30" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_rm_mech" /></td>
+              <td class="cm"><input class="ci" type="number" value="30" data-field="stop_rm_ei" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_rm_prod" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_rm_planned" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_rm_power" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_rm_other" /></td>
               <td class="cf"><div class="cv">30</div></td>
               <td class="cf"><div class="cv">410</div></td>
             </tr>
             <tr>
               <td class="tp">Coal Mill</td>
-              <td class="cm"><input class="ci" type="number" value="45" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="45" data-field="stop_cm_coal_mech" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm_coal_ei" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm_coal_prod" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm_coal_planned" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm_coal_power" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm_coal_other" /></td>
               <td class="cf"><div class="cv">45</div></td>
               <td class="cf"><div class="cv">320</div></td>
             </tr>
             <tr>
               <td class="tp">Kiln</td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_kiln_mech" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_kiln_ei" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_kiln_prod" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_kiln_planned" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_kiln_power" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_kiln_other" /></td>
               <td class="cf"><div class="cv">0</div></td>
               <td class="cf"><div class="cv">0</div></td>
             </tr>
             <tr>
               <td class="tp">Cement Mill-1</td>
-              <td class="cm"><input class="ci" type="number" value="120" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="600" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="120" data-field="stop_cm1_mech" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm1_ei" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm1_prod" /></td>
+              <td class="cm"><input class="ci" type="number" value="600" data-field="stop_cm1_planned" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm1_power" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm1_other" /></td>
               <td class="cf"><div class="cv">720</div></td>
               <td class="cf"><div class="cv">5,880</div></td>
             </tr>
             <tr>
               <td class="tp">Cement Mill-2</td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm2_mech" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm2_ei" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm2_prod" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm2_planned" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm2_power" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm2_other" /></td>
               <td class="cf"><div class="cv">0</div></td>
               <td class="cf"><div class="cv">180</div></td>
             </tr>
             <tr>
               <td class="tp">Packing</td>
-              <td class="cm"><input class="ci" type="number" value="85" /></td>
-              <td class="cm"><input class="ci" type="number" value="45" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" /></td>
+              <td class="cm"><input class="ci" type="number" value="85" data-field="stop_packing_mech" /></td>
+              <td class="cm"><input class="ci" type="number" value="45" data-field="stop_packing_ei" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_packing_prod" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_packing_planned" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_packing_power" /></td>
+              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_packing_other" /></td>
               <td class="cf"><div class="cv">130</div></td>
               <td class="cf"><div class="cv">920</div></td>
             </tr>
@@ -747,5 +747,31 @@
 </script>
 <script src="form-persist.js"></script>
 <script>initFormPersist('stoppage');</script>
+<script src="kpi-live.js"></script>
+<script>
+var _SECS = ['crusher','rm','cm_coal','kiln','cm1','cm2','packing'];
+var _CATS = ['mech','ei','prod','planned','power','other'];
+initKpiLive([
+  { kpi:'stop_total', compute: function(f,n){
+      return _SECS.reduce(function(s,sec){ return s+_CATS.reduce(function(ss,cat){ return ss+n(f['stop_'+sec+'_'+cat]); },0); },0);
+  }, fmt:'n0' },
+  { kpi:'stop_kiln', compute: function(f,n){
+      return _CATS.reduce(function(s,cat){ return s+n(f['stop_kiln_'+cat]); },0);
+  }, fmt:'n0' },
+  { kpi:'stop_planned', compute: function(f,n){
+      return _SECS.reduce(function(s,sec){ return s+n(f['stop_'+sec+'_planned']); },0);
+  }, fmt:'n0' },
+  { kpi:'stop_mech', compute: function(f,n){
+      return _SECS.reduce(function(s,sec){ return s+n(f['stop_'+sec+'_mech']); },0);
+  }, fmt:'n0' },
+  { kpi:'stop_ei', compute: function(f,n){
+      return _SECS.reduce(function(s,sec){ return s+n(f['stop_'+sec+'_ei']); },0);
+  }, fmt:'n0' },
+  { kpi:'kiln_avail', compute: function(f,n){
+      var kt=_CATS.reduce(function(s,cat){ return s+n(f['stop_kiln_'+cat]); },0);
+      return (1440-kt)/1440*100;
+  }, fmt:'pct1' }
+]);
+</script>
 </body>
 </html>

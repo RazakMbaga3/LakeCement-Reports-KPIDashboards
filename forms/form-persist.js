@@ -55,6 +55,8 @@
     scope.querySelectorAll('.cao-input').forEach(inp => {
       inp.dispatchEvent(new Event('change'));
     });
+    // Notify kpi-live.js that data has been restored
+    document.dispatchEvent(new CustomEvent('nyati:restored'));
   }
 
   /* ── Get the toolbar date input value ──────────────────────────── */

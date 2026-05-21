@@ -104,7 +104,7 @@
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Total Dispatch — On Date</div>
-      <div class="kt-val">376.5</div>
+      <div class="kt-val" data-kpi="dispatch_total">376.5</div>
       <div class="kt-unit">MT / Today</div>
       <div class="kt-vs vs-wa">▼ MTD pace: 81.3% of monthly target</div>
     </div>
@@ -125,21 +125,21 @@
     <div class="kt kt-m">
       <span class="kt-badge">Manual</span>
       <div class="kt-lbl">SO Pendency</div>
-      <div class="kt-val">1,560</div>
+      <div class="kt-val" data-kpi="so_pendency">1,560</div>
       <div class="kt-unit">MT — Open Sales Orders</div>
       <div class="kt-vs vs-wa">▲ Pending fulfilment — 4.1 days at today's rate</div>
     </div>
     <div class="kt kt-m">
       <span class="kt-badge">Manual</span>
       <div class="kt-lbl">Bags Packed Today</div>
-      <div class="kt-val">7,530</div>
+      <div class="kt-val" data-kpi="bags_packed">7,530</div>
       <div class="kt-unit">Bags / On Date</div>
       <div class="kt-vs vs-ok">▲ Packing lines operational</div>
     </div>
     <div class="kt kt-m">
       <span class="kt-badge">Manual</span>
       <div class="kt-lbl">Burst Bag Rate</div>
-      <div class="kt-val">0.47%</div>
+      <div class="kt-val" data-kpi="burst_rate">0.47%</div>
       <div class="kt-unit">% of Bags Packed</div>
       <div class="kt-vs vs-ng">▲ Above 0.30% target — investigate packer</div>
     </div>
@@ -187,15 +187,15 @@
 
           <tr>
             <td class="tp">Sales On Date</td>
-            <td class="cm"><input class="ci" type="number" value="346.5" /></td>
+            <td class="cm"><input class="ci" type="number" value="346.5" data-field="dispatch_425r" /></td>
             <td class="cf"><div class="cv">7,412</div></td>
             <td class="cf"><div class="cv">26,890</div></td>
-            <td class="cm"><input class="ci" type="number" value="30" /></td>
+            <td class="cm"><input class="ci" type="number" value="30" data-field="dispatch_425n" /></td>
             <td class="cf"><div class="cv">880</div></td>
             <td class="cf"><div class="cv">3,200</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_bulker" /></td>
             <td class="cf"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_bigbag" /></td>
             <td class="cf"><div class="cv">0</div></td>
             <td class="cf"><div class="cv">376.5</div></td>
             <td class="cf"><div class="cv">8,292</div></td>
@@ -240,15 +240,15 @@
 
           <tr>
             <td class="tp">SO Pendency</td>
-            <td class="cm"><input class="ci" type="number" value="1,240" /></td>
+            <td class="cm"><input class="ci" type="number" value="1,240" data-field="so_425r" /></td>
             <td class="cf"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="320" /></td>
+            <td class="cm"><input class="ci" type="number" value="320" data-field="so_425n" /></td>
             <td class="cf"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="so_bulker" /></td>
             <td class="cf"><div class="cv">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="so_bigbag" /></td>
             <td class="cf"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">1,560</div></td>
             <td class="cf"><div class="cv">—</div></td>
@@ -365,22 +365,22 @@
         <tbody>
           <tr>
             <td class="tp">42.5 R Bags Packed</td>
-            <td class="cm"><input class="ci" type="number" value="6,930" /></td>
+            <td class="cm"><input class="ci" type="number" value="6,930" data-field="bags_pl1" /></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cf"><div class="cv">6,930</div></td>
             <td class="cf"><div class="cv">148,240</div></td>
             <td class="cm"><input class="ci" type="number" value="7,000" /></td>
-            <td class="cm"><input class="ci" type="number" value="0.50" /></td>
+            <td class="cm"><input class="ci" type="number" value="0.50" data-field="burst_rate_pl1" /></td>
             <td class="cm"><input class="ci" type="text" value="Line 2 idle – CM2 feeding" style="text-align:left;padding-left:10px" /></td>
           </tr>
           <tr>
             <td class="tp">42.5 N / B-M Bags</td>
-            <td class="cm"><input class="ci" type="number" value="600" /></td>
+            <td class="cm"><input class="ci" type="number" value="600" data-field="bags_pl2" /></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cf"><div class="cv">600</div></td>
             <td class="cf"><div class="cv">17,600</div></td>
             <td class="cm"><input class="ci" type="number" value="600" /></td>
-            <td class="cm"><input class="ci" type="number" value="0.33" /></td>
+            <td class="cm"><input class="ci" type="number" value="0.33" data-field="burst_rate_pl2" /></td>
             <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:10px" /></td>
           </tr>
           <tr class="trow">
@@ -589,5 +589,17 @@
 </script>
 <script src="form-persist.js"></script>
 <script>initFormPersist('dispatch');</script>
+<script src="kpi-live.js"></script>
+<script>
+initKpiLive([
+  { kpi:'dispatch_total', compute: function(f,n){ return n(f.dispatch_425r)+n(f.dispatch_425n)+n(f.dispatch_bulker)+n(f.dispatch_bigbag); }, fmt:'n1' },
+  { kpi:'so_pendency',    compute: function(f,n){ return n(f.so_425r)+n(f.so_425n)+n(f.so_bulker)+n(f.so_bigbag); }, fmt:'n0' },
+  { kpi:'bags_packed',    compute: function(f,n){ return n(f.bags_pl1)+n(f.bags_pl2); }, fmt:'n0' },
+  { kpi:'burst_rate',     compute: function(f,n){
+      var b1=n(f.bags_pl1), b2=n(f.bags_pl2), tot=b1+b2;
+      return tot ? (n(f.burst_rate_pl1)*b1 + n(f.burst_rate_pl2)*b2) / tot : null;
+  }, fmt:'pct2' }
+]);
+</script>
 </body>
 </html>

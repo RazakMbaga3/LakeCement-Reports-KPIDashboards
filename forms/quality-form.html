@@ -104,7 +104,7 @@
     <div class="kt kt-m">
       <span class="kt-badge">Manual</span>
       <div class="kt-lbl">Clinker Free Lime</div>
-      <div class="kt-val">3.0%</div>
+      <div class="kt-val" data-kpi="free_lime">3.0%</div>
       <div class="kt-unit">Day Avg — Spec &lt; 3.0%</div>
       <div class="kt-vs vs-wa">▲ At limit — kiln temp adjustment required</div>
     </div>
@@ -118,28 +118,28 @@
     <div class="kt kt-m">
       <span class="kt-badge">Manual</span>
       <div class="kt-lbl">Cement Blaine — 42.5R</div>
-      <div class="kt-val">3,680</div>
+      <div class="kt-val" data-kpi="blaine_425r">3,680</div>
       <div class="kt-unit">cm²/g — Spec 3,500–4,200</div>
       <div class="kt-vs vs-ok">▲ Within specification band</div>
     </div>
     <div class="kt kt-m">
       <span class="kt-badge">Manual</span>
       <div class="kt-lbl">28-Day Strength — 42.5R</div>
-      <div class="kt-val">52.4</div>
+      <div class="kt-val" data-kpi="strength_28d">52.4</div>
       <div class="kt-unit">MPa — Min 42.5 MPa</div>
       <div class="kt-vs vs-ok">▲ 23.3% above minimum requirement</div>
     </div>
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">LSF — Raw Mill Day Avg</div>
-      <div class="kt-val">96.8</div>
+      <div class="kt-val" data-kpi="lsf_avg">96.8</div>
       <div class="kt-unit">LSF — Target 95–98</div>
       <div class="kt-vs vs-ok">▲ Within target range</div>
     </div>
     <div class="kt kt-m">
       <span class="kt-badge">Manual</span>
       <div class="kt-lbl">Coal Residue @ 90µ</div>
-      <div class="kt-val">4.5%</div>
+      <div class="kt-val" data-kpi="coal_residue">4.5%</div>
       <div class="kt-unit">% — Spec &lt; 5.0%</div>
       <div class="kt-vs vs-ok">▲ Coal fineness acceptable</div>
     </div>
@@ -181,7 +181,7 @@
           <tr>
             <td class="tp">Blaine (Fineness)</td>
             <td class="cm">
-              <input class="ci" type="number" value="3680" />
+              <input class="ci" type="number" value="3680" data-field="blaine_425r" />
               <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥3,600 cm²/g</div>
             </td>
             <td class="cm">
@@ -251,7 +251,7 @@
           <tr>
             <td class="tp">Compressive Strength 28-day</td>
             <td class="cm">
-              <input class="ci" type="number" value="52.4" step="0.1" />
+              <input class="ci" type="number" value="52.4" step="0.1" data-field="strength_28d" />
               <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥42.5 MPa</div>
             </td>
             <td class="cm">
@@ -265,7 +265,7 @@
           <tr>
             <td class="tp">Free Lime</td>
             <td class="cm">
-              <input class="ci" type="number" value="3.0" step="0.1" />
+              <input class="ci" type="number" value="3.0" step="0.1" data-field="free_lime" />
               <div style="font-size:9px;color:var(--m-fg);text-align:center;padding-bottom:3px">&lt;3.0%</div>
             </td>
             <td class="cm">
@@ -323,7 +323,7 @@
           <tr>
             <td class="tp">Coal Residue @ 90µ (Kiln)</td>
             <td class="cm">
-              <input class="ci" type="number" value="4.5" step="0.1" />
+              <input class="ci" type="number" value="4.5" step="0.1" data-field="coal_residue" />
               <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;5.0%</div>
             </td>
             <td class="cf"><div class="cv">4.3%</div></td>
@@ -376,17 +376,17 @@
         <tbody>
           <tr>
             <td class="tp">LSF</td>
-            <td class="cm"><input class="ci" type="number" value="96.2" step="0.1" />
+            <td class="cm"><input class="ci" type="number" value="96.2" step="0.1" data-field="lsf_rm_h1" />
               <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
-            <td class="cm"><input class="ci" type="number" value="97.0" step="0.1" />
+            <td class="cm"><input class="ci" type="number" value="97.0" step="0.1" data-field="lsf_rm_h2" />
               <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
-            <td class="cm"><input class="ci" type="number" value="96.8" step="0.1" />
+            <td class="cm"><input class="ci" type="number" value="96.8" step="0.1" data-field="lsf_rm_h3" />
               <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
-            <td class="cm"><input class="ci" type="number" value="96.5" step="0.1" />
+            <td class="cm"><input class="ci" type="number" value="96.5" step="0.1" data-field="lsf_rm_h4" />
               <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
-            <td class="cm"><input class="ci" type="number" value="97.1" step="0.1" />
+            <td class="cm"><input class="ci" type="number" value="97.1" step="0.1" data-field="lsf_rm_h5" />
               <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
-            <td class="cm"><input class="ci" type="number" value="96.9" step="0.1" />
+            <td class="cm"><input class="ci" type="number" value="96.9" step="0.1" data-field="lsf_rm_h6" />
               <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
             <td class="cf"><div class="cv">96.8</div></td>
             <td class="cf"><div class="cv">96.5</div></td>
@@ -680,5 +680,19 @@
 </script>
 <script src="form-persist.js"></script>
 <script>initFormPersist('quality');</script>
+<script src="kpi-live.js"></script>
+<script>
+initKpiLive([
+  { kpi:'free_lime',    field:'free_lime',    fmt:'pct1' },
+  { kpi:'blaine_425r',  field:'blaine_425r',  fmt:'n0'   },
+  { kpi:'strength_28d', field:'strength_28d', fmt:'n1'   },
+  { kpi:'coal_residue', field:'coal_residue', fmt:'pct1' },
+  { kpi:'lsf_avg', compute: function(f, n) {
+      var vals = ['lsf_rm_h1','lsf_rm_h2','lsf_rm_h3','lsf_rm_h4','lsf_rm_h5','lsf_rm_h6']
+                 .map(function(k){ return f[k]; }).filter(function(v){ return v !== '' && !isNaN(+v); });
+      return vals.length ? vals.reduce(function(a,b){ return a+(+b); },0)/vals.length : null;
+  }, fmt:'n1' }
+]);
+</script>
 </body>
 </html>
