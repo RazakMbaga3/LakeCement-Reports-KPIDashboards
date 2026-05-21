@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – Pile Quality Report</title>
+  <link rel="icon" type="image/png" href="../favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="forms.css" />
+  <style>
+    :root {
+      --m-bg:#FFFBEB; --m-fg:#B45309; --m-bd:#FDE68A;
+      --s-bg:#EFF6FF; --s-fg:#1D4ED8; --s-bd:#BFDBFE;
+      --f-bg:#F0FDF4; --f-fg:#15803D; --f-bd:#BBF7D0;
+    }
+    /* Out-of-spec CaO cell */
+    .ooc { background:#FEE2E2 !important; color:#B91C1C !important; font-weight:700 !important; }
+    /* Shift chemist label rows */
+    .shift-row td { background:#1A4070 !important; color:rgba(255,255,255,.9) !important; font-size:9px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; padding:4px 8px; }
+    /* Grade summary grid */
+    .grade-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:14px; }
+    .grade-card { border:1.5px solid var(--border); border-radius:var(--radius); padding:12px 14px; background:var(--off-white); }
+    .grade-card.hg { border-color:#B45309; background:#FFFBEB; }
+    .grade-card.lg { border-color:#1D4ED8; background:#EFF6FF; }
+    .grade-card.clay { border-color:#7C3AED; background:#F5F3FF; }
+    .grade-card.total { border-color:#15803D; background:#F0FDF4; }
+    .gc-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--text-muted); margin-bottom:4px; }
+    .gc-qty { font-size:22px; font-weight:800; color:var(--navy); line-height:1.1; }
+    .gc-unit { font-size:10px; color:var(--text-muted); margin-top:1px; }
+    .gc-pct { font-size:14px; font-weight:700; margin-top:4px; padding-top:4px; border-top:1px solid var(--border); }
+    .gc-pct.hg { color:#B45309; }
+    .gc-pct.lg { color:#1D4ED8; }
+    .gc-pct.clay { color:#7C3AED; }
+    .gc-pct.total { color:#15803D; }
+    /* Monthly summary table */
+    .ms-tbl { border-collapse:collapse; width:100%; font-size:10px; white-space:nowrap; }
+    .ms-tbl th { background:var(--navy); color:#fff; padding:6px 10px; font-size:9px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; border:1px solid #3A5A80; }
+    .ms-tbl td { padding:5px 10px; border:1px solid #DDE3EC; text-align:right; }
+    .ms-tbl td:first-child { text-align:left; font-weight:600; color:var(--navy); background:#F7F8FA; }
+    .ms-tbl tbody tr:hover td { background:#EFF6FF; }
+    .ms-tbl .today td { background:#FFF8F0 !important; }
+    .ms-tbl .today td:first-child { background:#FEF3C7 !important; font-weight:800; color:#92400E; }
+    .ms-tbl .ms-qty { color:var(--navy); font-weight:600; }
+    .ms-tbl .ms-pct { color:var(--green); font-weight:600; }
+    .ms-tbl .ms-zero { color:#CBD5E1; }
+    .ms-tbl .ms-tot { background:var(--navy) !important; color:white !important; font-weight:700; }
+    .ms-tbl .ms-tot td { background:var(--navy) !important; color:white !important; border-color:#2A4A70; }
+    /* Group headers in monthly table */
+    .ms-tbl .gh-qty { background:#2A4A70; }
+    .ms-tbl .gh-pct { background:#1A6040; }
+    @media (min-width:768px) { .grade-grid { grid-template-columns:repeat(4,1fr); } }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header class="top-header">
+  <div class="header-left">
+    <div class="logo-block">
+      <img class="nyati-logo" src="../NYATI-LOGO.png" alt="Nyati Cement" />
+      <div class="logo-text">
+        <img class="lc-wordmark" src="../lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
+        <span class="company-sub">Pile Quality Report</span>
+      </div>
+    </div>
+  </div>
+  <div class="header-center">
+    <div class="view-switcher">
+      <a href="../index.html" class="vs-tab">
+        <i data-lucide="bar-chart-2" class="vs-icon"></i>
+        <span>Monthly KPIs</span>
+      </a>
+      <a href="../daily-report.html" class="vs-tab active">
+        <i data-lucide="clipboard-list" class="vs-icon"></i>
+        <span>Daily Reports</span>
+      </a>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="brand-tag">
+      <span class="brand-slogan">Hushika Haraka · Hudumu Zaidi</span>
+      <span class="header-meta" id="live-date"></span>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════ NAV ══════════════════ -->
+<nav class="dept-nav">
+  <div class="nav-inner">
+    <span class="nav-label">DAILY REPORTS</span>
+    <button class="nav-btn" onclick="location.href='../daily-report.html'"><i data-lucide="factory" class="nav-icon"></i> Production</button>
+    <button class="nav-btn" onclick="location.href='../power-plant-report.html'"><i data-lucide="zap" class="nav-icon"></i> Power Plant (CPP)</button>
+    <button class="nav-btn" onclick="location.href='../mines-report.html'"><i data-lucide="pickaxe" class="nav-icon"></i> Mines</button>
+    <button class="nav-btn" onclick="location.href='dispatch-form.html'"><i data-lucide="truck" class="nav-icon"></i> Dispatch</button>
+    <button class="nav-btn" onclick="location.href='stoppage-form.html'"><i data-lucide="alert-triangle" class="nav-icon"></i> Stoppages</button>
+    <button class="nav-btn" onclick="location.href='quality-form.html'"><i data-lucide="flask-conical" class="nav-icon"></i> Quality</button>
+    <button class="nav-btn" onclick="location.href='materials-form.html'"><i data-lucide="package" class="nav-icon"></i> Materials</button>
+    <button class="nav-btn" onclick="location.href='power-form.html'"><i data-lucide="activity" class="nav-icon"></i> Power Cons.</button>
+    <button class="nav-btn active"><i data-lucide="layers" class="nav-icon"></i> Pile Quality</button>
+    <div class="nav-divider"></div>
+    <button class="nav-btn secondary" onclick="window.print()"><i data-lucide="printer" class="nav-icon"></i> Print / PDF</button>
+  </div>
+</nav>
+
+<!-- ══════════════════ TOOLBAR ══════════════════ -->
+<div class="toolbar">
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="tb-lbl">Date</span>
+    <input type="date" class="tb-ctl" value="2026-05-20" />
+  </div>
+  <div class="tb-sep"></div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="tb-lbl">Month</span>
+    <input type="text" class="tb-ctl" value="May 2026" style="min-width:80px;width:auto" />
+  </div>
+  <div class="tb-sep"></div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="tb-lbl">Prepared By</span>
+    <input type="text" class="tb-ctl" placeholder="QC / Mines Chemist…" style="min-width:160px;width:auto" />
+  </div>
+  <div class="tb-sep"></div>
+  <span class="rpt-pill">DRAFT</span>
+  <div class="btn-grp">
+    <button class="btn btn-out"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
+    <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+    <button class="btn btn-sub"><i data-lucide="check-circle" class="btn-icon"></i> Submit Report</button>
+  </div>
+</div>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<main class="fm-main">
+
+  <!-- legend -->
+  <div class="legend-bar">
+    <span class="leg-lbl">Data Source Key</span>
+    <span class="leg-chip leg-m"><i data-lucide="pencil" class="btn-icon"></i> Manual / Chemist Entry</span>
+    <span class="leg-chip leg-f"><i data-lucide="sigma" class="btn-icon"></i> Formula / Computed</span>
+    <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#B91C1C;font-weight:600;padding:3px 8px;background:#FEE2E2;border-radius:4px;border:1px solid #FECACA">
+      <i data-lucide="alert-circle" class="btn-icon"></i> Red = CaO &lt; 45.00% (Out of Spec)
+    </span>
+    <span style="margin-left:auto;font-size:11px;color:var(--text-muted);font-style:italic">Spec: CaO ≥ 45.00% · MgO ≤ 3.00%</span>
+  </div>
+
+  <!-- ══ KPI SUMMARY STRIP ════════════════════════════════════════ -->
+  <div class="kpi-strip">
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
+      <div class="kt-lbl">Total Pile Weight — Today</div>
+      <div class="kt-val">3,702.2</div>
+      <div class="kt-unit">MT / On Date</div>
+      <div class="kt-vs vs-ok">▲ 169 trips — weighbridge confirmed</div>
+    </div>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
+      <div class="kt-lbl">Trip Reconciliation</div>
+      <div class="kt-val">169 / 169</div>
+      <div class="kt-unit">QC Trips vs WB Trips</div>
+      <div class="kt-vs vs-ok">▲ Zero discrepancy — perfect match</div>
+    </div>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
+      <div class="kt-lbl">Weight Reconciliation</div>
+      <div class="kt-val">0.00</div>
+      <div class="kt-unit">MT Diff (QC vs WB)</div>
+      <div class="kt-vs vs-ok">▲ No weight variance recorded</div>
+    </div>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
+      <div class="kt-lbl">Avg % CaO — Day</div>
+      <div class="kt-val">44.46%</div>
+      <div class="kt-unit">Day Avg — Spec ≥ 45.00%</div>
+      <div class="kt-vs vs-ng">▼ Below spec — 9 of 18 readings OOC</div>
+    </div>
+    <div class="kt kt-m">
+      <span class="kt-badge">Manual</span>
+      <div class="kt-lbl">HG Limestone</div>
+      <div class="kt-val">54.52%</div>
+      <div class="kt-unit">2,018.50 MT of total pile</div>
+      <div class="kt-vs vs-ok">▲ Majority HG — good feed quality</div>
+    </div>
+    <div class="kt kt-m">
+      <span class="kt-badge">Manual</span>
+      <div class="kt-lbl">LG Limestone</div>
+      <div class="kt-val">45.48%</div>
+      <div class="kt-unit">1,683.70 MT of total pile</div>
+      <div class="kt-vs vs-wa">▲ LG proportion — monitor blend ratio</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       SECTION 1 — HOURLY PILE QUALITY LOG
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="layers" class="title-icon"></i> Hourly Pile Quality Log — Chemistry &amp; Trip Record</div>
+        <div class="rcard-sub">One entry per sampling round · QC chemist records % CaO, % MgO and truck trips · WB weight auto-checked</div>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" id="pile-log-tbl">
+        <thead>
+          <tr>
+            <th class="rn" style="min-width:28px">#</th>
+            <th style="min-width:80px">Time</th>
+            <th style="min-width:72px">% CaO</th>
+            <th style="min-width:68px">% MgO</th>
+            <th style="min-width:80px">Trips — QC Chemist</th>
+            <th style="min-width:80px">Trips — WB</th>
+            <th style="min-width:72px">Diff Trips</th>
+            <th style="min-width:88px">QC Weight (MT)</th>
+            <th style="min-width:88px">WB Weight (MT)</th>
+            <th style="min-width:72px">Diff Weight</th>
+            <th style="min-width:140px">Shift Chemist</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- ── SHIFT 1 · Night · 22:00–08:00 ── -->
+          <tr class="shift-row">
+            <td colspan="11">Shift 1 — Night (22:00 – 08:00) · SAID B &amp; KAIMU</td>
+          </tr>
+          <tr>
+            <td class="rn">1</td>
+            <td class="cm"><input class="ci" type="text" value="24:00" /></td>
+            <td class="cm cao-cell"><input class="ci cao-input" type="number" step="0.01" value="49.77" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="1.63" /></td>
+            <td class="cm"><input class="ci" type="number" value="15" /></td>
+            <td class="cm"><input class="ci" type="number" value="15" /></td>
+            <td class="cf cv">0</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="307.22" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="307.22" /></td>
+            <td class="cf cv">0.00</td>
+            <td class="cm"><input class="ci" type="text" value="Said B &amp; Kaimu" style="min-width:130px" /></td>
+          </tr>
+          <tr>
+            <td class="rn">2</td>
+            <td class="cm"><input class="ci" type="text" value="01:00" /></td>
+            <td class="cm cao-cell ooc"><input class="ci cao-input ooc" type="number" step="0.01" value="41.74" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="0.93" /></td>
+            <td class="cm"><input class="ci" type="number" value="9" /></td>
+            <td class="cm"><input class="ci" type="number" value="9" /></td>
+            <td class="cf cv">0</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="178.40" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="178.40" /></td>
+            <td class="cf cv">0.00</td>
+            <td class="cm"><input class="ci" type="text" value="Said B &amp; Kaimu" style="min-width:130px" /></td>
+          </tr>
+          <tr>
+            <td class="rn">3</td>
+            <td class="cm"><input class="ci" type="text" value="02:00" /></td>
+            <td class="cm cao-cell ooc"><input class="ci cao-input ooc" type="number" step="0.01" value="41.94" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="1.03" /></td>
+            <td class="cm"><input class="ci" type="number" value="11" /></td>
+            <td class="cm"><input class="ci" type="number" value="11" /></td>
+            <td class="cf cv">0</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="221.26" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="221.26" /></td>
+            <td class="cf cv">0.00</td>
+            <td class="cm"><input class="ci" type="text" value="Said B &amp; Kaimu" style="min-width:130px" /></td>
+          </tr>
+          <tr>
+            <td class="rn">4</td>
+            <td class="cm"><input class="ci" type="text" value="03:00" /></td>
+            <td class="cm cao-cell"><input class="ci cao-input" type="number" step="0.01" value="47.25" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="1.44" /></td>
+            <td class="cm"><input class="ci" type="number" value="12" /></td>
+            <td class="cm"><input class="ci" type="number" value="12" /></td>
+            <td class="cf cv">0</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="269.82" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="269.82" /></td>
+            <td class="cf cv">0.00</td>
+            <td class="cm"><input class="ci" type="text" value="Said B &amp; Kaimu" style="min-width:130px" /></td>
+          </tr>
+          <tr>
+            <td class="rn">5</td>
+            <td class="cm"><input class="ci" type="text" value="04:00" /></td>
+            <td class="cm cao-cell"><input class="ci cao-input" type="number" step="0.01" value="48.72" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="1.81" /></td>
+            <td class="cm"><input class="ci" type="number" value="6" /></td>
+            <td class="cm"><input class="ci" type="number" value="6" /></td>
+            <td class="cf cv">0</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="150.22" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="150.22" /></td>
+            <td class="cf cv">0.00</td>
+            <td class="cm"><input class="ci" type="text" value="Said B &amp; Kaimu" style="min-width:130px" /></td>
+          </tr>
+          <tr>
+            <td class="rn">6</td>
+            <td class="cm"><input class="ci" type="text" value="05:00" /></td>
+            <td class="cm cao-cell"><input class="ci cao-input" type="number" step="0.01" value="48.98" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="1.77" /></td>
+            <td class="cm"><input class="ci" type="number" value="3" /></td>
+            <td class="cm"><input class="ci" type="number" value="3" /></td>
+            <td class="cf cv">0</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="69.14" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="69.14" /></td>
+            <td class="cf cv">0.00</td>
+            <td class="cm"><input class="ci" type="text" value="Said B &amp; Kaimu" style="min-width:130px" /></td>
+          </tr>
+          <tr>
+            <td class="rn">7</td>
+            <td class="cm"><input class="ci" type="text" value="06:00" /></td>
+            <td class="cm cao-cell"><input class="ci cao-input" type="number" step="0.01" value="48.53" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="1.91" /></td>
+            <td class="cm"><input class="ci" type="number" value="11" /></td>
+            <td class="cm"><input class="ci" type="number" value="11" /></td>
+            <td class="cf cv">0</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="276.74" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="276.74" /></td>
+            <td class="cf cv">0.00</td>
+            <td class="cm"><input class="ci" type="text" value="Said B &amp; Kaimu" style="min-width:130px" /></td>
+          </tr>
+          <tr>
+            <td class="rn">8</td>
+            <td class="cm"><input class="ci" type="text" value="07:00" /></td>
+            <td class="cm cao-cell"><input class="ci cao-input" type="number" step="0.01" value="49.57" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="1.90" /></td>
+            <td class="cm"><input class="ci" type="number" value="6" /></td>
+            <td class="cm"><input class="ci" type="number" value="6" /></td>
+            <td class="cf cv">0</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="145.72" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="145.72" /></td>
+            <td class="cf cv">0.00</td>
+            <td class="cm"><input class="ci" type="text" value="Said B &amp; Kaimu" style="min-width:130px" /></td>
+          </tr>
+          <!-- ── SHIFT 2 · Day · 08:00–18:00 ── -->
+          <tr class="shift-row">
+            <td colspan="11">Shift 2 — Day (08:00 – 18:00) · ELLY &amp; DIONIZ</td>
+          </tr>
+          <tr>
+            <td class="rn">9</td>
+            <td class="cm"><input class="ci" type="text" value="09:00" /></td>
+            <td class="cm cao-cell ooc"><input class="ci cao-input ooc" type="number" step="0.01" value="31.32" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="2.02" /></td>
+            <td class="cm"><input class="ci" type="number" value="10" /></td>
+            <td class="cm"><input class="ci" type="number" value="10" /></td>
+            <td class="cf cv">0</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="210.00" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="210.00" /></td>
+            <td class="cf cv">0.00</td>
+            <td class="cm"><input class="ci" type="text" value="Elly &amp; Dioniz" style="min-width:130px" /></td>
+          </tr>
+          <tr>
+            <td class="rn">10</td>
+            <td class="cm"><input class="ci" type="text" value="10:00" /></td>
+            <td class="cm cao-cell ooc"><input class="ci cao-input ooc" type="number" step="0.01" value="44.72" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="1.18" /></td>
+            <td class="cm"><input class="ci" type="number" value="3" /></td>
+            <td class="cm"><input class="ci" type="number" value="3" /></td>
+            <td class="cf cv">0</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="67.04" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="67.04" /></td>
+            <td class="cf cv">0.00</td>
+            <td class="cm"><input class="ci" type="text" value="Elly &amp; Dioniz" style="min-width:130px" /></td>
+          </tr>
+          <tr>
+            <td class="rn">11</td>
+            <td class="cm"><input class="ci" type="text" value="12:00" /></td>
+            <td class="cm cao-cell ooc"><input class="ci cao-input ooc" type="number" step="0.01" value="44.30" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="1.34" /></td>
+            <td class="cm"><input class="ci" type="number" value="7" /></td>
+            <td class="cm"><input class="ci" type="number" value="7" /></td>
+            <td class="cf cv">0</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="161.24" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="161.24" /></td>
+            <td class="cf cv">0.00</td>
+            <td class="cm"><input class="ci" type="text" value="Elly &amp; Dioniz" style="min-width:130px" /></td>
+          </tr>
+          <tr>
+            <td class="rn">12</td>
+            <td class="cm"><input class="ci" type="text" value="14:00" /></td>
+            <td class="cm cao-cell ooc"><input class="ci cao-input ooc" type="number" step="0.01" value="40.60" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="1.37" /></td>
+            <td class="cm"><input class="ci" type="number" value="16" /></td>
+            <td class="cm"><input class="ci" type="number" value="16" /></td>
+            <td class="cf cv">0</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="353.74" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="353.74" /></td>
+            <td class="cf cv">0.00</td>
+            <td class="cm"><input class="ci" type="text" value="Elly &amp; Dioniz" style="min-width:130px" /></td>
+          </tr>
+          <tr>
+            <td class="rn">13</td>
+            <td class="cm"><input class="ci" type="text" value="15:00" /></td>
+            <td class="cm cao-cell ooc"><input class="ci cao-input ooc" type="number" step="0.01" value="38.50" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="1.17" /></td>
+            <td class="cm"><input class="ci" type="number" value="8" /></td>
+            <td class="cm"><input class="ci" type="number" value="8" /></td>
+            <td class="cf cv">0</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="190.90" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="190.90" /></td>
+            <td class="cf cv">0.00</td>
+            <td class="cm"><input class="ci" type="text" value="Elly &amp; Dioniz" style="min-width:130px" /></td>
+          </tr>
+          <tr>
+            <td class="rn">14</td>
+            <td class="cm"><input class="ci" type="text" value="17:00" /></td>
+            <td class="cm cao-cell ooc"><input class="ci cao-input ooc" type="number" step="0.01" value="40.29" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="1.17" /></td>
+            <td class="cm"><input class="ci" type="number" value="10" /></td>
+            <td class="cm"><input class="ci" type="number" value="10" /></td>
+            <td class="cf cv">0</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="217.12" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="217.12" /></td>
+            <td class="cf cv">0.00</td>
+            <td class="cm"><input class="ci" type="text" value="Elly &amp; Dioniz" style="min-width:130px" /></td>
+          </tr>
+          <tr>
+            <td class="rn">15</td>
+            <td class="cm"><input class="ci" type="text" value="18:00" /></td>
+            <td class="cm cao-cell ooc"><input class="ci cao-input ooc" type="number" step="0.01" value="38.28" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="1.15" /></td>
+            <td class="cm"><input class="ci" type="number" value="4" /></td>
+            <td class="cm"><input class="ci" type="number" value="4" /></td>
+            <td class="cf cv">0</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="84.00" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="84.00" /></td>
+            <td class="cf cv">0.00</td>
+            <td class="cm"><input class="ci" type="text" value="Elly &amp; Dioniz" style="min-width:130px" /></td>
+          </tr>
+          <!-- gap row - no sample 8pm -->
+          <tr>
+            <td class="rn">16</td>
+            <td class="cm"><input class="ci" type="text" value="19:00" /></td>
+            <td class="cm cao-cell"><input class="ci cao-input" type="number" step="0.01" value="45.74" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="0.91" /></td>
+            <td class="cm"><input class="ci" type="number" value="6" /></td>
+            <td class="cm"><input class="ci" type="number" value="6" /></td>
+            <td class="cf cv">0</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="126.00" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="126.00" /></td>
+            <td class="cf cv">0.00</td>
+            <td class="cm"><input class="ci" type="text" value="Elly &amp; Dioniz" style="min-width:130px" /></td>
+          </tr>
+          <!-- ── SHIFT 3 · Evening · 18:00–22:00 ── -->
+          <tr class="shift-row">
+            <td colspan="11">Shift 3 — Evening (18:00 – 22:00) · BINGOLA &amp; ABDUL</td>
+          </tr>
+          <tr>
+            <td class="rn">17</td>
+            <td class="cm"><input class="ci" type="text" value="21:00–23:00" /></td>
+            <td class="cm cao-cell"><input class="ci cao-input" type="number" step="0.01" value="50.56" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="1.77" /></td>
+            <td class="cm"><input class="ci" type="number" value="18" /></td>
+            <td class="cm"><input class="ci" type="number" value="18" /></td>
+            <td class="cf cv">0</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="383.22" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="383.22" /></td>
+            <td class="cf cv">0.00</td>
+            <td class="cm"><input class="ci" type="text" value="Bingola &amp; Abdul" style="min-width:130px" /></td>
+          </tr>
+          <tr>
+            <td class="rn">18</td>
+            <td class="cm"><input class="ci" type="text" value="23:00" /></td>
+            <td class="cm cao-cell"><input class="ci cao-input" type="number" step="0.01" value="49.54" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="1.24" /></td>
+            <td class="cm"><input class="ci" type="number" value="14" /></td>
+            <td class="cm"><input class="ci" type="number" value="14" /></td>
+            <td class="cf cv">0</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="290.42" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" value="290.42" /></td>
+            <td class="cf cv">0.00</td>
+            <td class="cm"><input class="ci" type="text" value="Bingola &amp; Abdul" style="min-width:130px" /></td>
+          </tr>
+          <!-- ── TOTALS ── -->
+          <tr style="background:#E8F0FA;font-weight:700;border-top:2px solid #173158">
+            <td class="rn" style="background:#173158;color:#fff">Σ</td>
+            <td style="font-weight:800;color:var(--navy);font-size:11px">Total</td>
+            <td class="cf cv" style="font-size:12px" id="avg-cao">44.46</td>
+            <td class="cf cv" style="font-size:12px">—</td>
+            <td class="cf cv" style="font-size:12px" id="tot-trips-qc">169</td>
+            <td class="cf cv" style="font-size:12px" id="tot-trips-wb">169</td>
+            <td class="cf cv" style="font-size:12px" id="diff-trips">0</td>
+            <td class="cf cv" style="font-size:12px" id="tot-qc-wt">3,702.20</td>
+            <td class="cf cv" style="font-size:12px" id="tot-wb-wt">3,702.20</td>
+            <td class="cf cv" style="font-size:12px" id="diff-wt">0.00</td>
+            <td style="color:var(--text-muted);font-size:9px;font-style:italic">3 shifts · 18 samples</td>
+          </tr>
+        </tbody>
+      </table>
+    </div><!-- /tbl-scroll -->
+
+    <!-- add-row hint -->
+    <div style="padding:8px 16px;display:flex;align-items:center;gap:8px">
+      <button class="btn btn-out" style="font-size:11px;padding:5px 12px" onclick="addPileRow()">
+        <i data-lucide="plus-circle" class="btn-icon"></i> Add Row
+      </button>
+      <span style="font-size:10px;color:var(--text-muted)">CaO &lt; 45.00% cells highlight red automatically on blur.</span>
+    </div>
+  </div><!-- /rcard -->
+
+  <!-- ════════════════════════════════════════════════
+       SECTION 2 — DAILY MATERIAL GRADE SUMMARY
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="pie-chart" class="title-icon"></i> Daily Material Grade Summary — 20 May 2026</div>
+        <div class="rcard-sub">Total pile quantity split by limestone grade · Source: QC weighbridge data</div>
+      </div>
+    </div>
+    <div class="grade-grid">
+      <div class="grade-card hg">
+        <div class="gc-label">HG — High Grade Limestone</div>
+        <div class="gc-qty">2,018.50</div>
+        <div class="gc-unit">MT / On Date</div>
+        <div class="gc-pct hg">54.52 %</div>
+      </div>
+      <div class="grade-card lg">
+        <div class="gc-label">LG — Low Grade Limestone</div>
+        <div class="gc-qty">1,683.70</div>
+        <div class="gc-unit">MT / On Date</div>
+        <div class="gc-pct lg">45.48 %</div>
+      </div>
+      <div class="grade-card clay">
+        <div class="gc-label">Clay</div>
+        <div class="gc-qty">0.00</div>
+        <div class="gc-unit">MT / On Date</div>
+        <div class="gc-pct clay">0.00 %</div>
+      </div>
+      <div class="grade-card total">
+        <div class="gc-label">Total Pile — All Grades</div>
+        <div class="gc-qty">3,702.20</div>
+        <div class="gc-unit">MT / On Date</div>
+        <div class="gc-pct total">100.00 %</div>
+      </div>
+    </div>
+    <!-- HG-MgO / LG-MgO detail -->
+    <div style="padding:0 14px 14px">
+      <table class="rt" style="font-size:10.5px">
+        <thead>
+          <tr>
+            <th style="text-align:left;min-width:160px">Grade</th>
+            <th>Qty (MT)</th>
+            <th>%</th>
+            <th style="min-width:120px">Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="cs cv">HG — High Grade</td>
+            <td class="cm cv">2,018.50</td>
+            <td class="cf cv">54.52%</td>
+            <td class="cs" style="font-size:9px;color:var(--text-muted)">Primary crusher feed</td>
+          </tr>
+          <tr>
+            <td class="cs cv">LG — Low Grade</td>
+            <td class="cm cv">1,683.70</td>
+            <td class="cf cv">45.48%</td>
+            <td class="cs" style="font-size:9px;color:var(--text-muted)">Blended with HG</td>
+          </tr>
+          <tr>
+            <td class="cs cv">HG-MgO</td>
+            <td class="cm cv">0.00</td>
+            <td class="cf cv">0.00%</td>
+            <td class="cs" style="font-size:9px;color:var(--text-muted)">High MgO zone — not active</td>
+          </tr>
+          <tr>
+            <td class="cs cv">LG-MgO</td>
+            <td class="cm cv">0.00</td>
+            <td class="cf cv">0.00%</td>
+            <td class="cs" style="font-size:9px;color:var(--text-muted)">Low grade, high MgO — not active</td>
+          </tr>
+          <tr>
+            <td class="cs cv">Clay</td>
+            <td class="cm cv">0.00</td>
+            <td class="cf cv">0.00%</td>
+            <td class="cs" style="font-size:9px;color:var(--text-muted)">Siliceous correction — not active</td>
+          </tr>
+          <tr style="font-weight:800;border-top:2px solid var(--navy)">
+            <td style="background:#173158;color:#fff;font-weight:800">TOTAL</td>
+            <td class="cf cv" style="font-weight:800;font-size:12px">3,702.20</td>
+            <td class="cf cv" style="font-weight:800">100.00%</td>
+            <td class="cs"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div><!-- /rcard -->
+
+  <!-- ════════════════════════════════════════════════
+       SECTION 3 — MTD LIMESTONE QUANTITY SUMMARY
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="calendar" class="title-icon"></i> MTD Limestone Quantity Summary — May 2026</div>
+        <div class="rcard-sub">Daily pile tonnage by grade · Qty in MT · % = share of day total</div>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="ms-tbl">
+        <thead>
+          <tr>
+            <th rowspan="2" style="text-align:left;min-width:90px">Date</th>
+            <th colspan="6" class="gh-qty">Quantity (MT)</th>
+            <th colspan="5" class="gh-pct">Percentage (%)</th>
+          </tr>
+          <tr>
+            <th class="gh-qty">HG</th>
+            <th class="gh-qty">LG</th>
+            <th class="gh-qty">HG-MgO</th>
+            <th class="gh-qty">LG-MgO</th>
+            <th class="gh-qty">Clay</th>
+            <th class="gh-qty">Total</th>
+            <th class="gh-pct">HG%</th>
+            <th class="gh-pct">LG%</th>
+            <th class="gh-pct">HG-MgO%</th>
+            <th class="gh-pct">LG-MgO%</th>
+            <th class="gh-pct">Clay%</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1 May 2026</td>
+            <td class="ms-qty">1,933.12</td><td class="ms-qty">661.04</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">348.26</td><td class="ms-qty">2,942.42</td>
+            <td class="ms-pct">65.70</td><td class="ms-pct">22.47</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-pct">11.84</td>
+          </tr>
+          <tr>
+            <td>2 May 2026</td>
+            <td class="ms-qty">448.64</td><td class="ms-zero">0.00</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">291.42</td><td class="ms-qty">740.06</td>
+            <td class="ms-pct">60.62</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-pct">39.38</td>
+          </tr>
+          <tr>
+            <td>3 May 2026</td>
+            <td class="ms-qty">2,272.42</td><td class="ms-qty">357.90</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">126.00</td><td class="ms-qty">2,756.32</td>
+            <td class="ms-pct">82.44</td><td class="ms-pct">12.98</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-pct">4.57</td>
+          </tr>
+          <tr>
+            <td>4 May 2026</td>
+            <td class="ms-qty">1,371.60</td><td class="ms-qty">959.54</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">70.70</td><td class="ms-qty">2,401.84</td>
+            <td class="ms-pct">57.11</td><td class="ms-pct">39.95</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-pct">2.94</td>
+          </tr>
+          <tr>
+            <td>5 May 2026</td>
+            <td class="ms-qty">2,645.00</td><td class="ms-qty">421.72</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">3,066.72</td>
+            <td class="ms-pct">86.25</td><td class="ms-pct">13.75</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td>
+          </tr>
+          <tr>
+            <td>6 May 2026</td>
+            <td class="ms-qty">1,883.34</td><td class="ms-qty">105.00</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">1,988.34</td>
+            <td class="ms-pct">94.72</td><td class="ms-pct">5.28</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td>
+          </tr>
+          <tr>
+            <td>7 May 2026</td>
+            <td class="ms-qty">2,296.82</td><td class="ms-qty">147.00</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">2,443.82</td>
+            <td class="ms-pct">93.98</td><td class="ms-pct">6.02</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td>
+          </tr>
+          <tr>
+            <td>8 May 2026</td>
+            <td class="ms-qty">2,447.34</td><td class="ms-qty">910.88</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">3,358.22</td>
+            <td class="ms-pct">72.88</td><td class="ms-pct">27.12</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td>
+          </tr>
+          <tr>
+            <td>9 May 2026</td>
+            <td class="ms-qty">2,153.18</td><td class="ms-qty">785.04</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">2,938.22</td>
+            <td class="ms-pct">73.28</td><td class="ms-pct">26.72</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td>
+          </tr>
+          <tr>
+            <td>10 May 2026</td>
+            <td class="ms-qty">1,697.24</td><td class="ms-qty">927.37</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">241.34</td><td class="ms-qty">2,865.95</td>
+            <td class="ms-pct">59.22</td><td class="ms-pct">32.36</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-pct">8.42</td>
+          </tr>
+          <tr>
+            <td>11 May 2026</td>
+            <td class="ms-qty">1,308.14</td><td class="ms-qty">449.68</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">60.30</td><td class="ms-qty">1,818.12</td>
+            <td class="ms-pct">71.95</td><td class="ms-pct">24.73</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-pct">3.32</td>
+          </tr>
+          <tr>
+            <td>12 May 2026</td>
+            <td class="ms-qty">2,701.56</td><td class="ms-qty">136.76</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">2,838.32</td>
+            <td class="ms-pct">95.18</td><td class="ms-pct">4.82</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td>
+          </tr>
+          <tr>
+            <td>13 May 2026</td>
+            <td class="ms-qty">2,047.50</td><td class="ms-qty">841.76</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">2,889.26</td>
+            <td class="ms-pct">70.87</td><td class="ms-pct">29.13</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td>
+          </tr>
+          <tr>
+            <td>14 May 2026</td>
+            <td class="ms-qty">1,687.98</td><td class="ms-qty">775.60</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">2,463.58</td>
+            <td class="ms-pct">68.52</td><td class="ms-pct">31.48</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td>
+          </tr>
+          <tr>
+            <td>15 May 2026</td>
+            <td class="ms-qty">1,368.08</td><td class="ms-qty">1,030.20</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">63.30</td><td class="ms-qty">2,461.58</td>
+            <td class="ms-pct">55.58</td><td class="ms-pct">41.85</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-pct">2.57</td>
+          </tr>
+          <tr>
+            <td>16 May 2026</td>
+            <td class="ms-qty">3,203.86</td><td class="ms-qty">425.78</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">63.30</td><td class="ms-qty">3,692.94</td>
+            <td class="ms-pct">86.76</td><td class="ms-pct">11.53</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-pct">1.71</td>
+          </tr>
+          <tr>
+            <td>17 May 2026</td>
+            <td class="ms-qty">1,875.80</td><td class="ms-qty">859.10</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">2,734.90</td>
+            <td class="ms-pct">68.59</td><td class="ms-pct">31.41</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td>
+          </tr>
+          <tr>
+            <td>18 May 2026</td>
+            <td class="ms-qty">1,664.12</td><td class="ms-qty">1,001.38</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">2,665.50</td>
+            <td class="ms-pct">62.43</td><td class="ms-pct">37.57</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td>
+          </tr>
+          <tr>
+            <td>19 May 2026</td>
+            <td class="ms-qty">2,013.38</td><td class="ms-qty">1,098.94</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">3,112.32</td>
+            <td class="ms-pct">64.69</td><td class="ms-pct">35.31</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td>
+          </tr>
+          <tr class="today">
+            <td>20 May 2026</td>
+            <td class="ms-qty">2,018.50</td><td class="ms-qty">1,683.70</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-zero">0</td><td class="ms-qty">3,702.20</td>
+            <td class="ms-pct">54.52</td><td class="ms-pct">45.48</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td><td class="ms-zero">0.00</td>
+          </tr>
+          <tr><td>21 May 2026</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">0.00</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td></tr>
+          <tr><td>22 May 2026</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">0.00</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td></tr>
+          <tr><td>23 May 2026</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">0.00</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td></tr>
+          <tr><td>24 May 2026</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">0.00</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td></tr>
+          <tr><td>25 May 2026</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">0.00</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td></tr>
+          <tr><td>26 May 2026</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">0.00</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td></tr>
+          <tr><td>27 May 2026</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">0.00</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td></tr>
+          <tr><td>28 May 2026</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">0.00</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td></tr>
+          <tr><td>29 May 2026</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">0.00</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td></tr>
+          <tr><td>30 May 2026</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">0.00</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td></tr>
+          <tr><td>31 May 2026</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">0.00</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td><td class="ms-zero">—</td></tr>
+          <!-- MTD totals -->
+          <tr class="ms-tot">
+            <td style="font-weight:800;color:#fff">MTD Total</td>
+            <td style="color:#fff;font-weight:700">36,756.82</td>
+            <td style="color:#fff;font-weight:700">12,614.49</td>
+            <td style="color:#fff;font-weight:700">0.00</td>
+            <td style="color:#fff;font-weight:700">0.00</td>
+            <td style="color:#fff;font-weight:700">1,264.62</td>
+            <td style="color:#F49545;font-weight:800;font-size:12px">50,635.93</td>
+            <td style="color:#BBF7D0;font-weight:700">72.59%</td>
+            <td style="color:#BBF7D0;font-weight:700">24.91%</td>
+            <td style="color:#BBF7D0">0.00%</td>
+            <td style="color:#BBF7D0">0.00%</td>
+            <td style="color:#BBF7D0;font-weight:700">2.50%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div><!-- /rcard -->
+
+  <!-- ════════════════════════════════════════════════
+       SIGN-OFF
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="signoff">
+      <div class="sign-slot">
+        <label>QC Chemist</label>
+        <input type="text" placeholder="Name &amp; signature" />
+      </div>
+      <div class="sign-slot">
+        <label>QC Supervisor</label>
+        <input type="text" placeholder="Name &amp; signature" />
+      </div>
+      <div class="sign-slot">
+        <label>Mines / Production Manager</label>
+        <input type="text" placeholder="Name &amp; signature" />
+      </div>
+    </div>
+  </div>
+
+</main><!-- /fm-main -->
+
+<!-- ══════════════════ FOOTER ══════════════════ -->
+<footer class="dash-footer">
+  <span>Lake Cement Ltd — Pile Quality Report · <span id="footer-date"></span></span>
+  <span>Nyati Cement · Hushika Haraka · Hudumu Zaidi</span>
+</footer>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  lucide.createIcons();
+
+  // Live date
+  (function(){
+    const now = new Date();
+    const opts = { weekday:'short', day:'2-digit', month:'short', year:'numeric' };
+    const s = now.toLocaleDateString('en-GB', opts);
+    document.getElementById('live-date').textContent = s;
+    document.getElementById('footer-date').textContent = s;
+  })();
+
+  // CaO out-of-spec auto-highlighting
+  const CAO_SPEC = 45.00;
+  function checkCao(input) {
+    const cell = input.closest('td');
+    const val = parseFloat(input.value);
+    if (!isNaN(val) && val < CAO_SPEC) {
+      cell.classList.add('ooc');
+      input.classList.add('ooc');
+    } else {
+      cell.classList.remove('ooc');
+      input.classList.remove('ooc');
+    }
+  }
+  document.querySelectorAll('.cao-input').forEach(inp => {
+    inp.addEventListener('change', () => checkCao(inp));
+    inp.addEventListener('blur',   () => checkCao(inp));
+  });
+
+  // Add row to pile log
+  let rowCount = 18;
+  function addPileRow() {
+    rowCount++;
+    const tbody = document.querySelector('#pile-log-tbl tbody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="rn">${rowCount}</td>
+      <td class="cm"><input class="ci" type="text" placeholder="HH:MM" /></td>
+      <td class="cm cao-cell"><input class="ci cao-input" type="number" step="0.01" placeholder="0.00" /></td>
+      <td class="cm"><input class="ci" type="number" step="0.01" placeholder="0.00" /></td>
+      <td class="cm"><input class="ci" type="number" placeholder="0" /></td>
+      <td class="cm"><input class="ci" type="number" placeholder="0" /></td>
+      <td class="cf cv">0</td>
+      <td class="cm"><input class="ci" type="number" step="0.01" placeholder="0.00" /></td>
+      <td class="cm"><input class="ci" type="number" step="0.01" placeholder="0.00" /></td>
+      <td class="cf cv">0.00</td>
+      <td class="cm"><input class="ci" type="text" placeholder="Chemist name…" style="min-width:130px" /></td>`;
+    // insert before the totals row (last tr)
+    const rows = tbody.querySelectorAll('tr');
+    tbody.insertBefore(tr, rows[rows.length - 1]);
+    // wire up CaO check on the new input
+    const newCao = tr.querySelector('.cao-input');
+    newCao.addEventListener('change', () => checkCao(newCao));
+    newCao.addEventListener('blur',   () => checkCao(newCao));
+    lucide.createIcons();
+  }
+</script>
+</body>
+</html>
