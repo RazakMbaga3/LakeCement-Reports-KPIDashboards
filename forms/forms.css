@@ -393,11 +393,110 @@ td.cf .cv { color:var(--f-fg); }
   .kt:hover { transform:none; }
 }
 
+/* ══════════════════════════════════════════════════════════════
+   GLOBAL INPUT POLISH
+   ══════════════════════════════════════════════════════════════ */
+
+/* Smooth focus ring on all text inputs */
+.tb-ctl { transition:border-color .15s, box-shadow .15s, background .15s; }
+.tb-ctl:focus {
+  border-color:var(--orange);
+  background:white;
+  box-shadow:0 0 0 3px rgba(244,149,69,.15);
+}
+
+/* Table cell inputs — focus highlight */
+td.cm .ci:focus {
+  background:rgba(253,230,138,.5);
+  box-shadow:inset 0 0 0 2px var(--m-bd), 0 0 0 3px rgba(244,149,69,.1);
+  border-radius:4px;
+}
+
+/* Placeholder styling */
+.tb-ctl::placeholder { color:#BBC5D3; font-weight:400; }
+.ci::placeholder     { color:#BBC5D3; font-weight:400; }
+.so-in::placeholder  { color:#BBC5D3; font-weight:400; }
+
+/* Button micro-interactions */
+.btn { transition:background .15s, border-color .15s, box-shadow .15s, transform .08s; }
+.btn:active { transform:scale(.97); }
+.btn-save:focus-visible,
+.btn-sub:focus-visible,
+.btn-out:focus-visible {
+  outline:3px solid rgba(244,149,69,.5);
+  outline-offset:2px;
+}
+
+/* Table row hover — more visible */
+.rt tbody tr:hover td { background:#EFF6FF !important; transition:background .1s; }
+.rt tbody tr:hover td.cm { background:#FEF3C7 !important; }
+.rt tbody tr:hover td.cs { background:#DBEAFE !important; }
+.rt tbody tr:hover td.cf { background:#DCFCE7 !important; }
+
+/* Section tabs — smoother active indicator */
+.sec-tab { transition:color .15s, background .15s, border-bottom-color .15s; }
+.sec-tab:focus-visible { outline:2px solid var(--orange); outline-offset:-2px; }
+
+/* ══════════════════════════════════════════════════════════════
+   COLLAPSIBLE RCARD
+   ══════════════════════════════════════════════════════════════ */
+.rcard-toggle {
+  width:22px; height:22px; border-radius:4px;
+  background:rgba(255,255,255,.12); border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  color:white; transition:background .15s, transform .2s;
+  flex-shrink:0; padding:0;
+}
+.rcard-toggle:hover { background:rgba(255,255,255,.22); }
+.rcard-toggle svg   { width:12px; height:12px; stroke-width:2.5; transition:transform .2s; }
+.rcard.collapsed .rcard-toggle svg { transform:rotate(-90deg); }
+
+/* Animate card body collapse */
+.rcard-body { overflow:hidden; transition:max-height .3s ease, opacity .25s ease; }
+.rcard.collapsed .rcard-body { max-height:0 !important; opacity:0; pointer-events:none; }
+
+/* ══════════════════════════════════════════════════════════════
+   PRINT / PDF — production quality
+   ══════════════════════════════════════════════════════════════ */
 @media print {
-  .toolbar, .dept-nav, .brand-accent-bar, .sec-nav, .btn-grp { display:none !important; }
+  @page { size:A4 landscape; margin:12mm 10mm; }
+
+  * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+
+  html, body { background:white !important; font-size:10px; }
+  .toolbar, .dept-nav, .brand-accent-bar, .sec-nav, .btn-grp,
+  .rcard-toggle, #_ns-shift, #_nyb, .legend-bar { display:none !important; }
+
+  .top-header {
+    position:static !important; height:auto; padding:8px 14px;
+    box-shadow:none !important;
+  }
   .top-header::after { display:none !important; }
-  .fm-main { padding:0; }
-  .rcard { page-break-inside:avoid; }
-  .top-header { position:static !important; height:auto; }
+
+  .fm-main, .dr-main { padding:0 !important; }
+
+  .rcard {
+    page-break-inside:avoid; break-inside:avoid;
+    box-shadow:none !important;
+    border:1px solid #CCC !important;
+    margin-bottom:8px;
+  }
+  .rcard.collapsed .rcard-body {
+    max-height:none !important; opacity:1 !important; pointer-events:auto !important;
+  }
+
+  .rcard-hdr { background:#173158 !important; }
+
   .sec-panel { display:block !important; }
+
+  .kpi-strip { grid-template-columns:repeat(3,1fr) !important; margin:0 0 8px !important; }
+  .kt { page-break-inside:avoid; break-inside:avoid; box-shadow:none !important; }
+
+  .rt { font-size:8.5px; }
+  .rt thead th { font-size:7.5px; padding:4px 6px; }
+  .rt tbody td { padding:3px 5px; }
+
+  .signoff { grid-template-columns:repeat(4,1fr); page-break-inside:avoid; }
+
+  a[href]::after { content:none !important; }
 }

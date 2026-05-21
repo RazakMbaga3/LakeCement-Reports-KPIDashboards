@@ -814,6 +814,38 @@ img { max-width: 100%; }
   .smry-alerts { padding: 8px 14px; }
 }
 
+/* ══════════════════════════════════════════════════════════════
+   GLOBAL POLISH — transitions, focus rings, scroll behaviour
+   ══════════════════════════════════════════════════════════════ */
+
+/* Smooth page-level scroll (already on html, but also set on common scroll containers) */
+.nav-inner, .tbl-scroll { scroll-behavior: smooth; }
+
+/* Nav buttons — micro-feedback */
+.nav-btn { transition: background .18s ease, color .18s ease, border-color .18s ease, box-shadow .15s; }
+.nav-btn:active { transform: scale(.96); }
+.nav-btn:focus-visible {
+  outline: 2px solid rgba(244,149,69,.6);
+  outline-offset: 2px;
+}
+
+/* Filter selects — orange focus ring */
+.filter-card select:focus {
+  outline: none;
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(244,149,69,.15);
+}
+
+/* Data rows — smoother hover */
+.data-row td { transition: background .1s; }
+
+/* Summary cards — hover lift */
+.sk-card { transition: box-shadow .15s ease, transform .12s ease; }
+.sk-card:hover { transform: translateY(-1px); }
+
+/* Scorecard chips */
+.sc-chip { transition: box-shadow .15s ease, transform .1s ease; }
+
 /* ── PRINT ────────────────────────────────────────────────── */
 @media print {
   .dept-nav, .filter-bar, .brand-accent-bar { display: none !important; }

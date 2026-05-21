@@ -93,6 +93,27 @@
     return { date, payload };
   }
 
+  /* ── Update "Last saved HH:MM" chip in toolbar ───────────────── */
+  function _updateSavedChip(status) {
+    let chip = document.getElementById('_ny-saved-chip');
+    if (!chip) {
+      chip = document.createElement('span');
+      chip.id = '_ny-saved-chip';
+      chip.style.cssText = 'font-size:10px;font-weight:600;color:var(--text-muted);white-space:nowrap;flex-shrink:0;transition:color .3s;padding:0 2px';
+      // Insert between toolbar sep and btn-grp
+      const grp = document.querySelector('.btn-grp');
+      if (grp) grp.parentElement.insertBefore(chip, grp);
+    }
+    const t = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    if (status === 'submitted') {
+      chip.style.color = 'var(--green)';
+      chip.textContent = '✓ Submitted ' + t;
+    } else {
+      chip.style.color = 'var(--text-muted)';
+      chip.textContent = 'Saved ' + t;
+    }
+  }
+
   /* ── Read snapshot from localStorage ────────────────────────────── */
   function _read(formId, date) {
     const raw = localStorage.getItem(_key(formId, date));
@@ -270,6 +291,8 @@
         e.preventDefault();
         const { date } = _write(formId, 'draft');
         _toast(`Draft saved — ${date}`, 'ok');
+        _updateSavedChip('draft');
+        document.dispatchEvent(new CustomEvent('nyati:saved', { detail: { formId, date } }));
       });
     });
 
@@ -307,6 +330,8 @@
 
         _lockForm();
         _toast(`Report submitted — nyati-${formId}-${date}.json downloaded`, 'ok');
+        _updateSavedChip('submitted');
+        document.dispatchEvent(new CustomEvent('nyati:submitted', { detail: { formId, date } }));
       });
     });
 
@@ -325,6 +350,8 @@
     setInterval(() => {
       if (!document.querySelector('.btn-sub[disabled]')) {
         _write(formId, 'draft');
+        _updateSavedChip('draft');
+        document.dispatchEvent(new CustomEvent('nyati:saved', { detail: { formId } }));
       }
     }, 60000);
 
