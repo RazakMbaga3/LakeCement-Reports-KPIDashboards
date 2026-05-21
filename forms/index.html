@@ -3,11 +3,127 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lake Cement – Daily Report Forms</title>
+  <title>Lake Cement – Daily Operations Status</title>
   <link rel="icon" type="image/png" href="../favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
   <link rel="stylesheet" href="forms.css" />
+  <style>
+    /* ── Status board ───────────────────────────────────────────────── */
+    .sb-wrap { padding:16px 24px 0; }
+
+    .sb-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:12px; flex-wrap:wrap; gap:8px;
+    }
+    .sb-title { font-size:13px; font-weight:800; text-transform:uppercase;
+      letter-spacing:.8px; color:var(--navy); display:flex; align-items:center; gap:8px; }
+    .sb-date-badge {
+      font-size:11px; font-weight:700; background:var(--navy); color:white;
+      padding:4px 12px; border-radius:20px; letter-spacing:.3px;
+    }
+    .sb-summary {
+      font-size:11px; color:var(--text-muted); display:flex; gap:16px; flex-wrap:wrap;
+    }
+    .sb-sum-item { display:flex; align-items:center; gap:5px; font-weight:600; }
+    .sb-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .sb-dot.ok   { background:#239557; }
+    .sb-dot.warn { background:#D97706; }
+    .sb-dot.na   { background:#CBD5E1; }
+
+    /* ── Status grid ────────────────────────────────────────────────── */
+    .sb-grid {
+      display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      gap:10px;
+      margin-bottom:4px;
+    }
+    @media (max-width:767px)  { .sb-grid { grid-template-columns:1fr; } }
+    @media (min-width:768px) and (max-width:1199px) { .sb-grid { grid-template-columns:repeat(3,1fr); } }
+    @media (min-width:1200px) { .sb-grid { grid-template-columns:repeat(3,1fr); } }
+
+    .sb-card {
+      background:white; border:1.5px solid var(--border); border-radius:var(--radius);
+      padding:12px 14px 10px; position:relative; overflow:hidden;
+      box-shadow:var(--shadow-sm); cursor:pointer; text-decoration:none; display:block;
+      transition:box-shadow .15s, border-color .15s;
+    }
+    .sb-card:hover { box-shadow:0 4px 18px rgba(23,49,88,.1); border-color:#93C5FD; }
+    .sb-card::before {
+      content:''; position:absolute; left:0; top:0; bottom:0; width:4px; border-radius:var(--radius) 0 0 var(--radius);
+    }
+    .sb-card.submitted::before { background:#239557; }
+    .sb-card.draft::before     { background:#D97706; }
+    .sb-card.missing::before   { background:#E2E8F0; }
+
+    .sb-card-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+    .sb-card-name {
+      font-size:11.5px; font-weight:700; color:var(--navy); text-transform:uppercase;
+      letter-spacing:.5px; display:flex; align-items:center; gap:6px;
+    }
+    .sb-badge {
+      font-size:8.5px; font-weight:800; padding:2px 8px; border-radius:12px;
+      text-transform:uppercase; letter-spacing:.5px; flex-shrink:0;
+    }
+    .sb-badge.submitted { background:#D1FAE5; color:#065F46; }
+    .sb-badge.draft     { background:#FEF3C7; color:#92400E; }
+    .sb-badge.missing   { background:#F1F5F9; color:#94A3B8; }
+
+    .sb-card-by {
+      font-size:11px; color:var(--text-muted); margin-bottom:3px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .sb-card-by strong { color:var(--navy); }
+    .sb-card-time { font-size:9.5px; color:#94A3B8; }
+    .sb-card-open {
+      position:absolute; bottom:10px; right:14px;
+      font-size:10px; font-weight:700; color:var(--orange);
+      display:flex; align-items:center; gap:3px;
+    }
+
+    /* ── Divider ────────────────────────────────────────────────────── */
+    .section-divider {
+      padding:20px 24px 10px;
+      font-size:11px; font-weight:700; text-transform:uppercase;
+      letter-spacing:.8px; color:var(--text-muted);
+      display:flex; align-items:center; gap:10px;
+    }
+    .section-divider::after {
+      content:''; flex:1; height:1px; background:var(--border);
+    }
+
+    /* ── Form cards (smaller, secondary) ────────────────────────────── */
+    .forms-grid-sm {
+      display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      gap:10px;
+      padding:0 24px 32px;
+    }
+    @media (max-width:767px)  { .forms-grid-sm { grid-template-columns:1fr; } }
+    @media (min-width:768px) and (max-width:1023px) { .forms-grid-sm { grid-template-columns:repeat(2,1fr); } }
+
+    .fc-sm {
+      background:white; border:1.5px solid var(--border); border-radius:var(--radius);
+      padding:12px 14px; text-decoration:none; display:block;
+      box-shadow:var(--shadow-sm); transition:box-shadow .15s, border-color .15s;
+    }
+    .fc-sm:hover { box-shadow:0 4px 16px rgba(23,49,88,.1); border-color:var(--orange); }
+    .fc-sm-top { display:flex; align-items:center; gap:8px; margin-bottom:5px; }
+    .fc-sm-icon { width:28px; height:28px; border-radius:6px; background:var(--off-white);
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+      border:1px solid var(--border); }
+    .fc-sm-icon svg { width:14px; height:14px; color:var(--navy); }
+    .fc-sm-name { font-size:12px; font-weight:700; color:var(--navy); }
+    .fc-sm-desc { font-size:10.5px; color:var(--text-muted); line-height:1.5; }
+    .fc-sm-owner { font-size:9.5px; color:var(--text-muted); margin-top:6px; border-top:1px solid var(--border); padding-top:6px; }
+
+    /* ── Refresh hint ─────────────────────────────────────────────── */
+    .sb-refresh {
+      font-size:10px; color:#94A3B8; display:flex; align-items:center; gap:5px;
+      cursor:pointer; padding:3px 8px; border-radius:4px; transition:background .1s;
+    }
+    .sb-refresh:hover { background:var(--off-white); color:var(--navy); }
+  </style>
 </head>
 <body>
 
@@ -18,7 +134,7 @@
       <img class="nyati-logo" src="../NYATI-LOGO.png" alt="Nyati Cement" />
       <div class="logo-text">
         <img class="lc-wordmark" src="../lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
-        <span class="company-sub">Daily Report Forms</span>
+        <span class="company-sub">Daily Operations Status</span>
       </div>
     </div>
   </div>
@@ -49,198 +165,276 @@
     <button class="nav-btn" onclick="location.href='../daily-report.html'"><i data-lucide="factory" class="nav-icon"></i> Production</button>
     <button class="nav-btn" onclick="location.href='../power-plant-report.html'"><i data-lucide="zap" class="nav-icon"></i> Power Plant (CPP)</button>
     <button class="nav-btn" onclick="location.href='../mines-report.html'"><i data-lucide="pickaxe" class="nav-icon"></i> Mines</button>
+    <button class="nav-btn" onclick="location.href='dispatch-form.html'"><i data-lucide="truck" class="nav-icon"></i> Dispatch</button>
+    <button class="nav-btn" onclick="location.href='stoppage-form.html'"><i data-lucide="alert-triangle" class="nav-icon"></i> Stoppages</button>
+    <button class="nav-btn" onclick="location.href='quality-form.html'"><i data-lucide="flask-conical" class="nav-icon"></i> Quality</button>
+    <button class="nav-btn" onclick="location.href='materials-form.html'"><i data-lucide="package" class="nav-icon"></i> Materials</button>
+    <button class="nav-btn" onclick="location.href='power-form.html'"><i data-lucide="activity" class="nav-icon"></i> Power Cons.</button>
+    <button class="nav-btn" onclick="location.href='pile-quality-form.html'"><i data-lucide="layers" class="nav-icon"></i> Pile Quality</button>
     <div class="nav-divider"></div>
-    <span class="nav-label" style="margin-left:8px">ENTRY FORMS</span>
-    <button class="nav-btn active"><i data-lucide="layout-grid" class="nav-icon"></i> All Forms</button>
+    <button class="nav-btn active"><i data-lucide="layout-grid" class="nav-icon"></i> Status Board</button>
   </div>
 </nav>
 
 <!-- ══════════════════ MAIN ══════════════════ -->
-<main style="flex:1;padding:20px 0 48px">
+<main style="flex:1;padding-bottom:48px">
 
-  <!-- Page header -->
-  <div style="padding:0 24px 16px;border-bottom:1px solid var(--border);margin-bottom:0">
-    <h2 style="font-size:18px;font-weight:800;color:var(--navy);margin-bottom:4px">
-      <i data-lucide="clipboard-list" style="width:18px;height:18px;vertical-align:-3px;margin-right:8px;stroke-width:2"></i>
-      Daily Report Entry Forms
-    </h2>
-    <p style="font-size:12px;color:var(--text-muted)">
-      Six daily data entry forms covering all plant operations. Pre-populated with sample data for 21-Apr-2026.
-      Amber cells require manual input; blue = system/auto; green = computed.
-    </p>
-  </div>
+  <!-- ═══════════════ TODAY'S STATUS BOARD ═══════════════ -->
+  <div class="sb-wrap">
 
-  <!-- ═══════════════ CARDS GRID ═══════════════ -->
-  <div class="forms-grid">
+    <div class="sb-header">
+      <div class="sb-title">
+        <i data-lucide="activity" style="width:15px;height:15px;stroke-width:2.5"></i>
+        Today's Operations Status
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="sb-date-badge" id="sb-date-badge">—</span>
+        <span class="sb-refresh" onclick="buildBoard()" title="Refresh from local storage">
+          <i data-lucide="refresh-cw" style="width:11px;height:11px"></i> Refresh
+        </span>
+      </div>
+    </div>
 
-    <!-- Dispatch -->
-    <a href="dispatch-form.html" class="form-card">
-      <div class="fc-hdr">
-        <i data-lucide="truck" class="fc-icon"></i>
-        <div class="fc-title">Dispatch &amp; Stoppage</div>
-      </div>
-      <div class="fc-body">
-        <div class="fc-desc">
-          Cement dispatch matrix (bags, bulker, big-bags) with Sales On Date / MTD / YTD.
-          Vehicles @ 6 AM, packing plant performance &amp; packing stoppage log.
-        </div>
-        <div class="fc-meta">
-          <span class="fc-tag">Sales</span>
-          <span class="fc-tag">Packing</span>
-          <span class="fc-tag">Dispatch</span>
-        </div>
-      </div>
-      <div class="fc-footer">
-        <span class="fc-owner"><i data-lucide="user" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i> Sales &amp; Packing Head</span>
-        <span class="fc-arrow">→</span>
-      </div>
-    </a>
+    <!-- Summary counts -->
+    <div class="sb-summary" id="sb-summary" style="margin-bottom:14px">
+      <span class="sb-sum-item"><span class="sb-dot ok"></span><span id="cnt-submitted">0 submitted</span></span>
+      <span class="sb-sum-item"><span class="sb-dot warn"></span><span id="cnt-draft">0 in draft</span></span>
+      <span class="sb-sum-item"><span class="sb-dot na"></span><span id="cnt-missing">9 not started</span></span>
+      <span style="color:#94A3B8;font-size:10.5px" id="sb-note">Reads from this browser's local storage — submit each form to record it here.</span>
+    </div>
 
-    <!-- Stoppages -->
-    <a href="stoppage-form.html" class="form-card">
-      <div class="fc-hdr">
-        <i data-lucide="alert-triangle" class="fc-icon"></i>
-        <div class="fc-title">Sectional Stoppages</div>
-      </div>
-      <div class="fc-body">
-        <div class="fc-desc">
-          Equipment stoppage log with section tabs: Crusher, Raw Mill, Coal Mill, Kiln,
-          CM-1, CM-2, Packing. Consolidated summary with category breakdown (Mech / E&amp;I / Prod / Planned).
-        </div>
-        <div class="fc-meta">
-          <span class="fc-tag">Mechanical</span>
-          <span class="fc-tag">E&amp;I</span>
-          <span class="fc-tag">Production</span>
-        </div>
-      </div>
-      <div class="fc-footer">
-        <span class="fc-owner"><i data-lucide="user" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i> Mechanical / E&amp;I Head</span>
-        <span class="fc-arrow">→</span>
-      </div>
-    </a>
-
-    <!-- CPP -->
-    <a href="cpp-form.html" class="form-card">
-      <div class="fc-hdr">
-        <i data-lucide="zap" class="fc-icon"></i>
-        <div class="fc-title">CPP Daily Report</div>
-      </div>
-      <div class="fc-body">
-        <div class="fc-desc">
-          Captive Power Plant — generation, auxiliary, PLF, heat rate, steam parameters.
-          Fuel (coal by source), Water Treatment Plant &amp; fly ash utilisation.
-        </div>
-        <div class="fc-meta">
-          <span class="fc-tag">Power Plant</span>
-          <span class="fc-tag">CPP</span>
-          <span class="fc-tag">Energy</span>
-        </div>
-      </div>
-      <div class="fc-footer">
-        <span class="fc-owner"><i data-lucide="user" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i> CPP Head</span>
-        <span class="fc-arrow">→</span>
-      </div>
-    </a>
-
-    <!-- Quality -->
-    <a href="quality-form.html" class="form-card">
-      <div class="fc-hdr">
-        <i data-lucide="flask-conical" class="fc-icon"></i>
-        <div class="fc-title">Quality / Lab Report</div>
-      </div>
-      <div class="fc-body">
-        <div class="fc-desc">
-          Finished cement physical tests (Blaine, setting time, strength, free lime).
-          Coal mill day avg. Raw Mill, Kiln Feed &amp; Clinker 4-hour chemistry samples (6 per day).
-        </div>
-        <div class="fc-meta">
-          <span class="fc-tag">Quality</span>
-          <span class="fc-tag">Lab</span>
-          <span class="fc-tag">Chemistry</span>
-        </div>
-      </div>
-      <div class="fc-footer">
-        <span class="fc-owner"><i data-lucide="user" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i> QC Manager / Lab Officer</span>
-        <span class="fc-arrow">→</span>
-      </div>
-    </a>
-
-    <!-- Materials -->
-    <a href="materials-form.html" class="form-card">
-      <div class="fc-hdr">
-        <i data-lucide="package" class="fc-icon"></i>
-        <div class="fc-title">Raw Materials &amp; Stores</div>
-      </div>
-      <div class="fc-body">
-        <div class="fc-desc">
-          Primary materials (limestone, clay, iron ore, gypsum), coal by supplier for Kiln and CPP,
-          cement bags, grinding aid &amp; diesel — opening / received / consumption / closing stock.
-        </div>
-        <div class="fc-meta">
-          <span class="fc-tag">Stores</span>
-          <span class="fc-tag">Materials</span>
-          <span class="fc-tag">Inventory</span>
-        </div>
-      </div>
-      <div class="fc-footer">
-        <span class="fc-owner"><i data-lucide="user" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i> Stores Head</span>
-        <span class="fc-arrow">→</span>
-      </div>
-    </a>
-
-    <!-- Power -->
-    <a href="power-form.html" class="form-card">
-      <div class="fc-hdr">
-        <i data-lucide="activity" class="fc-icon"></i>
-        <div class="fc-title">Power Consumption</div>
-      </div>
-      <div class="fc-body">
-        <div class="fc-desc">
-          Section-wise power consumption (Crusher, Raw Mill, Coal Mill, Kiln, CM-1, CM-2, Packing).
-          kWh / MT vs. target with variance chips. SPC summary for management review.
-        </div>
-        <div class="fc-meta">
-          <span class="fc-tag">E&amp;I</span>
-          <span class="fc-tag">Energy</span>
-          <span class="fc-tag">SPC</span>
-        </div>
-      </div>
-      <div class="fc-footer">
-        <span class="fc-owner"><i data-lucide="user" style="width:11px;height:11px;vertical-align:-1px;margin-right:3px"></i> E&amp;I Head</span>
-        <span class="fc-arrow">→</span>
-      </div>
-    </a>
+    <!-- Status card grid (built by JS) -->
+    <div class="sb-grid" id="sb-grid"></div>
 
   </div>
 
-  <!-- Quick info bar -->
-  <div style="margin:0 24px 0;padding:12px 20px;background:var(--section-bg);border:1px solid var(--border);border-radius:var(--radius);display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-    <i data-lucide="info" style="width:14px;height:14px;color:var(--navy-light);flex-shrink:0"></i>
-    <span style="font-size:11.5px;color:var(--text-muted)">
-      All forms are <strong style="color:var(--navy)">pre-populated with sample data for 21-Apr-2026</strong>.
-      Source Excel files are in <code style="background:white;border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-size:11px">data/samples/2026-04-21/</code>.
-      Amber cells require manual input daily; blue and green cells are read-only (system or computed).
-    </span>
+  <!-- ═══════════════ SECTION DIVIDER ═══════════════ -->
+  <div class="section-divider">
+    <i data-lucide="clipboard-list" style="width:12px;height:12px"></i>
+    Open a Report Form
+  </div>
+
+  <!-- ═══════════════ FORM CARDS ═══════════════ -->
+  <div class="forms-grid-sm">
+
+    <a href="../daily-report.html" class="fc-sm">
+      <div class="fc-sm-top">
+        <div class="fc-sm-icon"><i data-lucide="factory"></i></div>
+        <div class="fc-sm-name">Production</div>
+      </div>
+      <div class="fc-sm-desc">Material movement matrix — raw mill feed, coal, clinker stock &amp; cement grinding.</div>
+      <div class="fc-sm-owner">Production Head</div>
+    </a>
+
+    <a href="../power-plant-report.html" class="fc-sm">
+      <div class="fc-sm-top">
+        <div class="fc-sm-icon"><i data-lucide="zap"></i></div>
+        <div class="fc-sm-name">Power Plant (CPP)</div>
+      </div>
+      <div class="fc-sm-desc">Generation, PLF, heat rate, coal consumption, steam parameters &amp; WTP.</div>
+      <div class="fc-sm-owner">CPP Officer</div>
+    </a>
+
+    <a href="../mines-report.html" class="fc-sm">
+      <div class="fc-sm-top">
+        <div class="fc-sm-icon"><i data-lucide="pickaxe"></i></div>
+        <div class="fc-sm-name">Mines</div>
+      </div>
+      <div class="fc-sm-desc">Material movement matrix — blasting, hauling, overburden removal, contractor records.</div>
+      <div class="fc-sm-owner">Mines Engineer / Supervisor</div>
+    </a>
+
+    <a href="dispatch-form.html" class="fc-sm">
+      <div class="fc-sm-top">
+        <div class="fc-sm-icon"><i data-lucide="truck"></i></div>
+        <div class="fc-sm-name">Dispatch</div>
+      </div>
+      <div class="fc-sm-desc">Dispatch matrix (bags, bulker, big-bags), vehicles @ 6 AM, packing performance &amp; stoppage log.</div>
+      <div class="fc-sm-owner">Sales &amp; Packing Head</div>
+    </a>
+
+    <a href="stoppage-form.html" class="fc-sm">
+      <div class="fc-sm-top">
+        <div class="fc-sm-icon"><i data-lucide="alert-triangle"></i></div>
+        <div class="fc-sm-name">Stoppages</div>
+      </div>
+      <div class="fc-sm-desc">Section-wise stoppage log with category breakdown — Mech / E&amp;I / Prod / Planned.</div>
+      <div class="fc-sm-owner">Mechanical / E&amp;I Head</div>
+    </a>
+
+    <a href="quality-form.html" class="fc-sm">
+      <div class="fc-sm-top">
+        <div class="fc-sm-icon"><i data-lucide="flask-conical"></i></div>
+        <div class="fc-sm-name">Quality / Lab</div>
+      </div>
+      <div class="fc-sm-desc">Cement physical tests, coal mill avg, Raw Mill &amp; Clinker 4-hour chemistry (6 samples/day).</div>
+      <div class="fc-sm-owner">QC Manager / Lab Officer</div>
+    </a>
+
+    <a href="materials-form.html" class="fc-sm">
+      <div class="fc-sm-top">
+        <div class="fc-sm-icon"><i data-lucide="package"></i></div>
+        <div class="fc-sm-name">Raw Materials</div>
+      </div>
+      <div class="fc-sm-desc">All materials opening / received / consumed / closing — limestone, coal, bags, diesel.</div>
+      <div class="fc-sm-owner">Stores Head</div>
+    </a>
+
+    <a href="power-form.html" class="fc-sm">
+      <div class="fc-sm-top">
+        <div class="fc-sm-icon"><i data-lucide="activity"></i></div>
+        <div class="fc-sm-name">Power Consumption</div>
+      </div>
+      <div class="fc-sm-desc">Section-wise kWh, SPC vs target, TANESCO import, CPP auxiliary consumption.</div>
+      <div class="fc-sm-owner">E&amp;I Head</div>
+    </a>
+
+    <a href="pile-quality-form.html" class="fc-sm">
+      <div class="fc-sm-top">
+        <div class="fc-sm-icon"><i data-lucide="layers"></i></div>
+        <div class="fc-sm-name">Pile Quality</div>
+      </div>
+      <div class="fc-sm-desc">Hourly CaO / MgO readings, trip reconciliation, grade summary (HG/LG) and MTD limestone qty.</div>
+      <div class="fc-sm-owner">QC / Mines Chemist</div>
+    </a>
+
   </div>
 
 </main>
 
 <footer class="dash-footer">
   <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
-  <span>Daily Report Forms &mdash; <span id="footer-date"></span></span>
+  <span>Daily Operations Status &mdash; <span id="footer-date"></span></span>
 </footer>
 <div class="brand-accent-bar"></div>
 
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>
+/* ── Dates ─────────────────────────────────────────────────────── */
+const _today = new Date();
+const _todayISO  = _today.toISOString().slice(0, 10);
+const _todayFmt  = _today.toLocaleDateString('en-GB', { weekday:'short', day:'2-digit', month:'short', year:'numeric' });
+const _todayShort= _today.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+
+document.getElementById('live-date').textContent   = _todayFmt;
+document.getElementById('footer-date').textContent = _todayFmt;
+document.getElementById('sb-date-badge').textContent = _todayShort;
+
+/* ── Form definitions ───────────────────────────────────────────── */
+const FORMS = [
+  { id:'production',  name:'Production',       icon:'factory',        href:'../daily-report.html',       owner:'Production Head' },
+  { id:'power-plant', name:'Power Plant (CPP)', icon:'zap',            href:'../power-plant-report.html', owner:'CPP Officer' },
+  { id:'mines',       name:'Mines',             icon:'pickaxe',        href:'../mines-report.html',       owner:'Mines Engineer' },
+  { id:'dispatch',    name:'Dispatch',          icon:'truck',          href:'dispatch-form.html',         owner:'Sales &amp; Packing Head' },
+  { id:'stoppage',    name:'Stoppages',         icon:'alert-triangle', href:'stoppage-form.html',         owner:'Mech / E&amp;I Head' },
+  { id:'quality',     name:'Quality / Lab',     icon:'flask-conical',  href:'quality-form.html',          owner:'QC Manager' },
+  { id:'materials',   name:'Raw Materials',     icon:'package',        href:'materials-form.html',        owner:'Stores Head' },
+  { id:'power-cons',  name:'Power Consumption', icon:'activity',       href:'power-form.html',            owner:'E&amp;I Head' },
+  { id:'pile-quality',name:'Pile Quality',      icon:'layers',         href:'pile-quality-form.html',     owner:'QC / Mines Chemist' },
+];
+
+const NS = 'nyati';
+
+function _latestForToday(formId) {
+  /* Returns the best snapshot for today: submitted > draft > null */
+  const key = `${NS}-${formId}-${_todayISO}`;
+  const raw = localStorage.getItem(key);
+  if (raw) { try { return JSON.parse(raw); } catch(e){} }
+  return null;
+}
+
+function _allForForm(formId) {
+  /* Returns all saved snapshots for this form, newest first */
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(`${NS}-${formId}-`)) keys.push(k);
+  }
+  return keys.sort().reverse().map(k => {
+    try { return JSON.parse(localStorage.getItem(k)); } catch(e) { return null; }
+  }).filter(Boolean);
+}
+
+function _fmt(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  return d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) +
+         ' · ' + d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+}
+
+/* ── Build the status board ─────────────────────────────────────── */
+function buildBoard() {
+  const grid = document.getElementById('sb-grid');
+  grid.innerHTML = '';
+
+  let nSubmitted = 0, nDraft = 0, nMissing = 0;
+
+  FORMS.forEach(form => {
+    const snap  = _latestForToday(form.id);
+    const allSnaps = _allForForm(form.id);
+    const status = snap ? snap._m?.status : null;
+    const cls = status === 'submitted' ? 'submitted' : status === 'draft' ? 'draft' : 'missing';
+
+    if (cls === 'submitted') nSubmitted++;
+    else if (cls === 'draft') nDraft++;
+    else nMissing++;
+
+    /* Prepared by: prefer named data.prepared_by, fall back to inputs[1] */
+    let preparedBy = '—';
+    if (snap) {
+      const byNamed = snap.data?.prepared_by;
+      const byPos   = snap.inputs?.[1];
+      const raw = byNamed || byPos || '';
+      preparedBy = raw.trim() || '—';
+    }
+
+    /* Latest save time */
+    const savedAt = snap?._m?.savedAt || null;
+
+    /* Any prior submissions for other dates */
+    const lastSubmitted = allSnaps.find(s => s._m?.status === 'submitted' && s._m?.date !== _todayISO);
+
+    /* Badge text */
+    const badgeMap = { submitted:'✓ Submitted', draft:'⟳ Draft', missing:'Not Started' };
+    const badgeLabel = badgeMap[cls];
+
+    const card = document.createElement('a');
+    card.href  = form.href;
+    card.className = `sb-card ${cls}`;
+    card.innerHTML = `
+      <div class="sb-card-top">
+        <span class="sb-card-name">
+          <i data-lucide="${form.icon}" style="width:13px;height:13px;flex-shrink:0"></i>
+          ${form.name}
+        </span>
+        <span class="sb-badge ${cls}">${badgeLabel}</span>
+      </div>
+      <div class="sb-card-by">
+        ${cls !== 'missing'
+          ? `By: <strong>${preparedBy}</strong>`
+          : `<span style="color:#CBD5E1">No data for ${_todayShort}</span>`}
+      </div>
+      <div class="sb-card-time">
+        ${savedAt ? _fmt(savedAt) : lastSubmitted ? `Last: ${lastSubmitted._m.date}` : `Owner: ${form.owner}`}
+      </div>
+      <span class="sb-card-open">Open <i data-lucide="arrow-right" style="width:10px;height:10px"></i></span>`;
+    grid.appendChild(card);
+  });
+
+  /* Update summary counts */
+  document.getElementById('cnt-submitted').textContent = `${nSubmitted} submitted`;
+  document.getElementById('cnt-draft').textContent     = `${nDraft} in draft`;
+  document.getElementById('cnt-missing').textContent   = `${nMissing} not started`;
+
+  const allDone = nSubmitted === FORMS.length;
+  document.getElementById('sb-note').textContent = allDone
+    ? '✓ All 9 reports submitted for today.'
+    : `${FORMS.length - nSubmitted} report${FORMS.length - nSubmitted !== 1 ? 's' : ''} still needed for ${_todayShort}.`;
+
   lucide.createIcons();
-  const now = new Date();
-  const opts = { weekday:'short', year:'numeric', month:'short', day:'numeric' };
-  const str  = now.toLocaleDateString('en-GB', opts);
-  const el1  = document.getElementById('live-date');
-  const el2  = document.getElementById('footer-date');
-  if (el1) el1.textContent = str;
-  if (el2) el2.textContent = str;
+}
+
+buildBoard();
 </script>
 </body>
 </html>

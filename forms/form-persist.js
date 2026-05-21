@@ -22,22 +22,34 @@
 
   const NS = 'nyati'; // localStorage namespace prefix
 
-  /* ── Collect all editable inputs in DOM order ──────────────────── */
+  const _SEL = 'input:not([type="button"]):not([type="submit"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea';
+
+  /* ── Collect all editable inputs — positional array + named dict ── */
   function _collect(scope) {
-    return [...scope.querySelectorAll(
-      'input:not([type="button"]):not([type="submit"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea'
-    )].map(el => el.value);
+    const values = [];
+    const named  = {};
+    [...scope.querySelectorAll(_SEL)].forEach(el => {
+      values.push(el.value);
+      const f = el.getAttribute('data-field');
+      if (f) named[f] = el.value;
+    });
+    return { values, named };
   }
 
-  /* ── Restore values back by DOM-order index ─────────────────────── */
-  function _restore(scope, values) {
-    const els = [...scope.querySelectorAll(
-      'input:not([type="button"]):not([type="submit"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea'
-    )];
-    els.forEach((el, i) => {
-      if (i < values.length && values[i] !== undefined) {
-        el.value = values[i];
-      }
+  /* ── Restore: positional first, named fields override ───────────── */
+  function _restore(scope, payload) {
+    // Support both old format (plain array) and new format (object with inputs/data)
+    const values = Array.isArray(payload) ? payload : (payload.inputs || []);
+    const named  = Array.isArray(payload) ? {} : (payload.data || {});
+
+    // Positional restore
+    [...scope.querySelectorAll(_SEL)].forEach((el, i) => {
+      if (i < values.length && values[i] !== undefined) el.value = values[i];
+    });
+    // Named override (more reliable, survives form edits)
+    Object.entries(named).forEach(([field, value]) => {
+      const el = scope.querySelector(`[data-field="${field}"]`);
+      if (el) el.value = value;
     });
     // Re-trigger CaO spec check if pile-quality form
     scope.querySelectorAll('.cao-input').forEach(inp => {
@@ -69,14 +81,11 @@
   /* ── Write snapshot to localStorage ─────────────────────────────── */
   function _write(formId, status) {
     const date = _dateVal(document.body);
+    const { values, named } = _collect(document.body);
     const payload = {
-      _m: {
-        formId,
-        date,
-        savedAt: new Date().toISOString(),
-        status    // 'draft' | 'submitted'
-      },
-      inputs: _collect(document.body)
+      _m: { formId, date, savedAt: new Date().toISOString(), status },
+      inputs: values,   // positional array — backwards compat
+      data:   named     // named dict — Phase 2 readable
     };
     localStorage.setItem(_key(formId, date), JSON.stringify(payload));
     return { date, payload };
@@ -88,7 +97,7 @@
     if (!raw) return null;
     try {
       const p = JSON.parse(raw);
-      _restore(document.body, p.inputs);
+      _restore(document.body, p);   // pass full payload — handles both formats
       return p._m;
     } catch (e) {
       return null;
