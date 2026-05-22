@@ -158,6 +158,7 @@ function applyFilters() {
   updateSummary();
   if (currentDept === 'summary') updateSummaryDashboard();
   applyPeriodCards(view);
+  if (typeof loadKpiData === 'function') loadKpiData(mo, yr);
 }
 
 /* ─── compute achieved / not-achieved counts ────────────────── */

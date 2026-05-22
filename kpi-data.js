@@ -1,0 +1,399 @@
+/* ══════════════════════════════════════════════════════════════
+   Lake Cement Ltd – Monthly KPI Data Engine
+   Auto-aggregation from daily forms + inline/modal editing
+   ══════════════════════════════════════════════════════════════ */
+
+/* ─── Auto-calc row definitions ─────────────────────────────
+   Each entry maps a KPI row (by exact label text) to a daily
+   form field. Cells with these labels get ⚡ treatment.
+─────────────────────────────────────────────────────────────── */
+const KPI_AUTO = [
+  {
+    label:  'Clinker Free Lime',
+    form:   'quality',
+    field:  'free_lime',
+    agg:    'avg',
+    dp:     1,
+  },
+  {
+    label:  'Despatch / Day',
+    form:   'dispatch',
+    field:  '__dispatch_total',          // synthetic — summed in getMonthEntries
+    agg:    'avg',
+    dp:     0,
+  },
+];
+
+/* ─── Helpers ────────────────────────────────────────────── */
+function padMo(mo) { return String(mo).padStart(2, '0'); }
+
+function kpiSlug(text) {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+/* Collect all daily localStorage entries for a form in a given month */
+function getMonthEntries(formId, year, month) {
+  const prefix  = `nyati-${formId}-${year}-${padMo(month)}-`;
+  const entries = [];
+  for (let d = 1; d <= 31; d++) {
+    const raw = localStorage.getItem(prefix + String(d).padStart(2, '0'));
+    if (!raw) continue;
+    try {
+      const parsed = JSON.parse(raw);
+      const data   = parsed.data ?? {};
+      // Compute synthetic dispatch total from individual product streams
+      if (formId === 'dispatch') {
+        const tot = ['dispatch_425r','dispatch_425n','dispatch_bulker','dispatch_bigbag']
+          .reduce((s, f) => s + (parseFloat(data[f]) || 0), 0);
+        data.__dispatch_total = tot;
+      }
+      entries.push(data);
+    } catch { /* skip corrupt entries */ }
+  }
+  return entries;
+}
+
+function aggregateField(entries, field, agg, dp) {
+  const vals = entries.map(e => parseFloat(e[field])).filter(v => !isNaN(v) && v > 0);
+  if (!vals.length) return null;
+  let result;
+  if (agg === 'sum') result = vals.reduce((a, b) => a + b, 0);
+  else               result = vals.reduce((a, b) => a + b, 0) / vals.length;
+  return parseFloat(result.toFixed(dp ?? 2));
+}
+
+/* ─── Cell column helpers ────────────────────────────────── */
+const EDITABLE_COL_MIN = 4;   // 0-based: col 4 = ACTUAL
+const EDITABLE_COL_MAX = 17;  // col 17 = Dec (0-based index in a 19-col table)
+const SKIP_COLS = new Set([1, 2, 3, 18]); // unit, sign, target, status
+
+function getColIndex(cell) {
+  return Array.from(cell.parentElement.children).indexOf(cell);
+}
+
+/* Month column index in the 19-col table: Jan=6, Feb=7 … Dec=17 (0-based) */
+function moToColIdx(mo) { return mo + 5; }
+
+/* ─── Storage keys ───────────────────────────────────────── */
+function manualKey(dept, slug, yr, mo) {
+  return `nyati-kpi-${dept}-${slug}-${yr}-${padMo(mo)}`;
+}
+function overrideKey(dept, slug, yr, mo) {
+  return `nyati-kpi-override-${dept}-${slug}-${yr}-${padMo(mo)}`;
+}
+
+/* ─── Row status auto-update ─────────────────────────────── */
+function updateRowStatus(row) {
+  const cells  = row.querySelectorAll('td');
+  if (cells.length < 19) return;
+  const sign   = cells[2].textContent.trim();
+  const target = parseFloat(cells[3].textContent.replace(/,/g, ''));
+  const actual = parseFloat(cells[4].textContent.replace(/,/g, ''));
+  if (isNaN(target) || isNaN(actual)) return;
+
+  let achieved = false;
+  if (sign === '<')  achieved = actual < target;
+  if (sign === '>')  achieved = actual > target;
+  if (sign === '<=') achieved = actual <= target;
+  if (sign === '>=') achieved = actual >= target;
+  if (sign === '=')  achieved = actual === target;
+
+  const statusCell = cells[18];
+  statusCell.textContent  = achieved ? 'Achieved' : 'Not Achieved';
+  statusCell.className    = 'status ' + (achieved ? 'achieved-tag' : 'not-tag');
+  cells[4].className      = 'actual ' + (achieved ? 'green' : 'red');
+  row.className           = row.className.replace(/\b(achieved|not-achieved)-row\b/g, '')
+                            + ' ' + (achieved ? 'achieved' : 'not-achieved') + '-row';
+
+  // Bubble up to filter summary
+  if (typeof updateSummary === 'function') updateSummary();
+}
+
+/* ─── Inline editing ─────────────────────────────────────── */
+function makeEditable(cell, dept, slug, yr, mo, isAutoCell) {
+  if (cell.dataset.editing) return;
+  cell.dataset.editing = '1';
+  cell.contentEditable = 'true';
+  cell.classList.add('cell-editing');
+
+  // Select all text
+  const range = document.createRange();
+  range.selectNodeContents(cell);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+
+  function commit() {
+    delete cell.dataset.editing;
+    cell.contentEditable = 'false';
+    cell.classList.remove('cell-editing');
+
+    const val = cell.textContent.trim();
+    if (val === '') return;
+
+    const colIdx = getColIndex(cell);
+    const cellMo = colIdx >= 6 ? colIdx - 5 : mo;  // derive month from column
+
+    if (isAutoCell) {
+      // Override: store separately, swap badge
+      localStorage.setItem(overrideKey(dept, slug, yr, cellMo), val);
+      cell.classList.remove('auto-cell');
+      cell.classList.add('edited-cell');
+    } else {
+      localStorage.setItem(manualKey(dept, slug, yr, cellMo), val);
+    }
+
+    // If this is the ACTUAL column, update row status
+    if (colIdx === 4) updateRowStatus(cell.parentElement);
+  }
+
+  cell.addEventListener('blur',    commit, { once: true });
+  cell.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); cell.blur(); }
+    if (e.key === 'Escape') {
+      delete cell.dataset.editing;
+      cell.contentEditable = 'false';
+      cell.classList.remove('cell-editing');
+      cell.removeEventListener('blur', commit);
+    }
+  }, { once: true });
+}
+
+/* Attach click-to-edit to all kpi-table cells */
+function attachInlineEditing() {
+  document.querySelectorAll('.kpi-table').forEach(tbl => {
+    tbl.addEventListener('click', e => {
+      const cell = e.target.closest('td');
+      if (!cell) return;
+      const row = cell.closest('tr');
+      if (!row || !row.classList.contains('data-row')) return;
+
+      const colIdx = getColIndex(cell);
+      if (colIdx < EDITABLE_COL_MIN || colIdx > EDITABLE_COL_MAX) return;
+      if (SKIP_COLS.has(colIdx)) return;
+
+      // Derive dept from the section element's id
+      const section = tbl.closest('.dept-section');
+      const dept    = section ? section.id.replace('dept-', '') : 'unknown';
+      const slug    = kpiSlug(row.querySelector('td')?.textContent ?? '');
+      const yr      = document.getElementById('year-select').value;
+      const mo      = +document.getElementById('month-select').value;
+
+      makeEditable(cell, dept, slug, yr, mo, cell.classList.contains('auto-cell'));
+    });
+  });
+}
+
+/* ─── Load auto-calculated values ────────────────────────── */
+function loadAutoCalcValues(mo, yr) {
+  KPI_AUTO.forEach(({ label, form, field, agg, dp }) => {
+    const entries = getMonthEntries(form, yr, mo);
+    const value   = aggregateField(entries, field, agg, dp);
+    if (value === null) return;
+
+    document.querySelectorAll('.kpi-table .data-row').forEach(row => {
+      const labelCell = row.querySelector('td');
+      if (!labelCell) return;
+      if (labelCell.textContent.trim() !== label) return;
+
+      const section = row.closest('.dept-section');
+      const dept    = section ? section.id.replace('dept-', '') : 'unknown';
+      const slug    = kpiSlug(label);
+
+      // Skip if a manual override exists
+      const ovKey = overrideKey(dept, slug, yr, mo);
+      if (localStorage.getItem(ovKey) !== null) {
+        const actualCell = row.querySelectorAll('td')[4];
+        if (actualCell) {
+          actualCell.textContent = localStorage.getItem(ovKey);
+          actualCell.classList.add('edited-cell');
+        }
+        const moCell = row.querySelectorAll('td')[moToColIdx(mo)];
+        if (moCell) {
+          moCell.textContent = localStorage.getItem(ovKey);
+          moCell.classList.add('edited-cell');
+        }
+        return;
+      }
+
+      const displayVal = value.toLocaleString('en-US');
+
+      // Fill ACTUAL column (index 4)
+      const actualCell = row.querySelectorAll('td')[4];
+      if (actualCell) {
+        actualCell.textContent = displayVal;
+        actualCell.classList.add('auto-cell');
+        actualCell.classList.remove('edited-cell');
+        updateRowStatus(row);
+      }
+
+      // Fill the matching monthly column
+      const moCell = row.querySelectorAll('td')[moToColIdx(mo)];
+      if (moCell) {
+        moCell.textContent = displayVal;
+        moCell.classList.add('auto-cell');
+        moCell.classList.remove('edited-cell');
+      }
+    });
+  });
+}
+
+/* ─── Load manually saved values ────────────────────────── */
+function loadManualValues(mo, yr) {
+  document.querySelectorAll('.kpi-table .data-row').forEach(row => {
+    const labelCell = row.querySelector('td');
+    if (!labelCell) return;
+    const section = row.closest('.dept-section');
+    const dept    = section ? section.id.replace('dept-', '') : 'unknown';
+    const slug    = kpiSlug(labelCell.textContent.trim());
+
+    // Check all 12 monthly cells + ACTUAL
+    const cells = row.querySelectorAll('td');
+
+    // ACTUAL column (col 4) — use selected month key
+    const actKey = manualKey(dept, slug, yr, mo);
+    const actVal = localStorage.getItem(actKey);
+    if (actVal !== null && !cells[4]?.classList.contains('auto-cell')) {
+      if (cells[4]) cells[4].textContent = actVal;
+    }
+
+    // Monthly columns (cols 6–17)
+    for (let m = 1; m <= 12; m++) {
+      const colIdx = moToColIdx(m);
+      const cell   = cells[colIdx];
+      if (!cell) continue;
+      if (cell.classList.contains('auto-cell') || cell.classList.contains('edited-cell')) continue;
+      const saved = localStorage.getItem(manualKey(dept, slug, yr, m));
+      if (saved !== null) cell.textContent = saved;
+    }
+  });
+}
+
+/* ─── Public entry point called from applyFilters() ─────── */
+function loadKpiData(mo, yr) {
+  loadAutoCalcValues(mo, yr);
+  loadManualValues(mo, yr);
+}
+
+/* ══════════════════════════════════════════════════════════
+   FILL MONTHLY DATA MODAL
+══════════════════════════════════════════════════════════ */
+function openMonthlyModal() {
+  const mo   = +document.getElementById('month-select').value;
+  const yr   =  document.getElementById('year-select').value;
+  const dept =  typeof currentDept !== 'undefined' ? currentDept : 'summary';
+
+  const section = document.getElementById('dept-' + dept);
+  if (!section) return;
+
+  const MONTHS_SHORT = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  // Gather all data rows for this dept
+  const rows = Array.from(section.querySelectorAll('.kpi-table .data-row'));
+  if (!rows.length) {
+    alert('No KPI rows found for this department.');
+    return;
+  }
+
+  // Build modal HTML
+  const autoLabels = new Set(KPI_AUTO.map(k => k.label));
+
+  let tableRows = '';
+  rows.forEach(row => {
+    const cells   = row.querySelectorAll('td');
+    if (cells.length < 5) return;
+    const label   = cells[0].textContent.trim();
+    const unit    = cells[1].textContent.trim();
+    const slug    = kpiSlug(label);
+    const isAuto  = autoLabels.has(label);
+
+    // Current value: from ACTUAL cell or manual storage
+    let currentVal = cells[4].textContent.trim();
+    const stored   = localStorage.getItem(manualKey(dept, slug, yr, mo));
+    const override = localStorage.getItem(overrideKey(dept, slug, yr, mo));
+    if (stored !== null)   currentVal = stored;
+    if (override !== null) currentVal = override;
+
+    const badge = isAuto ? '<span class="modal-auto-badge">⚡ auto</span>' : '';
+
+    tableRows += `
+      <tr>
+        <td class="modal-kpi-label">${label}</td>
+        <td><input class="modal-input" type="text"
+            data-slug="${slug}" data-mo="${mo}" data-yr="${yr}" data-dept="${dept}"
+            data-is-auto="${isAuto}"
+            value="${currentVal}" placeholder="—" />${badge}</td>
+        <td class="modal-unit">${unit}</td>
+      </tr>`;
+  });
+
+  const deptLabel = section.closest('.dept-section')
+    ? (document.getElementById('ctx-dept-name')?.textContent ?? dept)
+    : dept;
+
+  const html = `
+    <div class="kpi-modal-overlay" id="kpi-modal-overlay">
+      <div class="kpi-modal" id="kpi-modal">
+        <div class="kpi-modal-header">
+          <div>
+            <div class="kpi-modal-title">Fill Monthly Data</div>
+            <div class="kpi-modal-sub">${deptLabel} — ${MONTHS_SHORT[mo]} ${yr}</div>
+          </div>
+          <button class="kpi-modal-close" onclick="closeMonthlyModal()">✕</button>
+        </div>
+        <table class="kpi-modal-table">
+          <thead>
+            <tr><th>KPI</th><th>Value</th><th>Unit</th></tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+        <div class="kpi-modal-footer">
+          <button class="kpi-modal-btn-save" onclick="saveAllModalValues()">Save All</button>
+          <button class="kpi-modal-btn-cancel" onclick="closeMonthlyModal()">Cancel</button>
+        </div>
+      </div>
+    </div>`;
+
+  document.body.insertAdjacentHTML('beforeend', html);
+
+  // Close on overlay click
+  document.getElementById('kpi-modal-overlay').addEventListener('click', e => {
+    if (e.target.id === 'kpi-modal-overlay') closeMonthlyModal();
+  });
+}
+
+function closeMonthlyModal() {
+  const overlay = document.getElementById('kpi-modal-overlay');
+  if (overlay) overlay.remove();
+}
+
+function saveAllModalValues() {
+  const inputs = document.querySelectorAll('.modal-input');
+  inputs.forEach(input => {
+    const val    = input.value.trim();
+    const slug   = input.dataset.slug;
+    const mo     = +input.dataset.mo;
+    const yr     = input.dataset.yr;
+    const dept   = input.dataset.dept;
+    const isAuto = input.dataset.isAuto === 'true';
+
+    if (val === '' || val === '—') return;
+
+    if (isAuto) {
+      localStorage.setItem(overrideKey(dept, slug, yr, mo), val);
+    } else {
+      localStorage.setItem(manualKey(dept, slug, yr, mo), val);
+    }
+  });
+
+  closeMonthlyModal();
+  // Reload cells
+  const mo = +document.getElementById('month-select').value;
+  const yr =  document.getElementById('year-select').value;
+  loadKpiData(mo, yr);
+}
+
+/* ─── INIT ───────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  attachInlineEditing();
+});

@@ -791,6 +791,100 @@ img { max-width: 100%; }
 body.period-ytd  .sk-delta,
 body.period-full .sk-delta { opacity: 0; }
 
+/* ── KPI Inline Editing ────────────────────────────────── */
+.kpi-table .data-row td { cursor: text; }
+.kpi-table .data-row td:hover:not(.cell-editing) { background: #F0F7FF; }
+.kpi-table .data-row td:nth-child(1),
+.kpi-table .data-row td:nth-child(2),
+.kpi-table .data-row td:nth-child(3),
+.kpi-table .data-row td:nth-child(4),
+.kpi-table .data-row td:last-child { cursor: default; }
+.kpi-table .data-row td:nth-child(2):hover,
+.kpi-table .data-row td:nth-child(3):hover,
+.kpi-table .data-row td:nth-child(4):hover,
+.kpi-table .data-row td:last-child:hover { background: transparent; }
+
+.cell-editing {
+  outline: 2px solid var(--navy) !important;
+  background: #EFF6FF !important;
+  border-radius: 2px;
+}
+.auto-cell  { border-left: 3px solid var(--green) !important; }
+.edited-cell { border-left: 3px solid var(--orange) !important; }
+
+/* ── Fill Monthly Data button ──────────────────────────── */
+.fill-monthly-btn {
+  margin-left: auto; padding: 8px 16px; border-radius: 8px; font-size: 12px;
+  font-weight: 700; background: var(--navy); color: white; border: none;
+  cursor: pointer; display: flex; align-items: center; gap: 6px;
+  transition: background .15s;
+}
+.fill-monthly-btn:hover { background: #1e3f6e; }
+.fill-monthly-btn svg   { width: 14px; height: 14px; }
+
+/* ── KPI Modal ─────────────────────────────────────────── */
+.kpi-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 2000;
+  display: flex; align-items: center; justify-content: center;
+}
+.kpi-modal {
+  background: white; border-radius: 12px; width: 520px;
+  max-width: 94vw; max-height: 82vh; overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+}
+.kpi-modal-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 20px 24px 14px; border-bottom: 1px solid var(--border);
+}
+.kpi-modal-title { font-size: 16px; font-weight: 800; color: var(--navy); }
+.kpi-modal-sub   { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.kpi-modal-close {
+  background: none; border: none; font-size: 18px; cursor: pointer;
+  color: var(--text-muted); padding: 0 4px; line-height: 1;
+}
+.kpi-modal-close:hover { color: var(--navy); }
+.kpi-modal-table {
+  width: 100%; border-collapse: collapse; overflow-y: auto;
+  display: block; max-height: calc(82vh - 130px); padding: 0 8px;
+}
+.kpi-modal-table thead th {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .6px; color: var(--text-muted); padding: 8px 12px;
+  border-bottom: 1px solid var(--border); position: sticky; top: 0;
+  background: white;
+}
+.kpi-modal-table tbody tr:hover { background: #F8FAFC; }
+.kpi-modal-label, .modal-kpi-label {
+  font-size: 12px; padding: 8px 12px; color: var(--text-dark); max-width: 240px;
+}
+.modal-unit { font-size: 11px; color: var(--text-muted); padding: 8px 8px 8px 4px; white-space: nowrap; }
+.modal-input {
+  width: 90px; padding: 5px 8px; border: 1.5px solid var(--border); border-radius: 6px;
+  font-size: 12px; font-weight: 600; text-align: right; color: var(--text-dark);
+}
+.modal-input:focus { outline: none; border-color: var(--navy); background: #EFF6FF; }
+.modal-auto-badge {
+  font-size: 9px; font-weight: 700; color: var(--green); margin-left: 5px;
+  vertical-align: middle;
+}
+.kpi-modal-footer {
+  display: flex; gap: 10px; justify-content: flex-end;
+  padding: 14px 24px; border-top: 1px solid var(--border);
+}
+.kpi-modal-btn-save {
+  padding: 8px 22px; background: var(--navy); color: white;
+  border: none; border-radius: 8px; font-size: 13px; font-weight: 700;
+  cursor: pointer;
+}
+.kpi-modal-btn-save:hover { background: #1e3f6e; }
+.kpi-modal-btn-cancel {
+  padding: 8px 16px; background: white; color: var(--text-muted);
+  border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px;
+  cursor: pointer;
+}
+.kpi-modal-btn-cancel:hover { border-color: var(--navy); color: var(--navy); }
+
 /* ── Dept Scorecard ────────────────────────────────────── */
 .smry-scorecard {
   display: grid; grid-template-columns: repeat(8,1fr);
