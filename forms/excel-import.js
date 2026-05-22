@@ -270,6 +270,112 @@
       return result;
     },
 
+    /* ── Limestone % Daily Report ────────────────────────────────── */
+    limestone: function (wb) {
+      /* Find the sheet for today's month. Sheet names like "MAY 2026",
+         "APRIL 2026", "March 2026", etc. */
+      var MONTH_NAMES = ['JAN','FEB','MAR','MARCH','APR','APRIL','MAY','JUN','JUNE',
+                         'JUL','JULY','AUG','AUGUST','SEP','SEPT','SEPTEMBER','OCT','NOV','DEC'];
+      var today   = new Date();
+      var yr      = today.getFullYear();
+      var moIdx   = today.getMonth(); // 0-based
+      /* Variants of the month name that might appear in the sheet */
+      var moVars  = [
+        ['JAN'],['FEB'],['MAR','MARCH'],['APR','APRIL'],['MAY'],
+        ['JUN','JUNE'],['JUL','JULY'],['AUG','AUGUST'],
+        ['SEP','SEPT','SEPTEMBER'],['OCT'],['NOV'],['DEC']
+      ][moIdx];
+
+      var shName = wb.SheetNames.find(function (n) {
+        var upper = n.trim().toUpperCase();
+        return moVars.some(function (v) { return upper.includes(v); }) &&
+               upper.includes(String(yr));
+      }) || wb.SheetNames[wb.SheetNames.length - 1];
+
+      var ws   = wb.Sheets[shName];
+      var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      /* Find today's date column in row 1 (header row).
+         Date format in Excel: "DD.MM.YYYY" */
+      var todayStr = String(today.getDate()).padStart(2, '0') + '.' +
+                     String(today.getMonth() + 1).padStart(2, '0') + '.' +
+                     today.getFullYear();
+      var hdr     = rows[1] || [];
+      var dateCol = -1;
+      for (var ci = 0; ci < hdr.length; ci++) {
+        if (String(hdr[ci]).trim() === todayStr) { dateCol = ci; break; }
+      }
+      /* If today not found, use rightmost column that has any data */
+      if (dateCol < 0) {
+        for (var ci = hdr.length - 1; ci >= 2; ci--) {
+          if (/^\d{2}\.\d{2}\.\d{4}$/.test(String(hdr[ci]).trim())) {
+            var hasData = rows.some(function (r, ri) {
+              return ri > 1 && r[ci] !== '' && !isNaN(parseFloat(r[ci]));
+            });
+            if (hasData) { dateCol = ci; break; }
+          }
+        }
+      }
+      if (dateCol < 0) {
+        return { _error: 'Could not find today\'s date (' + todayStr + ') or any data column in sheet "' + shName + '".' };
+      }
+
+      /* Recover date string for the found column */
+      var dateParts = String(hdr[dateCol]).trim().split('.');
+      var dateIso   = dateParts.length === 3
+        ? dateParts[2] + '-' + dateParts[1] + '-' + dateParts[0]
+        : today.toISOString().slice(0, 10);
+
+      /* Values in Excel are decimals (0.16 = 16%). Multiply by 100. */
+      function pct(v) {
+        var n = parseFloat(v);
+        return (!isNaN(n) && n > 0) ? fmt(n * 100, 2) : '';
+      }
+
+      /* Fixed row indices (0-based in parsed array):
+         Row  1 : Mill 1 header
+         Rows 2-16 : Mill 1 data (5 grades × 3 rows = 15)
+         Row 18 : Mill 2 header
+         Rows 19-33 : Mill 2 data
+         Row 34 : NCV
+         Row 36 : Avg Clinker Cons %                              */
+      var GRADE_ROWS = [
+        /* [fieldPrefix, lsRow, ckRow, gyRow] */
+        ['m1_425r',  2,  3,  4],
+        ['m1_425n',  5,  6,  7],
+        ['m1_325n',  8,  9, 10],
+        ['m1_blm',  11, 12, 13],
+        ['m1_opc',  14, 15, 16],
+        ['m2_425r', 19, 20, 21],
+        ['m2_425n', 22, 23, 24],
+        ['m2_325n', 25, 26, 27],
+        ['m2_blm',  28, 29, 30],
+        ['m2_opc',  31, 32, 33],
+      ];
+
+      var result = { date: dateIso };
+      GRADE_ROWS.forEach(function (gr) {
+        var pfx = gr[0];
+        result[pfx + '_ls'] = pct(rows[gr[1]] && rows[gr[1]][dateCol]);
+        result[pfx + '_ck'] = pct(rows[gr[2]] && rows[gr[2]][dateCol]);
+        result[pfx + '_gy'] = pct(rows[gr[3]] && rows[gr[3]][dateCol]);
+      });
+
+      /* NCV (row index 34) */
+      var ncvRow = rows[34] || [];
+      var ncvVal = toNum(ncvRow[dateCol]);
+      if (ncvVal !== null) result['ncv'] = fmt(ncvVal, 0);
+
+      /* Check we actually extracted something useful */
+      var hasData = Object.keys(result).some(function (k) {
+        return k !== 'date' && result[k] !== '';
+      });
+      if (!hasData) {
+        return { _error: 'Found column for ' + String(hdr[dateCol]).trim() + ' but all cells are empty. Check if data has been entered for this date.' };
+      }
+      return result;
+    },
+
     /* ── Department-Wise Overtime ─────────────────────────────────── */
     overtime: function (wb) {
       /* Try to find the OT sheet */

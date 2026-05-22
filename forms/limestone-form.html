@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – Limestone % Daily Report</title>
+  <link rel="icon" type="image/png" href="../favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="forms.css" />
+  <style>
+    /* ── Limestone-specific styles ───────────────────────────── */
+    .ls-mills { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    @media (max-width:1100px) { .ls-mills { grid-template-columns:1fr; } }
+    .ls-sum-ok   { background:#D1FAE5; color:#065F46; padding:2px 8px; border-radius:10px; font-weight:700; font-size:10px; white-space:nowrap; }
+    .ls-sum-warn { background:#FEF3C7; color:#92400E; padding:2px 8px; border-radius:10px; font-weight:700; font-size:10px; white-space:nowrap; }
+    .ls-sum-err  { background:#FEE2E2; color:#991B1B; padding:2px 8px; border-radius:10px; font-weight:700; font-size:10px; white-space:nowrap; }
+    .ls-sum-off  { color:var(--text-muted); font-size:10px; }
+    .ls-pct-in   { background:rgba(244,149,69,.07) !important; }
+    .ls-grade-hdr td { background:#F1F5FB; font-weight:700; font-size:10px; letter-spacing:.5px; text-transform:uppercase; color:var(--navy); padding:5px 10px; }
+    .ls-grade-lbl { font-weight:700; color:var(--navy); font-size:11px; text-align:center; min-width:70px; }
+    .ncv-row { display:flex; align-items:center; gap:20px; padding:12px 20px; background:white; border-top:1px solid var(--border); flex-wrap:wrap; }
+    .ncv-lbl  { font-size:11px; font-weight:700; color:var(--navy); text-transform:uppercase; letter-spacing:.5px; }
+    .ncv-unit { font-size:10px; color:var(--text-muted); }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header class="top-header">
+  <div class="header-left">
+    <div class="logo-block">
+      <img class="nyati-logo" src="../NYATI-LOGO.png" alt="Nyati Cement" />
+      <div class="logo-text">
+        <img class="lc-wordmark" src="../lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
+        <span class="company-sub">Limestone % Daily Report</span>
+      </div>
+    </div>
+  </div>
+  <div class="header-center">
+    <div class="view-switcher">
+      <a href="../index.html" class="vs-tab">
+        <i data-lucide="bar-chart-2" class="vs-icon"></i>
+        <span>Monthly KPIs</span>
+      </a>
+      <a href="../daily-report.html" class="vs-tab active">
+        <i data-lucide="clipboard-list" class="vs-icon"></i>
+        <span>Daily Reports</span>
+      </a>
+      <a href="../analytics.html" class="vs-tab">
+        <i data-lucide="trending-up" class="vs-icon"></i>
+        <span>Trends</span>
+      </a>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="brand-tag">
+      <span class="brand-slogan">Hushika Haraka · Hudumu Zaidi</span>
+      <span class="header-meta" id="live-date"></span>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════ NAV ══════════════════ -->
+<nav class="dept-nav">
+  <div class="nav-inner">
+    <span class="nav-label">DAILY REPORTS</span>
+    <button class="nav-btn" onclick="location.href='../daily-report.html'"><i data-lucide="factory" class="nav-icon"></i> Production</button>
+    <button class="nav-btn" onclick="location.href='../power-plant-report.html'"><i data-lucide="zap" class="nav-icon"></i> Power Plant (CPP)</button>
+    <button class="nav-btn" onclick="location.href='../mines-report.html'"><i data-lucide="pickaxe" class="nav-icon"></i> Mines</button>
+    <button class="nav-btn" onclick="location.href='dispatch-form.html'"><i data-lucide="truck" class="nav-icon"></i> Dispatch</button>
+    <button class="nav-btn" onclick="location.href='stoppage-form.html'"><i data-lucide="alert-triangle" class="nav-icon"></i> Stoppages</button>
+    <button class="nav-btn" onclick="location.href='quality-form.html'"><i data-lucide="flask-conical" class="nav-icon"></i> Quality</button>
+    <button class="nav-btn" onclick="location.href='materials-form.html'"><i data-lucide="package" class="nav-icon"></i> Materials</button>
+    <button class="nav-btn" onclick="location.href='power-form.html'"><i data-lucide="activity" class="nav-icon"></i> Power Cons.</button>
+    <button class="nav-btn" onclick="location.href='pile-quality-form.html'"><i data-lucide="layers" class="nav-icon"></i> Pile Quality</button>
+    <button class="nav-btn active"><i data-lucide="mountain" class="nav-icon"></i> Limestone %</button>
+    <div class="nav-divider"></div>
+    <button class="nav-btn secondary" onclick="window.print()"><i data-lucide="printer" class="nav-icon"></i> Print / PDF</button>
+  </div>
+</nav>
+
+<!-- ══════════════════ TOOLBAR ══════════════════ -->
+<div class="toolbar">
+  <div class="tb-group">
+    <span class="tb-lbl">Date</span>
+    <input type="date" class="tb-ctl" id="ls-date" value="2026-05-22" data-field="date" />
+  </div>
+  <div class="tb-sep"></div>
+  <div class="tb-group">
+    <span class="tb-lbl">Prepared By</span>
+    <input type="text" class="tb-ctl" data-field="prepared_by" placeholder="Quality Lab…" style="min-width:160px;width:auto" />
+  </div>
+  <div class="tb-sep"></div>
+  <span class="rpt-pill">DRAFT</span>
+  <div class="btn-grp">
+    <button class="btn btn-out"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
+    <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+    <button class="btn btn-sub"><i data-lucide="check-circle" class="btn-icon"></i> Submit Report</button>
+  </div>
+</div>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<main class="fm-main">
+
+  <!-- legend -->
+  <div class="legend-bar">
+    <span class="leg-lbl">Data Source Key</span>
+    <span class="leg-chip leg-m"><i data-lucide="pencil" class="btn-icon"></i> Manual / Lab Entry</span>
+    <span class="leg-chip leg-f"><i data-lucide="sigma" class="btn-icon"></i> Formula / Computed</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--text-muted);font-style:italic">Drag &amp; drop Limestone %.xlsx to auto-fill · Each grade: L% + C% + G% must sum to 100%.</span>
+  </div>
+
+  <!-- ══ KPI STRIP ════════════════════════════════════════ -->
+  <div class="kpi-strip">
+    <div class="kt kt-m">
+      <span class="kt-badge">Manual</span>
+      <div class="kt-lbl">NCV — Coal</div>
+      <div class="kt-val" id="kpi-ncv">—</div>
+      <div class="kt-unit">kcal / kg — Net Calorific Value</div>
+      <div class="kt-vs vs-wa" id="kpi-ncv-vs">From today's entry</div>
+    </div>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
+      <div class="kt-lbl">Avg Clinker Cons %</div>
+      <div class="kt-val" id="kpi-avg-ck">—</div>
+      <div class="kt-unit">% — Both Mills Combined</div>
+      <div class="kt-bar"><div class="kt-bar-fill" id="kpi-avg-ck-bar" style="width:0%"></div></div>
+      <div class="kt-foot"><span class="kt-tgt">Target: ≤ 78.00%</span><span class="kt-pct" id="kpi-avg-ck-pct">—</span></div>
+      <div class="kt-vs" id="kpi-avg-ck-vs">Computed from active grades</div>
+    </div>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
+      <div class="kt-lbl">Active Grades — Mill 1</div>
+      <div class="kt-val" id="kpi-m1-active">—</div>
+      <div class="kt-unit">Grades running today</div>
+      <div class="kt-vs vs-wa" id="kpi-m1-vs">From entries below</div>
+    </div>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
+      <div class="kt-lbl">Active Grades — Mill 2</div>
+      <div class="kt-val" id="kpi-m2-active">—</div>
+      <div class="kt-unit">Grades running today</div>
+      <div class="kt-vs vs-wa" id="kpi-m2-vs">From entries below</div>
+    </div>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
+      <div class="kt-lbl">Mix Errors</div>
+      <div class="kt-val" id="kpi-errors">—</div>
+      <div class="kt-unit">Grades with L+C+G ≠ 100%</div>
+      <div class="kt-vs" id="kpi-errors-vs">All mix sums validated</div>
+    </div>
+  </div>
+
+  <!-- ══ MILL CARDS ════════════════════════════════════════ -->
+  <div class="ls-mills">
+
+    <!-- CEMENT MILL 1 -->
+    <div class="rcard">
+      <div class="rcard-hdr">
+        <div>
+          <div class="rcard-title"><i data-lucide="settings" class="title-icon"></i> Cement Mill 1 — Composition</div>
+          <div class="rcard-sub">Limestone · Clinker · Gypsum mix by grade · % values</div>
+        </div>
+        <div class="rcard-chips">
+          <span class="rcard-chip">MILL 1</span>
+          <span class="rcard-chip orange">QUALITY LAB</span>
+        </div>
+      </div>
+      <div class="tbl-scroll">
+        <table class="rt" id="mill1-table">
+          <thead>
+            <tr>
+              <th class="tl grp-hdr" style="min-width:80px">Grade</th>
+              <th class="grp-hdr" style="min-width:90px">Limestone %</th>
+              <th class="grp-hdr" style="min-width:90px">Clinker %</th>
+              <th class="grp-hdr" style="min-width:90px">Gypsum %</th>
+              <th class="grp-hdr" style="min-width:80px">Sum %</th>
+            </tr>
+          </thead>
+          <tbody id="mill1-tbody">
+            <!-- Generated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CEMENT MILL 2 -->
+    <div class="rcard">
+      <div class="rcard-hdr">
+        <div>
+          <div class="rcard-title"><i data-lucide="settings" class="title-icon"></i> Cement Mill 2 — Composition</div>
+          <div class="rcard-sub">Limestone · Clinker · Gypsum mix by grade · % values</div>
+        </div>
+        <div class="rcard-chips">
+          <span class="rcard-chip">MILL 2</span>
+          <span class="rcard-chip orange">QUALITY LAB</span>
+        </div>
+      </div>
+      <div class="tbl-scroll">
+        <table class="rt" id="mill2-table">
+          <thead>
+            <tr>
+              <th class="tl grp-hdr" style="min-width:80px">Grade</th>
+              <th class="grp-hdr" style="min-width:90px">Limestone %</th>
+              <th class="grp-hdr" style="min-width:90px">Clinker %</th>
+              <th class="grp-hdr" style="min-width:90px">Gypsum %</th>
+              <th class="grp-hdr" style="min-width:80px">Sum %</th>
+            </tr>
+          </thead>
+          <tbody id="mill2-tbody">
+            <!-- Generated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /ls-mills -->
+
+  <!-- ══ NCV + AVG CLINKER ══════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="flame" class="title-icon"></i> NCV &amp; Average Clinker Consumption</div>
+        <div class="rcard-sub">Net Calorific Value of coal · Weighted average clinker % across both mills</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip orange">PROCESS / QC</span>
+      </div>
+    </div>
+    <div class="ncv-row">
+      <span class="ncv-lbl">NCV (Coal)</span>
+      <input class="ci" type="number" min="0" step="1" data-field="ncv"
+             placeholder="e.g. 5350"
+             style="width:110px;text-align:center;font-size:13px;font-weight:700" />
+      <span class="ncv-unit">kcal / kg</span>
+      <div class="tb-sep"></div>
+      <span class="ncv-lbl">Avg Clinker Cons %</span>
+      <div style="font-size:22px;font-weight:800;color:var(--navy);min-width:70px;text-align:center" id="avg-ck-display">—</div>
+      <span class="ncv-unit">% — computed from all active grades (both mills)</span>
+    </div>
+    <div style="padding:8px 20px 12px;font-size:10px;color:var(--text-muted)">
+      Average Clinker = sum of all active Clinker % readings ÷ number of active grade-mill combinations.
+      A grade is "active" when Clinker % &gt; 0.
+    </div>
+  </div>
+
+  <!-- ══ SIGN-OFF ══════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr"><div class="rcard-title"><i data-lucide="pen-line" class="title-icon"></i> Report Sign-off &amp; Approval</div></div>
+    <div class="signoff">
+      <div class="so-cell">
+        <div class="so-role">Lab Analyst</div>
+        <input class="so-in" data-field="so_analyst" placeholder="Full name…" />
+        <input class="so-time" data-field="so_analyst_time" placeholder="Time signed" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">Quality Manager</div>
+        <input class="so-in" data-field="so_qm" placeholder="Full name…" />
+        <input class="so-time" data-field="so_qm_time" placeholder="Time reviewed" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">Plant Manager</div>
+        <input class="so-in" data-field="so_pm" placeholder="Full name…" />
+        <input class="so-time" data-field="so_pm_time" placeholder="Time approved" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">General Manager</div>
+        <input class="so-in" data-field="so_gm" placeholder="Full name…" />
+        <input class="so-time" data-field="so_gm_time" placeholder="Time approved" />
+      </div>
+    </div>
+    <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span style="font-size:11px;color:var(--text-muted)">
+        Status: <strong style="color:var(--orange)">DRAFT</strong>
+      </span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-out"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+        <button class="btn btn-sub"><i data-lucide="lock" class="btn-icon"></i> Submit &amp; Lock</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span>Limestone % Daily Report &mdash; <span id="footer-date"></span></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+<script>
+lucide.createIcons();
+(function () {
+  var opts = { weekday:'short', year:'numeric', month:'short', day:'numeric' };
+  var str  = new Date().toLocaleDateString('en-GB', opts);
+  ['live-date','footer-date'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.textContent = str;
+  });
+  /* Set today's date as default */
+  var dateEl = document.getElementById('ls-date');
+  if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0,10);
+})();
+
+/* ── Grade definitions ──────────────────────────────────────────── */
+var LS_GRADES = [
+  { key: '425r', label: '42.5R' },
+  { key: '425n', label: '42.5N' },
+  { key: '325n', label: '32.5N' },
+  { key: 'blm',  label: '42.5N BLM' },
+  { key: 'opc',  label: 'OPC' },
+];
+
+/* ── Build one mill table ────────────────────────────────────────── */
+function buildMillTable(millNum, tbodyId) {
+  var pfx   = 'm' + millNum + '_';
+  var tbody = document.getElementById(tbodyId);
+
+  LS_GRADES.forEach(function (g) {
+    var fld = pfx + g.key;
+    var tr  = document.createElement('tr');
+    tr.className = 'data-row';
+    tr.innerHTML =
+      '<td class="ls-grade-lbl tp">' + g.label + '</td>' +
+      '<td class="cm"><input class="ci ls-pct-in" type="number" min="0" max="100" step="0.01" ' +
+        'data-field="' + fld + '_ls" data-mill="' + millNum + '" data-grade="' + g.key + '" data-comp="ls" ' +
+        'placeholder="—" /></td>' +
+      '<td class="cm"><input class="ci ls-pct-in" type="number" min="0" max="100" step="0.01" ' +
+        'data-field="' + fld + '_ck" data-mill="' + millNum + '" data-grade="' + g.key + '" data-comp="ck" ' +
+        'placeholder="—" /></td>' +
+      '<td class="cm"><input class="ci ls-pct-in" type="number" min="0" max="100" step="0.01" ' +
+        'data-field="' + fld + '_gy" data-mill="' + millNum + '" data-grade="' + g.key + '" data-comp="gy" ' +
+        'placeholder="—" /></td>' +
+      '<td class="cf" style="text-align:center;vertical-align:middle" id="sum-' + millNum + '-' + g.key + '">' +
+        '<span class="ls-sum-off">—</span>' +
+      '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+buildMillTable(1, 'mill1-tbody');
+buildMillTable(2, 'mill2-tbody');
+
+/* ── Live recalculation ──────────────────────────────────────────── */
+function recalc() {
+  var totalCk = 0, activeCnt = 0, errCnt = 0;
+  var m1Active = 0, m2Active = 0;
+
+  [1, 2].forEach(function (m) {
+    LS_GRADES.forEach(function (g) {
+      var pfx = 'm' + m + '_' + g.key;
+      var lsEl = document.querySelector('[data-field="' + pfx + '_ls"]');
+      var ckEl = document.querySelector('[data-field="' + pfx + '_ck"]');
+      var gyEl = document.querySelector('[data-field="' + pfx + '_gy"]');
+      if (!ckEl) return;
+
+      var ls = parseFloat(lsEl ? lsEl.value : '') || 0;
+      var ck = parseFloat(ckEl.value) || 0;
+      var gy = parseFloat(gyEl ? gyEl.value : '') || 0;
+      var anyFilled = ls > 0 || ck > 0 || gy > 0;
+      var sumCell   = document.getElementById('sum-' + m + '-' + g.key);
+
+      if (!anyFilled) {
+        if (sumCell) sumCell.innerHTML = '<span class="ls-sum-off">—</span>';
+        return;
+      }
+
+      /* Grade is active */
+      var sum = ls + ck + gy;
+      if (m === 1) m1Active++; else m2Active++;
+
+      if (ck > 0) { totalCk += ck; activeCnt++; }
+
+      var sumPct = sum.toFixed(2) + '%';
+      if (sum >= 99.5 && sum <= 100.5) {
+        if (sumCell) sumCell.innerHTML = '<span class="ls-sum-ok">' + sumPct + '</span>';
+      } else if (sum >= 98.5 && sum <= 101.5) {
+        if (sumCell) sumCell.innerHTML = '<span class="ls-sum-warn">' + sumPct + '</span>';
+        errCnt++;
+      } else {
+        if (sumCell) sumCell.innerHTML = '<span class="ls-sum-err">' + sumPct + '</span>';
+        errCnt++;
+      }
+    });
+  });
+
+  /* NCV KPI */
+  var ncvEl  = document.querySelector('[data-field="ncv"]');
+  var ncvVal = ncvEl ? parseFloat(ncvEl.value) || 0 : 0;
+  var kpiNcv = document.getElementById('kpi-ncv');
+  if (kpiNcv) kpiNcv.textContent = ncvVal > 0 ? ncvVal.toLocaleString('en-GB') : '—';
+
+  /* Avg Clinker */
+  var avgCk = activeCnt > 0 ? totalCk / activeCnt : 0;
+  var avgStr = avgCk > 0 ? avgCk.toFixed(2) + '%' : '—';
+
+  var el;
+  el = document.getElementById('kpi-avg-ck');     if (el) el.textContent = avgStr;
+  el = document.getElementById('avg-ck-display'); if (el) el.textContent = avgStr;
+
+  if (avgCk > 0) {
+    var bar = document.getElementById('kpi-avg-ck-bar');
+    if (bar) bar.style.width = Math.min(avgCk, 100).toFixed(1) + '%';
+    el = document.getElementById('kpi-avg-ck-pct');
+    if (el) el.textContent = (avgCk / 78 * 100).toFixed(1) + '% of target';
+    el = document.getElementById('kpi-avg-ck-vs');
+    if (el) {
+      el.textContent = avgCk <= 78
+        ? '▲ Within 78% target (' + avgCk.toFixed(2) + '%)'
+        : '▲ Above 78% target — ' + (avgCk - 78).toFixed(2) + '% over';
+      el.className = 'kt-vs ' + (avgCk <= 78 ? 'vs-ok' : 'vs-ng');
+    }
+  }
+
+  /* Active grades */
+  el = document.getElementById('kpi-m1-active');
+  if (el) el.textContent = m1Active > 0 ? m1Active : '0';
+  el = document.getElementById('kpi-m2-active');
+  if (el) el.textContent = m2Active > 0 ? m2Active : '0';
+
+  /* Mix errors */
+  el = document.getElementById('kpi-errors');
+  if (el) el.textContent = errCnt > 0 ? errCnt : '0';
+  el = document.getElementById('kpi-errors-vs');
+  if (el) {
+    el.textContent = errCnt > 0
+      ? '▲ ' + errCnt + ' grade(s) with mix sum ≠ 100%'
+      : '▲ All active grades sum to 100%';
+    el.className = 'kt-vs ' + (errCnt > 0 ? 'vs-ng' : 'vs-ok');
+  }
+}
+
+document.addEventListener('input', recalc);
+document.addEventListener('nyati:restored', recalc);
+recalc();
+</script>
+
+<script src="form-persist.js"></script>
+<script>initFormPersist('limestone');</script>
+<script src="nav-status.js"></script>
+<script src="collapsible.js"></script>
+<script src="excel-import.js"></script>
+<script src="excel-export.js"></script>
+
+</body>
+</html>
