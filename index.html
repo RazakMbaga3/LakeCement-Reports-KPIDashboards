@@ -62,9 +62,6 @@
       <button class="nav-btn" data-dept="production" onclick="switchDept('production')">
         <i data-lucide="factory" class="nav-icon"></i> Production
       </button>
-      <button class="nav-btn" data-dept="mining" onclick="switchDept('mining')">
-        <i data-lucide="pickaxe" class="nav-icon"></i> Mining
-      </button>
       <button class="nav-btn" data-dept="mines" onclick="switchDept('mines')">
         <i data-lucide="layers" class="nav-icon"></i> Mines
       </button>
@@ -103,7 +100,6 @@
             <option value="summary">— Executive Summary —</option>
             <option value="ei">Electrical &amp; Instrumentation</option>
             <option value="production">Production</option>
-            <option value="mining">Mining</option>
             <option value="mines">Mines</option>
             <option value="mechanical">Mechanical</option>
             <option value="powerplant">Power Plant</option>
@@ -618,12 +614,6 @@
           <div class="sc-chip-bar" id="sc-bar-production"></div>
           <div class="sc-chip-status" id="sc-lbl-production">—</div>
         </div>
-        <div class="sc-chip" data-dept="mining"       onclick="switchDept('mining')">
-          <div class="sc-chip-name">Mining</div>
-          <div class="sc-chip-pct" id="sc-pct-mining">—</div>
-          <div class="sc-chip-bar" id="sc-bar-mining"></div>
-          <div class="sc-chip-status" id="sc-lbl-mining">—</div>
-        </div>
         <div class="sc-chip" data-dept="mines"        onclick="switchDept('mines')">
           <div class="sc-chip-name">Mines</div>
           <div class="sc-chip-pct" id="sc-pct-mines">—</div>
@@ -1027,177 +1017,6 @@
       </div>
     </section>
 
-    <!-- ─────────── MINING DEPARTMENT ─────────── -->
-    <section class="dept-section hidden" id="dept-mining">
-      <div class="table-wrapper">
-        <table class="kpi-table">
-          <thead>
-            <tr class="thead-row">
-              <th class="col-kpi">KPI</th>
-              <th class="col-unit">UNIT</th>
-              <th class="col-sign">Signage</th>
-              <th class="col-target">TARGET</th>
-              <th class="col-actual highlight-col">Current Month<br>ACTUAL</th>
-              <th class="col-remarks">REMARKS</th>
-              <th class="col-month">Jan</th>
-              <th class="col-month">Feb</th>
-              <th class="col-month">Mar</th>
-              <th class="col-month">April</th>
-              <th class="col-month">May</th>
-              <th class="col-month">June</th>
-              <th class="col-month">July</th>
-              <th class="col-month">Aug</th>
-              <th class="col-month">Sept</th>
-              <th class="col-month">Oct</th>
-              <th class="col-month">Nov</th>
-              <th class="col-month">Dec</th>
-              <th class="col-status">STATUS</th>
-            </tr>
-          </thead>
-          <tbody>
-
-            <tr class="section-row"><td colspan="19">HEALTH &amp; SAFETY</td></tr>
-            <tr class="data-row achieved-row">
-              <td>Fatality</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
-              <td class="actual green">0</td><td></td>
-              <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
-              <td class="status achieved-tag">Achieved</td>
-            </tr>
-            <tr class="data-row achieved-row">
-              <td>LTI</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
-              <td class="actual green">0</td><td></td>
-              <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
-              <td class="status achieved-tag">Achieved</td>
-            </tr>
-            <tr class="data-row achieved-row">
-              <td>MTI</td><td>NOS</td><td class="sign">=</td><td class="target">0</td>
-              <td class="actual green">0</td><td></td>
-              <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
-              <td class="status achieved-tag">Achieved</td>
-            </tr>
-            <tr class="data-row not-achieved-row">
-              <td>Hazards Reported</td><td>NOS</td><td class="sign">&gt;</td><td class="target">4</td>
-              <td class="actual red">2</td><td></td>
-              <td>3</td><td>2</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
-              <td class="status not-tag">Not Achieved</td>
-            </tr>
-
-            <tr class="section-row"><td colspan="19">RUNNING HOURS – MONTH</td></tr>
-            <tr class="data-row achieved-row">
-              <td>Equipment Availability</td><td>%</td><td class="sign">&gt;</td><td class="target">1</td>
-              <td class="actual green">1</td><td></td>
-              <td>0</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>1</td>
-              <td class="status achieved-tag">Achieved</td>
-            </tr>
-            <tr class="data-row achieved-row">
-              <td>Production Rate / Running Hours</td><td>MT</td><td class="sign">&lt;</td><td class="target">0</td>
-              <td class="actual green">0</td><td></td>
-              <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
-              <td class="status achieved-tag">Achieved</td>
-            </tr>
-            <tr class="data-row achieved-row">
-              <td>Utilization Rate</td><td>%</td><td class="sign">&gt;</td><td class="target">1</td>
-              <td class="actual green">1</td><td></td>
-              <td></td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td></td><td></td><td>1</td>
-              <td class="status achieved-tag">Achieved</td>
-            </tr>
-            <tr class="data-row achieved-row">
-              <td>Work Order Cycle Time</td><td>HRS</td><td class="sign">&lt;</td><td class="target">0</td>
-              <td class="actual green">0</td><td></td>
-              <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
-              <td class="status achieved-tag">Achieved</td>
-            </tr>
-            <tr class="data-row achieved-row">
-              <td>Maintenance Downtime</td><td>HRS</td><td class="sign">&lt;</td><td class="target">60</td>
-              <td class="actual green">60</td><td></td>
-              <td>60</td><td>250</td><td>60</td><td>16</td><td>60</td><td>26</td><td>60</td><td>30</td><td>60</td><td>15</td><td>60</td><td>250</td>
-              <td class="status achieved-tag">Achieved</td>
-            </tr>
-            <tr class="data-row achieved-row">
-              <td>Maintenance Cost / Running Hours</td><td>TSH</td><td class="sign">&lt;</td><td class="target">4,000</td>
-              <td class="actual green">4,000</td><td></td>
-              <td>0</td><td>4000</td><td>455</td><td>2083</td><td>0</td><td>2083</td><td>2123</td><td>4000</td><td>727</td><td>4000</td><td></td><td>1000</td>
-              <td class="status achieved-tag">Achieved</td>
-            </tr>
-            <tr class="data-row achieved-row">
-              <td>Tyre / Track Cost / Running Hours</td><td>TSH</td><td class="sign">&lt;</td><td class="target">4,000</td>
-              <td class="actual green">4,000</td><td></td>
-              <td></td><td>4000</td><td>2662</td><td>2083</td><td>0</td><td>2083</td><td>0</td><td>4000</td><td>8661</td><td>4000</td><td></td><td>1000</td>
-              <td class="status achieved-tag">Achieved</td>
-            </tr>
-            <tr class="data-row achieved-row">
-              <td>Fuel Consumption / Running Hours</td><td>LPH</td><td class="sign">&lt;</td><td class="target">80</td>
-              <td class="actual green">30</td><td></td>
-              <td></td><td>30</td><td>31</td><td>15</td><td>17</td><td>15</td><td>12</td><td>2</td><td>4</td><td>2</td><td></td><td>2</td>
-              <td class="status achieved-tag">Achieved</td>
-            </tr>
-            <tr class="data-row achieved-row">
-              <td>Lubrication Consumption / Running Hours</td><td>LTRS</td><td class="sign">&lt;</td><td class="target">1</td>
-              <td class="actual green">0</td><td></td>
-              <td></td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td></td><td>25</td>
-              <td class="status achieved-tag">Achieved</td>
-            </tr>
-            <tr class="data-row achieved-row">
-              <td>Hydraulic Oil Consumption / Running Hours</td><td>LTRS</td><td class="sign">&lt;</td><td class="target">1</td>
-              <td class="actual green">0</td><td></td>
-              <td></td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td></td><td>0</td>
-              <td class="status achieved-tag">Achieved</td>
-            </tr>
-
-            <tr class="section-row"><td colspan="19">MONTHLY KEY PERFORMANCE INDICATORS – PLANT EQUIPMENT</td></tr>
-            <tr class="data-row not-achieved-row">
-              <td>Running Hours – Cumulative</td><td>HRS</td><td class="sign">=</td><td class="target">0</td>
-              <td class="actual red">117</td><td></td>
-              <td>0</td><td>117</td><td>0</td><td>166</td><td>0</td><td>177</td><td>0</td><td>426</td><td>0</td><td>286</td><td>0</td><td>0</td>
-              <td class="status not-tag">Not Achieved</td>
-            </tr>
-            <tr class="data-row not-achieved-row">
-              <td>Total Available Time – Month</td><td>HRS</td><td class="sign">=</td><td class="target">0</td>
-              <td class="actual red">244</td><td></td>
-              <td>0</td><td>244</td><td>0</td><td>228</td><td>0</td><td>210</td><td>0</td><td>204</td><td>0</td><td>220</td><td>0</td><td>0</td>
-              <td class="status not-tag">Not Achieved</td>
-            </tr>
-            <tr class="data-row not-achieved-row">
-              <td>Running Hours – Month</td><td>HRS</td><td class="sign">=</td><td class="target">0</td>
-              <td class="actual red">65</td><td></td>
-              <td>0</td><td>65</td><td>0</td><td>79</td><td>0</td><td>90</td><td>0</td><td>201</td><td>0</td><td>147</td><td>0</td><td>0</td>
-              <td class="status not-tag">Not Achieved</td>
-            </tr>
-            <tr class="data-row achieved-row">
-              <td>Maintenance Downtime</td><td>HRS</td><td class="sign">&lt;</td><td class="target">250</td>
-              <td class="actual green">6</td><td></td>
-              <td>0</td><td>6</td><td>0</td><td>22</td><td>0</td><td>40</td><td>0</td><td>46</td><td>0</td><td>30</td><td>0</td><td>0</td>
-              <td class="status achieved-tag">Achieved</td>
-            </tr>
-            <tr class="data-row not-achieved-row">
-              <td>MTBF</td><td>HRS</td><td class="sign">&lt;</td><td class="target">0</td>
-              <td class="actual red">65</td><td></td>
-              <td>0</td><td>65</td><td>0</td><td>87</td><td>0</td><td>43</td><td>0</td><td>46</td><td>0</td><td>70</td><td>0</td><td>0</td>
-              <td class="status not-tag">Not Achieved</td>
-            </tr>
-            <tr class="data-row not-achieved-row">
-              <td>Maintenance Cost / Running Hours</td><td>TSH</td><td class="sign">&lt;</td><td class="target">—</td>
-              <td class="actual red">15,429</td><td></td>
-              <td>0</td><td>15429</td><td>0</td><td>0</td><td>0</td><td>787</td><td>0</td><td>365</td><td>0</td><td>16338</td><td>0</td><td>0</td>
-              <td class="status not-tag">Not Achieved</td>
-            </tr>
-            <tr class="data-row not-achieved-row">
-              <td>Fuel Consumption / Running Hours</td><td>—</td><td class="sign">&lt;</td><td class="target">0</td>
-              <td class="actual red">0</td><td></td>
-              <td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>2</td><td>0</td><td>7</td><td>0</td><td>7</td><td>0</td><td>0</td>
-              <td class="status not-tag">Not Achieved</td>
-            </tr>
-            <tr class="data-row achieved-row">
-              <td>Lubrication Consumption / Running Hours</td><td>LPH</td><td class="sign">&lt;</td><td class="target">0</td>
-              <td class="actual green">0</td><td></td>
-              <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>
-              <td class="status achieved-tag">Achieved</td>
-            </tr>
-
-          </tbody>
-        </table>
-      </div>
-    </section>
 
     <!-- ─────────── MINES DEPARTMENT ─────────── -->
     <section class="dept-section hidden" id="dept-mines">

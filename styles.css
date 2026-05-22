@@ -793,7 +793,7 @@ body.period-full .sk-delta { opacity: 0; }
 
 /* ── Dept Scorecard ────────────────────────────────────── */
 .smry-scorecard {
-  display: grid; grid-template-columns: repeat(9,1fr);
+  display: grid; grid-template-columns: repeat(8,1fr);
   gap: 10px; padding: 0 24px 8px;
 }
 .sc-chip {

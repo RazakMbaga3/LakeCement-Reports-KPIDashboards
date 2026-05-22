@@ -15,10 +15,6 @@ const DEPT_META = {
     label: 'Production Department',
     resp:  'Responsibility: Mr. Godhania &amp; Team',
   },
-  mining: {
-    label: 'Mining &amp; Mines Workshop',
-    resp:  'Responsibility: Mines Workshop Team',
-  },
   mines: {
     label: 'Mines Department',
     resp:  'Responsibility: Mr. Mukesh Agrawal &amp; Team',
@@ -181,7 +177,7 @@ function updateSummary() {
 /* ─── Summary Dashboard updater ────────────────────────────── */
 function updateSummaryDashboard() {
   // Per-dept achievement scorecard chips
-  const DEPTS = ['ei','production','mining','mines','mechanical','powerplant','packing','stores','minesworkshop'];
+  const DEPTS = ['ei','production','mines','mechanical','powerplant','packing','stores','minesworkshop'];
   DEPTS.forEach(d => {
     const section = document.getElementById('dept-' + d);
     if (!section) return;
