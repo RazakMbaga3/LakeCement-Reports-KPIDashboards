@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(start \"c:\\\\Users\\\\USER\\\\LakeCementDashboard\\\\daily-report.html\")",
+      "Bash(start \"c:\\\\Users\\\\USER\\\\LakeCementDashboard\\\\index.html\")",
+      "Bash(git init *)",
+      "Bash(git config *)",
+      "Bash(git branch *)",
+      "Bash(git commit -m ' *)",
+      "Bash(python -m http.server 5500 --directory \"c:\\\\Users\\\\USER\\\\LakeCementDashboard\")",
+      "Bash(Start-Process \"http://localhost:5500\")",
+      "PowerShell(Start-Process \"http://localhost:5500\")",
+      "Bash(Start-Process python *)",
+      "Bash(Start-Sleep -Seconds 1)",
+      "Bash(python -m http.server 5500)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5500/)",
+      "Bash(cmd.exe /c start http://localhost:5500)",
+      "Bash(node -e ' *)"
+    ]
+  }
+}
