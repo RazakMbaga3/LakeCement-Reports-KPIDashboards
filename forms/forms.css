@@ -266,6 +266,112 @@ td.cf .cv { color:var(--f-fg); }
 .fc-arrow { font-size:16px; color:var(--orange); }
 
 /* ══════════════════════════════════════════════════════════════
+   EXPORT DROPDOWN
+   ══════════════════════════════════════════════════════════════ */
+.exp-wrap {
+  position: relative;
+}
+.exp-toggle { gap: 6px; }
+.exp-chevron { transition: transform .2s; }
+
+.exp-panel {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 300px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  z-index: 200;
+  overflow: hidden;
+}
+.exp-panel.exp-open { display: block; }
+
+.exp-item {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; padding: 11px 16px;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font); text-align: left;
+  transition: background .12s;
+}
+.exp-item:hover { background: var(--off-white); }
+.exp-item-icon { width: 16px; height: 16px; flex-shrink: 0; color: var(--navy); stroke-width: 2; }
+.exp-item-text { display: flex; flex-direction: column; gap: 1px; }
+.exp-item-text strong { font-size: 12px; font-weight: 700; color: var(--text-main); }
+.exp-item-text span   { font-size: 10px; color: var(--text-muted); }
+
+.exp-divider { height: 1px; background: var(--border); margin: 2px 0; }
+
+.exp-mail-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px;
+  background: var(--off-white);
+}
+.exp-email-in {
+  flex: 1; min-width: 0;
+  font-family: var(--font); font-size: 12px; font-weight: 500;
+  color: var(--text-main); background: white;
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  padding: 5px 10px; outline: none;
+}
+.exp-email-in:focus { border-color: var(--orange); }
+.exp-email-in::placeholder { color: #C0C8D4; font-weight: 400; }
+.exp-send { font-size: 11px; padding: 6px 12px; white-space: nowrap; }
+
+/* ══════════════════════════════════════════════════════════════
+   PRINT / PDF
+   ══════════════════════════════════════════════════════════════ */
+.print-hdr {
+  display: none; /* shown only in @media print */
+  align-items: center; gap: 14px;
+  padding: 16px 24px 12px;
+  border-bottom: 3px solid var(--navy);
+  margin-bottom: 8px;
+}
+.print-hdr-logo   { height: 44px; width: auto; }
+.print-hdr-text   { display: flex; flex-direction: column; gap: 2px; }
+.print-hdr-company { font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--text-muted); }
+.print-hdr-title  { font-size: 15px; font-weight: 800; color: var(--navy); }
+.print-hdr-date   { font-size: 11px; color: var(--text-muted); }
+
+@media print {
+  /* hide interactive chrome */
+  .top-header, .dept-nav, .toolbar, .legend-bar, .kpi-strip,
+  .dash-footer, .brand-accent-bar, .exp-wrap,
+  .collapsible-toggle, .sec-nav { display: none !important; }
+
+  /* show print header */
+  .print-hdr { display: flex !important; }
+
+  body { background: white !important; }
+  .fm-main { padding: 0 20px 24px !important; }
+
+  /* clean up inputs — show values, no chrome */
+  input.ci, input.so-in, input.so-time {
+    -webkit-appearance: none;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 4px 2px !important;
+  }
+  td.cm { background: #FFFDF5 !important; }
+  td.cs { background: #F5F8FF !important; }
+  td.cf { background: #F5FFF8 !important; }
+
+  /* keep cards together, don't split across pages */
+  .rcard { page-break-inside: avoid; margin-bottom: 10px; box-shadow: none !important; }
+  .rcard:hover { box-shadow: none !important; }
+
+  /* shrink font slightly for dense tables */
+  .rt { font-size: 10.5px; }
+  .tp { min-width: 140px; padding: 5px 10px; }
+  .ci { font-size: 10.5px; padding: 5px 4px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
    RESPONSIVE
    ══════════════════════════════════════════════════════════════ */
 @media (max-width:767px) {
