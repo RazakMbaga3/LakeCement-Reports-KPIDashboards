@@ -140,7 +140,8 @@
         <div class="filter-card">
           <label>View</label>
           <select id="view-select" onchange="applyFilters()">
-            <option value="month">Current Month</option>
+            <option value="daily">Today — Daily</option>
+            <option value="month" selected>Current Month</option>
             <option value="ytd">Year to Date</option>
             <option value="full">Full Year</option>
           </select>
@@ -197,6 +198,15 @@
         <span class="smry-alert-chip"><span class="alert-dot orange"></span> Burst Bag Generation above spec</span>
       </div>
 
+      <!-- Period Comparison Strip -->
+      <div class="period-strip" id="period-strip">
+        <span class="period-strip-lbl">Period:</span>
+        <button class="per-chip" data-period="daily" onclick="selectPeriod('daily')">Today</button>
+        <button class="per-chip active" data-period="month" onclick="selectPeriod('month')">This Month</button>
+        <button class="per-chip" data-period="ytd" onclick="selectPeriod('ytd')">YTD</button>
+        <button class="per-chip" data-period="full" onclick="selectPeriod('full')">Full Year</button>
+      </div>
+
       <!-- ── PRODUCTION OUTPUT ───────────────────────────────── -->
       <div class="smry-cat">
         <i data-lucide="factory" class="smry-cat-icon"></i>
@@ -206,7 +216,8 @@
       <div class="smry-hero">
 
         <!-- Kiln Output -->
-        <div class="sk-card concern">
+        <div class="sk-card concern"
+             data-daily="1,678" data-month="1,678" data-ytd="1,581" data-full="1,581">
           <div class="sk-top">
             <div class="sk-label">Kiln Output</div>
             <span class="sk-dept-tag">Production</span>
@@ -225,7 +236,8 @@
         </div>
 
         <!-- Despatch / Day -->
-        <div class="sk-card on-track">
+        <div class="sk-card on-track"
+             data-daily="2,738" data-month="2,738" data-ytd="2,738" data-full="2,738">
           <div class="sk-top">
             <div class="sk-label">Despatch / Day</div>
             <span class="sk-dept-tag">Packing</span>
@@ -244,7 +256,8 @@
         </div>
 
         <!-- Specific Thermal Energy -->
-        <div class="sk-card concern">
+        <div class="sk-card concern"
+             data-daily="816" data-month="816" data-ytd="821" data-full="821">
           <div class="sk-top">
             <div class="sk-label">Specific Heat Consumption</div>
             <span class="sk-dept-tag">Production</span>
@@ -263,7 +276,8 @@
         </div>
 
         <!-- Cement Mill 2 Output -->
-        <div class="sk-card on-track">
+        <div class="sk-card on-track"
+             data-daily="62" data-month="62" data-ytd="63" data-full="63">
           <div class="sk-top">
             <div class="sk-label">Cement Mill 2 Output</div>
             <span class="sk-dept-tag">Production</span>
@@ -292,7 +306,8 @@
       <div class="smry-row smry-row-4">
 
         <!-- SPC Total -->
-        <div class="sk-card concern">
+        <div class="sk-card concern"
+             data-daily="104" data-month="104" data-ytd="107" data-full="107">
           <div class="sk-top">
             <div class="sk-label">Specific Power — Total</div>
             <span class="sk-dept-tag">Production</span>
@@ -311,7 +326,8 @@
         </div>
 
         <!-- SPC Clinker -->
-        <div class="sk-card concern">
+        <div class="sk-card concern"
+             data-daily="79" data-month="79" data-ytd="79" data-full="79">
           <div class="sk-top">
             <div class="sk-label">SPC — Up to Clinker</div>
             <span class="sk-dept-tag">Production</span>
@@ -330,7 +346,8 @@
         </div>
 
         <!-- CPP Heat Rate -->
-        <div class="sk-card watch">
+        <div class="sk-card watch"
+             data-daily="3,888" data-month="3,888" data-ytd="3,863" data-full="3,863">
           <div class="sk-top">
             <div class="sk-label">CPP Heat Rate</div>
             <span class="sk-dept-tag">Power Plant</span>
@@ -349,7 +366,8 @@
         </div>
 
         <!-- CPP Auxiliary Power -->
-        <div class="sk-card watch">
+        <div class="sk-card watch"
+             data-daily="10.93" data-month="10.93" data-ytd="10.54" data-full="10.54">
           <div class="sk-top">
             <div class="sk-label">CPP Auxiliary Power</div>
             <span class="sk-dept-tag">Power Plant</span>
@@ -521,7 +539,8 @@
       </div>
       <div class="smry-row smry-row-3">
 
-        <div class="sk-card concern">
+        <div class="sk-card concern"
+             data-daily="0.50" data-month="0.50" data-ytd="0.50" data-full="0.50">
           <div class="sk-top">
             <div class="sk-label">Burst Bag Generation</div>
             <span class="sk-dept-tag">Packing</span>
@@ -557,7 +576,9 @@
           <div class="sk-status"><span class="sk-status-dot"></span> On Track</div>
         </div>
 
-        <div class="sk-card concern">
+        <div class="sk-card concern"
+             data-daily="3.0" data-month="3.0" data-ytd="3.5" data-full="3.5"
+             data-kpi-id="free-lime">
           <div class="sk-top">
             <div class="sk-label">Clinker Free Lime</div>
             <span class="sk-dept-tag">Production</span>

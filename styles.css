@@ -769,6 +769,28 @@ img { max-width: 100%; }
 .sk-card.sk-safety .sk-bar   { display: none; }
 .sk-card.sk-safety .sk-foot  { display: none; }
 
+/* ── Period Comparison Strip ───────────────────────────── */
+.period-strip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px 24px 4px;
+}
+.period-strip-lbl {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .8px; color: var(--text-muted); margin-right: 4px;
+}
+.per-chip {
+  padding: 5px 18px; border-radius: 20px; font-size: 11px; font-weight: 700;
+  background: white; border: 1.5px solid var(--border);
+  color: var(--text-muted); cursor: pointer; transition: all .15s;
+  letter-spacing: .3px;
+}
+.per-chip.active  { background: var(--navy); color: white; border-color: var(--navy); }
+.per-chip:hover:not(.active) { border-color: var(--navy); color: var(--navy); }
+
+/* hide delta arrows on YTD / Full Year period views */
+body.period-ytd  .sk-delta,
+body.period-full .sk-delta { opacity: 0; }
+
 /* ── Dept Scorecard ────────────────────────────────────── */
 .smry-scorecard {
   display: grid; grid-template-columns: repeat(9,1fr);

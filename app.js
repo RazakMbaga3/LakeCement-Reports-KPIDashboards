@@ -74,7 +74,10 @@ function switchDept(dept) {
   document.getElementById('ctx-resp').innerHTML = m.resp;
 
   updateSummary();
-  if (dept === 'summary') updateSummaryDashboard();
+  if (dept === 'summary') {
+    updateSummaryDashboard();
+    applyPeriodCards(document.getElementById('view-select').value);
+  }
 }
 
 /* ─── sync dept dropdown → nav ─────────────────────────────── */
@@ -88,20 +91,20 @@ function applyFilters() {
   const yr   =  document.getElementById('year-select').value;
   const view =  document.getElementById('view-select').value;
 
-  document.getElementById('ctx-period').textContent = MONTHS[mo] + ' ' + yr;
-
   document.querySelectorAll('.kpi-table').forEach(tbl => {
     // Skip tables that don't use month columns (e.g. Mines Workshop equipment table)
     if (!tbl.querySelector('.thead-row th.col-month')) return;
 
     // Update table class so min-width CSS rule can apply
-    tbl.classList.toggle('view-month', view === 'month');
+    tbl.classList.toggle('view-month', view === 'month' || view === 'daily');
 
     const headerCells = Array.from(tbl.querySelectorAll('.thead-row th'));
 
     // ── Rename the highlighted "Actual" column to the selected month name ──
     const actualHdr = tbl.querySelector('.thead-row .highlight-col');
-    if (actualHdr) actualHdr.innerHTML = MONTHS[mo] + '<br>ACTUAL';
+    if (actualHdr) {
+      actualHdr.innerHTML = view === 'daily' ? 'TODAY<br>ACTUAL' : MONTHS[mo] + '<br>ACTUAL';
+    }
 
     // ── Show / hide month header cells (indices 6–17) ──
     headerCells.forEach((th, i) => {
@@ -111,7 +114,7 @@ function applyFilters() {
       if (i < 6 || i > 17) return;
       const mIdx = i - 5; // i=6 → mIdx=1 (Jan) … i=17 → mIdx=12 (Dec)
 
-      if (view === 'month') {
+      if (view === 'month' || view === 'daily') {
         th.style.display = 'none';
       } else if (view === 'ytd') {
         th.style.display = (mIdx <= mo) ? '' : 'none';
@@ -129,7 +132,7 @@ function applyFilters() {
       cells.forEach((td, i) => {
         if (i < 6 || i > 17) { td.style.opacity = '1'; return; }
         const mIdx = i - 5;
-        if (view === 'month') {
+        if (view === 'month' || view === 'daily') {
           td.style.display = 'none';
           td.style.opacity  = '1';
         } else if (view === 'ytd') {
@@ -158,6 +161,7 @@ function applyFilters() {
 
   updateSummary();
   if (currentDept === 'summary') updateSummaryDashboard();
+  applyPeriodCards(view);
 }
 
 /* ─── compute achieved / not-achieved counts ────────────────── */
@@ -176,16 +180,6 @@ function updateSummary() {
 
 /* ─── Summary Dashboard updater ────────────────────────────── */
 function updateSummaryDashboard() {
-  // Sync period badge
-  const mo = +document.getElementById('month-select').value;
-  const yr =  document.getElementById('year-select').value;
-  const badge = document.getElementById('smry-period-badge');
-  if (badge) badge.textContent = MONTHS[mo] + ' ' + yr;
-
-  // Sync the smry-period in context bar
-  const ctxPeriod = document.getElementById('ctx-period');
-  if (ctxPeriod) ctxPeriod.textContent = MONTHS[mo] + ' ' + yr;
-
   // Per-dept achievement scorecard chips
   const DEPTS = ['ei','production','mining','mines','mechanical','powerplant','packing','stores','minesworkshop'];
   DEPTS.forEach(d => {
@@ -218,6 +212,69 @@ function updateSummaryDashboard() {
     const daysSince = Math.floor((new Date() - startOfYear) / 86400000);
     ltiEl.textContent = daysSince;
   }
+}
+
+/* ─── period analysis ───────────────────────────────────────── */
+function getDailyValue(formId, fieldName) {
+  const today = new Date().toISOString().slice(0, 10);
+  const raw = localStorage.getItem('nyati-' + formId + '-' + today);
+  if (!raw) return null;
+  try { return JSON.parse(raw).data?.[fieldName] ?? null; }
+  catch { return null; }
+}
+
+function applyPeriodCards(view) {
+  const mo = +document.getElementById('month-select').value;
+  const yr =  document.getElementById('year-select').value;
+
+  // Update body class for CSS hooks
+  ['daily','month','ytd','full'].forEach(p =>
+    document.body.classList.toggle('period-' + p, p === view)
+  );
+
+  // Sync period-strip chips
+  document.querySelectorAll('.per-chip').forEach(c =>
+    c.classList.toggle('active', c.dataset.period === view)
+  );
+
+  // Swap sk-card values for cards tagged with data-daily
+  document.querySelectorAll('.sk-card[data-daily]').forEach(card => {
+    const val  = card.dataset[view] ?? card.dataset.month;
+    const valEl = card.querySelector('.sk-value');
+    if (valEl && val) valEl.textContent = val;
+  });
+
+  // Live localStorage override for Today view
+  if (view === 'daily') {
+    const liveFl = getDailyValue('quality', 'free_lime');
+    if (liveFl != null) {
+      const card = document.querySelector('.sk-card[data-kpi-id="free-lime"]');
+      if (card) { const v = card.querySelector('.sk-value'); if (v) v.textContent = liveFl; }
+    }
+  }
+
+  // Update period badge and context bar label
+  const badge = document.getElementById('smry-period-badge');
+  const ctxPeriod = document.getElementById('ctx-period');
+  const today = new Date();
+  let periodText;
+  if (view === 'daily') {
+    periodText = 'Today — ' + today.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+  } else if (view === 'month') {
+    periodText = MONTHS[mo] + ' ' + yr;
+  } else if (view === 'ytd') {
+    periodText = 'YTD — Jan–' + MONTHS[mo].slice(0, 3) + ' ' + yr;
+  } else {
+    periodText = 'Full Year ' + yr;
+  }
+  if (badge) badge.textContent = periodText;
+  if (ctxPeriod) ctxPeriod.textContent = periodText;
+}
+
+function selectPeriod(view) {
+  const sel = document.getElementById('view-select');
+  if (sel) sel.value = view;
+  applyFilters();
 }
 
 /* ─── live date ─────────────────────────────────────────────── */
