@@ -204,15 +204,12 @@
       '    <i data-lucide="mail" class="exp-item-icon"></i>' +
       '    <input type="email" class="exp-email-in" id="exp-email-in"' +
       '      placeholder="recipient@example.com" autocomplete="email" />' +
-      '    <button class="btn btn-sub exp-send" id="exp-send">Send</button>' +
+      '    <button class="btn exp-send" id="exp-send">Send</button>' +
       '  </div>' +
       '</div>';
 
-    /* insert separator + wrap before btn-grp */
-    var sep = document.createElement('div');
-    sep.className = 'tb-sep';
-    btnGrp.parentNode.insertBefore(sep, btnGrp);
-    btnGrp.parentNode.insertBefore(wrap, btnGrp);
+    /* insert as first child of btn-grp (same pattern as excel-import) */
+    btnGrp.insertBefore(wrap, btnGrp.firstChild);
 
     if (window.lucide) lucide.createIcons();
 
@@ -262,10 +259,16 @@
   }
 
   /* ─── Init ────────────────────────────────────────────────────── */
-  document.addEventListener('DOMContentLoaded', function () {
+  function _init() {
     var formId = window._nyatiFormId;
     if (!formId) return;
     injectPrintHeader(formId);
     addExportUI(formId);
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _init);
+  } else {
+    _init();
+  }
 })();

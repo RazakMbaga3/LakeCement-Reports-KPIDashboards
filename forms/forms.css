@@ -318,7 +318,11 @@ td.cf .cv { color:var(--f-fg); }
 }
 .exp-email-in:focus { border-color: var(--orange); }
 .exp-email-in::placeholder { color: #C0C8D4; font-weight: 400; }
-.exp-send { font-size: 11px; padding: 6px 12px; white-space: nowrap; }
+.exp-send {
+  font-size: 11px; padding: 6px 12px; white-space: nowrap;
+  background: var(--navy); color: white; border-color: var(--navy);
+}
+.exp-send:hover { background: var(--navy-light); }
 
 /* ══════════════════════════════════════════════════════════════
    PRINT / PDF
