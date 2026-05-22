@@ -50,7 +50,12 @@ input[type="date"].tb-ctl { min-width:148px; cursor:text; }
 /* ── FORM MAIN WRAPPER ──────────────────────────────────────── */
 .fm-main { flex:1; padding:0 var(--space-x) 48px; max-width:1800px; margin:0 auto; width:100%; }
 
-/* ── LEGEND BAR ─────────────────────────────────────────────── */
+/* ── COMPACT TOOLBAR LEGEND ─────────────────────────────────── */
+.tb-leg { display:flex; gap:8px; align-items:center; }
+.leg    { display:flex; align-items:center; gap:5px; font-size:10px; color:var(--text-muted); white-space:nowrap; }
+.ld     { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+
+/* ── LEGEND BAR (kept for print-rule references; no longer rendered) ─ */
 .legend-bar {
   display:flex; align-items:center; gap:6px; padding:7px 14px;
   background:white; border:1px solid var(--border); border-radius:var(--radius);

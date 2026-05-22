@@ -47,6 +47,9 @@
     .btn-out   { background:transparent; color:var(--navy); border-color:#CBD5E1; }
     .btn-out:hover { border-color:var(--navy); }
     .btn-grp   { display:flex; gap:6px; margin-left:auto; }
+    .tb-leg    { display:flex; gap:8px; align-items:center; }
+    .leg       { display:flex; align-items:center; gap:5px; font-size:10px; color:var(--text-muted); white-space:nowrap; }
+    .ld        { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
 
     /* main */
     .dr-main { flex:1; padding:0 24px 48px; max-width:1400px; margin:0 auto; width:100%; }
@@ -299,6 +302,11 @@
   </div>
   <div class="tb-sep"></div>
   <span class="rpt-pill">DRAFT</span>
+  <div class="tb-leg">
+    <div class="leg"><div class="ld" style="background:#FDE68A;border:1px solid #B45309"></div>Manual</div>
+    <div class="leg"><div class="ld" style="background:#BFDBFE;border:1px solid #1D4ED8"></div>System</div>
+    <div class="leg"><div class="ld" style="background:#BBF7D0;border:1px solid #15803D"></div>Formula</div>
+  </div>
   <div class="btn-grp">
     <button class="btn btn-out"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
     <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
@@ -309,14 +317,6 @@
 <!-- ══════════════════ MAIN ══════════════════ -->
 <main class="dr-main">
 
-  <!-- legend -->
-  <div class="legend-bar">
-    <span class="leg-lbl">Data Source Key</span>
-    <span class="leg-chip leg-m"><i data-lucide="pencil" class="btn-icon"></i> Manual Entry — operator enters daily (On Date)</span>
-    <span class="leg-chip leg-s"><i data-lucide="cpu" class="btn-icon"></i> System / Auto — from DCS / meters / sensors</span>
-    <span class="leg-chip leg-f">∑ Formula — MTD, YTD &amp; calculated ratios</span>
-    <span style="margin-left:auto;font-size:11px;color:var(--text-muted);font-style:italic">Amber fields require manual input. Blue &amp; green cells are read-only.</span>
-  </div>
 
   <!-- ── SUMMARY STRIP ── -->
   <div class="kpi-strip">
