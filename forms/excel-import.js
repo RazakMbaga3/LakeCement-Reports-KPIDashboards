@@ -269,6 +269,125 @@
       });
       return result;
     },
+
+    /* ── Department-Wise Overtime ─────────────────────────────────── */
+    overtime: function (wb) {
+      /* Try to find the OT sheet */
+      var shName = wb.SheetNames.find(function (n) {
+        return /overtime|dept.?wise.?ot|ot.?report/i.test(n);
+      }) || wb.SheetNames[0];
+      var ws   = wb.Sheets[shName];
+      var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      /* ── Find header row: look for a row that has "OT TYPE" or
+         "ACTUAL" + "TARGET" in it ───────────────────────────────── */
+      var hdrIdx = -1;
+      var colOtType = -1, colHrTgt = -1, colHrAct = -1, colTshTgt = -1, colTshAct = -1, colRem = -1, colDept = -1;
+
+      for (var ri = 0; ri < Math.min(rows.length, 12); ri++) {
+        var r = rows[ri].map(function (c) { return String(c).trim().toUpperCase(); });
+        /* Look for a row containing both TARGET and ACTUAL */
+        if (r.some(function (c) { return /TARGET/.test(c); }) &&
+            r.some(function (c) { return /ACTUAL/.test(c); })) {
+          hdrIdx = ri;
+          /* Find columns by scanning this row AND the row above */
+          var above = ri > 0 ? rows[ri - 1].map(function (c) { return String(c).trim().toUpperCase(); }) : [];
+          r.forEach(function (c, i) {
+            /* OT Type column */
+            if (/OT.?TYPE|OT TYPE/.test(c)) colOtType = i;
+            /* Department: look for 'DEPT' or 'DEPARTMENT' in this or above row */
+            if (/^DEPT|DEPARTMENT/.test(c)) colDept = i;
+          });
+          /* Pair TARGET/ACTUAL columns — assume pattern: HrTgt, HrAct, TshTgt, TshAct */
+          var tgtIdxs = [], actIdxs = [];
+          r.forEach(function (c, i) {
+            if (/^TARGET$/.test(c)) tgtIdxs.push(i);
+            if (/^ACTUAL$/.test(c)) actIdxs.push(i);
+          });
+          if (tgtIdxs.length >= 2 && actIdxs.length >= 2) {
+            /* First pair = hours, second pair = TSH */
+            colHrTgt  = tgtIdxs[0];  colHrAct  = actIdxs[0];
+            colTshTgt = tgtIdxs[1];  colTshAct = actIdxs[1];
+          } else if (tgtIdxs.length >= 1 && actIdxs.length >= 1) {
+            /* Only one pair found — could be just one metric */
+            colHrAct  = actIdxs[0];
+            colTshAct = actIdxs[1] !== undefined ? actIdxs[1] : -1;
+          }
+          /* Remarks: last non-empty header-ish column after TSH */
+          for (var ci = (colTshAct > -1 ? colTshAct : colHrAct) + 1; ci < r.length; ci++) {
+            if (/REM|REMARK|NOTE/i.test(r[ci])) { colRem = ci; break; }
+          }
+          /* If colRem not found, use first column after last metric */
+          if (colRem < 0 && colTshAct > -1) colRem = colTshAct + 1;
+          break;
+        }
+      }
+
+      /* ── Dept name lookup from column 1 (or colDept) ─────────────
+         When a dept spans two rows (OT1+OT2), only the first row
+         has the dept name (due to merge). We carry it forward.     */
+      var DEPT_MAP = [
+        { key:'prod', re:/production/i },
+        { key:'qual', re:/quality/i },
+        { key:'mech', re:/mechanical/i },
+        { key:'elec', re:/electrical/i },
+        { key:'inst', re:/instrument/i },
+        { key:'pp',   re:/power.?plant|cpp/i },
+        { key:'qry',  re:/quarr/i },
+        { key:'hem',  re:/hem\b|hem.?maint/i },
+        { key:'pak',  re:/packing|dispatch/i },
+        { key:'str',  re:/\bstores?\b/i },
+        { key:'hr',   re:/\bh\.?r\b|human.?res/i },
+        { key:'acc',  re:/account/i },
+        { key:'civ',  re:/civil/i },
+        { key:'it',   re:/\bit\b|information.?tech|ict/i },
+      ];
+
+      function deptKey(name) {
+        var n = String(name).trim();
+        for (var di = 0; di < DEPT_MAP.length; di++) {
+          if (DEPT_MAP[di].re.test(n)) return DEPT_MAP[di].key;
+        }
+        return null;
+      }
+
+      var result = {};
+      var curDept = null;
+
+      /* Scan data rows from hdrIdx+1 (or row 2 if header not found) */
+      var startRow = hdrIdx >= 0 ? hdrIdx + 1 : 2;
+      var dCol     = colDept >= 0 ? colDept : 1;   /* dept in col 1 if not found */
+      var otCol    = colOtType >= 0 ? colOtType : 2;
+
+      for (var di = startRow; di < rows.length; di++) {
+        var row  = rows[di];
+        var deptCell = String(row[dCol] || '').trim();
+        var otCell   = String(row[otCol] || '').trim().toUpperCase();
+
+        /* Update current dept if a name appears */
+        if (deptCell) {
+          var k = deptKey(deptCell);
+          if (k) curDept = k;
+        }
+
+        /* Must have a valid OT type row */
+        var otNum = /OT1|OT\s*1|\bOT-?1\b/.test(otCell) ? 1 : /OT2|OT\s*2|\bOT-?2\b/.test(otCell) ? 2 : 0;
+        if (!otNum || !curDept) continue;
+
+        var pfx = 'ot_' + curDept + '_' + otNum;
+
+        if (colHrTgt  >= 0) result[pfx + '_hr_t'] = fmt(toNum(row[colHrTgt]),  0);
+        if (colHrAct  >= 0) result[pfx + '_hr_a'] = fmt(toNum(row[colHrAct]),  0);
+        if (colTshTgt >= 0) result[pfx + '_ts_t'] = fmt(toNum(row[colTshTgt]), 0);
+        if (colTshAct >= 0) result[pfx + '_ts_a'] = fmt(toNum(row[colTshAct]), 0);
+        if (colRem    >= 0) result[pfx + '_rem']  = String(row[colRem] || '').trim();
+      }
+
+      if (!Object.keys(result).length) {
+        return { _error: 'Could not extract OT data. Expected columns: OT TYPE, TARGET (hrs), ACTUAL (hrs), TARGET (TSH), ACTUAL (TSH). Check the sheet format.' };
+      }
+      return result;
+    },
   };
 
   /* ── Apply extracted data to form inputs ──────────────────────── */
@@ -373,7 +492,7 @@
   function processFile(file, formId) {
     var extractor = EXTRACTORS[formId];
     if (!extractor) {
-      alert('No Excel mapping for "' + formId + '".\nSupported: dispatch, quality, materials, power-cons, pile-quality');
+      alert('No Excel mapping for "' + formId + '".\nSupported: dispatch, quality, materials, power-cons, pile-quality, overtime');
       return;
     }
     loadXLSX(function () {
