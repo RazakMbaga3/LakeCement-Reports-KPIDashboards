@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – Stoppage Time Dashboard</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* ══════════════════════════════════════════════════════
+       STOPPAGE TIME DASHBOARD — page-specific styles
+    ══════════════════════════════════════════════════════ */
+    body { display:flex; flex-direction:column; min-height:100vh; background:var(--off-white); }
+
+    /* ── Filter bar ── */
+    .sd-filter {
+      background:white; border-bottom:1px solid var(--border);
+      padding:10px 24px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+      box-shadow:var(--shadow-sm); position:sticky; top:0; z-index:50;
+    }
+    .sd-filter-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--text-muted); }
+    .sd-select {
+      font-family:var(--font); font-size:12px; font-weight:600; color:var(--text-main);
+      background:var(--off-white); border:1.5px solid var(--border); border-radius:var(--radius);
+      padding:5px 10px; outline:none; cursor:pointer; appearance:none;
+    }
+    .sd-select:focus { border-color:var(--orange); background:white; }
+    .sd-badge {
+      margin-left:auto; display:flex; align-items:center; gap:6px;
+      font-size:11px; font-weight:700; color:var(--text-muted);
+    }
+    .sd-data-chip {
+      padding:4px 10px; border-radius:12px; font-size:10px; font-weight:700;
+      background:#ECFDF5; color:#059669; border:1px solid #A7F3D0;
+    }
+    .sd-data-chip.live { background:#FFF7ED; color:#D97706; border-color:#FDE68A; }
+
+    /* ── Main container ── */
+    .sd-main { flex:1; padding:20px 24px 48px; max-width:1700px; margin:0 auto; width:100%; }
+
+    /* ── Overview summary strip ── */
+    .sd-overview {
+      display:grid; grid-template-columns:repeat(7,1fr); gap:10px; margin-bottom:24px;
+    }
+    @media(max-width:1200px) { .sd-overview { grid-template-columns:repeat(4,1fr); } }
+    @media(max-width:700px)  { .sd-overview { grid-template-columns:repeat(2,1fr); } }
+
+    .ov-chip {
+      background:white; border:1px solid var(--border); border-radius:10px;
+      padding:12px 14px; cursor:pointer; transition:box-shadow .15s, transform .1s;
+      text-decoration:none;
+    }
+    .ov-chip:hover { box-shadow:var(--shadow-md); transform:translateY(-1px); }
+    .ov-chip-name { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); }
+    .ov-chip-hrs  { font-size:22px; font-weight:800; color:var(--navy); line-height:1.1; margin:4px 0 6px; }
+    .ov-chip-bar-bg { height:5px; background:#E2E8F0; border-radius:3px; overflow:hidden; }
+    .ov-chip-bar-fill { height:100%; border-radius:3px; background:var(--orange); transition:width .4s; }
+    .ov-chip-avail { font-size:10px; font-weight:600; color:var(--text-muted); margin-top:4px; }
+    .ov-chip-avail span { font-weight:800; }
+    .ov-chip-avail .green { color:var(--green); }
+    .ov-chip-avail .red   { color:var(--red); }
+
+    /* ── Section grid ── */
+    .sd-grid {
+      display:grid; grid-template-columns:repeat(2,1fr); gap:18px;
+    }
+    @media(max-width:900px) { .sd-grid { grid-template-columns:1fr; } }
+    .sd-grid .full-row { grid-column:1/-1; }
+
+    /* ── Section card ── */
+    .sc-card {
+      background:white; border:1px solid var(--border); border-radius:12px;
+      overflow:hidden; box-shadow:var(--shadow-sm);
+    }
+    .sc-card-header {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:14px 18px 12px; border-bottom:1px solid var(--border);
+      background:linear-gradient(135deg,#F8FAFC 0%,white 100%);
+    }
+    .sc-card-title {
+      display:flex; align-items:center; gap:8px;
+      font-size:14px; font-weight:800; color:var(--navy); letter-spacing:-.1px;
+    }
+    .sc-card-icon { color:var(--orange); }
+    .sc-total-badge {
+      font-size:11px; font-weight:700; padding:4px 12px; border-radius:20px;
+      background:#FFF7ED; color:var(--orange); border:1px solid #FDE68A;
+    }
+    .sc-card-body {
+      display:flex; gap:0; align-items:stretch; min-height:260px;
+    }
+    .sc-chart-wrap {
+      flex:0 0 200px; display:flex; flex-direction:column; align-items:center;
+      justify-content:center; padding:16px 8px 16px 16px; border-right:1px solid var(--border);
+    }
+    .sc-chart-canvas { width:160px !important; height:160px !important; }
+    .sc-legend { margin-top:10px; width:100%; }
+    .sc-leg-row {
+      display:flex; align-items:center; justify-content:space-between;
+      font-size:10px; padding:2px 4px; border-radius:3px;
+    }
+    .sc-leg-row:hover { background:#F8FAFC; }
+    .sc-leg-left { display:flex; align-items:center; gap:5px; }
+    .sc-leg-dot  { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+    .sc-leg-name { font-weight:600; color:var(--text-dark); }
+    .sc-leg-val  { font-weight:700; color:var(--text-muted); }
+
+    /* ── Reasons table ── */
+    .sc-table-wrap { flex:1; overflow-y:auto; max-height:320px; }
+    .sc-table {
+      width:100%; border-collapse:collapse; font-size:11px;
+    }
+    .sc-table thead th {
+      position:sticky; top:0; background:#F8FAFC; padding:8px 12px;
+      font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.6px;
+      color:var(--text-muted); border-bottom:1px solid var(--border); text-align:left;
+    }
+    .sc-table thead th:last-child { text-align:right; }
+    .sc-table tbody tr { border-bottom:1px solid #F1F5F9; }
+    .sc-table tbody tr:hover { background:#FAFBFC; }
+    .sc-table td { padding:7px 12px; color:var(--text-dark); vertical-align:middle; }
+    .sc-table td:last-child { text-align:right; font-weight:700; color:var(--text-dark); white-space:nowrap; }
+    .sc-dept-dot {
+      display:inline-block; width:7px; height:7px; border-radius:2px;
+      margin-right:6px; vertical-align:middle; flex-shrink:0;
+    }
+    .sc-table tfoot td {
+      padding:8px 12px; font-size:11px; font-weight:800; color:var(--navy);
+      border-top:2px solid var(--border); background:#F8FAFC;
+    }
+    .sc-table tfoot td:last-child { text-align:right; }
+
+    /* no-data state */
+    .sc-no-data {
+      display:flex; align-items:center; justify-content:center;
+      height:120px; color:var(--text-muted); font-size:12px;
+    }
+
+    /* ── Dept colour tokens ── */
+    :root {
+      --c-mech:    #EF4444;
+      --c-ei:      #3B82F6;
+      --c-prod:    #10B981;
+      --c-planned: #8B5CF6;
+      --c-power:   #F59E0B;
+      --c-others:  #94A3B8;
+    }
+
+    @media print {
+      .dept-nav, .sd-filter, .top-header::after { display:none !important; }
+      .top-header { position:static !important; }
+      .sd-card-body { max-height:none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header class="top-header">
+  <div class="header-left">
+    <div class="logo-block">
+      <img class="nyati-logo" src="NYATI-LOGO.png" alt="Nyati Cement" />
+      <div class="logo-text">
+        <img class="lc-wordmark" src="lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
+        <span class="company-sub">Stoppage Time Analysis</span>
+      </div>
+    </div>
+  </div>
+  <div class="header-center">
+    <div class="view-switcher">
+      <a href="index.html" class="vs-tab">
+        <i data-lucide="bar-chart-2" class="vs-icon"></i>
+        <span>Monthly KPIs</span>
+      </a>
+      <a href="daily-report.html" class="vs-tab">
+        <i data-lucide="clipboard-list" class="vs-icon"></i>
+        <span>Daily Reports</span>
+      </a>
+      <a href="analytics.html" class="vs-tab">
+        <i data-lucide="trending-up" class="vs-icon"></i>
+        <span>Trends</span>
+      </a>
+      <a href="stoppage-dashboard.html" class="vs-tab active">
+        <i data-lucide="alert-triangle" class="vs-icon"></i>
+        <span>Stoppages</span>
+      </a>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="header-meta" id="live-date"></div>
+  </div>
+</header>
+
+<!-- ══════════════════ NAV ══════════════════ -->
+<nav class="dept-nav">
+  <div class="nav-inner">
+    <span class="nav-label">DAILY REPORTS</span>
+    <button class="nav-btn" onclick="location.href='daily-report.html'"><i data-lucide="factory" class="nav-icon"></i> Production</button>
+    <button class="nav-btn" onclick="location.href='power-plant-report.html'"><i data-lucide="zap" class="nav-icon"></i> Power Plant (CPP)</button>
+    <button class="nav-btn" onclick="location.href='mines-report.html'"><i data-lucide="pickaxe" class="nav-icon"></i> Mines</button>
+    <button class="nav-btn" onclick="location.href='forms/dispatch-form.html'"><i data-lucide="truck" class="nav-icon"></i> Dispatch</button>
+    <button class="nav-btn active"><i data-lucide="alert-triangle" class="nav-icon"></i> Stoppages</button>
+    <button class="nav-btn" onclick="location.href='forms/stoppage-form.html'"><i data-lucide="pencil" class="nav-icon"></i> Fill Form</button>
+    <button class="nav-btn" onclick="location.href='forms/cpp-form.html'"><i data-lucide="zap" class="nav-icon"></i> CPP Form</button>
+    <button class="nav-btn" onclick="location.href='forms/quality-form.html'"><i data-lucide="flask-conical" class="nav-icon"></i> Quality</button>
+    <button class="nav-btn" onclick="location.href='forms/materials-form.html'"><i data-lucide="package" class="nav-icon"></i> Materials</button>
+    <button class="nav-btn" onclick="location.href='forms/power-form.html'"><i data-lucide="activity" class="nav-icon"></i> Power Cons.</button>
+    <button class="nav-btn" onclick="location.href='forms/pile-quality-form.html'"><i data-lucide="layers" class="nav-icon"></i> Pile Quality</button>
+    <button class="nav-btn" onclick="location.href='forms/limestone-form.html'"><i data-lucide="mountain" class="nav-icon"></i> Limestone %</button>
+    <div class="nav-divider"></div>
+    <button class="nav-btn" onclick="location.href='forms/overtime-form.html'"><i data-lucide="clock" class="nav-icon"></i> Overtime</button>
+    <div class="nav-divider"></div>
+    <button class="nav-btn secondary" onclick="window.print()"><i data-lucide="printer" class="nav-icon"></i> Print / PDF</button>
+  </div>
+</nav>
+
+<!-- ══════════════════ FILTER BAR ══════════════════ -->
+<div class="sd-filter">
+  <span class="sd-filter-lbl">Period</span>
+  <select class="sd-select" id="sd-month">
+    <option value="1">January</option>
+    <option value="2">February</option>
+    <option value="3">March</option>
+    <option value="4" selected>April</option>
+    <option value="5">May</option>
+    <option value="6">June</option>
+    <option value="7">July</option>
+    <option value="8">August</option>
+    <option value="9">September</option>
+    <option value="10">October</option>
+    <option value="11">November</option>
+    <option value="12">December</option>
+  </select>
+  <select class="sd-select" id="sd-year">
+    <option value="2025">2025</option>
+    <option value="2026" selected>2026</option>
+  </select>
+  <div class="sd-badge">
+    <span id="sd-data-badge" class="sd-data-chip">Base data · Apr 2026</span>
+    <span style="color:var(--text-muted);font-size:11px;">Total plant stoppages:</span>
+    <strong id="sd-grand-total" style="font-size:13px;color:var(--navy);">—</strong>
+  </div>
+</div>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<main class="sd-main">
+
+  <!-- Overview strip -->
+  <div class="sd-overview" id="sd-overview"></div>
+
+  <!-- Section cards grid -->
+  <div class="sd-grid" id="sd-grid"></div>
+
+</main>
+
+<!-- ══════════════════ FOOTER ══════════════════ -->
+<footer class="page-footer">
+  <span>Lake Cement Ltd — Stoppage Time Analysis</span>
+  <span id="footer-date"></span>
+</footer>
+
+<!-- ══════════════════ SCRIPTS ══════════════════ -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+/* ── Base dataset (baked in from Excel: April 2026) ─────────── */
+const STOPPAGE_BASE_DATA = {
+  label: 'April 2026',
+  month: '2026-04',
+  sections: {
+    crusher: {
+      label: 'Crusher',
+      icon: 'hammer',
+      categories: { mech:6, ei:14, prod:74.56, planned:45.85, power:0, others:57 },
+      total: 197.41,
+      reasons: [
+        {dept:'others',  reason:'Pile full',                              hrs:54.00},
+        {dept:'planned', reason:'Planned maintenance',                    hrs:45.85},
+        {dept:'prod',    reason:'Crusher / hopper cleaning',             hrs:33.56},
+        {dept:'prod',    reason:'Apron Feeder Jamming',                  hrs:23.00},
+        {dept:'ei',      reason:'Stacker travel drive fault',            hrs:10.00},
+        {dept:'prod',    reason:'Crusher discharge chute Jamming',       hrs:10.00},
+        {dept:'prod',    reason:'Boulder stuck in hopper chute',         hrs:6.00},
+        {dept:'mech',    reason:'Spillage conveyor belt sway / damage',  hrs:4.00},
+        {dept:'ei',      reason:'Conveyor Belts Overload / ZSS / Sway', hrs:3.00},
+        {dept:'mech',    reason:'Belt Conveyor Sway',                    hrs:2.00},
+        {dept:'prod',    reason:'211 BC3 chute Jamming',                 hrs:2.00},
+        {dept:'ei',      reason:'Main Drive LRS fault',                  hrs:1.00},
+      ]
+    },
+    rawmill: {
+      label: 'Raw Mill',
+      icon: 'wind',
+      categories: { mech:12.52, ei:3.35, prod:57.43, planned:79.60, power:0, others:33.87 },
+      total: 186.77,
+      reasons: [
+        {dept:'planned', reason:'Planned maintenance',                                        hrs:79.60},
+        {dept:'prod',    reason:'Hopper level low / Reclaimer / Pile change',                hrs:35.11},
+        {dept:'others',  reason:'Kiln stopped',                                              hrs:33.87},
+        {dept:'prod',    reason:'Surge Hopper Jammed',                                       hrs:14.30},
+        {dept:'prod',    reason:'Proportioning Hopper Jammed',                               hrs:6.52},
+        {dept:'mech',    reason:'Hopper level low due to Reclaimer / Transport Belt',        hrs:4.49},
+        {dept:'mech',    reason:'321 GB1 Mill Drive Gearbox vibration high',                 hrs:2.84},
+        {dept:'ei',      reason:'Hopper level low / Reclaimer cable problem',                hrs:2.33},
+        {dept:'mech',    reason:'Maintenance on WF1/WF2 / Hopper Liners',                   hrs:2.17},
+        {dept:'mech',    reason:'321 BE1/BE2 Tripped on Overload / maintenance',             hrs:1.72},
+        {dept:'prod',    reason:'Mill Drive Gearbox vibration high (repeat)',                hrs:1.50},
+        {dept:'mech',    reason:'Cyclone rotary bolts loose / Repair',                       hrs:1.45},
+        {dept:'mech',    reason:'Mill inspection',                                           hrs:0.83},
+        {dept:'ei',      reason:'Grinding roller Up/Down command not working',               hrs:0.60},
+        {dept:'mech',    reason:'321 BC1 tripped on SIMOCODE',                               hrs:0.47},
+        {dept:'ei',      reason:'321FN2/FN4/FN7 tripped on SIMOCODE',                       hrs:0.42},
+      ]
+    },
+    coalmill: {
+      label: 'Coal Mill',
+      icon: 'flame',
+      categories: { mech:4.5, ei:1.4, prod:9.63, planned:24, power:0, others:161.72 },
+      total: 201.25,
+      reasons: [
+        {dept:'others',  reason:'Bin Full',                             hrs:125.14},
+        {dept:'others',  reason:'Kiln stopped',                        hrs:25.75},
+        {dept:'planned', reason:'Planned maintenance',                  hrs:24.00},
+        {dept:'others',  reason:'Raw coal hopper empty',               hrs:10.83},
+        {dept:'prod',    reason:'Mill inlet RAL 521 RS1 jamming',      hrs:9.63},
+        {dept:'mech',    reason:'Planned maintenance (Mech)',           hrs:4.50},
+        {dept:'ei',      reason:'Coal mill main drive motor tripped',   hrs:0.98},
+        {dept:'ei',      reason:'521 FN1 Fan vibration high',          hrs:0.42},
+      ]
+    },
+    kiln: {
+      label: 'Kiln',
+      icon: 'thermometer',
+      categories: { mech:38.98, ei:0.5, prod:0, planned:60.38, power:0, others:0.7 },
+      total: 100.56,
+      reasons: [
+        {dept:'planned', reason:'Planned maintenance',                          hrs:60.38},
+        {dept:'mech',    reason:'Clinker breaker maintenance / jammed',         hrs:25.48},
+        {dept:'mech',    reason:'PH fan Mech inspection / Breakdown',           hrs:11.12},
+        {dept:'mech',    reason:'Kiln support roller bearing inspection',       hrs:2.21},
+        {dept:'others',  reason:'Low level in fine coal bin',                   hrs:0.70},
+        {dept:'ei',      reason:'Kiln main drive VFD problem',                  hrs:0.50},
+      ]
+    },
+    cm1: {
+      label: 'Cement Mill 1',
+      icon: 'settings',
+      categories: { mech:3.75, ei:0, prod:3.82, planned:153.53, power:1.69, others:100.93 },
+      total: 263.72,
+      reasons: [
+        {dept:'planned', reason:'Planned maintenance',                            hrs:153.53},
+        {dept:'others',  reason:'Silo full / No Orders',                          hrs:100.93},
+        {dept:'prod',    reason:'Clinker hopper level low',                       hrs:3.82},
+        {dept:'mech',    reason:'Hopper level low due to transport belt problem', hrs:1.98},
+        {dept:'power',   reason:'Power restriction from CPP / TANESCO',           hrs:1.69},
+        {dept:'mech',    reason:'Gearbox temperature high',                       hrs:1.17},
+        {dept:'mech',    reason:'Girth gear spray nozzle fault',                  hrs:0.60},
+      ]
+    },
+    cm2: {
+      label: 'Cement Mill 2',
+      icon: 'settings-2',
+      categories: { mech:14.35, ei:4.97, prod:3.66, planned:4.33, power:6.10, others:90.33 },
+      total: 123.74,
+      reasons: [
+        {dept:'others',  reason:'Silo full / No Orders',                           hrs:90.33},
+        {dept:'mech',    reason:'Girth gear spray nozzle fault',                   hrs:7.58},
+        {dept:'power',   reason:'Power restriction from TANESCO / CPP',            hrs:6.10},
+        {dept:'planned', reason:'Planned maintenance',                              hrs:4.33},
+        {dept:'mech',    reason:'Mill inlet inspection',                            hrs:3.68},
+        {dept:'mech',    reason:'Hopper level low due to transport belt problem',  hrs:2.67},
+        {dept:'ei',      reason:'632 HC1 Classifier tripped on available fault',   hrs:2.42},
+        {dept:'prod',    reason:'Clinker hopper level low',                         hrs:2.00},
+        {dept:'prod',    reason:'Separator return airslide 631AS4 jammed',         hrs:1.33},
+        {dept:'mech',    reason:'Air slide jamming — Separator return',            hrs:0.42},
+        {dept:'prod',    reason:'Mill outlet temperature high',                     hrs:0.33},
+      ]
+    },
+    packing: {
+      label: 'Packing Plant',
+      icon: 'package',
+      categories: { mech:114.13, ei:26.19, prod:3.21, planned:45.24, power:0, others:183.09 },
+      total: 371.86,
+      reasons: [
+        {dept:'others',  reason:'No trucks available to load',                                  hrs:132.39},
+        {dept:'planned', reason:'Planned maintenance of Packer / Truck loaders',               hrs:45.24},
+        {dept:'mech',    reason:'Silo extraction problem / Blower tripped / Gate problem',     hrs:41.96},
+        {dept:'mech',    reason:'Belt conveyor plate adjustment / bag jamming',                hrs:24.66},
+        {dept:'others',  reason:'Cleaning & drying of trailers due to rainfall',              hrs:18.05},
+        {dept:'mech',    reason:'Vibrating screen damaged / leakage',                         hrs:14.66},
+        {dept:'ei',      reason:'Silo extraction problem / Blower tripped (E&I)',             hrs:13.84},
+        {dept:'mech',    reason:'Air slide jammed',                                            hrs:13.63},
+        {dept:'others',  reason:'Shift change',                                               hrs:10.25},
+        {dept:'mech',    reason:'Truck Loader maintenance',                                    hrs:8.14},
+        {dept:'others',  reason:'Single/Double truck to load & silo changeover',              hrs:4.82},
+        {dept:'ei',      reason:'Spout maintenance',                                           hrs:3.63},
+        {dept:'ei',      reason:'ERP server upgrading / System failure',                       hrs:3.63},
+        {dept:'mech',    reason:'Spout maintenance (Mech)',                                    hrs:3.37},
+        {dept:'prod',    reason:'Silo extraction problem / Gates jam',                        hrs:3.21},
+        {dept:'mech',    reason:'Belt conveyor tripped / belt sway',                          hrs:2.50},
+        {dept:'mech',    reason:'Packer bin overflow',                                        hrs:2.18},
+        {dept:'ei',      reason:'Truck loader out of service — sensor / motor / brake',       hrs:2.03},
+        {dept:'ei',      reason:'Bucket Elevator belt sway (False alarm)',                     hrs:1.63},
+        {dept:'mech',    reason:'Bin extraction / Packer coated with materials',              hrs:1.17},
+        {dept:'mech',    reason:'Bucket Elevator belt sway',                                  hrs:1.00},
+        {dept:'ei',      reason:'Compressor air pressure low',                                hrs:0.68},
+        {dept:'ei',      reason:'Belt conveyor tripped',                                      hrs:0.58},
+        {dept:'mech',    reason:'Packer machine not rotating / bag discharge problem',        hrs:0.48},
+        {dept:'mech',    reason:'Filter fan problem / Air filter bursting',                   hrs:0.25},
+        {dept:'ei',      reason:'Inaccuracy of weight / Calibration of spouts',               hrs:0.17},
+        {dept:'mech',    reason:'Packer tripped — compressor air pressure low',               hrs:0.13},
+      ]
+    },
+  }
+};
+
+/* ── Config ─────────────────────────────────────────────── */
+const DEPT_CONFIG = {
+  mech:    { label:'Mechanical',          color:'#EF4444' },
+  ei:      { label:'E&I',                 color:'#3B82F6' },
+  prod:    { label:'Production',          color:'#10B981' },
+  planned: { label:'Planned Maint.',      color:'#8B5CF6' },
+  power:   { label:'Power / CPP',         color:'#F59E0B' },
+  others:  { label:'Others',              color:'#94A3B8' },
+};
+const DEPT_KEYS = ['mech','ei','prod','planned','power','others'];
+
+/* ── Utility ─────────────────────────────────────────────── */
+function fmtHrs(h) {
+  if (h === 0) return '0.00';
+  return h.toFixed(2);
+}
+function availability(totalHrs, daysInMonth) {
+  const cap = daysInMonth * 24;
+  return Math.max(0, ((cap - totalHrs) / cap * 100)).toFixed(1);
+}
+
+/* ── Read localStorage for a month ──────────────────────── */
+function readLiveData(yr, mo) {
+  // Aggregate stop_*_* fields (in minutes → convert to hours) across all days
+  const agg = {};
+  const moStr = String(mo).padStart(2,'0');
+  let hasData = false;
+
+  for (let d = 1; d <= 31; d++) {
+    const key = `nyati-stoppage-${yr}-${moStr}-${String(d).padStart(2,'0')}`;
+    const raw = localStorage.getItem(key);
+    if (!raw) continue;
+    try {
+      const data = JSON.parse(raw).data ?? {};
+      // Fields: stop_{section}_{cat}  e.g. stop_crusher_mech (minutes)
+      Object.entries(data).forEach(([k, v]) => {
+        if (!k.startsWith('stop_')) return;
+        const parts = k.split('_'); // ['stop', section, cat]
+        if (parts.length < 3) return;
+        const section = parts.slice(1, -1).join('_');
+        const cat     = parts[parts.length - 1];
+        agg[section] = agg[section] ?? {};
+        agg[section][cat] = (agg[section][cat] ?? 0) + (parseFloat(v) || 0);
+        hasData = true;
+      });
+    } catch {}
+  }
+
+  if (!hasData) return null;
+
+  // Convert minutes to hours, map section keys to dataset keys
+  const KEY_MAP = { rm:'rawmill', cm_coal:'coalmill', cm1:'cm1', cm2:'cm2', packing:'packing', crusher:'crusher', kiln:'kiln' };
+  const result = {};
+  Object.entries(agg).forEach(([sec, cats]) => {
+    const dsKey = KEY_MAP[sec] ?? sec;
+    result[dsKey] = {};
+    Object.entries(cats).forEach(([cat, mins]) => {
+      result[dsKey][cat] = Math.round((mins / 60) * 100) / 100;
+    });
+  });
+  return result;
+}
+
+/* ── Charts map ──────────────────────────────────────────── */
+const charts = {};
+
+/* ── Build overview chip ─────────────────────────────────── */
+function buildOverview(data, maxHrs) {
+  const el = document.getElementById('sd-overview');
+  el.innerHTML = '';
+  let grandTotal = 0;
+
+  Object.entries(data.sections).forEach(([key, sec]) => {
+    const total = sec.total ?? Object.values(sec.categories).reduce((a,b)=>a+b,0);
+    grandTotal += total;
+    const pct   = Math.min(100, (total / maxHrs) * 100);
+    const avail = availability(total, 30);
+    const availClass = parseFloat(avail) >= 90 ? 'green' : 'red';
+
+    const chip = document.createElement('a');
+    chip.className = 'ov-chip';
+    chip.href = `#section-${key}`;
+    chip.innerHTML = `
+      <div class="ov-chip-name">${sec.label}</div>
+      <div class="ov-chip-hrs">${fmtHrs(total)}<span style="font-size:11px;font-weight:600;color:var(--text-muted);margin-left:3px;">hrs</span></div>
+      <div class="ov-chip-bar-bg"><div class="ov-chip-bar-fill" style="width:${pct}%"></div></div>
+      <div class="ov-chip-avail">Avail: <span class="${availClass}">${avail}%</span></div>
+    `;
+    el.appendChild(chip);
+  });
+
+  document.getElementById('sd-grand-total').textContent = fmtHrs(grandTotal) + ' hrs';
+}
+
+/* ── Build section card ──────────────────────────────────── */
+function buildCard(key, sec, liveOverride) {
+  const cats    = liveOverride ?? sec.categories;
+  const total   = Object.values(cats).reduce((a,b)=>a+b,0);
+  const reasons = sec.reasons;
+
+  // Legend rows
+  const legendHTML = DEPT_KEYS.map(dk => {
+    const v = cats[dk] ?? 0;
+    if (v === 0) return '';
+    const pct = total > 0 ? (v/total*100).toFixed(0) : 0;
+    return `<div class="sc-leg-row">
+      <div class="sc-leg-left">
+        <div class="sc-leg-dot" style="background:${DEPT_CONFIG[dk].color}"></div>
+        <span class="sc-leg-name">${DEPT_CONFIG[dk].label}</span>
+      </div>
+      <span class="sc-leg-val">${fmtHrs(v)}h &nbsp;${pct}%</span>
+    </div>`;
+  }).join('');
+
+  // Reasons rows
+  const reasonRows = reasons.map(r => {
+    const col = DEPT_CONFIG[r.dept]?.color ?? '#94A3B8';
+    return `<tr>
+      <td><span class="sc-dept-dot" style="background:${col}"></span>${r.reason}</td>
+      <td>${fmtHrs(r.hrs)}</td>
+    </tr>`;
+  }).join('');
+
+  const isFullRow = key === 'packing';
+  const card = document.createElement('div');
+  card.className = 'sc-card' + (isFullRow ? ' full-row' : '');
+  card.id = `section-${key}`;
+  card.innerHTML = `
+    <div class="sc-card-header">
+      <div class="sc-card-title">
+        <i data-lucide="${sec.icon ?? 'alert-triangle'}" class="sc-card-icon" style="width:16px;height:16px"></i>
+        ${sec.label}
+      </div>
+      <span class="sc-total-badge">${fmtHrs(total)} hrs total</span>
+    </div>
+    <div class="sc-card-body">
+      <div class="sc-chart-wrap">
+        <canvas class="sc-chart-canvas" id="chart-${key}"></canvas>
+        <div class="sc-legend">${legendHTML}</div>
+      </div>
+      <div class="sc-table-wrap">
+        <table class="sc-table">
+          <thead>
+            <tr><th>Reason / Description</th><th>Hrs</th></tr>
+          </thead>
+          <tbody>${reasonRows || '<tr><td colspan="2" class="sc-no-data">No stoppage data</td></tr>'}</tbody>
+          <tfoot>
+            <tr><td>TOTAL STOPPAGE</td><td>${fmtHrs(total)}</td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>`;
+
+  return card;
+}
+
+/* ── Render chart for a section ──────────────────────────── */
+function renderChart(key, cats) {
+  const ctx = document.getElementById(`chart-${key}`);
+  if (!ctx) return;
+
+  // Destroy existing chart if any
+  if (charts[key]) { charts[key].destroy(); }
+
+  const labels = [];
+  const values = [];
+  const colors = [];
+
+  DEPT_KEYS.forEach(dk => {
+    const v = cats[dk] ?? 0;
+    if (v > 0) {
+      labels.push(DEPT_CONFIG[dk].label);
+      values.push(v);
+      colors.push(DEPT_CONFIG[dk].color);
+    }
+  });
+
+  if (values.length === 0) return;
+
+  charts[key] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: colors,
+        borderColor: 'white',
+        borderWidth: 2,
+        hoverOffset: 4,
+      }]
+    },
+    options: {
+      responsive: false,
+      cutout: '62%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.label}: ${fmtHrs(ctx.raw)} hrs (${(ctx.raw / ctx.dataset.data.reduce((a,b)=>a+b,0)*100).toFixed(1)}%)`
+          }
+        }
+      }
+    }
+  });
+}
+
+/* ── Main render ─────────────────────────────────────────── */
+function renderDashboard() {
+  const mo  = +document.getElementById('sd-month').value;
+  const yr  =  document.getElementById('sd-year').value;
+  const moPad = String(mo).padStart(2,'0');
+
+  const liveData = readLiveData(yr, mo);
+  const isLive   = liveData !== null;
+
+  // Update badge
+  const badge = document.getElementById('sd-data-badge');
+  const MONTHS = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  if (isLive) {
+    badge.textContent = `Live · ${MONTHS[mo]} ${yr}`;
+    badge.className = 'sd-data-chip live';
+  } else {
+    badge.textContent = `Base data · ${MONTHS[mo]} ${yr}`;
+    badge.className = 'sd-data-chip';
+  }
+
+  // Build display dataset — overlay live data on base categories
+  const displayData = { ...STOPPAGE_BASE_DATA, sections: {} };
+  Object.entries(STOPPAGE_BASE_DATA.sections).forEach(([key, sec]) => {
+    const liveCats = isLive ? liveData[key] : null;
+    displayData.sections[key] = {
+      ...sec,
+      categories: liveCats ?? sec.categories,
+      total: liveCats
+        ? Object.values(liveCats).reduce((a,b)=>a+b,0)
+        : sec.total,
+    };
+  });
+
+  // Max hours for bar scaling (use highest total across sections)
+  const maxHrs = Math.max(...Object.values(displayData.sections).map(s => s.total));
+
+  // Overview strip
+  buildOverview(displayData, maxHrs);
+
+  // Section cards
+  const grid = document.getElementById('sd-grid');
+  grid.innerHTML = '';
+  Object.entries(displayData.sections).forEach(([key, sec]) => {
+    const liveCats = isLive ? liveData[key] : null;
+    const card = buildCard(key, sec, liveCats);
+    grid.appendChild(card);
+  });
+
+  // Init Lucide icons then render charts
+  if (window.lucide) lucide.createIcons();
+  Object.entries(displayData.sections).forEach(([key, sec]) => {
+    const liveCats = isLive ? liveData[key] : null;
+    renderChart(key, liveCats ?? sec.categories);
+  });
+}
+
+/* ── Date helpers ─────────────────────────────────────────── */
+function setDates() {
+  const now  = new Date();
+  const opts = { weekday:'short', year:'numeric', month:'short', day:'numeric' };
+  const str  = now.toLocaleDateString('en-GB', opts);
+  const el1  = document.getElementById('live-date');
+  const el2  = document.getElementById('footer-date');
+  if (el1) el1.textContent = str;
+  if (el2) el2.textContent = str;
+}
+
+/* ── INIT ─────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  setDates();
+  renderDashboard();
+
+  document.getElementById('sd-month').addEventListener('change', renderDashboard);
+  document.getElementById('sd-year').addEventListener('change', renderDashboard);
+
+  if (window.lucide) lucide.createIcons();
+});
+</script>
+</body>
+</html>
