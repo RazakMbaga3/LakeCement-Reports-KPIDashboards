@@ -97,6 +97,43 @@
     /* Dept dot (reused from stoppage) */
     .sc-dept-dot { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:6px; vertical-align:middle; }
 
+
+    /* HR sub-tabs */
+    .hr-subtabs {
+      display:flex; gap:0; background:white; border:1px solid var(--border);
+      border-radius:10px; overflow:hidden; margin-bottom:18px;
+    }
+    .hr-stab {
+      flex:1; padding:10px 0; font-size:11px; font-weight:700;
+      color:var(--text-muted); background:transparent; border:none;
+      border-right:1px solid var(--border); cursor:pointer;
+      font-family:var(--font); transition:all .15s;
+    }
+    .hr-stab:last-child { border-right:none; }
+    .hr-stab:hover { background:#F8FAFC; color:var(--navy); }
+    .hr-stab.active { background:var(--navy); color:white; }
+    .hr-panel { display:none; }
+    .hr-panel.active { display:block; }
+
+    /* CSR accordion */
+    .csr-yr { border:1px solid var(--border); border-radius:8px; margin-bottom:10px; overflow:hidden; }
+    .csr-yr-hdr {
+      display:flex; align-items:center; gap:10px;
+      padding:12px 16px; cursor:pointer; list-style:none;
+      background:#F8FAFC; user-select:none;
+    }
+    .csr-yr-hdr::-webkit-details-marker { display:none; }
+    .csr-yr-hdr:hover { background:#EFF6FF; }
+    .csr-yr-label { font-size:14px; font-weight:800; color:var(--navy); min-width:45px; }
+    .csr-yr-meta  { font-size:11px; color:var(--text-muted); }
+    .csr-yr-meta strong { color:var(--text-dark); }
+    .csr-chevron  { width:14px; height:14px; margin-left:auto; color:var(--text-muted); transition:transform .2s; }
+    details[open] .csr-chevron { transform:rotate(180deg); }
+    .csr-yr-body  { padding:0; }
+    .mis-bar-wrap { display:inline-block; width:80px; height:5px; background:#E2E8F0; border-radius:3px; overflow:hidden; vertical-align:middle; }
+    .mis-bar-fill { height:100%; border-radius:3px; }
+    .tc { text-align:center; }
+
     @media print {
       .mis-tabs, .dept-nav, .top-header { position:static !important; }
     }
@@ -174,106 +211,659 @@
 
   <!-- KV strip -->
   <div class="mis-kv-strip">
-    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--navy)">277</div><div class="mis-kv-lbl">Total Employees</div></div>
+    <div class="mis-kv"><div class="mis-kv-val">277</div><div class="mis-kv-lbl">Total Employees</div><div class="mis-kv-sub">Kimbiji + Head Office</div></div>
     <div class="mis-kv"><div class="mis-kv-val" style="color:#10B981">236</div><div class="mis-kv-lbl">Local</div><div class="mis-kv-sub">Tanzanian nationals</div></div>
     <div class="mis-kv"><div class="mis-kv-val" style="color:#EF4444">41</div><div class="mis-kv-lbl">Expat</div><div class="mis-kv-sub">International staff</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--navy)">248</div><div class="mis-kv-lbl">Male</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--navy)">29</div><div class="mis-kv-lbl">Female</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--navy)">2</div><div class="mis-kv-lbl">Locations</div><div class="mis-kv-sub">Kimbiji &amp; Head Office</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--navy)">12</div><div class="mis-kv-lbl">Contract Staff</div><div class="mis-kv-sub">Active contracts</div></div>
+    <div class="mis-kv"><div class="mis-kv-val">248</div><div class="mis-kv-lbl">Male</div></div>
+    <div class="mis-kv"><div class="mis-kv-val">29</div><div class="mis-kv-lbl">Female</div></div>
+    <div class="mis-kv"><div class="mis-kv-val">2</div><div class="mis-kv-lbl">Locations</div><div class="mis-kv-sub">Kimbiji &amp; Head Office</div></div>
+    <div class="mis-kv"><div class="mis-kv-val">12</div><div class="mis-kv-lbl">Contractors</div><div class="mis-kv-sub">Active contracts</div></div>
+    <div class="mis-kv"><div class="mis-kv-val">172</div><div class="mis-kv-lbl">CSR Projects</div><div class="mis-kv-sub">Since 2011</div></div>
   </div>
 
-  <div class="mis-grid">
-    <!-- Employee headcount by department -->
-    <div class="mis-section mis-full">
+  <!-- Sub-tabs for HR sections -->
+  <div class="hr-subtabs">
+    <button class="hr-stab active" onclick="showHrTab('strength')">Strength Analysis</button>
+    <button class="hr-stab" onclick="showHrTab('roster')">Employee Roster</button>
+    <button class="hr-stab" onclick="showHrTab('contractors')">Contract Services</button>
+    <button class="hr-stab" onclick="showHrTab('csr')">CSR History</button>
+  </div>
+
+  <!-- ── STRENGTH ANALYSIS ── -->
+  <div class="hr-panel active" id="hr-strength">
+    <div class="mis-grid">
+
+      <!-- Dept headcount -->
+      <div class="mis-section mis-full">
+        <div class="mis-sec-hdr">
+          <i data-lucide="bar-chart-horizontal" class="mis-sec-icon"></i>
+          <h3 class="mis-sec-title">Employee Headcount by Department</h3>
+          <span style="margin-left:auto;font-size:10px;color:var(--text-muted)">Total: <strong>277</strong></span>
+        </div>
+        <div class="mis-table-wrap">
+          <table class="mis-table">
+            <thead>
+              <tr><th>Department</th><th style="text-align:center">Total</th><th style="text-align:center">Local</th><th style="text-align:center">Expat</th><th style="text-align:center">Male</th><th style="text-align:center">Female</th><th style="text-align:center">Kimbiji</th><th style="text-align:center">Head Office</th></tr>
+            </thead>
+            <tbody><tr><td>Accounts</td><td class="tc">8</td><td class="tc">6</td><td class="tc"><span style="color:#EF4444;font-weight:700">2</span></td><td class="tc">5</td><td class="tc">3</td><td class="tc">4</td><td class="tc">4</td></tr>
+<tr><td>Admin</td><td class="tc">3</td><td class="tc">3</td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc">0</td><td class="tc">3</td><td class="tc">0</td><td class="tc">3</td></tr>
+<tr><td>Captive Power Plant</td><td class="tc">33</td><td class="tc">27</td><td class="tc"><span style="color:#EF4444;font-weight:700">6</span></td><td class="tc">32</td><td class="tc">1</td><td class="tc">33</td><td class="tc">0</td></tr>
+<tr><td>Civil</td><td class="tc">1</td><td class="tc">1</td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc">1</td><td class="tc">0</td><td class="tc">1</td><td class="tc">0</td></tr>
+<tr><td>Corporate</td><td class="tc">5</td><td class="tc">0</td><td class="tc"><span style="color:#EF4444;font-weight:700">5</span></td><td class="tc">5</td><td class="tc">0</td><td class="tc">2</td><td class="tc">3</td></tr>
+<tr><td>Dispatch</td><td class="tc">22</td><td class="tc">22</td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc">16</td><td class="tc">6</td><td class="tc">22</td><td class="tc">0</td></tr>
+<tr><td>Electrical</td><td class="tc">15</td><td class="tc">13</td><td class="tc"><span style="color:#EF4444;font-weight:700">2</span></td><td class="tc">15</td><td class="tc">0</td><td class="tc">15</td><td class="tc">0</td></tr>
+<tr><td>Hr</td><td class="tc">15</td><td class="tc">15</td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc">7</td><td class="tc">8</td><td class="tc">15</td><td class="tc">0</td></tr>
+<tr><td>Instrumentation</td><td class="tc">18</td><td class="tc">14</td><td class="tc"><span style="color:#EF4444;font-weight:700">4</span></td><td class="tc">18</td><td class="tc">0</td><td class="tc">18</td><td class="tc">0</td></tr>
+<tr><td>Logistic Division</td><td class="tc">29</td><td class="tc">28</td><td class="tc"><span style="color:#EF4444;font-weight:700">1</span></td><td class="tc">29</td><td class="tc">0</td><td class="tc">29</td><td class="tc">0</td></tr>
+<tr><td>Mechanical</td><td class="tc">36</td><td class="tc">33</td><td class="tc"><span style="color:#EF4444;font-weight:700">3</span></td><td class="tc">36</td><td class="tc">0</td><td class="tc">36</td><td class="tc">0</td></tr>
+<tr><td>Production</td><td class="tc">24</td><td class="tc">16</td><td class="tc"><span style="color:#EF4444;font-weight:700">8</span></td><td class="tc">23</td><td class="tc">1</td><td class="tc">24</td><td class="tc">0</td></tr>
+<tr><td>Project</td><td class="tc">1</td><td class="tc">1</td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc">1</td><td class="tc">0</td><td class="tc">1</td><td class="tc">0</td></tr>
+<tr><td>Purchase</td><td class="tc">5</td><td class="tc">3</td><td class="tc"><span style="color:#EF4444;font-weight:700">2</span></td><td class="tc">5</td><td class="tc">0</td><td class="tc">1</td><td class="tc">4</td></tr>
+<tr><td>Quality Control</td><td class="tc">12</td><td class="tc">11</td><td class="tc"><span style="color:#EF4444;font-weight:700">1</span></td><td class="tc">10</td><td class="tc">2</td><td class="tc">12</td><td class="tc">0</td></tr>
+<tr><td>Quarrying</td><td class="tc">23</td><td class="tc">21</td><td class="tc"><span style="color:#EF4444;font-weight:700">2</span></td><td class="tc">23</td><td class="tc">0</td><td class="tc">23</td><td class="tc">0</td></tr>
+<tr><td>Sales & Marketing</td><td class="tc">19</td><td class="tc">16</td><td class="tc"><span style="color:#EF4444;font-weight:700">3</span></td><td class="tc">17</td><td class="tc">2</td><td class="tc">0</td><td class="tc">19</td></tr>
+<tr><td>Store</td><td class="tc">8</td><td class="tc">6</td><td class="tc"><span style="color:#EF4444;font-weight:700">2</span></td><td class="tc">5</td><td class="tc">3</td><td class="tc">8</td><td class="tc">0</td></tr>
+</tbody>
+            <tfoot>
+              <tr style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">
+                <td>TOTAL</td>
+                <td class="tc">277</td>
+                <td class="tc" style="color:#10B981">236</td>
+                <td class="tc" style="color:#EF4444">41</td>
+                <td class="tc">248</td>
+                <td class="tc">29</td>
+                <td class="tc">244</td>
+                <td class="tc">33</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- Target vs Actual strength -->
+      <div class="mis-section mis-full">
+        <div class="mis-sec-hdr">
+          <i data-lucide="target" class="mis-sec-icon"></i>
+          <h3 class="mis-sec-title">Target vs Actual Strength</h3>
+        </div>
+        <div class="mis-table-wrap">
+          <table class="mis-table">
+            <thead>
+              <tr><th>#</th><th>Department</th><th style="text-align:center">Target</th><th style="text-align:center">Actual</th><th style="text-align:center">Variance</th><th style="text-align:center">Contract Target</th><th>Fill Rate</th></tr>
+            </thead>
+            <tbody><tr><td>1</td><td>Accounts</td><td class="tc">5</td><td class="tc"><strong>5</strong></td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc" style="color:var(--text-muted)">—</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
+<tr><td>2</td><td>HR (Admin/Safety/Training/Security)</td><td class="tc">15</td><td class="tc"><strong>16</strong></td><td class="tc"><span style="color:#10B981;font-weight:700">+1</span></td><td class="tc" style="color:var(--text-muted)">45</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
+<tr><td>3</td><td>Civil</td><td class="tc">3</td><td class="tc"><strong>1</strong></td><td class="tc"><span style="color:#EF4444;font-weight:700">-2</span></td><td class="tc" style="color:var(--text-muted)">12</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:33%;background:#EF4444"></div></div></td></tr>
+<tr><td>4</td><td>CPP</td><td class="tc">31</td><td class="tc"><strong>33</strong></td><td class="tc"><span style="color:#10B981;font-weight:700">+2</span></td><td class="tc" style="color:var(--text-muted)">9</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
+<tr><td>5</td><td>Dispatch</td><td class="tc">25</td><td class="tc"><strong>22</strong></td><td class="tc"><span style="color:#EF4444;font-weight:700">-3</span></td><td class="tc" style="color:var(--text-muted)">25</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:88%;background:#F59E0B"></div></div></td></tr>
+<tr><td>6</td><td>E & I</td><td class="tc">32</td><td class="tc"><strong>33</strong></td><td class="tc"><span style="color:#10B981;font-weight:700">+1</span></td><td class="tc" style="color:var(--text-muted)">15</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
+<tr><td>7</td><td>Logistics</td><td class="tc">40</td><td class="tc"><strong>29</strong></td><td class="tc"><span style="color:#EF4444;font-weight:700">-11</span></td><td class="tc" style="color:var(--text-muted)">24</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:72%;background:#EF4444"></div></div></td></tr>
+<tr><td>8</td><td>Mechanical</td><td class="tc">34</td><td class="tc"><strong>36</strong></td><td class="tc"><span style="color:#10B981;font-weight:700">+2</span></td><td class="tc" style="color:var(--text-muted)">32</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
+<tr><td>9</td><td>Mines & Workshop</td><td class="tc">18</td><td class="tc"><strong>23</strong></td><td class="tc"><span style="color:#10B981;font-weight:700">+5</span></td><td class="tc" style="color:var(--text-muted)">25</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
+<tr><td>10</td><td>Production</td><td class="tc">20</td><td class="tc"><strong>24</strong></td><td class="tc"><span style="color:#10B981;font-weight:700">+4</span></td><td class="tc" style="color:var(--text-muted)">62</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
+<tr><td>11</td><td>Purchases</td><td class="tc">1</td><td class="tc"><strong>1</strong></td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc" style="color:var(--text-muted)">—</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
+<tr><td>12</td><td>Quality Control</td><td class="tc">12</td><td class="tc"><strong>12</strong></td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc" style="color:var(--text-muted)">16</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
+<tr><td>13</td><td>Stores</td><td class="tc">6</td><td class="tc"><strong>8</strong></td><td class="tc"><span style="color:#10B981;font-weight:700">+2</span></td><td class="tc" style="color:var(--text-muted)">5</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
+<tr><td>14</td><td>Projects</td><td class="tc">7</td><td class="tc"><strong>1</strong></td><td class="tc"><span style="color:#EF4444;font-weight:700">-6</span></td><td class="tc" style="color:var(--text-muted)">—</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:14%;background:#EF4444"></div></div></td></tr>
+</tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── EMPLOYEE ROSTER ── -->
+  <div class="hr-panel" id="hr-roster">
+    <div class="mis-section">
       <div class="mis-sec-hdr">
         <i data-lucide="users" class="mis-sec-icon"></i>
-        <h3 class="mis-sec-title">Employee Headcount by Department</h3>
+        <h3 class="mis-sec-title">Employee Roster (277 employees)</h3>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+          <input type="text" id="emp-search" placeholder="Search name, EmpNo, dept…" oninput="filterEmployees()" style="font-family:var(--font);font-size:11px;padding:5px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:220px" />
+          <select id="emp-filter-branch" onchange="filterEmployees()" style="font-family:var(--font);font-size:11px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
+            <option value="">All Locations</option>
+            <option value="Kimbiji">Kimbiji</option>
+            <option value="Head Office">Head Office</option>
+          </select>
+          <select id="emp-filter-cat" onchange="filterEmployees()" style="font-family:var(--font);font-size:11px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
+            <option value="">Local &amp; Expat</option>
+            <option value="LOCAL">Local Only</option>
+            <option value="EXPAT">Expat Only</option>
+          </select>
+          <span id="emp-count-lbl" style="font-size:11px;color:var(--text-muted);white-space:nowrap"></span>
+        </div>
       </div>
-      <div class="mis-table-wrap">
-        <table class="mis-table">
+      <div class="mis-table-wrap" style="max-height:560px">
+        <table class="mis-table" id="emp-table">
           <thead>
             <tr>
+              <th>Emp No.</th>
+              <th>Name</th>
+              <th style="text-align:center">Sex</th>
+              <th>Designation</th>
               <th>Department</th>
-              <th style="text-align:center">Total</th>
-              <th style="text-align:center">Local</th>
-              <th style="text-align:center">Expat</th>
-              <th style="text-align:center">Male</th>
-              <th style="text-align:center">Female</th>
+              <th>Location</th>
+              <th style="text-align:center">Category</th>
+              <th style="text-align:center">Date Joined</th>
             </tr>
           </thead>
-          <tbody>
-            <tr><td>Accounts</td><td class="num">8</td><td class="num">6</td><td class="num"><span style="color:#EF4444;font-weight:700">2</span></td><td class="num">5</td><td class="num">3</td></tr>
-<tr><td>Admin</td><td class="num">3</td><td class="num">3</td><td class="num"><span style="color:var(--text-muted)">0</span></td><td class="num">0</td><td class="num">3</td></tr>
-<tr><td>Captive  Power Plant</td><td class="num">33</td><td class="num">27</td><td class="num"><span style="color:#EF4444;font-weight:700">6</span></td><td class="num">32</td><td class="num">1</td></tr>
-<tr><td>Civil</td><td class="num">1</td><td class="num">1</td><td class="num"><span style="color:var(--text-muted)">0</span></td><td class="num">1</td><td class="num">0</td></tr>
-<tr><td>Corporate</td><td class="num">5</td><td class="num">0</td><td class="num"><span style="color:#EF4444;font-weight:700">5</span></td><td class="num">5</td><td class="num">0</td></tr>
-<tr><td>Dispatch</td><td class="num">22</td><td class="num">22</td><td class="num"><span style="color:var(--text-muted)">0</span></td><td class="num">16</td><td class="num">6</td></tr>
-<tr><td>Electrical</td><td class="num">15</td><td class="num">13</td><td class="num"><span style="color:#EF4444;font-weight:700">2</span></td><td class="num">15</td><td class="num">0</td></tr>
-<tr><td>Hr</td><td class="num">15</td><td class="num">15</td><td class="num"><span style="color:var(--text-muted)">0</span></td><td class="num">7</td><td class="num">8</td></tr>
-<tr><td>Instrumentation</td><td class="num">18</td><td class="num">14</td><td class="num"><span style="color:#EF4444;font-weight:700">4</span></td><td class="num">18</td><td class="num">0</td></tr>
-<tr><td>Logistic Division</td><td class="num">29</td><td class="num">28</td><td class="num"><span style="color:#EF4444;font-weight:700">1</span></td><td class="num">29</td><td class="num">0</td></tr>
-<tr><td>Mechanical</td><td class="num">36</td><td class="num">33</td><td class="num"><span style="color:#EF4444;font-weight:700">3</span></td><td class="num">36</td><td class="num">0</td></tr>
-<tr><td>Production</td><td class="num">24</td><td class="num">16</td><td class="num"><span style="color:#EF4444;font-weight:700">8</span></td><td class="num">23</td><td class="num">1</td></tr>
-<tr><td>Project</td><td class="num">1</td><td class="num">1</td><td class="num"><span style="color:var(--text-muted)">0</span></td><td class="num">1</td><td class="num">0</td></tr>
-<tr><td>Purchase</td><td class="num">5</td><td class="num">3</td><td class="num"><span style="color:#EF4444;font-weight:700">2</span></td><td class="num">5</td><td class="num">0</td></tr>
-<tr><td>Quality Control[Lab]</td><td class="num">12</td><td class="num">11</td><td class="num"><span style="color:#EF4444;font-weight:700">1</span></td><td class="num">10</td><td class="num">2</td></tr>
-<tr><td>Quarrying</td><td class="num">23</td><td class="num">21</td><td class="num"><span style="color:#EF4444;font-weight:700">2</span></td><td class="num">23</td><td class="num">0</td></tr>
-<tr><td>Sales & Marketing</td><td class="num">19</td><td class="num">16</td><td class="num"><span style="color:#EF4444;font-weight:700">3</span></td><td class="num">17</td><td class="num">2</td></tr>
-<tr><td>Store</td><td class="num">8</td><td class="num">6</td><td class="num"><span style="color:#EF4444;font-weight:700">2</span></td><td class="num">5</td><td class="num">3</td></tr>
-
-          </tbody>
-          <tfoot>
-            <tr style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">
-              <td>TOTAL</td>
-              <td class="num">277</td>
-              <td class="num" style="color:#10B981">236</td>
-              <td class="num" style="color:#EF4444">41</td>
-              <td class="num">248</td>
-              <td class="num">29</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    </div>
-
-    <!-- Contractors -->
-    <div class="mis-section mis-full">
-      <div class="mis-sec-hdr">
-        <i data-lucide="hard-hat" class="mis-sec-icon"></i>
-        <h3 class="mis-sec-title">Contract Services (12 Active Contracts)</h3>
-      </div>
-      <div class="mis-table-wrap">
-        <table class="mis-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Contractor</th>
-              <th>Scope of Work</th>
-              <th>Type</th>
-              <th style="text-align:center">Start</th>
-              <th style="text-align:center">End</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>1</td><td><strong>WORKFORCE GROUP TANZANIA LIMITED</strong></td><td>PROVIDING OF ASSIGNEES (STAFFS)- Plant, HO & LOGISTICS</td><td><span class="mis-tag">MANPOWER BASED</span></td><td class="num">01/01/2026</td><td class="num">31/12/2026</td></tr>
-<tr><td>2</td><td><strong>KIMUNITY CONTRACTORS</strong></td><td>JOB SERVICES FOR MANPOWER</td><td><span class="mis-tag">MANPOWER BASED</span></td><td class="num">10/01/2026</td><td class="num">09/01/2027</td></tr>
-<tr><td>3</td><td><strong>GIBS DEVELOPERS</strong></td><td>WASTE WATER DISPOSAL</td><td><span class="mis-tag">JOB BASED (FIXED RATE)</span></td><td class="num">15/03/2025</td><td class="num">14/03/2027</td></tr>
-<tr><td>3</td><td><strong>ELEGANT KITCHEN</strong></td><td>CATERING SERVICES FOR LOCALS</td><td><span class="mis-tag">JOB BASED</span></td><td class="num">26/03/2025</td><td class="num">25/03/2026</td></tr>
-<tr><td>4</td><td><strong>KEVISAN CANTEEN</strong></td><td>CATERING SERVICES FOR EXPATS</td><td><span class="mis-tag">JOB BASED</span></td><td class="num">01/01/2026</td><td class="num">31/12/2026</td></tr>
-<tr><td>5</td><td><strong>SHAZAF SECURITY LIMITED</strong></td><td>SECURITY SERVICES FOR OWNERS BUILDINGS, GROUNDS, PREMISES, PERSONAL PROPERTIES A</td><td><span class="mis-tag">JOB BASED</span></td><td class="num">01/02/2025</td><td class="num">28/02/2026</td></tr>
-<tr><td>6</td><td><strong>URBAN GARDEN</strong></td><td>GARDENING SERVICES & MAINTAINANCE OF GARDENS ON DAILY BASIS</td><td><span class="mis-tag">JOB BASED (FIXED RATE)</span></td><td class="num">08/03/2025</td><td class="num">07/03/2026</td></tr>
-<tr><td>7</td><td><strong>AGE</strong></td><td>CLEANING  SERVICES ON A DAILY BASIS</td><td><span class="mis-tag">JOB BASED (FIXED RATE)</span></td><td class="num">01/07/2025</td><td class="num">30/06/2026</td></tr>
-<tr><td>8</td><td><strong>CLEAN ROCK LTD</strong></td><td>DOING FUMIGATION INSIDE STAFF QUARTER ROOMS, INSIDE TWO BUILDINGS OF STORES DEPA</td><td><span class="mis-tag">JOB BASED (FIXED RATE)</span></td><td class="num">01/01/2026</td><td class="num">31/12/2026</td></tr>
-<tr><td>9</td><td><strong>CLEAN ROCK LTD</strong></td><td>CLEANING SERVICES ON DAILY BASES- HEAD OFFICE</td><td><span class="mis-tag">JOB BASED (FIXED RATE)</span></td><td class="num">01/09/2025</td><td class="num">31/08/2026</td></tr>
-<tr><td>10</td><td><strong>REMIELI RETAILS LIMITED</strong></td><td>OVERBURDEN/WASTE MATERIAL EXTRACTION, WHICH INCLUDES BUSH CLEARING, REMOVAL OF T</td><td><span class="mis-tag">JOB BASED (FIXED RATE)</span></td><td class="num">01/08/2024</td><td class="num">31/07/2027</td></tr>
-<tr><td>11</td><td><strong>MPEI TRANSPORTERS AND SUPPLIES LIMITED</strong></td><td>STAFF BUS (KIGAMBONI-KIMBIJI-KIGAMBONI) AND (MBAGALA-KIMBIJI-MBAGALA)</td><td><span class="mis-tag">JOB BASED (FIXED RATE)</span></td><td class="num">01/09/2025</td><td class="num">31/08/2027</td></tr>
-
-          </tbody>
+          <tbody id="emp-tbody"></tbody>
         </table>
       </div>
     </div>
   </div>
+
+  <!-- ── CONTRACTORS ── -->
+  <div class="hr-panel" id="hr-contractors">
+    <div class="mis-section">
+      <div class="mis-sec-hdr">
+        <i data-lucide="hard-hat" class="mis-sec-icon"></i>
+        <h3 class="mis-sec-title">Contract Services (12 Contracts)</h3>
+      </div>
+      <div class="mis-table-wrap">
+        <table class="mis-table">
+          <thead>
+            <tr><th>Contractor</th><th>Scope of Work</th><th>Type</th><th style="text-align:center">Start</th><th style="text-align:center">End</th><th style="text-align:center">Status</th></tr>
+          </thead>
+          <tbody><tr>
+      <td><strong>WORKFORCE GROUP TANZANIA LIMITED</strong></td>
+      <td style="max-width:340px;white-space:normal;line-height:1.4">PROVIDING OF ASSIGNEES (STAFFS)- Plant, HO & LOGISTICS</td>
+      <td><span class="mis-tag">MANPOWER BASED</span></td>
+      <td class="tc">01/01/2026</td>
+      <td class="tc">31/12/2026</td>
+      <td class="tc"><span class="mis-badge valid">Active</span></td>
+    </tr>
+<tr>
+      <td><strong>KIMUNITY CONTRACTORS</strong></td>
+      <td style="max-width:340px;white-space:normal;line-height:1.4">JOB SERVICES FOR MANPOWER</td>
+      <td><span class="mis-tag">MANPOWER BASED</span></td>
+      <td class="tc">10/01/2026</td>
+      <td class="tc">09/01/2027</td>
+      <td class="tc"><span class="mis-badge valid">Active</span></td>
+    </tr>
+<tr>
+      <td><strong>GIBS DEVELOPERS</strong></td>
+      <td style="max-width:340px;white-space:normal;line-height:1.4">WASTE WATER DISPOSAL</td>
+      <td><span class="mis-tag">JOB BASED (FIXED RATE)</span></td>
+      <td class="tc">15/03/2025</td>
+      <td class="tc">14/03/2027</td>
+      <td class="tc"><span class="mis-badge valid">Active</span></td>
+    </tr>
+<tr>
+      <td><strong>ELEGANT KITCHEN</strong></td>
+      <td style="max-width:340px;white-space:normal;line-height:1.4">CATERING SERVICES FOR LOCALS</td>
+      <td><span class="mis-tag">JOB BASED</span></td>
+      <td class="tc">26/03/2025</td>
+      <td class="tc">25/03/2026</td>
+      <td class="tc"><span class="mis-badge expired">Expired</span></td>
+    </tr>
+<tr>
+      <td><strong>KEVISAN CANTEEN</strong></td>
+      <td style="max-width:340px;white-space:normal;line-height:1.4">CATERING SERVICES FOR EXPATS</td>
+      <td><span class="mis-tag">JOB BASED</span></td>
+      <td class="tc">01/01/2026</td>
+      <td class="tc">31/12/2026</td>
+      <td class="tc"><span class="mis-badge valid">Active</span></td>
+    </tr>
+<tr>
+      <td><strong>SHAZAF SECURITY LIMITED</strong></td>
+      <td style="max-width:340px;white-space:normal;line-height:1.4">SECURITY SERVICES FOR OWNERS BUILDINGS, GROUNDS, PREMISES, PERSONAL PROPERTIES AND PERSONNEL</td>
+      <td><span class="mis-tag">JOB BASED</span></td>
+      <td class="tc">01/02/2025</td>
+      <td class="tc">28/02/2026</td>
+      <td class="tc"><span class="mis-badge expired">Expired</span></td>
+    </tr>
+<tr>
+      <td><strong>URBAN GARDEN</strong></td>
+      <td style="max-width:340px;white-space:normal;line-height:1.4">GARDENING SERVICES & MAINTAINANCE OF GARDENS ON DAILY BASIS</td>
+      <td><span class="mis-tag">JOB BASED (FIXED RATE)</span></td>
+      <td class="tc">08/03/2025</td>
+      <td class="tc">07/03/2026</td>
+      <td class="tc"><span class="mis-badge expired">Expired</span></td>
+    </tr>
+<tr>
+      <td><strong>AGE</strong></td>
+      <td style="max-width:340px;white-space:normal;line-height:1.4">CLEANING  SERVICES ON A DAILY BASIS</td>
+      <td><span class="mis-tag">JOB BASED (FIXED RATE)</span></td>
+      <td class="tc">01/07/2025</td>
+      <td class="tc">30/06/2026</td>
+      <td class="tc"><span class="mis-badge expiring">Expiring</span></td>
+    </tr>
+<tr>
+      <td><strong>CLEAN ROCK LTD</strong></td>
+      <td style="max-width:340px;white-space:normal;line-height:1.4">DOING FUMIGATION INSIDE STAFF QUARTER ROOMS, INSIDE TWO BUILDINGS OF STORES DEPARTMENT, CANTEEN,  LOGISTIC DIVISION AND MINING OFFICES</td>
+      <td><span class="mis-tag">JOB BASED (FIXED RATE)</span></td>
+      <td class="tc">01/01/2026</td>
+      <td class="tc">31/12/2026</td>
+      <td class="tc"><span class="mis-badge valid">Active</span></td>
+    </tr>
+<tr>
+      <td><strong>CLEAN ROCK LTD</strong></td>
+      <td style="max-width:340px;white-space:normal;line-height:1.4">CLEANING SERVICES ON DAILY BASES- HEAD OFFICE</td>
+      <td><span class="mis-tag">JOB BASED (FIXED RATE)</span></td>
+      <td class="tc">01/09/2025</td>
+      <td class="tc">31/08/2026</td>
+      <td class="tc"><span class="mis-badge valid">Active</span></td>
+    </tr>
+<tr>
+      <td><strong>REMIELI RETAILS LIMITED</strong></td>
+      <td style="max-width:340px;white-space:normal;line-height:1.4">OVERBURDEN/WASTE MATERIAL EXTRACTION, WHICH INCLUDES BUSH CLEARING, REMOVAL OF TOP SOIL (TILL THE LIMESTONE IS EXTRACTED); OVERBURDEN/WASTE MATERIAL LOADING AND TRANSPORT TO THE WASTE DUMP AS PER LCL GUIDELINES; BENCH CLEARING, HEAPING, LOADING OF LIMESTONE AND CLAY AAT THE QUARRY BENCHES; LOADING AND TRANSPORT OF LIMESTONE AND CLAY FROM THE BENCHES TO THE CRUSHER OR STOCKPILE; LOADING LIMESTONE FROM STOCK PILE AND TRANSPORTING TO CRUSHER; PROVISION OF DOZER SERVICES TO LCL AS AND WHEN REQUIRED ALONG WITH ONE OPERATOR AND FUEL.</td>
+      <td><span class="mis-tag">JOB BASED (FIXED RATE)</span></td>
+      <td class="tc">01/08/2024</td>
+      <td class="tc">31/07/2027</td>
+      <td class="tc"><span class="mis-badge valid">Active</span></td>
+    </tr>
+<tr>
+      <td><strong>MPEI TRANSPORTERS AND SUPPLIES LIMITED</strong></td>
+      <td style="max-width:340px;white-space:normal;line-height:1.4">STAFF BUS (KIGAMBONI-KIMBIJI-KIGAMBONI) AND (MBAGALA-KIMBIJI-MBAGALA)</td>
+      <td><span class="mis-tag">JOB BASED (FIXED RATE)</span></td>
+      <td class="tc">01/09/2025</td>
+      <td class="tc">31/08/2027</td>
+      <td class="tc"><span class="mis-badge valid">Active</span></td>
+    </tr>
+</tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CSR ── -->
+  <div class="hr-panel" id="hr-csr">
+    <div class="mis-section">
+      <div class="mis-sec-hdr">
+        <i data-lucide="heart-handshake" class="mis-sec-icon"></i>
+        <h3 class="mis-sec-title">Corporate Social Responsibility — Project History (2011–2026)</h3>
+        <span style="margin-left:auto;font-size:10px;color:var(--text-muted)">172 projects over 15 years</span>
+      </div>
+      <div style="padding:12px 18px">
+        
+<details class="csr-yr" open>
+  <summary class="csr-yr-hdr">
+    <span class="csr-yr-label">2025</span>
+    <span class="csr-yr-meta">16 projects &nbsp;·&nbsp; Total: <strong>TSH 102,496,000</strong></span>
+    <i data-lucide="chevron-down" class="csr-chevron"></i>
+  </summary>
+  <div class="csr-yr-body">
+    <table class="mis-table">
+      <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">DONATED 5 TRIPS OF SAND & RUBBLES TO MILITARY UNIVERSITY AT KIMBIJI.</td><td class="tc">Jan 2025</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">DONATED 5 TRIPS OF SAND & RUBBLES TO GOLANI VILLAGE COUNCIL</td><td class="tc">Feb 2025</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>3</td><td style="white-space:normal;line-height:1.4">DONATED 5 TRIPS OF SAND & RUBBLES TO MILITARY UNIVERSITY AT KIMBIJI.</td><td class="tc">Mar 2025</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CEMENT LTD (4 APPRENTICEES)</td><td class="tc">Apr 2025</td><td class="tc">TSH 6,240,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>5</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION TO TUICO FOR MEI MOSI (WORKERS' DAY)  CELEBRATION EVENT</td><td class="tc">Apr 2025</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4">REPAIRING OF  KIJAKA - MWASONGA ROAD</td><td class="tc">May 2025</td><td class="tc">TSH 27,800,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>7</td><td style="white-space:normal;line-height:1.4">DONATED 10 TRIPS OF SAND & RUBBLES TO MILLITARY UNIVERSITY AT KIMBIJI</td><td class="tc">Jun 2025</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>8</td><td style="white-space:normal;line-height:1.4">REPAIRING OF KIJAKA - MWASONGA ROAD</td><td class="tc">Jun 2025</td><td class="tc">TSH 14,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>9</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR UHURU TORCH CEREMONY TO KIGAMBONI DISTRICT</td><td class="tc">Jun 2025</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>10</td><td style="white-space:normal;line-height:1.4">CHARITY DONATION TO PATEL SAMAJ FOR CHARITY RELIGIOUS EVENT</td><td class="tc">Jun 2025</td><td class="tc">TSH 10,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>11</td><td style="white-space:normal;line-height:1.4">BLOOD DONATION CAMPAIGN</td><td class="tc">Aug 2025</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>12</td><td style="white-space:normal;line-height:1.4">GENERAL ELECTION CONTRIBUTION - CCM PARTY AT KIMBIJI</td><td class="tc">Sep 2025</td><td class="tc">TSH 5,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>13</td><td style="white-space:normal;line-height:1.4">DONATED 119 TRIPS OF SANDS TO GOLANI VILLAGE IN KIGAMBONI FOR REPAIRING OF ROADS</td><td class="tc">Sep 2025</td><td class="tc">TSH 8,806,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>14</td><td style="white-space:normal;line-height:1.4">TOILET PIT DIGGING FOR NGOBANYA PRIMARY SCHOOL</td><td class="tc">Oct 2025</td><td class="tc">TSH 1,500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>15</td><td style="white-space:normal;line-height:1.4">CONSTRUCTION OF THE ROAD FROM PLANT (GOLANI) TO CHEKA ( KIMBIJI ROAD) ( 87 TRIPS)</td><td class="tc">Nov 2025</td><td class="tc">TSH 21,150,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>14</td><td style="white-space:normal;line-height:1.4">ASSISTANCE OF SAND & RUBBLES TO MILITARY UNIVERSITY AT KIMBIJI (14 TRIPS)</td><td class="tc">Nov 2025</td><td class="tc">TSH 3,500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+</tbody>
+      <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2025</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 102,496,000</td><td></td></tr></tfoot>
+    </table>
+  </div>
+</details>
+<details class="csr-yr" open>
+  <summary class="csr-yr-hdr">
+    <span class="csr-yr-label">2024</span>
+    <span class="csr-yr-meta">15 projects &nbsp;·&nbsp; Total: <strong>TSH 46,157,800</strong></span>
+    <i data-lucide="chevron-down" class="csr-chevron"></i>
+  </summary>
+  <div class="csr-yr-body">
+    <table class="mis-table">
+      <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CEMENT LTD (8 APPRENTICEES)</td><td class="tc">Jan-March </td><td class="tc">TSH 3,120,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">DONATION OF 308 BAGS TO THE DC KIGAMBONI FOR THE CONSTRUCTION OF TOILET BLOCKS IN MWONGOZO PRIMARY SCHOOL</td><td class="tc">Feb 2024</td><td class="tc">TSH 4,419,800</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>3</td><td style="white-space:normal;line-height:1.4">DONATION OF  166 KG PREMIUM QUALITY RICE TO TANZANIA LOCAL GOVERNMENT WORKERS UNION TEMEKE REGION  FOR WOMENS'  DAY CELEBRATION</td><td class="tc">Feb 2024</td><td class="tc">TSH 498,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4">EXCAVATOR FOR CLEANING AREA AT KIJAKA</td><td class="tc">Feb 2024</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>5</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CMENT LTD (8 APPRENTICEES)</td><td class="tc">April - De</td><td class="tc">TSH 9,360,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">Ongoing</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR UHURU TORCH CEREMONY TO KIGAMBONI DISTRICT</td><td class="tc">Mar 2024</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>7</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION TO TUICO FOR MEI MOSI (WORKERS' DAY)  CELEBRATION EVENT</td><td class="tc">Apr 2024</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>8</td><td style="white-space:normal;line-height:1.4">DONATED 20 UMBRELLAS TO KIMBIJI WARD</td><td class="tc">May 2024</td><td class="tc">TSH 100,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>9</td><td style="white-space:normal;line-height:1.4">DONATED 10 BARRELS/ DRUMS TO GOLANI VILLAGE COUNCIL</td><td class="tc">May 2024</td><td class="tc">TSH 100,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>10</td><td style="white-space:normal;line-height:1.4">REPAIRS TO TARURA & TANROADS ROUGH ROADS IN THE KIMBIJI-MWASONGA ZONE</td><td class="tc">May 2024</td><td class="tc">TSH 15,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>11</td><td style="white-space:normal;line-height:1.4">DONATED 10 BARRELS/DRUM TO KIMBIJI PRISION FORCE</td><td class="tc">Jun 2024</td><td class="tc">TSH 100,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>12</td><td style="white-space:normal;line-height:1.4">DONATED CONSTRUCTION DEBRIS/ WASTE FOR CONSTRUCTION FOR ROAD RECONSTRUCTION AROUND KIMBIJI PRISON AREA</td><td class="tc">Jun 2024</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>13</td><td style="white-space:normal;line-height:1.4">DONATED CONSTRUCTION DEBRIS/ WASTE FOR CONSTRUCTION OF TWO CLASSES IN GOLANI AND GOBANYA</td><td class="tc">Jun 2024</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>14</td><td style="white-space:normal;line-height:1.4">DONATED 6 TRIPS OF WASTE MATERIAL TO KIMBIJI PRESBITARIAN CHURCH</td><td class="tc">Nov 2024</td><td class="tc">TSH 600,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>14</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICE APRIL TO DECEMBER 2024</td><td class="tc">Dec 2024</td><td class="tc">TSH 9,360,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+</tbody>
+      <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2024</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 46,157,800</td><td></td></tr></tfoot>
+    </table>
+  </div>
+</details>
+<details class="csr-yr">
+  <summary class="csr-yr-hdr">
+    <span class="csr-yr-label">2023</span>
+    <span class="csr-yr-meta">15 projects &nbsp;·&nbsp; Total: <strong>TSH 70,798,400</strong></span>
+    <i data-lucide="chevron-down" class="csr-chevron"></i>
+  </summary>
+  <div class="csr-yr-body">
+    <table class="mis-table">
+      <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CMENT LTD (10 APPRENTICEES)</td><td class="tc">Jan-March </td><td class="tc">TSH 3,300,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">DONATION OF RUBBLE  MATERIAL FOR THE FOUNDATION OF CHURCH BULIDING -  20 TRIPS</td><td class="tc">Feb 2023</td><td class="tc">TSH 1,488,400</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>3</td><td style="white-space:normal;line-height:1.4">DONATION OF  200 KG PREMIUM QUALITY RICE TO KIGAMBONI MUNICIPAL FOR WOMENS'  DAY CELEBRATION</td><td class="tc">Mar 2023</td><td class="tc">TSH 700,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION TO TUICO FOR MEI MOSI (WORKERS' DAY)  CELEBRATION EVENT</td><td class="tc">Mar 2023</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>5</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR UHURU TORCH CEREMONY TO KIGAMBONI DISTRICT</td><td class="tc">Apr 2023</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4">ROAD REPAIR AT KIMBIJI WARD FOR PREPARATION OF UHURU TORCH</td><td class="tc">May 2023</td><td class="tc">TSH 850,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>7</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CMENT LTD (10 APPRENTICEES)</td><td class="tc">April-June</td><td class="tc">TSH 3,780,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>8</td><td style="white-space:normal;line-height:1.4">CONSTRUCTION OF TWO (2) CLASSROOMS AT NGOBANYA PRIMARY SCHOOL</td><td class="tc">Jun 2023</td><td class="tc">TSH 42,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>9</td><td style="white-space:normal;line-height:1.4">DONATION OF  SPORT EQUIPMENTS FOR BIGSTONE BASKETBALL TEAM</td><td class="tc">March 2023</td><td class="tc">TSH 1,215,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>10</td><td style="white-space:normal;line-height:1.4">NGOBANYA PRIMARY SCHOOL ROAD REPAIR -22 TRIPS</td><td class="tc">Aug 2023</td><td class="tc">TSH 1,188,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>11</td><td style="white-space:normal;line-height:1.4">MWASONGA ROAD REPAIR - 83 TRIPS</td><td class="tc">Aug 2023</td><td class="tc">TSH 4,897,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>12</td><td style="white-space:normal;line-height:1.4">HIRING OF MOTOR GRADER FOR NGOBANYA SCHOOL & MWASONGA ROAD REPAIR</td><td class="tc">Aug 2023</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>13</td><td style="white-space:normal;line-height:1.4">KIGAMBONI MUNICIPAL TOP SOIL FOR PLANTATION (for loading only) - 16 TRIPS</td><td class="tc">Aug 2023</td><td class="tc">TSH 320,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">Planned</span></td></tr>
+<tr><td>14</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CMENT LTD (10 APPRENTICEES)</td><td class="tc">July-Augus</td><td class="tc">TSH 2,520,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>15</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CMENT LTD (10 APPRENTICEES)</td><td class="tc">Sept-Dec 2</td><td class="tc">TSH 5,040,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+</tbody>
+      <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2023</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 70,798,400</td><td></td></tr></tfoot>
+    </table>
+  </div>
+</details>
+<details class="csr-yr">
+  <summary class="csr-yr-hdr">
+    <span class="csr-yr-label">2022</span>
+    <span class="csr-yr-meta">19 projects &nbsp;·&nbsp; Total: <strong>TSH 73,829,859</strong></span>
+    <i data-lucide="chevron-down" class="csr-chevron"></i>
+  </summary>
+  <div class="csr-yr-body">
+    <table class="mis-table">
+      <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">SUPPLY OF WATER (CARTON 100) AND 200 KG RICE TO KIGAMBONI MUNICIPAL FOR WOMENS  DAY</td><td class="tc">Mar 2022</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">DONATED  600 CEMENT  BAGS OF 42.5 TO RUANGWA DISTRICT COUNCIL (REQUEST FROM PMO)</td><td class="tc">Mar 2022</td><td class="tc">TSH 7,997,999</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>3</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICEES SPONSORED BY LAKE CMENT LTD (8 APPRENTICEES)</td><td class="tc">Jan-March </td><td class="tc">TSH 3,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4">DONATED 200 CEMENT BAGS TO RPC ILALA FOR THE CONSTRUCTION OF POLICE STATION AT MWANAGATI</td><td class="tc">Mar 2022</td><td class="tc">TSH 2,666,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>5</td><td style="white-space:normal;line-height:1.4">SUPPLY OF RUBBLES AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">Apr 2022</td><td class="tc">TSH 325,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR UHURU TORCH CEREMONY TO KIGAMBONI DISTRICT</td><td class="tc">Apr 2022</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>7</td><td style="white-space:normal;line-height:1.4">DONATION OF 30 RAIN COATS TO SIX STREETS FOR KIMBIJI WARD</td><td class="tc">Apr 2022</td><td class="tc">TSH 900,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>8</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR UHURU TORCH CEREMONY TO CHALINZE MUNICIPAL COUNCIL</td><td class="tc">Apr 2022</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>9</td><td style="white-space:normal;line-height:1.4">DONATION OF 10 DUST BINS TO WARD COUNCILOR FOR THE KIMBIJI WARD</td><td class="tc">May 2022</td><td class="tc">TSH 650,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>10</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICEES SPONSORED BY LAKE CMENT LTD (8 APPRENTICEES)</td><td class="tc">Apr-June 2</td><td class="tc">TSH 3,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>11</td><td style="white-space:normal;line-height:1.4">REPAIR OF ROAD AT THE BEACH AT KIDAGAA AREA</td><td class="tc">Jul 2022</td><td class="tc">TSH 480,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>12</td><td style="white-space:normal;line-height:1.4">SIGNAGES - GOLAN PRIMARY SCHOOL</td><td class="tc">Oct 2022</td><td class="tc">TSH 424,800</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>13</td><td style="white-space:normal;line-height:1.4">2 SPEED HUMPS,4 TRIPS OF WASTE MATERIAL - GOLAN PRIMARY SCHOOL</td><td class="tc">Oct 2022</td><td class="tc">TSH 344,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>14</td><td style="white-space:normal;line-height:1.4">5 TRIPS OF WASTE MARERIAL FOR LANDSCAPING - KIMBIJI SECONDARY SCHOOL</td><td class="tc">Oct 2022</td><td class="tc">TSH 430,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>15</td><td style="white-space:normal;line-height:1.4">8 TRIPS OF WASTE MATERIAL FOR LANDSCAPING - KIJAKA DISPENSARY & KIJAKA PRIMARY SCHOOL</td><td class="tc">Oct 2022</td><td class="tc">TSH 688,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>16</td><td style="white-space:normal;line-height:1.4">CONSTRUCTION OF GEZAULOLE BUS STAND AT KIGAMBONI MUNICIPAL COUNCIL</td><td class="tc">Nov 2022</td><td class="tc">TSH 46,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>17</td><td style="white-space:normal;line-height:1.4">SUPPLY AGGREGATE MATERIALS FOR KIMBIJI WARD SECONDARY SCHOOL 5trips</td><td class="tc">Dec 2022</td><td class="tc">TSH 715,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>18</td><td style="white-space:normal;line-height:1.4">SUPPLY TOP SOIL AT KIJAKA HEALTH CENTER 8trips</td><td class="tc">Dec 2022</td><td class="tc">TSH 1,144,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>19</td><td style="white-space:normal;line-height:1.4">GROUND LEVELLING AT TUNDWI SONGANI SECONDARY SCHOOL 28hrs</td><td class="tc">Dec 2022</td><td class="tc">TSH 2,565,060</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+</tbody>
+      <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2022</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 73,829,859</td><td></td></tr></tfoot>
+    </table>
+  </div>
+</details>
+<details class="csr-yr">
+  <summary class="csr-yr-hdr">
+    <span class="csr-yr-label">2021</span>
+    <span class="csr-yr-meta">27 projects &nbsp;·&nbsp; Total: <strong>TSH 79,267,119</strong></span>
+    <i data-lucide="chevron-down" class="csr-chevron"></i>
+  </summary>
+  <div class="csr-yr-body">
+    <table class="mis-table">
+      <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">DONATION OF 13 SETS OF CHAIRS AND TABLES FOR KIMBIJI SECONDARY SCHOOL</td><td class="tc">Jan 2021</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">CONSTRUCTION OF  FIVE (5) TOILETS IN GOLANI PRIMARY SCHOOL INCLUDING SOAK PIT AND DEVELOPMENT OF SURROUNDING AREA</td><td class="tc">Jan 2021</td><td class="tc">TSH 11,270,897</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>3</td><td style="white-space:normal;line-height:1.4">SUPPAORT TO GOLANI PRIMARY SCHOOL (2 CLASSROOMS), INCLUDING DOORS, WINDOWS, FLOORING, ROOFING SHEETS, WALL PLASTERING AND DEVELOPMENT OF SURROUNDING AREA</td><td class="tc">Jan 2021</td><td class="tc">TSH 6,033,946</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4">CLEANING OF DAMPO- KIMBIJI WARD</td><td class="tc">Feb 2021</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>5</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION TOWARDS FIRE & RESCUE WELFARE FUND</td><td class="tc">Feb 2021</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4">DONATED 200 KGS OF RICE TO ORPHANAGE  DURING WOMEN'S DAY</td><td class="tc">Mar 2021</td><td class="tc">TSH 400,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>7</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION TO TUICO FOR MEI MOSI (WORKERS' DAY)  CELEBRATION EVENT</td><td class="tc">Mar 2021</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>8</td><td style="white-space:normal;line-height:1.4">RENOVATION OF ONE DOMITORY  AND CONSTRUCTION OF SEPTIC TANK AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">Apr 2021</td><td class="tc">TSH 6,351,157</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>9</td><td style="white-space:normal;line-height:1.4">CLEARING THE  AREA FOR CONSTRUCTION OF BOY'S DORMITORY AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">May 2021</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>10</td><td style="white-space:normal;line-height:1.4">SUPPLY OF GRAVEL FOR CONSTRUCTION OF BOY'S DORMITORY AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">May 2021</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>11</td><td style="white-space:normal;line-height:1.4">SUPPLY OF SAND FOR CONSTRUCTION OF BOY'S DORMITORY AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">May 2021</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>12</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION OF 5 NEW BALLS TO SUPPORT LOCAL FOOTBALL TOURNAMENT AT MIKENGE FOOTBALL CLUB</td><td class="tc">Jun-21</td><td class="tc">TSH 300,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>13</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR UHURU TORCH CEREMONY TO KIGAMBONI DISTRICT</td><td class="tc">Jul-21</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>14</td><td style="white-space:normal;line-height:1.4">SUPPLY OF RUBBLES  AND CLEANLINESS  AT KIMBIJI HOSPITAL  FOR THE PREPARATION OF UHURU TORCH</td><td class="tc">Aug-21</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>15</td><td style="white-space:normal;line-height:1.4">CLEANING OF DAMPO  AREA AT LINGATO - KISARAWE 2 TO SUPPORT NEMC</td><td class="tc">Sept-21</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>16</td><td style="white-space:normal;line-height:1.4">SUPPLY OF RUBBLES  AROUND  GOLANI OFFICE AND PRIMARY SCHOOL</td><td class="tc">Oct-21</td><td class="tc">TSH 10,075,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>17</td><td style="white-space:normal;line-height:1.4">SUPPLY  OF RUBBLES  FOR LEVELING OF ONE CLASS AT MIKENGE PRIMARY SCHOOL</td><td class="tc">Oct-21</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>18</td><td style="white-space:normal;line-height:1.4">CLEAR BUSH / MAINTAIN  ROAD FROM GOLANI TO KIDAGAA/MIKENGE</td><td class="tc">Oct-21</td><td class="tc">TSH 9,870,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>19</td><td style="white-space:normal;line-height:1.4">SUPPORT TO KIGAMBONI DISTRICT CLEANING CAMPAIGN BY DONATING (10 WASTE BINS) @70,000</td><td class="tc">Oct-21</td><td class="tc">TSH 700,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>20</td><td style="white-space:normal;line-height:1.4">SUPPLY OF RUBBLES  FOR CONSTRUCTION OF (8 CLASSES) AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">Nov-21</td><td class="tc">TSH 1,040,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>21</td><td style="white-space:normal;line-height:1.4">SUPPLY OF RUBBLES  FOR CONSTRUCTION OF (2 CLASSES ) AT GOLAN SHIKIZI PRIMARY  SCHOOL</td><td class="tc">Nov-21</td><td class="tc">TSH 260,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>22</td><td style="white-space:normal;line-height:1.4">CONSTRUCTION OF KWA CHARLE OFFICE (20 BAGS OF CEMENT)</td><td class="tc">Nov-21</td><td class="tc">TSH 218,120</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>23</td><td style="white-space:normal;line-height:1.4">DONATED  600 CEMENT  BAGS OF 42.5 TO RUANGWA DISTRICT COUNCIL (REQUEST FROM PMO)</td><td class="tc">Nov-21</td><td class="tc">TSH 7,997,999</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>24</td><td style="white-space:normal;line-height:1.4">SUPPLY OF WATER FOR KIMBIJI CLEANING COMPAIGN (200 bottles @400)</td><td class="tc">Dec-21</td><td class="tc">TSH 80,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>25</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICEES SPONSORED BY LAKE CMENT LTD (9 APPRENTICEES)</td><td class="tc">Jan 21-Dec</td><td class="tc">TSH 10,170,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>1</td><td style="white-space:normal;line-height:1.4">DEVELOPMENT  OF ROAD  OF KIJAKA DISPENSARY</td><td class="tc">Feb 2021</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">SUPPLY OF RUBBLES ( 6 TRIPS )  AT KIMBIJI HEALTH CENTRE  FOR PREPARATION OF UHURU TORCH</td><td class="tc">Feb 2021</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+</tbody>
+      <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2021</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 79,267,119</td><td></td></tr></tfoot>
+    </table>
+  </div>
+</details>
+<details class="csr-yr">
+  <summary class="csr-yr-hdr">
+    <span class="csr-yr-label">2020</span>
+    <span class="csr-yr-meta">13 projects &nbsp;·&nbsp; Total: <strong>TSH 169,322,420</strong></span>
+    <i data-lucide="chevron-down" class="csr-chevron"></i>
+  </summary>
+  <div class="csr-yr-body">
+    <table class="mis-table">
+      <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">BALAKRISHNA FOUNDATION CONSTRUCTION OF CANTEEN FOR UPANGA PRIMARY SCHOOL</td><td class="tc">Feb 2020</td><td class="tc">TSH 7,524,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR VISITATION OF THE PRESIDENT IN KIGAMBONI MUNICIPAL</td><td class="tc">Feb 2020</td><td class="tc">TSH 5,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>3</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR EIGHT TYRES FOR TWO POLICE VEHICLES OF KIGAMBONI</td><td class="tc">Feb 2020</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4">DONATION FOR RENOVATION OF GOLANI PRIMARY SCHOOL (2 CLASSES)</td><td class="tc">May 2020</td><td class="tc">TSH 17,993,400</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>5</td><td style="white-space:normal;line-height:1.4">IRIMBA ,SINGIDA CONSTITUENCY FOR CONSTRUCTION OF GIRL'S SECONDARY SCHOOL HOSTEL</td><td class="tc">Aug 2020</td><td class="tc">TSH 3,999,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR REPAIRING KIGAMBONI POLICE VEHICLE TOYOTA LAND CRUISER</td><td class="tc">Sep 2020</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>7</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR ELECTION TO DC 30 MILLION</td><td class="tc">Sep 2020</td><td class="tc">TSH 30,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>8</td><td style="white-space:normal;line-height:1.4">CEMENT TO REGIONAL COMMISSIONER (RC) 1500 BAGS</td><td class="tc">Mar 2020</td><td class="tc">TSH 20,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>9</td><td style="white-space:normal;line-height:1.4">SUPPLIED TO TARURA 60 TRIPS OF WASTE FOR THE ROAD REPAIR AT KIMBIJI MWASONGA ROAD</td><td class="tc">Apr 2020</td><td class="tc">TSH 24,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>10</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR ELECTION TO REGIONAL COMMISSIONER 40 MILLION</td><td class="tc">Sep 2020</td><td class="tc">TSH 40,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>11</td><td style="white-space:normal;line-height:1.4">RECONSTRUCTION OF DOMITORY FOR KIMBIJI SECONDARY SCHOOL</td><td class="tc">Oct 2020</td><td class="tc">TSH 7,526,020</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>12</td><td style="white-space:normal;line-height:1.4">REPAIRING OF ROAD NEAR KIMBIJI VILLAGE HOSPITAL</td><td class="tc">Dec 2020</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>13</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICEES  SPONSORED BY LAKE CEMENT LTD (6 APPRENTICEES)</td><td class="tc">JAN -DEC  </td><td class="tc">TSH 8,280,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+</tbody>
+      <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2020</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 169,322,420</td><td></td></tr></tfoot>
+    </table>
+  </div>
+</details>
+<details class="csr-yr">
+  <summary class="csr-yr-hdr">
+    <span class="csr-yr-label">2019</span>
+    <span class="csr-yr-meta">16 projects &nbsp;·&nbsp; Total: <strong>TSH 27,710,000</strong></span>
+    <i data-lucide="chevron-down" class="csr-chevron"></i>
+  </summary>
+  <div class="csr-yr-body">
+    <table class="mis-table">
+      <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">DOZZER    (WEEK)     -KIMBIJI HOSPITAL  (levelling)</td><td class="tc">Feb 2019</td><td class="tc">TSH 3,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">WHEEL LOADER ( 1 WEEK) -NEW KIGAMBONI  HOSPITAL GEZA ( cleaning)</td><td class="tc">Mar 2019</td><td class="tc">TSH 4,800,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>3</td><td style="white-space:normal;line-height:1.4">CLEANING OF DAMPO- KIMBIJI WARD</td><td class="tc">Jun 2019</td><td class="tc">—</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4">SUPPLY OF WASTE MATERIALS ( 5TRIPS) - KIMBIJI HOSPITAL (Reparing kimbiji hospital road) 5*20*20,000=2,000,000</td><td class="tc">Jun 2019</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>5</td><td style="white-space:normal;line-height:1.4">SUPPLY OF WASTE MATERIAL (8 TRIPS)-KIJAKA 8*20*20,000 = 3,200,000</td><td class="tc">Jul 2019</td><td class="tc">TSH 3,200,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4">HYDRA  (6HRS) -KIMBIJI HOSPITAL    ( shifting washing machines)</td><td class="tc">Jul 2019</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>7</td><td style="white-space:normal;line-height:1.4">TREE PLANTATION ( KIMBIJI SECONDARY) (150TREES) - SHADES AND FRUITS TREES</td><td class="tc">Jul 2019</td><td class="tc">TSH 950,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>8</td><td style="white-space:normal;line-height:1.4">TREE PLANTATION (150 TREES) ( KIJAKA PRIMARY SCHOOL & HOSPITAL)-      ''</td><td class="tc">Aug 2019</td><td class="tc">TSH 950,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>9</td><td style="white-space:normal;line-height:1.4">CEMENT   300 BGS (PRISON)</td><td class="tc">Aug 2019</td><td class="tc">—</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>10</td><td style="white-space:normal;line-height:1.4">TREE PLANTATION (150) MIKENGE PRIMARY SCHOOL-              ''</td><td class="tc">Aug 2019</td><td class="tc">TSH 950,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>11</td><td style="white-space:normal;line-height:1.4">TREE PLANTATION (150) ( GOLANI PRIMARY SCHOOL)-                       ''</td><td class="tc">Aug 2019</td><td class="tc">TSH 950,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>12</td><td style="white-space:normal;line-height:1.4">SUPPLY OF CLAY MATERIAL (5TRIPS) -PRISON (5*20*15,000 = 1,500,000 /=</td><td class="tc">Aug 2019</td><td class="tc">TSH 1,500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>13</td><td style="white-space:normal;line-height:1.4">DONATION OF IRRIGATION PIPES (3) ROLLS-KIMBIJI WARD</td><td class="tc">Sep 2019</td><td class="tc">TSH 520,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>14</td><td style="white-space:normal;line-height:1.4">TREE PLANTATION (150) BOHARI PRIMARY SCHOOL -          ''</td><td class="tc"> SEPT-19</td><td class="tc">TSH 950,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>15</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR MAINTAIN SECURITY AT KIGAMBONI MINICIPAL</td><td class="tc">Dec 2019</td><td class="tc">TSH 1,500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>16</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICEES SPONSORED BY LAKE CEMENT LTD (4 APPRENTICEES)</td><td class="tc">JAN-DEC 20</td><td class="tc">TSH 4,440,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+</tbody>
+      <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2019</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 27,710,000</td><td></td></tr></tfoot>
+    </table>
+  </div>
+</details>
+<details class="csr-yr">
+  <summary class="csr-yr-hdr">
+    <span class="csr-yr-label">2018</span>
+    <span class="csr-yr-meta">9 projects &nbsp;·&nbsp; Total: <strong>TSH 11,781,100</strong></span>
+    <i data-lucide="chevron-down" class="csr-chevron"></i>
+  </summary>
+  <div class="csr-yr-body">
+    <table class="mis-table">
+      <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION TO NEEDY(VIJIBWEN HOSPITAL &ORPHANS)</td><td class="tc">Jan 2018</td><td class="tc">TSH 1,502,600</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">SAFETY TRAINING TO MOTORCYCLE DRIVERS</td><td class="tc">Jan 2018</td><td class="tc">TSH 40,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>3</td><td style="white-space:normal;line-height:1.4">DONATION OF SEED AND FERTILIZER TO POOR FARMERS</td><td class="tc">Mar 2018</td><td class="tc">TSH 552,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4">DONATION OF SEEDS AND FERTILIZER TO FARMERS</td><td class="tc">Mar 2018</td><td class="tc">TSH 278,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>5</td><td style="white-space:normal;line-height:1.4">RECONSTRUCTION OF GOLANI OFFICE</td><td class="tc">Jun 2018</td><td class="tc">TSH 2,115,500</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4">DONATION OF PUMPS,SEEDS,FERTILIZER,SPRAYING PUMPS FOR IRRIGATION PROJECT</td><td class="tc">Jul 2018</td><td class="tc">TSH 1,913,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>7</td><td style="white-space:normal;line-height:1.4">COMPENSATION TO COMPLAINERS NEAR MINING AREA</td><td class="tc">2018</td><td class="tc">TSH 700,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>8</td><td style="white-space:normal;line-height:1.4">VOLUNTEERING CLEANING AT BEACH AREAS</td><td class="tc">2018</td><td class="tc">—</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>9</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CEMENT (4 APPRENTICEES)</td><td class="tc">JAN-DEC 20</td><td class="tc">TSH 4,680,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+</tbody>
+      <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2018</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 11,781,100</td><td></td></tr></tfoot>
+    </table>
+  </div>
+</details>
+<details class="csr-yr">
+  <summary class="csr-yr-hdr">
+    <span class="csr-yr-label">2017</span>
+    <span class="csr-yr-meta">19 projects &nbsp;·&nbsp; Total: <strong>TSH 91,533,528</strong></span>
+    <i data-lucide="chevron-down" class="csr-chevron"></i>
+  </summary>
+  <div class="csr-yr-body">
+    <table class="mis-table">
+      <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">DONATION OF COLOUR PAINTS TO POLICE STATION</td><td class="tc">Feb 2017</td><td class="tc">TSH 112,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">SWASH PROGRAM KIMBIJI PRIMARY SCHOOL</td><td class="tc">Feb 2017</td><td class="tc">TSH 212,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>3</td><td style="white-space:normal;line-height:1.4">DONATION OF DOMITORY AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">Feb 2017</td><td class="tc">TSH 65,000,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4">SWASH PROGRAM</td><td class="tc">Mar 2017</td><td class="tc">TSH 212,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>5</td><td style="white-space:normal;line-height:1.4">DONATION OF SEEDS AND MEDICINE TO POOR FARMERS</td><td class="tc">Apr 2017</td><td class="tc">TSH 400,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4">VOLUNTEERING TEACHING PROGRAM KIMBIJ SECONDARY</td><td class="tc">Apr 2017</td><td class="tc">—</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>7</td><td style="white-space:normal;line-height:1.4">MEI MOSI SPORTS AND GAMES</td><td class="tc">May 2017</td><td class="tc">—</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>8</td><td style="white-space:normal;line-height:1.4">PRIME MINISTER/UHURU TOURCH DAY (1000bgs of 40.2N)</td><td class="tc">May 2017</td><td class="tc">—</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>9</td><td style="white-space:normal;line-height:1.4">REPARING ROAD KIMBIJI TO NGOBANYA</td><td class="tc">Jul 2017</td><td class="tc">TSH 3,000,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>10</td><td style="white-space:normal;line-height:1.4">STREET YOUTH SEMINER</td><td class="tc">Sep 2017</td><td class="tc">TSH 90,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>11</td><td style="white-space:normal;line-height:1.4">DONATION OF TRICYCLES (2)</td><td class="tc">Sep 2017</td><td class="tc">TSH 1,050,700</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>12</td><td style="white-space:normal;line-height:1.4">RENOVATION OF TALAWANDA PRIMARY SCHOOL BAGAMOYO-PWANI</td><td class="tc">Sep 2017</td><td class="tc">TSH 13,762,995</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>13</td><td style="white-space:normal;line-height:1.4">DONATION OF SEWING MACHINE(1) -GOLANI STREET</td><td class="tc">Nov 2017</td><td class="tc">TSH 274,167</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>14</td><td style="white-space:normal;line-height:1.4">DONATION OF SEWING MACHINE(1)-KIZITOHUONJWA</td><td class="tc">Nov 2017</td><td class="tc">TSH 274,167</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>15</td><td style="white-space:normal;line-height:1.4">DONATION OFSEWING MACHINE(1)- MIKENGE</td><td class="tc">Nov 2017</td><td class="tc">TSH 274,167</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>16</td><td style="white-space:normal;line-height:1.4">DONATION OF SEWING MACHINE(1) - KWA CHALE</td><td class="tc">Nov 2017</td><td class="tc">TSH 274,167</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>17</td><td style="white-space:normal;line-height:1.4">DONATION OF SEWING MACHINE(1) - KIJAKA</td><td class="tc">Nov 2017</td><td class="tc">TSH 274,167</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>18</td><td style="white-space:normal;line-height:1.4">YOUTH SEMINER</td><td class="tc">Nov 2017</td><td class="tc">TSH 203,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>19</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CEMENT (4 APPRENTICEES)</td><td class="tc">JAN-DEC 20</td><td class="tc">TSH 6,120,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+</tbody>
+      <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2017</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 91,533,528</td><td></td></tr></tfoot>
+    </table>
+  </div>
+</details>
+<details class="csr-yr">
+  <summary class="csr-yr-hdr">
+    <span class="csr-yr-label">2016</span>
+    <span class="csr-yr-meta">10 projects &nbsp;·&nbsp; Total: <strong>TSH 26,077,000</strong></span>
+    <i data-lucide="chevron-down" class="csr-chevron"></i>
+  </summary>
+  <div class="csr-yr-body">
+    <table class="mis-table">
+      <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">DONATION OF CEMENT TO ILALA MUNICIPAL (100 bgs)</td><td class="tc">Jan 2016</td><td class="tc">TSH 1,177,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">AWARD TOP LINKING IN CIVIL ENGINERING (DIT)</td><td class="tc">Jan 2016</td><td class="tc">TSH 550,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>3</td><td style="white-space:normal;line-height:1.4">TREE PLANTATION AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">Jul 2016</td><td class="tc">TSH 3,000,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4">DONATION OF CEMENT TO BAGAMOYO COMMISIONER (400 bgs)</td><td class="tc">Oct 2016</td><td class="tc">TSH 3,800,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>5</td><td style="white-space:normal;line-height:1.4">DONATION OF SCHOOL ITEMS TO POOR STUDENTS</td><td class="tc">Oct 2016</td><td class="tc">TSH 3,000,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4">MITIWANGO COMPAIGN KIGAMBONI MUNICIPAL</td><td class="tc">Oct 2016</td><td class="tc">TSH 3,800,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>7</td><td style="white-space:normal;line-height:1.4">FACTORY GREEN BELT PLANTATION</td><td class="tc">Nov 2016</td><td class="tc">TSH 2,700,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>8</td><td style="white-space:normal;line-height:1.4">DONATION OF CEMENT FOR KIMBIJI PRISON OFFICES (200 bgs)</td><td class="tc">Dec 2016</td><td class="tc">TSH 1,900,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>9</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION TO NEEDY(ELDERS& ORPHANS)</td><td class="tc">Dec 2016</td><td class="tc">TSH 1,710,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>10</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CEMENT (4 APPRENTICEES)</td><td class="tc">JAN-DEC 20</td><td class="tc">TSH 4,440,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+</tbody>
+      <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2016</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 26,077,000</td><td></td></tr></tfoot>
+    </table>
+  </div>
+</details>
+<details class="csr-yr">
+  <summary class="csr-yr-hdr">
+    <span class="csr-yr-label">2015</span>
+    <span class="csr-yr-meta">7 projects &nbsp;·&nbsp; Total: <strong>TSH 10,961,152</strong></span>
+    <i data-lucide="chevron-down" class="csr-chevron"></i>
+  </summary>
+  <div class="csr-yr-body">
+    <table class="mis-table">
+      <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">CONNECTING ELECTRICAL POWER SUPPLY AT DISPENSARY</td><td class="tc">Mar 2015</td><td class="tc">TSH 5,281,152</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">DONATION OF CEMENT FOR KAHAMA FLOOD VICTIMS</td><td class="tc">Apr 2015</td><td class="tc">200 bgs</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>3</td><td style="white-space:normal;line-height:1.4">MEI MOSI SPORTS AND GAMES</td><td class="tc">May 2015</td><td class="tc">—</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4">SUPPLY OF CONSTRUCTION MATERIAL TO JKT</td><td class="tc">May 2015</td><td class="tc">—</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>5</td><td style="white-space:normal;line-height:1.4">REPAIRING KIMBIJI TO MWASONGA ROAD</td><td class="tc">May 2015</td><td class="tc">TSH 4,000,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CEMENT (2 APPRENTICEES)</td><td class="tc">JUNE-DEC 1</td><td class="tc">TSH 1,680,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>7</td><td style="white-space:normal;line-height:1.4">SUPPORTING OF LABORATORY EQUIPMENTS (DIT)</td><td class="tc">Aug 2015</td><td class="tc">—</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+</tbody>
+      <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2015</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 10,961,152</td><td></td></tr></tfoot>
+    </table>
+  </div>
+</details>
+<details class="csr-yr">
+  <summary class="csr-yr-hdr">
+    <span class="csr-yr-label">2014</span>
+    <span class="csr-yr-meta">2 projects &nbsp;·&nbsp; Total: <strong>TSH 4,500,000</strong></span>
+    <i data-lucide="chevron-down" class="csr-chevron"></i>
+  </summary>
+  <div class="csr-yr-body">
+    <table class="mis-table">
+      <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
+      <tbody><tr><td>5</td><td style="white-space:normal;line-height:1.4">SUPPLY OF AGGREGATES AND WHEEL LODER</td><td class="tc">Jul 2014</td><td class="tc">TSH 1,500,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4">LEVELING GOLANI PLAY GROUND</td><td class="tc">2014</td><td class="tc">TSH 3,000,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+</tbody>
+      <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2014</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 4,500,000</td><td></td></tr></tfoot>
+    </table>
+  </div>
+</details>
+<details class="csr-yr">
+  <summary class="csr-yr-hdr">
+    <span class="csr-yr-label">2013</span>
+    <span class="csr-yr-meta">2 projects &nbsp;·&nbsp; Total: <strong>TSH 23,781,107</strong></span>
+    <i data-lucide="chevron-down" class="csr-chevron"></i>
+  </summary>
+  <div class="csr-yr-body">
+    <table class="mis-table">
+      <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
+      <tbody><tr><td>3</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION NATIONAL CEREMONY</td><td class="tc">Jul 2013</td><td class="tc">TSH 100,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4">DONATION OF QUALITY CLASS AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">Jul 2013</td><td class="tc">TSH 23,681,107</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+</tbody>
+      <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2013</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 23,781,107</td><td></td></tr></tfoot>
+    </table>
+  </div>
+</details>
+<details class="csr-yr">
+  <summary class="csr-yr-hdr">
+    <span class="csr-yr-label">2012</span>
+    <span class="csr-yr-meta">1 project &nbsp;·&nbsp; Total: <strong>TSH 23,681,107</strong></span>
+    <i data-lucide="chevron-down" class="csr-chevron"></i>
+  </summary>
+  <div class="csr-yr-body">
+    <table class="mis-table">
+      <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">DONATION OF QUALITY CLASS AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">Oct 2012</td><td class="tc">TSH 23,681,107</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+</tbody>
+      <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2012</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 23,681,107</td><td></td></tr></tfoot>
+    </table>
+  </div>
+</details>
+<details class="csr-yr">
+  <summary class="csr-yr-hdr">
+    <span class="csr-yr-label">2011</span>
+    <span class="csr-yr-meta">1 project &nbsp;·&nbsp; Total: <strong>TSH 1,500,000</strong></span>
+    <i data-lucide="chevron-down" class="csr-chevron"></i>
+  </summary>
+  <div class="csr-yr-body">
+    <table class="mis-table">
+      <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">TANROAD (MWASONGA ROAD)</td><td class="tc">Jul 2011</td><td class="tc">TSH 1,500,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">COMPLETED</span></td></tr>
+</tbody>
+      <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2011</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 1,500,000</td><td></td></tr></tfoot>
+    </table>
+  </div>
+</details>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- ══════════════════ ASSETS ══════════════════ -->
@@ -645,6 +1235,61 @@
     document.getElementById('panel-' + id)?.classList.add('active');
     document.getElementById('tab-' + id)?.classList.add('active');
   }
+</script>
+
+<script>
+/* ══ EMPLOYEE ROSTER DATA ══ */
+const EMP_DATA = [{"n": "Cecilia Waya", "e": "LCL/KIMB/692", "s": "F", "d": "23 Feb 2016", "b": "Kimbiji", "dp": "Accounts", "c": "LOCAL", "ds": "Assistant Accountant"}, {"n": "Muneesh Kumar", "e": "LCL/KIMB/1189", "s": "M", "d": "15 Apr 2022", "b": "Kimbiji", "dp": "Accounts", "c": "EXPAT", "ds": "Head Business Supervision And Operations"}, {"n": "David Francis Lukindo", "e": "LCL/KIMB/1398", "s": "M", "d": "17 Jun 2025", "b": "Kimbiji", "dp": "Accounts", "c": "LOCAL", "ds": "Accounts Officer"}, {"n": "Jesca Amon Mertaroy", "e": "LCL/KIMB/1396", "s": "F", "d": "17 Jun 2025", "b": "Kimbiji", "dp": "Accounts", "c": "LOCAL", "ds": "Trainee Accounts Officer"}, {"n": "Grasiana Bernard Tarimo", "e": "LCL/KIMB/831", "s": "F", "d": "14 Oct 2016", "b": "Kimbiji", "dp": "Hr", "c": "LOCAL", "ds": "Hr Officer - Payroll"}, {"n": "Said Mbinje", "e": "LCL/KIMB/306", "s": "M", "d": "15 Apr 2014", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Senior Technician"}, {"n": "Aron Odilo Karugaba", "e": "LCL/KIMB/1361", "s": "M", "d": "11 Sep 2024", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Chemist"}, {"n": "Pius  Malunde", "e": "LCL/KIMB/728", "s": "M", "d": "30 May 2016", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Technician"}, {"n": "Abdallah B. Mohamed", "e": "LCL/KIMB/974", "s": "M", "d": "27 Feb 2018", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Technician"}, {"n": "Bakari B. Mpeje", "e": "LCL/KIMB/931", "s": "M", "d": "03 Oct 2017", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Technician"}, {"n": "Joseph Batista Nyembeke", "e": "LCL/KIMB/378", "s": "M", "d": "24 Jun 2014", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Technician"}, {"n": "Maurice Cyrill Chifwila", "e": "LCL/KIMB/765", "s": "M", "d": "17 Sep 2016", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Boiler Operator"}, {"n": "Francis  Mwaihola", "e": "LCL/KIMB/604", "s": "M", "d": "12 Jun 2015", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Boiler Operator"}, {"n": "Godfrey N. Mponda", "e": "LCL/KIMB/1194", "s": "M", "d": "17 May 2022", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Boiler Operator"}, {"n": "Pankaj Kumar Singh", "e": "LCL/KIMB/732", "s": "M", "d": "10 Jun 2016", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "EXPAT", "ds": "Shift Engineer  Turbine"}, {"n": "Raman. Anbarasan", "e": "LCL/KIMB/051", "s": "M", "d": "08 Feb 2014", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "EXPAT", "ds": "Manager Power Plant"}, {"n": "Fides Issah Tumpale", "e": "LCL/KIMB/1332", "s": "F", "d": "27 Mar 2024", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Trainee Chemist"}, {"n": "Azizi M. Sanzey", "e": "LCL/KIMB/181", "s": "M", "d": "10 Feb 2014", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Dm Plant Operator"}, {"n": "Omary Lugendo", "e": "LCL/KIMB/125", "s": "M", "d": "21 Jan 2014", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Turben Field Operator"}, {"n": "Peter Wanchoke Mariba", "e": "LCL/KIMB/293", "s": "M", "d": "21 Apr 2014", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Turben Field Operator"}, {"n": "Sheik Ahamed Gulam", "e": "LCL/KIMB/1067", "s": "M", "d": "07 Mar 2020", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "EXPAT", "ds": "Power- Plant High Pressure Boiler Technician"}, {"n": "Lukelo Z. Mhapa", "e": "LCL/KIMB/1093", "s": "M", "d": "01 Oct 2020", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Mechanical Engineer"}, {"n": "Martin Faustin Ngalika", "e": "LCL/KIMB/1071", "s": "M", "d": "24 Mar 2020", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Water Treatment Plant Operator"}, {"n": "Neeraj  Rajak", "e": "LCL/KIMB/1333", "s": "M", "d": "15 Jan 2024", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "EXPAT", "ds": "Senior Chemist"}, {"n": "Brij  K. Pandey", "e": "LCL/KIMB/1090", "s": "M", "d": "16 Sep 2020", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "EXPAT", "ds": "Captive Power Plant  High Pressure Turbine Technic"}, {"n": "Joseph S. Urio", "e": "LCL/KIMB/1116", "s": "M", "d": "13 Jan 2021", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Senior Welding Technician"}, {"n": "Animesh Kumar", "e": "LCL/KIMB/1224", "s": "M", "d": "30 Sep 2022", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "EXPAT", "ds": "Shift Incharge Power Plant"}, {"n": "Gerald Michael Kitundu", "e": "LCL/KIMB/1339", "s": "M", "d": "07 May 2024", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Trainee Turbine Field Operator"}, {"n": "Haji Ally Juma", "e": "LCL/KIMB/1320", "s": "M", "d": "27 Feb 2024", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Boiler And Turbine Field Operator"}, {"n": "Evance Alfa Yona", "e": "LCL/KIMB/1390", "s": "M", "d": "29 Apr 2025", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Trainee Dcs Operator"}, {"n": "Steven Richard Anania", "e": "LCL/KIMB/1393", "s": "M", "d": "20 May 2025", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Trainee Dcs Operator"}, {"n": "Emmanuel Gunda Mwendo", "e": "LCL/KIMB/1407", "s": "M", "d": "19 Aug 2025", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Trainee Dcs Engineer"}, {"n": "Damian Respicius Damian", "e": "LCL/KIMB/1410", "s": "M", "d": "02 Sep 2025", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Trainee Dcs Engineer"}, {"n": "Rajabu Waziri Kimaya", "e": "LCL/KIMB/1411", "s": "M", "d": "02 Sep 2025", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Trainee Dcs Engineer"}, {"n": "James Daniel Msaghaa", "e": "LCL/KIMB/1414", "s": "M", "d": "09 Sep 2025", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Trainee Dcs Engineer"}, {"n": "Wingod Douglas Massawe", "e": "LCL/KIMB/1419", "s": "M", "d": "23 Sep 2025", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Trainee Dcs Engineer"}, {"n": "Zakayo Julias Kibitanyi", "e": "LCL/KIMB/1429", "s": "M", "d": "02 Dec 2025", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Trainee Dcs Engineer"}, {"n": "Jumanne Wenseslaus Juma", "e": "LCL/KIMB/1436", "s": "M", "d": "14 Jan 2026", "b": "Kimbiji", "dp": "Captive Power Plant", "c": "LOCAL", "ds": "Technician"}, {"n": "Daud John Charles", "e": "LCL/KIMB/1139", "s": "M", "d": "25 May 2021", "b": "Kimbiji", "dp": "Civil", "c": "LOCAL", "ds": "Handyman"}, {"n": "Biswajeet Mallik", "e": "LCL/KIMB/1040", "s": "M", "d": "07 Nov 2019", "b": "Kimbiji", "dp": "Corporate", "c": "EXPAT", "ds": "Director"}, {"n": "Paven Gandhi", "e": "LCL/KIMB/1415", "s": "M", "d": "05 Sep 2025", "b": "Kimbiji", "dp": "Corporate", "c": "EXPAT", "ds": "Chief Plant Operations Officer"}, {"n": "Jatinder Singh Dogra", "e": "LCL/KIMB/835", "s": "M", "d": "01 Nov 2016", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Manager"}, {"n": "Hamisi   Mahadhi", "e": "LCL/KIMB/577", "s": "M", "d": "04 May 2015", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Loader"}, {"n": "Juma I. Nkoningo", "e": "LCL/KIMB/870", "s": "M", "d": "11 Jan 2017", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Loader"}, {"n": "Ramadhani H. Said", "e": "LCL/KIMB/1065", "s": "M", "d": "03 Mar 2020", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Weight Bridge Officer"}, {"n": "Abdul-Aziz H. Pilly", "e": "LCL/KIMB/1094", "s": "M", "d": "13 Oct 2020", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Weight Bridge Officer"}, {"n": "Shan H. Ramadhani", "e": "LCL/KIMB/1095", "s": "F", "d": "13 Oct 2020", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Weight Bridge Officer"}, {"n": "Maulidi S. Ngomile", "e": "LCL/KIMB/661", "s": "M", "d": "02 Dec 2015", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Weight Bridge Officer"}, {"n": "Rehema A. Mwafula", "e": "LCL/KIMB/935", "s": "F", "d": "10 Oct 2017", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Weight Bridge Officer"}, {"n": "Joyce H. Kileo", "e": "LCL/KIMB/1028", "s": "F", "d": "12 Sep 2019", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Weight Bridge Officer"}, {"n": "Shaban J. Masoud", "e": "LCL/KIMB/964", "s": "M", "d": "09 Jan 2018", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Logistics Supervisor"}, {"n": "Saidi Bungara", "e": "LCL/KIMB/400", "s": "M", "d": "04 Jul 2014", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Packers"}, {"n": "Philemon Mwakyusa", "e": "LCL/KIMB/415", "s": "M", "d": "16 Jul 2014", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Packers"}, {"n": "John M. Masemo", "e": "LCL/KIMB/868", "s": "M", "d": "11 Jan 2017", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Packers"}, {"n": "Ismail B. Mauyanga", "e": "LCL/KIMB/869", "s": "M", "d": "11 Jan 2017", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Packers"}, {"n": "Gilbert Albert Limbumba", "e": "LCL/KIMB/1231", "s": "M", "d": "11 Oct 2022", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Packing Plant Supervisor"}, {"n": "Joseph Thobias  Lyimo", "e": "LCL/KIMB/1278", "s": "M", "d": "09 Aug 2023", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Packing Plant Supervisor"}, {"n": "Mohamed A. Mahutya", "e": "LCL/KIMB/1192", "s": "M", "d": "05 May 2022", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Weighbridge Officer"}, {"n": "Christina Stanley Ngowo", "e": "LCL/KIMB/1263", "s": "F", "d": "09 May 2023", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Weighbridge Officer"}, {"n": "Happiness Elinipenda Shishira", "e": "LCL/KIMB/1385", "s": "F", "d": "13 Mar 2025", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Weighbridge Officer"}, {"n": "Gloryjoy Jabiri Mkombozi", "e": "LCL/KIMB/1399", "s": "F", "d": "17 Jun 2025", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Weighbridge Officer"}, {"n": "Justice Jublathe Swai", "e": "LCL/KIMB/1412", "s": "M", "d": "02 Sep 2025", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Packing Plant Supervisor"}, {"n": "Elias Erasto Ruvoma", "e": "LCL/KIMB/1437", "s": "M", "d": "27 Jan 2026", "b": "Kimbiji", "dp": "Dispatch", "c": "LOCAL", "ds": "Packing Plant Supervisor"}, {"n": "Lucas Sylvester  Banzi", "e": "LCL/KIMB/1358", "s": "M", "d": "13 Aug 2024", "b": "Kimbiji", "dp": "Electrical", "c": "LOCAL", "ds": "Senior Technician"}, {"n": "Malick Sosteness Sungu", "e": "LCL/KIMB/1225", "s": "M", "d": "04 Oct 2022", "b": "Kimbiji", "dp": "Electrical", "c": "LOCAL", "ds": "Electrical Engineer"}, {"n": "Adam Anderson Daudi", "e": "LCL/KIMB/1318", "s": "M", "d": "06 Feb 2024", "b": "Kimbiji", "dp": "Electrical", "c": "LOCAL", "ds": "Electrical Engineer"}, {"n": "Vitael Elikeseni Mringo", "e": "LCL/KIMB/1080", "s": "M", "d": "19 May 2020", "b": "Kimbiji", "dp": "Electrical", "c": "LOCAL", "ds": "Senior Electrical Technician"}, {"n": "Abdi Ramadhani Abdallah", "e": "LCL/KIMB/1169", "s": "M", "d": "23 Nov 2021", "b": "Kimbiji", "dp": "Electrical", "c": "LOCAL", "ds": "Senior Electrical Technician"}, {"n": "Daniel Majee Palmet", "e": "LCL/KIMB/1228", "s": "M", "d": "06 Oct 2022", "b": "Kimbiji", "dp": "Electrical", "c": "LOCAL", "ds": "Senior Electrical Technician"}, {"n": "Claus Nyahenge", "e": "LCL/KIMB/250", "s": "M", "d": "15 Jan 2014", "b": "Kimbiji", "dp": "Electrical", "c": "LOCAL", "ds": "Senior Electrical Technician"}, {"n": "Halphani Nyangasi", "e": "LCL/KIMB/382", "s": "M", "d": "08 Jul 2014", "b": "Kimbiji", "dp": "Electrical", "c": "LOCAL", "ds": "Senior Electrical Technician"}, {"n": "Mkude Lujeli", "e": "LCL/KIMB/658", "s": "M", "d": "24 Nov 2015", "b": "Kimbiji", "dp": "Electrical", "c": "LOCAL", "ds": "Senior Electrical Technician"}, {"n": "Frank A. Lukio", "e": "LCL/KIMB/1150", "s": "M", "d": "20 Jul 2021", "b": "Kimbiji", "dp": "Electrical", "c": "LOCAL", "ds": "Junior Electrical Technician"}, {"n": "Paul Salu", "e": "LCL/KIMB/632", "s": "M", "d": "31 Aug 2015", "b": "Kimbiji", "dp": "Electrical", "c": "LOCAL", "ds": "Electrical Technician"}, {"n": "John Daudi", "e": "LCL/KIMB/446", "s": "M", "d": "13 Aug 2014", "b": "Kimbiji", "dp": "Electrical", "c": "LOCAL", "ds": "Electrical Technician"}, {"n": "Hussein Suleiman Mwenda", "e": "LCL/KIMB/1373", "s": "M", "d": "21 Nov 2024", "b": "Kimbiji", "dp": "Electrical", "c": "LOCAL", "ds": "Electrical Technician"}, {"n": "Mahesh Pazhayarambath", "e": "LCL/KIMB/1344", "s": "M", "d": "20 May 2024", "b": "Kimbiji", "dp": "Electrical", "c": "EXPAT", "ds": "Manager - Power Plant Instrumentation"}, {"n": "Bhaskar Mani", "e": "LCL/KIMB/1418", "s": "M", "d": "19 Aug 2025", "b": "Kimbiji", "dp": "Electrical", "c": "EXPAT", "ds": "Electrical & Electronics Technician"}, {"n": "Fred John Kiresia", "e": "LCL/KIMB/1199", "s": "M", "d": "14 Jun 2022", "b": "Kimbiji", "dp": "Hr", "c": "LOCAL", "ds": "Hr Officer"}, {"n": "Benedict Tibelius Kimbusu", "e": "LCL/KIMB/1343", "s": "M", "d": "11 Jun 2024", "b": "Kimbiji", "dp": "Hr", "c": "LOCAL", "ds": "Hr Officer"}, {"n": "Stephen Peter Damalu", "e": "LCL/KIMB/197", "s": "M", "d": "06 Mar 2014", "b": "Kimbiji", "dp": "Hr", "c": "LOCAL", "ds": "Driver"}, {"n": "Awena Shabani Haruna", "e": "LCL/KIMB/600", "s": "F", "d": "11 Jun 2015", "b": "Kimbiji", "dp": "Hr", "c": "LOCAL", "ds": "Receptionist"}, {"n": "Msami Kuria Kassim", "e": "LCL/KIMB/1340", "s": "M", "d": "11 Jun 2024", "b": "Kimbiji", "dp": "Hr", "c": "LOCAL", "ds": "Security Officer"}, {"n": "Halima H. Mohamed", "e": "LCL/KIMB/921", "s": "F", "d": "26 Sep 2017", "b": "Kimbiji", "dp": "Hr", "c": "LOCAL", "ds": "Security Officer"}, {"n": "Norbert Constantine Swai", "e": "LCL/KIMB/1312", "s": "M", "d": "03 Jan 2024", "b": "Kimbiji", "dp": "Hr", "c": "LOCAL", "ds": "Ass/Manager"}, {"n": "Silvia Kitaly", "e": "LCL/KIMB/636", "s": "F", "d": "08 Sep 2015", "b": "Kimbiji", "dp": "Hr", "c": "LOCAL", "ds": "Assistant Manager"}, {"n": "Aman F. Daudi", "e": "LCL/KIMB/1002", "s": "M", "d": "06 Nov 2018", "b": "Kimbiji", "dp": "Hr", "c": "LOCAL", "ds": "Security Officer"}, {"n": "Amina Hamadi Siwa", "e": "LCL/KIMB/746", "s": "F", "d": "01 Aug 2016", "b": "Kimbiji", "dp": "Hr", "c": "LOCAL", "ds": "Senior Hr Officer"}, {"n": "Nicholaus G.  Kihumbe", "e": "LCL/KIMB/1037", "s": "M", "d": "22 Oct 2019", "b": "Kimbiji", "dp": "Hr", "c": "LOCAL", "ds": "Senior Security Officer"}, {"n": "Sophia George Mkassi", "e": "LCL/KIMB/1334", "s": "F", "d": "12 Apr 2024", "b": "Kimbiji", "dp": "Hr", "c": "LOCAL", "ds": "Manager - Hr & Administration"}, {"n": "Gloria Richard Makulu", "e": "LCL/KIMB/1372", "s": "F", "d": "19 Nov 2024", "b": "Kimbiji", "dp": "Hr", "c": "LOCAL", "ds": "Hr Officer - Training"}, {"n": "Fausta Essa Mwakabaga", "e": "LCL/KIMB/1395", "s": "F", "d": "27 May 2025", "b": "Kimbiji", "dp": "Hr", "c": "LOCAL", "ds": "Safety Officer"}, {"n": "Carlos Ngatunga", "e": "LCL/KIMB/119", "s": "M", "d": "02 Jan 2014", "b": "Kimbiji", "dp": "Instrumentation", "c": "LOCAL", "ds": "Junior Foreman"}, {"n": "Vijai S. Chouhan", "e": "LCL/KIMB/1041", "s": "M", "d": "11 Nov 2019", "b": "Kimbiji", "dp": "Instrumentation", "c": "EXPAT", "ds": "Electrical And Electronics Technician"}, {"n": "Chetan Singh Rawat", "e": "LCL/KIMB/1202", "s": "M", "d": "16 Jun 2022", "b": "Kimbiji", "dp": "Instrumentation", "c": "EXPAT", "ds": "Electrical Instrument  Technician"}, {"n": "Rameshbhai Vallabhbhai Patel", "e": "LCL/KIMB/1205", "s": "M", "d": "18 Jul 2022", "b": "Kimbiji", "dp": "Instrumentation", "c": "EXPAT", "ds": "Hod - E & I"}, {"n": "Juma Maulid Kabwebwe", "e": "LCL/KIMB/1370", "s": "M", "d": "12 Nov 2024", "b": "Kimbiji", "dp": "Instrumentation", "c": "LOCAL", "ds": "Instrument Technician"}, {"n": "Leonce Costantine", "e": "LCL/KIMB/606", "s": "M", "d": "20 Jun 2015", "b": "Kimbiji", "dp": "Instrumentation", "c": "LOCAL", "ds": "Instrument Technician"}, {"n": "Sikujua Juma", "e": "LCL/KIMB/186", "s": "M", "d": "13 Feb 2014", "b": "Kimbiji", "dp": "Instrumentation", "c": "LOCAL", "ds": "Instrument Technician"}, {"n": "Nicholaus Ngalya", "e": "LCL/KIMB/735", "s": "M", "d": "23 Jun 2016", "b": "Kimbiji", "dp": "Instrumentation", "c": "LOCAL", "ds": "Instrument Technician"}, {"n": "Mashauri George", "e": "LCL/KIMB/489", "s": "M", "d": "01 Dec 2014", "b": "Kimbiji", "dp": "Instrumentation", "c": "LOCAL", "ds": "Senior Instrument Technician"}, {"n": "Demetelius Titus Mtundu", "e": "LCL/KIMB/723", "s": "M", "d": "25 Apr 2016", "b": "Kimbiji", "dp": "Instrumentation", "c": "LOCAL", "ds": "Senior Instrument Technician"}, {"n": "James D. Chalula", "e": "LCL/KIMB/1110", "s": "M", "d": "08 Dec 2020", "b": "Kimbiji", "dp": "Instrumentation", "c": "LOCAL", "ds": "Senior Instrument Technician"}, {"n": "Miraji K. Mohamedi", "e": "LCL/KIMB/1015", "s": "M", "d": "05 Feb 2019", "b": "Kimbiji", "dp": "Instrumentation", "c": "LOCAL", "ds": "It Technician"}, {"n": "Simon Maganga Simon", "e": "LCL/KIMB/1151", "s": "M", "d": "27 Jul 2021", "b": "Kimbiji", "dp": "Instrumentation", "c": "LOCAL", "ds": "Junior Instrument Technician"}, {"n": "Stephen Leonard Kilawe", "e": "LCL/KIMB/1230", "s": "M", "d": "11 Oct 2022", "b": "Kimbiji", "dp": "Instrumentation", "c": "LOCAL", "ds": "Senior Instrument Engineer"}, {"n": "Jafari Ahmad Jafari", "e": "LCL/KIMB/1360", "s": "M", "d": "03 Sep 2024", "b": "Kimbiji", "dp": "Instrumentation", "c": "LOCAL", "ds": "Trainee Instrumentation Technician"}, {"n": "Saurabh Bhattacharya", "e": "LCL/KIMB/1416", "s": "M", "d": "24 Jul 2025", "b": "Kimbiji", "dp": "Instrumentation", "c": "EXPAT", "ds": "Erp Engineer"}, {"n": "Patrick Nicodemu Mbowe", "e": "LCL/KIMB/1433", "s": "M", "d": "14 Jan 2026", "b": "Kimbiji", "dp": "Instrumentation", "c": "LOCAL", "ds": "Trainee Instrumentation Technician"}, {"n": "Kelvin Moses Masawe", "e": "LCL/KIMB/1434", "s": "M", "d": "14 Jan 2026", "b": "Kimbiji", "dp": "Instrumentation", "c": "LOCAL", "ds": "Instrumentation Technician"}, {"n": "Rajabu A. Mhagama", "e": "LCL/LOG/998", "s": "M", "d": "20 Oct 2018", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Shabani Kambi Salum", "e": "LCL/LOG/760", "s": "M", "d": "07 Sep 2016", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Juma S. Rajabu", "e": "LCL/LOG/830", "s": "M", "d": "01 Oct 2016", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Sadala M. Msechu", "e": "LCL/LOG/799", "s": "M", "d": "01 Oct 2016", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Franki W. Singano", "e": "LCL/LOG/802", "s": "M", "d": "01 Oct 2016", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Selemani R. Chalachala", "e": "LCL/LOG/803", "s": "M", "d": "01 Oct 2016", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Mwinshehe Mohamed Mwinshehe", "e": "LCL/LOG/1289", "s": "M", "d": "07 Oct 2023", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Hamad Hatujuani Maneno", "e": "LCL/LOG/1259", "s": "M", "d": "18 Apr 2023", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Paschal Maganga Mayunga", "e": "LCL/LOG/1156", "s": "M", "d": "31 Aug 2021", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Rayfas G. Lutumo", "e": "LCL/LOG/1168", "s": "M", "d": "02 Nov 2021", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Daudi M. Mbaraka", "e": "LCL/LOG/1128", "s": "M", "d": "20 Apr 2021", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Salum S. Ulingo", "e": "LCL/LOG/1131", "s": "M", "d": "20 Apr 2021", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Maxon Stephano Magwai", "e": "LCL/LOG/1271", "s": "M", "d": "06 Jun 2023", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "John Raphael  Kawela", "e": "LCL/LOG/1327", "s": "M", "d": "19 Mar 2024", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Stansilaus Raifozi Nzunda", "e": "LCL/LOG/1354", "s": "M", "d": "30 Jul 2024", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Abdallah Omary Mapande", "e": "LCL/LOG/1341", "s": "M", "d": "11 Jun 2024", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "William Fabian Balole", "e": "LCL/LOG/1337", "s": "M", "d": "07 May 2024", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Joeli Jemsi Sarakikya", "e": "LCL/LOG/1345", "s": "M", "d": "02 Jul 2024", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Athuman Rajabu Kapenda", "e": "LCL/LOG/1346", "s": "M", "d": "02 Jul 2024", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Hemedi Abdallah Kaundu", "e": "LCL/LOG/1349", "s": "M", "d": "02 Jul 2024", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Pradeep Kumar Kurra", "e": "LCL/LOG/1365", "s": "M", "d": "21 Sep 2024", "b": "Kimbiji", "dp": "Logistic Division", "c": "EXPAT", "ds": "Head Cement Transportation"}, {"n": "Pascal Method Ngonyani", "e": "LCL/LOG/1387", "s": "M", "d": "18 Mar 2025", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Selemani Ally Chalachala", "e": "LCL/LOG/1391", "s": "M", "d": "29 Apr 2025", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Hamisi Rajabu Safumbili", "e": "LCL/LOG/1392", "s": "M", "d": "29 Apr 2025", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Ernest Method Ngonyani", "e": "LCL/LOG/1400", "s": "M", "d": "24 Jun 2025", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Thomas Wambura Alphonce", "e": "LCL/LOG/1413", "s": "M", "d": "02 Sep 2025", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Yusufu Hashimu Ramadhani", "e": "LCL/LOG/1422", "s": "M", "d": "01 Oct 2025", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Hassani Hussein Chagge", "e": "LCL/LOG/1430", "s": "M", "d": "23 Dec 2025", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Rajabu Nasoro Chamjinga", "e": "LCL/LOG/1435", "s": "M", "d": "14 Jan 2026", "b": "Kimbiji", "dp": "Logistic Division", "c": "LOCAL", "ds": "Heavy Vehicle Driver"}, {"n": "Simoni C. Mwanamwani", "e": "LCL/KIMB/667", "s": "M", "d": "29 Jan 2016", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Senior Technician"}, {"n": "Hamis Zakaria William", "e": "LCL/KIMB/184", "s": "M", "d": "19 Feb 2014", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Senior Technician"}, {"n": "Erasto Lubinza", "e": "LCL/KIMB/185", "s": "M", "d": "19 Feb 2014", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Senior Technician"}, {"n": "Emmanuel  Mbiro", "e": "LCL/KIMB/367", "s": "M", "d": "23 Jun 2014", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Senior Technician"}, {"n": "Sydney Kalengo", "e": "LCL/KIMB/278", "s": "M", "d": "10 Apr 2014", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Senior Technician"}, {"n": "Jabiri J. Amani", "e": "LCL/KIMB/532", "s": "M", "d": "13 Jan 2015", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Senior Technician"}, {"n": "Winners Kanyamhanya", "e": "LCL/KIMB/433", "s": "M", "d": "04 Aug 2014", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Welder"}, {"n": "Paschal Ndilana", "e": "LCL/KIMB/176", "s": "M", "d": "12 Feb 2014", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Plumber"}, {"n": "Khalfani  Athuman  Khalfani", "e": "LCL/KIMB/1367", "s": "M", "d": "29 Oct 2024", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Technician"}, {"n": "Mirward B Gama", "e": "LCL/KIMB/897", "s": "M", "d": "26 Jul 2017", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Technician"}, {"n": "Joseph F. Karata", "e": "LCL/KIMB/914", "s": "M", "d": "19 Sep 2017", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Technician"}, {"n": "Salumu Madala", "e": "LCL/KIMB/290", "s": "M", "d": "16 Apr 2014", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Junior Technician"}, {"n": "Eliasi Mbwale", "e": "LCL/KIMB/701", "s": "M", "d": "10 Mar 2016", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Junior Technician"}, {"n": "Rashid Mussa Abdallah", "e": "LCL/KIMB/1296", "s": "M", "d": "31 Oct 2023", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Junior Technician"}, {"n": "Frank Amosi", "e": "LCL/KIMB/223", "s": "M", "d": "01 Apr 2014", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Junior Foreman"}, {"n": "Michael Kitundu", "e": "LCL/KIMB/381", "s": "M", "d": "16 Jul 2014", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Shift Manager"}, {"n": "Sabinus Daniel Ludota", "e": "LCL/KIMB/753", "s": "M", "d": "24 Aug 2016", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Filter Mechanics"}, {"n": "Ackley Chiwanga", "e": "LCL/KIMB/212", "s": "M", "d": "03 Mar 2014", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Welder Cum Fitter"}, {"n": "Zakaria Zakayo Lissu", "e": "LCL/KIMB/1382", "s": "M", "d": "18 Feb 2025", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Mechanical Engineer"}, {"n": "Ram Babu Rawat", "e": "LCL/KIMB/726", "s": "M", "d": "06 May 2016", "b": "Kimbiji", "dp": "Mechanical", "c": "EXPAT", "ds": "Cement Plant Technical Manager"}, {"n": "Balu Pog", "e": "LCL/KIMB/007", "s": "M", "d": "01 Aug 2012", "b": "Kimbiji", "dp": "Mechanical", "c": "EXPAT", "ds": "Raw And Cement Mill Specialist"}, {"n": "Nicholaus B. Massawe", "e": "LCL/KIMB/1193", "s": "M", "d": "09 May 2022", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Fitter Cum Turner"}, {"n": "Adam Rashid  Mfaume", "e": "LCL/KIMB/1238", "s": "M", "d": "14 Nov 2022", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Senior Mechanical - Utilities"}, {"n": "Sylivester Richard Mshongole", "e": "LCL/KIMB/1323", "s": "M", "d": "19 Mar 2024", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Trainee Mechanical Engineer"}, {"n": "Yohane Jackson Mdibule", "e": "LCL/KIMB/1366", "s": "M", "d": "29 Oct 2024", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Trainee Mechanical Engineer"}, {"n": "Hassan Bakki", "e": "LCL/KIMB/526", "s": "M", "d": "12 Jan 2015", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Foreman"}, {"n": "Manhard G. Mpanduka", "e": "LCL/KIMB/529", "s": "M", "d": "12 Jan 2015", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Foreman"}, {"n": "Betela Hassani Miraji", "e": "LCL/KIMB/439", "s": "M", "d": "06 Aug 2014", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Foreman"}, {"n": "Petro Masigan", "e": "LCL/KIMB/1155", "s": "M", "d": "24 Aug 2021", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Junior Engineer (Civil)"}, {"n": "Raphael Peter Haule", "e": "LCL/KIMB/1404", "s": "M", "d": "14 Aug 2025", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Mechanical Technician"}, {"n": "Pavan Kalyan Bandela", "e": "LCL/KIMB/1417", "s": "M", "d": "31 Jul 2025", "b": "Kimbiji", "dp": "Mechanical", "c": "EXPAT", "ds": "Head Mechanical Draftsman"}, {"n": "Abdallah Sadick Risala", "e": "LCL/KIMB/1420", "s": "M", "d": "30 Sep 2025", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Trainee Technician"}, {"n": "Innocent Peter Shirima", "e": "LCL/KIMB/1421", "s": "M", "d": "30 Sep 2025", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Technician"}, {"n": "Oscar Lusajo Mwangomile", "e": "LCL/KIMB/1423", "s": "M", "d": "07 Oct 2025", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Technician"}, {"n": "Simon Longino Simon", "e": "LCL/KIMB/1426", "s": "M", "d": "10 Nov 2025", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Trainee Mechanical Engineer"}, {"n": "Emmanuel Gesonko Marwa", "e": "LCL/KIMB/1427", "s": "M", "d": "10 Nov 2025", "b": "Kimbiji", "dp": "Mechanical", "c": "LOCAL", "ds": "Trainee Mechanical Engineer"}, {"n": "Frank Maimu", "e": "LCL/KIMB/535", "s": "M", "d": "07 Jan 2015", "b": "Kimbiji", "dp": "Production", "c": "LOCAL", "ds": "Ccr Officer"}, {"n": "Daniel Nyangela", "e": "LCL/KIMB/194", "s": "M", "d": "28 Feb 2014", "b": "Kimbiji", "dp": "Production", "c": "LOCAL", "ds": "Ccr Officer"}, {"n": "Edward Gabriel", "e": "LCL/KIMB/311", "s": "M", "d": "15 May 2014", "b": "Kimbiji", "dp": "Production", "c": "LOCAL", "ds": "Ccr Officer"}, {"n": "Ezra Ntare", "e": "LCL/KIMB/219", "s": "M", "d": "03 Mar 2014", "b": "Kimbiji", "dp": "Production", "c": "LOCAL", "ds": "Ccr Officer"}, {"n": "Paschal Hadlehem", "e": "LCL/KIMB/1105", "s": "M", "d": "17 Nov 2020", "b": "Kimbiji", "dp": "Production", "c": "LOCAL", "ds": "Ccr Officer"}, {"n": "Shija Shigela Darushi", "e": "LCL/KIMB/1315", "s": "M", "d": "23 Jan 2024", "b": "Kimbiji", "dp": "Production", "c": "LOCAL", "ds": "Ccr Officer"}, {"n": "Bitia F. Kaiza", "e": "LCL/KIMB/623", "s": "F", "d": "30 Jul 2015", "b": "Kimbiji", "dp": "Production", "c": "LOCAL", "ds": "Statistical Assistant"}, {"n": "Gnvsvprasada Rao", "e": "LCL/KIMB/251", "s": "M", "d": "14 Mar 2014", "b": "Kimbiji", "dp": "Production", "c": "EXPAT", "ds": "Mill Operator"}, {"n": "Nema Mwakipanga", "e": "LCL/KIMB/622", "s": "M", "d": "22 Jul 2015", "b": "Kimbiji", "dp": "Production", "c": "LOCAL", "ds": "Reclaimer Operator"}, {"n": "Ravi Uppu", "e": "LCL/KIMB/971", "s": "M", "d": "22 Dec 2017", "b": "Kimbiji", "dp": "Production", "c": "EXPAT", "ds": "Ccr Technician Clinker Coal Processing And Prepara"}, {"n": "Munna Katike", "e": "LCL/KIMB/1313", "s": "M", "d": "12 Dec 2023", "b": "Kimbiji", "dp": "Production", "c": "EXPAT", "ds": "Ccr Operator"}, {"n": "Amada Salehe", "e": "LCL/KIMB/313", "s": "M", "d": "15 May 2014", "b": "Kimbiji", "dp": "Production", "c": "LOCAL", "ds": "Site Operator"}, {"n": "Emile F. Mbabilanyi", "e": "LCL/KIMB/201", "s": "M", "d": "03 Mar 2014", "b": "Kimbiji", "dp": "Production", "c": "LOCAL", "ds": "Site Operator"}, {"n": "Hamis J. Mdachi", "e": "LCL/KIMB/1101", "s": "M", "d": "10 Nov 2020", "b": "Kimbiji", "dp": "Production", "c": "LOCAL", "ds": "Process Engineer"}, {"n": "Gilbert Josiah", "e": "LCL/KIMB/274", "s": "M", "d": "15 Apr 2014", "b": "Kimbiji", "dp": "Production", "c": "LOCAL", "ds": "Senior Site Operator"}, {"n": "Joseph Ndunguru", "e": "LCL/KIMB/275", "s": "M", "d": "15 Apr 2014", "b": "Kimbiji", "dp": "Production", "c": "LOCAL", "ds": "Senior Site Operator"}, {"n": "Hezron Kivamba", "e": "LCL/KIMB/738", "s": "M", "d": "15 Jul 2016", "b": "Kimbiji", "dp": "Production", "c": "LOCAL", "ds": "Material Handling Supervisor"}, {"n": "Bharath Kumar Mandla", "e": "LCL/KIMB/1266", "s": "M", "d": "09 May 2023", "b": "Kimbiji", "dp": "Production", "c": "EXPAT", "ds": "Ccr Operator Technician"}, {"n": "Rajabu Pius Mbugi", "e": "LCL/KIMB/1270", "s": "M", "d": "06 Jun 2023", "b": "Kimbiji", "dp": "Production", "c": "LOCAL", "ds": "Assistant Manager Process"}, {"n": "Natha Malde Godhania", "e": "LCL/KIMB/1376", "s": "M", "d": "22 Nov 2024", "b": "Kimbiji", "dp": "Production", "c": "EXPAT", "ds": "Head Cement Production & Quality"}, {"n": "Thirulok Chandar Krishnakumar", "e": "LCL/KIMB/1386", "s": "M", "d": "16 Dec 2024", "b": "Kimbiji", "dp": "Production", "c": "EXPAT", "ds": "Cement Production Manager"}, {"n": "Elfasi Ezromu Isaya", "e": "LCL/KIMB/1389", "s": "M", "d": "15 Apr 2025", "b": "Kimbiji", "dp": "Production", "c": "LOCAL", "ds": "Trainee Ccr Officer"}, {"n": "Ganesh Kumar Chittiboina", "e": "LCL/KIMB/1405", "s": "M", "d": "09 Jul 2025", "b": "Kimbiji", "dp": "Production", "c": "EXPAT", "ds": "Process Manager"}, {"n": "Hitesh Ranchhodbhai Bhalsod", "e": "LCL/KIMB/1431", "s": "M", "d": "28 Sep 2025", "b": "Kimbiji", "dp": "Production", "c": "EXPAT", "ds": "Ccr Officer"}, {"n": "Sanjiv Chaudhary", "e": "LCL/KIMB/1432", "s": "M", "d": "15 Dec 2025", "b": "Kimbiji", "dp": "Purchase", "c": "EXPAT", "ds": "International Imports Control Manager"}, {"n": "Arnold Kaduri", "e": "LCL/KIMB/071", "s": "M", "d": "01 Nov 2011", "b": "Kimbiji", "dp": "Project", "c": "LOCAL", "ds": "Geologist"}, {"n": "Abdulkarim Juma Suleiman", "e": "LCL/KIMB/1304", "s": "M", "d": "29 Nov 2023", "b": "Kimbiji", "dp": "Quality Control", "c": "LOCAL", "ds": "Chemist"}, {"n": "Kaimu Athumani Muksini", "e": "LCL/KIMB/1308", "s": "M", "d": "19 Dec 2023", "b": "Kimbiji", "dp": "Quality Control", "c": "LOCAL", "ds": "Chemist"}, {"n": "Elly Eben Munuo", "e": "LCL/KIMB/1309", "s": "M", "d": "19 Dec 2023", "b": "Kimbiji", "dp": "Quality Control", "c": "LOCAL", "ds": "Chemist"}, {"n": "Mathayo Richard Kayombo", "e": "LCL/KIMB/1331", "s": "M", "d": "26 Mar 2024", "b": "Kimbiji", "dp": "Quality Control", "c": "LOCAL", "ds": "Chemist"}, {"n": "Said B. Hamis", "e": "LCL/KIMB/995", "s": "M", "d": "09 Oct 2018", "b": "Kimbiji", "dp": "Quality Control", "c": "LOCAL", "ds": "Chemist"}, {"n": "Edina Nziku", "e": "LCL/KIMB/416", "s": "F", "d": "29 Jun 2014", "b": "Kimbiji", "dp": "Quality Control", "c": "LOCAL", "ds": "Chemist"}, {"n": "Saidi    Hasani Said", "e": "LCL/KIMB/631", "s": "M", "d": "31 Aug 2015", "b": "Kimbiji", "dp": "Quality Control", "c": "LOCAL", "ds": "Chemist"}, {"n": "Norbert Mondo", "e": "LCL/KIMB/309", "s": "M", "d": "05 May 2014", "b": "Kimbiji", "dp": "Quality Control", "c": "LOCAL", "ds": "Chemist"}, {"n": "Dioniz Dickson", "e": "LCL/KIMB/1378", "s": "M", "d": "31 Dec 2024", "b": "Kimbiji", "dp": "Quality Control", "c": "LOCAL", "ds": "Trainee Chemist"}, {"n": "Tmadhusudhan Reddy", "e": "LCL/KIMB/041", "s": "M", "d": "04 Feb 2014", "b": "Kimbiji", "dp": "Quality Control", "c": "EXPAT", "ds": "Cement Quality Control Specialist"}, {"n": "Kathiberth Robert Bingora", "e": "LCL/KIMB/1329", "s": "M", "d": "26 Mar 2024", "b": "Kimbiji", "dp": "Quality Control", "c": "LOCAL", "ds": "Junior Chemist"}, {"n": "Thereza Mwandu William", "e": "LCL/KIMB/1409", "s": "F", "d": "26 Aug 2025", "b": "Kimbiji", "dp": "Quality Control", "c": "LOCAL", "ds": "Trainee Laboratory Assistant"}, {"n": "Baraka Innocent Keya", "e": "LCL/KIMB/1077", "s": "M", "d": "08 Apr 2020", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Engineer"}, {"n": "Esau John Chenela", "e": "LCL/KIMB/169", "s": "M", "d": "10 Feb 2014", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Crusher Operator"}, {"n": "Steven Mwita", "e": "LCL/KIMB/192", "s": "M", "d": "13 Mar 2014", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Crusher Operator"}, {"n": "Yudathadei Machumilane", "e": "LCL/KIMB/610", "s": "M", "d": "10 Jun 2015", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Assistant Manager"}, {"n": "Seleman S. Mbawala", "e": "LCL/LOG/1107", "s": "M", "d": "01 Dec 2020", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Surface Miner Operator"}, {"n": "Peter John Chienella", "e": "LCL/KIMB/1351", "s": "M", "d": "17 Jul 2024", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Surface Miner Operator"}, {"n": "Vitalis Kaizer", "e": "LCL/KIMB/741", "s": "M", "d": "12 Jul 2016", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Mines & Crausher Operator"}, {"n": "Edward G. Bakebula", "e": "LCL/KIMB/968", "s": "M", "d": "31 Jan 2018", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Mechanics"}, {"n": "Aziz H. Lingila", "e": "LCL/KIMB/1119", "s": "M", "d": "09 Feb 2021", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Stacker/Reclaimer Operator"}, {"n": "Ibrahim Nyakiboha", "e": "LCL/KIMB/1063", "s": "M", "d": "25 Feb 2020", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Geological Technician"}, {"n": "Mukesh Agrawal", "e": "LCL/KIMB/1359", "s": "M", "d": "23 Aug 2024", "b": "Kimbiji", "dp": "Quarrying", "c": "EXPAT", "ds": "Hod - Mining"}, {"n": "Ramson J. Chirimi", "e": "LCL/KIMB/1008", "s": "M", "d": "11 Dec 2018", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Senior Mechanics"}, {"n": "Benedict Kipangula", "e": "LCL/KIMB/566", "s": "M", "d": "10 Apr 2015", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Electrical Welder"}, {"n": "Abilah Mustapha  Nungu", "e": "LCL/KIMB/1262", "s": "M", "d": "09 May 2023", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Mining Engineer"}, {"n": "Leonard M Lusato", "e": "LCL/KIMB/1322", "s": "M", "d": "05 Mar 2024", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Mining Engineer"}, {"n": "Shadrack Jackson Kamgisha", "e": "LCL/KIMB/1353", "s": "M", "d": "30 Jul 2024", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Mining Engineer"}, {"n": "Eladius Gordian Rugaimukam", "e": "LCL/KIMB/1335", "s": "M", "d": "16 Apr 2024", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Crusher - Cum - Stacker Operator"}, {"n": "Martin Peter Mwakanyaga", "e": "LCL/KIMB/1357", "s": "M", "d": "01 Aug 2024", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Senior Mining Engineer"}, {"n": "Ibrahim Mwinyimani Mkanda", "e": "LCL/KIMB/1362", "s": "M", "d": "01 Oct 2024", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Engineer - Workshop"}, {"n": "Yogeshkumar Narendrakumar Mishra", "e": "LCL/KIMB/1380", "s": "M", "d": "13 Jan 2025", "b": "Kimbiji", "dp": "Quarrying", "c": "EXPAT", "ds": "Surface Miner And Heavy Equipment Maintenance Manager"}, {"n": "Isaya Joseph Musyani", "e": "LCL/KIMB/1397", "s": "M", "d": "17 Jun 2025", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Surface Miner Operator"}, {"n": "Emmanuel Elias Lusanza", "e": "LCL/KIMB/1402", "s": "M", "d": "15 Jul 2025", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Auto Electrician"}, {"n": "Fredrick Paulo Teophano", "e": "LCL/KIMB/1245", "s": "M", "d": "15 Oct 2025", "b": "Kimbiji", "dp": "Quarrying", "c": "LOCAL", "ds": "Geological Technician"}, {"n": "Salehe Mohamed Lupapuro", "e": "LCL/KIMB/065", "s": "M", "d": "02 Dec 2013", "b": "Kimbiji", "dp": "Store", "c": "LOCAL", "ds": "Stores Clerk"}, {"n": "Fredy   G. Mkundi", "e": "LCL/KIMB/579", "s": "M", "d": "06 May 2015", "b": "Kimbiji", "dp": "Store", "c": "LOCAL", "ds": "Ass/Store Keeper"}, {"n": "Moses Madogo", "e": "LCL/KIMB/215", "s": "M", "d": "12 Mar 2014", "b": "Kimbiji", "dp": "Store", "c": "LOCAL", "ds": "Senior Officer Store"}, {"n": "Kishorkumar M. Jadav", "e": "LCL/KIMB/885", "s": "M", "d": "02 Jun 2017", "b": "Kimbiji", "dp": "Store", "c": "EXPAT", "ds": "Manager Opration And Planning"}, {"n": "Jacqueline D. Uronu", "e": "LCL/KIMB/811", "s": "F", "d": "18 Oct 2016", "b": "Kimbiji", "dp": "Store", "c": "LOCAL", "ds": "Senior Store Officer"}, {"n": "Govind Singh Tanwar", "e": "LCL/KIMB/1293", "s": "M", "d": "03 Oct 2023", "b": "Kimbiji", "dp": "Store", "c": "EXPAT", "ds": "Cement & Raw Material Handling Technician"}, {"n": "Linna Fulgens Nchimbi", "e": "LCL/KIMB/1383", "s": "F", "d": "03 Mar 2025", "b": "Kimbiji", "dp": "Store", "c": "LOCAL", "ds": "Assistant Store Officer"}, {"n": "Sharifa Abdalah Mnuru", "e": "LCL/KIMB/1384", "s": "F", "d": "03 Mar 2025", "b": "Kimbiji", "dp": "Store", "c": "LOCAL", "ds": "Assistant Store Officer"}, {"n": "Castor J.  Mbeho", "e": "LCL/HO/086", "s": "M", "d": "05 Sep 2017", "b": "Head Office", "dp": "Accounts", "c": "LOCAL", "ds": "Assistant Accounts Officer"}, {"n": "Punit R. Asawla", "e": "LCL/HO/098", "s": "M", "d": "25 Jul 2018", "b": "Head Office", "dp": "Accounts", "c": "LOCAL", "ds": "Sr. Accountant"}, {"n": "Rahul Chandrakant Chauhan", "e": "LCL/HO/007", "s": "M", "d": "01 Jan 2014", "b": "Head Office", "dp": "Accounts", "c": "EXPAT", "ds": "Company Busines Supervision And Operation Mgt Cont"}, {"n": "Devotha  Musoke", "e": "LCL/HO/100", "s": "F", "d": "15 Aug 2018", "b": "Head Office", "dp": "Accounts", "c": "LOCAL", "ds": "Accounts Assistant"}, {"n": "Eliza Andrew  Kihwele", "e": "LCL/HO/013", "s": "F", "d": "13 May 2010", "b": "Head Office", "dp": "Admin", "c": "LOCAL", "ds": "Office Attendant"}, {"n": "Zakia Bushiri", "e": "LCL/HO/039", "s": "F", "d": "17 Nov 2014", "b": "Head Office", "dp": "Admin", "c": "LOCAL", "ds": "Administration Officer"}, {"n": "Nakazzi Julian Marina", "e": "LCL/HO/020", "s": "F", "d": "16 Sep 2013", "b": "Head Office", "dp": "Admin", "c": "LOCAL", "ds": "Officer-Admin And Sourcing"}, {"n": "Indra Pratap Narain  Pathak", "e": "LCL/HO/006", "s": "M", "d": "21 Mar 2015", "b": "Head Office", "dp": "Corporate", "c": "EXPAT", "ds": "Strategic Business Head"}, {"n": "Saraswathy S Paliseri", "e": "LCL/HO/004", "s": "M", "d": "21 Mar 2015", "b": "Head Office", "dp": "Corporate", "c": "EXPAT", "ds": "General Manager"}, {"n": "Sankalp Jaithalia", "e": "LCL/HO/165", "s": "M", "d": "29 May 2025", "b": "Head Office", "dp": "Corporate", "c": "EXPAT", "ds": "Chief Finance Officer"}, {"n": "Ankush Chaudhary", "e": "LCL/HO/153", "s": "M", "d": "02 Sep 2023", "b": "Head Office", "dp": "Purchase", "c": "EXPAT", "ds": "Manager"}, {"n": "Shadrack Sanga", "e": "LCL/HO/084", "s": "M", "d": "17 Jul 2017", "b": "Head Office", "dp": "Purchase", "c": "LOCAL", "ds": "Junior Officer- Sourcing"}, {"n": "Robert C. Mgombelo", "e": "LCL/HO/113", "s": "M", "d": "09 Mar 2019", "b": "Head Office", "dp": "Purchase", "c": "LOCAL", "ds": "Sourcing Officer Logistics"}, {"n": "Dullah Kiluvia", "e": "LCL/HO/034", "s": "M", "d": "02 Dec 2014", "b": "Head Office", "dp": "Purchase", "c": "LOCAL", "ds": "Senior Purchase Officer"}, {"n": "Laurent Deusdedit Kadege", "e": "LCL/HO/137", "s": "M", "d": "27 Sep 2021", "b": "Head Office", "dp": "Sales & Marketing", "c": "LOCAL", "ds": "Sales Officer"}, {"n": "Kaela B. Martin", "e": "LCL/HO/110", "s": "M", "d": "11 Feb 2019", "b": "Head Office", "dp": "Sales & Marketing", "c": "LOCAL", "ds": "Sales Officer"}, {"n": "Anthony W. Hizza", "e": "LCL/HO/139", "s": "M", "d": "01 Nov 2021", "b": "Head Office", "dp": "Sales & Marketing", "c": "LOCAL", "ds": "Assistant Manager"}, {"n": "Nirav H. Oza", "e": "LCL/HO/104", "s": "M", "d": "28 Sep 2018", "b": "Head Office", "dp": "Sales & Marketing", "c": "EXPAT", "ds": "Technical Cement Rolling Manager"}, {"n": "Karim  Hakim  Mataula", "e": "LCL/HO/154", "s": "M", "d": "04 Sep 2023", "b": "Head Office", "dp": "Sales & Marketing", "c": "LOCAL", "ds": "Back Office Coordinator"}, {"n": "Robert Eliud Job", "e": "LCL/HO/155", "s": "M", "d": "09 Sep 2023", "b": "Head Office", "dp": "Sales & Marketing", "c": "LOCAL", "ds": "Back Office Coordinator"}, {"n": "Caritas Anania Nzowa", "e": "LCL/HO/156", "s": "M", "d": "22 Sep 2023", "b": "Head Office", "dp": "Sales & Marketing", "c": "LOCAL", "ds": "Back Office Coordinator"}, {"n": "Karala G.  Mlando", "e": "LCL/HO/142", "s": "M", "d": "21 Feb 2022", "b": "Head Office", "dp": "Sales & Marketing", "c": "LOCAL", "ds": "Back Office Coordinator"}, {"n": "Fadhili  Yustas", "e": "LCL/HO/089", "s": "M", "d": "06 Nov 2017", "b": "Head Office", "dp": "Sales & Marketing", "c": "LOCAL", "ds": "Senior Sales Excutive"}, {"n": "Sixto Gibson  Mwenda", "e": "LCL/HO/052", "s": "M", "d": "03 Sep 2015", "b": "Head Office", "dp": "Sales & Marketing", "c": "LOCAL", "ds": "Deputy Manager"}, {"n": "Adehelma Evaristo Mkinga", "e": "LCL/HO/158", "s": "F", "d": "01 Dec 2023", "b": "Head Office", "dp": "Sales & Marketing", "c": "LOCAL", "ds": "Cement Export Documentation & Coordination Officer"}, {"n": "Bhavnesh S. Valand", "e": "LCL/HO/066", "s": "M", "d": "09 May 2016", "b": "Head Office", "dp": "Sales & Marketing", "c": "LOCAL", "ds": "Senior Sales Coordinator Executive"}, {"n": "Ajit Ranjan Singh", "e": "LCL/HO/151", "s": "M", "d": "22 May 2023", "b": "Head Office", "dp": "Sales & Marketing", "c": "EXPAT", "ds": "Cement Business Manager"}, {"n": "Christopher I. Matenga", "e": "LCL/HO/143", "s": "M", "d": "23 May 2022", "b": "Head Office", "dp": "Sales & Marketing", "c": "LOCAL", "ds": "Assistant Sales Officer"}, {"n": "Chirag  K Patel", "e": "LCL/HO/161", "s": "M", "d": "21 Oct 2024", "b": "Head Office", "dp": "Sales & Marketing", "c": "EXPAT", "ds": "Head Cement Project Sales"}, {"n": "Aileth Cornel Lucas", "e": "LCL/HO/162", "s": "F", "d": "09 Nov 2024", "b": "Head Office", "dp": "Sales & Marketing", "c": "LOCAL", "ds": "Senior Technical Sales Coordinator Executive"}, {"n": "Fabian Faustin Rwabuleke", "e": "LCL/HO/163", "s": "M", "d": "24 Feb 2025", "b": "Head Office", "dp": "Sales & Marketing", "c": "LOCAL", "ds": "Sales Officer"}, {"n": "Razak Ndoile Mbaga", "e": "LCL/HO/164", "s": "M", "d": "28 Apr 2025", "b": "Head Office", "dp": "Sales & Marketing", "c": "LOCAL", "ds": "Social Media Cordinator"}, {"n": "Gabriel Lazaro Mbele", "e": "LCL/HO/166", "s": "M", "d": "26 Aug 2025", "b": "Head Office", "dp": "Sales & Marketing", "c": "LOCAL", "ds": "Sales Officer"}];
+
+function renderEmployees(data) {
+  const tbody = document.getElementById('emp-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = data.map(e => {
+    const catBadge = e.c === 'EXPAT'
+      ? '<span class="mis-badge expired" style="background:#FEF2F2;color:#DC2626;border-color:#FECACA">Expat</span>'
+      : '<span class="mis-badge valid">Local</span>';
+    return `<tr>
+      <td style="color:var(--text-muted);font-size:10.5px">${e.e}</td>
+      <td><strong>${e.n}</strong></td>
+      <td class="tc">${e.s}</td>
+      <td style="font-size:10.5px">${e.ds}</td>
+      <td>${e.dp}</td>
+      <td>${e.b}</td>
+      <td class="tc">${catBadge}</td>
+      <td class="tc" style="font-size:10.5px;color:var(--text-muted)">${e.d}</td>
+    </tr>`;
+  }).join('');
+  const lbl = document.getElementById('emp-count-lbl');
+  if (lbl) lbl.textContent = `Showing ${data.length} of 277`;
+}
+
+function filterEmployees() {
+  const q      = (document.getElementById('emp-search')?.value || '').toLowerCase();
+  const branch = document.getElementById('emp-filter-branch')?.value || '';
+  const cat    = document.getElementById('emp-filter-cat')?.value || '';
+  const filtered = EMP_DATA.filter(e => {
+    const matchQ  = !q || e.n.toLowerCase().includes(q) || e.e.toLowerCase().includes(q) || e.dp.toLowerCase().includes(q) || e.ds.toLowerCase().includes(q);
+    const matchB  = !branch || e.b === branch;
+    const matchC  = !cat || e.c === cat;
+    return matchQ && matchB && matchC;
+  });
+  renderEmployees(filtered);
+}
+
+function showHrTab(id) {
+  document.querySelectorAll('.hr-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.hr-stab').forEach(t => t.classList.remove('active'));
+  const panel = document.getElementById('hr-' + id);
+  if (panel) panel.classList.add('active');
+  const btn = [...document.querySelectorAll('.hr-stab')].find(b => b.getAttribute('onclick')?.includes(id));
+  if (btn) btn.classList.add('active');
+  if (id === 'roster') renderEmployees(EMP_DATA);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Pre-render roster so search works immediately when tab is clicked
+  renderEmployees(EMP_DATA);
+});
 </script>
 </body>
 </html>
