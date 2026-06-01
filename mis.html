@@ -133,6 +133,7 @@
     .mis-bar-wrap { display:inline-block; width:80px; height:5px; background:#E2E8F0; border-radius:3px; overflow:hidden; vertical-align:middle; }
     .mis-bar-fill { height:100%; border-radius:3px; }
     .tc { text-align:center; }
+    .tr { text-align:right; font-weight:600; }
 
     @media print {
       .mis-tabs, .dept-nav, .top-header { position:static !important; }
@@ -871,139 +872,546 @@
 
   <!-- KV strip -->
   <div class="mis-kv-strip">
-    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--navy)">144</div><div class="mis-kv-lbl">Total Fleet</div><div class="mis-kv-sub">All registered vehicles</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:#3B82F6">26</div><div class="mis-kv-lbl">Passenger</div><div class="mis-kv-sub">Cars &amp; motorbikes</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:#F59E0B">7</div><div class="mis-kv-lbl">Plant</div><div class="mis-kv-sub">Loaders, cranes, tippers</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:#EF4444">15</div><div class="mis-kv-lbl">Mining</div><div class="mis-kv-sub">Surface miners, tippers</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:#10B981">96</div><div class="mis-kv-lbl">Logistics</div><div class="mis-kv-sub">Tractors, bulkers, trailers</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--navy)">13</div><div class="mis-kv-lbl">AMC Contracts</div><div class="mis-kv-sub">Maintenance agreements</div></div>
+    <div class="mis-kv"><div class="mis-kv-val">237</div><div class="mis-kv-lbl">IT Assets</div><div class="mis-kv-sub">54 HO · 183 Factory</div></div>
+    <div class="mis-kv"><div class="mis-kv-val">144</div><div class="mis-kv-lbl">Fleet Vehicles</div><div class="mis-kv-sub">26 pass · 22 plant · 96 logistics</div></div>
+    <div class="mis-kv"><div class="mis-kv-val">TSH 6.6B</div><div class="mis-kv-lbl">Spares Value</div><div class="mis-kv-sub">2,804 line items</div></div>
+    <div class="mis-kv"><div class="mis-kv-val">$1,310,041</div><div class="mis-kv-lbl">CAPEX Spent</div><div class="mis-kv-sub">Budget: $1,365,000</div></div>
+    <div class="mis-kv"><div class="mis-kv-val">562 ac</div><div class="mis-kv-lbl">Land Holdings</div><div class="mis-kv-sub">TSH 10.5B total value</div></div>
   </div>
 
-  <div class="mis-grid">
-    <!-- Vehicle fleet -->
-    <div class="mis-section mis-full">
+  <!-- Sub-tabs -->
+  <div class="hr-subtabs">
+    <button class="hr-stab active" onclick="showAssetTab('it')">IT Assets</button>
+    <button class="hr-stab" onclick="showAssetTab('vehicles')">Vehicles</button>
+    <button class="hr-stab" onclick="showAssetTab('spares')">Critical Spares</button>
+    <button class="hr-stab" onclick="showAssetTab('capex')">CAPEX</button>
+    <button class="hr-stab" onclick="showAssetTab('land')">Land</button>
+  </div>
+
+  <!-- ══ IT ASSETS ══ -->
+  <div class="hr-panel active" id="asset-it">
+    <div class="mis-grid">
+
+      <!-- Summary strip -->
+      <div class="mis-section mis-full">
+        <div class="mis-sec-hdr">
+          <i data-lucide="monitor" class="mis-sec-icon"></i>
+          <h3 class="mis-sec-title">IT Equipment Summary</h3>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;padding:14px 18px">
+          <div class="mis-kv" style="flex:0 0 auto;min-width:110px">
+            <div class="mis-kv-val" style="font-size:22px">237</div>
+            <div class="mis-kv-lbl">Computers</div>
+            <div class="mis-kv-sub">54 HO + 183 Factory</div>
+          </div>
+          <div class="mis-kv" style="flex:0 0 auto;min-width:110px">
+            <div class="mis-kv-val" style="font-size:22px">57</div>
+            <div class="mis-kv-lbl">Network Devices</div>
+            <div class="mis-kv-sub">Switches &amp; Firewalls</div>
+          </div>
+          <div class="mis-kv" style="flex:0 0 auto;min-width:110px">
+            <div class="mis-kv-val" style="font-size:22px">69</div>
+            <div class="mis-kv-lbl">CCTV Cameras</div>
+          </div>
+          <div class="mis-kv" style="flex:0 0 auto;min-width:110px">
+            <div class="mis-kv-val" style="font-size:22px">31</div>
+            <div class="mis-kv-lbl">Biometric / RFID</div>
+          </div>
+          <div class="mis-kv" style="flex:0 0 auto;min-width:110px">
+            <div class="mis-kv-val" style="font-size:22px">17</div>
+            <div class="mis-kv-lbl">External Drives</div>
+          </div>
+          <div class="mis-kv" style="flex:0 0 auto;min-width:110px">
+            <div class="mis-kv-val" style="font-size:22px">21</div>
+            <div class="mis-kv-lbl">Equipment Software</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Computer register -->
+      <div class="mis-section mis-full">
+        <div class="mis-sec-hdr">
+          <i data-lucide="laptop" class="mis-sec-icon"></i>
+          <h3 class="mis-sec-title">Computer Register (237 devices)</h3>
+          <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+            <input type="text" id="pc-search" placeholder="Search name, user, dept…" oninput="filterPCs()" style="font-family:var(--font);font-size:11px;padding:5px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:200px" />
+            <select id="pc-filter-loc" onchange="filterPCs()" style="font-family:var(--font);font-size:11px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
+              <option value="">All Locations</option>
+              <option value="Head Office">Head Office</option>
+              <option value="Factory / Kimbiji">Factory</option>
+            </select>
+            <span id="pc-count-lbl" style="font-size:11px;color:var(--text-muted);white-space:nowrap"></span>
+          </div>
+        </div>
+        <div class="mis-table-wrap" style="max-height:460px">
+          <table class="mis-table" id="pc-table">
+            <thead><tr><th>PC Name</th><th>User</th><th>Department</th><th>Model</th><th>OS</th><th>Location</th></tr></thead>
+            <tbody id="pc-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Network -->
+      <div class="mis-section">
+        <div class="mis-sec-hdr">
+          <i data-lucide="network" class="mis-sec-icon"></i>
+          <h3 class="mis-sec-title">Network Switches (57)</h3>
+        </div>
+        <div class="mis-table-wrap" style="max-height:320px">
+          <table class="mis-table">
+            <thead><tr><th>#</th><th>Make</th><th>Model</th><th>Location</th><th style="text-align:center">Ports</th></tr></thead>
+            <tbody><tr><td>1</td><td><strong>D-Link</strong></td><td>DGS-1016D</td><td>HR OFFICE</td><td class="tc">16</td></tr>
+<tr><td>2</td><td><strong>D-Link</strong></td><td>DGS-1024D</td><td>MECHANICAL UMEME HOUSE</td><td class="tc">24</td></tr>
+<tr><td>3</td><td><strong>ZyXEL</strong></td><td>ES1100-8P</td><td>CANTEEN</td><td class="tc">8</td></tr>
+<tr><td>4</td><td><strong>D-Link</strong></td><td>DGS-1008P</td><td>WEIGHTBRIGE NO2</td><td class="tc">8</td></tr>
+<tr><td>5</td><td><strong>PLANET</strong></td><td>DS-3E0310P -E/M</td><td>WEIGHTBRIGE NO2</td><td class="tc">10</td></tr>
+<tr><td>6</td><td><strong>D-Link</strong></td><td>DGS-1024D</td><td>WEIGHTBRIGE NO1</td><td class="tc">24</td></tr>
+<tr><td>7</td><td><strong>HIKVISION</strong></td><td>DS-3E0310P -E/M</td><td>WEIGHTBRIGE NO1</td><td class="tc">8</td></tr>
+<tr><td>8</td><td><strong>PLANET</strong></td><td>IGS-4215-8P2T2S</td><td>WEIGHTBRIGE NO1</td><td class="tc">8</td></tr>
+<tr><td>9</td><td><strong>D-Link</strong></td><td>DES-1024D</td><td>TOKEN OFFICE</td><td class="tc">24</td></tr>
+<tr><td>10</td><td><strong>PLANET</strong></td><td>IFGS1022HPT(V2)</td><td>FABRICATION</td><td class="tc">10</td></tr>
+<tr><td>11</td><td><strong>D-Link</strong></td><td>DSG-1016D</td><td>PROJECT OFFICE</td><td class="tc">16</td></tr>
+<tr><td>12</td><td><strong>D-Link</strong></td><td>DES-1008A</td><td>SAJIV OFFICE</td><td class="tc">8</td></tr>
+<tr><td>13</td><td><strong>D-Link</strong></td><td>DES-1008A</td><td>MECHANICAL WORKSHOP</td><td class="tc">8</td></tr>
+<tr><td>14</td><td><strong>D-Link</strong></td><td>DGS-1008A</td><td>MECHANICAL WORKSHOP</td><td class="tc">8</td></tr>
+<tr><td>15</td><td><strong>D-Link</strong></td><td>DGS- 1008A</td><td>POWER PLANT CONTROL ROOM</td><td class="tc">8</td></tr>
+<tr><td>16</td><td><strong>PLANET</strong></td><td>IGS-4215-8P2T2S</td><td>POWER PLANT INSTRUMENTATION</td><td class="tc">10</td></tr>
+<tr><td>17</td><td><strong>D-Link</strong></td><td>DES-1008A</td><td>Staff Colony Punch Area</td><td class="tc">8</td></tr>
+<tr><td>18</td><td><strong>PLANET</strong></td><td>IGS-4215-8P2T2S</td><td>LC4</td><td class="tc">10</td></tr>
+<tr><td>19</td><td><strong>D-Link</strong></td><td>DGS-1016D</td><td>LC4</td><td class="tc">16</td></tr>
+<tr><td>20</td><td><strong>PLANET</strong></td><td>IGS-4215-8P2T2S</td><td>MECHANICAL WORKSHOP</td><td class="tc">10</td></tr>
+<tr><td>21</td><td><strong>D-Link</strong></td><td>DES-1008A</td><td>WATER PLANT</td><td class="tc">8</td></tr>
+<tr><td>22</td><td><strong>D-Link</strong></td><td>DGS-1016D</td><td>PARKING PLANT</td><td class="tc">16</td></tr>
+<tr><td>23</td><td><strong>D-Link</strong></td><td>DES-1008A</td><td>PUNCH MAIN GATE</td><td class="tc">8</td></tr>
+<tr><td>24</td><td><strong>TP-LINK</strong></td><td>TL-SF1009(UN)</td><td>CEMENT MILL</td><td class="tc">9</td></tr>
+<tr><td>25</td><td><strong>PLANET</strong></td><td>IGS-4215-8P2T2S</td><td>LC3</td><td class="tc">10</td></tr>
+<tr><td>26</td><td><strong>PLANET</strong></td><td>IGS-4215-8P2T2S</td><td>LC1</td><td class="tc">10</td></tr>
+<tr><td>27</td><td><strong>TP-LINK</strong></td><td>TL-SFF1009P</td><td>LC2</td><td class="tc">9</td></tr>
+<tr><td>28</td><td><strong>PLANET</strong></td><td>IFGS-1022HPT</td><td>FABRICATION</td><td class="tc">10</td></tr>
+<tr><td>29</td><td><strong>HIKVISION- SWITCH</strong></td><td>-</td><td>NVR SERVER ROOM</td><td class="tc">25</td></tr>
+<tr><td>30</td><td><strong>D-Link</strong></td><td>DES-1008A</td><td>NVR SERVER ROOM</td><td class="tc">8</td></tr>
+<tr><td>31</td><td><strong>D-Link</strong></td><td>DES-1008C</td><td>PRODUCTION OFFICE</td><td class="tc">8</td></tr>
+<tr><td>32</td><td><strong>D-Link</strong></td><td>DES-1008C</td><td>VISITING ROOM</td><td class="tc">8</td></tr>
+<tr><td>33</td><td><strong>D-Link</strong></td><td>DGS-1016D</td><td>MAINGATE SECURITY</td><td class="tc">16</td></tr>
+<tr><td>34</td><td><strong>D-Link</strong></td><td>DGS-1016D</td><td>ACCOUNT SERVER ROOM</td><td class="tc">16</td></tr>
+<tr><td>35</td><td><strong>D-Link</strong></td><td>DGS-1016D</td><td>ACCOUNT SERVER ROOM</td><td class="tc">16</td></tr>
+<tr><td>36</td><td><strong>CISCO</strong></td><td>WS-C2950T-24</td><td>ACCOUNT SERVER ROOM</td><td class="tc">24</td></tr>
+<tr><td>37</td><td><strong>D-Link</strong></td><td>DGS-1008A</td><td>ACCOUNT OFFICE</td><td class="tc">8</td></tr>
+<tr><td>38</td><td><strong>D-Link</strong></td><td>DES-1008</td><td>ACCOUNT OFFICE</td><td class="tc">8</td></tr>
+<tr><td>39</td><td><strong>D-Link</strong></td><td>DGS-1024D</td><td>ACCOUNT OFFICE</td><td class="tc">24</td></tr>
+<tr><td>40</td><td><strong>D-Link</strong></td><td>DGS-F1100-10PS-E</td><td>LC3</td><td class="tc">10</td></tr>
+</tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CCTV -->
+      <div class="mis-section">
+        <div class="mis-sec-hdr">
+          <i data-lucide="camera" class="mis-sec-icon"></i>
+          <h3 class="mis-sec-title">CCTV Cameras (69)</h3>
+        </div>
+        <div class="mis-table-wrap" style="max-height:320px">
+          <table class="mis-table">
+            <thead><tr><th>#</th><th>Camera Name</th><th>IP Address</th><th>Model</th></tr></thead>
+            <tbody><tr><td>1</td><td>HIK Vision NVR</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.11</td><td>DS-7732NI-K4</td></tr>
+<tr><td>2</td><td>LOADING 04</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.22</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>3</td><td>LOADING 03</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.24</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>4</td><td>LOADING 02</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.32</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>5</td><td>LOADING 01</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.31</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>6</td><td>STORE 02</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.26</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>7</td><td>Block J Front View</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.71</td><td>DS-2CD2643G2-IZS</td></tr>
+<tr><td>8</td><td>STORE 03</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.28</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>9</td><td>STORE AREA O.SIDE</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.29</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>10</td><td>STORE FRONT SIDE</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.30</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>11</td><td>CEMENT 01 MIL</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.25</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>12</td><td>SUB-STATION</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.86</td><td>DS-2CD2643G2-IZS</td></tr>
+<tr><td>13</td><td>CM MILL FEEDER</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.33</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>14</td><td>CRUSHER PTZ CAM</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.34</td><td>DS-2DE7225IW-AE</td></tr>
+<tr><td>15</td><td>WB2 SIDE 02</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.44</td><td>DS-2CD1023G0E-I</td></tr>
+<tr><td>16</td><td>Staff Colon inside Gate</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.74</td><td>DS-2CD2643G2-IZS</td></tr>
+<tr><td>17</td><td>MINE WB</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.51</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>18</td><td>MAIN ROAD VIEW</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.45</td><td>DS-2DE7225IW-AE</td></tr>
+<tr><td>19</td><td>NEW COLONY SIDE 2</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.80</td><td>DS-2DE7225IW-AE</td></tr>
+<tr><td>20</td><td>FUEL STATION</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.48</td><td>DS-2DE7225IW-AE</td></tr>
+<tr><td>21</td><td>WB1 SIDE 1</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.244</td><td>DS-2CD1023G0E-I</td></tr>
+<tr><td>22</td><td>STORE INSIDE</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.73</td><td>DS-2CD1643G0-I</td></tr>
+<tr><td>23</td><td>Mining Office inside</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.2</td><td>DS-2CD1643G0-I</td></tr>
+<tr><td>24</td><td>PACKER 02</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.38</td><td>DS-2CD1023G0E-I</td></tr>
+<tr><td>25</td><td>CANTEEN TOILET</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.92</td><td>DS-2CD1023G0E-I</td></tr>
+<tr><td>26</td><td>Staff Colon Gate No 2</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.76</td><td>DS-2CD2643G2-IZS</td></tr>
+<tr><td>27</td><td>WB1 TOP VIEW</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.3</td><td>DS-2CD1023G0E-I</td></tr>
+<tr><td>28</td><td>Staff Colon Block B and C</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.67</td><td>DS-2CD2643G2-IZS</td></tr>
+<tr><td>29</td><td>Block J Back View</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.68</td><td>DS-2CD2643G2-IZS</td></tr>
+<tr><td>30</td><td>PUNCHING</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.70</td><td>DS-2CD2643G2-IZS</td></tr>
+</tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Equipment Software -->
+      <div class="mis-section mis-full">
+        <div class="mis-sec-hdr">
+          <i data-lucide="cpu" class="mis-sec-icon"></i>
+          <h3 class="mis-sec-title">Equipment Software Register (21 items)</h3>
+        </div>
+        <div class="mis-table-wrap">
+          <table class="mis-table">
+            <thead><tr><th>#</th><th>Location</th><th>Equipment</th><th>Software</th><th>Responsible</th></tr></thead>
+            <tbody><tr><td>1</td><td>CPP</td><td><strong>Symap - Synchronization Panel</strong></td><td style="font-size:10.5px">Symap Parameter Tool v.2.108</td><td>Mayank</td></tr>
+<tr><td>2</td><td>Plant MCC</td><td><strong>Simocode</strong></td><td style="font-size:10.5px">Simocode Es 2007+SP2  Version 2007+SP2</td><td>Mayank</td></tr>
+<tr><td>3</td><td>Pyro</td><td><strong>Coal Firing Pfister</strong></td><td style="font-size:10.5px">Twin -Cat System Manager V 2.11 or 192.168.240.1</td><td>Ramesh / Mahesh</td></tr>
+<tr><td>4</td><td>CM 2</td><td><strong>Cement Mill 2 VLRS  PLC</strong></td><td style="font-size:10.5px">CPU Sr 20- Step7 Microwin Smart</td><td>Ramesh / Mahesh</td></tr>
+<tr><td>5</td><td>CM 2</td><td><strong>Coniq Weighfeeder</strong></td><td style="font-size:10.5px">192.168.240.1</td><td>Ramesh / Mahesh</td></tr>
+<tr><td>6</td><td>Reclaimer</td><td><strong>Reclaimer Bridge Type</strong></td><td style="font-size:10.5px">TIA portal V.16</td><td>Ramesh / Mahesh</td></tr>
+<tr><td>7</td><td>Stacker/Reclaimer</td><td><strong>Stacker &Reclaimer</strong></td><td style="font-size:10.5px">Step7-300,Ssimatic Manager PCS7 V 8.0</td><td>Ramesh / Mahesh</td></tr>
+<tr><td>8</td><td>Pyro</td><td><strong>Shell Scanner</strong></td><td style="font-size:10.5px">Raytek CS6.0.3.2</td><td>Ramesh / Mahesh</td></tr>
+<tr><td>9</td><td>General</td><td><strong>CCTV Camera</strong></td><td style="font-size:10.5px">IVMS-4200</td><td>Ramesh / Mahesh</td></tr>
+<tr><td>10</td><td>CM 2</td><td><strong>ABB VFDs</strong></td><td style="font-size:10.5px">Drive composer Entry V.2.8.2  ABB</td><td>Ramesh / Mahesh</td></tr>
+<tr><td>11</td><td>Plant Server</td><td><strong>DCS System</strong></td><td style="font-size:10.5px">PCS 7 Ver 9.1</td><td>Ramesh / Mahesh</td></tr>
+<tr><td>12</td><td>QC Lab</td><td><strong>QCX</strong></td><td style="font-size:10.5px">Work Place QCX FL Smidth 7504</td><td>Auto Generate</td></tr>
+<tr><td>13</td><td>Server Room</td><td><strong>Employee Punching Machine</strong></td><td style="font-size:10.5px">Com Master / Pay Roll</td><td>Saurabh</td></tr>
+<tr><td>14</td><td>Server Room</td><td><strong>ERP Back up - ORION</strong></td><td style="font-size:10.5px">ERP - Orion (Data Mining)</td><td>Saurabh</td></tr>
+<tr><td>15</td><td>Local Canteen</td><td><strong>Canteen Management System</strong></td><td style="font-size:10.5px">Canteen Management System</td><td>Saurabh</td></tr>
+<tr><td>16</td><td>Server Room</td><td><strong>Contractor Employee Punching</strong></td><td style="font-size:10.5px">Smart Pay</td><td>Saurabh</td></tr>
+<tr><td>17</td><td>Server Room</td><td><strong>Unmanned Weighbridge</strong></td><td style="font-size:10.5px">UMS Software</td><td>Saurabh</td></tr>
+<tr><td>18</td><td>Server Room</td><td><strong>Mining Weighbridge</strong></td><td style="font-size:10.5px">UMS Software</td><td>Saurabh</td></tr>
+<tr><td>19</td><td>Server Room</td><td><strong>Nozzle Packer Systems</strong></td><td style="font-size:10.5px">UMS Software</td><td>Saurabh</td></tr>
+<tr><td>19</td><td>ODOO</td><td><strong>Cloud Backup FTP</strong></td><td style="font-size:10.5px">ODOO</td><td>Saurabh</td></tr>
+<tr><td>20</td><td>UPS Room</td><td><strong>Sophos Firewall</strong></td><td style="font-size:10.5px">Sophos Software and Configuration Backup</td><td>Saurabh</td></tr>
+</tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ VEHICLES ══ -->
+  <div class="hr-panel" id="asset-vehicles">
+    <div class="mis-kv-strip" style="margin-bottom:16px">
+      <div class="mis-kv"><div class="mis-kv-val" style="color:#10B981">96</div><div class="mis-kv-lbl">Logistics</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:#EF4444">7</div><div class="mis-kv-lbl">Mining</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:#3B82F6">26</div><div class="mis-kv-lbl">Passenger</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:#F59E0B">15</div><div class="mis-kv-lbl">Plant</div></div>
+    </div>
+    <div class="mis-section">
       <div class="mis-sec-hdr">
         <i data-lucide="truck" class="mis-sec-icon"></i>
-        <h3 class="mis-sec-title">Vehicle Fleet Register (showing first 60 of 144)</h3>
+        <h3 class="mis-sec-title">Fleet Register (144 vehicles)</h3>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+          <select id="veh-filter-cat" onchange="filterVehicles()" style="font-family:var(--font);font-size:11px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
+            <option value="">All Categories</option>
+            <option value="Passenger">Passenger</option>
+            <option value="Plant">Plant</option>
+            <option value="Mining">Mining</option>
+            <option value="Logistics">Logistics</option>
+          </select>
+          <input type="text" id="veh-search" placeholder="Search reg, make, type…" oninput="filterVehicles()" style="font-family:var(--font);font-size:11px;padding:5px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:190px" />
+          <span id="veh-count-lbl" style="font-size:11px;color:var(--text-muted);white-space:nowrap"></span>
+        </div>
       </div>
-      <div class="mis-table-wrap">
-        <table class="mis-table">
-          <thead>
-            <tr>
-              <th>Category</th>
-              <th>Reg. No.</th>
-              <th>Make</th>
-              <th>Model</th>
-              <th>Type</th>
-              <th>Location</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 912 EFX</strong></td><td>Toyota</td><td>Hilux Revo</td><td>Pick Up</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 608EGX</strong></td><td>Toyota</td><td>Hilux Surf</td><td>Pick Up</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 368 DUQ</strong></td><td>Toyota</td><td>LC Prado</td><td>Station Wagon</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 791 DNK</strong></td><td>Toyota</td><td>IST</td><td>Saloon</td><td>HO</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 457 EHU</strong></td><td>Toyota</td><td>Rav 4</td><td>Station Wagon</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>MC 823 CHB</strong></td><td>Bajaj</td><td>Boxer</td><td>Motor Cycle</td><td>HO</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>MC 519 DME</strong></td><td>Skymark</td><td>B-SK</td><td>Motor Cycle</td><td>HO</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>MC 464 DWN</strong></td><td>TVS</td><td>XLHD</td><td>Motor Cycle</td><td>HO</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>MC 400 EUB</strong></td><td>Honda</td><td>SDH125-D</td><td>Motor cycle</td><td>HO</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 806 DQM</strong></td><td>Toyota</td><td>Camry</td><td>Saloon</td><td>HO</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 103 EES</strong></td><td>Nissan</td><td>Note</td><td>Saloon</td><td>HO</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 768 DDC</strong></td><td>Land Rover</td><td>Rangerover</td><td>Station Wagon</td><td>HO</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 446 DSX</strong></td><td>Land Rover</td><td>Discovery 4</td><td>Station Wagon</td><td>HO</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 907 EAT</strong></td><td>Land Rover</td><td>Vouge</td><td>Station Wagon</td><td>HO</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 945 ENT</strong></td><td>Toyota</td><td>Succeed</td><td>Station Wagon</td><td>HO</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 418 DYL</strong></td><td>Toyota</td><td>Harrier</td><td>Station Wagon</td><td>HO</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 716 DYT</strong></td><td>Nissan</td><td>X-Trail</td><td>Station Wagon</td><td>HO</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 178 EJL</strong></td><td>Toyota</td><td>Harrier</td><td>Station Wagon</td><td>HO</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 703 ELJ</strong></td><td>Nissan</td><td>X-Trail</td><td>Station Wagon</td><td>HO</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>MC 866 ACD</strong></td><td>Bajaj</td><td>Boxer</td><td>Motor Cycle</td><td>LOG</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>MC 431 CGP</strong></td><td>Bajaj</td><td>Boxer</td><td>Motor Cycle</td><td>LOG</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 175 BCM</strong></td><td>Tata</td><td>Mobile 20731</td><td>Pick Up</td><td>LOG</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 957 CYZ</strong></td><td>Toyota</td><td>Prado</td><td>Station Wagon</td><td>LOG</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 459 EQJ</strong></td><td>Toyota</td><td>VANGUARD</td><td>Station Wagon</td><td>HO</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 215 EQV</strong></td><td>Land Rover</td><td>Rangerover 3.0</td><td>Station Wagon</td><td>HO</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#3B82F6"></span>Passenger</td><td><strong>T 672 DHG</strong></td><td>Toyota</td><td>Hilux Surf</td><td>Station Wagon</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#EF4444"></span>Mining</td><td><strong>T 909 DZE</strong></td><td>ACE</td><td>PHANTON 4X4</td><td>Loader</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#EF4444"></span>Mining</td><td><strong>T 963 DTP</strong></td><td>Caterpillar</td><td>SEM655D</td><td>Wheel Loader</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#EF4444"></span>Mining</td><td><strong>T 186 DUH</strong></td><td>Escorts</td><td>Hydra-14</td><td>Crane</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#EF4444"></span>Mining</td><td><strong>T 955 EAN</strong></td><td>Escorts</td><td>Hydra</td><td>Crane</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#EF4444"></span>Mining</td><td><strong>T 289 ECC</strong></td><td>Escorts</td><td>Hydra-12</td><td>Crane</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#EF4444"></span>Mining</td><td><strong>T 850 DTF</strong></td><td>FAW</td><td>J5P 6X4 340 HP/CA3256</td><td>Tipper</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#EF4444"></span>Mining</td><td><strong>T 852 DTF</strong></td><td>FAW</td><td>J5P 6X4 340 HP/CA3256</td><td>Tipper</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#EF4444"></span>Mining</td><td><strong>T 487 EFG</strong></td><td>Godrej</td><td>GX 300D- NEO</td><td>Forklift</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#EF4444"></span>Mining</td><td><strong>T 373 CNJ</strong></td><td>Greaves</td><td>BOMAG-BW211D3</td><td>Road Roller</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#EF4444"></span>Mining</td><td><strong>T 876 CLU</strong></td><td>JCB</td><td>Backhoe Loader 3DX</td><td>Loader</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#EF4444"></span>Mining</td><td><strong>T 647 CNE</strong></td><td>Mahindra</td><td>6000D1</td><td>Tractor</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#EF4444"></span>Mining</td><td><strong>T 365 CNJ</strong></td><td>Mahindra</td><td>6000</td><td>Tractor</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#EF4444"></span>Mining</td><td><strong>T 822 CQA</strong></td><td>Noble</td><td>Unknown</td><td>Tipping Trailer</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#EF4444"></span>Mining</td><td><strong>T 726 CNU</strong></td><td>Noble</td><td>Unknown</td><td>Tipping Trailer</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#EF4444"></span>Mining</td><td><strong>T 207 CBV</strong></td><td>Zoomlion</td><td>QY70V532</td><td>Crane</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#F59E0B"></span>Plant</td><td><strong>T 936 EEZ</strong></td><td>XCMG</td><td>XE500DK</td><td>Excavator</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#F59E0B"></span>Plant</td><td><strong>T425 EHQ</strong></td><td>HOWO</td><td>HOWO 8X 4</td><td>Tipper</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#F59E0B"></span>Plant</td><td><strong>T 671 EJN</strong></td><td>L & T</td><td>KSM 304</td><td>Surface Miner</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#F59E0B"></span>Plant</td><td><strong>T 270 EJP</strong></td><td>HOWO</td><td>HOWO 8X 4</td><td>Tipper</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#F59E0B"></span>Plant</td><td><strong>T 275 EJP</strong></td><td>HOWO</td><td>HOWO 8X 4</td><td>Tipper</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#F59E0B"></span>Plant</td><td><strong>T 130 CCA</strong></td><td>Caterpillar</td><td>Forklift-DP30 NTD</td><td>Forklift</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#F59E0B"></span>Plant</td><td><strong>T 727 EDH</strong></td><td>Zoomlion</td><td>180 T</td><td>Crane</td><td>Factory</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#10B981"></span>Logistics</td><td><strong>T 370 DFH</strong></td><td>Emir Turkey</td><td>Unknown</td><td>Bulker</td><td>Logistics</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#10B981"></span>Logistics</td><td><strong>T 393 DHM</strong></td><td>Emir Turkey</td><td>AE9G22</td><td>Bulker</td><td>Logistics</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#10B981"></span>Logistics</td><td><strong>T 567 DHM</strong></td><td>Emir Turkey</td><td>AE9G22</td><td>Bulker</td><td>Logistics</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#10B981"></span>Logistics</td><td><strong>T 273 DZX</strong></td><td>FAW</td><td>CA4181P2K15T1YA80</td><td>Tractor</td><td>Logistics</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#10B981"></span>Logistics</td><td><strong>T 274 DZX</strong></td><td>FAW</td><td>CA4181P2K15T1YA80</td><td>Tractor</td><td>Logistics</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#10B981"></span>Logistics</td><td><strong>T 275 DZX</strong></td><td>FAW</td><td>CA4181P2K15T1YA80</td><td>Tractor</td><td>Logistics</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#10B981"></span>Logistics</td><td><strong>T 276 DZX</strong></td><td>FAW</td><td>CA4181P2K15T1YA80</td><td>Tractor</td><td>Logistics</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#10B981"></span>Logistics</td><td><strong>T 893 EAB</strong></td><td>FAW</td><td>CA4181P2K15T1YA80</td><td>Tractor</td><td>Logistics</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#10B981"></span>Logistics</td><td><strong>T 983 DGZ</strong></td><td>HOWO</td><td>HOWO</td><td>Tractor</td><td>Logistics</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#10B981"></span>Logistics</td><td><strong>T 679 DRG</strong></td><td>HOWO</td><td>E7G</td><td>Tractor</td><td>Logistics</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#10B981"></span>Logistics</td><td><strong>T 680 DRG</strong></td><td>HOWO</td><td>E7G</td><td>Tractor</td><td>Logistics</td></tr>
-<tr><td><span class="sc-dept-dot" style="background:#10B981"></span>Logistics</td><td><strong>T 682 DRG</strong></td><td>HOWO</td><td>E7G</td><td>Tractor</td><td>Logistics</td></tr>
-
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- AMC -->
-    <div class="mis-section mis-full">
-      <div class="mis-sec-hdr">
-        <i data-lucide="file-text" class="mis-sec-icon"></i>
-        <h3 class="mis-sec-title">Annual Maintenance Contracts (13)</h3>
-      </div>
-      <div class="mis-table-wrap">
-        <table class="mis-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Department</th>
-              <th>Agency</th>
-              <th>Description</th>
-              <th style="text-align:center">Valid From</th>
-              <th style="text-align:center">Valid Till</th>
-              <th style="text-align:center">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>1</td><td>QC</td><td><strong>Avantgarde INC FZCO</strong></td><td>XRF Analyser</td><td class="num">01.04.2025</td><td class="num">31.03.2026</td><td><span class="mis-badge expired">Expired</span></td></tr>
-<tr><td>2</td><td>Powerplant</td><td><strong>Car & General Trading Ltd</strong></td><td>CPP - DG Maintenance - 3 Nos (1.5MW Each) + Kiln DG (1 </td><td class="num">18.03.2025</td><td class="num">17.03.2026</td><td><span class="mis-badge expired">Expired</span></td></tr>
-<tr><td>3</td><td>E&I</td><td><strong>Endeavour Software Solutions Limited</strong></td><td>Time & Attendance System</td><td class="num">01.06.2025</td><td class="num">31.05.2026</td><td><span class="mis-badge expired">Expired</span></td></tr>
-<tr><td>4</td><td>E&I</td><td><strong>Endel Tanzania Limited</strong></td><td>5 x Weigh Bridge & 3 x Platform Scales</td><td class="num">01.11.2025</td><td class="num">30.10.2026</td><td><span class="mis-badge valid">Valid</span></td></tr>
-<tr><td>5</td><td>E&I</td><td><strong>I Magic Solution</strong></td><td>RFID System for WB1, WB2, MInes WB1 & WB2 and 02 nos Of</td><td class="num">01.08.2025</td><td class="num">31.07.2026</td><td><span class="mis-badge expiring">Expiring</span></td></tr>
-<tr><td>6</td><td>E&I</td><td><strong>Pinnacle Computer Systems LLC</strong></td><td>Orion ERP</td><td class="num">01.01.2026</td><td class="num">31.12.2026</td><td><span class="mis-badge valid">Valid</span></td></tr>
-<tr><td>7</td><td>E&I</td><td><strong>Satconet</strong></td><td>ICT Service Outsourcing</td><td class="num">01.10.2023</td><td class="num">30.09.2024</td><td><span class="mis-badge expired">Expired</span></td></tr>
-<tr><td>8</td><td>Admin</td><td><strong>Total Cool</strong></td><td>Samsung ACs (Head Office)</td><td class="num">01.03.2026</td><td class="num">28.02.2027</td><td><span class="mis-badge valid">Valid</span></td></tr>
-<tr><td>9</td><td>Accounts</td><td><strong>Pergamon Group Limited</strong></td><td>TRA Fiscal Device 611 Maintenance</td><td class="num">01.01.2026</td><td class="num">31.12.2026</td><td><span class="mis-badge valid">Valid</span></td></tr>
-<tr><td>10</td><td>Accounts</td><td><strong>Power Computers Ltd</strong></td><td>TRA Fiscal Device Maintenance</td><td class="num">01.06.2025</td><td class="num">30.05.2026</td><td><span class="mis-badge expired">Expired</span></td></tr>
-<tr><td>11</td><td>Safety</td><td><strong>Winow Fire & Motor Works Limited</strong></td><td>Fire Extinguishers</td><td class="num">01.05.2025</td><td class="num">31.04.2026</td><td><span class="mis-badge valid">Valid</span></td></tr>
-<tr><td>12</td><td>E&I</td><td><strong>Wintech Sales & Services Ltd</strong></td><td>Lift Service & Inspection</td><td class="num">01.02.2024</td><td class="num">30.04.2025</td><td><span class="mis-badge expired">Expired</span></td></tr>
-<tr><td>13</td><td>E&I</td><td><strong>Ahead Africa Solution Ltd</strong></td><td>AMC for IT Services</td><td class="num">15.09.2025</td><td class="num">14.09.2026</td><td><span class="mis-badge valid">Valid</span></td></tr>
-
-          </tbody>
+      <div class="mis-table-wrap" style="max-height:540px">
+        <table class="mis-table" id="veh-table">
+          <thead><tr><th>Category</th><th>Reg. No.</th><th>Make</th><th>Model</th><th>Type</th><th>Location</th><th>Allocation</th></tr></thead>
+          <tbody id="veh-tbody"></tbody>
         </table>
       </div>
     </div>
   </div>
+
+  <!-- ══ CRITICAL SPARES ══ -->
+  <div class="hr-panel" id="asset-spares">
+    <div class="mis-kv-strip" style="margin-bottom:16px">
+      <div class="mis-kv"><div class="mis-kv-val">TSH 6.65B</div><div class="mis-kv-lbl">Total Inventory Value</div></div>
+      <div class="mis-kv"><div class="mis-kv-val" style="color:#EF4444">294</div><div class="mis-kv-lbl">Class A Items</div><div class="mis-kv-sub">TSH 3595M</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:#F59E0B">838</div><div class="mis-kv-lbl">Class B Items</div><div class="mis-kv-sub">TSH 834M</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:#94A3B8">1672</div><div class="mis-kv-lbl">Class C Items</div><div class="mis-kv-sub">TSH 2217M</div></div>
+    </div>
+    <div class="mis-grid">
+      <div class="mis-section">
+        <div class="mis-sec-hdr">
+          <i data-lucide="package-search" class="mis-sec-icon"></i>
+          <h3 class="mis-sec-title">Top 20 Items by Value</h3>
+        </div>
+        <div class="mis-table-wrap" style="max-height:460px">
+          <table class="mis-table">
+            <thead><tr><th>Class</th><th>Code</th><th>Description</th><th style="text-align:center">UOM</th><th style="text-align:right">Value (TSH)</th></tr></thead>
+            <tbody><tr>
+      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">CPRGM002</td>
+      <td>GRINDING MEDIA HIGH CHROME  SIZE 20 MM</td>
+      <td class="tc">MT</td>
+      <td class="tr">TSH 298,141,026</td>
+    </tr>
+<tr>
+      <td><span class="mis-badge" style="background:#94A3B81a;color:#94A3B8;border-color:#94A3B866">C</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">CPRRF013</td>
+      <td>BRICK AC 70  /20 SPL 3K 618 SIZE 198 X 180 X 103 / 97 SA FOR KILN</td>
+      <td class="tc">NOS</td>
+      <td class="tr">TSH 246,253,450</td>
+    </tr>
+<tr>
+      <td><span class="mis-badge" style="background:#94A3B81a;color:#94A3B8;border-color:#94A3B866">C</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">CPMBG002</td>
+      <td>BAG EMPTY FOR CEMENT PACKING GRADE 42.5R MATERIAL WOVEN POLYPROPY</td>
+      <td class="tc">NOS</td>
+      <td class="tr">TSH 233,390,115</td>
+    </tr>
+<tr>
+      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">CPRGM001</td>
+      <td>GRINDING MEDIA HIGH CHROME  SIZE 17 MM</td>
+      <td class="tc">MT</td>
+      <td class="tr">TSH 204,785,435</td>
+    </tr>
+<tr>
+      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">CPRGM004</td>
+      <td>GRINDING MEDIA HIGH CHROME  SIZE 30 MM</td>
+      <td class="tc">MT</td>
+      <td class="tr">TSH 189,693,906</td>
+    </tr>
+<tr>
+      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">CPRRF026</td>
+      <td>CASTABLE  CALDEMON BPTC</td>
+      <td class="tc">MT</td>
+      <td class="tr">TSH 155,721,278</td>
+    </tr>
+<tr>
+      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">CPRGM008</td>
+      <td>GRINDING MEDIA HIGH CHROME  SIZE 70 MM</td>
+      <td class="tc">MT</td>
+      <td class="tr">TSH 154,913,844</td>
+    </tr>
+<tr>
+      <td><span class="mis-badge" style="background:#94A3B81a;color:#94A3B8;border-color:#94A3B866">C</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">CFLFL001</td>
+      <td>FUEL DIESEL</td>
+      <td class="tc">LTR</td>
+      <td class="tr">TSH 140,973,479</td>
+    </tr>
+<tr>
+      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">CPRGM003</td>
+      <td>GRINDING MEDIA HIGH CHROME  SIZE 25 MM</td>
+      <td class="tc">MT</td>
+      <td class="tr">TSH 139,844,512</td>
+    </tr>
+<tr>
+      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">CPRGM006</td>
+      <td>GRINDING MEDIA HIGH CHROME  SIZE 50 MM</td>
+      <td class="tc">MT</td>
+      <td class="tr">TSH 136,779,279</td>
+    </tr>
+<tr>
+      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">CPRGM009</td>
+      <td>GRINDING MEDIA HIGH CHROME  SIZE 80 MM</td>
+      <td class="tc">MT</td>
+      <td class="tr">TSH 134,271,985</td>
+    </tr>
+<tr>
+      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">CPRGM005</td>
+      <td>GRINDING MEDIA HIGH CHROME  SIZE 40 MM</td>
+      <td class="tc">MT</td>
+      <td class="tr">TSH 124,002,885</td>
+    </tr>
+<tr>
+      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">CPRRF005</td>
+      <td>CASTABLE HASLE D59A</td>
+      <td class="tc">MT</td>
+      <td class="tr">TSH 93,868,318</td>
+    </tr>
+<tr>
+      <td><span class="mis-badge" style="background:#94A3B81a;color:#94A3B8;border-color:#94A3B866">C</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">CFLGR008</td>
+      <td>GREASE BERUGEAR HV 20 FOR CEMENT MILL GIRTH GEAR</td>
+      <td class="tc">KG</td>
+      <td class="tr">TSH 92,125,944</td>
+    </tr>
+<tr>
+      <td><span class="mis-badge" style="background:#94A3B81a;color:#94A3B8;border-color:#94A3B866">C</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">CPMBG004</td>
+      <td>BAG EMPTY FOR CEMENT PACKING GRADE 42.5N CEM II MATERIAL WOVEN PO</td>
+      <td class="tc">NOS</td>
+      <td class="tr">TSH 76,749,123</td>
+    </tr>
+<tr>
+      <td><span class="mis-badge" style="background:#94A3B81a;color:#94A3B8;border-color:#94A3B866">C</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">CPRRF014</td>
+      <td>BRICK AC 70 /20 SPL 3K - 218 SIZE 198 X 180 X 103/ 84 SA FOR KILN</td>
+      <td class="tc">NOS</td>
+      <td class="tr">TSH 75,859,058</td>
+    </tr>
+<tr>
+      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">CQCGS009</td>
+      <td>NORMAL SAND EN196-1</td>
+      <td class="tc">MT</td>
+      <td class="tr">TSH 74,086,855</td>
+    </tr>
+<tr>
+      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">EISGS011</td>
+      <td>POSITION TRANSDUCER MODEL NO. 8TL7 E501 M0300 P S32 SUPPLY 10 TO </td>
+      <td class="tc">NOS</td>
+      <td class="tr">TSH 70,282,800</td>
+    </tr>
+<tr>
+      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">CPRGM007</td>
+      <td>GRINDING MEDIA HIGH CHROME  SIZE 60 MM</td>
+      <td class="tc">MT</td>
+      <td class="tr">TSH 67,655,615</td>
+    </tr>
+<tr>
+      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">EAUSM179</td>
+      <td>COUPLING PART NO. 101013 FOR SURFACE MINER KSM304</td>
+      <td class="tc">NOS</td>
+      <td class="tr">TSH 66,620,825</td>
+    </tr>
+</tbody>
+          </table>
+        </div>
+      </div>
+      <div class="mis-section">
+        <div class="mis-sec-hdr">
+          <i data-lucide="clipboard-check" class="mis-sec-icon"></i>
+          <h3 class="mis-sec-title">Monthly Stock Audit Progress</h3>
+        </div>
+        <div class="mis-table-wrap" style="max-height:460px">
+          <table class="mis-table">
+            <thead><tr><th>Month</th><th>A-Class</th><th>B-Class</th><th>C-Class</th></tr></thead>
+            <tbody><tr><td>Oct-2025</td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
+<tr><td>Nov-2025</td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
+<tr><td>Dec-2025</td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Jan-2026</td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Feb-2026</td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Mar-2026</td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/59</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/167</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/334</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Apr-2026</td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/167</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>May-2026</td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/167</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Jun-2026</td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Jul-2026</td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Aug-2026</td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Sep-2026</td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></div></td><td><div style="display:flex;align-items:center;gap:6px"><div class="mis-bar-wrap" style="width:70px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
+</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CAPEX ══ -->
+  <div class="hr-panel" id="asset-capex">
+    <div class="mis-kv-strip" style="margin-bottom:16px">
+      <div class="mis-kv"><div class="mis-kv-val">$1,310,041</div><div class="mis-kv-lbl">Total Spent (YTD)</div></div>
+      <div class="mis-kv"><div class="mis-kv-val">$1,365,000</div><div class="mis-kv-lbl">Total Budget</div></div>
+      <div class="mis-kv"><div class="mis-kv-val"><span style="color:#10B981;font-weight:700">96%</span></div><div class="mis-kv-lbl">Budget Utilisation</div></div>
+      <div class="mis-kv"><div class="mis-kv-val">$54,959</div><div class="mis-kv-lbl">Remaining Budget</div></div>
+    </div>
+    <div class="mis-section">
+      <div class="mis-sec-hdr">
+        <i data-lucide="trending-up" class="mis-sec-icon"></i>
+        <h3 class="mis-sec-title">CAPEX — Budget vs Actual (FEB 2026)</h3>
+      </div>
+      <div class="mis-table-wrap">
+        <table class="mis-table">
+          <thead><tr><th>Cost Head</th><th>Account</th><th style="text-align:right">Actual (USD)</th><th style="text-align:right">Budget (USD)</th><th style="text-align:center">% Used</th></tr></thead>
+          <tbody><tr style=""><td style="padding-left:28px">2200 TPD Commissioning</td><td style="font-size:10px;color:var(--text-muted)">371021 CWIP-PYRO UPGRADATION</td><td class="tr">$266,545</td><td class="tr">$300,000</td><td class="tc"><span style="color:#10B981;font-weight:700">89%</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">2200 TPD Commissioning Total</td><td style="font-size:10px;color:var(--text-muted)"></td><td class="tr">$289,460</td><td class="tr">$300,000</td><td class="tc"><span style="color:#10B981;font-weight:700">96%</span></td></tr>
+<tr style=""><td style="padding-left:28px">MINING LAND</td><td style="font-size:10px;color:var(--text-muted)">301003 LAND COST</td><td class="tr">$252,452</td><td class="tr">$600,000</td><td class="tc"><span style="color:#10B981;font-weight:700">42%</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">MINING LAND Total</td><td style="font-size:10px;color:var(--text-muted)"></td><td class="tr">$252,452</td><td class="tr">$600,000</td><td class="tc"><span style="color:#10B981;font-weight:700">42%</span></td></tr>
+<tr style=""><td style="padding-left:28px">OTHERS</td><td style="font-size:10px;color:var(--text-muted)">371039 CWIP-CONSTRUCTION OF LIME STONE AND GYPSUM FEEDING SY</td><td class="tr">$45,637</td><td class="tr">$70,000</td><td class="tc"><span style="color:#10B981;font-weight:700">65%</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">OTHERS Total</td><td style="font-size:10px;color:var(--text-muted)"></td><td class="tr">$80,240</td><td class="tr">$70,000</td><td class="tc"><span style="color:#EF4444;font-weight:700">115%</span></td></tr>
+<tr style=""><td style="padding-left:28px">RM SHED</td><td style="font-size:10px;color:var(--text-muted)">371012 CWIP-QUARRY RAW MATERIAL SHED EXTENSION</td><td class="tr">$73,219</td><td class="tr">$300,000</td><td class="tc"><span style="color:#10B981;font-weight:700">24%</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">RM SHED Total</td><td style="font-size:10px;color:var(--text-muted)"></td><td class="tr">$73,219</td><td class="tr">$300,000</td><td class="tc"><span style="color:#10B981;font-weight:700">24%</span></td></tr>
+<tr style=""><td style="padding-left:28px">ROADS</td><td style="font-size:10px;color:var(--text-muted)">371014 CWIP-GYPSUM SHED SURROUNDING & CEMENT MILL AREA NEW R</td><td class="tr">$9,932</td><td class="tr">—</td><td class="tc"><span style="color:var(--text-muted)">—</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">ROADS Total</td><td style="font-size:10px;color:var(--text-muted)"></td><td class="tr">$33,601</td><td class="tr">$35,000</td><td class="tc"><span style="color:#10B981;font-weight:700">96%</span></td></tr>
+<tr style=""><td style="padding-left:28px">WALL</td><td style="font-size:10px;color:var(--text-muted)">371059 CWIP-CONSTRUCTION OF PLANT BOUNDARY WALL</td><td class="tr">$40,352</td><td class="tr">$60,000</td><td class="tc"><span style="color:#10B981;font-weight:700">67%</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">WALL Total</td><td style="font-size:10px;color:var(--text-muted)"></td><td class="tr">$40,352</td><td class="tr">$60,000</td><td class="tc"><span style="color:#10B981;font-weight:700">67%</span></td></tr>
+<tr style=""><td style="padding-left:28px">OPC Project</td><td style="font-size:10px;color:var(--text-muted)">371038 CWIP-CONSTRUCTION OF NEW RAW MILL FEEDING AND UPGRADA</td><td class="tr">$169,812</td><td class="tr">—</td><td class="tc"><span style="color:var(--text-muted)">—</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">OPC Project Total</td><td style="font-size:10px;color:var(--text-muted)"></td><td class="tr">$540,717</td><td class="tr">—</td><td class="tc"><span style="color:var(--text-muted)">—</span></td></tr>
+</tbody>
+          <tfoot><tr style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">
+            <td>GRAND TOTAL</td><td></td>
+            <td class="tr">$1,310,041</td>
+            <td class="tr">$1,365,000</td>
+            <td class="tc"><span style="color:#10B981;font-weight:700">96%</span></td>
+          </tr></tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ LAND ══ -->
+  <div class="hr-panel" id="asset-land">
+    <div class="mis-kv-strip" style="margin-bottom:16px">
+      <div class="mis-kv"><div class="mis-kv-val">562</div><div class="mis-kv-lbl">Total Acres</div></div>
+      <div class="mis-kv"><div class="mis-kv-val">TSH 10.52B</div><div class="mis-kv-lbl">Total Value</div></div>
+      <div class="mis-kv"><div class="mis-kv-val">371</div><div class="mis-kv-lbl">Total Parcels</div><div class="mis-kv-sub">M4 + New Acquisitions</div></div>
+      <div class="mis-kv"><div class="mis-kv-val">3</div><div class="mis-kv-lbl">Locations</div><div class="mis-kv-sub">Kimbiji · Mkuranga · Gezaulole</div></div>
+    </div>
+    <div class="mis-grid">
+
+      <!-- M4 land by location -->
+      <div class="mis-section">
+        <div class="mis-sec-hdr">
+          <i data-lucide="map-pin" class="mis-sec-icon"></i>
+          <h3 class="mis-sec-title">Land Holdings by Location (M4)</h3>
+        </div>
+        <div class="mis-table-wrap">
+          <table class="mis-table">
+            <thead><tr><th>Location</th><th style="text-align:center">Parcels</th><th style="text-align:right">Acres</th><th style="text-align:right">Value (TSH)</th><th>ML / PL</th></tr></thead>
+            <tbody><tr><td><strong>Beach, Gezaulole</strong></td><td class="tc">1</td><td class="tr">0.97</td><td class="tr">TSH 180,000,000</td><td style="font-size:10px">ML/395/10</td></tr>
+<tr><td><strong>Kimbiji</strong></td><td class="tc">359</td><td class="tr">546.98</td><td class="tr">TSH 9,865,110,351</td><td style="font-size:10px">ML/395/10, PL/17158/2021</td></tr>
+</tbody>
+            <tfoot><tr style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">
+              <td>TOTAL (M4)</td>
+              <td class="tc">360</td>
+              <td class="tr">547.95</td>
+              <td class="tr">TSH 10,045,110,351</td>
+              <td></td>
+            </tr></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAL — new acquisitions -->
+      <div class="mis-section">
+        <div class="mis-sec-hdr">
+          <i data-lucide="file-plus" class="mis-sec-icon"></i>
+          <h3 class="mis-sec-title">New Acquisitions — TAL 2023 (11 parcels)</h3>
+        </div>
+        <div class="mis-table-wrap">
+          <table class="mis-table">
+            <thead><tr><th>Agreement No.</th><th>Location</th><th style="text-align:right">Acres</th><th>Use</th><th>Purpose</th><th>Status</th><th style="text-align:right">Value (TSH)</th></tr></thead>
+            <tbody><tr><td>TAL/MAD/23-01</td><td>Mkuranga</td><td class="tr">1.14</td><td>Mining</td><td>Limestone</td><td><span class="mis-badge valid">acquired</span></td><td class="tr">TSH 130,000,000</td></tr>
+<tr><td>TAL/MAD/23-02</td><td>Mkuranga</td><td class="tr">2.34</td><td>Mining</td><td>Limestone</td><td><span class="mis-badge valid">acquired</span></td><td class="tr">TSH 36,150,000</td></tr>
+<tr><td>TAL/MAD/23-03</td><td>Mkuranga</td><td class="tr">5.36</td><td>Mining</td><td>Limestone</td><td><span class="mis-badge valid">acquired</span></td><td class="tr">TSH 93,130,000</td></tr>
+<tr><td>TAL/MAD/23-04</td><td>Mkuranga</td><td class="tr">2.27</td><td>Mining</td><td>Limestone</td><td><span class="mis-badge valid">acquired</span></td><td class="tr">TSH 65,000,000</td></tr>
+<tr><td>TAL/MAD/23-05</td><td>Mkuranga</td><td class="tr">1.10</td><td>Mining</td><td>Limestone</td><td><span class="mis-badge valid">acquired</span></td><td class="tr">TSH 19,428,000</td></tr>
+<tr><td>TAL/MAD-23-06</td><td>Mkuranga</td><td class="tr">0.10</td><td>Mining</td><td>Limestone</td><td><span class="mis-badge valid">acquired</span></td><td class="tr">TSH 3,860,000</td></tr>
+<tr><td>TAL/MAD-23-07</td><td>Mkuranga</td><td class="tr">0.10</td><td>Mining</td><td>Limestone</td><td><span class="mis-badge valid">acquired</span></td><td class="tr">TSH 14,000,000</td></tr>
+<tr><td>TAL/MAD-23-08</td><td>Mkuranga</td><td class="tr">0.17</td><td>Mining</td><td>Limestone</td><td><span class="mis-badge valid">acquired</span></td><td class="tr">TSH 7,000,000</td></tr>
+<tr><td>TAL/MAD-23-09</td><td>Mkuranga</td><td class="tr">0.16</td><td>Mining</td><td>Limestone</td><td><span class="mis-badge valid">acquired</span></td><td class="tr">TSH 45,000,000</td></tr>
+<tr><td>TAL/MAD-23-10</td><td>Mkuranga</td><td class="tr">0.55</td><td>Mining</td><td>Limestone</td><td><span class="mis-badge valid">acquired</span></td><td class="tr">TSH 32,500,000</td></tr>
+<tr><td>TAL/MAD-23-11</td><td>Mkuranga</td><td class="tr">0.55</td><td>Mining</td><td>Limestone</td><td><span class="mis-badge valid">acquired</span></td><td class="tr">TSH 32,500,000</td></tr>
+</tbody>
+            <tfoot><tr style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">
+              <td colspan="2">TOTAL (TAL)</td>
+              <td class="tr">13.84</td>
+              <td colspan="3"></td>
+              <td class="tr">TSH 478,568,000</td>
+            </tr></tfoot>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 </div>
 
 <!-- ══════════════════ COMPLIANCES ══════════════════ -->
@@ -1289,6 +1697,85 @@ function showHrTab(id) {
 document.addEventListener('DOMContentLoaded', () => {
   // Pre-render roster so search works immediately when tab is clicked
   renderEmployees(EMP_DATA);
+});
+</script>
+
+<script>
+/* ══ ASSETS DATA ══ */
+const PC_DATA  = [{"n": "LCLHSMDS07-KABALA", "u": "Mr.KABALA", "d": "SALES & MARKETING", "m": "Dell Vestro 3520", "o": "Windos 11 pro", "l": "Head Office"}, {"n": "LCLHSMNB02-BAVNESH", "u": "Mr.BHAVNESH", "d": "SALES & MARKETING", "m": "HP 250 G7 Notebook PC", "o": "Window 11 home single", "l": "Head Office"}, {"n": "LCLHSMNB21-ROBERT", "u": "Mr.ROBERT", "d": "SALES & MARKETING", "m": "HP Pro book", "o": "Window 10 Pro 64-bit", "l": "Head Office"}, {"n": "LCLHSMNB23-CARITAS", "u": "Mr.CARITAS", "d": "SALES & MARKETING", "m": "Dell inc Vestro 3910", "o": "Window 11 Pro 64-bit", "l": "Head Office"}, {"n": "LCLHSMNB24-RAZACK", "u": "Mr.RAZACK", "d": "SALES & MARKETING", "m": "HP Pro Book 450", "o": "Window 11 Pro 64-bit", "l": "Head Office"}, {"n": "LCLHSMDS15-ENG", "u": "ENGINEERS Common PC", "d": "SALES & MARKETING", "m": "Dell Optiplex 7020", "o": "Window 10 Pro 64-bit", "l": "Head Office"}, {"n": "LCLHACDS13-CASTRO", "u": "Mr.CASTRO", "d": "ACCOUNTS", "m": "HP Pavilion Ts 15", "o": "Window 10 Pro 64-bit", "l": "Head Office"}, {"n": "LCLHACDS10-JANETH", "u": "Ms.JANETH", "d": "ACCOUNTS", "m": "Dell Vestro 3910", "o": "Window 11 Pro 64-bit", "l": "Head Office"}, {"n": "LCLHSMNB07-ADEL", "u": "Mr.ADEL", "d": "SALES & MARKETING", "m": "Dell Optiplex 3020", "o": "Window 10 Pro 64-bit", "l": "Head Office"}, {"n": "LCHSMNB22-KARIM", "u": "Mr.KARIM", "d": "SALES & MARKETING", "m": "Dell Inspiron 15-3567", "o": "Window 10 Pro 64-bit", "l": "Head Office"}, {"n": "LCLHPRDS08-MERINA", "u": "Ms.MERINA", "d": "PROCUREMENT", "m": "Dell Optiplex 380", "o": "Window 10 Pro 64-bit", "l": "Head Office"}, {"n": "LCLHPRDS03-ROBERT", "u": "Mr.ROBERT", "d": "PROCUREMENT", "m": "Dell Optiplex 3040", "o": "Window 10 Pro 64-bit", "l": "Head Office"}, {"n": "LCLHFIDS01-DEVOTHA", "u": "Ms.DEVOTHA", "d": "ACCOUNTS", "m": "LENOVO 3574KSQ", "o": "Window 10 Pro 64-bit", "l": "Head Office"}, {"n": "LCLHQ-BHARGAV", "u": "Old Pc used Mr.BHARGAV", "d": "SALES & MARKETING", "m": "Dell Vestro 3500", "o": "Window 11 Pro 64-bit", "l": "Head Office"}, {"n": "LCLHPRDS02-DULLA", "u": "Mr.DULLA", "d": "PROCUREMENT", "m": "HP ProBook 450 GZ", "o": "Window 10 Pro 64-bit", "l": "Head Office"}, {"n": "LCLHACNBOS-PUNNIT", "u": "Mr.PUNNIT", "d": "ACCOUNTS", "m": "Dell Vostro 15 3510", "o": "Window 11 Pro 64-bit", "l": "Head Office"}, {"n": "LCLHPRDS07-ANKUSH", "u": "Mr.ANKUSH", "d": "PROCUREMENT", "m": "Dell Vestro 3500", "o": "Window 10 Pro 64-bit(10)", "l": "Head Office"}, {"n": "LCLHSMD16-PATACK", "u": "Mr.IPN PATHAK", "d": "SALES & MARKETING", "m": "LENOVO", "o": "Window 11 Pro 64-bit", "l": "Head Office"}, {"n": "LCLHACDF SANKALP", "u": "Mr.SANKALP JAITHALIA", "d": "ACCOUNTS", "m": "HP Laptop 14-epoxxx", "o": "Window 10 Pro 64-bit(10.0, Build 26106)", "l": "Head Office"}, {"n": "LCLHPRDS04-SHADRACK", "u": "Mr.SHADRACK", "d": "PROCUREMENT", "m": "HP Laptop 15-da0xxx", "o": "Window 10 Pro 64-bit(10.0, Boild 19045)", "l": "Head Office"}, {"n": "SAJIV KUMAR", "u": "Mr.SAJIV KUMAR", "d": "PROCUREMENT", "m": "hp LAPTOP 240 G10", "o": "Window 11 Pro 64-bit", "l": "Head Office"}, {"n": "LCLHHRNB01-POOJA", "u": "Ms.POOJA", "d": "ADMINISTRATION", "m": "Dell Optiplex 3020", "o": "Window 10 Pro", "l": "Head Office"}, {"n": "LCLHSMNB03-PATEL", "u": "Mr.CHIRAJ PATEL", "d": "SALES & MARKETING", "m": "HP PROBOOK 440 G7", "o": "WINDOWS 11 PRO", "l": "Head Office"}, {"n": "DESKTOP", "u": "ACCOUNTS", "d": "ACCOUNTS", "m": "DELL OPTPLEX 7010", "o": "NULL", "l": "Head Office"}, {"n": "LCLHSMNB25", "u": "Ms.AILETH CORREL", "d": "SALES & MARKETING", "m": "HP PRO 250 G8 NOTEBOOK PC", "o": "Windos 11 pro", "l": "Head Office"}, {"n": "LCLSALES-MWANZA", "u": "Mr.Nirav Ojha", "d": "SALES & MARKETING", "m": "Lenovo Notebook", "o": "Windos 11 pro", "l": "Head Office"}, {"n": "LCLHSMNB04", "u": "Mr.Vinit Kumar Pandey", "d": "SALES & MARKETING", "m": "Inspiron 15 3511", "o": "Windos 11 pro", "l": "Head Office"}, {"n": "LCLHSMNB1-PRANITA", "u": "Mr.Dhawal Rawal", "d": "SALES & MARKETING", "m": "Dell Lattitude 3440", "o": "Windos 11 pro", "l": "Head Office"}, {"n": "DESKTOP-E6PRQKC", "u": "Mr.Parth Purohit", "d": "SALES & MARKETING", "m": "Dell Lattitude 3450", "o": "Windos 11 pro", "l": "Head Office"}, {"n": "LCLHHRNB02", "u": "Ms.Jenne", "d": "HR", "m": "HP Laptop - 15bs0xx", "o": "Windows 10 pro", "l": "Head Office"}, {"n": "LCLHQ-AJIT", "u": "Mr.AJIT SINGH", "d": "SALES & MARKETING", "m": "HP 250 G8 Notebook PC", "o": "Windows 10 PRo", "l": "Head Office"}, {"n": "LCLHACDS15", "u": "Mr Rahul", "d": "Account", "m": "Hp Pavilion Laptop 15-eg3", "o": "Windows 11 Pro 64bit", "l": "Head Office"}, {"n": "Mr. Biswajeet Mallik", "u": "LCL-KIMBIJI-AVP", "d": "Corporate", "m": "Hp Laptop 14-ep0120nia", "o": "Windows 11 Pro 64bit", "l": "Head Office"}, {"n": "Cisco Network Switch", "u": "Catalyst 2950", "d": "1883272", "m": "", "o": "", "l": "Head Office"}, {"n": "Cisco Network Switch", "u": "SG300-28", "d": "DNI180703AJ", "m": "", "o": "", "l": "Head Office"}, {"n": "Cisco Network Switch", "u": "SG300-28", "d": "DN18087w0", "m": "", "o": "", "l": "Head Office"}, {"n": "Sophos", "u": "XGS126", "d": "X12304K67MXQK77", "m": "", "o": "", "l": "Head Office"}, {"n": "CARITAS", "u": "HP Laserjet ProMFP M125nw", "d": "CNB7H7Q5LW", "m": "", "o": "", "l": "Head Office"}, {"n": "POOL", "u": "CANON IMAGE RUNNER C3326i", "d": "(21)NL00190817", "m": "", "o": "", "l": "Head Office"}, {"n": "KABALA", "u": "HP Laserjet p2035", "d": "VNC3948884", "m": "", "o": "", "l": "Head Office"}, {"n": "ADEL", "u": "HP Laserjet ProMFP M125nw", "d": "CNB7J6164W", "m": "", "o": "", "l": "Head Office"}, {"n": "ACCOUNT", "u": "HP Laserjet M111a", "d": "VNC3P14553", "m": "", "o": "", "l": "Head Office"}, {"n": "DEVOTH", "u": "HP Laserjet ProMFP M125nw", "d": "CNB7H7Q538", "m": "", "o": "", "l": "Head Office"}, {"n": "IPN Pathak", "u": "CANON G3470", "d": "KPBK31902", "m": "", "o": "", "l": "Head Office"}, {"n": "SANKALP JAITHALIA", "u": "HP Laserjet p2035", "d": "VNC4B54666", "m": "", "o": "", "l": "Head Office"}, {"n": "ACCOUNT", "u": "HP Laserjet p2036", "d": "CNC0L31010", "m": "", "o": "", "l": "Head Office"}, {"n": "HR", "u": "HP LASER PRO MFP M130nw", "d": "VNF3CO5164", "m": "", "o": "", "l": "Head Office"}, {"n": "Head Office", "u": "EASY UPS", "d": "9B2219A31566", "m": "", "o": "", "l": "Head Office"}, {"n": "Head Office", "u": "Back APC 650", "d": "3B1243X03926", "m": "", "o": "", "l": "Head Office"}, {"n": "Head Office", "u": "APC", "d": "9B2413A07104", "m": "", "o": "", "l": "Head Office"}, {"n": "Head Office", "u": "DVR", "d": "1", "m": "", "o": "", "l": "Head Office"}, {"n": "Head Office", "u": "Cameras", "d": "4", "m": "", "o": "", "l": "Head Office"}, {"n": "Head Office", "u": "WiFI", "d": "2", "m": "", "o": "", "l": "Head Office"}, {"n": "HQ CONFERENCE ROOM", "u": "HISENSE  INTARACTIVE DIGITAL BOARD", "d": "75WN6FE", "m": "", "o": "", "l": "Head Office"}, {"n": "LCLKHEADPAVAN", "u": "Pavan Gandhi", "d": "Admin", "m": "HP LAPTOP 14", "o": "Windos 11 pro", "l": "Factory / Kimbiji"}, {"n": "LCL-KIMBIJI-AVP", "u": "Mr.Biswajeet", "d": "Admin", "m": "Hp laptop", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKACDS17", "u": "Mr.Muneesh Dogra", "d": "Accounts", "m": "HP Laptop 15-da3xxx", "o": "Windows 11 Home Single Language", "l": "Factory / Kimbiji"}, {"n": "LCLKACDS14", "u": "Mr.David", "d": "Accounts", "m": "Dell OPTIPLEX 3010", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKACDS16", "u": "Ms.Cecylia Waya", "d": "Accounts", "m": "DELL OPTIPLEX 7040", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKACDS15", "u": "Ms.Johnherica", "d": "Accounts", "m": "Dell OPTIPLEX 7040", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKACDS04", "u": "Ms.Jesca", "d": "Accounts", "m": "DELL OPTIPLEX 3020", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKACDS01", "u": "Invoice Scanner", "d": "Accounts", "m": "DELL OPTIPLEX 3050", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLK-Canteen", "u": "Canteen", "d": "Canteen", "m": "Dell OPTIPLEX 9020", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKPRODODS04", "u": "Mr.Petro  Msigani", "d": "Projects", "m": "Dell Vostro  3888", "o": "windows 11 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLKCIVDS01", "u": "Civil General use", "d": "CIVIL", "m": "Dell Vostro  3670", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCL-PK2", "u": "Packer 01", "d": "Dispatch-Packing", "m": "HP Engage one pro AIO system", "o": "Windows 11 Pro", "l": "Factory / Kimbiji"}, {"n": "LCL-PK1", "u": "Packer 01", "d": "Dispatch-Packing", "m": "HP Engage one pro AIO system", "o": "Windows 11 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLKLODS13", "u": "Mr.Jatinder", "d": "Dispatch-Packing", "m": "HP 250 G8 LAPTOP", "o": "Windows 11 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLKELDS06", "u": "Ms.Rukia Mwinyi", "d": "E&I", "m": "Dell OPTIPLEX 9020", "o": "windows 10 Pro", "l": "Factory / Kimbiji"}, {"n": "CLKINNB10", "u": "Mr.Bhaskar", "d": "E&I", "m": "Dell OPTIPLEX 9020", "o": "windows 10 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLKKIMPAY01", "u": "Payroll Server", "d": "IT", "m": "DELL OPTIPLEX 3080", "o": "WINDOS 11 PRO", "l": "Factory / Kimbiji"}, {"n": "LCLKPR0DS03", "u": "UMS Server", "d": "IT", "m": "DELL VOSTRO", "o": "WINDOS 11 PRO", "l": "Factory / Kimbiji"}, {"n": "LCLKINNB02", "u": "Ramesh Patel", "d": "E&I", "m": "DELL Inspiron 15-3567", "o": "windows 10 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLKICTD02", "u": "Glory - Training", "d": "Training", "m": "HP ProBook 4540s", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKINNB09-Umeme", "u": "Mr.Stephani Kilawe", "d": "E&I", "m": "Dell OPTIPLEX 3020", "o": "windows 10 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLKHRDS02", "u": "Mr.Ben-HR", "d": "Admin", "m": "DELL OPTIPLEX 7010", "o": "Window 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKHRDSO1", "u": "Ms.Amina Siwa", "d": "Admin", "m": "OptiPlex 7020", "o": "Window 7 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKHRDS09-SOPHY", "u": "Ms.Sophia Mkassi", "d": "Admin", "m": "HP 250 G8 NOTEBOOK PC", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKLODS10", "u": "Token Email", "d": "Dispatch-token", "m": "HP Pro 3330 MT", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKLODS14", "u": "TOKEN PC1", "d": "Dispatch-Token", "m": "DELL OptiPlex 5090", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKLODS02", "u": "INVOICE PC", "d": "Dispatch-Token", "m": "Dell OPTIPLEX 3080", "o": "Windows 11 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKLDDS03", "u": "Mr.Biju", "d": "LOGISTICS", "m": "HP Pro 3330  MT", "o": "WINDOWS 7 PRO", "l": "Factory / Kimbiji"}, {"n": "LCLKLDDS15", "u": "Mr.Biju Cctv", "d": "LOGISTICS", "m": "DELL OPTILEX 3020", "o": "WINDOWS 10 PRO", "l": "Factory / Kimbiji"}, {"n": "LCLKLDDS04", "u": "Ms.Husna", "d": "LOGISTICS", "m": "HP 2000 Notebook PC", "o": "WINDOWS 10 PRO", "l": "Factory / Kimbiji"}, {"n": "LCLKLDDS08-HOD", "u": "Mr.Pradeep", "d": "LOGISTICS", "m": "DELL VOSTRO 3520 NOTEBOOK PC", "o": "WINDOWS 10 PRO", "l": "Factory / Kimbiji"}, {"n": "LCLKLDDS02", "u": "Ms.Aisha", "d": "LOGISTICS", "m": "DELL OPTILEX  9020", "o": "WINDOWS 10 PRO", "l": "Factory / Kimbiji"}, {"n": "LCLKLDD209", "u": "Mr.Omary", "d": "LOGISTICS", "m": "HP 2000 Notebook PC", "o": "WINDOWS 7 PRO", "l": "Factory / Kimbiji"}, {"n": "LCLKLDDS07-SAMWEL", "u": "General use", "d": "LOGISTICS", "m": "VOSTRO 270", "o": "WINDOWS 10 PRO", "l": "Factory / Kimbiji"}, {"n": "LCLKCODS01-Mining-WB", "u": "CCTV Monitoring - QC", "d": "QUALITY CONTROL", "m": "Optiplex 7040", "o": "Window 10pro", "l": "Factory / Kimbiji"}, {"n": "LCLKLODS01", "u": "NEW MINNIG WB", "d": "MINING WB", "m": "Optiplex 3090", "o": "Window 11pro", "l": "Factory / Kimbiji"}, {"n": "LCLKLODS12-TOKEN-2", "u": "TOKEN PC2", "d": "Dispatch-Token", "m": "OPTIPLEX 3010", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKWBBACKUP", "u": "WEIGHT BRIDGE 2 UNMAN", "d": "Dispatch", "m": "DELL OPTIPLEX 7010", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLMEDS01", "u": "Mr.Balu", "d": "Mechanical", "m": "Dell Vostro 3520", "o": "Windows 11 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLKMEDS02", "u": "Mrslvester", "d": "Mechanical", "m": "Dell OPTIPLEX 7020", "o": "Windows 7 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKMEDS06-PAUL", "u": "Mr.Yohana", "d": "Mechanical", "m": "Dell OPTIPLEX 3020", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKMEDS16", "u": "Mr.Rawat", "d": "Mechanical", "m": "HP 250G 10", "o": "Windows 11 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLKMEDS05", "u": "Mr.Adam", "d": "Mechanical", "m": "Dell OPTIPLEX 3010", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKMINDS06- LAPTOP", "u": "Mr.Mukesh", "d": "Mining", "m": "Dell Vostro 3500", "o": "Windows 11 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKMINDS07", "u": "Mr.Ibrahim Nyakiboha", "d": "Mining", "m": "DELL OPTILEX 7010", "o": "Windows 11 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKMIDSO1-Anord", "u": "Mr.Arnold", "d": "Mining", "m": "Dell Vostro 3888", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKMINDS03", "u": "Mr.Ibrahim", "d": "Mining", "m": "DELL OPTILEX 3070", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKMINDS04-Yuda", "u": "Mr.Yuda", "d": "Mining", "m": "Dell OPTIPLEX 3521", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKMINDS05", "u": "Mr.Martin", "d": "Mining", "m": "Dell Vostro 3888", "o": "Windows 11 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKPPDS05", "u": "Power Plant", "d": "Power Plant", "m": "DELL OptiPlex 3020", "o": "WINDOWS 10 PRO", "l": "Factory / Kimbiji"}, {"n": "LCLKPPDS05-Anbarassan", "u": "Mr.Anbarasan", "d": "Power Plant", "m": "DELL Inspiron 3521", "o": "WINDOWS 10 PRO", "l": "Factory / Kimbiji"}, {"n": "KPPDS05-CPP", "u": "Shift Eng Pc", "d": "Power Plant", "m": "Dell Vostro 3888", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LAKE0S3", "u": "PowerPlant-DCS", "d": "Power Plant-Control Room", "m": "Dell Vostro", "o": "Windows 7 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKPRDS02222", "u": "Ms.Bitia", "d": "Production", "m": "Dell UPTIPLEX 3070", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKPRDS6", "u": "Mr.Rajab", "d": "Production", "m": "Dell OPTTIPLEX 7010", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKPRDS05-Ganesh", "u": "Mr.Ganesh", "d": "Production", "m": "HP Laptop 14-cf2xxx", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKPRDS07", "u": "Mr.Godhania", "d": "Production", "m": "HP 250 G7 Notebook PC", "o": "Windows 11 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKPRDS03", "u": "Mr.Thirulok", "d": "Production", "m": "DELL Vostro 3500", "o": "Windows 11 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKINNB01", "u": "Mr.Mahesh Mohan", "d": "E&I", "m": "Hp 250 G3 NOTEBOOK PC", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKPORDS04", "u": "Drawing", "d": "Mechanical", "m": "Optiplex  3090", "o": "Windows 11 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLKITMON01", "u": "Monitoring PC", "d": "IT Office", "m": "Optiplex 5060", "o": "Windows 10 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLPRODS07", "u": "Mr.Saurabh", "d": "IT Office", "m": "Hp Laptop 15-da3xxx", "o": "Windows 11 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLKQCDS09", "u": "QUALITY CONTROL", "d": "QUALITY CONTROL", "m": "DELL OPTILEX 3010", "o": "WINDOWS 10 PRO", "l": "Factory / Kimbiji"}, {"n": "LCLKQCNB02", "u": "QC MANAGER", "d": "QUALITY CONTROL", "m": "HP PROBOOK 4540S", "o": "WINDOWS 10 PRO", "l": "Factory / Kimbiji"}, {"n": "LCLKQCNB06-MADUU", "u": "Mr.Madhu", "d": "QUALITY CONTROL", "m": "DELL OPTILEX 3010", "o": "WINDOWS 10 PRO", "l": "Factory / Kimbiji"}, {"n": "ES0S", "u": "PowerPlant-DCS", "d": "Power Plant-Control Room", "m": "HP PRO MT3330", "o": "Windows 7 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKLODP", "u": "Mr.Geogfrey", "d": "Dispatch-Packing", "m": "DELL OPTIPLEX 5040", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "IT Store - Outdated", "u": "IT OFFICE", "d": "IT", "m": "Dell Inspiron N5040", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKHSNB02", "u": "Mr.Norbert", "d": "SAFETY", "m": "Dell Inspiron 3542", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKSTDS10", "u": "Mr.Kishori-CCTV PC", "d": "Store", "m": "Dell OPTIPLEX 5040", "o": "windows 10 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLKSTDS20", "u": "Mr.Kishori", "d": "Store", "m": "HP LAPTOP 1F-fdxxx", "o": "windows 11 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLSKSTDS19", "u": "Mr.Govind", "d": "Store", "m": "Dell OPTIPLEX 3070", "o": "windows 11 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLKSTDS07", "u": "Mr.Salehe", "d": "Store", "m": "Dell OPTIPLEX 9020", "o": "windows 10 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLKSTDS14", "u": "Ms.Sharifa", "d": "Store", "m": "Dell OPTIPLEX 3020", "o": "windows 10 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLKSTDS13", "u": "Mr.Moses", "d": "Store", "m": "DELL OPTIPLEX 9020", "o": "windows 10 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLKSTDS06", "u": "Ms.Jackline", "d": "Store", "m": "DELL OPTIPLEX 3020", "o": "windows 10 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLKSTDS01", "u": "Ms.Linna", "d": "Store", "m": "DELL VOSTRO 3888", "o": "Windows 11 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKSTDS02", "u": "Store", "d": "Store", "m": "Dell OPTIPLEX 7010", "o": "Windows 10 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLKADDS04", "u": "Ms.SILVIA", "d": "Training", "m": "LENOVO 10147", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCKADDS02", "u": "IT Stock", "d": "IT", "m": "Dell OPTIPLEX 7020", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKPPDS04", "u": "PowerPlant/WTP", "d": "Water Plant", "m": "HP PROBOOK 450G1", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKM-GATE", "u": "Ms.HALIMA", "d": "SECURITY OFFICERS(ADMIN)", "m": "DELL OPTIPLEX 5090", "o": "Windows 11 Pro", "l": "Factory / Kimbiji"}, {"n": "DESKTOP-RQH089S", "u": "CCTV CAMERA", "d": "SECURITY OFFICERS(ADMIN)", "m": "DELL OptiPlex 5040", "o": "Windows 10 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLKODOSECURITY", "u": "MAIN GATE", "d": "SECURITY OFFICERS(ADMIN)", "m": "DELL OptiPlex 3010", "o": "Windows 10 Pro", "l": "Factory / Kimbiji"}, {"n": "LCLK-ODOO", "u": "IT OFFICE", "d": "IT OFFICE", "m": "DELL OptiPlex 3090", "o": "Windows 11 Pro", "l": "Factory / Kimbiji"}, {"n": "DESKTOP-7NH2E46", "u": "WB1 UNMAN", "d": "Dispatch-WB 1", "m": "DELL OPTIPLEX 5090", "o": "Windows 11 pro", "l": "Factory / Kimbiji"}, {"n": "LCLKMBJLGTS-DAIM", "u": "Ms.Ibrahimu Ngereza", "d": "LOGISTICS", "m": "HP ProOne 400 G1 Aio", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "Mining Weigh Bridge 2", "u": "Mining Weigh Bridge", "d": "null", "m": "dell optiplex 7010", "o": "Windos 11 pro", "l": "Factory / Kimbiji"}, {"n": "Dell - Unallocated - For Backup for WB1", "u": "Spare for WB1", "d": "null", "m": "dell optiplex 7010", "o": "Windos 11 pro", "l": "Factory / Kimbiji"}, {"n": "Dell - Unallocated - For Backup for WB2", "u": "Spare for WB2", "d": "null", "m": "dell optiplex 7010", "o": "Windos 11 pro", "l": "Factory / Kimbiji"}, {"n": "IT Store - Outdated", "u": "IT OFFICE", "d": "IT", "m": "Dell Inspiron N5010 ( LapTop)", "o": "Windows 7 Pro Service Park 1", "l": "Factory / Kimbiji"}, {"n": "IT Store - Outdated", "u": "IT Office", "d": "IT", "m": "Hp ProBook 4540s(Laptop)", "o": "-", "l": "Factory / Kimbiji"}, {"n": "IT Store", "u": "IT OFFICE", "d": "IT", "m": "Dell Optiplex XE", "o": "-", "l": "Factory / Kimbiji"}, {"n": "Arnold", "u": "DESKTOP-2VPR9IB", "d": "Mining", "m": "Dell Inspiron 5520 (LapTop)", "o": "Windows 10 Pro 64bit", "l": "Factory / Kimbiji"}, {"n": "LCLHPRDS01", "u": "Sanjiv Chaudhary", "d": "Procurement", "m": "Hp Pavilion Laptop 15-eg3060TU", "o": "Windows 11 Pro 64bit", "l": "Factory / Kimbiji"}, {"n": "LCLKICTD02", "u": "E&I - Reclaimer System", "d": "E&I", "m": "LENOVO 20VE", "o": "WINDOWS 11 PRO", "l": "Factory / Kimbiji"}, {"n": "LCLAKHRDSO5", "u": "MISS.GRACEANNA", "d": "ACCOUNTS", "m": "DELL OPTIPLEX 3010", "o": "WINDOS 10 PRO", "l": "Factory / Kimbiji"}, {"n": "LCLHRD07", "u": "Mr.Fredy", "d": "HR", "m": "DELL VOSTRO 3888", "o": "WINDOWS 10 PRO", "l": "Factory / Kimbiji"}, {"n": "LCLKINNB02", "u": "E&I - DCS Siemens", "d": "E&I", "m": "HP LAPTOP 15S-fr5xxx", "o": "WINDOWS 11 PRO", "l": "Factory / Kimbiji"}, {"n": "Engineering PC", "u": "Engineering Industrial PC", "d": "E&I", "m": "Dell", "o": "WINDOWS 10 PRO", "l": "Factory / Kimbiji"}, {"n": "Projects", "u": "Balu MM", "d": "Projects", "m": "Dell Vostro 3520", "o": "WINDOWS 11 PRO", "l": "Factory / Kimbiji"}, {"n": "Admin", "u": "Awena Shabani", "d": "Admin", "m": "Dell Optiplex 7010", "o": "Windows 10 PRO", "l": "Factory / Kimbiji"}, {"n": "LCLKMIDS06", "u": "IT Stock", "d": "IT", "m": "Lenovo  80SV", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "DESKTOP-79EV3S8", "u": "Hitachi MV System", "d": "E&I", "m": "Dell latitude 3420", "o": "Windows 10 pro", "l": "Factory / Kimbiji"}, {"n": "Tally System 1", "u": "Backup Tally System", "d": "IT", "m": "Optiplex 3010", "o": "WINDOS 10 PRO", "l": "Factory / Kimbiji"}, {"n": "Tally System 2", "u": "Backup Tally System", "d": "IT", "m": "Optiplex 7020", "o": "WINDOS 10 PRO", "l": "Factory / Kimbiji"}, {"n": "Jaiprakash Chauhan", "u": "Mr.Chauhan", "d": "Mechanical", "m": "HP 250 G10", "o": "Windows 11 Pro", "l": "Factory / Kimbiji"}, {"n": "Syed Muneer Ahammad", "u": "Syed Muneer Ahammad", "d": "Mechanical", "m": "HP 250 G10", "o": "Windows 11 Pro", "l": "Factory / Kimbiji"}, {"n": "Parking Plant", "u": "Client08", "d": "Dispatch", "m": "Dell OptiPlex 5000", "o": "Windows 10 Enterprise 64bit", "l": "Factory / Kimbiji"}, {"n": "Crusher", "u": "Client07", "d": "Mining", "m": "Dell OptiPlex 5000", "o": "Windows 10 Enterprise 64bit", "l": "Factory / Kimbiji"}, {"n": "QC", "u": "Client06", "d": "QC", "m": "Dell OptiPlex 5000", "o": "Windows 10 Enterprise 64bit", "l": "Factory / Kimbiji"}, {"n": "Ccr", "u": "Client05", "d": "Production", "m": "Dell OptiPlex 5000", "o": "Windows 10 Enterprise 64bit", "l": "Factory / Kimbiji"}, {"n": "Ccr", "u": "Client04", "d": "Production", "m": "Dell OptiPlex 5000", "o": "Windows 10 Enterprise 64bit", "l": "Factory / Kimbiji"}, {"n": "Ccr", "u": "Client03", "d": "Production", "m": "Dell OptiPlex 5000", "o": "Windows 10 Enterprise 64bit", "l": "Factory / Kimbiji"}, {"n": "Ccr", "u": "Client02", "d": "Production", "m": "Dell OptiPlex 5000", "o": "Windows 10 Enterprise 64bit", "l": "Factory / Kimbiji"}, {"n": "Ccr", "u": "Client01", "d": "Production", "m": "Dell OptiPlex 5000", "o": "Windows 10 Enterprise 64bit", "l": "Factory / Kimbiji"}, {"n": "Ccr", "u": "hp-PC(Scan Shell)", "d": "Production", "m": "Hp", "o": "Windows 10 Enterprise 64bit", "l": "Factory / Kimbiji"}, {"n": "Engineering", "u": "ES01", "d": "E & I", "m": "Dell OptiPlex 5000", "o": "Windows 10 Enterprise 64bit", "l": "Factory / Kimbiji"}, {"n": "XRF-PC (QCX)", "u": "Desktop-3LFODA7", "d": "QC", "m": "Dell Vostro", "o": "Windows 10 Pro 64bit", "l": "Factory / Kimbiji"}, {"n": "QC", "u": "QCX7504SRV01", "d": "QC", "m": "Dell Precision 5820", "o": "Windows 10 Pro Workstations  64bit", "l": "Factory / Kimbiji"}, {"n": "Ccr Cpp", "u": "ESOS1", "d": "Power Plant", "m": "Hp Pro 3330 Micro Tower", "o": "Windows 7 Ultmate 64bit", "l": "Factory / Kimbiji"}, {"n": "Ccr Cpp", "u": "user-Pc", "d": "Power Plant", "m": "Dell Vostro 270", "o": "Windows 7 Ultmate 64bit", "l": "Factory / Kimbiji"}, {"n": "Ccr Cpp", "u": "user-Pc", "d": "Power Plant", "m": "SIMATIC IPC547D", "o": "Windows 7 Ultmate 64bit", "l": "Factory / Kimbiji"}, {"n": "Ccr Cpp", "u": "ESOS2", "d": "Power Plant", "m": "Dell Optiplex 9020", "o": "Windows 7 Professinal 64bit", "l": "Factory / Kimbiji"}, {"n": "ESXi Host - Primary - VMWARE", "u": "", "d": "SERVER ROOM", "m": "HP DL 380 Gen 9", "o": "ESXi 6.7", "l": "Factory / Kimbiji"}, {"n": "ESXi Host - Backup", "u": "", "d": "SERVER ROOM", "m": "HP DL 380 Gen 8", "o": "ESXi 6.7", "l": "Factory / Kimbiji"}, {"n": "CPP Server", "u": "LAKESERVER-02", "d": "Power Plant", "m": "x3300 M4", "o": "Windows Server 2008 R2 Starndard  64bit", "l": "Factory / Kimbiji"}, {"n": "CPP Server", "u": "LAKESERVER-01", "d": "Power Plant", "m": "x3300 M4", "o": "Windows Server 2008 R2 Starndard  64it", "l": "Factory / Kimbiji"}, {"n": "DCS Server", "u": "SERVER01", "d": "E & I", "m": "Dell EMC", "o": "Windows Server 2019 Standard 64bit", "l": "Factory / Kimbiji"}, {"n": "DCS Server", "u": "SERVER02", "d": "E & I", "m": "Dell EMC", "o": "Windows Server 2019 Standard 64bit", "l": "Factory / Kimbiji"}, {"n": "5 KVA UPS", "u": "", "d": "SERVER ROOM", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "PLANT CONFFERENCE ROOM", "u": "HISENSE  INTARACTIVE DIGITAL BOARD", "d": "86WM6FE", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "PLANT CONFFERENCE ROOM", "u": "EPSON PROJECTOR", "d": "EB-2250U", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO P2035", "u": "", "d": "Electrical Instrument", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO M402 DN", "u": "", "d": "LOGISTICS", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO MFP M227SDN", "u": "", "d": "LOGISTICS", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO MFP 135a", "u": "", "d": "Mining", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO P2035", "u": "", "d": "MINING WB", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "EPSON L3250", "u": "", "d": "QUALITY CONTROL", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO P2035", "u": "", "d": "Production", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO M400 m 401a", "u": "", "d": "Dispatch-Packing", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "CANON IMAGE RUNNER 2206N", "u": "", "d": "IT STORE", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO M402 DN", "u": "", "d": "Accounts", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "CANON IMAGE RUNNER 2202", "u": "", "d": "IT STORE", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO P2035", "u": "", "d": "QUALITY CONTROL", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP DESKJET INK ADVANTAGE 1515", "u": "", "d": "RECEPTION", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "CANON IMAGE RUNNER 2206N", "u": "", "d": "SAFETY", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO P2055", "u": "", "d": "LOGISTICS", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO P2035", "u": "", "d": "LOGISTICS", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO 4003dn", "u": "", "d": "DISPATCH", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO 4003dn", "u": "", "d": "DISPATCH", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "CANON IMAGE RUNNER 2202N", "u": "", "d": "IT STORE", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO M402 DNE", "u": "", "d": "IT STORE", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASER JET PRO 402 DNE", "u": "", "d": "Human resource", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO M402 DNE", "u": "", "d": "IT STORE", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "CANON IMAGE RUNNER 2206", "u": "", "d": "Human resource", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO M404 DN", "u": "", "d": "Dispatch", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO 4003dn", "u": "", "d": "STORE", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO M402 DNE", "u": "", "d": "Mechanical", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO M402 DNE", "u": "", "d": "Mechanical", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "EPSON TM-T88VI", "u": "", "d": "CANTEEN", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET P1108", "u": "", "d": "IT STORE", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "CANON IMAGE RUNNER C3226i", "u": "", "d": "IT OFFICE", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP DESIGNJET T630", "u": "", "d": "IT OFFICE", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO P2055", "u": "", "d": "SAJEEV", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO M404 DN", "u": "", "d": "Power Plant", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO P2035", "u": "", "d": "Accounts", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO MFP M329dw", "u": "", "d": "Mr.Ramesh", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJ MFP135a", "u": "", "d": "Production", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO M402 DN", "u": "", "d": "IT STORE", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LAJERJET PRO MFP 4304", "u": "", "d": "UNIT HEAD", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP COLOR LASER 150nw", "u": "", "d": "IT STORE", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP COLOR LASER 150nw", "u": "", "d": "IT STORE", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP COLOR LASER JET MFP M227N", "u": "", "d": "Sankalp Jaithalia", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LASERJET PRO 4003dn", "u": "", "d": "DISPATCH", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP LAJERJET PRO MFP 4303 - Color", "u": "", "d": "ACCOUNTS", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "ZEBRA ZT411 - Label Printer", "u": "", "d": "STORES", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP SCANJET 200", "u": "", "d": "LOGISTICS", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "CANON    M111221 SCANNER", "u": "", "d": "Store", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "CANON M111221 SCANNER", "u": "", "d": "Human resource", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "HP SCANJET 200", "u": "", "d": "IT STORE", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "CANON SCAN LIDE 300", "u": "", "d": "Accounts", "m": "", "o": "", "l": "Factory / Kimbiji"}, {"n": "CANON SCAN LIDE 300", "u": "", "d": "IT Store", "m": "Cable Faulty", "o": "", "l": "Factory / Kimbiji"}];
+const VEH_DATA = [{"c": "Passenger", "r": "T 912 EFX", "mk": "Toyota", "md": "Hilux Revo", "t": "Pick Up", "l": "Factory", "a": "Mining"}, {"c": "Passenger", "r": "T 608EGX", "mk": "Toyota", "md": "Hilux Surf", "t": "Pick Up", "l": "Factory", "a": "Jatinder"}, {"c": "Passenger", "r": "T 368 DUQ", "mk": "Toyota", "md": "LC Prado", "t": "Station Wagon", "l": "Factory", "a": "Mallik"}, {"c": "Passenger", "r": "T 791 DNK", "mk": "Toyota", "md": "IST", "t": "Saloon", "l": "HO", "a": "Purchase"}, {"c": "Passenger", "r": "T 457 EHU", "mk": "Toyota", "md": "Rav 4", "t": "Station Wagon", "l": "Factory", "a": "Sophia"}, {"c": "Passenger", "r": "MC 823 CHB", "mk": "Bajaj", "md": "Boxer", "t": "Motor Cycle", "l": "HO", "a": "Sixto"}, {"c": "Passenger", "r": "MC 519 DME", "mk": "Skymark", "md": "B-SK", "t": "Motor Cycle", "l": "HO", "a": "Fabian"}, {"c": "Passenger", "r": "MC 464 DWN", "mk": "TVS", "md": "XLHD", "t": "Motor Cycle", "l": "HO", "a": "Admin - Food"}, {"c": "Passenger", "r": "MC 400 EUB", "mk": "Honda", "md": "SDH125-D", "t": "Motor cycle", "l": "HO", "a": "Evath -Sales & Mktg"}, {"c": "Passenger", "r": "T 806 DQM", "mk": "Toyota", "md": "Camry", "t": "Saloon", "l": "HO", "a": "Sajiv"}, {"c": "Passenger", "r": "T 103 EES", "mk": "Nissan", "md": "Note", "t": "Saloon", "l": "HO", "a": "Ankush"}, {"c": "Passenger", "r": "T 768 DDC", "mk": "Land Rover", "md": "Rangerover", "t": "Station Wagon", "l": "HO", "a": "Pavan Gandhi"}, {"c": "Passenger", "r": "T 446 DSX", "mk": "Land Rover", "md": "Discovery 4", "t": "Station Wagon", "l": "HO", "a": "Sankalp Jaithalia"}, {"c": "Passenger", "r": "T 907 EAT", "mk": "Land Rover", "md": "Vouge", "t": "Station Wagon", "l": "HO", "a": "KVP"}, {"c": "Passenger", "r": "T 945 ENT", "mk": "Toyota", "md": "Succeed", "t": "Station Wagon", "l": "HO", "a": "Accounts"}, {"c": "Passenger", "r": "T 418 DYL", "mk": "Toyota", "md": "Harrier", "t": "Station Wagon", "l": "HO", "a": "Pathak"}, {"c": "Passenger", "r": "T 716 DYT", "mk": "Nissan", "md": "X-Trail", "t": "Station Wagon", "l": "HO", "a": "Nirav"}, {"c": "Passenger", "r": "T 178 EJL", "mk": "Toyota", "md": "Harrier", "t": "Station Wagon", "l": "HO", "a": "Chirag Patel"}, {"c": "Passenger", "r": "T 703 ELJ", "mk": "Nissan", "md": "X-Trail", "t": "Station Wagon", "l": "HO", "a": "Ajit"}, {"c": "Passenger", "r": "MC 866 ACD", "mk": "Bajaj", "md": "Boxer", "t": "Motor Cycle", "l": "LOG", "a": "Logistics"}, {"c": "Passenger", "r": "MC 431 CGP", "mk": "Bajaj", "md": "Boxer", "t": "Motor Cycle", "l": "LOG", "a": "Logistics"}, {"c": "Passenger", "r": "T 175 BCM", "mk": "Tata", "md": "Mobile 20731", "t": "Pick Up", "l": "LOG", "a": "Logistics"}, {"c": "Passenger", "r": "T 957 CYZ", "mk": "Toyota", "md": "Prado", "t": "Station Wagon", "l": "LOG", "a": "Logistics"}, {"c": "Passenger", "r": "T 459 EQJ", "mk": "Toyota", "md": "VANGUARD", "t": "Station Wagon", "l": "HO", "a": "Sales"}, {"c": "Passenger", "r": "T 215 EQV", "mk": "Land Rover", "md": "Rangerover 3.0", "t": "Station Wagon", "l": "HO", "a": "VKP"}, {"c": "Passenger", "r": "T 672 DHG", "mk": "Toyota", "md": "Hilux Surf", "t": "Station Wagon", "l": "Factory", "a": "For Sale"}, {"c": "Plant", "r": "T 909 DZE", "mk": "ACE", "md": "PHANTON 4X4", "t": "Loader", "l": "Factory", "a": "Project"}, {"c": "Plant", "r": "T 963 DTP", "mk": "Caterpillar", "md": "SEM655D", "t": "Wheel Loader", "l": "Factory", "a": "Mining"}, {"c": "Plant", "r": "T 186 DUH", "mk": "Escorts", "md": "Hydra-14", "t": "Crane", "l": "Factory", "a": "Maintenance"}, {"c": "Plant", "r": "T 955 EAN", "mk": "Escorts", "md": "Hydra", "t": "Crane", "l": "Factory", "a": "Project"}, {"c": "Plant", "r": "T 289 ECC", "mk": "Escorts", "md": "Hydra-12", "t": "Crane", "l": "Factory", "a": "Project"}, {"c": "Plant", "r": "T 850 DTF", "mk": "FAW", "md": "J5P 6X4 340 HP/CA3256", "t": "Tipper", "l": "Factory", "a": "Mining"}, {"c": "Plant", "r": "T 852 DTF", "mk": "FAW", "md": "J5P 6X4 340 HP/CA3256", "t": "Tipper", "l": "Factory", "a": "Mining"}, {"c": "Plant", "r": "T 487 EFG", "mk": "Godrej", "md": "GX 300D- NEO", "t": "Forklift", "l": "Factory", "a": "Stores"}, {"c": "Plant", "r": "T 373 CNJ", "mk": "Greaves", "md": "BOMAG-BW211D3", "t": "Road Roller", "l": "Factory", "a": "Mining"}, {"c": "Plant", "r": "T 876 CLU", "mk": "JCB", "md": "Backhoe Loader 3DX", "t": "Loader", "l": "Factory", "a": "Mining"}, {"c": "Plant", "r": "T 647 CNE", "mk": "Mahindra", "md": "6000D1", "t": "Tractor", "l": "Factory", "a": "Mining"}, {"c": "Plant", "r": "T 365 CNJ", "mk": "Mahindra", "md": "6000", "t": "Tractor", "l": "Factory", "a": "Mining"}, {"c": "Plant", "r": "T 822 CQA", "mk": "Noble", "md": "Unknown", "t": "Tipping Trailer", "l": "Factory", "a": "Mining (Used with tractor)"}, {"c": "Plant", "r": "T 726 CNU", "mk": "Noble", "md": "Unknown", "t": "Tipping Trailer", "l": "Factory", "a": "Mining (Used with tractor)"}, {"c": "Plant", "r": "T 207 CBV", "mk": "Zoomlion", "md": "QY70V532", "t": "Crane", "l": "Factory", "a": "Maintenance"}, {"c": "Mining", "r": "T 936 EEZ", "mk": "XCMG", "md": "XE500DK", "t": "Excavator", "l": "Factory", "a": "Mining"}, {"c": "Mining", "r": "T425 EHQ", "mk": "HOWO", "md": "HOWO 8X 4", "t": "Tipper", "l": "Factory", "a": "Mining"}, {"c": "Mining", "r": "T 671 EJN", "mk": "L & T", "md": "KSM 304", "t": "Surface Miner", "l": "Factory", "a": "Mining"}, {"c": "Mining", "r": "T 270 EJP", "mk": "HOWO", "md": "HOWO 8X 4", "t": "Tipper", "l": "Factory", "a": "Mining"}, {"c": "Mining", "r": "T 275 EJP", "mk": "HOWO", "md": "HOWO 8X 4", "t": "Tipper", "l": "Factory", "a": "Mining-Accident"}, {"c": "Mining", "r": "T 130 CCA", "mk": "Caterpillar", "md": "Forklift-DP30 NTD", "t": "Forklift", "l": "Factory", "a": "2014-07-01 00:00:00"}, {"c": "Mining", "r": "T 727 EDH", "mk": "Zoomlion", "md": "180 T", "t": "Crane", "l": "Factory", "a": "2023-08-01 00:00:00"}, {"c": "Logistics", "r": "T 370 DFH", "mk": "Emir Turkey", "md": "Unknown", "t": "Bulker", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 393 DHM", "mk": "Emir Turkey", "md": "AE9G22", "t": "Bulker", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 567 DHM", "mk": "Emir Turkey", "md": "AE9G22", "t": "Bulker", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 273 DZX", "mk": "FAW", "md": "CA4181P2K15T1YA80", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 274 DZX", "mk": "FAW", "md": "CA4181P2K15T1YA80", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 275 DZX", "mk": "FAW", "md": "CA4181P2K15T1YA80", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 276 DZX", "mk": "FAW", "md": "CA4181P2K15T1YA80", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 893 EAB", "mk": "FAW", "md": "CA4181P2K15T1YA80", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 983 DGZ", "mk": "HOWO", "md": "HOWO", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 679 DRG", "mk": "HOWO", "md": "E7G", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 680 DRG", "mk": "HOWO", "md": "E7G", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 682 DRG", "mk": "HOWO", "md": "E7G", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 910 DSZ", "mk": "HUAWIN", "md": "WL9407GFLC", "t": "Bulker", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 918 DSZ", "mk": "HUAWIN", "md": "WL9407GFLC", "t": "Bulker", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 919 DSZ", "mk": "HUAWIN", "md": "WL9407GFLC", "t": "Bulker", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 920 DSZ", "mk": "HUAWIN", "md": "WL9407GFLC", "t": "Bulker", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 922 DSZ", "mk": "HUAWIN", "md": "WL9407GFLC", "t": "Bulker", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 943 DDR", "mk": "NURSAN", "md": "Unknown", "t": "Bulker", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 296 DBZ", "mk": "Scania", "md": "R420", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 297 DBZ", "mk": "Scania", "md": "R421", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 298 DBZ", "mk": "Scania", "md": "R422", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 299 DBZ", "mk": "Scania", "md": "R423", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 300 DBZ", "mk": "Scania", "md": "R424", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 301 DBZ", "mk": "Scania", "md": "R425", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 302 DBZ", "mk": "Scania", "md": "R426", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 303 DBZ", "mk": "Scania", "md": "R427", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 305 DBZ", "mk": "Scania", "md": "R429", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 306 DBZ", "mk": "Scania", "md": "R430", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 307 DBZ", "mk": "Scania", "md": "R431", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 308 DBZ", "mk": "Scania", "md": "R432", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 309 DBZ", "mk": "Scania", "md": "R433", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 310 DBZ", "mk": "Scania", "md": "R434", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 729 DCF", "mk": "Scania", "md": "R420", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 736 DCF", "mk": "Scania", "md": "R420", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 738 DCF", "mk": "Scania", "md": "R420", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 739 DCF", "mk": "Scania", "md": "R420", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 740 DCF", "mk": "Scania", "md": "R420", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 741 DCF", "mk": "Scania", "md": "R420", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 742 DCF", "mk": "Scania", "md": "R420", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 743 DCF", "mk": "Scania", "md": "R420", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 746 DCF", "mk": "Scania", "md": "R420", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 747 DCF", "mk": "Scania", "md": "R420", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 748 DCF", "mk": "Scania", "md": "R420", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 749 DCF", "mk": "Scania", "md": "R420", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 752 DCF", "mk": "Scania", "md": "R420", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 946 BXS", "mk": "Scania", "md": "R420", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 923 CNV", "mk": "Scania", "md": "R420", "t": "Tractor", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 895 DYH", "mk": "Sino Truck", "md": "Hubei Huawin L1C39GRT", "t": "Bulker", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 915 DYH", "mk": "Sino Truck", "md": "Hubei Huawin L1C39GRT", "t": "Bulker", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 916 DYH", "mk": "Sino Truck", "md": "Hubei Huawin L1C39GRT", "t": "Bulker", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 918 DYH", "mk": "Sino Truck", "md": "Hubei Huawin L1C39GRT", "t": "Bulker", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 921 DYH", "mk": "Sino Truck", "md": "Hubei Huawin L1C39GRT", "t": "Bulker", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 645 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 781 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 782 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 784 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 785 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 786 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 788 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 789 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 790 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 791 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 792 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 793 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 796 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 797 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 799 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 801 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 803 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 804 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 805 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 806 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 808 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 810 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 811 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 815 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 817 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 819 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 821 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 824 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 927 DCT", "mk": "Sinotruck", "md": "Unknown", "t": "Trailer", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 528 CHX", "mk": "Trailer", "md": "Unknown", "t": "Bulker", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T 986 CHP", "mk": "Trailer", "md": "Unknown", "t": "Bulker", "l": "Logistics", "a": ""}, {"c": "Logistics", "r": "T720DFQ", "mk": "LOCAL", "md": "LOCAL", "t": "TRAILER", "l": "SCRAPPED", "a": ""}, {"c": "Logistics", "r": "T713DFQ", "mk": "LOCAL", "md": "LOCAL", "t": "TRAILER", "l": "SOLD", "a": ""}, {"c": "Logistics", "r": "T715DFQ", "mk": "LOCAL", "md": "LOCAL", "t": "TRAILER", "l": "SOLD", "a": ""}, {"c": "Logistics", "r": "T717DFQ", "mk": "LOCAL", "md": "LOCAL", "t": "TRAILER", "l": "SOLD", "a": ""}, {"c": "Logistics", "r": "T719DFQ", "mk": "LOCAL", "md": "LOCAL", "t": "TRAILER", "l": "SOLD", "a": ""}, {"c": "Logistics", "r": "T980DGZ", "mk": "HOWO", "md": "HOWO", "t": "HOWO TRUCK", "l": "FIRE", "a": ""}, {"c": "Logistics", "r": "T304AUP", "mk": "SCANIA", "md": "113", "t": "SC 113", "l": "SCRAPED", "a": ""}, {"c": "Logistics", "r": "T531CHX", "mk": "UNKNOWN", "md": "UNKNOWN", "t": "BULKER", "l": "SCRAPED", "a": ""}, {"c": "Logistics", "r": "T681DRG", "mk": "HOWO", "md": "HOWO 380", "t": "HOWO TRUCK", "l": "ACCIDENT", "a": ""}, {"c": "Logistics", "r": "T671DDA", "mk": "LOCAL", "md": "LOCAL", "t": "TRAILER", "l": "SOLD", "a": ""}, {"c": "Logistics", "r": "T637APP", "mk": "SCANIA", "md": "113", "t": "SCANIA 113", "l": "SOLD", "a": ""}, {"c": "Logistics", "r": "T642AKW", "mk": "SCANIA", "md": "113", "t": "SCANIA 113", "l": "SOLD", "a": ""}, {"c": "Logistics", "r": "T304DBZ", "mk": "SCANIA", "md": "R420", "t": "SCANIA R420", "l": "SCRAPPED", "a": ""}];
+const VCAT_COLORS = {"Passenger": "#3B82F6", "Plant": "#F59E0B", "Mining": "#EF4444", "Logistics": "#10B981"};
+
+function renderPCs(data) {
+  const tbody = document.getElementById('pc-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = data.map(p => `<tr>
+    <td style="font-size:10.5px"><strong>${p.n}</strong></td>
+    <td>${p.u}</td>
+    <td>${p.d}</td>
+    <td style="font-size:10.5px">${p.m}</td>
+    <td style="font-size:10px;color:var(--text-muted)">${p.o}</td>
+    <td><span class="mis-tag">${p.l}</span></td>
+  </tr>`).join('');
+  const lbl = document.getElementById('pc-count-lbl');
+  if (lbl) lbl.textContent = `${data.length} of 237`;
+}
+
+function filterPCs() {
+  const q   = (document.getElementById('pc-search')?.value||'').toLowerCase();
+  const loc = document.getElementById('pc-filter-loc')?.value||'';
+  const filtered = PC_DATA.filter(p => {
+    const mq = !q || p.n.toLowerCase().includes(q)||p.u.toLowerCase().includes(q)||p.d.toLowerCase().includes(q);
+    const ml = !loc || p.l === loc;
+    return mq && ml;
+  });
+  renderPCs(filtered);
+}
+
+function renderVehicles(data) {
+  const tbody = document.getElementById('veh-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = data.map(v => {
+    const col = VCAT_COLORS[v.c] || '#94A3B8';
+    return `<tr>
+      <td><span class="sc-dept-dot" style="background:${col}"></span>${v.c}</td>
+      <td><strong>${v.r}</strong></td>
+      <td>${v.mk}</td>
+      <td style="font-size:10.5px">${v.md}</td>
+      <td>${v.t}</td>
+      <td>${v.l}</td>
+      <td style="font-size:10.5px;color:var(--text-muted)">${v.a}</td>
+    </tr>`;
+  }).join('');
+  const lbl = document.getElementById('veh-count-lbl');
+  if (lbl) lbl.textContent = `${data.length} of 144`;
+}
+
+function filterVehicles() {
+  const q   = (document.getElementById('veh-search')?.value||'').toLowerCase();
+  const cat = document.getElementById('veh-filter-cat')?.value||'';
+  const filtered = VEH_DATA.filter(v => {
+    const mq = !q || v.r.toLowerCase().includes(q)||v.mk.toLowerCase().includes(q)||v.t.toLowerCase().includes(q)||v.md.toLowerCase().includes(q);
+    const mc = !cat || v.c === cat;
+    return mq && mc;
+  });
+  renderVehicles(filtered);
+}
+
+function showAssetTab(id) {
+  document.querySelectorAll('#panel-assets .hr-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('#panel-assets .hr-stab').forEach(t => t.classList.remove('active'));
+  const panel = document.getElementById('asset-' + id);
+  if (panel) panel.classList.add('active');
+  const btn = [...document.querySelectorAll('#panel-assets .hr-stab')].find(b => b.getAttribute('onclick')?.includes(id));
+  if (btn) btn.classList.add('active');
+  if (id === 'it')       renderPCs(PC_DATA);
+  if (id === 'vehicles') renderVehicles(VEH_DATA);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderPCs(PC_DATA);
+  renderVehicles(VEH_DATA);
 });
 </script>
 </body>
