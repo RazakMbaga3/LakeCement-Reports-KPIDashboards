@@ -135,6 +135,87 @@
     .tc { text-align:center; }
     .tr { text-align:right; font-weight:600; }
 
+
+    /* ── Edit-mode toolbar ── */
+    .mis-edit-btn {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:4px 12px; border-radius:6px; border:1.5px solid var(--border);
+      background:white; font-family:var(--font); font-size:11px; font-weight:600;
+      color:var(--text-muted); cursor:pointer; transition:all .15s;
+    }
+    .mis-edit-btn:hover { border-color:var(--orange); color:var(--orange); }
+    .mis-edit-btn.active { background:var(--navy); color:white; border-color:var(--navy); }
+    .mis-edit-btn svg { width:12px; height:12px; flex-shrink:0; }
+
+    .mis-add-btn {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:5px 14px; border-radius:6px; border:1.5px solid #10B981;
+      background:#ECFDF5; font-family:var(--font); font-size:11px; font-weight:700;
+      color:#059669; cursor:pointer; transition:all .15s; margin-bottom:10px;
+    }
+    .mis-add-btn:hover { background:#059669; color:white; }
+
+    /* Editable cell */
+    td.mis-editable[contenteditable=true] {
+      outline:2px solid var(--orange) !important;
+      background:#FFFBF5 !important;
+      border-radius:3px;
+      cursor:text;
+    }
+    td.mis-editable:not([contenteditable=true]).edit-on {
+      cursor:text;
+      background:#FAFBFC;
+    }
+    td.mis-editable:not([contenteditable=true]).edit-on:hover {
+      background:#FFF7ED;
+      outline:1px dashed #FDE68A;
+      border-radius:3px;
+    }
+
+    /* Delete row button */
+    .row-del-btn {
+      width:22px; height:22px; border:1px solid #FECACA; border-radius:4px;
+      background:#FEF2F2; color:#DC2626; cursor:pointer; font-size:13px;
+      display:inline-flex; align-items:center; justify-content:center;
+      transition:all .15s; line-height:1;
+    }
+    .row-del-btn:hover { background:#DC2626; color:white; }
+
+    /* Upload zone */
+    .mis-upload-zone {
+      border:2px dashed var(--border); border-radius:10px;
+      padding:24px; text-align:center; cursor:pointer;
+      transition:all .2s; background:white;
+    }
+    .mis-upload-zone:hover, .mis-upload-zone.drag-over {
+      border-color:var(--orange); background:#FFF7ED;
+    }
+    .mis-upload-zone input[type=file] { display:none; }
+
+    /* Inline select for status cells */
+    .mis-status-select {
+      font-family:var(--font); font-size:10px; font-weight:700;
+      border:1.5px solid var(--border); border-radius:6px;
+      padding:2px 6px; outline:none; cursor:pointer;
+      background:white;
+    }
+    .mis-status-select:focus { border-color:var(--orange); }
+
+    /* Saved indicator */
+    .mis-saved-flash {
+      position:fixed; bottom:24px; right:24px; z-index:999;
+      background:var(--navy); color:white; padding:10px 20px;
+      border-radius:8px; font-size:12px; font-weight:600;
+      box-shadow:0 4px 16px rgba(0,0,0,.15);
+      animation:fadeInOut 2.2s forwards;
+    }
+    @keyframes fadeInOut {
+      0%{opacity:0;transform:translateY(8px)}
+      15%{opacity:1;transform:translateY(0)}
+      75%{opacity:1}
+      100%{opacity:0;transform:translateY(8px)}
+    }
+
     @media print {
       .mis-tabs, .dept-nav, .top-header { position:static !important; }
     }
@@ -1429,7 +1510,18 @@
     <div class="mis-section">
       <div class="mis-sec-hdr">
         <i data-lucide="shield-check" class="mis-sec-icon"></i>
-        <h3 class="mis-sec-title">Certificates &amp; Licenses Register (88 items)</h3>
+        <h3 class="mis-sec-title">Certificates &amp; Licenses Register</h3>
+        <span id="cert-total-lbl" style="margin-left:6px;font-size:10px;color:var(--text-muted)">88 items</span>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+          <label class="mis-edit-btn" style="cursor:pointer" title="Upload updated Certificates Excel file">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+            Upload Excel
+            <input type="file" id="cert-upload-input" accept=".xlsx,.xls" onchange="handleCertUpload(event)" />
+          </label>
+          <button class="mis-edit-btn" id="cert-clear-btn" onclick="clearCertUpload()" style="display:none;border-color:#EF4444;color:#EF4444" title="Revert to base data">
+            Reset
+          </button>
+        </div>
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <input type="text" id="cert-search" placeholder="Search description, agency…" oninput="filterCerts()" style="font-family:var(--font);font-size:11px;padding:5px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:220px" />
           <select id="cert-filter-status" onchange="filterCerts()" style="font-family:var(--font);font-size:11px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
@@ -1664,7 +1756,17 @@
     <div class="mis-section">
       <div class="mis-sec-hdr">
         <i data-lucide="scale" class="mis-sec-icon"></i>
-        <h3 class="mis-sec-title">Ongoing Legal Cases (4)</h3>
+        <h3 class="mis-sec-title">Ongoing Legal Cases</h3>
+        <span id="legal-count-lbl" style="margin-left:6px;font-size:10px;color:var(--text-muted)"></span>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+          <button class="mis-edit-btn" id="legal-edit-btn" onclick="toggleLegalEdit()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
+        </div>
+      </div>
+      <div id="legal-add-bar" style="display:none;padding:10px 18px 0">
+        <button class="mis-add-btn" onclick="addLegalRow()">+ Add Case</button>
       </div>
       <div class="mis-table-wrap">
         <table class="mis-table">
@@ -1730,7 +1832,18 @@
     <div class="mis-section">
       <div class="mis-sec-hdr">
         <i data-lucide="file-check" class="mis-sec-icon"></i>
-        <h3 class="mis-sec-title">Insurance Claims Register (23 claims)</h3>
+        <h3 class="mis-sec-title">Insurance Claims Register</h3>
+        <span id="ins-count-lbl" style="margin-left:6px;font-size:10px;color:var(--text-muted)"></span>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+          <button class="mis-edit-btn" id="ins-edit-btn" onclick="toggleInsEdit()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
+          <button class="mis-edit-btn" onclick="openAddClaimModal()" style="border-color:#10B981;color:#059669">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Claim
+          </button>
+        </div>
       </div>
       <div class="mis-table-wrap" style="max-height:560px">
         <table class="mis-table">
@@ -2612,7 +2725,14 @@
     <div class="mis-section">
       <div class="mis-sec-hdr">
         <i data-lucide="wrench" class="mis-sec-icon"></i>
-        <h3 class="mis-sec-title">Annual Maintenance Contracts (13)</h3>
+        <h3 class="mis-sec-title">Annual Maintenance Contracts</h3>
+        <span id="amc-count-lbl" style="margin-left:6px;font-size:10px;color:var(--text-muted)"></span>
+        <div style="margin-left:auto">
+          <button class="mis-edit-btn" id="amc-edit-btn" onclick="toggleAmcEdit()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit Dates &amp; Status
+          </button>
+        </div>
       </div>
       <div class="mis-table-wrap">
         <table class="mis-table">
@@ -2995,5 +3115,528 @@ function showStoreTab(id) {
   if (btn) btn.classList.add('active');
 }
 </script>
+
+<!-- ══ ADD INSURANCE CLAIM MODAL ══ -->
+<div id="add-claim-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:white;border-radius:14px;padding:28px 32px;width:500px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.2)">
+    <h3 style="margin:0 0 20px;font-size:15px;font-weight:800;color:var(--navy)">Add Insurance Claim</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div>
+        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);display:block;margin-bottom:4px">Date</label>
+        <input id="acm-date" type="date" style="width:100%;font-family:var(--font);font-size:12px;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;box-sizing:border-box" />
+      </div>
+      <div>
+        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);display:block;margin-bottom:4px">Item Claimed</label>
+        <input id="acm-item" type="text" placeholder="Description…" style="width:100%;font-family:var(--font);font-size:12px;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;box-sizing:border-box" />
+      </div>
+      <div>
+        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);display:block;margin-bottom:4px">Amount Claimed (TSH)</label>
+        <input id="acm-claimed" type="number" placeholder="0" style="width:100%;font-family:var(--font);font-size:12px;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;box-sizing:border-box" />
+      </div>
+      <div>
+        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);display:block;margin-bottom:4px">Amount Received (TSH)</label>
+        <input id="acm-received" type="number" placeholder="0" style="width:100%;font-family:var(--font);font-size:12px;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;box-sizing:border-box" />
+      </div>
+    </div>
+    <div style="margin-bottom:20px">
+      <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);display:block;margin-bottom:4px">Notes</label>
+      <textarea id="acm-note" rows="2" placeholder="Status note…" style="width:100%;font-family:var(--font);font-size:12px;padding:7px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;resize:vertical;box-sizing:border-box"></textarea>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px">
+      <button onclick="closeAddClaimModal()" style="font-family:var(--font);font-size:12px;font-weight:600;padding:8px 20px;border-radius:8px;border:1.5px solid var(--border);background:white;color:var(--text-muted);cursor:pointer">Cancel</button>
+      <button onclick="saveNewClaim()" style="font-family:var(--font);font-size:12px;font-weight:700;padding:8px 20px;border-radius:8px;border:none;background:var(--navy);color:white;cursor:pointer">Save Claim</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   MIS DATA INPUT — Option B (Excel upload) + Option C (Inline edit)
+   localStorage keys:
+     mis-edit-legal     : full legal cases array
+     mis-amc-overrides  : {sn: {vt, status}} partial overrides
+     mis-ins-extra      : additional claims array
+     mis-ins-edits      : {sn: {received, status}} edits
+     mis-cert-upload    : full certs array from uploaded Excel
+══════════════════════════════════════════════════════════════════ */
+
+/* ── Toast notification ──────────────────────────────────────── */
+function misToast(msg) {
+  const el = document.createElement('div');
+  el.className = 'mis-saved-flash';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2400);
+}
+
+/* ════════════════════════════════════════════
+   OPTION C — LEGAL CASES
+════════════════════════════════════════════ */
+const LEGAL_BASE = [
+  {sn:'1', case:'WAMILUMA',          filed:'COMPANY',           dept:'DISPATCH',  matter:'FRAUD CASE AT WEIGHBRIDGE-2017',                                  initiated:'Sep 2022', court:'COURT OF APPEAL',                                          next:'AWAITED'},
+  {sn:'2', case:'WAMILUMA',          filed:'COMPANY',           dept:'DISPATCH',  matter:'EXECUTION OF AWARD',                                              initiated:'Apr 2022', court:'RESIDENT MAGISTRATES COURT- AT KISUTU',                   next:'ON HOLD TILL FURTHER NOTIFICATION'},
+  {sn:'3', case:'WAMILUMA',          filed:'COMPANY',           dept:'DISPATCH',  matter:'BILL OF COSTS',                                                   initiated:'Apr 2022', court:'HIGH COURT OF TANZANIA - HON. NOMGWA, DR',                next:''},
+  {sn:'4', case:'ASIA ALLY B. URASSA', filed:'LOCAL STAKEHOLDER', dept:'QUARRYING', matter:'COMPENSATION OF TSH 300,000,000 FOR LAND BOUGHT BY LAKE CEMENT', initiated:'Aug 2025', court:'DISTRICT LAND AND HOUSING TRIBUNAL - KIGAMBONI',         next:'06.03.2026 @ 09:30am'},
+];
+
+let legalData = [];
+let legalEditMode = false;
+
+function loadLegal() {
+  const saved = localStorage.getItem('mis-edit-legal');
+  legalData = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(LEGAL_BASE));
+  renderLegal();
+}
+
+function saveLegal() {
+  localStorage.setItem('mis-edit-legal', JSON.stringify(legalData));
+  misToast('Legal cases saved');
+}
+
+function renderLegal() {
+  const tbody = document.getElementById('legal-tbody');
+  if (!tbody) return;
+  const em = legalEditMode;
+
+  tbody.innerHTML = legalData.map((c, idx) => {
+    const nextColor = c.next && c.next.includes('2026') ? '#EF4444' : 'var(--text-muted)';
+    const delBtn = em ? `<td class="tc"><button class="row-del-btn" onclick="deleteLegalRow(${idx})" title="Delete">×</button></td>` : '';
+
+    const makeCell = (val, field, extraStyle='') =>
+      em ? `<td class="mis-editable ${em ? 'edit-on' : ''}" contenteditable="true"
+              style="${extraStyle}" onblur="legalCellEdit(${idx},'${field}',this.textContent)"
+              >${val}</td>`
+         : `<td style="${extraStyle}">${val}</td>`;
+
+    return `<tr>
+      <td style="color:var(--text-muted);font-size:10px">${c.sn}</td>
+      ${makeCell(`<strong>${c.case}</strong>`, 'case')}
+      <td><span class="mis-tag">${c.filed}</span></td>
+      ${makeCell(c.dept, 'dept', 'font-size:11px')}
+      ${makeCell(c.matter, 'matter', 'white-space:normal;line-height:1.4;max-width:260px;font-size:10.5px')}
+      ${makeCell(c.initiated, 'initiated', 'text-align:center;font-size:10px;color:var(--text-muted)')}
+      ${makeCell(c.court, 'court', 'font-size:10px')}
+      ${makeCell(c.next, 'next', `text-align:center;font-size:10px;color:${nextColor};font-weight:${c.next.includes('2026')?'700':'400'}`)}
+      ${delBtn}
+    </tr>`;
+  }).join('');
+
+  // Update count label
+  const lbl = document.getElementById('legal-count-lbl');
+  if (lbl) lbl.textContent = `(${legalData.length} case${legalData.length !== 1 ? 's' : ''})`;
+
+  // Re-init lucide icons for any new SVGs
+  if (window.lucide) lucide.createIcons();
+}
+
+function legalCellEdit(idx, field, val) {
+  legalData[idx][field] = val.trim();
+  saveLegal();
+}
+
+function toggleLegalEdit() {
+  legalEditMode = !legalEditMode;
+  const btn = document.getElementById('legal-edit-btn');
+  const addBar = document.getElementById('legal-add-bar');
+  if (btn) btn.classList.toggle('active', legalEditMode);
+  if (addBar) addBar.style.display = legalEditMode ? 'block' : 'none';
+  renderLegal();
+}
+
+function addLegalRow() {
+  const nextSn = String(legalData.length + 1);
+  legalData.push({sn: nextSn, case:'New Case', filed:'', dept:'', matter:'', initiated:'', court:'', next:''});
+  saveLegal();
+  renderLegal();
+}
+
+function deleteLegalRow(idx) {
+  if (!confirm('Delete this legal case?')) return;
+  legalData.splice(idx, 1);
+  legalData.forEach((r, i) => r.sn = String(i + 1));
+  saveLegal();
+  renderLegal();
+}
+
+/* ════════════════════════════════════════════
+   OPTION C — AMC CONTRACTS (edit Valid-To + Status)
+════════════════════════════════════════════ */
+const AMC_BASE_VT = {
+  '1':'31.03.2026','2':'17.03.2026','3':'31.05.2026','4':'30.10.2026',
+  '5':'31.07.2026','6':'31.12.2026','7':'30.09.2024','8':'28.02.2027',
+  '9':'31.12.2026','10':'30.05.2026','11':'31.04.2026','12':'30.04.2025','13':'14.09.2026'
+};
+const AMC_STATUS_ORDER = ['active','expiring','expired'];
+let amcEditMode = false;
+
+function loadAmc() {
+  // Apply any saved overrides to the rendered rows
+  const overrides = JSON.parse(localStorage.getItem('mis-amc-overrides') || '{}');
+  const rows = document.querySelectorAll('#store-amc table tbody tr');
+  let count = 0;
+  rows.forEach(row => {
+    const snCell = row.querySelector('td:first-child');
+    if (!snCell) return;
+    const sn = snCell.textContent.trim();
+    if (overrides[sn]) {
+      count++;
+      if (overrides[sn].vt) {
+        const vtCell = row.querySelectorAll('td')[5];
+        if (vtCell) vtCell.textContent = overrides[sn].vt;
+      }
+      if (overrides[sn].status) {
+        const stCell = row.querySelector('td:last-child');
+        if (stCell) stCell.innerHTML = amcStatusBadge(overrides[sn].status);
+      }
+    }
+  });
+  const lbl = document.getElementById('amc-count-lbl');
+  if (lbl) lbl.textContent = `(${rows.length})`;
+}
+
+function amcStatusBadge(s) {
+  if (s === 'active')   return '<span class="mis-badge valid">Active</span>';
+  if (s === 'expiring') return '<span class="mis-badge expiring">Expiring</span>';
+  return '<span class="mis-badge expired">Expired</span>';
+}
+
+function toggleAmcEdit() {
+  amcEditMode = !amcEditMode;
+  const btn = document.getElementById('amc-edit-btn');
+  if (btn) btn.classList.toggle('active', amcEditMode);
+
+  const rows = document.querySelectorAll('#store-amc table tbody tr');
+  const overrides = JSON.parse(localStorage.getItem('mis-amc-overrides') || '{}');
+
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    const sn = cells[0]?.textContent.trim();
+    const vtCell  = cells[5];  // Valid-To column
+    const stCell  = cells[8];  // Status column
+
+    if (amcEditMode) {
+      // Make Valid-To editable
+      if (vtCell) {
+        vtCell.classList.add('mis-editable', 'edit-on');
+        vtCell.setAttribute('contenteditable', 'true');
+        vtCell.onblur = () => {
+          const ov = JSON.parse(localStorage.getItem('mis-amc-overrides') || '{}');
+          ov[sn] = ov[sn] || {};
+          ov[sn].vt = vtCell.textContent.trim();
+          localStorage.setItem('mis-amc-overrides', JSON.stringify(ov));
+          misToast('AMC date updated');
+        };
+      }
+      // Replace status badge with select
+      if (stCell) {
+        const cur = overrides[sn]?.status || (stCell.textContent.toLowerCase().includes('active') ? 'active' : stCell.textContent.toLowerCase().includes('expir') ? 'expiring' : 'expired');
+        stCell.innerHTML = `<select class="mis-status-select" onchange="saveAmcStatus('${sn}', this.value)">
+          <option value="active"   ${cur==='active'  ?'selected':''}>Active</option>
+          <option value="expiring" ${cur==='expiring'?'selected':''}>Expiring</option>
+          <option value="expired"  ${cur==='expired' ?'selected':''}>Expired</option>
+        </select>`;
+      }
+    } else {
+      if (vtCell) {
+        vtCell.classList.remove('mis-editable', 'edit-on');
+        vtCell.removeAttribute('contenteditable');
+        vtCell.onblur = null;
+      }
+      if (stCell && stCell.querySelector('select')) {
+        const cur = overrides[sn]?.status;
+        stCell.innerHTML = cur ? amcStatusBadge(cur) : stCell.querySelector('select').value ? amcStatusBadge(stCell.querySelector('select').value) : stCell.innerHTML;
+      }
+    }
+  });
+}
+
+function saveAmcStatus(sn, status) {
+  const ov = JSON.parse(localStorage.getItem('mis-amc-overrides') || '{}');
+  ov[sn] = ov[sn] || {};
+  ov[sn].status = status;
+  localStorage.setItem('mis-amc-overrides', JSON.stringify(ov));
+  misToast('AMC status updated');
+}
+
+/* ════════════════════════════════════════════
+   OPTION C — INSURANCE CLAIMS (edit received + add new)
+════════════════════════════════════════════ */
+let insEditMode = false;
+
+function loadIns() {
+  const edits = JSON.parse(localStorage.getItem('mis-ins-edits') || '{}');
+  const extras = JSON.parse(localStorage.getItem('mis-ins-extra') || '[]');
+
+  // Apply edits to existing rows
+  document.querySelectorAll('#comp-insurance table tbody tr[data-sn]').forEach(row => {
+    const sn = row.dataset.sn;
+    if (edits[sn]) {
+      const rcvCell = row.querySelectorAll('td')[4];
+      const stCell  = row.querySelector('td:last-child');
+      if (rcvCell && edits[sn].received) rcvCell.innerHTML = `<span style="color:#10B981;font-weight:600">TSH ${Number(edits[sn].received).toLocaleString()}</span>`;
+      if (stCell  && edits[sn].status)   stCell.innerHTML  = insBadge(edits[sn].status);
+    }
+  });
+
+  // Append extra rows
+  if (extras.length > 0) {
+    const tbody = document.querySelector('#comp-insurance table tbody');
+    if (tbody) {
+      extras.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.dataset.sn = 'extra-' + c.sn;
+        tr.setAttribute('data-extra', '1');
+        const var_ = c.claimed - c.received;
+        const status = c.received >= c.claimed && c.claimed > 0 ? 'settled' : c.received > 0 ? 'partial' : 'pending';
+        tr.innerHTML = `
+          <td style="color:#3B82F6;font-weight:600">${c.sn} <span style="font-size:9px;background:#EFF6FF;color:#3B82F6;padding:1px 4px;border-radius:3px">NEW</span></td>
+          <td class="tc" style="font-size:10px;color:var(--text-muted)">${c.date}</td>
+          <td style="max-width:240px;white-space:normal;line-height:1.4">${c.item}</td>
+          <td class="tr">${c.claimed ? 'TSH ' + Number(c.claimed).toLocaleString() : '—'}</td>
+          <td class="tr" style="color:#10B981;font-weight:600">${c.received ? 'TSH ' + Number(c.received).toLocaleString() : '—'}</td>
+          <td class="tc">${var_ > 0 ? '<span style="color:#EF4444;font-weight:600">TSH ' + var_.toLocaleString() + '</span>' : '—'}</td>
+          <td class="tc">${insBadge(status)}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    // Update count
+    updateInsCount();
+  }
+}
+
+function insBadge(s) {
+  if (s === 'settled') return '<span class="mis-badge valid">Settled</span>';
+  if (s === 'partial') return '<span class="mis-badge expiring">Partial</span>';
+  return '<span class="mis-badge expiring">Pending</span>';
+}
+
+function updateInsCount() {
+  const total = document.querySelectorAll('#comp-insurance table tbody tr').length;
+  const lbl = document.getElementById('ins-count-lbl');
+  if (lbl) lbl.textContent = `(${total} claims)`;
+}
+
+function toggleInsEdit() {
+  insEditMode = !insEditMode;
+  const btn = document.getElementById('ins-edit-btn');
+  if (btn) btn.classList.toggle('active', insEditMode);
+
+  const edits = JSON.parse(localStorage.getItem('mis-ins-edits') || '{}');
+  document.querySelectorAll('#comp-insurance table tbody tr[data-sn]').forEach(row => {
+    const sn = row.dataset.sn;
+    if (sn.startsWith('extra')) return;
+    const rcvCell = row.querySelectorAll('td')[4];
+    const stCell  = row.querySelector('td:last-child');
+
+    if (insEditMode) {
+      if (rcvCell) {
+        rcvCell.classList.add('mis-editable', 'edit-on');
+        rcvCell.setAttribute('contenteditable', 'true');
+        rcvCell.onblur = () => {
+          const raw = rcvCell.textContent.replace(/[^0-9.]/g,'').trim();
+          const num = parseFloat(raw) || 0;
+          const ev = JSON.parse(localStorage.getItem('mis-ins-edits') || '{}');
+          ev[sn] = ev[sn] || {};
+          ev[sn].received = num;
+          localStorage.setItem('mis-ins-edits', JSON.stringify(ev));
+          rcvCell.innerHTML = `<span style="color:#10B981;font-weight:600">TSH ${num.toLocaleString()}</span>`;
+          misToast('Received amount saved');
+        };
+      }
+      if (stCell) {
+        const curStatus = edits[sn]?.status || (stCell.textContent.toLowerCase().includes('settled') ? 'settled' : stCell.textContent.toLowerCase().includes('partial') ? 'partial' : 'pending');
+        stCell.innerHTML = `<select class="mis-status-select" onchange="saveInsStatus('${sn}', this.value)">
+          <option value="settled" ${curStatus==='settled'?'selected':''}>Settled</option>
+          <option value="partial" ${curStatus==='partial'?'selected':''}>Partial</option>
+          <option value="pending" ${curStatus==='pending'?'selected':''}>Pending</option>
+        </select>`;
+      }
+    } else {
+      if (rcvCell) { rcvCell.classList.remove('mis-editable','edit-on'); rcvCell.removeAttribute('contenteditable'); rcvCell.onblur = null; }
+      if (stCell?.querySelector('select')) {
+        const v = stCell.querySelector('select').value;
+        stCell.innerHTML = insBadge(v);
+      }
+    }
+  });
+}
+
+function saveInsStatus(sn, status) {
+  const ev = JSON.parse(localStorage.getItem('mis-ins-edits') || '{}');
+  ev[sn] = ev[sn] || {};
+  ev[sn].status = status;
+  localStorage.setItem('mis-ins-edits', JSON.stringify(ev));
+  misToast('Claim status updated');
+}
+
+/* Add new claim modal */
+function openAddClaimModal() {
+  document.getElementById('add-claim-modal').style.display = 'flex';
+  document.getElementById('acm-date').value = new Date().toISOString().slice(0,10);
+}
+function closeAddClaimModal() {
+  document.getElementById('add-claim-modal').style.display = 'none';
+}
+function saveNewClaim() {
+  const date     = document.getElementById('acm-date').value;
+  const item     = document.getElementById('acm-item').value.trim();
+  const claimed  = parseFloat(document.getElementById('acm-claimed').value) || 0;
+  const received = parseFloat(document.getElementById('acm-received').value) || 0;
+  const note     = document.getElementById('acm-note').value.trim();
+  if (!item) { alert('Please enter a description.'); return; }
+
+  const extras = JSON.parse(localStorage.getItem('mis-ins-extra') || '[]');
+  const sn = 24 + extras.length;
+  // Format date
+  const dt = date ? new Date(date).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '';
+  extras.push({sn, date:dt, item, claimed, received, note});
+  localStorage.setItem('mis-ins-extra', JSON.stringify(extras));
+
+  closeAddClaimModal();
+  // Re-render
+  loadIns();
+  updateInsCount();
+  misToast('New claim added');
+
+  // Clear form
+  ['acm-item','acm-claimed','acm-received','acm-note'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+}
+
+/* ════════════════════════════════════════════
+   OPTION B — CERTIFICATES EXCEL UPLOAD
+   Uses SheetJS (already in project)
+════════════════════════════════════════════ */
+function handleCertUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb    = XLSX.read(e.target.result, {type:'array'});
+      const ws    = wb.Sheets['CERTIFICATES'] || wb.Sheets[wb.SheetNames[0]];
+      const rows  = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+
+      const parsed = [];
+      const today  = new Date();
+
+      rows.slice(4).forEach((row, i) => {
+        const num    = String(row[0] || '').trim();
+        const desc   = String(row[1] || '').trim().slice(0,75);
+        const agency = String(row[2] || '').trim().slice(0,55);
+        const number = String(row[3] || '').trim().slice(0,45);
+        const vf     = String(row[4] || '').trim().slice(0,12);
+        const vt     = String(row[5] || '').trim().slice(0,12);
+        const remark = String(row[6] || '').trim().slice(0,65);
+        const rawSt  = String(row[7] || '').trim();
+        if (!desc) return;
+
+        const rs = rawSt.toUpperCase();
+        let badge = 'active';
+        if (rs.includes('RENEWAL') || rs.includes('AWAITED')) badge = 'renewal';
+        else if (rs === 'INACTIVE') badge = 'inactive';
+        else if (rs === 'ACTIVE' || !rawSt) {
+          if (vt) {
+            try {
+              const parts = vt.split('.');
+              const dt = parts.length === 3 ? new Date(parts[2], parts[1]-1, parts[0]) : new Date(vt);
+              const diff = (dt - today) / 86400000;
+              if (diff < 0) badge = 'expired';
+              else if (diff <= 180) badge = 'expiring';
+            } catch(e) {}
+          }
+        }
+        parsed.push({n:num,d:desc,a:agency,no:number,vf,vt,r:remark,s:badge,rs:rawSt});
+      });
+
+      if (parsed.length < 5) {
+        alert('Could not read certificates from this file. Make sure the sheet is named "CERTIFICATES" and matches the standard format.');
+        return;
+      }
+
+      localStorage.setItem('mis-cert-upload', JSON.stringify(parsed));
+      renderCerts(parsed);
+
+      const lbl = document.getElementById('cert-total-lbl');
+      if (lbl) lbl.textContent = `${parsed.length} items (uploaded)`;
+
+      const clearBtn = document.getElementById('cert-clear-btn');
+      if (clearBtn) clearBtn.style.display = 'inline-flex';
+
+      misToast(`Certificates loaded: ${parsed.length} items from ${file.name}`);
+    } catch(err) {
+      alert('Error reading Excel file: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  event.target.value = ''; // allow re-upload of same file
+}
+
+function clearCertUpload() {
+  localStorage.removeItem('mis-cert-upload');
+  renderCerts(CERT_DATA);
+  const lbl = document.getElementById('cert-total-lbl');
+  if (lbl) lbl.textContent = `${CERT_DATA.length} items`;
+  const clearBtn = document.getElementById('cert-clear-btn');
+  if (clearBtn) clearBtn.style.display = 'none';
+  misToast('Reverted to base data');
+}
+
+/* ════════════════════════════════════════════
+   TAG EXISTING INSURANCE ROWS WITH data-sn
+════════════════════════════════════════════ */
+function tagInsuranceRows() {
+  const tbody = document.querySelector('#comp-insurance table tbody');
+  if (!tbody) return;
+  tbody.querySelectorAll('tr').forEach((row, i) => {
+    if (!row.dataset.sn) row.dataset.sn = String(i + 1);
+  });
+  updateInsCount();
+}
+
+/* ════════════════════════════════════════════
+   INIT on DOMContentLoaded
+════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  loadLegal();
+
+  // Load cert overrides
+  const savedCerts = localStorage.getItem('mis-cert-upload');
+  if (savedCerts) {
+    const parsed = JSON.parse(savedCerts);
+    renderCerts(parsed);
+    const lbl = document.getElementById('cert-total-lbl');
+    if (lbl) lbl.textContent = `${parsed.length} items (uploaded)`;
+    const clearBtn = document.getElementById('cert-clear-btn');
+    if (clearBtn) clearBtn.style.display = 'inline-flex';
+  } else {
+    const lbl = document.getElementById('cert-total-lbl');
+    if (lbl) lbl.textContent = `${CERT_DATA.length} items`;
+  }
+});
+
+// Tab-activation hooks
+const _origShowCompTab = window.showCompTab;
+window.showCompTab = function(id) {
+  if (typeof _origShowCompTab === 'function') _origShowCompTab(id);
+  if (id === 'insurance') { tagInsuranceRows(); loadIns(); }
+  if (id === 'legal')     loadLegal();
+};
+
+const _origShowStoreTab = window.showStoreTab;
+window.showStoreTab = function(id) {
+  if (typeof _origShowStoreTab === 'function') _origShowStoreTab(id);
+  if (id === 'amc') loadAmc();
+};
+
+// SheetJS CDN (for Option B upload)
+if (typeof XLSX === 'undefined') {
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+  document.head.appendChild(s);
+}
+</script>
+
 </body>
 </html>
