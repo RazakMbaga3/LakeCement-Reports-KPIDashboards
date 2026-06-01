@@ -1976,79 +1976,793 @@
 
   <!-- KV strip -->
   <div class="mis-kv-strip">
-    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--navy)">35,126 MT</div><div class="mis-kv-lbl">Raw Materials</div><div class="mis-kv-sub">Total on-site stock</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--navy)">6,624</div><div class="mis-kv-lbl">Iron Ore</div><div class="mis-kv-sub">MT</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:var(--navy)">1,695</div><div class="mis-kv-lbl">Clinker</div><div class="mis-kv-sub">MT</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:var(--navy)">19,971</div><div class="mis-kv-lbl">Coal</div><div class="mis-kv-sub">MT</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:var(--navy)">6,836</div><div class="mis-kv-lbl">Gypsum</div><div class="mis-kv-sub">MT</div></div>
+    <div class="mis-kv"><div class="mis-kv-val">2</div><div class="mis-kv-lbl">Stock Audits</div><div class="mis-kv-sub">Physical verification snapshots</div></div>
+    <div class="mis-kv"><div class="mis-kv-val">6,697</div><div class="mis-kv-lbl">Inventory Line Items</div><div class="mis-kv-sub">Spares &amp; consumables</div></div>
+    <div class="mis-kv"><div class="mis-kv-val">TSH 13.2B</div><div class="mis-kv-lbl">Spares Inventory Value</div></div>
+    <div class="mis-kv"><div class="mis-kv-val">13</div><div class="mis-kv-lbl">AMC Contracts</div></div>
+    <div class="mis-kv"><div class="mis-kv-val" style="color:#10B981">6</div><div class="mis-kv-lbl">Active AMCs</div></div>
+    <div class="mis-kv"><div class="mis-kv-val" style="color:#EF4444">6</div><div class="mis-kv-lbl">Expired AMCs</div></div>
   </div>
 
-  <div class="mis-grid">
-    <!-- Raw Materials Stock -->
+  <!-- Sub-tabs -->
+  <div class="hr-subtabs">
+    <button class="hr-stab active" onclick="showStoreTab('rawmat')">Raw Materials Stock</button>
+    <button class="hr-stab" onclick="showStoreTab('spares')">Spares &amp; Consumables</button>
+    <button class="hr-stab" onclick="showStoreTab('amc')">AMC Contracts</button>
+  </div>
+
+  <!-- ══ RAW MATERIALS ══ -->
+  <div class="hr-panel active" id="store-rawmat">
+    
+<div class="mis-section" style="margin-bottom:16px">
+  <div class="mis-sec-hdr">
+    <i data-lucide="layers" class="mis-sec-icon"></i>
+    <h3 class="mis-sec-title">Physical Stock Audit — 20.10.2025</h3>
+    <span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--navy)">Grand Total: 52,768.6 MT</span>
+  </div>
+  <div class="mis-table-wrap">
+    <table class="mis-table">
+      <thead><tr><th>Material</th><th>Heap / Location Breakdown</th><th style="text-align:right">Physical Total (MT)</th><th style="text-align:center">Odoo System</th></tr></thead>
+      <tbody><tr>
+          <td><strong>Iron Ore</strong></td>
+          <td style="font-size:10px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Near yard area Heap-1 (1,496 MT)</td>
+          <td class="tr" style="font-weight:700;color:var(--navy)">1,514.0 MT</td>
+          <td class="tc">—</td>
+        </tr>
+<tr>
+          <td><strong>Clinker</strong></td>
+          <td style="font-size:10px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Clinker Stock Pile (19,784 MT); Gypsum shed  Size L 50 M x W 20 M x (1,299 MT); Mining yard (2,822 MT)</td>
+          <td class="tr" style="font-weight:700;color:var(--navy)">24,204.3 MT</td>
+          <td class="tc"><span style="color:#EF4444;font-size:10px">Sys:23,373 Δ+831</span></td>
+        </tr>
+<tr>
+          <td><strong>Coal</strong></td>
+          <td style="font-size:10px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Open Yard-Heap-1 (7,262 MT); Open Yard-Heap-2 (5,542 MT); Coal Shed Heap-1 Size L 90 M x W 35 (5,905 MT); Coal Shed Heap-1 (2,940 MT)</td>
+          <td class="tr" style="font-weight:700;color:var(--navy)">21,698.9 MT</td>
+          <td class="tc"><span style="color:#EF4444;font-size:10px">Sys:20,090 Δ+1,609</span></td>
+        </tr>
+<tr>
+          <td><strong>Gypsum</strong></td>
+          <td style="font-size:10px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">New yard Heap-1 (4,468 MT); Heap-2 (680 MT); Gypsum powder (150 MT)</td>
+          <td class="tr" style="font-weight:700;color:var(--navy)">5,351.4 MT</td>
+          <td class="tc"><span style="color:#EF4444;font-size:10px">Sys:4,889 Δ+462</span></td>
+        </tr>
+</tbody>
+    </table>
+  </div>
+</div>
+<div class="mis-section" style="margin-bottom:16px">
+  <div class="mis-sec-hdr">
+    <i data-lucide="layers" class="mis-sec-icon"></i>
+    <h3 class="mis-sec-title">Physical Stock Audit — 09.07.2025</h3>
+    <span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--navy)">Grand Total: 35,126.6 MT</span>
+  </div>
+  <div class="mis-table-wrap">
+    <table class="mis-table">
+      <thead><tr><th>Material</th><th>Heap / Location Breakdown</th><th style="text-align:right">Physical Total (MT)</th><th style="text-align:center">Odoo System</th></tr></thead>
+      <tbody><tr>
+          <td><strong>Iron Ore</strong></td>
+          <td style="font-size:10px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Near yard area Heap-1 (6,600 MT)</td>
+          <td class="tr" style="font-weight:700;color:var(--navy)">6,624.0 MT</td>
+          <td class="tc">—</td>
+        </tr>
+<tr>
+          <td><strong>Clinker</strong></td>
+          <td style="font-size:10px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Clinker Stock Pile (1,411 MT)</td>
+          <td class="tr" style="font-weight:700;color:var(--navy)">1,695.2 MT</td>
+          <td class="tc"><span style="color:#EF4444;font-size:10px">Sys:1,122 Δ+573</span></td>
+        </tr>
+<tr>
+          <td><strong>Coal</strong></td>
+          <td style="font-size:10px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Open Yard-Heap-1 (2,867 MT); Open Yard-Heap-2 (399 MT); Open Yard-Heap-3 (5,998 MT); Open Yard-Heap-4 (259 MT); Open Yard-Heap-5 (346 MT); Coal Shed Heap-1 (8,036 MT); Coal Shed Heap-1 (2,016 MT)</td>
+          <td class="tr" style="font-weight:700;color:var(--navy)">19,971.0 MT</td>
+          <td class="tc"><span style="color:#EF4444;font-size:10px">Sys:18,774 Δ+1,197</span></td>
+        </tr>
+<tr>
+          <td><strong>Gypsum</strong></td>
+          <td style="font-size:10px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">New yard Heap-1 (5,601 MT); Gypsum powder (1,200 MT)</td>
+          <td class="tr" style="font-weight:700;color:var(--navy)">6,836.4 MT</td>
+          <td class="tc"><span style="color:#EF4444;font-size:10px">Sys:5,701 Δ+1,136</span></td>
+        </tr>
+</tbody>
+    </table>
+  </div>
+</div>
+
+    <!-- Inventory closing values -->
     <div class="mis-section">
       <div class="mis-sec-hdr">
-        <i data-lucide="layers" class="mis-sec-icon"></i>
-        <h3 class="mis-sec-title">Raw Materials Stock — Physical Inventory</h3>
+        <i data-lucide="database" class="mis-sec-icon"></i>
+        <h3 class="mis-sec-title">Inventory Closing Positions (Odoo ERP)</h3>
       </div>
-      <div class="mis-table-wrap">
+      <div class="mis-table-wrap" style="max-height:420px">
         <table class="mis-table">
-          <thead>
-            <tr>
-              <th>Material</th>
-              <th style="text-align:center">Quantity (MT)</th>
-              <th>Share of Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td><strong>Iron Ore</strong></td><td class="num">6,624 MT</td><td style="width:160px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:19%;background:var(--orange)"></div></div><span class="mis-bar-lbl">19%</span></td></tr>
-<tr><td><strong>Clinker</strong></td><td class="num">1,695 MT</td><td style="width:160px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:5%;background:var(--orange)"></div></div><span class="mis-bar-lbl">5%</span></td></tr>
-<tr><td><strong>Coal</strong></td><td class="num">19,971 MT</td><td style="width:160px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:57%;background:var(--orange)"></div></div><span class="mis-bar-lbl">57%</span></td></tr>
-<tr><td><strong>Gypsum</strong></td><td class="num">6,836 MT</td><td style="width:160px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:19%;background:var(--orange)"></div></div><span class="mis-bar-lbl">19%</span></td></tr>
-
-          </tbody>
-          <tfoot>
-            <tr style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">
-              <td>TOTAL</td>
-              <td class="num">35,126 MT</td>
-              <td></td>
-            </tr>
-          </tfoot>
+          <thead><tr><th>Material</th><th style="text-align:right">Closing Qty</th><th style="text-align:right">Closing Value</th></tr></thead>
+          <tbody><tr style="background:#F8FAFC;font-weight:700"><td colspan="3" style="padding:8px 14px;border-top:2px solid var(--border);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted)">08-01-2026 to 09-01-2026</td></tr>
+<tr><td>COAL</td><td class="tr">20,513.3 MT</td><td class="tr">—</td></tr>
+<tr><td>GYPSUM</td><td class="tr">2,148.9 MT</td><td class="tr">—</td></tr>
+<tr><td>IRON ORE</td><td class="tr">3,118.7 MT</td><td class="tr">—</td></tr>
+<tr><td>CLINKER SPG</td><td class="tr">2,418.1 MT</td><td class="tr">—</td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td colspan="3" style="padding:8px 14px;border-top:2px solid var(--border);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted)">02-02-2026 to 03-02-2026</td></tr>
+<tr><td>COAL</td><td class="tr">23,959.1 MT</td><td class="tr">TSH 5,165M</td></tr>
+<tr><td>GYPSUM</td><td class="tr">5,588.0 MT</td><td class="tr">TSH 630M</td></tr>
+<tr><td>IRON ORE</td><td class="tr">1,486.7 MT</td><td class="tr">TSH 138M</td></tr>
+<tr><td>CLINKER SPG</td><td class="tr">3,858.6 MT</td><td class="tr">TSH 784M</td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td colspan="3" style="padding:8px 14px;border-top:2px solid var(--border);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted)">30-03-2026 to 31-03-2026</td></tr>
+<tr><td>COAL</td><td class="tr">28,619.9 MT</td><td class="tr">TSH 5,932M</td></tr>
+<tr><td>GYPSUM</td><td class="tr">7,445.4 MT</td><td class="tr">TSH 835M</td></tr>
+<tr><td>IRON ORE</td><td class="tr">5,365.7 MT</td><td class="tr">TSH 533M</td></tr>
+<tr><td>BAUXITE</td><td class="tr">298.4 MT</td><td class="tr">TSH 34M</td></tr>
+<tr><td>CLINKER SPG</td><td class="tr">8,628.5 MT</td><td class="tr">TSH 1,689M</td></tr>
+</tbody>
         </table>
       </div>
     </div>
+  </div>
 
-    <!-- Spares & Consumables -->
+  <!-- ══ SPARES ══ -->
+  <div class="hr-panel" id="store-spares">
+    <div class="mis-grid">
+
+      <!-- Inventory by category -->
+      <div class="mis-section">
+        <div class="mis-sec-hdr">
+          <i data-lucide="grid" class="mis-sec-icon"></i>
+          <h3 class="mis-sec-title">Inventory by Category (6,697 items · TSH 13.2B)</h3>
+        </div>
+        <div class="mis-table-wrap" style="max-height:480px">
+          <table class="mis-table">
+            <thead><tr><th>Category</th><th style="text-align:center">Items</th><th style="text-align:right">Value (TSH)</th><th>Share</th></tr></thead>
+            <tbody><tr>
+      <td><strong>Mechanical Spares</strong></td>
+      <td class="tc">1,591</td>
+      <td class="tr">TSH 4,495.5M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:100%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">34.1%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Production Consumables</strong></td>
+      <td class="tc">47</td>
+      <td class="tr">TSH 1,856.0M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:42%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">14.1%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Power Plant Spares</strong></td>
+      <td class="tc">349</td>
+      <td class="tr">TSH 1,258.6M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:30%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">9.5%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Electrical Spares</strong></td>
+      <td class="tc">890</td>
+      <td class="tr">TSH 972.0M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:21%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">7.4%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Instrumentation Spare</strong></td>
+      <td class="tc">367</td>
+      <td class="tr">TSH 971.4M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:21%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">7.4%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Automobile-Vehicle</strong></td>
+      <td class="tc">765</td>
+      <td class="tr">TSH 640.3M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:15%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">4.9%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Packing Material</strong></td>
+      <td class="tc">9</td>
+      <td class="tr">TSH 579.6M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:12%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">4.4%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Fuel & Lubricants</strong></td>
+      <td class="tc">39</td>
+      <td class="tr">TSH 441.4M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:9%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">3.3%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Bearing</strong></td>
+      <td class="tc">331</td>
+      <td class="tr">TSH 372.5M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:9%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">2.8%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Logistic Consumable</strong></td>
+      <td class="tc">577</td>
+      <td class="tr">TSH 274.6M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:6%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">2.1%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>QC Spares</strong></td>
+      <td class="tc">80</td>
+      <td class="tr">TSH 167.4M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:3%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">1.3%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Valve</strong></td>
+      <td class="tc">179</td>
+      <td class="tr">TSH 164.8M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:3%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">1.2%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Fasteners</strong></td>
+      <td class="tc">250</td>
+      <td class="tr">TSH 150.7M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:3%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">1.1%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Pipes & Fittings</strong></td>
+      <td class="tc">258</td>
+      <td class="tr">TSH 143.3M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:3%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">1.1%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Civil Construction</strong></td>
+      <td class="tc">106</td>
+      <td class="tr">TSH 136.5M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:3%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">1.0%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Welding Consumables</strong></td>
+      <td class="tc">54</td>
+      <td class="tr">TSH 126.3M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:3%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">1.0%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Tools & Tackles</strong></td>
+      <td class="tc">315</td>
+      <td class="tr">TSH 86.3M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:3%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">0.7%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>General Consumables</strong></td>
+      <td class="tc">128</td>
+      <td class="tr">TSH 81.8M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:3%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">0.6%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>IT Consumables</strong></td>
+      <td class="tc">90</td>
+      <td class="tr">TSH 63.4M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:0%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">0.5%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Plates and Sheets</strong></td>
+      <td class="tc">26</td>
+      <td class="tr">TSH 57.2M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:0%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">0.4%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Paints & Adhesives</strong></td>
+      <td class="tc">40</td>
+      <td class="tr">TSH 50.5M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:0%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">0.4%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Structural Steel</strong></td>
+      <td class="tc">25</td>
+      <td class="tr">TSH 36.4M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:0%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">0.3%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Laboratory Chemicals</strong></td>
+      <td class="tc">44</td>
+      <td class="tr">TSH 20.5M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:0%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">0.2%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>PROJECT</strong></td>
+      <td class="tc">33</td>
+      <td class="tr">TSH 16.4M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:0%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">0.1%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Stationery</strong></td>
+      <td class="tc">74</td>
+      <td class="tr">TSH 16.2M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:0%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">0.1%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Capital Asset</strong></td>
+      <td class="tc">8</td>
+      <td class="tr">TSH 8.6M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:0%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">0.1%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Industrial Gases</strong></td>
+      <td class="tc">10</td>
+      <td class="tr">TSH 4.5M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:0%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">0.0%</span>
+        </div>
+      </td>
+    </tr>
+<tr>
+      <td><strong>Electrical Consumables</strong></td>
+      <td class="tc">12</td>
+      <td class="tr">TSH 4.2M</td>
+      <td style="min-width:130px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:0%;background:var(--orange)"></div></div>
+          <span class="mis-bar-lbl">0.0%</span>
+        </div>
+      </td>
+    </tr>
+</tbody>
+            <tfoot><tr style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">
+              <td>TOTAL</td>
+              <td class="tc">6,697</td>
+              <td class="tr">TSH 13.20B</td>
+              <td></td>
+            </tr></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- Audit progress + Deviation report -->
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="mis-section">
+          <div class="mis-sec-hdr">
+            <i data-lucide="clipboard-check" class="mis-sec-icon"></i>
+            <h3 class="mis-sec-title">Monthly Audit Progress</h3>
+          </div>
+          <div class="mis-table-wrap" style="max-height:220px">
+            <table class="mis-table">
+              <thead><tr><th>Month</th><th>A-Class</th><th>B-Class</th><th>C-Class</th></tr></thead>
+              <tbody><tr><td>Oct-2025</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
+<tr><td>Nov-2025</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
+<tr><td>Dec-2025</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Jan-2026</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Feb-2026</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Mar-2026</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/59</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/167</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/334</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Apr-2026</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/167</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>May-2026</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/167</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Jun-2026</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Jul-2026</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Aug-2026</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Sep-2026</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
+</tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="mis-section">
+          <div class="mis-sec-hdr">
+            <i data-lucide="alert-triangle" class="mis-sec-icon"></i>
+            <h3 class="mis-sec-title">Deviation Report (Items Not Found)</h3>
+          </div>
+          <div class="mis-table-wrap" style="max-height:240px">
+            <table class="mis-table">
+              <thead><tr><th>Month</th><th style="text-align:center">Planned</th><th style="text-align:center">Done</th><th style="text-align:center">A</th><th style="text-align:center">B</th><th style="text-align:center">C</th><th style="text-align:center">Total Dev.</th><th>Remarks</th></tr></thead>
+              <tbody><tr style="background:#FFF7ED">
+      <td>Oct-2025</td>
+      <td class="tc">560</td>
+      <td class="tc">560</td>
+      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:#F59E0B">1</td>
+      <td class="tc" style="color:#94A3B8">—</td>
+      <td class="tc"><span style="color:#EF4444;font-weight:700">1 ⚠</span></td>
+      <td style="font-size:10px;color:var(--text-muted)"></td>
+    </tr>
+<tr style="background:#FFF7ED">
+      <td>Nov-2025</td>
+      <td class="tc">560</td>
+      <td class="tc">560</td>
+      <td class="tc" style="color:#EF4444">2</td>
+      <td class="tc" style="color:#F59E0B">—</td>
+      <td class="tc" style="color:#94A3B8">—</td>
+      <td class="tc"><span style="color:#EF4444;font-weight:700">2 ⚠</span></td>
+      <td style="font-size:10px;color:var(--text-muted)"></td>
+    </tr>
+<tr style="background:#FFF7ED">
+      <td>Dec-2025</td>
+      <td class="tc">560</td>
+      <td class="tc">560</td>
+      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:#F59E0B">2</td>
+      <td class="tc" style="color:#94A3B8">—</td>
+      <td class="tc"><span style="color:#EF4444;font-weight:700">2 ⚠</span></td>
+      <td style="font-size:10px;color:var(--text-muted)"></td>
+    </tr>
+<tr>
+      <td>Jan-2026</td>
+      <td class="tc">560</td>
+      <td class="tc">560</td>
+      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:#F59E0B">—</td>
+      <td class="tc" style="color:#94A3B8">—</td>
+      <td class="tc"><span style="color:var(--text-muted)">0</span></td>
+      <td style="font-size:10px;color:var(--text-muted)"></td>
+    </tr>
+<tr style="background:#FFF7ED">
+      <td>Feb-2026</td>
+      <td class="tc">560</td>
+      <td class="tc">560</td>
+      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:#F59E0B">—</td>
+      <td class="tc" style="color:#94A3B8">1</td>
+      <td class="tc"><span style="color:#EF4444;font-weight:700">1 ⚠</span></td>
+      <td style="font-size:10px;color:var(--text-muted)">BOLT HT ALLEN HEAD M20 X 50MM FULL THREAD GRADE 8.8 (3 Nos Shorte</td>
+    </tr>
+<tr>
+      <td>Mar-2026</td>
+      <td class="tc">560</td>
+      <td class="tc">—</td>
+      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:#F59E0B">—</td>
+      <td class="tc" style="color:#94A3B8">—</td>
+      <td class="tc"><span style="color:var(--text-muted)">0</span></td>
+      <td style="font-size:10px;color:var(--text-muted)"></td>
+    </tr>
+<tr>
+      <td>Apr-2026</td>
+      <td class="tc">558</td>
+      <td class="tc">—</td>
+      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:#F59E0B">—</td>
+      <td class="tc" style="color:#94A3B8">—</td>
+      <td class="tc"><span style="color:var(--text-muted)">0</span></td>
+      <td style="font-size:10px;color:var(--text-muted)"></td>
+    </tr>
+<tr>
+      <td>May-2026</td>
+      <td class="tc">558</td>
+      <td class="tc">—</td>
+      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:#F59E0B">—</td>
+      <td class="tc" style="color:#94A3B8">—</td>
+      <td class="tc"><span style="color:var(--text-muted)">0</span></td>
+      <td style="font-size:10px;color:var(--text-muted)"></td>
+    </tr>
+<tr>
+      <td>Jun-2026</td>
+      <td class="tc">557</td>
+      <td class="tc">—</td>
+      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:#F59E0B">—</td>
+      <td class="tc" style="color:#94A3B8">—</td>
+      <td class="tc"><span style="color:var(--text-muted)">0</span></td>
+      <td style="font-size:10px;color:var(--text-muted)"></td>
+    </tr>
+<tr>
+      <td>Jul-2026</td>
+      <td class="tc">557</td>
+      <td class="tc">—</td>
+      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:#F59E0B">—</td>
+      <td class="tc" style="color:#94A3B8">—</td>
+      <td class="tc"><span style="color:var(--text-muted)">0</span></td>
+      <td style="font-size:10px;color:var(--text-muted)"></td>
+    </tr>
+<tr>
+      <td>Aug-2026</td>
+      <td class="tc">557</td>
+      <td class="tc">—</td>
+      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:#F59E0B">—</td>
+      <td class="tc" style="color:#94A3B8">—</td>
+      <td class="tc"><span style="color:var(--text-muted)">0</span></td>
+      <td style="font-size:10px;color:var(--text-muted)"></td>
+    </tr>
+<tr>
+      <td>Sep-2026</td>
+      <td class="tc">557</td>
+      <td class="tc">—</td>
+      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:#F59E0B">—</td>
+      <td class="tc" style="color:#94A3B8">—</td>
+      <td class="tc"><span style="color:var(--text-muted)">0</span></td>
+      <td style="font-size:10px;color:var(--text-muted)"></td>
+    </tr>
+</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ AMC ══ -->
+  <div class="hr-panel" id="store-amc">
+    <div class="mis-kv-strip" style="margin-bottom:16px">
+      <div class="mis-kv"><div class="mis-kv-val">13</div><div class="mis-kv-lbl">Total AMC Contracts</div></div>
+      <div class="mis-kv"><div class="mis-kv-val" style="color:#10B981">6</div><div class="mis-kv-lbl">Active</div></div>
+      <div class="mis-kv"><div class="mis-kv-val" style="color:#D97706">1</div><div class="mis-kv-lbl">Expiring Soon</div></div>
+      <div class="mis-kv"><div class="mis-kv-val" style="color:#EF4444">6</div><div class="mis-kv-lbl">Expired</div></div>
+    </div>
     <div class="mis-section">
       <div class="mis-sec-hdr">
         <i data-lucide="wrench" class="mis-sec-icon"></i>
-        <h3 class="mis-sec-title">Spares &amp; Consumables — Monthly Stock Taking</h3>
+        <h3 class="mis-sec-title">Annual Maintenance Contracts (13)</h3>
       </div>
       <div class="mis-table-wrap">
         <table class="mis-table">
           <thead>
-            <tr>
-              <th>Month</th>
-              <th>A-Class</th>
-              <th>B-Class</th>
-              <th>C-Class</th>
-            </tr>
+            <tr><th>#</th><th>Department</th><th>Agency / Vendor</th><th>Particulars</th><th style="text-align:center">From</th><th style="text-align:center">To</th><th>Visits / Year</th><th style="text-align:right">Annual Charge</th><th style="text-align:center">Status</th></tr>
           </thead>
-          <tbody>
-            <tr><td>Oct-2025</td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></td></tr>
-<tr><td>Nov-2025</td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></td></tr>
-<tr><td>Dec-2025</td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></td></tr>
-<tr style="font-weight:700;background:#F0F7FF"><td>Jan-2026</td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></td></tr>
-<tr style="font-weight:700;background:#F0F7FF"><td>Feb-2026</td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></td></tr>
-<tr style="font-weight:700;background:#F0F7FF"><td>Mar-2026</td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/59</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/167</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/334</span></td></tr>
-<tr style="font-weight:700;background:#F0F7FF"><td>Apr-2026</td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/167</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></td></tr>
-<tr style="font-weight:700;background:#F0F7FF"><td>May-2026</td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/167</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></td></tr>
-<tr style="font-weight:700;background:#F0F7FF"><td>Jun-2026</td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></td></tr>
-<tr style="font-weight:700;background:#F0F7FF"><td>Jul-2026</td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></td></tr>
-<tr style="font-weight:700;background:#F0F7FF"><td>Aug-2026</td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></td></tr>
-<tr style="font-weight:700;background:#F0F7FF"><td>Sep-2026</td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></td><td><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></td></tr>
-
-          </tbody>
+          <tbody><tr>
+      <td>1</td>
+      <td>QC</td>
+      <td><strong>Avantgarde INC FZCO</strong></td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">XRF Analyser</td>
+      <td class="tc" style="font-size:10px">01.04.2025</td>
+      <td class="tc" style="font-size:10px">31.03.2026</td>
+      <td style="font-size:10px;color:var(--text-muted)">1 PM & 1 BM</td>
+      <td class="tr" style="font-size:10.5px">USD 11,764</td>
+      <td class="tc"><span class="mis-badge expired">Expired</span></td>
+    </tr>
+<tr>
+      <td>2</td>
+      <td>Powerplant</td>
+      <td><strong>Car & General Trading Ltd</strong></td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">CPP - DG Maintenance - 3 Nos (1.5MW Each) + Kiln DG (1 No)</td>
+      <td class="tc" style="font-size:10px">18.03.2025</td>
+      <td class="tc" style="font-size:10px">17.03.2026</td>
+      <td style="font-size:10px;color:var(--text-muted)">2 Visits Per DG & 2 Inspection Visits / Year</td>
+      <td class="tr" style="font-size:10.5px">TSH 9,950,000</td>
+      <td class="tc"><span class="mis-badge expired">Expired</span></td>
+    </tr>
+<tr>
+      <td>3</td>
+      <td>E&I</td>
+      <td><strong>Endeavour Software Solutions Limited</strong></td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">Time & Attendance System</td>
+      <td class="tc" style="font-size:10px">01.06.2025</td>
+      <td class="tc" style="font-size:10px">31.05.2026</td>
+      <td style="font-size:10px;color:var(--text-muted)">Online (Need Based Visits)</td>
+      <td class="tr" style="font-size:10.5px">TSH 5,562,000</td>
+      <td class="tc"><span class="mis-badge expired">Expired</span></td>
+    </tr>
+<tr>
+      <td>4</td>
+      <td>E&I</td>
+      <td><strong>Endel Tanzania Limited</strong></td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">5 x Weigh Bridge & 3 x Platform Scales</td>
+      <td class="tc" style="font-size:10px">01.11.2025</td>
+      <td class="tc" style="font-size:10px">30.10.2026</td>
+      <td style="font-size:10px;color:var(--text-muted)">2</td>
+      <td class="tr" style="font-size:10.5px">TSH 13,419,000</td>
+      <td class="tc"><span class="mis-badge valid">Active</span></td>
+    </tr>
+<tr>
+      <td>5</td>
+      <td>E&I</td>
+      <td><strong>I Magic Solution</strong></td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">RFID System for WB1, WB2, MInes WB1 & WB2 and 02 nos Of Packer Sy</td>
+      <td class="tc" style="font-size:10px">01.08.2025</td>
+      <td class="tc" style="font-size:10px">31.07.2026</td>
+      <td style="font-size:10px;color:var(--text-muted)">Online (No Visit)</td>
+      <td class="tr" style="font-size:10.5px">USD 2,353</td>
+      <td class="tc"><span class="mis-badge expiring">Expiring</span></td>
+    </tr>
+<tr>
+      <td>6</td>
+      <td>E&I</td>
+      <td><strong>Pinnacle Computer Systems LLC</strong></td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">Orion ERP</td>
+      <td class="tc" style="font-size:10px">01.01.2026</td>
+      <td class="tc" style="font-size:10px">31.12.2026</td>
+      <td style="font-size:10px;color:var(--text-muted)">Online (No Visit)</td>
+      <td class="tr" style="font-size:10.5px">USD 8,000</td>
+      <td class="tc"><span class="mis-badge valid">Active</span></td>
+    </tr>
+<tr>
+      <td>7</td>
+      <td>E&I</td>
+      <td><strong>Satconet</strong></td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">ICT Service Outsourcing</td>
+      <td class="tc" style="font-size:10px">01.10.2023</td>
+      <td class="tc" style="font-size:10px">30.09.2024</td>
+      <td style="font-size:10px;color:var(--text-muted)">Online (Need Based Visits)</td>
+      <td class="tr" style="font-size:10.5px">TSH 25,910,000</td>
+      <td class="tc"><span class="mis-badge expired">Expired</span></td>
+    </tr>
+<tr>
+      <td>8</td>
+      <td>Admin</td>
+      <td><strong>Total Cool</strong></td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">Samsung ACs (Head Office)</td>
+      <td class="tc" style="font-size:10px">01.03.2026</td>
+      <td class="tc" style="font-size:10px">28.02.2027</td>
+      <td style="font-size:10px;color:var(--text-muted)">4 Visits</td>
+      <td class="tr" style="font-size:10.5px">TSH 2,640,000</td>
+      <td class="tc"><span class="mis-badge valid">Active</span></td>
+    </tr>
+<tr>
+      <td>9</td>
+      <td>Accounts</td>
+      <td><strong>Pergamon Group Limited</strong></td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">TRA Fiscal Device 611 Maintenance</td>
+      <td class="tc" style="font-size:10px">01.01.2026</td>
+      <td class="tc" style="font-size:10px">31.12.2026</td>
+      <td style="font-size:10px;color:var(--text-muted)">Online (No Visit)</td>
+      <td class="tr" style="font-size:10.5px">TSH 400,000</td>
+      <td class="tc"><span class="mis-badge valid">Active</span></td>
+    </tr>
+<tr>
+      <td>10</td>
+      <td>Accounts</td>
+      <td><strong>Power Computers Ltd</strong></td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">TRA Fiscal Device Maintenance</td>
+      <td class="tc" style="font-size:10px">01.06.2025</td>
+      <td class="tc" style="font-size:10px">30.05.2026</td>
+      <td style="font-size:10px;color:var(--text-muted)">Online (No Visit)</td>
+      <td class="tr" style="font-size:10.5px">TSH 457,000</td>
+      <td class="tc"><span class="mis-badge expired">Expired</span></td>
+    </tr>
+<tr>
+      <td>11</td>
+      <td>Safety</td>
+      <td><strong>Winow Fire & Motor Works Limited</strong></td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">Fire Extinguishers</td>
+      <td class="tc" style="font-size:10px">01.05.2025</td>
+      <td class="tc" style="font-size:10px">31.04.2026</td>
+      <td style="font-size:10px;color:var(--text-muted)">3 Visits</td>
+      <td class="tr" style="font-size:10.5px">TSH 7,010,000</td>
+      <td class="tc"><span class="mis-badge valid">Active</span></td>
+    </tr>
+<tr>
+      <td>12</td>
+      <td>E&I</td>
+      <td><strong>Wintech Sales & Services Ltd</strong></td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">Lift Service & Inspection</td>
+      <td class="tc" style="font-size:10px">01.02.2024</td>
+      <td class="tc" style="font-size:10px">30.04.2025</td>
+      <td style="font-size:10px;color:var(--text-muted)">6 Visits</td>
+      <td class="tr" style="font-size:10.5px">TSH 9,200,000</td>
+      <td class="tc"><span class="mis-badge expired">Expired</span></td>
+    </tr>
+<tr>
+      <td>13</td>
+      <td>E&I</td>
+      <td><strong>Ahead Africa Solution Ltd</strong></td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">AMC for IT Services</td>
+      <td class="tc" style="font-size:10px">15.09.2025</td>
+      <td class="tc" style="font-size:10px">14.09.2026</td>
+      <td style="font-size:10px;color:var(--text-muted)">2 Resident Engineers Available On Site in 2 S</td>
+      <td class="tr" style="font-size:10.5px">TSH 38,880,000</td>
+      <td class="tc"><span class="mis-badge valid">Active</span></td>
+    </tr>
+</tbody>
         </table>
       </div>
     </div>
   </div>
+
 </div>
 
 <!-- ══════════════════ FOOTER ══════════════════ -->
@@ -2262,6 +2976,17 @@ function showCompTab(id) {
 }
 
 document.addEventListener('DOMContentLoaded', () => renderCerts(CERT_DATA));
+</script>
+
+<script>
+function showStoreTab(id) {
+  document.querySelectorAll('#panel-store .hr-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('#panel-store .hr-stab').forEach(t => t.classList.remove('active'));
+  const panel = document.getElementById('store-' + id);
+  if (panel) panel.classList.add('active');
+  const btn = [...document.querySelectorAll('#panel-store .hr-stab')].find(b => b.getAttribute('onclick')?.includes(id));
+  if (btn) btn.classList.add('active');
+}
 </script>
 </body>
 </html>
