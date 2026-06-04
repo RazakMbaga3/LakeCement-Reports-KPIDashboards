@@ -139,13 +139,13 @@ const PERMISSIONS = {
   },
 
   it: {
-    mis_tabs: ['assets'],
+    mis_tabs: ['assets','audit'],
     hr:         null,
     assets:     { it:'edit',       vehicles:null,   spares:null,        capex:'own',  land:null },
     compliance: null,
     store:      null,
     kpi:        { depts:['summary'], fill:false, daily:false },
-    canViewAudit:  false,
+    canViewAudit:  true,
     canManageUsers:false,
     canExport:     false,
   },
