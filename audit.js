@@ -243,7 +243,7 @@ function renderAccessMatrix() {
   }
 
   const ROLE_LABELS = {
-    md: 'MD / CEO', admin: 'System Admin', management: 'Senior Mgt',
+    md: 'MD', admin: 'System Admin', management: 'Senior Mgt',
     hr: 'HR & Admin', finance: 'Finance', stores: 'Stores',
     cpp: 'Power Plant', pm: 'Projects & Maint', it: 'IT',
     logistics: 'Logistics', mining: 'Mining', production: 'Production & QC',
