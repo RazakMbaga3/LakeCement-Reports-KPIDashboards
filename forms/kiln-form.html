@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – Kiln & Pyro Daily Report</title>
+  <link rel="icon" type="image/png" href="../favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <script src="../auth.js"></script>
+  <link rel="stylesheet" href="forms.css" />
+</head>
+<body>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header class="top-header">
+  <div class="header-left">
+    <div class="logo-block">
+      <img class="nyati-logo" src="../NYATI-LOGO.png" alt="Nyati Cement" />
+      <div class="logo-text">
+        <img class="lc-wordmark" src="../lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
+        <span class="company-sub">Kiln &amp; Pyro Daily Report</span>
+      </div>
+    </div>
+  </div>
+  <div class="header-center">
+    <div class="view-switcher">
+      <a href="../index.html" class="vs-tab"><i data-lucide="bar-chart-2" class="vs-icon"></i><span>Monthly KPIs</span></a>
+      <a href="../daily-report.html" class="vs-tab active"><i data-lucide="clipboard-list" class="vs-icon"></i><span>Daily Reports</span></a>
+      <a href="../analytics.html" class="vs-tab"><i data-lucide="trending-up" class="vs-icon"></i><span>Trends</span></a>
+      <a href="../mis.html" class="vs-tab"><i data-lucide="layout-dashboard" class="vs-icon"></i><span>MIS</span></a>
+    </div>
+  </div>
+  <div class="header-right">
+    <div id="auth-user-info"></div>
+    <a href="index.html" style="display:inline-flex;align-items:center;gap:7px;padding:7px 16px;border-radius:var(--radius);background:var(--orange);color:white;font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(244,149,69,.35);white-space:nowrap;flex-shrink:0">
+      <i data-lucide="clipboard-list" style="width:13px;height:13px;stroke-width:2.5;flex-shrink:0"></i>
+      Daily Entry Forms
+    </a>
+    <div class="header-meta"><span id="live-date"></span></div>
+  </div>
+</header>
+
+<!-- ══════════════════ NAV ══════════════════ -->
+<nav class="dept-nav">
+  <div class="nav-inner">
+    <span class="nav-label">DAILY REPORTS</span>
+    <button class="nav-btn" onclick="location.href='../daily-report.html'"><i data-lucide="factory" class="nav-icon"></i> Production</button>
+    <button class="nav-btn" onclick="location.href='../power-plant-report.html'"><i data-lucide="zap" class="nav-icon"></i> Power Plant (CPP)</button>
+    <button class="nav-btn" onclick="location.href='../mines-report.html'"><i data-lucide="pickaxe" class="nav-icon"></i> Mines</button>
+    <button class="nav-btn" onclick="location.href='dispatch-form.html'"><i data-lucide="truck" class="nav-icon"></i> Dispatch</button>
+    <button class="nav-btn" onclick="location.href='stoppage-form.html'"><i data-lucide="alert-triangle" class="nav-icon"></i> Stoppages</button>
+    <button class="nav-btn active"><i data-lucide="flame" class="nav-icon"></i> Kiln &amp; Pyro</button>
+    <button class="nav-btn" onclick="location.href='cement-mill-form.html'"><i data-lucide="package" class="nav-icon"></i> Cement Mill</button>
+    <button class="nav-btn" onclick="location.href='cpp-form.html'"><i data-lucide="zap" class="nav-icon"></i> CPP Form</button>
+    <button class="nav-btn" onclick="location.href='quality-form.html'"><i data-lucide="flask-conical" class="nav-icon"></i> Quality</button>
+    <button class="nav-btn" onclick="location.href='materials-form.html'"><i data-lucide="package" class="nav-icon"></i> Materials</button>
+    <button class="nav-btn" onclick="location.href='power-form.html'"><i data-lucide="activity" class="nav-icon"></i> Power Cons.</button>
+    <button class="nav-btn" onclick="location.href='pile-quality-form.html'"><i data-lucide="layers" class="nav-icon"></i> Pile Quality</button>
+    <button class="nav-btn" onclick="location.href='limestone-form.html'"><i data-lucide="mountain" class="nav-icon"></i> Limestone %</button>
+    <div class="nav-divider"></div>
+    <button class="nav-btn" onclick="location.href='overtime-form.html'"><i data-lucide="clock" class="nav-icon"></i> Overtime</button>
+    <div class="nav-divider"></div>
+    <button class="nav-btn secondary" onclick="window.print()"><i data-lucide="printer" class="nav-icon"></i> Print / PDF</button>
+  </div>
+</nav>
+
+<!-- ══════════════════ TOOLBAR ══════════════════ -->
+<div class="toolbar">
+  <div class="tb-group">
+    <span class="tb-lbl">Date</span>
+    <input type="date" class="tb-ctl" value="2026-06-04" data-field="date" />
+  </div>
+  <div class="tb-sep"></div>
+  <div class="tb-group">
+    <span class="tb-lbl">Production Head</span>
+    <input type="text" class="tb-ctl" data-field="prepared_by" placeholder="Kiln / Pyro Head…" style="min-width:160px;width:auto" />
+  </div>
+  <div class="tb-sep"></div>
+  <span class="rpt-pill">DRAFT</span>
+  <div class="tb-leg">
+    <div class="leg"><div class="ld" style="background:#FDE68A;border:1px solid #B45309"></div>Manual</div>
+    <div class="leg"><div class="ld" style="background:#BFDBFE;border:1px solid #1D4ED8"></div>System</div>
+    <div class="leg"><div class="ld" style="background:#BBF7D0;border:1px solid #15803D"></div>Formula</div>
+  </div>
+  <div class="btn-grp">
+    <button class="btn btn-out"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
+    <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+    <button class="btn btn-sub"><i data-lucide="check-circle" class="btn-icon"></i> Submit Report</button>
+  </div>
+</div>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<main class="fm-main">
+
+  <!-- ══ KPI SUMMARY STRIP ════════════════════════════════════════ -->
+  <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr)">
+    <div class="kt kt-m">
+      <span class="kt-badge">Manual</span>
+      <div class="kt-lbl">Clinker Produced — On Date</div>
+      <div class="kt-val" data-kpi="kiln_prod_kpi">—</div>
+      <div class="kt-unit">MT / Day</div>
+      <div class="kt-bar"><div class="kt-bar-fill" style="width:0%"></div></div>
+      <div class="kt-foot"><span class="kt-tgt">Target: 1,650 MT</span><span class="kt-pct">—</span></div>
+    </div>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
+      <div class="kt-lbl">Kiln Availability</div>
+      <div class="kt-val" data-kpi="kiln_avail_kpi">—</div>
+      <div class="kt-unit">% — Target &gt; 90%</div>
+    </div>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
+      <div class="kt-lbl">Specific Heat Consumption</div>
+      <div class="kt-val" data-kpi="kiln_sp_heat_kpi">—</div>
+      <div class="kt-unit">kcal / kg Clinker — Target &lt; 800</div>
+    </div>
+    <div class="kt kt-m">
+      <span class="kt-badge">Manual</span>
+      <div class="kt-lbl">Kiln Running Hours</div>
+      <div class="kt-val" data-kpi="kiln_run_kpi">—</div>
+      <div class="kt-unit">hrs / 24 hrs available</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       BLOCK 1 — KILN OPERATING DATA
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="flame" class="title-icon"></i> Kiln &amp; Pyro — Operating Data</div>
+        <div class="rcard-sub">Running hours, production, clinker output &amp; key operating parameters</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip orange">PRODUCTION HEAD</span>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:900px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" style="min-width:260px">Parameter</th>
+            <th class="grp-hdr">Unit</th>
+            <th class="grp-hdr">On Date</th>
+            <th class="grp-hdr">MTD</th>
+            <th class="grp-hdr">YTD</th>
+            <th class="grp-hdr">Target (Day)</th>
+            <th class="grp-hdr">Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="srow"><td colspan="7">Kiln (Rotary)</td></tr>
+          <tr>
+            <td class="tp">Running Hours</td><td class="ts">hrs</td>
+            <td class="cm"><input class="ci" type="number" value="24.00" step="0.25" min="0" max="24" data-field="kiln_run_hrs" /></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="24" /></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Total Stoppage</td><td class="ts">min</td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="kiln_stop_min" /></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" placeholder="Reason if any…" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Availability</td><td class="ts">%</td>
+            <td class="cf"><div class="cv" data-kpi="kiln_avail_kpi2">—</div></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="ts">≥ 90%</td><td class="cs"><div class="cv">Formula: (1440 − stop_min) ÷ 1440 × 100</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Clinker Production — On Date</td><td class="ts">MT</td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="kiln_prod_mt" /></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="1650" /></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Average Feed Rate (Kiln)</td><td class="ts">TPH</td>
+            <td class="cm"><input class="ci" type="number" value="0" step="0.1" data-field="kiln_feed_tph" /></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="72" /></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Kiln Speed (Avg)</td><td class="ts">RPM</td>
+            <td class="cm"><input class="ci" type="number" value="0" step="0.01" data-field="kiln_speed_rpm" /></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="3.5" step="0.1" /></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+
+          <tr class="srow"><td colspan="7">Preheater &amp; Calciner</td></tr>
+          <tr>
+            <td class="tp">Degree of Calcination</td><td class="ts">%</td>
+            <td class="cm"><input class="ci" type="number" value="0" step="0.1" data-field="kiln_calcination_pct" /></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">≥ 92%</div></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Kiln Feed LSF</td><td class="ts">—</td>
+            <td class="cm"><input class="ci" type="number" value="0" step="0.1" data-field="kiln_feed_lsf" /></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">95–100</div></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+
+          <tr class="srow"><td colspan="7">Clinker Cooler</td></tr>
+          <tr>
+            <td class="tp">Cooler Running Hours</td><td class="ts">hrs</td>
+            <td class="cm"><input class="ci" type="number" value="24.00" step="0.25" data-field="cooler_run_hrs" /></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="24" /></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Cooler Efficiency</td><td class="ts">%</td>
+            <td class="cm"><input class="ci" type="number" value="0" step="0.1" data-field="cooler_eff_pct" /></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">≥ 70%</div></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       BLOCK 2 — TEMPERATURES
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="thermometer" class="title-icon"></i> Temperature Profile — Day Average</div>
+        <div class="rcard-sub">Critical process temperatures — kiln, preheater, cooler</div>
+      </div>
+      <div class="rcard-chips"><span class="rcard-chip orange">PRODUCTION HEAD</span></div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:900px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" style="min-width:240px">Measurement Point</th>
+            <th class="grp-hdr">Unit</th>
+            <th class="grp-hdr">On Date Avg</th>
+            <th class="grp-hdr">MTD Avg</th>
+            <th class="grp-hdr">Normal Range</th>
+            <th class="grp-hdr">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="srow"><td colspan="6">Kiln Temperatures</td></tr>
+          <tr>
+            <td class="tp">Burning Zone Temperature</td><td class="ts">°C</td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="kiln_temp_bz" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">1,350 – 1,450 °C</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Kiln Inlet Temperature</td><td class="ts">°C</td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="kiln_temp_inlet" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">900 – 1,050 °C</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Kiln Outlet (Clinker) Temperature</td><td class="ts">°C</td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="kiln_temp_outlet" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">1,350 – 1,480 °C</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+          <tr class="srow"><td colspan="6">Preheater Temperatures</td></tr>
+          <tr>
+            <td class="tp">Preheater Exit Gas (Stage 1)</td><td class="ts">°C</td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="kiln_temp_ph_exit" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">300 – 380 °C</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Preheater Bottom (Stage 4/5)</td><td class="ts">°C</td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="kiln_temp_ph_bottom" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">850 – 950 °C</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+          <tr class="srow"><td colspan="6">Cooler Temperatures</td></tr>
+          <tr>
+            <td class="tp">Cooler Exit Air Temperature</td><td class="ts">°C</td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="kiln_temp_cooler_exit" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">65 – 120 °C</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Clinker Discharge Temperature</td><td class="ts">°C</td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="kiln_temp_clinker_discharge" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">≤ 100 + ambient °C</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       BLOCK 3 — COAL CONSUMPTION (KILN)
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="flame" class="title-icon"></i> Fuel Consumption — Kiln Coal</div>
+        <div class="rcard-sub">Coal consumed for pyro processing — specific heat computation</div>
+      </div>
+      <div class="rcard-chips"><span class="rcard-chip orange">PRODUCTION · STORES</span></div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:900px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" style="min-width:240px">Parameter</th>
+            <th class="grp-hdr">Unit</th>
+            <th class="grp-hdr">On Date</th>
+            <th class="grp-hdr">MTD</th>
+            <th class="grp-hdr">YTD</th>
+            <th class="grp-hdr">Target</th>
+            <th class="grp-hdr">Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="tp">Coal Consumed — Kiln</td><td class="ts">MT</td>
+            <td class="cm"><input class="ci" type="number" value="0" step="0.1" data-field="kiln_coal_cons" /></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="265" /></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" placeholder="Supplier mix if different…" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Coal NCV (Net Calorific Value)</td><td class="ts">kcal/kg</td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="kiln_coal_ncv" /></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">≥ 4,800 kcal/kg</div></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Specific Heat Consumption</td><td class="ts">kcal/kg clinker</td>
+            <td class="cf"><div class="cv" data-kpi="kiln_sp_heat_kpi2">—</div></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">&lt; 800 kcal/kg</div></td>
+            <td class="cs"><div class="cv">Formula: coal_cons × NCV × 1,000 ÷ clinker_prod</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Coal Consumption % (of clinker)</td><td class="ts">%</td>
+            <td class="cf"><div class="cv" data-kpi="kiln_coal_pct">—</div></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">~14–16%</div></td>
+            <td class="cs"><div class="cv">Formula: coal_cons ÷ clinker_prod × 100</div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       BLOCK 4 — RAW MILL
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="wind" class="title-icon"></i> Raw Mill (RM-1) — Operating Data</div>
+        <div class="rcard-sub">Raw meal production, running hours &amp; silo status</div>
+      </div>
+      <div class="rcard-chips"><span class="rcard-chip orange">PRODUCTION HEAD</span></div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:900px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" style="min-width:240px">Parameter</th>
+            <th class="grp-hdr">Unit</th>
+            <th class="grp-hdr">On Date</th>
+            <th class="grp-hdr">MTD</th>
+            <th class="grp-hdr">YTD</th>
+            <th class="grp-hdr">Target (Day)</th>
+            <th class="grp-hdr">Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="tp">RM-1 Running Hours</td><td class="ts">hrs</td>
+            <td class="cm"><input class="ci" type="number" value="0" step="0.25" max="24" data-field="rm1_run_hrs" /></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="20" /></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">RM-1 Production (Raw Meal)</td><td class="ts">MT</td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rm1_prod_mt" /></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="1800" /></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">RM-1 Average Feed Rate</td><td class="ts">TPH</td>
+            <td class="cm"><input class="ci" type="number" value="0" step="0.5" data-field="rm1_feed_tph" /></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="90" /></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Raw Meal to Silo (Opening Stock)</td><td class="ts">MT</td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rm1_meal_silo_open" /></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">Raw Meal Silo (Closing Stock)</td><td class="ts">MT</td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rm1_meal_silo_close" /></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="tp">RM Stoppages</td><td class="ts">min</td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rm1_stop_min" /></td>
+            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" placeholder="Reason if any…" /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SIGN-OFF -->
+  <div class="rcard">
+    <div class="rcard-hdr"><div class="rcard-title"><i data-lucide="pen-line" class="title-icon"></i> Report Sign-off &amp; Approval</div></div>
+    <div class="signoff">
+      <div class="so-cell">
+        <div class="so-role">Production Head</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time signed" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">Shift Supervisor</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time reviewed" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">Plant Manager</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time approved" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">Technical Manager</div>
+        <input class="so-in" placeholder="Full name…" />
+        <input class="so-time" placeholder="Time approved" />
+      </div>
+    </div>
+    <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span style="font-size:11px;color:var(--text-muted)">
+        Status: <strong style="color:var(--orange)">DRAFT</strong>
+      </span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-out"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+        <button class="btn btn-sub"><i data-lucide="lock" class="btn-icon"></i> Submit &amp; Lock</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span>Kiln &amp; Pyro Daily Report &mdash; <span id="footer-date"></span></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  lucide.createIcons();
+  requireAuth();
+  applyDailyPermissions();
+  const now = new Date();
+  const opts = { weekday:'short', year:'numeric', month:'short', day:'numeric' };
+  const str  = now.toLocaleDateString('en-GB', opts);
+  ['live-date','footer-date'].forEach(id => { const e = document.getElementById(id); if (e) e.textContent = str; });
+</script>
+<script src="form-persist.js"></script>
+<script>initFormPersist('kiln');</script>
+<script src="nav-status.js"></script>
+<script src="collapsible.js"></script>
+<script src="excel-import.js"></script>
+<script src="excel-export.js"></script>
+<script src="kpi-live.js"></script>
+<script>
+initKpiLive([
+  /* Clinker production KPI card */
+  { kpi:'kiln_prod_kpi', field:'kiln_prod_mt', fmt:'n0',
+    target:1650, sign:'>=', targetLabel:'Target: 1,650 MT'
+  },
+  /* Kiln availability — (1440 − stop_min) / 1440 × 100 */
+  { kpi:'kiln_avail_kpi', fmt:'pct1',
+    compute: function(f,n){ return (1440 - n(f.kiln_stop_min)) / 1440 * 100; },
+    target:90, sign:'>=', targetLabel:'Target: ≥ 90%'
+  },
+  { kpi:'kiln_avail_kpi2', fmt:'pct1',
+    compute: function(f,n){ return (1440 - n(f.kiln_stop_min)) / 1440 * 100; }
+  },
+  /* Running hours KPI */
+  { kpi:'kiln_run_kpi', field:'kiln_run_hrs', fmt:'n1' },
+  /* Specific heat — coal_cons(MT) × NCV(kcal/kg) × 1000 ÷ clinker(MT) */
+  { kpi:'kiln_sp_heat_kpi', fmt:'n0',
+    compute: function(f,n){
+      var prod = n(f.kiln_prod_mt), coal = n(f.kiln_coal_cons), ncv = n(f.kiln_coal_ncv);
+      return (prod > 0 && ncv > 0) ? coal * ncv * 1000 / prod : null;
+    },
+    target:800, sign:'<=', targetLabel:'Target: < 800 kcal/kg'
+  },
+  { kpi:'kiln_sp_heat_kpi2', fmt:'n0',
+    compute: function(f,n){
+      var prod = n(f.kiln_prod_mt), coal = n(f.kiln_coal_cons), ncv = n(f.kiln_coal_ncv);
+      return (prod > 0 && ncv > 0) ? coal * ncv * 1000 / prod : null;
+    }
+  },
+  /* Coal % of clinker */
+  { kpi:'kiln_coal_pct', fmt:'pct1',
+    compute: function(f,n){
+      var prod = n(f.kiln_prod_mt), coal = n(f.kiln_coal_cons);
+      return (prod > 0) ? coal / prod * 100 : null;
+    }
+  }
+]);
+</script>
+</body>
+</html>

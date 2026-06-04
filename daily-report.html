@@ -398,19 +398,19 @@
 
   <!-- ── KPI SUMMARY STRIP ── -->
   <div class="kpi-strip">
-    <div class="kt kt-s">
-      <span class="kt-badge">System</span>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Clinker Produced Today</div>
-      <div class="kt-val">1,625</div>
+      <div class="kt-val" data-kpi="clinker_today">—</div>
       <div class="kt-unit">MT / On Date</div>
-      <div class="kt-vs vs-ok">▲ Kiln running 24.00 hrs</div>
+      <div class="kt-vs vs-ok">Auto-loaded from Kiln form</div>
     </div>
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Cement Produced Today</div>
-      <div class="kt-val">250</div>
-      <div class="kt-unit">MT / On Date (42.5R)</div>
-      <div class="kt-vs vs-wa">CM-1 idle · CM-2 running</div>
+      <div class="kt-val" data-kpi="cement_today">—</div>
+      <div class="kt-unit">MT / On Date (CM-1 + CM-2)</div>
+      <div class="kt-vs vs-wa">Auto-loaded from Cement Mill form</div>
     </div>
     <div class="kt kt-s">
       <span class="kt-badge">System</span>
@@ -1481,9 +1481,21 @@ initKpiLive([
 <script src="forms/report-loader.js"></script>
 <script>
 initReportLoader({
-  forms: ['materials', 'power-cons', 'quality', 'stoppage'],
+  forms: ['materials', 'power-cons', 'quality', 'stoppage', 'kiln', 'cement-mill'],
 
   computes: [
+    /* ── Clinker — from kiln form ───────────────────────────────────── */
+    { kpi: 'clinker_today', fmt: 'n0',
+      compute: function(d, n) { return n(d.kiln_prod_mt) || null; }
+    },
+    /* ── Cement — from cement-mill form ─────────────────────────────── */
+    { kpi: 'cement_today', fmt: 'n0',
+      compute: function(d, n) {
+        var cm1 = n(d.cm1_425r_mt)+n(d.cm1_425n_mt)+n(d.cm1_325n_mt)+n(d.cm1_opc_mt);
+        var cm2 = n(d.cm2_425r_mt)+n(d.cm2_425n_mt)+n(d.cm2_425n_bm_mt)+n(d.cm2_325n_mt);
+        return (cm1+cm2) > 0 ? cm1+cm2 : null;
+      }
+    },
     /* ── Power ─────────────────────────────────────────────────────── */
     { kpi: 'total_power', fmt: 'n0',
       compute: function(d, n) {

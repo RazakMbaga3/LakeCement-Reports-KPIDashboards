@@ -17,16 +17,20 @@
 
   /* URL fragment → form ID mapping */
   const URL_MAP = {
-    'daily-report.html':       'production',
-    'power-plant-report.html': 'power-plant',
-    'mines-report.html':       'mines',
-    'dispatch-form.html':      'dispatch',
-    'stoppage-form.html':      'stoppage',
-    'quality-form.html':       'quality',
-    'materials-form.html':     'materials',
-    'power-form.html':         'power-cons',
-    'pile-quality-form.html':  'pile-quality',
-    'cpp-form.html':           'cpp',
+    'daily-report.html':        'production',
+    'power-plant-report.html':  'power-plant',
+    'mines-report.html':        'mines',
+    'dispatch-form.html':       'dispatch',
+    'stoppage-form.html':       'stoppage',
+    'quality-form.html':        'quality',
+    'materials-form.html':      'materials',
+    'power-form.html':          'power-cons',
+    'pile-quality-form.html':   'pile-quality',
+    'cpp-form.html':            'cpp',
+    'kiln-form.html':           'kiln',
+    'cement-mill-form.html':    'cement-mill',
+    'limestone-form.html':      'limestone',
+    'overtime-form.html':       'overtime',
   };
 
   function today() {

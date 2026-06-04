@@ -331,45 +331,45 @@
 
   <!-- ── SUMMARY STRIP ── -->
   <div class="kpi-strip">
-    <div class="kt kt-m">
-      <span class="kt-badge">Manual</span>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Gross Power Generated</div>
-      <div class="kt-val">139,400</div>
+      <div class="kt-val" data-kpi="cpp_gross_gen">—</div>
       <div class="kt-unit">kWh / On Date</div>
-      <div class="kt-vs vs-wa">▼ PLF 58.08% — below 80% target</div>
+      <div class="kt-vs vs-wa">Auto-loaded from CPP Form</div>
     </div>
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Net Power Exported</div>
-      <div class="kt-val">122,243</div>
+      <div class="kt-val" data-kpi="cpp_net_gen">—</div>
       <div class="kt-unit">kWh (Gross − Aux)</div>
-      <div class="kt-vs vs-wa">▼ Aux consumption 12.31% of gross</div>
+      <div class="kt-vs vs-wa">Auto-loaded from CPP Form</div>
     </div>
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Plant Load Factor</div>
-      <div class="kt-val">58.08%</div>
+      <div class="kt-val" data-kpi="cpp_plf">—</div>
       <div class="kt-unit">% PLF — Target 80%</div>
-      <div class="kt-vs vs-ng">▼ 21.9 pp below target</div>
+      <div class="kt-vs vs-ng">Formula: Gross ÷ (10,000 kW × 24 hrs)</div>
     </div>
-    <div class="kt kt-m">
-      <span class="kt-badge">Manual</span>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Coal Consumed (Boiler)</div>
-      <div class="kt-val">132</div>
+      <div class="kt-val" data-kpi="cpp_coal">—</div>
       <div class="kt-unit">MT / On Date</div>
-      <div class="kt-vs vs-ok">▲ Heat Rate 3,888 kcal/kWh — within norm</div>
+      <div class="kt-vs vs-ok">Auto-loaded from CPP Form</div>
     </div>
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Heat Rate</div>
-      <div class="kt-val">3,888</div>
+      <div class="kt-val" data-kpi="cpp_heat_rate">—</div>
       <div class="kt-unit">kcal/kWh — Target &lt; 4,200</div>
-      <div class="kt-vs vs-ok">▲ Acceptable thermal efficiency</div>
+      <div class="kt-vs vs-ok">Formula: coal × GCV × 1000 ÷ gross_gen</div>
     </div>
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Specific Fuel Consumption</div>
-      <div class="kt-val">0.95</div>
+      <div class="kt-val" data-kpi="cpp_sfc">—</div>
       <div class="kt-unit">kg Coal / kWh — Target &lt; 0.90</div>
       <div class="kt-bar"><div class="kt-bar-fill" style="width:90%"></div></div>
       <div class="kt-foot">
@@ -933,6 +933,46 @@
 <script>initFormPersist('power-plant');</script>
 <script src="forms/nav-status.js"></script>
 <script src="forms/collapsible.js"></script>
+<script src="forms/report-loader.js"></script>
+<script>
+initReportLoader({
+  forms: ['cpp'],
+  computes: [
+    { kpi:'cpp_gross_gen', fmt:'n0',
+      compute: function(d,n){ return n(d.cpp_gross_gen_kwh) || null; }
+    },
+    { kpi:'cpp_net_gen', fmt:'n0',
+      compute: function(d,n){
+        var g=n(d.cpp_gross_gen_kwh), a=n(d.cpp_aux_kwh);
+        return (g>0) ? g-a : null;
+      }
+    },
+    { kpi:'cpp_plf', fmt:'pct1',
+      compute: function(d,n){
+        /* PLF = gross_gen ÷ (installed_kW × 24 hrs) × 100; installed = 10,000 kW */
+        var g=n(d.cpp_gross_gen_kwh);
+        return (g>0) ? g/(10000*24)*100 : null;
+      }
+    },
+    { kpi:'cpp_coal', fmt:'n0',
+      compute: function(d,n){ return n(d.cpp_coal_cons) || null; }
+    },
+    { kpi:'cpp_heat_rate', fmt:'n0',
+      compute: function(d,n){
+        var g=n(d.cpp_gross_gen_kwh), coal=n(d.cpp_coal_cons), gcv=n(d.cpp_coal_gcv);
+        return (g>0 && coal>0 && gcv>0) ? coal*gcv*1000/g : null;
+      }
+    },
+    { kpi:'cpp_sfc', fmt:'n2',
+      compute: function(d,n){
+        var g=n(d.cpp_gross_gen_kwh), coal=n(d.cpp_coal_cons);
+        return (g>0 && coal>0) ? coal*1000/g : null;
+      }
+    }
+  ],
+  fills: []
+});
+</script>
 </body>
 </html>
 
