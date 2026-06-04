@@ -19,6 +19,7 @@ const _SESSION_KEY = 'lcl_mis_session';
 const MIS_USERS = [
   { id:1,  username:'admin',      password:'Admin@LCL2026',  name:'System Administrator',        role:'admin',      dept:'IT',             active:true },
   { id:2,  username:'md',         password:'MD@LCL2026',     name:'Managing Director',           role:'md',         dept:'CORPORATE',      active:true },
+  { id:13, username:'planthead',  password:'Plant@LCL2026',  name:'Plant Head',                  role:'md',         dept:'OPERATIONS',     active:true },
   { id:3,  username:'management', password:'Mgt@LCL2026',    name:'Senior Management',           role:'management', dept:'CORPORATE',      active:true },
   { id:4,  username:'hr',         password:'HR@LCL2026',     name:'HR & Admin Manager',          role:'hr',         dept:'HR & ADMIN',     active:true },
   { id:5,  username:'finance',    password:'Fin@LCL2026',    name:'Finance & Accounts Manager',  role:'finance',    dept:'FINANCE',        active:true },
