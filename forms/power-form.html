@@ -108,17 +108,17 @@
 
   <!-- ══ KPI SUMMARY STRIP ════════════════════════════════════════ -->
   <div class="kpi-strip">
-    <div class="kt kt-s">
-      <span class="kt-badge">System</span>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Total Power Consumed</div>
-      <div class="kt-val">157,961</div>
+      <div class="kt-val" data-kpi="total_power">157,961</div>
       <div class="kt-unit">kWh / On Date</div>
-      <div class="kt-vs vs-wa">▲ Plant-wide consumption</div>
+      <div class="kt-vs vs-wa">▲ Plant-wide — sum of all sections</div>
     </div>
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">SPC — Total Cement</div>
-      <div class="kt-val">156.7</div>
+      <div class="kt-val" data-kpi="spc_total">156.7</div>
       <div class="kt-unit">kWh/MT — Target 150</div>
       <div class="kt-vs vs-ng">▼ 4.5% above target</div>
     </div>
@@ -297,7 +297,7 @@
           <tr>
             <td class="ts">9</td>
             <td class="tp">Compressed Air / Utilities</td>
-            <td class="cm"><input class="ci" type="number" value="4200" /></td>
+            <td class="cm"><input class="ci" type="number" value="4200" data-field="pwr_utils_kwh" /></td>
             <td class="cs"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
             <td class="cs"><div class="cv">—</div></td>
@@ -308,7 +308,7 @@
           <tr>
             <td class="ts">10</td>
             <td class="tp">Lighting &amp; General Services</td>
-            <td class="cm"><input class="ci" type="number" value="3600" /></td>
+            <td class="cm"><input class="ci" type="number" value="3600" data-field="pwr_lighting_kwh" /></td>
             <td class="cs"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
             <td class="cs"><div class="cv">—</div></td>
@@ -472,6 +472,27 @@
 <script src="collapsible.js"></script>
 <script src="excel-import.js"></script>
 <script src="excel-export.js"></script>
+<script src="kpi-live.js"></script>
+<script>
+initKpiLive([
+  { kpi:'total_power', fmt:'n0',
+    compute: function(f,n){
+      return n(f.pwr_crusher_kwh)+n(f.pwr_rawmill_kwh)+n(f.pwr_coalmill_kwh)
+            +n(f.pwr_kiln_kwh)+n(f.pwr_cm2_kwh)+n(f.pwr_packing_kwh)
+            +n(f.pwr_utils_kwh)+n(f.pwr_lighting_kwh);
+    }
+  },
+  { kpi:'spc_total', fmt:'n1',
+    compute: function(f,n){
+      var pwr = n(f.pwr_crusher_kwh)+n(f.pwr_rawmill_kwh)+n(f.pwr_coalmill_kwh)
+               +n(f.pwr_kiln_kwh)+n(f.pwr_cm2_kwh)+n(f.pwr_packing_kwh)
+               +n(f.pwr_utils_kwh)+n(f.pwr_lighting_kwh);
+      var prod = n(f.pwr_kiln_prod_mt)+n(f.pwr_cm2_prod_mt);
+      return (pwr > 0 && prod > 0) ? pwr/prod : null;
+    }
+  }
+]);
+</script>
 </body>
 </html>
 

@@ -434,16 +434,16 @@
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Specific Power</div>
-      <div class="kt-val">156.7</div>
+      <div class="kt-val" data-kpi="specific_power">156.7</div>
       <div class="kt-unit">kWh / MT Eq. Cement</div>
       <div class="kt-vs vs-ok">Heat: 799 kcal/kg clinker</div>
     </div>
-    <div class="kt kt-s">
-      <span class="kt-badge">System</span>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Total Power Consumed</div>
-      <div class="kt-val">157,961</div>
+      <div class="kt-val" data-kpi="total_power">—</div>
       <div class="kt-unit">kWh / On Date</div>
-      <div class="kt-vs vs-ok">From CPP / Electrical dept</div>
+      <div class="kt-vs vs-ok">Auto-loaded from Power Cons form</div>
     </div>
   </div>
 
@@ -1287,6 +1287,128 @@
   </div>
 
   <!-- ════════════════════════════════════════════════
+       SECTION 5 — QUALITY SUMMARY (auto-loaded from quality form)
+  ════════════════════════════════════════════════ -->
+  <div class="rcard" style="margin-top:14px">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="flask-conical" class="title-icon"></i> Quality Summary — Day Average</div>
+        <div class="rcard-sub">Auto-loaded from Quality / Lab form · Edit quality data in <a href="forms/quality-form.html" style="color:var(--orange)">Quality Form</a></div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip orange">QUALITY / LAB</span>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:800px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" style="min-width:220px">Parameter</th>
+            <th class="grp-hdr">On Date</th>
+            <th class="grp-hdr">Spec / Target</th>
+            <th class="grp-hdr">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="tp">Blaine Fineness — 42.5R (cm²/g)</td>
+            <td class="cs"><div class="cv" data-kpi="q_blaine_425r">—</div></td>
+            <td class="ts">≥ 3,500 cm²/g</td>
+            <td class="cf"><div class="cv" data-kpi="q_blaine_status">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Free Lime — Clinker (%)</td>
+            <td class="cs"><div class="cv" data-kpi="q_free_lime">—</div></td>
+            <td class="ts">&lt; 3.0%</td>
+            <td class="cf"><div class="cv" data-kpi="q_free_lime_status">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">LSF — Raw Mill Day Avg</td>
+            <td class="cs"><div class="cv" data-kpi="q_lsf_avg">—</div></td>
+            <td class="ts">95 – 98</td>
+            <td class="cf"><div class="cv" data-kpi="q_lsf_status">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">28-Day Compressive Strength — 42.5R (MPa)</td>
+            <td class="cs"><div class="cv" data-kpi="q_strength_28d">—</div></td>
+            <td class="ts">≥ 42.5 MPa</td>
+            <td class="cf"><div class="cv" data-kpi="q_strength_status">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Coal Residue @ 90µ (%)</td>
+            <td class="cs"><div class="cv" data-kpi="q_coal_residue">—</div></td>
+            <td class="ts">&lt; 5.0%</td>
+            <td class="cf"><div class="cv" data-kpi="q_coal_residue_status">—</div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       SECTION 6 — STOPPAGES & AVAILABILITY (from stoppage form)
+  ════════════════════════════════════════════════ -->
+  <div class="rcard" style="margin-top:14px">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="alert-triangle" class="title-icon"></i> Equipment Availability — On Date</div>
+        <div class="rcard-sub">Auto-loaded from Stoppages form · Edit stoppage data in <a href="forms/stoppage-form.html" style="color:var(--orange)">Stoppages Form</a></div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip orange">MAINTENANCE · PRODUCTION</span>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:700px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" style="min-width:180px">Section</th>
+            <th class="grp-hdr">Total Stoppage (hrs)</th>
+            <th class="grp-hdr">Running Hours</th>
+            <th class="grp-hdr">Availability %</th>
+            <th class="grp-hdr">Target</th>
+            <th class="grp-hdr">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="tp">Crusher</td>
+            <td class="cs"><div class="cv" data-kpi="stop_crusher_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="run_crusher_hrs">—</div></td>
+            <td class="cs"><div class="cv" data-kpi="avail_crusher">—</div></td>
+            <td class="ts">&gt; 85%</td>
+            <td class="cf"><div class="cv" data-kpi="avail_crusher_st">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Raw Mill</td>
+            <td class="cs"><div class="cv" data-kpi="stop_rm_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="run_rm_hrs">—</div></td>
+            <td class="cs"><div class="cv" data-kpi="avail_rm">—</div></td>
+            <td class="ts">&gt; 80%</td>
+            <td class="cf"><div class="cv" data-kpi="avail_rm_st">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Kiln (Pyro)</td>
+            <td class="cs"><div class="cv" data-kpi="stop_kiln_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="run_kiln_hrs">—</div></td>
+            <td class="cs"><div class="cv" data-kpi="avail_kiln">—</div></td>
+            <td class="ts">&gt; 90%</td>
+            <td class="cf"><div class="cv" data-kpi="avail_kiln_st">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Cement Mill-1</td>
+            <td class="cs"><div class="cv" data-kpi="stop_cm1_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="run_cm1_hrs">—</div></td>
+            <td class="cs"><div class="cv" data-kpi="avail_cm1">—</div></td>
+            <td class="ts">&gt; 80%</td>
+            <td class="cf"><div class="cv" data-kpi="avail_cm1_st">—</div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
        SIGN-OFF
   ════════════════════════════════════════════════ -->
   <div class="rcard" style="margin-top:14px">
@@ -1351,8 +1473,205 @@
 <script src="forms/kpi-live.js"></script>
 <script>
 initKpiLive([
-  { kpi:'coal_total', compute: function(f,n){ return n(f.coal_kiln)+n(f.coal_cpp); }, fmt:'n0' }
+  { kpi:'coal_total', fmt:'n0',
+    compute: function(f,n){ return n(f.coal_kiln)+n(f.coal_cpp); }
+  }
 ]);
+</script>
+<script src="forms/report-loader.js"></script>
+<script>
+initReportLoader({
+  forms: ['materials', 'power-cons', 'quality', 'stoppage'],
+
+  computes: [
+    /* ── Power ─────────────────────────────────────────────────────── */
+    { kpi: 'total_power', fmt: 'n0',
+      compute: function(d, n) {
+        return n(d.pwr_crusher_kwh) + n(d.pwr_rawmill_kwh) + n(d.pwr_coalmill_kwh)
+             + n(d.pwr_kiln_kwh)   + n(d.pwr_cm2_kwh)     + n(d.pwr_packing_kwh)
+             + n(d.pwr_utils_kwh)  + n(d.pwr_lighting_kwh);
+      }
+    },
+
+    /* ── Quality — direct field reads ────────────────────────────── */
+    { kpi: 'q_blaine_425r',  fmt: 'n0',
+      compute: function(d, n) { return n(d.blaine_425r) || null; }
+    },
+    { kpi: 'q_free_lime',    fmt: 'pct1',
+      compute: function(d, n) { return n(d.free_lime) || null; }
+    },
+    { kpi: 'q_strength_28d', fmt: 'n1',
+      compute: function(d, n) { return n(d.strength_28d) || null; }
+    },
+    { kpi: 'q_coal_residue', fmt: 'pct1',
+      compute: function(d, n) { return n(d.coal_residue) || null; }
+    },
+
+    /* ── LSF average ─────────────────────────────────────────────── */
+    { kpi: 'q_lsf_avg', fmt: 'n1',
+      compute: function(d, n) {
+        var vals = ['lsf_rm_h1','lsf_rm_h2','lsf_rm_h3','lsf_rm_h4','lsf_rm_h5','lsf_rm_h6']
+                   .map(function(k){ return n(d[k]); }).filter(function(v){ return v > 0; });
+        return vals.length ? vals.reduce(function(a,b){ return a+b; }, 0) / vals.length : null;
+      }
+    },
+
+    /* ── Quality status labels ────────────────────────────────────── */
+    { kpi: 'q_blaine_status',
+      compute: function(d, n) { var v=n(d.blaine_425r); return v>0 ? (v>=3500?'✓ OK':'✗ LOW') : null; }
+    },
+    { kpi: 'q_free_lime_status',
+      compute: function(d, n) { var v=n(d.free_lime); return v>0 ? (v<=3.0?'✓ OK':'✗ HIGH') : null; }
+    },
+    { kpi: 'q_lsf_status',
+      compute: function(d, n) {
+        var vals = ['lsf_rm_h1','lsf_rm_h2','lsf_rm_h3','lsf_rm_h4','lsf_rm_h5','lsf_rm_h6']
+                   .map(function(k){ return n(d[k]); }).filter(function(v){ return v > 0; });
+        if (!vals.length) return null;
+        var avg = vals.reduce(function(a,b){ return a+b; }, 0) / vals.length;
+        return (avg>=95&&avg<=98) ? '✓ OK' : '⚠ CHECK';
+      }
+    },
+    { kpi: 'q_strength_status',
+      compute: function(d, n) { var v=n(d.strength_28d); return v>0 ? (v>=42.5?'✓ OK':'✗ LOW') : null; }
+    },
+    { kpi: 'q_coal_residue_status',
+      compute: function(d, n) { var v=n(d.coal_residue); return v>0 ? (v<=5.0?'✓ OK':'✗ HIGH') : null; }
+    },
+
+    /* ── Stoppages — availability % per section (1440 min = 24 hrs) ─ */
+    { kpi: 'avail_crusher', fmt: 'pct1',
+      compute: function(d, n) {
+        var s = n(d.stop_crusher_mech)+n(d.stop_crusher_ei)+n(d.stop_crusher_prod)
+               +n(d.stop_crusher_planned)+n(d.stop_crusher_power)+n(d.stop_crusher_other);
+        return ((1440-s)/1440*100);
+      }
+    },
+    { kpi: 'avail_kiln', fmt: 'pct1',
+      compute: function(d, n) {
+        var s = n(d.stop_kiln_mech)+n(d.stop_kiln_ei)+n(d.stop_kiln_prod)
+               +n(d.stop_kiln_planned)+n(d.stop_kiln_power)+n(d.stop_kiln_other);
+        return ((1440-s)/1440*100);
+      }
+    },
+    { kpi: 'avail_rm', fmt: 'pct1',
+      compute: function(d, n) {
+        var s = n(d.stop_rm_mech)+n(d.stop_rm_ei)+n(d.stop_rm_prod)
+               +n(d.stop_rm_planned)+n(d.stop_rm_power)+n(d.stop_rm_other);
+        return ((1440-s)/1440*100);
+      }
+    },
+    { kpi: 'avail_cm1', fmt: 'pct1',
+      compute: function(d, n) {
+        var s = n(d.stop_cm1_mech)+n(d.stop_cm1_ei)+n(d.stop_cm1_prod)
+               +n(d.stop_cm1_planned)+n(d.stop_cm1_power)+n(d.stop_cm1_other);
+        return ((1440-s)/1440*100);
+      }
+    },
+    { kpi: 'stop_kiln_hrs', fmt: 'n1',
+      compute: function(d, n) {
+        var s = n(d.stop_kiln_mech)+n(d.stop_kiln_ei)+n(d.stop_kiln_prod)
+               +n(d.stop_kiln_planned)+n(d.stop_kiln_power)+n(d.stop_kiln_other);
+        return s/60;
+      }
+    },
+    { kpi: 'stop_crusher_hrs', fmt: 'n1',
+      compute: function(d, n) {
+        var s = n(d.stop_crusher_mech)+n(d.stop_crusher_ei)+n(d.stop_crusher_prod)
+               +n(d.stop_crusher_planned)+n(d.stop_crusher_power)+n(d.stop_crusher_other);
+        return s/60;
+      }
+    },
+    { kpi: 'stop_rm_hrs', fmt: 'n1',
+      compute: function(d, n) {
+        var s = n(d.stop_rm_mech)+n(d.stop_rm_ei)+n(d.stop_rm_prod)
+               +n(d.stop_rm_planned)+n(d.stop_rm_power)+n(d.stop_rm_other);
+        return s/60;
+      }
+    },
+    { kpi: 'stop_cm1_hrs', fmt: 'n1',
+      compute: function(d, n) {
+        var s = n(d.stop_cm1_mech)+n(d.stop_cm1_ei)+n(d.stop_cm1_prod)
+               +n(d.stop_cm1_planned)+n(d.stop_cm1_power)+n(d.stop_cm1_other);
+        return s/60;
+      }
+    },
+    /* Running hours = 24 - stoppage hours */
+    { kpi: 'run_crusher_hrs', fmt: 'n1',
+      compute: function(d, n) {
+        var s = n(d.stop_crusher_mech)+n(d.stop_crusher_ei)+n(d.stop_crusher_prod)
+               +n(d.stop_crusher_planned)+n(d.stop_crusher_power)+n(d.stop_crusher_other);
+        return 24 - s/60;
+      }
+    },
+    { kpi: 'run_rm_hrs', fmt: 'n1',
+      compute: function(d, n) {
+        var s = n(d.stop_rm_mech)+n(d.stop_rm_ei)+n(d.stop_rm_prod)
+               +n(d.stop_rm_planned)+n(d.stop_rm_power)+n(d.stop_rm_other);
+        return 24 - s/60;
+      }
+    },
+    { kpi: 'run_kiln_hrs', fmt: 'n1',
+      compute: function(d, n) {
+        var s = n(d.stop_kiln_mech)+n(d.stop_kiln_ei)+n(d.stop_kiln_prod)
+               +n(d.stop_kiln_planned)+n(d.stop_kiln_power)+n(d.stop_kiln_other);
+        return 24 - s/60;
+      }
+    },
+    { kpi: 'run_cm1_hrs', fmt: 'n1',
+      compute: function(d, n) {
+        var s = n(d.stop_cm1_mech)+n(d.stop_cm1_ei)+n(d.stop_cm1_prod)
+               +n(d.stop_cm1_planned)+n(d.stop_cm1_power)+n(d.stop_cm1_other);
+        return 24 - s/60;
+      }
+    },
+    /* Status labels for availability */
+    { kpi: 'avail_crusher_st',
+      compute: function(d, n) {
+        var s = n(d.stop_crusher_mech)+n(d.stop_crusher_ei)+n(d.stop_crusher_prod)
+               +n(d.stop_crusher_planned)+n(d.stop_crusher_power)+n(d.stop_crusher_other);
+        return ((1440-s)/1440*100) >= 85 ? '✓ OK' : '⚠ LOW';
+      }
+    },
+    { kpi: 'avail_rm_st',
+      compute: function(d, n) {
+        var s = n(d.stop_rm_mech)+n(d.stop_rm_ei)+n(d.stop_rm_prod)
+               +n(d.stop_rm_planned)+n(d.stop_rm_power)+n(d.stop_rm_other);
+        return ((1440-s)/1440*100) >= 80 ? '✓ OK' : '⚠ LOW';
+      }
+    },
+    { kpi: 'avail_kiln_st',
+      compute: function(d, n) {
+        var s = n(d.stop_kiln_mech)+n(d.stop_kiln_ei)+n(d.stop_kiln_prod)
+               +n(d.stop_kiln_planned)+n(d.stop_kiln_power)+n(d.stop_kiln_other);
+        return ((1440-s)/1440*100) >= 90 ? '✓ OK' : '⚠ LOW';
+      }
+    },
+    { kpi: 'avail_cm1_st',
+      compute: function(d, n) {
+        var s = n(d.stop_cm1_mech)+n(d.stop_cm1_ei)+n(d.stop_cm1_prod)
+               +n(d.stop_cm1_planned)+n(d.stop_cm1_power)+n(d.stop_cm1_other);
+        return ((1440-s)/1440*100) >= 80 ? '✓ OK' : '⚠ LOW';
+      }
+    }
+  ],
+
+  fills: [
+    /* ── Coal Kiln: pre-populate from materials form supplier totals ─ */
+    { field: 'coal_kiln',
+      compute: function(d, n) {
+        return n(d.coal_k_s1) + n(d.coal_k_s2) + n(d.coal_k_s3)
+             + n(d.coal_k_s4) + n(d.coal_k_s5);
+      }
+    },
+    /* ── Coal CPP: pre-populate from materials form CPP totals ──────── */
+    { field: 'coal_cpp',
+      compute: function(d, n) {
+        return n(d.coal_cpp_s1) + n(d.coal_cpp_s2) + n(d.coal_cpp_s3);
+      }
+    }
+  ]
+});
 </script>
 </body>
 </html>
