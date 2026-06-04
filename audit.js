@@ -161,7 +161,7 @@ function exportAuditLog() {
   a.download = 'LCL-MIS-AuditLog-' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
   URL.revokeObjectURL(url);
-  auditLog('EXPORT', 'Audit', 'Audit Trail', '—', '—', log.length + ' entries exported to CSV');
+  auditLog('EXPORT', 'Audit', 'Audit Log', '—', '—', log.length + ' entries exported to CSV');
 }
 
 /* ══════════════════════════════════════════════════════════════════════
