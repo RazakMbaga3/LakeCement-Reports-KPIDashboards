@@ -269,10 +269,17 @@
     if (!document.getElementById('_nyb')) {
       const banner = document.createElement('div');
       banner.id = '_nyb';
-      banner.innerHTML = '✓ &nbsp;Report Submitted &amp; Locked — JSON file downloaded to your computer';
+      banner.innerHTML =
+        '<span>✓ &nbsp;Report Submitted &amp; Locked — JSON file downloaded to your computer</span>' +
+        '<button onclick="document.getElementById(\'_nyb\').remove()" title="Dismiss" style="' +
+          'position:absolute;right:12px;top:50%;transform:translateY(-50%);' +
+          'background:rgba(255,255,255,.25);border:none;color:white;width:22px;height:22px;' +
+          'border-radius:50%;cursor:pointer;font-size:14px;line-height:1;display:flex;' +
+          'align-items:center;justify-content:center;font-family:inherit' +
+        '">×</button>';
       Object.assign(banner.style, {
         position: 'fixed', top: '0', left: '0', right: '0', zIndex: '9997',
-        background: '#239557', color: 'white', padding: '9px 16px',
+        background: '#239557', color: 'white', padding: '9px 48px 9px 16px',
         textAlign: 'center', fontFamily: 'Inter,sans-serif',
         fontSize: '12px', fontWeight: '700', letterSpacing: '.3px'
       });
