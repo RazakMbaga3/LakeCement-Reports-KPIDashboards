@@ -459,7 +459,7 @@
                 <span class="an-card-dot" style="background:#239557"></span>
                 Blaine 425R
               </div>
-              <div class="an-card-sub">Cement fineness &middot; Spec &ge; 330 BLU/cm&sup2;</div>
+              <div class="an-card-sub">Cement fineness &middot; Spec &ge; 3,500 cm&sup2;/g</div>
             </div>
             <div class="an-card-stats">
               <div class="an-stat">
@@ -547,6 +547,63 @@
             <div class="emp-sub">Submit the Pile Quality form to see trends</div>
           </div>
         </div>
+      </div>
+
+      <!-- Section: Production -->
+      <div class="an-section-hdr">
+        <i data-lucide="factory" class="an-icon-ops" style="width:14px;height:14px;stroke-width:2.2;flex-shrink:0"></i>
+        <span class="an-section-title ops">Kiln &amp; Production</span>
+        <div class="an-section-line"></div>
+        <span class="an-section-badge" id="badge-production">0 days</span>
+      </div>
+      <div class="an-grid" style="margin-bottom:20px">
+
+        <div class="an-card" id="card-clinker">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#F49545"></span>
+                Clinker Production
+              </div>
+              <div class="an-card-sub">Daily output from kiln &middot; Target &ge; 1,650 MT</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat"><span class="an-stat-val" id="stat-clinker-cur">—</span><span class="an-stat-lbl">Latest MT</span></div>
+              <div class="an-stat"><span class="an-stat-val" id="stat-clinker-avg">—</span><span class="an-stat-lbl">Avg MT/day</span></div>
+              <div class="an-stat"><span class="an-stat-trend" id="stat-clinker-trend">—</span><span class="an-stat-lbl">Trend</span></div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-clinker"></canvas></div>
+          <div class="an-card-empty" id="empty-clinker">
+            <div class="emp-icon">🏭</div>
+            <div class="emp-msg">No clinker production data</div>
+            <div class="emp-sub">Submit the Kiln &amp; Pyro form to see trends</div>
+          </div>
+        </div>
+
+        <div class="an-card" id="card-sp-heat">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#7c3aed"></span>
+                Specific Heat Consumption
+              </div>
+              <div class="an-card-sub">Thermal efficiency &middot; Target &lt; 800 kcal/kg clinker</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat"><span class="an-stat-val" id="stat-sp-heat-cur">—</span><span class="an-stat-lbl">Latest</span></div>
+              <div class="an-stat"><span class="an-stat-val" id="stat-sp-heat-avg">—</span><span class="an-stat-lbl">Period avg</span></div>
+              <div class="an-stat"><span class="an-stat-trend" id="stat-sp-heat-trend">—</span><span class="an-stat-lbl">Trend</span></div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-sp-heat"></canvas></div>
+          <div class="an-card-empty" id="empty-sp-heat">
+            <div class="emp-icon">🔥</div>
+            <div class="emp-msg">No heat consumption data</div>
+            <div class="emp-sub">Submit the Kiln &amp; Pyro form to see trends</div>
+          </div>
+        </div>
+
       </div>
 
       <!-- Section: Operations -->
