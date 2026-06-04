@@ -7,6 +7,9 @@
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <script src="auth.js"></script>
+  <script src="audit.js"></script>
+  <script src="mis-edit.js"></script>
   <style>
     /* ══════════════════ MIS PAGE STYLES ══════════════════ */
     body { display:flex; flex-direction:column; min-height:100vh; background:var(--off-white); }
@@ -255,6 +258,7 @@
     </div>
   </div>
   <div class="header-right">
+    <div id="auth-user-info"></div>
     <div class="header-meta" id="live-date"></div>
   </div>
 </header>
@@ -273,6 +277,9 @@
   </button>
   <button class="mis-tab" id="tab-store" onclick="showMisTab('store')">
     <i data-lucide="package" class="mis-tab-icon"></i> Purchase &amp; Store
+  </button>
+  <button class="mis-tab" id="tab-audit" onclick="showMisTab('audit')" style="display:none">
+    <i data-lucide="shield" class="mis-tab-icon"></i> Audit Trail
   </button>
 </div>
 
@@ -1763,6 +1770,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Edit
           </button>
+          <button class="mis-edit-btn" onclick="exportLegal()" title="Download Legal Cases as JSON">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export
+          </button>
         </div>
       </div>
       <div id="legal-add-bar" style="display:none;padding:10px 18px 0">
@@ -1838,6 +1849,10 @@
           <button class="mis-edit-btn" id="ins-edit-btn" onclick="toggleInsEdit()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Edit
+          </button>
+          <button class="mis-edit-btn" onclick="exportInsurance()" title="Download Insurance claims as JSON">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export
           </button>
           <button class="mis-edit-btn" onclick="openAddClaimModal()" style="border-color:#10B981;color:#059669">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -2732,10 +2747,14 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Edit Dates &amp; Status
           </button>
+          <button class="mis-edit-btn" onclick="exportAmc()" title="Download AMC overrides as JSON">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export
+          </button>
         </div>
       </div>
       <div class="mis-table-wrap">
-        <table class="mis-table">
+        <table class="mis-table" id="store-amc">
           <thead>
             <tr><th>#</th><th>Department</th><th>Agency / Vendor</th><th>Particulars</th><th style="text-align:center">From</th><th style="text-align:center">To</th><th>Visits / Year</th><th style="text-align:right">Annual Charge</th><th style="text-align:center">Status</th></tr>
           </thead>
@@ -2890,6 +2909,132 @@
 
 </div>
 
+<!-- ══════════════════ AUDIT TRAIL (admin / md only) ══════════════════ -->
+<div class="mis-panel" id="panel-audit">
+
+  <div class="mis-kv-strip">
+    <div class="mis-kv">
+      <div class="mis-kv-val" id="audit-total-kv">—</div>
+      <div class="mis-kv-lbl">Total Entries</div>
+      <div class="mis-kv-sub">Stored locally</div>
+    </div>
+    <div class="mis-kv">
+      <div class="mis-kv-val" id="audit-users-kv">—</div>
+      <div class="mis-kv-lbl">Unique Users</div>
+    </div>
+    <div class="mis-kv">
+      <div class="mis-kv-val" id="audit-edits-kv">—</div>
+      <div class="mis-kv-lbl">Edit Actions</div>
+    </div>
+    <div class="mis-kv">
+      <div class="mis-kv-val" id="audit-adds-kv">—</div>
+      <div class="mis-kv-lbl">Add / Upload Actions</div>
+    </div>
+    <div class="mis-kv">
+      <div class="mis-kv-val" id="audit-today-kv">—</div>
+      <div class="mis-kv-lbl">Today's Activity</div>
+      <div class="mis-kv-sub">Since midnight</div>
+    </div>
+    <div class="mis-kv">
+      <div class="mis-kv-val" id="audit-logins-kv">—</div>
+      <div class="mis-kv-lbl">Login Events</div>
+    </div>
+  </div>
+
+  <div class="mis-section">
+    <div class="mis-sec-hdr">
+      <i data-lucide="shield" class="mis-sec-icon"></i>
+      <h3 class="mis-sec-title">Audit Trail — All User Activity</h3>
+      <span id="audit-count-lbl" style="margin-left:6px;font-size:10px;color:var(--text-muted)"></span>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <button class="mis-edit-btn" onclick="exportAuditLog()" title="Export to CSV">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export CSV
+        </button>
+        <button class="mis-edit-btn" onclick="clearAuditLog()" title="Clear all logs" style="border-color:#FECACA;color:#DC2626">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          Clear Log
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="audit-filter-bar">
+      <label style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">Filters:</label>
+      <input type="text"   id="af-user"   placeholder="User name…"   style="width:140px" oninput="applyAuditFilters()" />
+      <select id="af-action" onchange="applyAuditFilters()">
+        <option value="">All Actions</option>
+        <option value="EDIT">EDIT</option>
+        <option value="ADD">ADD</option>
+        <option value="DELETE">DELETE</option>
+        <option value="UPLOAD">UPLOAD</option>
+        <option value="EXPORT">EXPORT</option>
+        <option value="LOGIN">LOGIN</option>
+        <option value="LOGOUT">LOGOUT</option>
+      </select>
+      <select id="af-tab" onchange="applyAuditFilters()">
+        <option value="">All Tabs</option>
+        <option value="HR & Admin">HR &amp; Admin</option>
+        <option value="Assets">Assets</option>
+        <option value="Compliances">Compliances</option>
+        <option value="Purchase & Store">Purchase &amp; Store</option>
+        <option value="Store">Store</option>
+        <option value="Audit">Audit</option>
+      </select>
+      <input type="date" id="af-from" onchange="applyAuditFilters()" title="From date" />
+      <input type="date" id="af-to"   onchange="applyAuditFilters()" title="To date" />
+      <button class="mis-edit-btn" onclick="resetAuditFilters()">Clear</button>
+    </div>
+
+    <div class="mis-table-wrap" style="max-height:560px">
+      <table class="mis-table">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>User</th>
+            <th>Department</th>
+            <th>Role</th>
+            <th>Action</th>
+            <th>Tab</th>
+            <th>Section</th>
+            <th>Field</th>
+            <th>Change</th>
+          </tr>
+        </thead>
+        <tbody id="audit-tbody">
+          <tr><td colspan="9" class="audit-empty">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination bar -->
+    <div class="audit-pagination">
+      <button class="mis-edit-btn" id="audit-prev-btn" onclick="goAuditPage(-1)" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px"><polyline points="15 18 9 12 15 6"/></svg>
+        Prev
+      </button>
+      <span id="audit-page-info" style="font-size:11px;color:var(--text-muted,#64748B);font-weight:600"></span>
+      <button class="mis-edit-btn" id="audit-next-btn" onclick="goAuditPage(1)" disabled>
+        Next
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Access Rights Matrix ── -->
+  <div class="mis-section" style="margin-top:24px">
+    <div class="mis-sec-hdr">
+      <i data-lucide="lock" class="mis-sec-icon"></i>
+      <h3 class="mis-sec-title">Access Rights Matrix</h3>
+      <span style="margin-left:8px;font-size:10px;color:var(--text-muted)">Role → section permission grid</span>
+    </div>
+    <div id="access-matrix-container" style="padding:0 0 8px">
+      <p style="padding:16px;font-size:11px;color:var(--text-muted)">Loading…</p>
+    </div>
+  </div>
+
+</div>
+
 <!-- ══════════════════ FOOTER ══════════════════ -->
 <footer class="dash-footer">
   <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Management Information System</span>
@@ -2915,6 +3060,14 @@
     document.querySelectorAll('.nav-btn[data-lucide]').forEach(b => b.classList.remove('active'));
     document.getElementById('panel-' + id)?.classList.add('active');
     document.getElementById('tab-' + id)?.classList.add('active');
+    // Audit tab: load panel when opened
+    if (id === 'audit') _loadAuditPanel();
+  }
+
+  function _loadAuditPanel() {
+    if (typeof renderAuditPanel   === 'function') renderAuditPanel({});
+    if (typeof refreshAuditKV     === 'function') refreshAuditKV();
+    if (typeof renderAccessMatrix === 'function') renderAccessMatrix();
   }
 </script>
 
@@ -3205,7 +3358,7 @@ function renderLegal() {
 
     const makeCell = (val, field, extraStyle='') =>
       em ? `<td class="mis-editable ${em ? 'edit-on' : ''}" contenteditable="true"
-              style="${extraStyle}" onblur="legalCellEdit(${idx},'${field}',this.textContent)"
+              style="${extraStyle}" onblur="legalCellEdit(${idx},'${field}',this.textContent.trim())"
               >${val}</td>`
          : `<td style="${extraStyle}">${val}</td>`;
 
@@ -3305,6 +3458,9 @@ function toggleAmcEdit() {
   amcEditMode = !amcEditMode;
   const btn = document.getElementById('amc-edit-btn');
   if (btn) btn.classList.toggle('active', amcEditMode);
+  /* Show/hide Add AMC bar */
+  const addBar = document.getElementById('amc-add-row-bar');
+  if (addBar) addBar.style.display = amcEditMode ? '' : 'none';
 
   const rows = document.querySelectorAll('#store-amc table tbody tr');
   const overrides = JSON.parse(localStorage.getItem('mis-amc-overrides') || '{}');
@@ -3599,9 +3755,15 @@ function tagInsuranceRows() {
    INIT on DOMContentLoaded
 ════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
-  loadLegal();
+  /* ── 1. Auth gate — redirect to login if no session ── */
+  requireAuth();
 
-  // Load cert overrides
+  /* ── 2. Load existing data ── */
+  loadLegal();
+  loadAmc();
+  tagInsuranceRows();
+  loadIns();
+
   const savedCerts = localStorage.getItem('mis-cert-upload');
   if (savedCerts) {
     const parsed = JSON.parse(savedCerts);
@@ -3614,6 +3776,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const lbl = document.getElementById('cert-total-lbl');
     if (lbl) lbl.textContent = `${CERT_DATA.length} items`;
   }
+
+  /* ── 3. Apply role-based permissions ── */
+  applyMISPermissions();
+
+  /* ── 4. Initialise universal table edit system ── */
+  MIS_EDIT.init();
+
+  /* ── 5. Hide edit buttons for roles without edit permission ── */
+  applyEditButtonPermissions();
 });
 
 // Tab-activation hooks
@@ -3629,6 +3800,53 @@ window.showStoreTab = function(id) {
   if (typeof _origShowStoreTab === 'function') _origShowStoreTab(id);
   if (id === 'amc') loadAmc();
 };
+
+/* ════════════════════════════════════════════
+   EXPORT JSON (so baked-in data can be updated)
+════════════════════════════════════════════ */
+function downloadJSON(data, filename) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+  misToast('Exported: ' + filename);
+}
+
+function exportLegal() {
+  const data = JSON.parse(localStorage.getItem('mis-edit-legal') || 'null') || LEGAL_BASE;
+  downloadJSON(data, 'legal-cases.json');
+}
+
+function exportAmc() {
+  const overrides = JSON.parse(localStorage.getItem('mis-amc-overrides') || '{}');
+  // Build full snapshot by reading current DOM rows
+  const rows = document.querySelectorAll('#store-amc table tbody tr');
+  const snapshot = [];
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    if (cells.length < 8) return;
+    const sn   = cells[0]?.textContent.trim();
+    const dept = cells[1]?.textContent.trim();
+    const vendor = cells[2]?.textContent.trim();
+    const descr  = cells[3]?.textContent.trim();
+    const vf     = cells[4]?.textContent.trim();
+    const vt     = cells[5]?.textContent.trim();
+    const visits = cells[6]?.textContent.trim();
+    const charge = cells[7]?.textContent.trim();
+    const statusEl = cells[8]?.querySelector('span,select');
+    const status = overrides[sn]?.status || (statusEl?.value || statusEl?.textContent?.trim() || '');
+    snapshot.push({sn, dept, vendor, descr, vf, vt: overrides[sn]?.vt || vt, visits, charge, status});
+  });
+  downloadJSON({overrides, snapshot}, 'amc-contracts.json');
+}
+
+function exportInsurance() {
+  const edits  = JSON.parse(localStorage.getItem('mis-ins-edits')  || '{}');
+  const extras = JSON.parse(localStorage.getItem('mis-ins-extra')  || '[]');
+  downloadJSON({edits, extras}, 'insurance-claims.json');
+}
 
 // SheetJS CDN (for Option B upload)
 if (typeof XLSX === 'undefined') {

@@ -61,42 +61,77 @@ img { max-width: 100%; }
 }
 
 /* ── TOP HEADER ─────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   TOP HEADER — CSS Grid 3-column layout
+   grid-template-columns: [logo] auto | [nav] 1fr | [right] auto
+   Grid guarantees the right column always gets its natural width.
+   Left and right are auto-sized; center fills the remainder.
+═══════════════════════════════════════════════════════════════ */
 .top-header {
   background: var(--navy);
   color: var(--white);
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 28px;
-  height: 68px;
-  box-shadow: 0 2px 12px rgba(23,49,88,.25);
+  padding: 0 24px;
+  height: 64px;
   position: sticky;
   top: 0;
   z-index: 100;
+  box-shadow: 0 2px 12px rgba(23,49,88,.28);
 }
-/* Brand stripe sticks as bottom separator on the header */
+
+/* Brand accent stripe */
 .top-header::after {
   content: '';
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  height: 4px;
+  height: 3px;
   background: linear-gradient(
-    to right,
-    var(--navy-light) 0%, var(--navy-light) 58%,
-    var(--orange) 58%, var(--orange) 80%,
-    var(--accent-gray) 80%, var(--accent-gray) 100%
+    90deg,
+    var(--navy-light) 0%,   var(--navy-light) 55%,
+    var(--orange)     55%,  var(--orange)     78%,
+    #5B8DB8           78%,  #5B8DB8           100%
   );
+  pointer-events: none;
 }
 
-.header-left  { display: flex; align-items: center; gap: 14px; flex: 1; }
-.header-center { flex: 1; text-align: center; }
-.header-right { flex: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+/* ── Grid columns ───────────────────────────────────────────── */
+
+/* Column 1 — Logo */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 20px;
+  min-width: 0;
+}
+
+/* Column 2 — Nav (centered within its 1fr cell) */
+.header-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Column 3 — Actions + Date + User block
+   min-width ensures the grid reserves this space BEFORE JS renders auth */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 16px;
+  min-width: 380px;     /* shift-badge(80) + date(100) + auth(200) + gaps */
+  justify-content: flex-end;
+}
 
 .logo-block { display: flex; align-items: center; gap: 14px; }
 
 /* Nyati Cement logo image */
 .nyati-logo {
-  height: 46px;
+  height: 42px;
   width: auto;
   display: block;
   flex-shrink: 0;
@@ -169,8 +204,12 @@ img { max-width: 100%; }
 .brand-slogan { font-size: 9px; color: rgba(255,255,255,.45); letter-spacing: .3px; }
 
 .header-meta {
-  font-size: 10px; color: rgba(255,255,255,.4);
+  font-size: 10px;
+  color: rgba(255,255,255,.45);
   letter-spacing: .3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  order: 50;                    /* sits before auth block */
 }
 
 /* ── DEPT NAV ────────────────────────────────────────────────────── */
@@ -542,31 +581,38 @@ img { max-width: 100%; }
    Breakpoints:  mobile < 768px  |  tablet 768–1023px  |  desktop 1024px+
 ══════════════════════════════════════════════════════════════ */
 
+/* ── TABLET: 1024 – 1199px ──────────────────────────────────── */
+@media (max-width: 1199px) {
+  .auth-user-name  { max-width: 90px; }
+  .vs-tab          { padding: 7px 12px; min-width: 0; }
+  .header-left     { padding-right: 12px; }
+  .header-right    { padding-left: 12px; gap: 6px; min-width: 310px; }
+}
+
+/* ── COMPACT: < 960px — hide dept & date ────────────────────── */
+@media (max-width: 959px) {
+  .auth-user-dept  { display: none; }
+  .header-meta     { display: none; }
+  .header-right    { min-width: 200px; }
+  .vs-tab          { padding: 7px 10px; font-size: 11px; }
+}
+
 /* ── MOBILE: < 768px ────────────────────────────────────────── */
 @media (max-width: 767px) {
   :root { --header-h: 56px; }
-
-  /* Header: logo | switcher (compact) | date */
   .top-header {
-    height: auto;
-    min-height: 56px;
-    padding: 8px 14px;
-    flex-wrap: nowrap;
-    gap: 0;
+    height: 56px;
+    padding: 0 12px;
   }
-  /* Show switcher on mobile as icon-only pills */
-  .header-center  { display: flex; justify-content: center; flex: none; }
-  .view-switcher  { padding: 2px; }
-  .vs-tab         { padding: 7px 10px; gap: 0; }
-  .vs-tab span    { display: none; }
-  .header-right   { flex: none; }
-  .header-left    { flex: 1; min-width: 0; }
-  .nyati-logo     { height: 36px; }
-  .lc-wordmark    { height: 11px; }
-  .logo-block     { gap: 10px; }
-  .company-sub    { font-size: 9px; }
-  .brand-slogan   { display: none; }
-  .header-meta    { font-size: 9.5px; }
+  .header-left     { padding-right: 8px; }
+  .header-right    { padding-left: 8px; gap: 6px; min-width: 120px; }
+  /* Nav: icons only */
+  .view-switcher   { padding: 2px; gap: 1px; }
+  .vs-tab          { padding: 6px 9px; min-width: 0; gap: 0; }
+  .vs-tab span     { display: none; }
+  /* Auth: avatar + logout only */
+  .auth-user-details { display: none; }
+  .header-meta       { display: none; }
 
   /* Nav: compact horizontally-scrollable pills */
   .nav-inner   { height: 40px; padding: 0 10px; gap: 3px; }
@@ -616,10 +662,11 @@ img { max-width: 100%; }
 
 /* ── EXTRA SMALL: < 480px ──────────────────────────────────── */
 @media (max-width: 479px) {
-  /* Hide header-right entirely */
-  .header-right  { display: none; }
-  .nyati-logo    { height: 32px; }
-  .lc-wordmark   { height: 10px; }
+  .top-header     { grid-template-columns: auto 1fr auto; padding: 0 10px; }
+  .lc-wordmark    { display: none; }
+  .company-sub    { display: none; }
+  .nyati-logo     { height: 32px; }
+  .auth-user-name { display: none; }
 
   /* Single-column filter group */
   .filter-group  { grid-template-columns: 1fr 1fr; }

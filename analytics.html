@@ -7,6 +7,7 @@
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <script src="auth.js"></script>
   <style>
     /* ── Period picker bar ──────────────────────────────────────── */
     .an-period-bar {
@@ -362,7 +363,8 @@
       </div>
     </div>
     <div class="header-right">
-      <a href="forms/index.html" style="display:inline-flex;align-items:center;gap:7px;padding:7px 16px;border-radius:var(--radius);background:var(--orange);color:white;font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(244,149,69,.35);white-space:nowrap;margin-bottom:4px">
+      <div id="auth-user-info"></div>
+      <a href="forms/index.html" style="display:inline-flex;align-items:center;gap:7px;padding:7px 16px;border-radius:var(--radius);background:var(--orange);color:white;font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(244,149,69,.35);white-space:nowrap;flex-shrink:0">
         <i data-lucide="clipboard-list" style="width:13px;height:13px;stroke-width:2.5;flex-shrink:0"></i>
         Daily Entry Forms
       </a>
@@ -650,7 +652,11 @@
   <div class="brand-accent-bar"></div>
 
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-  <script>lucide.createIcons();</script>
+  <script>
+    lucide.createIcons();
+    requireAuth();
+    applyAnalyticsPermissions();
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="analytics.js"></script>
 </body>

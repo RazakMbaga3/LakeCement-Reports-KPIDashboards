@@ -7,6 +7,7 @@
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <script src="auth.js"></script>
   <style>
     /* ══════════════════════════════════════════════════════════════
        CPP POWER PLANT DAILY REPORT — page-specific styles
@@ -268,6 +269,7 @@
     </div>
   </div>
   <div class="header-right">
+    <div id="auth-user-info"></div>
     <div class="header-meta" id="live-date"></div>
   </div>
 </header>
@@ -918,10 +920,15 @@
   ['live-date','footer-date'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=s; });
 </script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-<script>lucide.createIcons();</script>
+<script>
+  lucide.createIcons();
+  requireAuth();
+  applyDailyPermissions();
+</script>
 <script src="forms/form-persist.js"></script>
 <script>initFormPersist('power-plant');</script>
 <script src="forms/nav-status.js"></script>
 <script src="forms/collapsible.js"></script>
 </body>
 </html>
+

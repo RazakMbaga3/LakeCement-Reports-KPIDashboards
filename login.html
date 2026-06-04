@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MIS — Sign In</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="auth.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:   #173158;
+      --orange: #F49545;
+      --border: #E2E8F0;
+      --font:   'Inter', sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      min-height: 100vh;
+      background: #F1F5F9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    /* Top accent stripe */
+    .accent-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--orange);
+    }
+
+    /* Card */
+    .card {
+      width: 100%;
+      max-width: 400px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08), 0 8px 24px rgba(0,0,0,.07);
+      overflow: hidden;
+    }
+
+    /* Card header */
+    .card-head {
+      padding: 32px 32px 24px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-head img {
+      height: 40px;
+      object-fit: contain;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--navy);
+      letter-spacing: -.2px;
+    }
+    .card-sub {
+      margin-top: 3px;
+      font-size: 11.5px;
+      color: #94A3B8;
+      font-weight: 500;
+    }
+
+    /* Form body */
+    .card-body {
+      padding: 24px 32px 28px;
+    }
+
+    .field + .field { margin-top: 16px; }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 6px;
+    }
+
+    .input-wrap { position: relative; }
+
+    .input-wrap svg.input-icon {
+      position: absolute;
+      left: 11px; top: 50%;
+      transform: translateY(-50%);
+      width: 14px; height: 14px;
+      color: #CBD5E1;
+      pointer-events: none;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px 12px 10px 34px;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      color: #1E293B;
+      background: #F8FAFC;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      outline: none;
+      transition: border-color .15s, background .15s, box-shadow .15s;
+    }
+    input::placeholder { color: #CBD5E1; }
+    input:focus {
+      border-color: var(--orange);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(244,149,69,.12);
+    }
+    input.err {
+      border-color: #EF4444;
+      box-shadow: 0 0 0 3px rgba(239,68,68,.10);
+    }
+
+    .pw-toggle {
+      position: absolute;
+      right: 10px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      cursor: pointer; padding: 2px;
+      color: #CBD5E1;
+      transition: color .15s;
+    }
+    .pw-toggle:hover { color: var(--navy); }
+
+    /* Error banner */
+    .error-msg {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: 7px;
+      padding: 9px 12px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #DC2626;
+    }
+    .error-msg.show { display: flex; }
+    .error-msg svg { width: 14px; height: 14px; flex-shrink: 0; color: #EF4444; }
+
+    /* Submit */
+    .btn-submit {
+      width: 100%;
+      margin-top: 20px;
+      padding: 11px;
+      background: var(--orange);
+      color: #fff;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: background .15s, transform .1s;
+    }
+    .btn-submit:hover { background: #E08430; }
+    .btn-submit:active { transform: scale(.98); }
+    .btn-submit:disabled { background: #CBD5E1; cursor: not-allowed; transform: none; }
+
+    .btn-spinner {
+      display: none;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+    }
+    .btn-submit.loading .btn-spinner { display: block; }
+    .btn-submit.loading .btn-label   { opacity: .7; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Quick-fill pills */
+    .pills-wrap {
+      padding: 16px 32px 20px;
+      border-top: 1px solid var(--border);
+      background: #F8FAFC;
+    }
+    .pills-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #94A3B8;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-bottom: 10px;
+    }
+    .pills-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .pill {
+      padding: 6px 4px;
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .12s, background .12s;
+      user-select: none;
+    }
+    .pill:hover {
+      border-color: var(--orange);
+      background: #FFF7F0;
+    }
+    .pill-name {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .pill-user {
+      display: block;
+      font-size: 9px;
+      font-weight: 500;
+      color: #94A3B8;
+      margin-top: 1px;
+    }
+
+    /* Footer */
+    .page-footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 10px;
+      color: #94A3B8;
+    }
+  </style>
+</head>
+<body>
+
+<div class="accent-bar"></div>
+
+<div class="card">
+
+  <!-- Header -->
+  <div class="card-head">
+    <img src="NYATI-LOGO.png" alt="Nyati Cement" />
+    <div class="card-title">Management Information System</div>
+    <div class="card-sub">Sign in to continue</div>
+  </div>
+
+  <!-- Form -->
+  <div class="card-body">
+
+    <div class="error-msg" id="err-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span id="err-text">Invalid username or password.</span>
+    </div>
+
+    <form id="login-form" onsubmit="handleLogin(event)" autocomplete="on">
+
+      <div class="field">
+        <label for="username">Username</label>
+        <div class="input-wrap">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <input type="text" id="username" name="username"
+            placeholder="username" autocomplete="username"
+            autocapitalize="none" required />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="input-wrap">
+          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <input type="password" id="password" name="password"
+            placeholder="••••••••" autocomplete="current-password" required />
+          <button type="button" class="pw-toggle" onclick="togglePw()" title="Show / hide password">
+            <svg id="eye-show" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg id="eye-hide" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="login-btn">
+        <div class="btn-spinner"></div>
+        <span class="btn-label">Sign In</span>
+      </button>
+
+    </form>
+  </div>
+
+  <!-- Quick-fill pills -->
+  <div class="pills-wrap">
+    <div class="pills-label">Quick fill</div>
+    <div class="pills-grid">
+      <div class="pill" onclick="fillCreds('md','MD@LCL2026')">
+        <span class="pill-name">MD / CEO</span>
+        <span class="pill-user">md</span>
+      </div>
+      <div class="pill" onclick="fillCreds('hr','HR@LCL2026')">
+        <span class="pill-name">HR &amp; Admin</span>
+        <span class="pill-user">hr</span>
+      </div>
+      <div class="pill" onclick="fillCreds('finance','Fin@LCL2026')">
+        <span class="pill-name">Finance</span>
+        <span class="pill-user">finance</span>
+      </div>
+      <div class="pill" onclick="fillCreds('stores','Str@LCL2026')">
+        <span class="pill-name">Stores</span>
+        <span class="pill-user">stores</span>
+      </div>
+      <div class="pill" onclick="fillCreds('cpp','CPP@LCL2026')">
+        <span class="pill-name">Power Plant</span>
+        <span class="pill-user">cpp</span>
+      </div>
+      <div class="pill" onclick="fillCreds('pm','PM@LCL2026')">
+        <span class="pill-name">Projects &amp; Maint</span>
+        <span class="pill-user">pm</span>
+      </div>
+      <div class="pill" onclick="fillCreds('it','IT@LCL2026')">
+        <span class="pill-name">IT</span>
+        <span class="pill-user">it</span>
+      </div>
+      <div class="pill" onclick="fillCreds('logistics','Log@LCL2026')">
+        <span class="pill-name">Logistics</span>
+        <span class="pill-user">logistics</span>
+      </div>
+      <div class="pill" onclick="fillCreds('mining','Min@LCL2026')">
+        <span class="pill-name">Mining</span>
+        <span class="pill-user">mining</span>
+      </div>
+      <div class="pill" onclick="fillCreds('production','Prod@LCL2026')">
+        <span class="pill-name">Production</span>
+        <span class="pill-user">production</span>
+      </div>
+      <div class="pill" onclick="fillCreds('management','Mgt@LCL2026')">
+        <span class="pill-name">Management</span>
+        <span class="pill-user">management</span>
+      </div>
+      <div class="pill" onclick="fillCreds('admin','Admin@LCL2026')">
+        <span class="pill-name">Admin</span>
+        <span class="pill-user">admin</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p class="page-footer">&copy; 2026 Lake Cement Ltd &nbsp;·&nbsp; MIS v2.0</p>
+
+<script>
+  /* Redirect if already logged in */
+  (function () {
+    if (getCurrentUser()) {
+      const p = new URLSearchParams(window.location.search);
+      window.location.href = p.get('return') || 'index.html';
+    }
+  })();
+
+  function handleLogin(e) {
+    e.preventDefault();
+    const btn   = document.getElementById('login-btn');
+    const uEl   = document.getElementById('username');
+    const pEl   = document.getElementById('password');
+    const errBox = document.getElementById('err-box');
+
+    errBox.classList.remove('show');
+    uEl.classList.remove('err');
+    pEl.classList.remove('err');
+
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    setTimeout(() => {
+      const ok = login(uEl.value, pEl.value);
+      btn.classList.remove('loading');
+      btn.disabled = false;
+
+      if (ok) {
+        btn.style.background = '#10B981';
+        btn.querySelector('.btn-label').textContent = 'Redirecting…';
+        const p = new URLSearchParams(window.location.search);
+        setTimeout(() => { window.location.href = p.get('return') || 'index.html'; }, 400);
+      } else {
+        uEl.classList.add('err');
+        pEl.classList.add('err');
+        document.getElementById('err-text').textContent = 'Invalid username or password. Please try again.';
+        errBox.classList.add('show');
+        pEl.value = '';
+        pEl.focus();
+      }
+    }, 300);
+  }
+
+  function togglePw() {
+    const inp  = document.getElementById('password');
+    const show = document.getElementById('eye-show');
+    const hide = document.getElementById('eye-hide');
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      show.style.display = 'none';
+      hide.style.display = '';
+    } else {
+      inp.type = 'password';
+      show.style.display = '';
+      hide.style.display = 'none';
+    }
+  }
+
+  function fillCreds(user, pass) {
+    const uEl = document.getElementById('username');
+    const pEl = document.getElementById('password');
+    uEl.value = user;
+    pEl.value = pass;
+    uEl.classList.remove('err');
+    pEl.classList.remove('err');
+    document.getElementById('err-box').classList.remove('show');
+    pEl.focus();
+  }
+
+  ['username', 'password'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      document.getElementById(id).classList.remove('err');
+      document.getElementById('err-box').classList.remove('show');
+    });
+  });
+
+  document.getElementById('username').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('password').focus(); }
+  });
+</script>
+
+</body>
+</html>

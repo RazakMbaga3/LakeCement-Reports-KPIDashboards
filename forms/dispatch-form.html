@@ -7,6 +7,7 @@
   <link rel="icon" type="image/png" href="../favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
+  <script src="../auth.js"></script>
   <link rel="stylesheet" href="forms.css" />
 </head>
 <body>
@@ -39,6 +40,7 @@
     </div>
   </div>
   <div class="header-right">
+    <div id="auth-user-info"></div>
     <div class="brand-tag">
       <span class="header-meta" id="live-date"></span>
     </div>
@@ -584,6 +586,8 @@
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>
   lucide.createIcons();
+  requireAuth();
+  applyDailyPermissions();
   const now = new Date();
   const opts = { weekday:'short', year:'numeric', month:'short', day:'numeric' };
   const str  = now.toLocaleDateString('en-GB', opts);
@@ -615,3 +619,4 @@ initKpiLive([
 </script>
 </body>
 </html>
+

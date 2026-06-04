@@ -105,7 +105,8 @@
       'background:' + sh.bg, 'border:1px solid ' + sh.color + '40',
       'color:' + sh.color, 'border-radius:5px',
       'padding:3px 10px', 'font-size:10px', 'font-weight:700',
-      'letter-spacing:.4px', 'white-space:nowrap', 'margin-bottom:4px',
+      'letter-spacing:.4px', 'white-space:nowrap', 'flex-shrink:0',
+      'order:1',   /* always first inside header-right */
     ].join(';');
     el.innerHTML =
       '<span style="width:6px;height:6px;border-radius:50%;' +
