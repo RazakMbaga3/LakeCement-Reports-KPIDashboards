@@ -123,7 +123,7 @@
       unit:   'MT',
       dec:    0,
       metric: function(d) { var v = nvl(d.kiln_prod_mt); return (v && v > 0) ? v : null; },
-      target: 1650, targetDir: '>=', targetLabel: 'Target 1,650 MT',
+      target: 2000, targetDir: '>=', targetLabel: 'Target ≥ 2,000 MT/day',
       color:  '#F49545', fillColor: 'rgba(244,149,69,0.08)',
     },
     {
@@ -137,7 +137,7 @@
         return (prod && prod > 0 && coal && coal > 0 && ncv && ncv > 0)
           ? coal * ncv * 1000 / prod : null;
       },
-      target: 800, targetDir: '<=', targetLabel: 'Target < 800',
+      target: 780, targetDir: '<=', targetLabel: 'Target < 780 kcal/kg',
       color:  '#7c3aed', fillColor: 'rgba(124,58,237,0.08)',
     },
   ];

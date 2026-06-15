@@ -307,6 +307,11 @@
 <!-- ══════════════════ HEADER ══════════════════ -->
 <header class="top-header">
   <div class="header-left">
+    <a href="portal.html" class="home-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
+      Home
+    </a>
+    <span class="sh-sep"></span>
     <div class="logo-block">
       <img class="nyati-logo" src="NYATI-LOGO.png" alt="Nyati Cement" />
       <div class="logo-text">
@@ -315,33 +320,8 @@
       </div>
     </div>
   </div>
-  <div class="header-center">
-    <div class="view-switcher">
-      <a href="index.html" class="vs-tab">
-        <i data-lucide="bar-chart-2" class="vs-icon"></i>
-        <span>Monthly KPIs</span>
-      </a>
-      <a href="daily-report.html" class="vs-tab active">
-        <i data-lucide="clipboard-list" class="vs-icon"></i>
-        <span>Daily Reports</span>
-      </a>
-      <a href="analytics.html" class="vs-tab">
-        <i data-lucide="trending-up" class="vs-icon"></i>
-        <span>Trends</span>
-      </a>
-      <a href="mis.html" class="vs-tab">
-        <i data-lucide="layout-dashboard" class="vs-icon"></i>
-        <span>MIS</span>
-      </a>
-    </div>
-  </div>
   <div class="header-right">
     <div id="auth-user-info"></div>
-    <a href="forms/index.html" style="display:inline-flex;align-items:center;gap:7px;padding:7px 16px;border-radius:var(--radius);background:var(--orange);color:white;font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(244,149,69,.35);white-space:nowrap;flex-shrink:0">
-      <i data-lucide="clipboard-list" style="width:13px;height:13px;stroke-width:2.5;flex-shrink:0"></i>
-      Daily Entry Forms
-    </a>
-    <div class="header-meta" id="live-date"></div>
   </div>
 </header>
 
@@ -1416,32 +1396,32 @@
     <div class="signoff">
       <div class="so-cell">
         <div class="so-role">Production Head</div>
-        <input class="so-in" placeholder="Full name…" />
-        <input class="so-time" placeholder="Time signed" />
+        <input class="so-in" data-field="sig_prod_head_name" placeholder="Full name…" />
+        <input class="so-time" data-field="sig_prod_head_time" placeholder="Time signed" />
       </div>
       <div class="so-cell">
         <div class="so-role">Plant Manager</div>
-        <input class="so-in" placeholder="Full name…" />
-        <input class="so-time" placeholder="Time reviewed" />
+        <input class="so-in" data-field="sig_plant_mgr_name" placeholder="Full name…" />
+        <input class="so-time" data-field="sig_plant_mgr_time" placeholder="Time reviewed" />
       </div>
       <div class="so-cell">
         <div class="so-role">Technical Manager</div>
-        <input class="so-in" placeholder="Full name…" />
-        <input class="so-time" placeholder="Time approved" />
+        <input class="so-in" data-field="sig_tech_mgr_name" placeholder="Full name…" />
+        <input class="so-time" data-field="sig_tech_mgr_time" placeholder="Time approved" />
       </div>
       <div class="so-cell">
         <div class="so-role">General Manager</div>
-        <input class="so-in" placeholder="Full name…" />
-        <input class="so-time" placeholder="Time approved" />
+        <input class="so-in" data-field="sig_gen_mgr_name" placeholder="Full name…" />
+        <input class="so-time" data-field="sig_gen_mgr_time" placeholder="Time approved" />
       </div>
     </div>
     <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;">
       <span style="font-size:11px;color:var(--text-muted)">
-        Status: <strong style="color:var(--orange)">DRAFT</strong> &nbsp;·&nbsp;
-        Date: <strong>03 May 2026</strong>
+        Status: <strong id="so-status-lbl" style="color:var(--orange)">DRAFT</strong> &nbsp;·&nbsp;
+        Date: <strong id="so-date-lbl">—</strong>
       </span>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-out"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+        <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
         <button class="btn btn-sub"><i data-lucide="lock" class="btn-icon"></i> Submit &amp; Lock</button>
       </div>
     </div>
@@ -1684,6 +1664,45 @@ initReportLoader({
     }
   ]
 });
+</script>
+<script>
+/* ── Sign-off footer: sync status label + date from form-persist state ── */
+(function () {
+  function updateSignOffFooter() {
+    var dateInput  = document.querySelector('input[type="date"]');
+    var dateVal    = dateInput ? dateInput.value : new Date().toISOString().slice(0, 10);
+    var statusLbl  = document.getElementById('so-status-lbl');
+    var dateLbl    = document.getElementById('so-date-lbl');
+
+    /* Show the report date in a readable format */
+    if (dateLbl && dateVal) {
+      var d = new Date(dateVal + 'T00:00:00');
+      dateLbl.textContent = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    /* Read status from localStorage */
+    if (statusLbl) {
+      var key = 'nyati-production-' + dateVal;
+      var raw = localStorage.getItem(key);
+      var status = 'DRAFT';
+      if (raw) {
+        try { status = (JSON.parse(raw)._m.status || 'draft').toUpperCase(); } catch (e) {}
+      }
+      statusLbl.textContent = status;
+      statusLbl.style.color = status === 'SUBMITTED' ? 'var(--green)' : 'var(--orange)';
+    }
+  }
+
+  /* Run on load */
+  document.addEventListener('DOMContentLoaded', updateSignOffFooter);
+
+  /* Re-run whenever date changes or form is saved/submitted */
+  document.addEventListener('nyati:saved',     updateSignOffFooter);
+  document.addEventListener('nyati:restored',  updateSignOffFooter);
+  document.addEventListener('change', function (e) {
+    if (e.target && e.target.type === 'date') updateSignOffFooter();
+  });
+}());
 </script>
 </body>
 </html>

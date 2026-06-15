@@ -261,6 +261,13 @@ function canManageUsers()  { return _getPerms().canManageUsers  === true; }
 function canFillKPI()      { return _getPerms().kpi?.fill       === true; }
 function canSubmitDaily()  { return _getPerms().kpi?.daily      === true; }
 
+/* Public permission accessors used by portal.js */
+function getMyPerms()      { return _getPerms(); }
+function getMyDailyAccess() {
+  const u = getCurrentUser();
+  return u ? (_DAILY_ACCESS[u.role] || { edit:[], nav:[] }) : { edit:[], nav:[] };
+}
+
 function getAllowedKPIDepts() {
   const p = _getPerms();
   return p.kpi?.depts || [];
@@ -617,7 +624,8 @@ const _DAILY_ACCESS = {
                 nav:  ['daily-report.html','dispatch-form.html'] },
   mining:     { edit: ['mines-report.html','limestone-form.html'],
                 nav:  ['daily-report.html','mines-report.html','limestone-form.html'] },
-  production: { edit: ['daily-report.html','quality-form.html','pile-quality-form.html'],
+  production: { edit: ['daily-report.html','quality-form.html','pile-quality-form.html',
+                            'kiln-form.html','cement-mill-form.html'],
                 nav:  'all' },
 };
 

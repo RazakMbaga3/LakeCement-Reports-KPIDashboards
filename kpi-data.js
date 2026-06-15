@@ -8,19 +8,100 @@
    form field. Cells with these labels get ⚡ treatment.
 ─────────────────────────────────────────────────────────────── */
 const KPI_AUTO = [
+  // ── Quality form ────────────────────────────────────────────
   {
-    label:  'Clinker Free Lime',
-    form:   'quality',
-    field:  'free_lime',
-    agg:    'avg',
-    dp:     1,
+    label: 'Clinker Free Lime',
+    form:  'quality',
+    field: 'free_lime',
+    agg:   'avg',
+    dp:    1,
+  },
+  // ── Dispatch form ────────────────────────────────────────────
+  {
+    label: 'Despatch / Day',
+    form:  'dispatch',
+    field: '__dispatch_total',   // synthetic — summed in getMonthEntries
+    agg:   'avg',
+    dp:    0,
+  },
+  // ── Kiln form ────────────────────────────────────────────────
+  {
+    label: 'Kiln Output',
+    form:  'kiln',
+    field: 'kiln_prod_mt',
+    agg:   'avg',
+    dp:    0,
   },
   {
-    label:  'Despatch / Day',
-    form:   'dispatch',
-    field:  '__dispatch_total',          // synthetic — summed in getMonthEntries
-    agg:    'avg',
-    dp:     0,
+    label:   'Specific Thermal Energy Consumption',
+    form:    'kiln',
+    // Weighted average: ∑(coal×NCV×1000) / ∑(prod)
+    compute: function(entries) {
+      var heatSum = 0, prodSum = 0;
+      entries.forEach(function(d) {
+        var prod = parseFloat(d.kiln_prod_mt);
+        var coal = parseFloat(d.kiln_coal_cons);
+        var ncv  = parseFloat(d.kiln_coal_ncv);
+        if (prod > 0 && coal > 0 && ncv > 0) {
+          heatSum += coal * ncv * 1000;
+          prodSum += prod;
+        }
+      });
+      return prodSum > 0 ? parseFloat((heatSum / prodSum).toFixed(0)) : null;
+    },
+    dp: 0,
+  },
+  // ── Power form ───────────────────────────────────────────────
+  {
+    label:   'Specific Power Consumption – Total',
+    form:    'power-cons',
+    compute: function(entries) {
+      var kwhFields = ['pwr_crusher_kwh','pwr_rawmill_kwh','pwr_coalmill_kwh','pwr_kiln_kwh',
+                       'pwr_cm2_kwh','pwr_packing_kwh','pwr_utils_kwh','pwr_lighting_kwh'];
+      var kwhSum = 0, prodSum = 0;
+      entries.forEach(function(d) {
+        var prod = (parseFloat(d.pwr_kiln_prod_mt) || 0) + (parseFloat(d.pwr_cm2_prod_mt) || 0);
+        if (prod > 0) {
+          kwhSum  += kwhFields.reduce(function(s, f) { return s + (parseFloat(d[f]) || 0); }, 0);
+          prodSum += prod;
+        }
+      });
+      return prodSum > 0 ? parseFloat((kwhSum / prodSum).toFixed(2)) : null;
+    },
+    dp: 2,
+  },
+  {
+    label:   'Specific Power Consumption – Up to Clinker',
+    form:    'power-cons',
+    compute: function(entries) {
+      var kwhFields = ['pwr_crusher_kwh','pwr_rawmill_kwh','pwr_coalmill_kwh','pwr_kiln_kwh'];
+      var kwhSum = 0, prodSum = 0;
+      entries.forEach(function(d) {
+        var prod = parseFloat(d.pwr_kiln_prod_mt) || 0;
+        if (prod > 0) {
+          kwhSum  += kwhFields.reduce(function(s, f) { return s + (parseFloat(d[f]) || 0); }, 0);
+          prodSum += prod;
+        }
+      });
+      return prodSum > 0 ? parseFloat((kwhSum / prodSum).toFixed(2)) : null;
+    },
+    dp: 2,
+  },
+  {
+    label:   'Specific Power Consumption – Cement Grinding',
+    form:    'power-cons',
+    compute: function(entries) {
+      var kwhSum = 0, prodSum = 0;
+      entries.forEach(function(d) {
+        var prod = parseFloat(d.pwr_cm2_prod_mt) || 0;
+        if (prod > 0) {
+          kwhSum  += parseFloat(d.pwr_cm2_kwh) || 0;
+          prodSum += prod;
+        }
+      });
+      return prodSum > 0 ? parseFloat((kwhSum / prodSum).toFixed(2)) : null;
+    },
+    dp: 2,
   },
 ];
 
@@ -184,17 +265,26 @@ function attachInlineEditing() {
   });
 }
 
+/* Normalize dashes so HTML en/em-dash (&ndash; &mdash;) match JS string literals */
+function normLabel(s) {
+  return s.replace(/[–—]/g, '–').trim();
+}
+
 /* ─── Load auto-calculated values ────────────────────────── */
 function loadAutoCalcValues(mo, yr) {
-  KPI_AUTO.forEach(({ label, form, field, agg, dp }) => {
+  KPI_AUTO.forEach(({ label, form, field, agg, dp, compute }) => {
     const entries = getMonthEntries(form, yr, mo);
-    const value   = aggregateField(entries, field, agg, dp);
+    const value   = compute
+      ? compute(entries)
+      : aggregateField(entries, field, agg, dp);
     if (value === null) return;
+
+    const normTarget = normLabel(label);
 
     document.querySelectorAll('.kpi-table .data-row').forEach(row => {
       const labelCell = row.querySelector('td');
       if (!labelCell) return;
-      if (labelCell.textContent.trim() !== label) return;
+      if (normLabel(labelCell.textContent) !== normTarget) return;
 
       const section = row.closest('.dept-section');
       const dept    = section ? section.id.replace('dept-', '') : 'unknown';

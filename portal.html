@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement — Home</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="auth.js"></script>
+  <style>
+    /* ══════════════════════════════════════════════════
+       PORTAL HOME — page styles
+    ══════════════════════════════════════════════════ */
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: var(--off-white, #F8FAFC);
+    }
+
+    /* ── Greeting bar ────────────────────────────────── */
+    .portal-greeting {
+      background: white;
+      border-bottom: 1px solid var(--border, #E2E8F0);
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .pg-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--navy, #173158);
+      margin: 0 0 3px;
+      letter-spacing: -.2px;
+    }
+    .pg-sub {
+      font-size: 11.5px;
+      color: var(--text-muted, #64748B);
+      font-weight: 500;
+      margin: 0;
+    }
+    .pg-date {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted, #64748B);
+      white-space: nowrap;
+      padding: 5px 13px;
+      background: var(--off-white, #F8FAFC);
+      border: 1px solid var(--border, #E2E8F0);
+      border-radius: 20px;
+    }
+
+    /* ── Main content ────────────────────────────────── */
+    .portal-main {
+      flex: 1;
+      padding: 28px 28px 56px;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* ── Section ─────────────────────────────────────── */
+    .portal-section { margin-bottom: 34px; }
+    .portal-section-hdr {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 13px;
+    }
+    .psh-dot {
+      width: 8px; height: 8px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .psh-label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.1px;
+      color: var(--text-muted, #64748B);
+    }
+    .psh-count {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted, #64748B);
+      background: var(--off-white, #F8FAFC);
+      border: 1px solid var(--border, #E2E8F0);
+      border-radius: 10px;
+      padding: 1px 7px;
+    }
+
+    /* ── Card grid ───────────────────────────────────── */
+    .portal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    /* ── Card ─────────────────────────────────────────── */
+    .pcard {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border: 1.5px solid var(--border, #E2E8F0);
+      border-radius: 12px;
+      overflow: hidden;
+      text-decoration: none;
+      transition: box-shadow .17s, border-color .17s, transform .13s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    }
+    .pcard:hover {
+      box-shadow: 0 6px 24px rgba(23,49,88,.13);
+      border-color: rgba(23,49,88,.22);
+      transform: translateY(-2px);
+    }
+    .pcard-accent {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+    }
+    .pcard-icon {
+      padding: 18px 18px 8px 22px;
+    }
+    .pcard-body {
+      padding: 2px 18px 0 22px;
+      flex: 1;
+    }
+    .pcard-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--navy, #173158);
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+    .pcard-sub {
+      font-size: 11px;
+      color: var(--text-muted, #64748B);
+      line-height: 1.5;
+      font-weight: 500;
+    }
+    .pcard-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 14px 14px 22px;
+      margin-top: 12px;
+    }
+    .pcard-badge {
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      padding: 3px 9px;
+      border-radius: 10px;
+    }
+    .badge-view   { background:#DBEAFE; color:#1E40AF; border:1px solid #93C5FD; }
+    .badge-submit { background:#FEF3C7; color:#92400E; border:1px solid #FCD34D; }
+    .pcard-arrow {
+      color: #94A3B8;
+      transition: transform .15s, color .15s;
+      flex-shrink: 0;
+    }
+    .pcard:hover .pcard-arrow { transform: translateX(3px); color: var(--navy, #173158); }
+
+    /* ── Empty state ─────────────────────────────────── */
+    .portal-empty {
+      padding: 64px 24px;
+      text-align: center;
+      color: var(--text-muted, #64748B);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    /* ── Footer ─────────────────────────────────────── */
+    .portal-footer {
+      text-align: center;
+      padding: 14px 24px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #94A3B8;
+      letter-spacing: .4px;
+      border-top: 1px solid var(--border, #E2E8F0);
+      background: white;
+    }
+
+    /* ── Responsive ─────────────────────────────────── */
+    @media (max-width: 640px) {
+      .portal-main     { padding: 16px 14px 40px; }
+      .portal-greeting { padding: 14px 16px; }
+      .pg-title        { font-size: 16px; }
+      .portal-grid     { grid-template-columns: 1fr 1fr; gap: 10px; }
+    }
+    @media (max-width: 400px) {
+      .portal-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════ HEADER ══════════════════════ -->
+<header class="top-header">
+  <div class="header-left">
+    <div class="logo-block">
+      <img class="nyati-logo" src="NYATI-LOGO.png" alt="Nyati Cement" />
+      <div class="logo-text">
+        <img class="lc-wordmark" src="lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
+        <span class="company-sub">Operations MIS</span>
+      </div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div id="auth-user-info"></div>
+  </div>
+</header>
+
+<!-- ══════════════════════ GREETING ══════════════════════ -->
+<section class="portal-greeting">
+  <div>
+    <h1 class="pg-title" id="pg-greeting">Welcome</h1>
+    <p  class="pg-sub"   id="pg-sub">Loading your workspace…</p>
+  </div>
+  <div class="pg-date" id="pg-date"></div>
+</section>
+
+<!-- ══════════════════════ CARDS ══════════════════════ -->
+<main class="portal-main" id="portal-main">
+  <div class="portal-empty">Loading…</div>
+</main>
+
+<!-- ══════════════════════ FOOTER ══════════════════════ -->
+<footer class="portal-footer">
+  Lake Cement Ltd &nbsp;·&nbsp; Operations MIS &nbsp;·&nbsp; <span id="portal-year"></span>
+</footer>
+
+<script src="portal.js"></script>
+</body>
+</html>

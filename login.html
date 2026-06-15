@@ -380,7 +380,7 @@
   (function () {
     if (getCurrentUser()) {
       const p = new URLSearchParams(window.location.search);
-      window.location.href = p.get('return') || 'index.html';
+      window.location.href = p.get('return') || 'portal.html';
     }
   })();
 
@@ -407,7 +407,7 @@
         btn.style.background = '#10B981';
         btn.querySelector('.btn-label').textContent = 'Redirecting…';
         const p = new URLSearchParams(window.location.search);
-        setTimeout(() => { window.location.href = p.get('return') || 'index.html'; }, 400);
+        setTimeout(() => { window.location.href = p.get('return') || 'portal.html'; }, 400);
       } else {
         uEl.classList.add('err');
         pEl.classList.add('err');
