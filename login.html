@@ -374,17 +374,6 @@
     }
   }
 
-  function fillCreds(user, pass) {
-    const uEl = document.getElementById('username');
-    const pEl = document.getElementById('password');
-    uEl.value = user;
-    pEl.value = pass;
-    uEl.classList.remove('err');
-    pEl.classList.remove('err');
-    document.getElementById('err-box').classList.remove('show');
-    pEl.focus();
-  }
-
   ['username', 'password'].forEach(id => {
     document.getElementById(id).addEventListener('input', () => {
       document.getElementById(id).classList.remove('err');
