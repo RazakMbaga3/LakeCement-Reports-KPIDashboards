@@ -166,7 +166,11 @@
   }
 
   /* ══ Public entry point ════════════════════════════════════════════ */
+  let _activeConfig = null;
+
   global.initReportLoader = function (config) {
+    _activeConfig = config;
+
     // Re-run when date picker changes
     const dateEl = document.querySelector('input[type="date"]');
     if (dateEl) {
@@ -176,8 +180,16 @@
     // Re-run after form-persist restores a production snapshot
     document.addEventListener('nyati:restored', () => setTimeout(() => _run(config), 80));
 
+    // Re-run after inline section save
+    document.addEventListener('nyati:inline-saved', () => setTimeout(() => _run(config), 80));
+
     // Initial run — wait 160 ms for form-persist to initialise first
     setTimeout(() => _run(config), 160);
+  };
+
+  // Exposed so inline-edit.js can trigger a KPI refresh after saving
+  global.refreshReportLoader = function () {
+    if (_activeConfig) _run(_activeConfig);
   };
 
 }(window));

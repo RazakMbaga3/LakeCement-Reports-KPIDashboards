@@ -1,18 +1,18 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lake Cement – Cement Mill Daily Report</title>
+  <title>Lake Cement â€“ Cement Mill Daily Report</title>
   <link rel="icon" type="image/png" href="../favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
-  <script src="../auth.js"></script>
+  <script src="../auth.js?v=6"></script>
   <link rel="stylesheet" href="forms.css" />
 </head>
 <body>
 
-<!-- ══════════════════ HEADER ══════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• HEADER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <header class="top-header">
   <div class="header-left">
     <a href="../portal.html" class="home-btn">
@@ -24,7 +24,6 @@
       <img class="nyati-logo" src="../NYATI-LOGO.png" alt="Nyati Cement" />
       <div class="logo-text">
         <img class="lc-wordmark" src="../lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
-        <span class="company-sub">Cement Mill Daily Report</span>
       </div>
     </div>
   </div>
@@ -34,31 +33,10 @@
   </div>
 </header>
 
-<!-- ══════════════════ NAV ══════════════════ -->
-<nav class="dept-nav">
-  <div class="nav-inner">
-    <span class="nav-label">DAILY REPORTS</span>
-    <button class="nav-btn" onclick="location.href='../daily-report.html'"><i data-lucide="factory" class="nav-icon"></i> Production</button>
-    <button class="nav-btn" onclick="location.href='../power-plant-report.html'"><i data-lucide="zap" class="nav-icon"></i> Power Plant (CPP)</button>
-    <button class="nav-btn" onclick="location.href='../mines-report.html'"><i data-lucide="pickaxe" class="nav-icon"></i> Mines</button>
-    <button class="nav-btn" onclick="location.href='dispatch-form.html'"><i data-lucide="truck" class="nav-icon"></i> Dispatch</button>
-    <button class="nav-btn" onclick="location.href='stoppage-form.html'"><i data-lucide="alert-triangle" class="nav-icon"></i> Stoppages</button>
-    <button class="nav-btn" onclick="location.href='kiln-form.html'"><i data-lucide="flame" class="nav-icon"></i> Kiln &amp; Pyro</button>
-    <button class="nav-btn active"><i data-lucide="package" class="nav-icon"></i> Cement Mill</button>
-    <button class="nav-btn" onclick="location.href='cpp-form.html'"><i data-lucide="zap" class="nav-icon"></i> CPP Form</button>
-    <button class="nav-btn" onclick="location.href='quality-form.html'"><i data-lucide="flask-conical" class="nav-icon"></i> Quality</button>
-    <button class="nav-btn" onclick="location.href='materials-form.html'"><i data-lucide="package" class="nav-icon"></i> Materials</button>
-    <button class="nav-btn" onclick="location.href='power-form.html'"><i data-lucide="activity" class="nav-icon"></i> Power Cons.</button>
-    <button class="nav-btn" onclick="location.href='pile-quality-form.html'"><i data-lucide="layers" class="nav-icon"></i> Pile Quality</button>
-    <button class="nav-btn" onclick="location.href='limestone-form.html'"><i data-lucide="mountain" class="nav-icon"></i> Limestone %</button>
-    <div class="nav-divider"></div>
-    <button class="nav-btn" onclick="location.href='overtime-form.html'"><i data-lucide="clock" class="nav-icon"></i> Overtime</button>
-    <div class="nav-divider"></div>
-    <button class="nav-btn secondary" onclick="window.print()"><i data-lucide="printer" class="nav-icon"></i> Print / PDF</button>
-  </div>
-</nav>
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• NAV â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<nav class="dept-nav"><div class="nav-inner"></div></nav>
 
-<!-- ══════════════════ TOOLBAR ══════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TOOLBAR â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="toolbar">
   <div class="tb-group">
     <span class="tb-lbl">Date</span>
@@ -67,7 +45,7 @@
   <div class="tb-sep"></div>
   <div class="tb-group">
     <span class="tb-lbl">Production Head</span>
-    <input type="text" class="tb-ctl" data-field="prepared_by" placeholder="CM Head…" style="min-width:160px;width:auto" />
+    <input type="text" class="tb-ctl" data-field="prepared_by" placeholder="CM Headâ€¦" style="min-width:160px;width:auto" />
   </div>
   <div class="tb-sep"></div>
   <span class="rpt-pill">DRAFT</span>
@@ -83,46 +61,46 @@
   </div>
 </div>
 
-<!-- ══════════════════ MAIN ══════════════════ -->
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• MAIN â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <main class="fm-main">
 
-  <!-- ══ KPI SUMMARY STRIP ════════════════════════════════════════ -->
+  <!-- â•â• KPI SUMMARY STRIP â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
   <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr)">
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Total Cement Produced</div>
-      <div class="kt-val" data-kpi="cm_total_kpi">—</div>
-      <div class="kt-unit">MT — CM-1 + CM-2</div>
+      <div class="kt-val" data-kpi="cm_total_kpi">â€”</div>
+      <div class="kt-unit">MT â€” CM-1 + CM-2</div>
       <div class="kt-bar"><div class="kt-bar-fill"></div></div>
-      <div class="kt-foot"><span class="kt-tgt">Target: 1,000 MT</span><span class="kt-pct">—</span></div>
+      <div class="kt-foot"><span class="kt-tgt">Target: 1,000 MT</span><span class="kt-pct">â€”</span></div>
     </div>
     <div class="kt kt-m">
       <span class="kt-badge">Manual</span>
       <div class="kt-lbl">CM-1 Production</div>
-      <div class="kt-val" data-kpi="cm1_prod_kpi">—</div>
-      <div class="kt-unit">MT — On Date</div>
+      <div class="kt-val" data-kpi="cm1_prod_kpi">â€”</div>
+      <div class="kt-unit">MT â€” On Date</div>
     </div>
     <div class="kt kt-m">
       <span class="kt-badge">Manual</span>
       <div class="kt-lbl">CM-2 Production</div>
-      <div class="kt-val" data-kpi="cm2_prod_kpi">—</div>
-      <div class="kt-unit">MT — On Date</div>
+      <div class="kt-val" data-kpi="cm2_prod_kpi">â€”</div>
+      <div class="kt-unit">MT â€” On Date</div>
     </div>
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Total Bags Packed</div>
-      <div class="kt-val" data-kpi="cm_bags_total_kpi">—</div>
+      <div class="kt-val" data-kpi="cm_bags_total_kpi">â€”</div>
       <div class="kt-unit">Bags (42.5R + 42.5N)</div>
     </div>
   </div>
 
-  <!-- ════════════════════════════════════════════════
-       BLOCK 1 — CEMENT MILL-1 (CM-1)
-  ════════════════════════════════════════════════ -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       BLOCK 1 â€” CEMENT MILL-1 (CM-1)
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="cog" class="title-icon"></i> Cement Mill-1 (CM-1) — Operating Data</div>
+        <div class="rcard-title"><i data-lucide="cog" class="title-icon"></i> Cement Mill-1 (CM-1) â€” Operating Data</div>
         <div class="rcard-sub">Production by grade, running hours, SPC and stoppages</div>
       </div>
       <div class="rcard-chips">
@@ -148,73 +126,73 @@
           <tr>
             <td class="tp">CM-1 Running Hours</td><td class="ts">hrs</td>
             <td class="cm"><input class="ci" type="number" value="0" step="0.25" max="24" data-field="cm1_run_hrs" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="number" value="20" /></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
             <td class="tp">CM-1 Stoppages</td><td class="ts">min</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_stop_min" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" placeholder="Reason…" /></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" placeholder="Reasonâ€¦" /></td>
           </tr>
           <tr>
             <td class="tp">CM-1 Average Feed Rate</td><td class="ts">TPH</td>
             <td class="cm"><input class="ci" type="number" value="0" step="0.5" data-field="cm1_feed_tph" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="number" value="60" /></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
 
           <tr class="srow"><td colspan="7">CM-1 Production by Grade</td></tr>
           <tr>
-            <td class="tp">CM-1 — 42.5 R (Nyati Cement)</td><td class="ts">MT</td>
+            <td class="tp">CM-1 â€” 42.5 R (Nyati Cement)</td><td class="ts">MT</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_425r_mt" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
-            <td class="tp">CM-1 — 42.5 N</td><td class="ts">MT</td>
+            <td class="tp">CM-1 â€” 42.5 N</td><td class="ts">MT</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_425n_mt" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
-            <td class="tp">CM-1 — 32.5 N</td><td class="ts">MT</td>
+            <td class="tp">CM-1 â€” 32.5 N</td><td class="ts">MT</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_325n_mt" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
-            <td class="tp">CM-1 — OPC</td><td class="ts">MT</td>
+            <td class="tp">CM-1 â€” OPC</td><td class="ts">MT</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_opc_mt" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr class="trow">
             <td colspan="2" style="text-align:right;padding-right:12px;font-weight:700">CM-1 TOTAL</td>
-            <td class="cf"><div class="cv" data-kpi="cm1_prod_kpi2">—</div></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm1_prod_kpi2">â€”</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td colspan="2"></td>
           </tr>
 
           <tr class="srow"><td colspan="7">CM-1 Quality &amp; Performance</td></tr>
           <tr>
-            <td class="tp">Blaine Achieved (42.5R)</td><td class="ts">cm²/g</td>
+            <td class="tp">Blaine Achieved (42.5R)</td><td class="ts">cmÂ²/g</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_blaine_425r" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">≥ 3,500</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
+            <td class="cs"><div class="cv">â‰¥ 3,500</div></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
             <td class="tp">Separator Speed (Avg)</td><td class="ts">RPM</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_sep_rpm" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="number" value="900" /></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
@@ -223,13 +201,13 @@
     </div>
   </div>
 
-  <!-- ════════════════════════════════════════════════
-       BLOCK 2 — CEMENT MILL-2 (CM-2)
-  ════════════════════════════════════════════════ -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       BLOCK 2 â€” CEMENT MILL-2 (CM-2)
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="cog" class="title-icon"></i> Cement Mill-2 (CM-2) — Operating Data</div>
+        <div class="rcard-title"><i data-lucide="cog" class="title-icon"></i> Cement Mill-2 (CM-2) â€” Operating Data</div>
         <div class="rcard-sub">Production by grade, running hours, SPC and stoppages</div>
       </div>
       <div class="rcard-chips">
@@ -255,73 +233,73 @@
           <tr>
             <td class="tp">CM-2 Running Hours</td><td class="ts">hrs</td>
             <td class="cm"><input class="ci" type="number" value="0" step="0.25" max="24" data-field="cm2_run_hrs" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="number" value="22" /></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
             <td class="tp">CM-2 Stoppages</td><td class="ts">min</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_stop_min" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" placeholder="Reason…" /></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" placeholder="Reasonâ€¦" /></td>
           </tr>
           <tr>
             <td class="tp">CM-2 Average Feed Rate</td><td class="ts">TPH</td>
             <td class="cm"><input class="ci" type="number" value="0" step="0.5" data-field="cm2_feed_tph" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="number" value="55" /></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
 
           <tr class="srow"><td colspan="7">CM-2 Production by Grade</td></tr>
           <tr>
-            <td class="tp">CM-2 — 42.5 R (Nyati Cement)</td><td class="ts">MT</td>
+            <td class="tp">CM-2 â€” 42.5 R (Nyati Cement)</td><td class="ts">MT</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_425r_mt" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
-            <td class="tp">CM-2 — 42.5 N</td><td class="ts">MT</td>
+            <td class="tp">CM-2 â€” 42.5 N</td><td class="ts">MT</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_425n_mt" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
-            <td class="tp">CM-2 — 42.5 N BM (Blended)</td><td class="ts">MT</td>
+            <td class="tp">CM-2 â€” 42.5 N BM (Blended)</td><td class="ts">MT</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_425n_bm_mt" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
-            <td class="tp">CM-2 — 32.5 N</td><td class="ts">MT</td>
+            <td class="tp">CM-2 â€” 32.5 N</td><td class="ts">MT</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_325n_mt" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr class="trow">
             <td colspan="2" style="text-align:right;padding-right:12px;font-weight:700">CM-2 TOTAL</td>
-            <td class="cf"><div class="cv" data-kpi="cm2_prod_kpi2">—</div></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm2_prod_kpi2">â€”</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td colspan="2"></td>
           </tr>
 
           <tr class="srow"><td colspan="7">CM-2 Quality &amp; Performance</td></tr>
           <tr>
-            <td class="tp">Blaine Achieved (42.5R)</td><td class="ts">cm²/g</td>
+            <td class="tp">Blaine Achieved (42.5R)</td><td class="ts">cmÂ²/g</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_blaine_425r" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">≥ 3,500</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
+            <td class="cs"><div class="cv">â‰¥ 3,500</div></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
             <td class="tp">Separator Speed (Avg)</td><td class="ts">RPM</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_sep_rpm" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="number" value="880" /></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
@@ -330,16 +308,16 @@
     </div>
   </div>
 
-  <!-- ════════════════════════════════════════════════
-       BLOCK 3 — CLINKER & MATERIALS CONSUMED
-  ════════════════════════════════════════════════ -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       BLOCK 3 â€” CLINKER & MATERIALS CONSUMED
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="layers" class="title-icon"></i> Materials Consumed — Cement Grinding</div>
+        <div class="rcard-title"><i data-lucide="layers" class="title-icon"></i> Materials Consumed â€” Cement Grinding</div>
         <div class="rcard-sub">Clinker, gypsum, grinding aid and additives consumed today</div>
       </div>
-      <div class="rcard-chips"><span class="rcard-chip orange">PRODUCTION · STORES</span></div>
+      <div class="rcard-chips"><span class="rcard-chip orange">PRODUCTION Â· STORES</span></div>
     </div>
     <div class="tbl-scroll">
       <table class="rt" style="min-width:900px">
@@ -359,32 +337,32 @@
             <td class="tp">Clinker (Own + Purchased)</td><td class="ts">MT</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm_clinker_open" /></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm_clinker_cons" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="cm_clinker_close">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm_clinker_close">â€”</div></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
             <td class="tp">Gypsum</td><td class="ts">MT</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm_gypsum_open" /></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm_gypsum_cons" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="cm_gypsum_close">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm_gypsum_close">â€”</div></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
             <td class="tp">Fly Ash</td><td class="ts">MT</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm_flyash_open" /></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm_flyash_cons" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="cm_flyash_close">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm_flyash_close">â€”</div></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
             <td class="tp">Grinding Aid (Sika/equiv.)</td><td class="ts">kg</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm_grind_aid_open" /></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm_grind_aid_cons" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="cm_grind_aid_close">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm_grind_aid_close">â€”</div></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
         </tbody>
@@ -392,16 +370,16 @@
     </div>
   </div>
 
-  <!-- ════════════════════════════════════════════════
-       BLOCK 4 — BAGGING & DISPATCH
-  ════════════════════════════════════════════════ -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+       BLOCK 4 â€” BAGGING & DISPATCH
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
         <div class="rcard-title"><i data-lucide="package" class="title-icon"></i> Bagging &amp; Dispatch</div>
         <div class="rcard-sub">PP bag consumption per grade + bulk dispatch</div>
       </div>
-      <div class="rcard-chips"><span class="rcard-chip orange">PRODUCTION · DISPATCH</span></div>
+      <div class="rcard-chips"><span class="rcard-chip orange">PRODUCTION Â· DISPATCH</span></div>
     </div>
     <div class="tbl-scroll">
       <table class="rt" style="min-width:900px">
@@ -418,47 +396,47 @@
         <tbody>
           <tr class="srow"><td colspan="6">Bags Filled (50 kg)</td></tr>
           <tr>
-            <td class="tp">PP Bags — 42.5 R</td><td class="ts">Bags</td>
+            <td class="tp">PP Bags â€” 42.5 R</td><td class="ts">Bags</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm_bags_425r" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
-            <td class="tp">PP Bags — 42.5 N</td><td class="ts">Bags</td>
+            <td class="tp">PP Bags â€” 42.5 N</td><td class="ts">Bags</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm_bags_425n" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
-            <td class="tp">PP Bags — 32.5 N</td><td class="ts">Bags</td>
+            <td class="tp">PP Bags â€” 32.5 N</td><td class="ts">Bags</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm_bags_325n" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr class="trow">
             <td colspan="2" style="text-align:right;padding-right:12px;font-weight:700">TOTAL BAGS</td>
-            <td class="cf"><div class="cv" data-kpi="cm_bags_total_kpi2">—</div></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm_bags_total_kpi2">â€”</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td></td>
           </tr>
           <tr class="srow"><td colspan="6">Bulk Dispatch</td></tr>
           <tr>
             <td class="tp">Bulk Cement Dispatched</td><td class="ts">MT</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm_bulk_dispatch_mt" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
-          <tr class="srow"><td colspan="6">Cement Silos — Closing Stock</td></tr>
+          <tr class="srow"><td colspan="6">Cement Silos â€” Closing Stock</td></tr>
           <tr>
-            <td class="tp">Cement Silo — 42.5 R</td><td class="ts">MT</td>
+            <td class="tp">Cement Silo â€” 42.5 R</td><td class="ts">MT</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm_silo_425r" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
-            <td class="tp">Cement Silo — 42.5 N</td><td class="ts">MT</td>
+            <td class="tp">Cement Silo â€” 42.5 N</td><td class="ts">MT</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm_silo_425n" /></td>
-            <td class="cf"><div class="cv">—</div></td><td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">â€”</div></td><td class="cf"><div class="cv">â€”</div></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
           </tr>
         </tbody>
@@ -472,22 +450,22 @@
     <div class="signoff">
       <div class="so-cell">
         <div class="so-role">CM Head / Packing Head</div>
-        <input class="so-in" placeholder="Full name…" />
+        <input class="so-in" placeholder="Full nameâ€¦" />
         <input class="so-time" placeholder="Time signed" />
       </div>
       <div class="so-cell">
         <div class="so-role">Production Head</div>
-        <input class="so-in" placeholder="Full name…" />
+        <input class="so-in" placeholder="Full nameâ€¦" />
         <input class="so-time" placeholder="Time reviewed" />
       </div>
       <div class="so-cell">
         <div class="so-role">Plant Manager</div>
-        <input class="so-in" placeholder="Full name…" />
+        <input class="so-in" placeholder="Full nameâ€¦" />
         <input class="so-time" placeholder="Time approved" />
       </div>
       <div class="so-cell">
         <div class="so-role">General Manager</div>
-        <input class="so-in" placeholder="Full name…" />
+        <input class="so-in" placeholder="Full nameâ€¦" />
         <input class="so-time" placeholder="Time approved" />
       </div>
     </div>
@@ -573,3 +551,8 @@ initKpiLive([
 </script>
 </body>
 </html>
+
+
+
+
+

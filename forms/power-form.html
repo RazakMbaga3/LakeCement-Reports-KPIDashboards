@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="../favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
-  <script src="../auth.js"></script>
+  <script src="../auth.js?v=6"></script>
   <link rel="stylesheet" href="forms.css" />
 </head>
 <body>
@@ -24,7 +24,6 @@
       <img class="nyati-logo" src="../NYATI-LOGO.png" alt="Nyati Cement" />
       <div class="logo-text">
         <img class="lc-wordmark" src="../lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
-        <span class="company-sub">Power Consumption Report</span>
       </div>
     </div>
   </div>
@@ -35,26 +34,7 @@
 </header>
 
 <!-- ══════════════════ NAV ══════════════════ -->
-<nav class="dept-nav">
-  <div class="nav-inner">
-    <span class="nav-label">DAILY REPORTS</span>
-    <button class="nav-btn" onclick="location.href='../daily-report.html'"><i data-lucide="factory" class="nav-icon"></i> Production</button>
-    <button class="nav-btn" onclick="location.href='../power-plant-report.html'"><i data-lucide="zap" class="nav-icon"></i> Power Plant (CPP)</button>
-    <button class="nav-btn" onclick="location.href='../mines-report.html'"><i data-lucide="pickaxe" class="nav-icon"></i> Mines</button>
-    <button class="nav-btn" onclick="location.href='dispatch-form.html'"><i data-lucide="truck" class="nav-icon"></i> Dispatch</button>
-    <button class="nav-btn" onclick="location.href='stoppage-form.html'"><i data-lucide="alert-triangle" class="nav-icon"></i> Stoppages</button>
-    <button class="nav-btn" onclick="location.href='cpp-form.html'"><i data-lucide="zap" class="nav-icon"></i> CPP Form</button>
-    <button class="nav-btn" onclick="location.href='quality-form.html'"><i data-lucide="flask-conical" class="nav-icon"></i> Quality</button>
-    <button class="nav-btn" onclick="location.href='materials-form.html'"><i data-lucide="package" class="nav-icon"></i> Materials</button>
-    <button class="nav-btn active"><i data-lucide="activity" class="nav-icon"></i> Power Cons.</button>
-    <button class="nav-btn" onclick="location.href='pile-quality-form.html'"><i data-lucide="layers" class="nav-icon"></i> Pile Quality</button>
-    <button class="nav-btn" onclick="location.href='limestone-form.html'"><i data-lucide="mountain" class="nav-icon"></i> Limestone %</button>
-    <div class="nav-divider"></div>
-    <button class="nav-btn" onclick="location.href='overtime-form.html'"><i data-lucide="clock" class="nav-icon"></i> Overtime</button>
-    <div class="nav-divider"></div>
-    <button class="nav-btn secondary" onclick="window.print()"><i data-lucide="printer" class="nav-icon"></i> Print / PDF</button>
-  </div>
-</nav>
+<nav class="dept-nav"><div class="nav-inner"></div></nav>
 
 <!-- ══════════════════ TOOLBAR ══════════════════ -->
 <div class="toolbar">
@@ -474,4 +454,9 @@ initKpiLive([
 </script>
 </body>
 </html>
+
+
+
+
+
 

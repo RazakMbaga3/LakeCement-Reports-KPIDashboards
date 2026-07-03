@@ -50,6 +50,13 @@ let currentDept = 'ei';
 
 /* ─── switch department ─────────────────────────────────────── */
 function switchDept(dept) {
+  // Defense in depth: even though the nav buttons/dropdown are filtered
+  // by role in applyKPIPermissions(), refuse to switch to a department
+  // this role has no view rights to (e.g. a stale button, console call).
+  if (typeof canViewKPIDept === 'function' && !canViewKPIDept(dept)) {
+    dept = 'summary';
+  }
+
   currentDept = dept;
 
   // hide all sections
@@ -74,6 +81,9 @@ function switchDept(dept) {
     updateSummaryDashboard();
     applyPeriodCards(document.getElementById('view-select').value);
   }
+
+  // Re-evaluate "Fill Monthly Data" visibility for the newly selected dept.
+  if (typeof refreshFillButtonVisibility === 'function') refreshFillButtonVisibility();
 }
 
 /* ─── sync dept dropdown → nav ─────────────────────────────── */

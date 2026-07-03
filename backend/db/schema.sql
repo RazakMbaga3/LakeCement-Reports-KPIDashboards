@@ -82,20 +82,6 @@ CREATE TABLE IF NOT EXISTS kpi_monthly (
   UNIQUE (department, year, month, kpi_key)
 );
 
--- ── OVERTIME ────────────────────────────────────────────────
--- Separate table for overtime records (multi-row per submission)
-CREATE TABLE IF NOT EXISTS overtime_records (
-  id            SERIAL PRIMARY KEY,
-  record_date   DATE        NOT NULL,
-  employee_name VARCHAR(100),
-  department    VARCHAR(50),
-  hours         NUMERIC(4,1),
-  reason        TEXT,
-  approved_by   VARCHAR(100),
-  submitted_by  INTEGER REFERENCES users(id),
-  submitted_at  TIMESTAMP DEFAULT NOW()
-);
-
 -- ── INDEXES (speeds up common queries) ──────────────────────
 CREATE INDEX IF NOT EXISTS idx_daily_reports_date     ON daily_reports(record_date);
 CREATE INDEX IF NOT EXISTS idx_daily_reports_form     ON daily_reports(form_type);

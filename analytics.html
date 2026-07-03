@@ -1,15 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lake Cement – Trend Analytics</title>
+  <title>Lake Cement â€“ Trend Analytics</title>
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
-  <script src="auth.js"></script>
+  <script src="auth.js?v=6"></script>
   <style>
-    /* ── Period picker bar ──────────────────────────────────────── */
+    /* â”€â”€ Period picker bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .an-period-bar {
       background: white;
       border-bottom: 1px solid var(--border);
@@ -76,7 +76,7 @@
     .an-cov-fair  { background: #FEF3C7; color: #92400E; border-color: #FDE68A; }
     .an-cov-none  { background: var(--section-bg); color: var(--text-muted); border-color: var(--border); }
 
-    /* ── Main layout ────────────────────────────────────────────── */
+    /* â”€â”€ Main layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .an-main {
       padding: 20px var(--space-x, 28px) 48px;
       max-width: 1600px;
@@ -84,7 +84,7 @@
       width: 100%;
     }
 
-    /* ── Section heading ────────────────────────────────────────── */
+    /* â”€â”€ Section heading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .an-section-hdr {
       display: flex;
       align-items: center;
@@ -112,7 +112,7 @@
       border-radius: 8px;
     }
 
-    /* ── Chart grid ─────────────────────────────────────────────── */
+    /* â”€â”€ Chart grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .an-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -121,7 +121,7 @@
     }
     @media (max-width: 900px) { .an-grid { grid-template-columns: 1fr; } }
 
-    /* ── Chart card ─────────────────────────────────────────────── */
+    /* â”€â”€ Chart card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .an-card {
       background: white;
       border: 1px solid var(--border);
@@ -224,7 +224,7 @@
     .an-card-empty .emp-msg  { font-size: 11px; font-weight: 600; }
     .an-card-empty .emp-sub  { font-size: 10px; margin-top: 4px; opacity: .7; }
 
-    /* ── Anomaly panel ──────────────────────────────────────────── */
+    /* â”€â”€ Anomaly panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .an-anomaly-wrap {
       background: white;
       border: 1px solid var(--border);
@@ -294,7 +294,7 @@
     }
     .an-no-anomaly span { font-size: 20px; display: block; margin-bottom: 6px; }
 
-    /* ── Empty state (no localStorage data at all) ─────────────── */
+    /* â”€â”€ Empty state (no localStorage data at all) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .an-empty-state {
       display: none;
       flex-direction: column;
@@ -308,7 +308,7 @@
     .an-empty-state .es-body  { font-size: 12px; color: var(--text-muted); max-width: 380px; line-height: 1.6; }
     .an-empty-state a         { color: var(--orange); font-weight: 700; text-decoration: none; }
 
-    /* ── Section header icon colors ────────────────────────────── */
+    /* â”€â”€ Section header icon colors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     .an-icon-quality  { color: #239557; }
     .an-icon-ops      { color: #F49545; }
     .an-icon-anomaly  { color: #e53935; }
@@ -316,10 +316,10 @@
     .an-section-title.ops      { color: #F49545; }
     .an-section-title.anomaly  { color: #e53935; }
 
-    /* ── Responsive grid ────────────────────────────────────────── */
+    /* â”€â”€ Responsive grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     @media (max-width: 1100px) { .an-grid { grid-template-columns: 1fr; } }
 
-    /* ── Print ──────────────────────────────────────────────────── */
+    /* â”€â”€ Print â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
     @media print {
       @page { size: A4 landscape; margin: 10mm 8mm; }
       .an-period-bar, .dash-footer { display: none; }
@@ -331,7 +331,7 @@
 </head>
 <body>
 
-  <!-- ═══════════════════ TOP HEADER ═══════════════════ -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• TOP HEADER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
   <header class="top-header">
     <div class="header-left">
       <a href="portal.html" class="home-btn">
@@ -343,7 +343,6 @@
         <img class="nyati-logo" src="NYATI-LOGO.png" alt="Nyati Cement" />
         <div class="logo-text">
           <img class="lc-wordmark" src="lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
-          <span class="company-sub">Trend Analytics</span>
         </div>
       </div>
     </div>
@@ -352,7 +351,7 @@
     </div>
   </header>
 
-  <!-- ═══════════════════ PERIOD BAR ═══════════════════ -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• PERIOD BAR â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
   <div class="an-period-bar">
     <div class="an-period-inner">
       <span class="an-period-lbl">Period</span>
@@ -369,19 +368,19 @@
     </div>
   </div>
 
-  <!-- ═══════════════════ MAIN ═══════════════════ -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• MAIN â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
   <main class="an-main" id="an-main">
 
     <!-- Empty state shown when nothing in localStorage -->
     <div class="an-empty-state" id="an-empty">
-      <div class="es-icon">📊</div>
+      <div class="es-icon">ðŸ“Š</div>
       <div class="es-title">No trend data yet</div>
       <div class="es-body">
         Trend charts appear automatically as daily report forms are submitted.
         <br><br>
-        <a href="forms/index.html">Open Daily Entry Forms →</a>
-        &nbsp;&nbsp;·&nbsp;&nbsp;
-        <a href="javascript:seedDemoData()" style="color:var(--navy)">Load sample data →</a>
+        <a href="forms/index.html">Open Daily Entry Forms â†’</a>
+        &nbsp;&nbsp;Â·&nbsp;&nbsp;
+        <a href="javascript:seedDemoData()" style="color:var(--navy)">Load sample data â†’</a>
         <br><br>
         <span style="font-size:11px;opacity:.7">Or import historical Excel files using the Import Excel button on each form.</span>
       </div>
@@ -409,22 +408,22 @@
             </div>
             <div class="an-card-stats">
               <div class="an-stat">
-                <span class="an-stat-val" id="stat-free-cao-cur">—</span>
+                <span class="an-stat-val" id="stat-free-cao-cur">â€”</span>
                 <span class="an-stat-lbl">Latest</span>
               </div>
               <div class="an-stat">
-                <span class="an-stat-val" id="stat-free-cao-avg">—</span>
+                <span class="an-stat-val" id="stat-free-cao-avg">â€”</span>
                 <span class="an-stat-lbl">Period avg</span>
               </div>
               <div class="an-stat">
-                <span class="an-stat-trend" id="stat-free-cao-trend">—</span>
+                <span class="an-stat-trend" id="stat-free-cao-trend">â€”</span>
                 <span class="an-stat-lbl">Trend</span>
               </div>
             </div>
           </div>
           <div class="an-chart-wrap"><canvas id="chart-free-cao"></canvas></div>
           <div class="an-card-empty" id="empty-free-cao">
-            <div class="emp-icon">🔬</div>
+            <div class="emp-icon">ðŸ”¬</div>
             <div class="emp-msg">No quality data</div>
             <div class="emp-sub">Submit the Quality form to see trends</div>
           </div>
@@ -441,22 +440,22 @@
             </div>
             <div class="an-card-stats">
               <div class="an-stat">
-                <span class="an-stat-val" id="stat-blaine-cur">—</span>
+                <span class="an-stat-val" id="stat-blaine-cur">â€”</span>
                 <span class="an-stat-lbl">Latest</span>
               </div>
               <div class="an-stat">
-                <span class="an-stat-val" id="stat-blaine-avg">—</span>
+                <span class="an-stat-val" id="stat-blaine-avg">â€”</span>
                 <span class="an-stat-lbl">Period avg</span>
               </div>
               <div class="an-stat">
-                <span class="an-stat-trend" id="stat-blaine-trend">—</span>
+                <span class="an-stat-trend" id="stat-blaine-trend">â€”</span>
                 <span class="an-stat-lbl">Trend</span>
               </div>
             </div>
           </div>
           <div class="an-chart-wrap"><canvas id="chart-blaine"></canvas></div>
           <div class="an-card-empty" id="empty-blaine">
-            <div class="emp-icon">🔬</div>
+            <div class="emp-icon">ðŸ”¬</div>
             <div class="emp-msg">No quality data</div>
             <div class="emp-sub">Submit the Quality form to see trends</div>
           </div>
@@ -473,22 +472,22 @@
             </div>
             <div class="an-card-stats">
               <div class="an-stat">
-                <span class="an-stat-val" id="stat-strength-cur">—</span>
+                <span class="an-stat-val" id="stat-strength-cur">â€”</span>
                 <span class="an-stat-lbl">Latest</span>
               </div>
               <div class="an-stat">
-                <span class="an-stat-val" id="stat-strength-avg">—</span>
+                <span class="an-stat-val" id="stat-strength-avg">â€”</span>
                 <span class="an-stat-lbl">Period avg</span>
               </div>
               <div class="an-stat">
-                <span class="an-stat-trend" id="stat-strength-trend">—</span>
+                <span class="an-stat-trend" id="stat-strength-trend">â€”</span>
                 <span class="an-stat-lbl">Trend</span>
               </div>
             </div>
           </div>
           <div class="an-chart-wrap"><canvas id="chart-strength"></canvas></div>
           <div class="an-card-empty" id="empty-strength">
-            <div class="emp-icon">🔬</div>
+            <div class="emp-icon">ðŸ”¬</div>
             <div class="emp-msg">No strength data</div>
             <div class="emp-sub">Submit the Quality form to see trends</div>
           </div>
@@ -505,22 +504,22 @@
             </div>
             <div class="an-card-stats">
               <div class="an-stat">
-                <span class="an-stat-val" id="stat-pile-cao-cur">—</span>
+                <span class="an-stat-val" id="stat-pile-cao-cur">â€”</span>
                 <span class="an-stat-lbl">Latest</span>
               </div>
               <div class="an-stat">
-                <span class="an-stat-val" id="stat-pile-cao-avg">—</span>
+                <span class="an-stat-val" id="stat-pile-cao-avg">â€”</span>
                 <span class="an-stat-lbl">Period avg</span>
               </div>
               <div class="an-stat">
-                <span class="an-stat-trend" id="stat-pile-cao-trend">—</span>
+                <span class="an-stat-trend" id="stat-pile-cao-trend">â€”</span>
                 <span class="an-stat-lbl">Trend</span>
               </div>
             </div>
           </div>
           <div class="an-chart-wrap"><canvas id="chart-pile-cao"></canvas></div>
           <div class="an-card-empty" id="empty-pile-cao">
-            <div class="emp-icon">🪨</div>
+            <div class="emp-icon">ðŸª¨</div>
             <div class="emp-msg">No pile quality data</div>
             <div class="emp-sub">Submit the Pile Quality form to see trends</div>
           </div>
@@ -546,14 +545,14 @@
               <div class="an-card-sub">Daily output from kiln &middot; Target &ge; 1,650 MT</div>
             </div>
             <div class="an-card-stats">
-              <div class="an-stat"><span class="an-stat-val" id="stat-clinker-cur">—</span><span class="an-stat-lbl">Latest MT</span></div>
-              <div class="an-stat"><span class="an-stat-val" id="stat-clinker-avg">—</span><span class="an-stat-lbl">Avg MT/day</span></div>
-              <div class="an-stat"><span class="an-stat-trend" id="stat-clinker-trend">—</span><span class="an-stat-lbl">Trend</span></div>
+              <div class="an-stat"><span class="an-stat-val" id="stat-clinker-cur">â€”</span><span class="an-stat-lbl">Latest MT</span></div>
+              <div class="an-stat"><span class="an-stat-val" id="stat-clinker-avg">â€”</span><span class="an-stat-lbl">Avg MT/day</span></div>
+              <div class="an-stat"><span class="an-stat-trend" id="stat-clinker-trend">â€”</span><span class="an-stat-lbl">Trend</span></div>
             </div>
           </div>
           <div class="an-chart-wrap"><canvas id="chart-clinker"></canvas></div>
           <div class="an-card-empty" id="empty-clinker">
-            <div class="emp-icon">🏭</div>
+            <div class="emp-icon">ðŸ­</div>
             <div class="emp-msg">No clinker production data</div>
             <div class="emp-sub">Submit the Kiln &amp; Pyro form to see trends</div>
           </div>
@@ -569,14 +568,14 @@
               <div class="an-card-sub">Thermal efficiency &middot; Target &lt; 800 kcal/kg clinker</div>
             </div>
             <div class="an-card-stats">
-              <div class="an-stat"><span class="an-stat-val" id="stat-sp-heat-cur">—</span><span class="an-stat-lbl">Latest</span></div>
-              <div class="an-stat"><span class="an-stat-val" id="stat-sp-heat-avg">—</span><span class="an-stat-lbl">Period avg</span></div>
-              <div class="an-stat"><span class="an-stat-trend" id="stat-sp-heat-trend">—</span><span class="an-stat-lbl">Trend</span></div>
+              <div class="an-stat"><span class="an-stat-val" id="stat-sp-heat-cur">â€”</span><span class="an-stat-lbl">Latest</span></div>
+              <div class="an-stat"><span class="an-stat-val" id="stat-sp-heat-avg">â€”</span><span class="an-stat-lbl">Period avg</span></div>
+              <div class="an-stat"><span class="an-stat-trend" id="stat-sp-heat-trend">â€”</span><span class="an-stat-lbl">Trend</span></div>
             </div>
           </div>
           <div class="an-chart-wrap"><canvas id="chart-sp-heat"></canvas></div>
           <div class="an-card-empty" id="empty-sp-heat">
-            <div class="emp-icon">🔥</div>
+            <div class="emp-icon">ðŸ”¥</div>
             <div class="emp-msg">No heat consumption data</div>
             <div class="emp-sub">Submit the Kiln &amp; Pyro form to see trends</div>
           </div>
@@ -603,22 +602,22 @@
             </div>
             <div class="an-card-stats">
               <div class="an-stat">
-                <span class="an-stat-val" id="stat-dispatch-cur">—</span>
+                <span class="an-stat-val" id="stat-dispatch-cur">â€”</span>
                 <span class="an-stat-lbl">Latest MT</span>
               </div>
               <div class="an-stat">
-                <span class="an-stat-val" id="stat-dispatch-avg">—</span>
+                <span class="an-stat-val" id="stat-dispatch-avg">â€”</span>
                 <span class="an-stat-lbl">Avg MT/day</span>
               </div>
               <div class="an-stat">
-                <span class="an-stat-trend" id="stat-dispatch-trend">—</span>
+                <span class="an-stat-trend" id="stat-dispatch-trend">â€”</span>
                 <span class="an-stat-lbl">Trend</span>
               </div>
             </div>
           </div>
           <div class="an-chart-wrap"><canvas id="chart-dispatch"></canvas></div>
           <div class="an-card-empty" id="empty-dispatch">
-            <div class="emp-icon">🚛</div>
+            <div class="emp-icon">ðŸš›</div>
             <div class="emp-msg">No dispatch data</div>
             <div class="emp-sub">Submit the Dispatch form to see trends</div>
           </div>
@@ -635,22 +634,22 @@
             </div>
             <div class="an-card-stats">
               <div class="an-stat">
-                <span class="an-stat-val" id="stat-power-cur">—</span>
+                <span class="an-stat-val" id="stat-power-cur">â€”</span>
                 <span class="an-stat-lbl">Latest kWh</span>
               </div>
               <div class="an-stat">
-                <span class="an-stat-val" id="stat-power-avg">—</span>
+                <span class="an-stat-val" id="stat-power-avg">â€”</span>
                 <span class="an-stat-lbl">Avg kWh/day</span>
               </div>
               <div class="an-stat">
-                <span class="an-stat-trend" id="stat-power-trend">—</span>
+                <span class="an-stat-trend" id="stat-power-trend">â€”</span>
                 <span class="an-stat-lbl">Trend</span>
               </div>
             </div>
           </div>
           <div class="an-chart-wrap"><canvas id="chart-power"></canvas></div>
           <div class="an-card-empty" id="empty-power">
-            <div class="emp-icon">⚡</div>
+            <div class="emp-icon">âš¡</div>
             <div class="emp-msg">No power data</div>
             <div class="emp-sub">Submit the Power Consumption form to see trends</div>
           </div>
@@ -662,7 +661,7 @@
         <i data-lucide="alert-triangle" style="width:14px;height:14px;color:#e53935;stroke-width:2.2;flex-shrink:0"></i>
         <span class="an-section-title" style="color:#e53935">Anomalies &amp; Spec Violations</span>
         <div class="an-section-line"></div>
-        <span class="an-section-badge" id="badge-anomaly">Scanning…</span>
+        <span class="an-section-badge" id="badge-anomaly">Scanningâ€¦</span>
       </div>
       <div class="an-anomaly-wrap" id="an-anomaly-wrap">
         <div class="an-anomaly-hdr">
@@ -670,10 +669,10 @@
             <i data-lucide="shield-alert" class="an-icon-anomaly" style="width:13px;height:13px;stroke-width:2.2;flex-shrink:0"></i>
             Flagged Readings
           </div>
-          <span class="an-anomaly-count" id="an-anomaly-count">—</span>
+          <span class="an-anomaly-count" id="an-anomaly-count">â€”</span>
         </div>
         <div class="an-anomaly-body" id="an-anomaly-body">
-          <div class="an-no-anomaly"><span>⏳</span>Scanning data…</div>
+          <div class="an-no-anomaly"><span>â³</span>Scanning dataâ€¦</div>
         </div>
       </div>
 
@@ -696,3 +695,7 @@
   <script src="analytics.js"></script>
 </body>
 </html>
+
+
+
+

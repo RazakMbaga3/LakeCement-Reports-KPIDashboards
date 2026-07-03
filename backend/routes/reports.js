@@ -2,7 +2,7 @@
   routes/reports.js — Daily Form Submit & Retrieve
 
   All 10 forms (production, dispatch, quality, power, kiln,
-  cement-mill, limestone, materials, pile-quality, overtime)
+  cement-mill, limestone, materials, pile-quality, stoppage)
   use the same endpoints. The "form_type" field differentiates them.
 
   POST /api/reports/:formType           → submit/update a daily form

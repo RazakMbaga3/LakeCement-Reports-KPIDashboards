@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
-  <script src="auth.js"></script>
+  <script src="auth.js?v=6"></script>
   <style>
     /* ══════════════════════════════════════════════════════════════
        PRODUCTION DAILY REPORT — page-specific styles
@@ -300,6 +300,44 @@
       .kpi-strip { grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:16px; }
       .signoff   { grid-template-columns:repeat(4,1fr); }
     }
+
+    /* ── Inline edit panels ── */
+    .ie-edit-btn {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:4px 12px; border-radius:6px;
+      background:rgba(244,149,69,.13); border:1px solid rgba(244,149,69,.4);
+      color:#F49545; font-family:var(--font); font-size:10.5px; font-weight:700;
+      cursor:pointer; flex-shrink:0; transition:background .15s;
+    }
+    .ie-edit-btn:hover { background:rgba(244,149,69,.22); }
+    .ie-panel {
+      background:#FFFBEB; border-top:2px solid var(--orange);
+      padding:18px 20px 14px;
+    }
+    .ie-grid {
+      display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
+      gap:10px 14px; margin-bottom:14px;
+    }
+    .ie-field { display:flex; flex-direction:column; gap:4px; }
+    .ie-label {
+      font-size:9px; font-weight:700; text-transform:uppercase;
+      letter-spacing:.5px; color:#475569;
+    }
+    .ie-input {
+      font-family:var(--font); font-size:12.5px; font-weight:600; color:#173158;
+      border:1.5px solid #FDE68A; border-radius:6px; padding:6px 9px;
+      background:white; outline:none; width:100%; box-sizing:border-box;
+    }
+    .ie-input:focus { border-color:var(--orange); }
+    .ie-section-hdr {
+      font-size:9px; font-weight:800; text-transform:uppercase;
+      letter-spacing:.7px; color:var(--navy); margin:12px 0 8px;
+      border-bottom:1px solid #FDE68A; padding-bottom:4px;
+    }
+    .ie-actions { display:flex; gap:8px; justify-content:flex-end; padding-top:4px; }
+    .ie-save { background:var(--orange); color:white; border:none; padding:7px 20px; border-radius:6px; font-family:var(--font); font-size:12px; font-weight:700; cursor:pointer; }
+    .ie-cancel { background:#F1F5F9; color:#475569; border:1.5px solid #E2E8F0; padding:7px 14px; border-radius:6px; font-family:var(--font); font-size:12px; font-weight:600; cursor:pointer; }
+    .ie-owner-tag { font-size:9px; color:rgba(255,255,255,.45); margin-left:6px; font-weight:500; }
   </style>
 </head>
 <body>
@@ -316,7 +354,6 @@
       <img class="nyati-logo" src="NYATI-LOGO.png" alt="Nyati Cement" />
       <div class="logo-text">
         <img class="lc-wordmark" src="lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
-        <span class="company-sub">Daily Production Report</span>
       </div>
     </div>
   </div>
@@ -326,26 +363,7 @@
 </header>
 
 <!-- ══════════════════ NAV ══════════════════ -->
-<nav class="dept-nav">
-  <div class="nav-inner">
-    <span class="nav-label">DAILY REPORTS</span>
-    <button class="nav-btn active"><i data-lucide="factory" class="nav-icon"></i> Production</button>
-    <button class="nav-btn" onclick="location.href='power-plant-report.html'"><i data-lucide="zap" class="nav-icon"></i> Power Plant (CPP)</button>
-    <button class="nav-btn" onclick="location.href='mines-report.html'"><i data-lucide="pickaxe" class="nav-icon"></i> Mines</button>
-    <button class="nav-btn" onclick="location.href='forms/dispatch-form.html'"><i data-lucide="truck" class="nav-icon"></i> Dispatch</button>
-    <button class="nav-btn" onclick="location.href='forms/stoppage-form.html'"><i data-lucide="alert-triangle" class="nav-icon"></i> Stoppages</button>
-    <button class="nav-btn" onclick="location.href='forms/cpp-form.html'"><i data-lucide="zap" class="nav-icon"></i> CPP Form</button>
-    <button class="nav-btn" onclick="location.href='forms/quality-form.html'"><i data-lucide="flask-conical" class="nav-icon"></i> Quality</button>
-    <button class="nav-btn" onclick="location.href='forms/materials-form.html'"><i data-lucide="package" class="nav-icon"></i> Materials</button>
-    <button class="nav-btn" onclick="location.href='forms/power-form.html'"><i data-lucide="activity" class="nav-icon"></i> Power Cons.</button>
-    <button class="nav-btn" onclick="location.href='forms/pile-quality-form.html'"><i data-lucide="layers" class="nav-icon"></i> Pile Quality</button>
-    <button class="nav-btn" onclick="location.href='forms/limestone-form.html'"><i data-lucide="mountain" class="nav-icon"></i> Limestone %</button>
-    <div class="nav-divider"></div>
-    <button class="nav-btn" onclick="location.href='forms/overtime-form.html'"><i data-lucide="clock" class="nav-icon"></i> Overtime</button>
-    <div class="nav-divider"></div>
-    <button class="nav-btn secondary" onclick="window.print()"><i data-lucide="printer" class="nav-icon"></i> Print / PDF</button>
-  </div>
-</nav>
+<nav class="dept-nav"><div class="nav-inner"></div></nav>
 
 <!-- ══════════════════ TOOLBAR ══════════════════ -->
 <div class="toolbar">
@@ -1245,146 +1263,268 @@
       </table>
     </div>
 
-    <!-- DATA SOURCE NOTES -->
-    <div class="rcard">
-      <div class="rcard-hdr">
-        <div class="rcard-title"><i data-lucide="clipboard-list" class="title-icon"></i> Data Sources &amp; Department Responsibilities</div>
-      </div>
-      <div class="notes-col" style="border-right:none">
-        <div class="notes-lbl">Data Origin</div>
-        <div class="note-row"><span class="note-item">Limestone (HG)</span><span class="note-dept">Mines</span><span class="note-src">Data from Mining department</span></div>
-        <div class="note-row"><span class="note-item">OB Clay</span><span class="note-dept">Mines</span><span class="note-src">Data from Mining department</span></div>
-        <div class="note-row"><span class="note-item">ID Clay</span><span class="note-dept">Mines</span><span class="note-src">Data from Mining department</span></div>
-        <div class="note-row"><span class="note-item">Iron Ore</span><span class="note-dept">Store</span><span class="note-src">Data from Store department</span></div>
-        <div class="note-row"><span class="note-item">Gypsum</span><span class="note-dept">Store</span><span class="note-src">Data from Store department</span></div>
-        <div class="note-row"><span class="note-item">Coal</span><span class="note-dept">Store</span><span class="note-src">Data from Store department</span></div>
-        <div class="note-row"><span class="note-item">Purchased Clinker</span><span class="note-dept">Store</span><span class="note-src">Data from Store department</span></div>
-        <div class="note-row"><span class="note-item">CPP Coal Used</span><span class="note-dept">CPP</span><span class="note-src">From Power Plant department</span></div>
-        <div class="note-row"><span class="note-item">Daily Power Units</span><span class="note-dept">Electrical</span><span class="note-src">From Electrical department</span></div>
-      </div>
-    </div>
 
   </div>
 
   <!-- ════════════════════════════════════════════════
-       SECTION 5 — QUALITY SUMMARY (auto-loaded from quality form)
+       SECTION 5 — QUALITY SUMMARY
   ════════════════════════════════════════════════ -->
   <div class="rcard" style="margin-top:14px">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="flask-conical" class="title-icon"></i> Quality Summary — Day Average</div>
-        <div class="rcard-sub">Auto-loaded from Quality / Lab form · Edit quality data in <a href="forms/quality-form.html" style="color:var(--orange)">Quality Form</a></div>
+        <div class="rcard-title"><i data-lucide="flask-conical" class="title-icon"></i> Quality Summary — Day Average <span class="ie-owner-tag">· QUALITY / LAB</span></div>
+        <div class="rcard-sub">Filled by Production &amp; QC · data auto-updates on save</div>
       </div>
       <div class="rcard-chips">
-        <span class="rcard-chip orange">QUALITY / LAB</span>
+        <button class="ie-edit-btn" id="ie-btn-quality" onclick="InlineEdit.open('quality','quality')">
+          <i data-lucide="pencil" style="width:11px;height:11px"></i> Enter Data
+        </button>
       </div>
     </div>
-    <div class="tbl-scroll">
-      <table class="rt" style="min-width:800px">
-        <thead>
-          <tr>
+
+    <!-- VIEW -->
+    <div id="quality-view">
+      <div class="tbl-scroll">
+        <table class="rt" style="min-width:800px">
+          <thead><tr>
             <th class="tl grp-hdr" style="min-width:220px">Parameter</th>
             <th class="grp-hdr">On Date</th>
             <th class="grp-hdr">Spec / Target</th>
             <th class="grp-hdr">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="tp">Blaine Fineness — 42.5R (cm²/g)</td>
-            <td class="cs"><div class="cv" data-kpi="q_blaine_425r">—</div></td>
-            <td class="ts">≥ 3,500 cm²/g</td>
-            <td class="cf"><div class="cv" data-kpi="q_blaine_status">—</div></td>
-          </tr>
-          <tr>
-            <td class="tp">Free Lime — Clinker (%)</td>
-            <td class="cs"><div class="cv" data-kpi="q_free_lime">—</div></td>
-            <td class="ts">&lt; 3.0%</td>
-            <td class="cf"><div class="cv" data-kpi="q_free_lime_status">—</div></td>
-          </tr>
-          <tr>
-            <td class="tp">LSF — Raw Mill Day Avg</td>
-            <td class="cs"><div class="cv" data-kpi="q_lsf_avg">—</div></td>
-            <td class="ts">95 – 98</td>
-            <td class="cf"><div class="cv" data-kpi="q_lsf_status">—</div></td>
-          </tr>
-          <tr>
-            <td class="tp">28-Day Compressive Strength — 42.5R (MPa)</td>
-            <td class="cs"><div class="cv" data-kpi="q_strength_28d">—</div></td>
-            <td class="ts">≥ 42.5 MPa</td>
-            <td class="cf"><div class="cv" data-kpi="q_strength_status">—</div></td>
-          </tr>
-          <tr>
-            <td class="tp">Coal Residue @ 90µ (%)</td>
-            <td class="cs"><div class="cv" data-kpi="q_coal_residue">—</div></td>
-            <td class="ts">&lt; 5.0%</td>
-            <td class="cf"><div class="cv" data-kpi="q_coal_residue_status">—</div></td>
-          </tr>
-        </tbody>
-      </table>
+          </tr></thead>
+          <tbody>
+            <tr><td class="tp">Blaine Fineness — 42.5R (cm²/g)</td><td class="cs"><div class="cv" data-kpi="q_blaine_425r">—</div></td><td class="ts">≥ 3,500 cm²/g</td><td class="cf"><div class="cv" data-kpi="q_blaine_status">—</div></td></tr>
+            <tr><td class="tp">Free Lime — Clinker (%)</td><td class="cs"><div class="cv" data-kpi="q_free_lime">—</div></td><td class="ts">&lt; 3.0%</td><td class="cf"><div class="cv" data-kpi="q_free_lime_status">—</div></td></tr>
+            <tr><td class="tp">LSF — Raw Mill Day Avg</td><td class="cs"><div class="cv" data-kpi="q_lsf_avg">—</div></td><td class="ts">95 – 98</td><td class="cf"><div class="cv" data-kpi="q_lsf_status">—</div></td></tr>
+            <tr><td class="tp">28-Day Compressive Strength — 42.5R (MPa)</td><td class="cs"><div class="cv" data-kpi="q_strength_28d">—</div></td><td class="ts">≥ 42.5 MPa</td><td class="cf"><div class="cv" data-kpi="q_strength_status">—</div></td></tr>
+            <tr><td class="tp">Coal Residue @ 90µ (%)</td><td class="cs"><div class="cv" data-kpi="q_coal_residue">—</div></td><td class="ts">&lt; 5.0%</td><td class="cf"><div class="cv" data-kpi="q_coal_residue_status">—</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EDIT PANEL -->
+    <div id="quality-edit" class="ie-panel" style="display:none">
+      <div class="ie-grid">
+        <div class="ie-field"><label class="ie-label">Blaine Fineness 42.5R (cm²/g)</label><input type="number" class="ie-input" data-inline="blaine_425r" placeholder="e.g. 3680"></div>
+        <div class="ie-field"><label class="ie-label">Free Lime — Clinker (%)</label><input type="number" step="0.1" class="ie-input" data-inline="free_lime" placeholder="e.g. 2.8"></div>
+        <div class="ie-field"><label class="ie-label">28-Day Strength 42.5R (MPa)</label><input type="number" step="0.1" class="ie-input" data-inline="strength_28d" placeholder="e.g. 52.4"></div>
+        <div class="ie-field"><label class="ie-label">Coal Residue @ 90µ (%)</label><input type="number" step="0.1" class="ie-input" data-inline="coal_residue" placeholder="e.g. 4.2"></div>
+      </div>
+      <div class="ie-section-hdr">LSF Raw Mill — Hourly Readings</div>
+      <div class="ie-grid">
+        <div class="ie-field"><label class="ie-label">LSF H1</label><input type="number" step="0.1" class="ie-input" data-inline="lsf_rm_h1" placeholder="95–98"></div>
+        <div class="ie-field"><label class="ie-label">LSF H2</label><input type="number" step="0.1" class="ie-input" data-inline="lsf_rm_h2" placeholder="95–98"></div>
+        <div class="ie-field"><label class="ie-label">LSF H3</label><input type="number" step="0.1" class="ie-input" data-inline="lsf_rm_h3" placeholder="95–98"></div>
+        <div class="ie-field"><label class="ie-label">LSF H4</label><input type="number" step="0.1" class="ie-input" data-inline="lsf_rm_h4" placeholder="95–98"></div>
+        <div class="ie-field"><label class="ie-label">LSF H5</label><input type="number" step="0.1" class="ie-input" data-inline="lsf_rm_h5" placeholder="95–98"></div>
+        <div class="ie-field"><label class="ie-label">LSF H6</label><input type="number" step="0.1" class="ie-input" data-inline="lsf_rm_h6" placeholder="95–98"></div>
+      </div>
+      <div class="ie-actions">
+        <button class="ie-cancel" onclick="InlineEdit.close('quality')">Cancel</button>
+        <button class="ie-save" onclick="InlineEdit.save('quality','quality')">Save Quality Data</button>
+      </div>
     </div>
   </div>
 
   <!-- ════════════════════════════════════════════════
-       SECTION 6 — STOPPAGES & AVAILABILITY (from stoppage form)
+       SECTION 6 — STOPPAGES & AVAILABILITY
   ════════════════════════════════════════════════ -->
   <div class="rcard" style="margin-top:14px">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="alert-triangle" class="title-icon"></i> Equipment Availability — On Date</div>
-        <div class="rcard-sub">Auto-loaded from Stoppages form · Edit stoppage data in <a href="forms/stoppage-form.html" style="color:var(--orange)">Stoppages Form</a></div>
+        <div class="rcard-title"><i data-lucide="alert-triangle" class="title-icon"></i> Equipment Availability — On Date <span class="ie-owner-tag">· P &amp; M</span></div>
+        <div class="rcard-sub">Filled by Projects &amp; Maintenance · stoppage minutes per section and category</div>
       </div>
       <div class="rcard-chips">
-        <span class="rcard-chip orange">MAINTENANCE · PRODUCTION</span>
+        <button class="ie-edit-btn" id="ie-btn-stoppages" onclick="InlineEdit.open('stoppages','stoppage')">
+          <i data-lucide="pencil" style="width:11px;height:11px"></i> Enter Data
+        </button>
       </div>
     </div>
-    <div class="tbl-scroll">
-      <table class="rt" style="min-width:700px">
-        <thead>
-          <tr>
+
+    <!-- VIEW -->
+    <div id="stoppages-view">
+      <div class="tbl-scroll">
+        <table class="rt" style="min-width:700px">
+          <thead><tr>
             <th class="tl grp-hdr" style="min-width:180px">Section</th>
             <th class="grp-hdr">Total Stoppage (hrs)</th>
             <th class="grp-hdr">Running Hours</th>
             <th class="grp-hdr">Availability %</th>
             <th class="grp-hdr">Target</th>
             <th class="grp-hdr">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="tp">Crusher</td>
-            <td class="cs"><div class="cv" data-kpi="stop_crusher_hrs">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="run_crusher_hrs">—</div></td>
-            <td class="cs"><div class="cv" data-kpi="avail_crusher">—</div></td>
-            <td class="ts">&gt; 85%</td>
-            <td class="cf"><div class="cv" data-kpi="avail_crusher_st">—</div></td>
-          </tr>
-          <tr>
-            <td class="tp">Raw Mill</td>
-            <td class="cs"><div class="cv" data-kpi="stop_rm_hrs">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="run_rm_hrs">—</div></td>
-            <td class="cs"><div class="cv" data-kpi="avail_rm">—</div></td>
-            <td class="ts">&gt; 80%</td>
-            <td class="cf"><div class="cv" data-kpi="avail_rm_st">—</div></td>
-          </tr>
-          <tr>
-            <td class="tp">Kiln (Pyro)</td>
-            <td class="cs"><div class="cv" data-kpi="stop_kiln_hrs">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="run_kiln_hrs">—</div></td>
-            <td class="cs"><div class="cv" data-kpi="avail_kiln">—</div></td>
-            <td class="ts">&gt; 90%</td>
-            <td class="cf"><div class="cv" data-kpi="avail_kiln_st">—</div></td>
-          </tr>
-          <tr>
-            <td class="tp">Cement Mill-1</td>
-            <td class="cs"><div class="cv" data-kpi="stop_cm1_hrs">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="run_cm1_hrs">—</div></td>
-            <td class="cs"><div class="cv" data-kpi="avail_cm1">—</div></td>
-            <td class="ts">&gt; 80%</td>
-            <td class="cf"><div class="cv" data-kpi="avail_cm1_st">—</div></td>
-          </tr>
-        </tbody>
-      </table>
+          </tr></thead>
+          <tbody>
+            <tr><td class="tp">Crusher</td><td class="cs"><div class="cv" data-kpi="stop_crusher_hrs">—</div></td><td class="cf"><div class="cv" data-kpi="run_crusher_hrs">—</div></td><td class="cs"><div class="cv" data-kpi="avail_crusher">—</div></td><td class="ts">&gt; 85%</td><td class="cf"><div class="cv" data-kpi="avail_crusher_st">—</div></td></tr>
+            <tr><td class="tp">Raw Mill</td><td class="cs"><div class="cv" data-kpi="stop_rm_hrs">—</div></td><td class="cf"><div class="cv" data-kpi="run_rm_hrs">—</div></td><td class="cs"><div class="cv" data-kpi="avail_rm">—</div></td><td class="ts">&gt; 80%</td><td class="cf"><div class="cv" data-kpi="avail_rm_st">—</div></td></tr>
+            <tr><td class="tp">Kiln (Pyro)</td><td class="cs"><div class="cv" data-kpi="stop_kiln_hrs">—</div></td><td class="cf"><div class="cv" data-kpi="run_kiln_hrs">—</div></td><td class="cs"><div class="cv" data-kpi="avail_kiln">—</div></td><td class="ts">&gt; 90%</td><td class="cf"><div class="cv" data-kpi="avail_kiln_st">—</div></td></tr>
+            <tr><td class="tp">Cement Mill-1</td><td class="cs"><div class="cv" data-kpi="stop_cm1_hrs">—</div></td><td class="cf"><div class="cv" data-kpi="run_cm1_hrs">—</div></td><td class="cs"><div class="cv" data-kpi="avail_cm1">—</div></td><td class="ts">&gt; 80%</td><td class="cf"><div class="cv" data-kpi="avail_cm1_st">—</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EDIT PANEL -->
+    <div id="stoppages-edit" class="ie-panel" style="display:none">
+      <div style="font-size:9px;color:#92400E;background:#FEF3C7;border-radius:5px;padding:6px 10px;margin-bottom:12px;font-weight:600;">Enter stoppage minutes per section and cause category (0 if none)</div>
+      <div class="ie-section-hdr">Crusher</div>
+      <div class="ie-grid">
+        <div class="ie-field"><label class="ie-label">Mechanical (min)</label><input type="number" class="ie-input" data-inline="stop_crusher_mech" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">E &amp; I (min)</label><input type="number" class="ie-input" data-inline="stop_crusher_ei" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Production (min)</label><input type="number" class="ie-input" data-inline="stop_crusher_prod" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Planned (min)</label><input type="number" class="ie-input" data-inline="stop_crusher_planned" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Power Cut (min)</label><input type="number" class="ie-input" data-inline="stop_crusher_power" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Other (min)</label><input type="number" class="ie-input" data-inline="stop_crusher_other" placeholder="0"></div>
+      </div>
+      <div class="ie-section-hdr">Raw Mill</div>
+      <div class="ie-grid">
+        <div class="ie-field"><label class="ie-label">Mechanical (min)</label><input type="number" class="ie-input" data-inline="stop_rm_mech" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">E &amp; I (min)</label><input type="number" class="ie-input" data-inline="stop_rm_ei" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Production (min)</label><input type="number" class="ie-input" data-inline="stop_rm_prod" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Planned (min)</label><input type="number" class="ie-input" data-inline="stop_rm_planned" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Power Cut (min)</label><input type="number" class="ie-input" data-inline="stop_rm_power" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Other (min)</label><input type="number" class="ie-input" data-inline="stop_rm_other" placeholder="0"></div>
+      </div>
+      <div class="ie-section-hdr">Kiln (Pyro)</div>
+      <div class="ie-grid">
+        <div class="ie-field"><label class="ie-label">Mechanical (min)</label><input type="number" class="ie-input" data-inline="stop_kiln_mech" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">E &amp; I (min)</label><input type="number" class="ie-input" data-inline="stop_kiln_ei" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Production (min)</label><input type="number" class="ie-input" data-inline="stop_kiln_prod" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Planned (min)</label><input type="number" class="ie-input" data-inline="stop_kiln_planned" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Power Cut (min)</label><input type="number" class="ie-input" data-inline="stop_kiln_power" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Other (min)</label><input type="number" class="ie-input" data-inline="stop_kiln_other" placeholder="0"></div>
+      </div>
+      <div class="ie-section-hdr">Cement Mill-1</div>
+      <div class="ie-grid">
+        <div class="ie-field"><label class="ie-label">Mechanical (min)</label><input type="number" class="ie-input" data-inline="stop_cm1_mech" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">E &amp; I (min)</label><input type="number" class="ie-input" data-inline="stop_cm1_ei" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Production (min)</label><input type="number" class="ie-input" data-inline="stop_cm1_prod" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Planned (min)</label><input type="number" class="ie-input" data-inline="stop_cm1_planned" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Power Cut (min)</label><input type="number" class="ie-input" data-inline="stop_cm1_power" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Other (min)</label><input type="number" class="ie-input" data-inline="stop_cm1_other" placeholder="0"></div>
+      </div>
+      <div class="ie-actions">
+        <button class="ie-cancel" onclick="InlineEdit.close('stoppages')">Cancel</button>
+        <button class="ie-save" onclick="InlineEdit.save('stoppages','stoppage')">Save Stoppages Data</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       SECTION 7 — DISPATCH & SO PENDENCY
+  ════════════════════════════════════════════════ -->
+  <div class="rcard" style="margin-top:14px">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="truck" class="title-icon"></i> Dispatch &amp; SO Pendency <span class="ie-owner-tag">· LOGISTICS</span></div>
+        <div class="rcard-sub">Filled by Logistics &amp; Workshop · bags dispatched and outstanding sales orders</div>
+      </div>
+      <div class="rcard-chips">
+        <button class="ie-edit-btn" id="ie-btn-dispatch" onclick="InlineEdit.open('dispatch','dispatch')">
+          <i data-lucide="pencil" style="width:11px;height:11px"></i> Enter Data
+        </button>
+      </div>
+    </div>
+
+    <!-- VIEW -->
+    <div id="dispatch-view">
+      <div class="tbl-scroll">
+        <table class="rt" style="min-width:640px">
+          <thead><tr>
+            <th class="tl grp-hdr" style="min-width:200px">Item</th>
+            <th class="grp-hdr">42.5R (Bags)</th>
+            <th class="grp-hdr">42.5N / B-M (Bags)</th>
+            <th class="grp-hdr">Bulker (Trucks)</th>
+            <th class="grp-hdr">Big Bag (Trucks)</th>
+          </tr></thead>
+          <tbody>
+            <tr><td class="tp">Dispatched — On Date</td><td class="cs"><div class="cv" data-kpi="disp_425r">—</div></td><td class="cs"><div class="cv" data-kpi="disp_425n">—</div></td><td class="cs"><div class="cv" data-kpi="disp_bulker">—</div></td><td class="cs"><div class="cv" data-kpi="disp_bigbag">—</div></td></tr>
+            <tr><td class="tp">SO Pendency</td><td class="cs"><div class="cv" data-kpi="so_425r">—</div></td><td class="cs"><div class="cv" data-kpi="so_425n">—</div></td><td class="cs"><div class="cv" data-kpi="so_bulker">—</div></td><td class="cs"><div class="cv" data-kpi="so_bigbag">—</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EDIT PANEL -->
+    <div id="dispatch-edit" class="ie-panel" style="display:none">
+      <div class="ie-section-hdr">Dispatched — On Date</div>
+      <div class="ie-grid">
+        <div class="ie-field"><label class="ie-label">42.5R Bags</label><input type="number" class="ie-input" data-inline="dispatch_425r" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">42.5N / B-M Bags</label><input type="number" class="ie-input" data-inline="dispatch_425n" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Bulker (Trucks)</label><input type="number" class="ie-input" data-inline="dispatch_bulker" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Big Bag (Trucks)</label><input type="number" class="ie-input" data-inline="dispatch_bigbag" placeholder="0"></div>
+      </div>
+      <div class="ie-section-hdr">SO Pendency</div>
+      <div class="ie-grid">
+        <div class="ie-field"><label class="ie-label">SO Pendency 42.5R</label><input type="number" class="ie-input" data-inline="so_425r" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">SO Pendency 42.5N</label><input type="number" class="ie-input" data-inline="so_425n" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">SO Bulker Pendency</label><input type="number" class="ie-input" data-inline="so_bulker" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">SO Big Bag Pendency</label><input type="number" class="ie-input" data-inline="so_bigbag" placeholder="0"></div>
+      </div>
+      <div class="ie-actions">
+        <button class="ie-cancel" onclick="InlineEdit.close('dispatch')">Cancel</button>
+        <button class="ie-save" onclick="InlineEdit.save('dispatch','dispatch')">Save Dispatch Data</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       SECTION 8 — POWER CONSUMPTION
+  ════════════════════════════════════════════════ -->
+  <div class="rcard" style="margin-top:14px">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="activity" class="title-icon"></i> Power Consumption — Section Wise <span class="ie-owner-tag">· CPP</span></div>
+        <div class="rcard-sub">Filled by Power Plant (CPP) · kWh consumed per plant section</div>
+      </div>
+      <div class="rcard-chips">
+        <button class="ie-edit-btn" id="ie-btn-power" onclick="InlineEdit.open('power','power-cons')">
+          <i data-lucide="pencil" style="width:11px;height:11px"></i> Enter Data
+        </button>
+      </div>
+    </div>
+
+    <!-- VIEW -->
+    <div id="power-view">
+      <div class="tbl-scroll">
+        <table class="rt" style="min-width:500px">
+          <thead><tr>
+            <th class="tl grp-hdr" style="min-width:200px">Section</th>
+            <th class="grp-hdr">kWh Consumed</th>
+          </tr></thead>
+          <tbody>
+            <tr><td class="tp">Crusher</td><td class="cs"><div class="cv" data-kpi="pwr_disp_crusher">—</div></td></tr>
+            <tr><td class="tp">Raw Mill</td><td class="cs"><div class="cv" data-kpi="pwr_disp_rm">—</div></td></tr>
+            <tr><td class="tp">Coal Mill</td><td class="cs"><div class="cv" data-kpi="pwr_disp_cm">—</div></td></tr>
+            <tr><td class="tp">Kiln</td><td class="cs"><div class="cv" data-kpi="pwr_disp_kiln">—</div></td></tr>
+            <tr><td class="tp">Cement Mill-2</td><td class="cs"><div class="cv" data-kpi="pwr_disp_cm2">—</div></td></tr>
+            <tr><td class="tp">Packing Plant</td><td class="cs"><div class="cv" data-kpi="pwr_disp_packing">—</div></td></tr>
+            <tr><td class="tp">Utilities / Compressed Air</td><td class="cs"><div class="cv" data-kpi="pwr_disp_utils">—</div></td></tr>
+            <tr><td class="tp">Lighting &amp; General</td><td class="cs"><div class="cv" data-kpi="pwr_disp_lighting">—</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EDIT PANEL -->
+    <div id="power-edit" class="ie-panel" style="display:none">
+      <div class="ie-grid">
+        <div class="ie-field"><label class="ie-label">Crusher (kWh)</label><input type="number" class="ie-input" data-inline="pwr_crusher_kwh" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Raw Mill (kWh)</label><input type="number" class="ie-input" data-inline="pwr_rawmill_kwh" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Coal Mill (kWh)</label><input type="number" class="ie-input" data-inline="pwr_coalmill_kwh" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Kiln (kWh)</label><input type="number" class="ie-input" data-inline="pwr_kiln_kwh" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Kiln Production (MT)</label><input type="number" class="ie-input" data-inline="pwr_kiln_prod_mt" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Cement Mill-2 (kWh)</label><input type="number" class="ie-input" data-inline="pwr_cm2_kwh" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">CM-2 Production (MT)</label><input type="number" class="ie-input" data-inline="pwr_cm2_prod_mt" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Packing Plant (kWh)</label><input type="number" class="ie-input" data-inline="pwr_packing_kwh" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Utilities (kWh)</label><input type="number" class="ie-input" data-inline="pwr_utils_kwh" placeholder="0"></div>
+        <div class="ie-field"><label class="ie-label">Lighting (kWh)</label><input type="number" class="ie-input" data-inline="pwr_lighting_kwh" placeholder="0"></div>
+      </div>
+      <div class="ie-actions">
+        <button class="ie-cancel" onclick="InlineEdit.close('power')">Cancel</button>
+        <button class="ie-save" onclick="InlineEdit.save('power','power-cons')">Save Power Data</button>
+      </div>
     </div>
   </div>
 
@@ -1459,9 +1599,10 @@ initKpiLive([
 ]);
 </script>
 <script src="forms/report-loader.js"></script>
+<script src="forms/inline-edit.js"></script>
 <script>
 initReportLoader({
-  forms: ['materials', 'power-cons', 'quality', 'stoppage', 'kiln', 'cement-mill'],
+  forms: ['materials', 'power-cons', 'quality', 'stoppage', 'kiln', 'cement-mill', 'dispatch'],
 
   computes: [
     /* ── Clinker — from kiln form ───────────────────────────────────── */
@@ -1645,7 +1786,25 @@ initReportLoader({
                +n(d.stop_cm1_planned)+n(d.stop_cm1_power)+n(d.stop_cm1_other);
         return ((1440-s)/1440*100) >= 80 ? '✓ OK' : '⚠ LOW';
       }
-    }
+    },
+    /* ── Dispatch ────────────────────────────────────────────────── */
+    { kpi: 'disp_425r',    fmt: 'n0', compute: function(d,n){ return n(d.dispatch_425r)||null; } },
+    { kpi: 'disp_425n',    fmt: 'n0', compute: function(d,n){ return n(d.dispatch_425n)||null; } },
+    { kpi: 'disp_bulker',  fmt: 'n0', compute: function(d,n){ return n(d.dispatch_bulker)||null; } },
+    { kpi: 'disp_bigbag',  fmt: 'n0', compute: function(d,n){ return n(d.dispatch_bigbag)||null; } },
+    { kpi: 'so_425r',      fmt: 'n0', compute: function(d,n){ return n(d.so_425r)||null; } },
+    { kpi: 'so_425n',      fmt: 'n0', compute: function(d,n){ return n(d.so_425n)||null; } },
+    { kpi: 'so_bulker',    fmt: 'n0', compute: function(d,n){ return n(d.so_bulker)||null; } },
+    { kpi: 'so_bigbag',    fmt: 'n0', compute: function(d,n){ return n(d.so_bigbag)||null; } },
+    /* ── Power section-wise display ─────────────────────────────── */
+    { kpi: 'pwr_disp_crusher',  fmt: 'n0', compute: function(d,n){ return n(d.pwr_crusher_kwh)||null; } },
+    { kpi: 'pwr_disp_rm',       fmt: 'n0', compute: function(d,n){ return n(d.pwr_rawmill_kwh)||null; } },
+    { kpi: 'pwr_disp_cm',       fmt: 'n0', compute: function(d,n){ return n(d.pwr_coalmill_kwh)||null; } },
+    { kpi: 'pwr_disp_kiln',     fmt: 'n0', compute: function(d,n){ return n(d.pwr_kiln_kwh)||null; } },
+    { kpi: 'pwr_disp_cm2',      fmt: 'n0', compute: function(d,n){ return n(d.pwr_cm2_kwh)||null; } },
+    { kpi: 'pwr_disp_packing',  fmt: 'n0', compute: function(d,n){ return n(d.pwr_packing_kwh)||null; } },
+    { kpi: 'pwr_disp_utils',    fmt: 'n0', compute: function(d,n){ return n(d.pwr_utils_kwh)||null; } },
+    { kpi: 'pwr_disp_lighting', fmt: 'n0', compute: function(d,n){ return n(d.pwr_lighting_kwh)||null; } }
   ],
 
   fills: [
@@ -1706,3 +1865,8 @@ initReportLoader({
 </script>
 </body>
 </html>
+
+
+
+
+

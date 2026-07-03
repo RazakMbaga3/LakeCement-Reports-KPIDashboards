@@ -1,13 +1,13 @@
 /* ══════════════════════════════════════════════════════════════════
-   Nyati Cement — Nav Status Dots + Shift Indicator
+   Nyati Cement — Nav Fill-Status Dots + Shift Indicator
    ─────────────────────────────────────────────────────────────────
-   • Reads today's localStorage for each report form
+   • Reads today's localStorage for each report's relevant section
    • Injects a colored dot next to each nav button
      – green  = submitted today
      – amber  = draft saved today
-     – grey   = not started
-   • Injects the current operating shift badge into header-right
-   • Re-fires on nyati:saved, nyati:submitted, storage events
+     – grey   = not started / no data
+   • Dot is role-aware: logistics sees dispatch fill status on the
+     Production tab, PM sees stoppage status, etc.
    ══════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -15,67 +15,93 @@
 
   const NS = 'nyati';
 
-  /* URL fragment → form ID mapping */
-  const URL_MAP = {
-    'daily-report.html':        'production',
-    'power-plant-report.html':  'power-plant',
-    'mines-report.html':        'mines',
-    'dispatch-form.html':       'dispatch',
-    'stoppage-form.html':       'stoppage',
-    'quality-form.html':        'quality',
-    'materials-form.html':      'materials',
-    'power-form.html':          'power-cons',
-    'pile-quality-form.html':   'pile-quality',
-    'cpp-form.html':            'cpp',
-    'kiln-form.html':           'kiln',
-    'cement-mill-form.html':    'cement-mill',
-    'limestone-form.html':      'limestone',
-    'overtime-form.html':       'overtime',
+  /* Page → default form ID (used for admin/management/view-only roles) */
+  const PAGE_DEFAULT_FORM = {
+    'daily-report.html':       'production',
+    'power-plant-report.html': 'power-plant',
+    'mines-report.html':       'mines',
+  };
+
+  /* Role → { pageName: formId } — which form ID to check for fill status */
+  const ROLE_SECTION_MAP = {
+    logistics:  { 'daily-report.html': 'dispatch' },
+    pm:         { 'daily-report.html': 'stoppage' },
+    cpp:        { 'daily-report.html': 'power-cons', 'power-plant-report.html': 'power-plant' },
+    production: { 'daily-report.html': 'quality', 'power-plant-report.html': 'power-plant', 'mines-report.html': 'mines' },
+    mining:     { 'mines-report.html': 'mines', 'daily-report.html': 'mines' },
+    stores:     { 'daily-report.html': 'materials' },
   };
 
   function today() {
-    return new Date().toISOString().slice(0, 10);
+    const d = document.querySelector('input[type="date"]');
+    return d ? d.value : new Date().toISOString().slice(0, 10);
+  }
+
+  function getCurrentRole() {
+    try {
+      const u = JSON.parse(sessionStorage.getItem('nyati_user') || '{}');
+      return u.role || null;
+    } catch (e) { return null; }
   }
 
   function formStatus(formId) {
     const key = NS + '-' + formId + '-' + today();
     const raw = localStorage.getItem(key);
     if (!raw) return 'empty';
-    try { return JSON.parse(raw)._m?.status || 'draft'; } catch (e) { return 'draft'; }
+    try {
+      const parsed = JSON.parse(raw);
+      const status = parsed._m && parsed._m.status;
+      /* Also check if data object has any non-empty values */
+      const data = parsed.data || {};
+      const hasData = Object.values(data).some(function(v){ return v !== '' && v !== null && v !== undefined; });
+      if (status === 'submitted') return 'submitted';
+      if (status === 'draft' || hasData) return 'draft';
+      return 'empty';
+    } catch (e) { return 'empty'; }
   }
 
-  function formIdFromBtn(btn) {
-    /* active button = current page */
+  function resolveFormId(pageName) {
+    const role = getCurrentRole();
+    if (role && ROLE_SECTION_MAP[role] && ROLE_SECTION_MAP[role][pageName]) {
+      return ROLE_SECTION_MAP[role][pageName];
+    }
+    return PAGE_DEFAULT_FORM[pageName] || null;
+  }
+
+  function pageNameFromHref(href) {
+    if (!href) return null;
+    const parts = href.split('/');
+    const file = parts[parts.length - 1].split('?')[0];
+    return file || null;
+  }
+
+  function pageNameFromBtn(btn) {
     if (btn.classList.contains('active')) {
       const path = location.pathname;
-      for (const [pat, id] of Object.entries(URL_MAP)) {
-        if (path.includes(pat)) return id;
+      for (const pg of Object.keys(PAGE_DEFAULT_FORM)) {
+        if (path.includes(pg)) return pg;
       }
       return null;
     }
-    /* derive from onclick href */
     const oc = btn.getAttribute('onclick') || '';
     const m  = oc.match(/location\.href\s*=\s*['"]([^'"]+)['"]/);
-    if (m) {
-      for (const [pat, id] of Object.entries(URL_MAP)) {
-        if (m[1].includes(pat)) return id;
-      }
-    }
-    return null;
+    return m ? pageNameFromHref(m[1]) : null;
   }
 
   /* ── Inject nav dots ─────────────────────────────────────────── */
   function injectDots() {
-    document.querySelectorAll('.nav-btn:not(.secondary)').forEach(btn => {
+    document.querySelectorAll('.nav-btn:not(.secondary)').forEach(function(btn) {
       btn.querySelector('.nav-dot')?.remove();
-      const id = formIdFromBtn(btn);
-      if (!id) return;
-      const st  = formStatus(id);
+      const pg = pageNameFromBtn(btn);
+      if (!pg) return;
+      const formId = resolveFormId(pg);
+      if (!formId) return;
+      const st  = formStatus(formId);
       const dot = document.createElement('span');
       dot.className = 'nav-dot nav-dot-' + st;
       dot.title     = st === 'submitted' ? 'Submitted today'   :
                       st === 'draft'     ? 'Draft saved today' :
-                                          'Not started';
+                                          'Not yet filled';
       btn.appendChild(dot);
     });
   }
@@ -95,8 +121,8 @@
   }
 
   function injectShift() {
-    const sh  = whichShift();
-    let   el  = document.getElementById('_ns-shift');
+    const sh = whichShift();
+    let el = document.getElementById('_ns-shift');
     if (!el) {
       el = document.createElement('div');
       el.id = '_ns-shift';
@@ -110,7 +136,7 @@
       'color:' + sh.color, 'border-radius:5px',
       'padding:3px 10px', 'font-size:10px', 'font-weight:700',
       'letter-spacing:.4px', 'white-space:nowrap', 'flex-shrink:0',
-      'order:1',   /* always first inside header-right */
+      'order:1',
     ].join(';');
     el.innerHTML =
       '<span style="width:6px;height:6px;border-radius:50%;' +
@@ -119,17 +145,24 @@
       sh.label;
   }
 
-  /* ── One-time CSS for animations ─────────────────────────────── */
+  /* ── CSS ─────────────────────────────────────────────────────── */
   function ensureCSS() {
     if (document.getElementById('_ns-css')) return;
     const s = document.createElement('style');
     s.id = '_ns-css';
     s.textContent =
       '@keyframes _ns-pulse{0%,100%{opacity:1}50%{opacity:.35}}' +
-      '.nav-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;display:inline-block;margin-left:3px;transition:background .3s}' +
-      '.nav-dot-submitted{background:#239557;box-shadow:0 0 0 2px rgba(35,149,87,.2)}' +
-      '.nav-dot-draft{background:#D97706;box-shadow:0 0 0 2px rgba(217,119,6,.2)}' +
-      '.nav-dot-empty{background:#94A3B8}';
+      /* dot base */
+      '.nav-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;' +
+        'margin-left:5px;vertical-align:middle;transition:background .3s,box-shadow .3s}' +
+      /* submitted = solid green ring */
+      '.nav-dot-submitted{background:#239557;box-shadow:0 0 0 2px rgba(35,149,87,.3),' +
+        '0 0 0 4px rgba(35,149,87,.1)}' +
+      /* draft = amber pulsing */
+      '.nav-dot-draft{background:#D97706;box-shadow:0 0 0 2px rgba(217,119,6,.25);' +
+        'animation:_ns-pulse 2.4s ease-in-out infinite}' +
+      /* empty = muted grey */
+      '.nav-dot-empty{background:rgba(148,163,184,.4)}';
     document.head.appendChild(s);
   }
 
@@ -146,12 +179,15 @@
     init();
   }
 
-  /* Re-run on form save / submit events */
-  document.addEventListener('nyati:saved',    injectDots);
-  document.addEventListener('nyati:submitted', injectDots);
-  window.addEventListener('storage',           injectDots);
+  /* Re-run dots on save/submit/date change/storage event */
+  document.addEventListener('nyati:saved',        injectDots);
+  document.addEventListener('nyati:submitted',     injectDots);
+  document.addEventListener('nyati:inline-saved',  injectDots);
+  window.addEventListener('storage',              injectDots);
+  document.addEventListener('change', function(e) {
+    if (e.target && e.target.type === 'date') setTimeout(injectDots, 50);
+  });
 
-  /* Update shift badge every minute */
   setInterval(function () { injectShift(); }, 60000);
 
 }());

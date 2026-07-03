@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
-  <script src="auth.js"></script>
+  <script src="auth.js?v=6"></script>
 </head>
 <body>
 
@@ -23,7 +23,6 @@
         <img class="nyati-logo" src="NYATI-LOGO.png" alt="Nyati Cement" />
         <div class="logo-text">
           <img class="lc-wordmark" src="lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
-          <span class="company-sub">Operations Dashboard</span>
         </div>
       </div>
     </div>
@@ -36,10 +35,9 @@
   <nav class="dept-nav">
     <div class="nav-inner">
       <button class="nav-btn active" data-dept="summary" onclick="switchDept('summary')" style="background:var(--navy-light);border-color:rgba(255,255,255,.3);font-weight:700;">
-        <i data-lucide="layout-dashboard" class="nav-icon"></i> Summary
+        <i data-lucide="layout-dashboard" class="nav-icon"></i> Plant Summary
       </button>
       <div class="nav-divider"></div>
-      <span class="nav-label">DEPARTMENT</span>
       <button class="nav-btn" data-dept="ei" onclick="switchDept('ei')">
         <i data-lucide="zap" class="nav-icon"></i> E &amp; I
       </button>
@@ -64,9 +62,6 @@
       <button class="nav-btn" data-dept="minesworkshop" onclick="switchDept('minesworkshop')">
         <i data-lucide="truck" class="nav-icon"></i> Mines Workshop
       </button>
-      <button class="nav-btn" data-dept="overtime" onclick="switchDept('overtime')">
-        <i data-lucide="clock" class="nav-icon"></i> Overtime
-      </button>
       <div class="nav-divider"></div>
       <button class="nav-btn secondary" onclick="window.print()">
         <i data-lucide="printer" class="nav-icon"></i> Print / PDF
@@ -90,7 +85,6 @@
             <option value="packing">Packing Plant</option>
             <option value="stores">Stores</option>
             <option value="minesworkshop">Mines Workshop</option>
-            <option value="overtime">Overtime (Dept. Wise)</option>
           </select>
         </div>
         <div class="filter-card">
@@ -1984,374 +1978,6 @@
       </div>
     </section>
 
-    <!-- ─────────── OVERTIME ─────────── -->
-    <section class="dept-section hidden" id="dept-overtime">
-
-      <div class="ot-rpt-hdr">
-        <div>
-          <div class="ot-rpt-title">Department Wise Overtime</div>
-          <div class="ot-rpt-sub">Monthly KPI — Value in TSH &nbsp;·&nbsp; Full Year Tracker</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <a href="forms/overtime-form.html" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:var(--orange);color:white;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.3px">
-            <svg style="width:12px;height:12px;stroke-width:2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Enter Monthly Data
-          </a>
-          <div class="ot-rpt-badge">FEB 2026</div>
-        </div>
-      </div>
-
-      <div class="table-wrapper" style="overflow-x:auto;">
-        <table class="kpi-table" style="min-width:2100px;font-size:11px;white-space:nowrap;">
-          <thead>
-            <tr class="thead-row">
-              <th rowspan="2" style="min-width:36px;text-align:center">Sl.</th>
-              <th rowspan="2" style="min-width:160px;text-align:left;padding-left:12px">Department</th>
-              <th rowspan="2" style="min-width:50px">OT Type</th>
-              <th colspan="2" style="background:var(--navy);color:white">No. of Hrs</th>
-              <th colspan="2" style="background:var(--navy);color:white">Value in TSH</th>
-              <th rowspan="2" style="min-width:150px;text-align:left">Remarks</th>
-              <th colspan="12" style="background:var(--navy);color:white">Full Year KPI Tracker (Value in TSH)</th>
-              <th rowspan="2" style="min-width:110px">Total YTD</th>
-            </tr>
-            <tr class="thead-row" style="font-size:10px">
-              <th>Target</th><th class="highlight-col">Actual</th>
-              <th>Target</th><th class="highlight-col">Actual</th>
-              <th>Jan</th><th>Feb</th><th>Mar</th><th>Apr</th>
-              <th>May</th><th>Jun</th><th>Jul</th><th>Aug</th>
-              <th>Sep</th><th>Oct</th><th>Nov</th><th>Dec</th>
-            </tr>
-          </thead>
-          <tbody>
-
-            <!-- 1. Production -->
-            <tr class="data-row">
-              <td class="ot-slno" rowspan="2">1</td>
-              <td class="ot-dept-cell" rowspan="2">Production</td>
-              <td class="ot-type ot1">OT1</td>
-              <td class="ot-num target">900</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">3,729,146</td><td class="ot-num">3,778,535</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">7,507,681</td>
-            </tr>
-            <tr class="data-row">
-              <td class="ot-type ot2">OT2</td>
-              <td class="ot-num target">200</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">3,238,760</td><td class="ot-num">280,972</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">3,519,732</td>
-            </tr>
-
-            <!-- 2. Quality -->
-            <tr class="data-row">
-              <td class="ot-slno" rowspan="2">2</td>
-              <td class="ot-dept-cell" rowspan="2">Quality</td>
-              <td class="ot-type ot1">OT1</td>
-              <td class="ot-num target">500</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">1,133,799</td><td class="ot-num">1,386,907</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">2,520,706</td>
-            </tr>
-            <tr class="data-row">
-              <td class="ot-type ot2">OT2</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">1,447,496</td><td class="ot-num">—</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">1,447,496</td>
-            </tr>
-
-            <!-- 3. Mechanical -->
-            <tr class="data-row">
-              <td class="ot-slno" rowspan="2">3</td>
-              <td class="ot-dept-cell" rowspan="2">Mechanical</td>
-              <td class="ot-type ot1">OT1</td>
-              <td class="ot-num target">450</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">3,392,970</td><td class="ot-num">4,272,491</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">7,665,461</td>
-            </tr>
-            <tr class="data-row">
-              <td class="ot-type ot2">OT2</td>
-              <td class="ot-num target">200</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">3,196,035</td><td class="ot-num">821,005</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">4,017,040</td>
-            </tr>
-
-            <!-- 4. Electrical -->
-            <tr class="data-row">
-              <td class="ot-slno" rowspan="2">4</td>
-              <td class="ot-dept-cell" rowspan="2">Electrical</td>
-              <td class="ot-type ot1">OT1</td>
-              <td class="ot-num target">600</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">2,599,072</td><td class="ot-num">3,762,447</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">6,361,519</td>
-            </tr>
-            <tr class="data-row">
-              <td class="ot-type ot2">OT2</td>
-              <td class="ot-num target">75</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">4,013,444</td><td class="ot-num">1,682,011</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">5,695,455</td>
-            </tr>
-
-            <!-- 5. Instrumentation -->
-            <tr class="data-row">
-              <td class="ot-slno" rowspan="2">5</td>
-              <td class="ot-dept-cell" rowspan="2">Instrumentation</td>
-              <td class="ot-type ot1">OT1</td>
-              <td class="ot-num target">600</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">3,191,921</td><td class="ot-num">3,651,297</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">6,843,218</td>
-            </tr>
-            <tr class="data-row">
-              <td class="ot-type ot2">OT2</td>
-              <td class="ot-num target">75</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">3,333,014</td><td class="ot-num">999,815</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">4,332,829</td>
-            </tr>
-
-            <!-- 6. Power Plant -->
-            <tr class="data-row">
-              <td class="ot-slno" rowspan="2">6</td>
-              <td class="ot-dept-cell" rowspan="2">Power Plant</td>
-              <td class="ot-type ot1">OT1</td>
-              <td class="ot-num target">1,200</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">4,240,610</td><td class="ot-num">4,851,426</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">9,092,036</td>
-            </tr>
-            <tr class="data-row">
-              <td class="ot-type ot2">OT2</td>
-              <td class="ot-num target">200</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">3,027,990</td><td class="ot-num">84,331</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">3,112,321</td>
-            </tr>
-
-            <!-- 7. Quarrying -->
-            <tr class="data-row achieved-row">
-              <td class="ot-slno" rowspan="2">7</td>
-              <td class="ot-dept-cell" rowspan="2">Quarrying</td>
-              <td class="ot-type ot1">OT1</td>
-              <td class="ot-num target">1,000</td><td class="ot-num actual green">−150</td>
-              <td class="ot-num target">4,569,695</td><td class="ot-num actual green">−685,454</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">2,763,989</td><td class="ot-num">3,073,086</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">5,837,075</td>
-            </tr>
-            <tr class="data-row">
-              <td class="ot-type ot2">OT2</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">2,805,569</td><td class="ot-num">—</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">2,805,569</td>
-            </tr>
-
-            <!-- 8. HEM Maintenance -->
-            <tr class="data-row achieved-row">
-              <td class="ot-slno" rowspan="2">8</td>
-              <td class="ot-dept-cell" rowspan="2">HEM Maintenance</td>
-              <td class="ot-type ot1">OT1</td>
-              <td class="ot-num target">300</td><td class="ot-num actual green">150</td>
-              <td class="ot-num target">1,370,908</td><td class="ot-num actual green">685,454</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">—</td><td class="ot-num">685,454</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">685,454</td>
-            </tr>
-            <tr class="data-row achieved-row">
-              <td class="ot-type ot2">OT2</td>
-              <td class="ot-num target">200</td><td class="ot-num actual green">23</td>
-              <td class="ot-num target">1,248,016</td><td class="ot-num actual green">143,522</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">—</td><td class="ot-num">143,522</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">143,522</td>
-            </tr>
-
-            <!-- 9. Packing and Dispatch -->
-            <tr class="data-row">
-              <td class="ot-slno" rowspan="2">9</td>
-              <td class="ot-dept-cell" rowspan="2">Packing and Dispatch</td>
-              <td class="ot-type ot1">OT1</td>
-              <td class="ot-num target">2,000</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">3,632,132</td><td class="ot-num">4,785,115</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">8,417,247</td>
-            </tr>
-            <tr class="data-row">
-              <td class="ot-type ot2">OT2</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">2,910,250</td><td class="ot-num">99,555</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">3,009,805</td>
-            </tr>
-
-            <!-- 10. Stores -->
-            <tr class="data-row">
-              <td class="ot-slno" rowspan="2">10</td>
-              <td class="ot-dept-cell" rowspan="2">Stores</td>
-              <td class="ot-type ot1">OT1</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">—</td><td class="ot-num">4,691</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">4,691</td>
-            </tr>
-            <tr class="data-row">
-              <td class="ot-type ot2">OT2</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">—</td><td class="ot-num">129,625</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">129,625</td>
-            </tr>
-
-            <!-- 11. HR & Admin -->
-            <tr class="data-row not-achieved-row">
-              <td class="ot-slno" rowspan="2">11</td>
-              <td class="ot-dept-cell" rowspan="2">HR &amp; Admin</td>
-              <td class="ot-type ot1">OT1</td>
-              <td class="ot-num target">200</td><td class="ot-num actual red">216</td>
-              <td class="ot-num target">624,192</td><td class="ot-num actual red">674,127</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">658,990</td><td class="ot-num">674,127</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">1,333,117</td>
-            </tr>
-            <tr class="data-row not-achieved-row">
-              <td class="ot-type ot2">OT2</td>
-              <td class="ot-num target">0</td><td class="ot-num actual red">99</td>
-              <td class="ot-num target">0</td><td class="ot-num actual red">543,511</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">1,295,935</td><td class="ot-num">543,511</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">1,839,446</td>
-            </tr>
-
-            <!-- 12. Accounts -->
-            <tr class="data-row">
-              <td class="ot-slno" rowspan="2">12</td>
-              <td class="ot-dept-cell" rowspan="2">Accounts</td>
-              <td class="ot-type ot1">OT1</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">—</td><td class="ot-num">—</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">—</td>
-            </tr>
-            <tr class="data-row">
-              <td class="ot-type ot2">OT2</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks">Due to month closing &amp; month-end on weekly off days</td>
-              <td class="ot-num">93,144</td><td class="ot-num">46,019</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">139,163</td>
-            </tr>
-
-            <!-- 13. Civil -->
-            <tr class="data-row">
-              <td class="ot-slno" rowspan="2">13</td>
-              <td class="ot-dept-cell" rowspan="2">Civil</td>
-              <td class="ot-type ot1">OT1</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">—</td><td class="ot-num">—</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">—</td>
-            </tr>
-            <tr class="data-row">
-              <td class="ot-type ot2">OT2</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">—</td><td class="ot-num">—</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">—</td>
-            </tr>
-
-            <!-- 14. IT -->
-            <tr class="data-row">
-              <td class="ot-slno" rowspan="2">14</td>
-              <td class="ot-dept-cell" rowspan="2">IT</td>
-              <td class="ot-type ot1">OT1</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">—</td><td class="ot-num">228,367</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">228,367</td>
-            </tr>
-            <tr class="data-row">
-              <td class="ot-type ot2">OT2</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-num target">0</td><td class="ot-num">0</td>
-              <td class="ot-remarks"></td>
-              <td class="ot-num">—</td><td class="ot-num">365,387</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:700">365,387</td>
-            </tr>
-
-            <!-- TOTAL -->
-            <tr class="ot-total-row">
-              <td colspan="6" style="text-align:right;padding:7px 12px;letter-spacing:.5px">TOTAL</td>
-              <td class="ot-num actual">1,361,160</td>
-              <td></td>
-              <td class="ot-num" style="font-weight:800">50,704,265</td>
-              <td class="ot-num" style="font-weight:800">36,349,697</td>
-              <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-              <td class="ot-num" style="font-weight:800;color:var(--navy)">87,053,963</td>
-            </tr>
-
-          </tbody>
-        </table>
-      </div>
-
-      <div style="padding:8px 16px;font-size:10px;color:var(--text-muted);background:white;border-top:1px solid var(--border)">
-        OT1 = Standard Overtime &nbsp;·&nbsp; OT2 = Holiday / Special Overtime &nbsp;·&nbsp; Values in Tanzanian Shilling (TSH) &nbsp;·&nbsp; Grand Total YTD: <strong style="color:var(--navy)">TSH 87,053,963</strong>
-      </div>
-
-    </section>
 
   </main>
 
@@ -2420,3 +2046,6 @@
   </script>
 </body>
 </html>
+
+
+

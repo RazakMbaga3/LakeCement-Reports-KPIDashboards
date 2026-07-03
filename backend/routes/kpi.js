@@ -68,9 +68,9 @@ router.get('/:dept/:year/:month', requireAuth, async (req, res) => {
 });
 
 // ── PUT /api/kpi/:dept/:year/:month ─────────────────────────
-// Save KPI values — management/admin only
+// Save KPI values — management/admin only (md is view-only)
 // Body: [ { kpi_key, target, actual, unit }, ... ]
-router.put('/:dept/:year/:month', requireAuth, requireRole('md', 'admin', 'management'), async (req, res) => {
+router.put('/:dept/:year/:month', requireAuth, requireRole('admin', 'management'), async (req, res) => {
   try {
     const { dept, year, month } = req.params;
     const kpis = req.body; // array of KPI rows

@@ -37,8 +37,11 @@ const MIS_USERS = [
    mis_tabs  : MIS tabs this role can see ('audit' = admin/md only)
    Tab keys  : null = hidden entirely | 'view' = read-only | 'edit' = full
                'own' = restricted to own dept rows (read+edit)
-   kpi.depts : 'all' OR array of nav-btn data-dept values
-   kpi.fill  : can open "Fill Monthly Data" form
+   kpi.depts     : 'all' OR array of nav-btn data-dept values — VIEW scope
+   kpi.editDepts : 'all' OR array of data-dept values this role may actually
+                   submit/edit via "Fill Monthly Data" — must be a subset of
+                   kpi.depts. Depts in kpi.depts but not kpi.editDepts are
+                   view-only for this role.
    kpi.daily : can submit daily reports
 ══════════════════════════════════════════════════════════════════════ */
 const PERMISSIONS = {
@@ -49,7 +52,7 @@ const PERMISSIONS = {
     assets:     { it:'view',       vehicles:'view', spares:'view',      capex:'edit', land:'edit' },
     compliance: { certs:'view',    mlpl:'view',     legal:'view',       insurance:'view' },
     store:      { rawmat:'view',   spares:'view',   amc:'view' },
-    kpi:        { depts:'all', fill:true,  daily:true  },
+    kpi:        { depts:'all', editDepts:[], daily:false },
     canViewAudit:  true,
     canManageUsers:false,
     canExport:     true,
@@ -61,7 +64,7 @@ const PERMISSIONS = {
     assets:     { it:'edit',       vehicles:'view', spares:'view',      capex:'view', land:'view' },
     compliance: { certs:'view',    mlpl:'view',     legal:'view',       insurance:'view' },
     store:      { rawmat:'view',   spares:'view',   amc:'view' },
-    kpi:        { depts:'all', fill:false, daily:false },
+    kpi:        { depts:'all', editDepts:[], daily:false },
     canViewAudit:  true,
     canManageUsers:true,
     canExport:     true,
@@ -73,7 +76,7 @@ const PERMISSIONS = {
     assets:     { it:'view',       vehicles:'view', spares:'view',      capex:'view', land:'view' },
     compliance: { certs:'view',    mlpl:'view',     legal:'view',       insurance:'view' },
     store:      { rawmat:'view',   spares:'view',   amc:'view' },
-    kpi:        { depts:'all', fill:false, daily:false },
+    kpi:        { depts:'all', editDepts:[], daily:false },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     true,
@@ -85,7 +88,7 @@ const PERMISSIONS = {
     assets:     null,
     compliance: { certs:'edit',    mlpl:null,       legal:'edit',       insurance:'edit' },
     store:      null,
-    kpi:        { depts:['summary','overtime'], fill:true, daily:true },
+    kpi:        { depts:['summary'], editDepts:[], daily:true },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     true,
@@ -97,7 +100,7 @@ const PERMISSIONS = {
     assets:     { it:'view',       vehicles:'view', spares:'view',      capex:'edit', land:'view' },
     compliance: { certs:'view',    mlpl:'view',     legal:'view',       insurance:'edit' },
     store:      { rawmat:'view',   spares:'view',   amc:'view' },
-    kpi:        { depts:'all', fill:false, daily:false },
+    kpi:        { depts:'all', editDepts:[], daily:false },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     true,
@@ -109,7 +112,7 @@ const PERMISSIONS = {
     assets:     null,
     compliance: null,
     store:      { rawmat:'edit',   spares:'edit',   amc:'edit' },
-    kpi:        { depts:['summary','stores'], fill:true, daily:true },
+    kpi:        { depts:['summary','stores'], editDepts:['stores'], daily:true },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     true,
@@ -121,7 +124,7 @@ const PERMISSIONS = {
     assets:     { it:'own',        vehicles:'own',  spares:'own',       capex:'own',  land:null },
     compliance: { certs:'own',     mlpl:null,        legal:null,         insurance:'own' },
     store:      { rawmat:null,     spares:'own',    amc:'own' },
-    kpi:        { depts:['summary','powerplant','overtime'], fill:true, daily:true },
+    kpi:        { depts:['summary','powerplant'], editDepts:['powerplant'], daily:true },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     false,
@@ -133,7 +136,7 @@ const PERMISSIONS = {
     assets:     { it:'own',        vehicles:'own',  spares:'own',       capex:'own',  land:null },
     compliance: { certs:'own',     mlpl:null,        legal:null,         insurance:'own' },
     store:      { rawmat:null,     spares:'own',    amc:'own' },
-    kpi:        { depts:['summary','ei','mechanical','overtime'], fill:true, daily:true },
+    kpi:        { depts:['summary','ei','mechanical'], editDepts:['mechanical'], daily:true },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     false,
@@ -145,7 +148,7 @@ const PERMISSIONS = {
     assets:     { it:'edit',       vehicles:null,   spares:null,        capex:'own',  land:null },
     compliance: null,
     store:      null,
-    kpi:        { depts:['summary'], fill:false, daily:false },
+    kpi:        { depts:['summary'], editDepts:[], daily:false },
     canViewAudit:  true,
     canManageUsers:false,
     canExport:     false,
@@ -157,7 +160,7 @@ const PERMISSIONS = {
     assets:     { it:'own',        vehicles:'edit', spares:null,        capex:null,   land:null },
     compliance: { certs:'own',     mlpl:null,        legal:'own',        insurance:'own' },
     store:      null,
-    kpi:        { depts:['summary','packing','minesworkshop','overtime'], fill:true, daily:true },
+    kpi:        { depts:['summary','packing','minesworkshop'], editDepts:[], daily:true },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     false,
@@ -169,7 +172,7 @@ const PERMISSIONS = {
     assets:     { it:'own',        vehicles:'own',  spares:'own',       capex:'own',  land:'view' },
     compliance: { certs:'own',     mlpl:'edit',     legal:'own',        insurance:'own' },
     store:      { rawmat:'edit',   spares:'own',    amc:null },
-    kpi:        { depts:['summary','mines','overtime'], fill:true, daily:true },
+    kpi:        { depts:['summary','mines'], editDepts:['mines'], daily:true },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     false,
@@ -181,7 +184,7 @@ const PERMISSIONS = {
     assets:     null,
     compliance: null,
     store:      { rawmat:'edit',   spares:'own',    amc:null },
-    kpi:        { depts:['summary','production','packing','overtime'], fill:true, daily:true },
+    kpi:        { depts:['summary','production','packing'], editDepts:['production'], daily:true },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     false,
@@ -258,8 +261,28 @@ function canEdit(tab, section) {
 function canViewAudit()    { return _getPerms().canViewAudit    === true; }
 function canExport()       { return _getPerms().canExport       === true; }
 function canManageUsers()  { return _getPerms().canManageUsers  === true; }
-function canFillKPI()      { return _getPerms().kpi?.fill       === true; }
 function canSubmitDaily()  { return _getPerms().kpi?.daily      === true; }
+
+/* Per-department KPI view/edit checks — the KPI dashboard has ONE dept
+   selected at a time (currentDept in app.js), and a role's rights can
+   differ per department, so these must be checked against a specific dept
+   rather than as a single global flag. */
+function canViewKPIDept(dept) {
+  const depts = _getPerms().kpi?.depts;
+  if (!depts) return false;
+  return depts === 'all' || (Array.isArray(depts) && depts.includes(dept));
+}
+function canFillKPIDept(dept) {
+  const editDepts = _getPerms().kpi?.editDepts;
+  if (!editDepts) return false;
+  return editDepts === 'all' || (Array.isArray(editDepts) && editDepts.includes(dept));
+}
+/* True if this role can edit ANY department at all — used only to decide
+   whether the Fill button's visibility should ever be re-evaluated. */
+function canFillKPI() {
+  const editDepts = _getPerms().kpi?.editDepts;
+  return editDepts === 'all' || (Array.isArray(editDepts) && editDepts.length > 0);
+}
 
 /* Public permission accessors used by portal.js */
 function getMyPerms()      { return _getPerms(); }
@@ -402,6 +425,33 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
       display:inline-block; padding:1px 7px; border-radius:4px;
       font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px;
       background:#F1F5F9; color:#475569; border:1px solid #E2E8F0;
+    }
+
+    /* ── Daily nav zone labels ── */
+    .nav-btn.fill-tab {
+      background:rgba(244,149,69,.13);
+      border-left:3px solid #F49545;
+    }
+    .nav-btn.fill-tab:hover {
+      background:rgba(244,149,69,.22);
+    }
+    .nav-btn.fill-tab.active {
+      background:var(--orange) !important;
+      border-left-color:#fff !important;
+    }
+    .nav-btn.view-tab {
+      background:rgba(148,163,184,.08);
+      border-left:3px solid rgba(148,163,184,.35);
+      opacity:.78;
+    }
+    .nav-btn.view-tab:hover {
+      background:rgba(148,163,184,.16);
+      opacity:1;
+    }
+    .nav-btn.view-tab.active {
+      background:var(--navy-light) !important;
+      border-left-color:rgba(148,163,184,.6) !important;
+      opacity:1;
     }
 
     /* ── Audit pagination bar ── */
@@ -590,12 +640,34 @@ function applyKPIPermissions() {
       const dept = btn.dataset.dept;
       if (!depts.includes(dept)) btn.style.display = 'none';
     });
+
+    /* The "Department" dropdown (#dept-select) is a second, independent
+       way to reach a department view and was not being filtered — a role
+       could bypass the hidden nav buttons above just by using the select.
+       Strip out any option this role isn't allowed to view. */
+    const deptSelect = document.getElementById('dept-select');
+    if (deptSelect) {
+      Array.from(deptSelect.options).forEach(opt => {
+        if (!depts.includes(opt.value)) opt.remove();
+      });
+    }
   }
 
-  const fillBtn = document.querySelector('.fill-monthly-btn');
-  if (fillBtn && !p.kpi?.fill) fillBtn.style.display = 'none';
-
+  refreshFillButtonVisibility();
   renderUserHeader();
+}
+
+/* Show/hide the "Fill Monthly Data" button based on whether the CURRENTLY
+   SELECTED department is one this role may edit — not just whether the
+   role can edit *some* department. Must be re-run every time the selected
+   department changes (see switchDept() in app.js), otherwise a role could
+   open the editor for a department by switching to it while the button's
+   stale visibility state from page-load still says "visible". */
+function refreshFillButtonVisibility() {
+  const fillBtn = document.querySelector('.fill-monthly-btn');
+  if (!fillBtn) return;
+  const dept = (typeof currentDept !== 'undefined') ? currentDept : 'summary';
+  fillBtn.style.display = canFillKPIDept(dept) ? '' : 'none';
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -606,28 +678,102 @@ function applyKPIPermissions() {
    'all' means every nav link is visible for that role (view-only access).
 ══════════════════════════════════════════════════════════════════════ */
 const _DAILY_ACCESS = {
-  md:         { edit: [],                                                               nav: 'all' },
-  admin:      { edit: [],                                                               nav: 'all' },
-  management: { edit: [],                                                               nav: 'all' },
-  finance:    { edit: [],                                                               nav: 'all' },
-  hr:         { edit: ['overtime-form.html'],
-                nav:  ['overtime-form.html'] },
-  stores:     { edit: ['materials-form.html'],
-                nav:  ['daily-report.html','materials-form.html'] },
-  cpp:        { edit: ['power-plant-report.html','cpp-form.html','power-form.html'],
-                nav:  ['daily-report.html','power-plant-report.html','cpp-form.html','power-form.html'] },
-  pm:         { edit: ['stoppage-form.html'],
-                nav:  ['daily-report.html','stoppage-form.html'] },
+  md:         { edit: [],                                                          nav: 'all' },
+  admin:      { edit: [],                                                          nav: 'all' },
+  management: { edit: [],                                                          nav: 'all' },
+  finance:    { edit: [],                                                          nav: 'all' },
+  hr:         { edit: [],
+                nav:  ['daily-report.html'] },
+  stores:     { edit: [],
+                nav:  ['daily-report.html'] },
+  cpp:        { edit: ['daily-report.html','power-plant-report.html'],
+                nav:  ['daily-report.html','power-plant-report.html'] },
+  pm:         { edit: ['daily-report.html'],
+                nav:  ['daily-report.html'] },
   it:         { edit: [],
                 nav:  ['daily-report.html'] },
-  logistics:  { edit: ['dispatch-form.html'],
-                nav:  ['daily-report.html','dispatch-form.html'] },
-  mining:     { edit: ['mines-report.html','limestone-form.html'],
-                nav:  ['daily-report.html','mines-report.html','limestone-form.html'] },
-  production: { edit: ['daily-report.html','quality-form.html','pile-quality-form.html',
-                            'kiln-form.html','cement-mill-form.html'],
+  logistics:  { edit: ['daily-report.html'],
+                nav:  ['daily-report.html'] },
+  mining:     { edit: ['mines-report.html'],
+                nav:  ['daily-report.html','mines-report.html'] },
+  production: { edit: ['daily-report.html'],
                 nav:  'all' },
 };
+
+/* ══════════════════════════════════════════════════════════════════════
+   DAILY NAV CATALOGUE — single source of truth for the reports stripe
+══════════════════════════════════════════════════════════════════════ */
+const _DAILY_NAV_ITEMS = [
+  { page:'daily-report.html',       label:'Production',  icon:'factory',  hRoot:'daily-report.html',       hForm:'../daily-report.html' },
+  { page:'power-plant-report.html', label:'Power Plant', icon:'zap',      hRoot:'power-plant-report.html', hForm:'../power-plant-report.html' },
+  { page:'mines-report.html',       label:'Mines',       icon:'pickaxe',  hRoot:'mines-report.html',       hForm:'../mines-report.html' },
+];
+
+function buildDailyNav() {
+  const navInner = document.querySelector('.dept-nav .nav-inner');
+  if (!navInner) return;
+  const user = getCurrentUser();
+  if (!user) return;
+
+  const access      = _DAILY_ACCESS[user.role] || { edit:[], nav:[] };
+  const inForms     = window.location.pathname.includes('/forms/');
+  const currentPage = window.location.pathname.split('/').pop() || 'daily-report.html';
+
+  const visible = access.nav === 'all'
+    ? _DAILY_NAV_ITEMS
+    : _DAILY_NAV_ITEMS.filter(it => access.nav.includes(it.page));
+
+  const fillItems = visible.filter(it => access.edit.includes(it.page));
+  const viewItems = visible.filter(it => !access.edit.includes(it.page));
+
+  function btn(item, isFill) {
+    const href   = inForms ? item.hForm : item.hRoot;
+    const active = item.page === currentPage;
+    const zone   = isFill ? 'fill-tab' : 'view-tab';
+    const aStyle = active
+      ? (isFill
+          ? 'background:var(--orange);color:white;border-color:var(--orange);font-weight:700;'
+          : 'background:var(--navy-light);border-color:rgba(255,255,255,.3);font-weight:700;')
+      : '';
+    const click = active ? '' : `onclick="location.href='${href}'"`;
+    return `<button class="nav-btn ${zone}${active?' active':''}" ${click} style="${aStyle}">` +
+           `<i data-lucide="${item.icon}" class="nav-icon"></i> ${item.label}</button>`;
+  }
+
+  let html = '';
+
+  if (fillItems.length) {
+    fillItems.forEach(it => { html += btn(it, true); });
+    html += '<div class="nav-divider"></div>';
+  }
+
+  if (viewItems.length) {
+    viewItems.forEach(it => { html += btn(it, false); });
+    html += '<div class="nav-divider"></div>';
+  }
+
+  html += `<button class="nav-btn secondary" onclick="window.print()"><i data-lucide="printer" class="nav-icon"></i> Print / PDF</button>`;
+
+  navInner.innerHTML = html;
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons();
+  }
+}
+
+/* Auto-build the daily nav, but only on actual daily-report pages.
+   index.html reuses the same .dept-nav/.nav-inner markup for its 9
+   KPI department buttons — buildDailyNav() must never touch that. */
+function _isDailyReportPage() {
+  const path = window.location.pathname;
+  const page = path.split('/').pop() || '';
+  const rootDailyPages = ['daily-report.html', 'power-plant-report.html', 'mines-report.html'];
+  return path.includes('/forms/') || rootDailyPages.includes(page);
+}
+document.addEventListener('DOMContentLoaded', function () {
+  if (_isDailyReportPage() && document.querySelector('.dept-nav .nav-inner') && getCurrentUser()) {
+    buildDailyNav();
+  }
+});
 
 /* ══════════════════════════════════════════════════════════════════════
    APPLY PERMISSIONS — DAILY REPORT PAGE & ALL SUB-FORMS
@@ -643,22 +789,26 @@ function applyDailyPermissions() {
   const currentPage = window.location.pathname.split('/').pop() || 'daily-report.html';
   const canEditPage = access.edit.includes(currentPage);
 
-  /* ── 1. Filter nav links ─────────────────────────────────────────── */
-  if (access.nav !== 'all') {
-    document.querySelectorAll('.nav-btn[onclick]').forEach(btn => {
-      const match = (btn.getAttribute('onclick') || '').match(/location\.href\s*=\s*['"]([^'"]+)['"]/);
-      if (!match) return;   /* active page button or print button — no href, keep visible */
-      const linkedPage = match[1].split('/').pop();
-      if (!access.nav.includes(linkedPage)) {
-        btn.style.display = 'none';
-      }
-    });
-  }
+  /* ── 1. Build role-aware split nav (FILL | VIEW ONLY) ──────────── */
+  buildDailyNav();
+
+  /* ── 1b. Show inline-edit buttons only to the owning department ──── */
+  const _IE_BTN_ROLES = {
+    'ie-btn-quality':   ['production'],
+    'ie-btn-stoppages': ['pm', 'production'],
+    'ie-btn-dispatch':  ['logistics'],
+    'ie-btn-power':     ['cpp'],
+  };
+  Object.entries(_IE_BTN_ROLES).forEach(([btnId, allowedRoles]) => {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.style.display = allowedRoles.includes(role) ? '' : 'none';
+  });
 
   /* ── 2. View-Only mode when role cannot edit this page ──────────── */
   if (!canEditPage) {
-    /* Disable every editable input/textarea/select */
-    document.querySelectorAll('input, textarea, select').forEach(el => {
+    /* Disable every editable input/textarea/select EXCEPT inline-edit panel inputs */
+    document.querySelectorAll('input:not(.ie-input), textarea:not(.ie-input), select:not(.ie-input)').forEach(el => {
       el.disabled = true;
       el.style.cursor = 'not-allowed';
     });

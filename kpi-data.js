@@ -373,6 +373,16 @@ function openMonthlyModal() {
   const yr   =  document.getElementById('year-select').value;
   const dept =  typeof currentDept !== 'undefined' ? currentDept : 'summary';
 
+  // Defense in depth: the Fill button is hidden when the role can't edit
+  // the current dept, but refuse here too in case this is ever called
+  // directly (stale DOM state, console call, etc.).
+  if (typeof canFillKPIDept === 'function' && !canFillKPIDept(dept)) {
+    if (typeof showPermDenied === 'function') {
+      showPermDenied('You do not have edit access for this department.');
+    }
+    return;
+  }
+
   const section = document.getElementById('dept-' + dept);
   if (!section) return;
 
@@ -468,6 +478,7 @@ function saveAllModalValues() {
     const isAuto = input.dataset.isAuto === 'true';
 
     if (val === '' || val === '—') return;
+    if (typeof canFillKPIDept === 'function' && !canFillKPIDept(dept)) return;
 
     if (isAuto) {
       localStorage.setItem(overrideKey(dept, slug, yr, mo), val);
