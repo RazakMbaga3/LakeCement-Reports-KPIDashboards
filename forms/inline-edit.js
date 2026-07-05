@@ -105,16 +105,25 @@
       document.dispatchEvent(new CustomEvent('nyati:inline-saved', { detail: { formId: formId } }));
       if (typeof global.refreshReportLoader === 'function') global.refreshReportLoader();
 
-      var synced = true;
+      var synced = true, queued = false;
       if (global.NyatiAPI) {
         try {
           await global.NyatiAPI.submitForm(formId, date, 'day', Object.assign({}, merged, { _status: 'draft' }));
-        } catch (e) { synced = false; }
+        } catch (e) {
+          synced = false;
+          // Retryable outage (offline, 401, 5xx) → hand to the offline queue
+          if (global.NyatiQueue && (!e.status || e.status === 401 || e.status >= 500)) {
+            global.NyatiQueue.enqueue(formId, date, 'day', Object.assign({}, merged, { _status: 'draft' }));
+            queued = true;
+          }
+        }
       }
 
       _toast(synced
         ? 'Saved — ' + formId.replace(/-/g, ' ') + ' data updated'
-        : 'Saved locally — ' + formId.replace(/-/g, ' ') + ' did not reach the server', synced ? 'ok' : 'warn');
+        : (queued
+          ? 'Saved locally — offline, queued for auto-sync'
+          : 'Saved locally — the server rejected ' + formId.replace(/-/g, ' ')), synced ? 'ok' : 'warn');
       this.close(sectionId);
     },
   };

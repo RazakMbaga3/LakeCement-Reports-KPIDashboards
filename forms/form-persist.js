@@ -148,14 +148,21 @@
 
   /* ── Sync a saved snapshot to the server. Best-effort: local save/lock
      UX always proceeds regardless of server reachability; this only adds
-     durability on top of it. ────────────────────────────────────────── */
+     durability on top of it. Retryable failures (offline, 401, 5xx) are
+     handed to NyatiQueue, which auto-syncs when the server returns. ──── */
   async function _syncToServer(formId, date, named, status) {
-    if (!global.NyatiAPI) return { ok: false };
+    if (!global.NyatiAPI) return { ok: false, queued: false };
+    const payload = Object.assign({}, named, { _status: status });
     try {
-      await global.NyatiAPI.submitForm(formId, date, 'day', Object.assign({}, named, { _status: status }));
+      await global.NyatiAPI.submitForm(formId, date, 'day', payload);
       return { ok: true };
     } catch (e) {
-      return { ok: false, error: e };
+      const retryable = !e.status || e.status === 401 || e.status >= 500;
+      if (retryable && global.NyatiQueue) {
+        global.NyatiQueue.enqueue(formId, date, 'day', payload);
+        return { ok: false, queued: true };
+      }
+      return { ok: false, queued: false, error: e };
     }
   }
 
@@ -335,7 +342,11 @@
         document.dispatchEvent(new CustomEvent('nyati:saved', { detail: { formId, date } }));
 
         const sync = await _syncToServer(formId, date, payload.data, 'draft');
-        if (!sync.ok) _toast(`Saved locally — server sync failed, will retry`, 'warn');
+        if (!sync.ok) {
+          _toast(sync.queued
+            ? `Saved locally — offline, queued for auto-sync`
+            : `Saved locally — server rejected the sync (check your access)`, 'warn');
+        }
       });
     });
 
@@ -380,8 +391,10 @@
         const sync = await _syncToServer(formId, date, payload.data, 'submitted');
         if (sync.ok) {
           _toast(`Report submitted — nyati-${formId}-${date}.json downloaded`, 'ok');
+        } else if (sync.queued) {
+          _toast(`Submitted locally — server offline, queued for auto-sync`, 'warn');
         } else {
-          _toast(`Submitted & downloaded locally — did NOT reach the server. Retry or contact IT.`, 'warn');
+          _toast(`Submitted & downloaded locally — the server REJECTED it. Contact IT.`, 'err');
         }
       });
     });

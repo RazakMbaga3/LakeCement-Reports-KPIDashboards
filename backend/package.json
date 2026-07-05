@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "backend",
   "version": "1.0.0",
   "main": "server.js",
@@ -9,6 +9,7 @@
     "migrate": "node db/migrate.js",
     "lint": "eslint .",
     "accept:phase1": "node scripts/accept-phase1.js",
+    "accept:phase2": "node scripts/accept-phase2.js",
     "smoke": "node scripts/smoke.js",
     "test": "npm run lint && npm run smoke"
   },

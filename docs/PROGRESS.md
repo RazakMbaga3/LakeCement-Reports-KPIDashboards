@@ -32,17 +32,28 @@ Last audit: 2026-07-05.
       (tampered token 401, lockout 423, RBAC 403, revocation, must-change gate,
       validation 400s). Browser-side login/change-password JS syntax-checked.
 
-## Phase 2 — Data Layer Migration — ▶ IN PROGRESS (further along than expected)
-- [x] forms/api-client.js complete (submitForm / getForm / getFormRange, auth header)
+## Phase 2 — Data Layer Migration — ✅ DONE (2026-07-05)
+- [x] forms/api-client.js complete (submitForm / getForm / getFormRange, auth
+      header, err.status on HTTP failures for retry/permanent classification)
 - [x] form-persist.js: server-first save/load, localStorage demoted to offline cache
-- [x] report-loader.js: server-first read
-- [ ] Verify EVERY form (kiln, cement-mill, cpp, power, limestone, mines, dispatch,
-      quality, pile-quality, materials, stoppage) submits to Postgres end-to-end
-- [ ] Verify analytics.js / kpi-data.js / index.html read from API
-- [ ] Offline queue with sync-on-reconnect (currently: fallback read cache only —
-      writes made while offline are NOT queued for replay)
-- [ ] One-time localStorage → Postgres import for historical entries
-- [ ] Accept: two-browser test with cleared localStorage; kill-server-mid-entry test
+- [x] report-loader.js / analytics.js / kpi-data.js: server-first reads (verified)
+- [x] All 13 form types verified submitting to Postgres end-to-end and reading
+      back identically from a second authenticated session (accept-phase2 Part A)
+- [x] Offline WRITE queue: forms/offline-queue.js — retryable failures
+      (offline/401/5xx) queue locally; auto-flush on 'online' event, every 60 s,
+      and on page load; status pill bottom-left with review panel.
+      Conflict rule: server wins — if the server copy is newer than the queued
+      item it is flagged for review ("Use mine" / "Keep server"); permanent
+      rejections (validation/403) also flag for review instead of retrying.
+      Wired into form-persist.js, inline-edit.js, and all 15 pages.
+- [x] One-time import: import-local.html scans this browser's nyati-* entries,
+      skips dates already on the server (server wins), imports the rest via the
+      API per role; JSON backup download included. Old positional-only snapshots
+      are backup-only (no field names to map).
+- [x] Accept: scripts/accept-phase2.js — 20 checks green 2026-07-05
+      (13-form round-trip + second-session identity; queue: server-down keeps,
+      reconnect syncs, newer-server conflict, both resolutions, 403 review).
+      Kill-server-mid-entry is covered by B1/B2 against the real queue module.
 
 ## Phase 3 — KPI Formula Layer — ⬜ NOT STARTED
 Facts registry + formula registry + audited manual override (design agreed — see
