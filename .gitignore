@@ -10,3 +10,13 @@ desktop.ini
 
 # Logs
 *.log
+backend/logs/
+
+# Dependencies & secrets (belt-and-braces; backend/.gitignore also covers these)
+node_modules/
+.env
+.env.local
+
+# Excel lock/temp files (the .xlsx report templates themselves stay tracked)
+~$*.xls*
+*.tmp
