@@ -64,8 +64,15 @@
     }
   }
 
-  /* ── Read named-field dict from a saved form snapshot ───────────── */
-  function _readForm(formId, date) {
+  /* ── Read named-field dict from a form's saved data — server first
+     (source of truth), localStorage fallback (offline / unreachable). ── */
+  async function _readForm(formId, date) {
+    if (global.NyatiAPI) {
+      try {
+        const record = await global.NyatiAPI.getForm(formId, date);
+        if (record && record.data) return record.data;
+      } catch (e) { /* fall through to localStorage */ }
+    }
     const raw = localStorage.getItem(`${NS}-${formId}-${date}`);
     if (!raw) return {};
     try {
@@ -75,15 +82,15 @@
   }
 
   /* ── Merge all source forms for a given date ────────────────────── */
-  function _loadAll(formIds, date) {
+  async function _loadAll(formIds, date) {
     const merged = {};
-    (formIds || []).forEach(id => {
-      const d = _readForm(id, date);
+    for (const id of (formIds || [])) {
+      const d = await _readForm(id, date);
       Object.entries(d).forEach(([k, v]) => {
         // Later forms overwrite on key collision — order matters
         merged[k] = v;
       });
-    });
+    }
     return merged;
   }
 
@@ -156,10 +163,10 @@
   }
 
   /* ── Main run: load + apply ────────────────────────────────────── */
-  function _run(config) {
+  async function _run(config) {
     const dateEl = document.querySelector('input[type="date"]');
     const date   = dateEl ? dateEl.value : new Date().toISOString().slice(0, 10);
-    const data   = _loadAll(config.forms, date);
+    const data   = await _loadAll(config.forms, date);
     _applyComputes(config.computes, data);
     _applyFills(config.fills, data);
     _badge(config.forms, date, data);

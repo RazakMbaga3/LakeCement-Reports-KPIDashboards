@@ -8,29 +8,16 @@
 'use strict';
 
 const _SESSION_KEY = 'lcl_mis_session';
+const _TOKEN_KEY   = 'lcl_mis_token';
 
-/* ══════════════════════════════════════════════════════════════════════
-   USER DATABASE
-   Admin can edit usernames, passwords, names, roles, departments here.
-   Passwords should be changed immediately after first login.
-   Roles: md | admin | management | hr | finance | stores | cpp |
+/* API base — the one line to change when deploying off localhost (e.g. to
+   the LAN server's address, or '/api' once a reverse proxy fronts both). */
+const _API_BASE = 'http://localhost:5000/api';
+
+/* Roles: md | admin | management | hr | finance | stores | cpp |
           pm | it | logistics | mining | production
-══════════════════════════════════════════════════════════════════════ */
-const MIS_USERS = [
-  { id:1,  username:'admin',      password:'Admin@LCL2026',  name:'System Administrator',        role:'admin',      dept:'IT',             active:true },
-  { id:2,  username:'md',         password:'MD@LCL2026',     name:'Managing Director',           role:'md',         dept:'CORPORATE',      active:true },
-  { id:13, username:'planthead',  password:'Plant@LCL2026',  name:'Plant Head',                  role:'md',         dept:'OPERATIONS',     active:true },
-  { id:3,  username:'management', password:'Mgt@LCL2026',    name:'Senior Management',           role:'management', dept:'CORPORATE',      active:true },
-  { id:4,  username:'hr',         password:'HR@LCL2026',     name:'HR & Admin Manager',          role:'hr',         dept:'HR & ADMIN',     active:true },
-  { id:5,  username:'finance',    password:'Fin@LCL2026',    name:'Finance & Accounts Manager',  role:'finance',    dept:'FINANCE',        active:true },
-  { id:6,  username:'stores',     password:'Str@LCL2026',    name:'Purchase & Stores Manager',   role:'stores',     dept:'STORES',         active:true },
-  { id:7,  username:'cpp',        password:'CPP@LCL2026',    name:'Power Plant HOD',             role:'cpp',        dept:'POWER PLANT',    active:true },
-  { id:8,  username:'pm',         password:'PM@LCL2026',     name:'Projects & Maintenance HOD',  role:'pm',         dept:'P & M',          active:true },
-  { id:9,  username:'it',         password:'IT@LCL2026',     name:'IT Manager',                  role:'it',         dept:'IT',             active:true },
-  { id:10, username:'logistics',  password:'Log@LCL2026',    name:'Logistics & Workshops HOD',   role:'logistics',  dept:'LOGISTICS',      active:true },
-  { id:11, username:'mining',     password:'Min@LCL2026',    name:'Mining Manager',              role:'mining',     dept:'MINING',         active:true },
-  { id:12, username:'production', password:'Prod@LCL2026',   name:'Production & QC Manager',     role:'production', dept:'PRODUCTION & QC',active:true },
-];
+   User accounts now live server-side (backend/db/seed.js) with bcrypt-hashed
+   passwords — the old plaintext MIS_USERS array has been removed. */
 
 /* ══════════════════════════════════════════════════════════════════════
    PERMISSION MATRIX
@@ -194,31 +181,51 @@ const PERMISSIONS = {
 /* ══════════════════════════════════════════════════════════════════════
    SESSION MANAGEMENT
 ══════════════════════════════════════════════════════════════════════ */
-function login(username, password) {
-  const u = MIS_USERS.find(u =>
-    u.username === username.trim().toLowerCase() &&
-    u.password === password &&
-    u.active
-  );
-  if (!u) return false;
-  const session = {
+/* Real backend login — POSTs credentials, stores the JWT + a session object
+   shaped exactly like the old client-side one so every existing permission
+   helper below (which all read getCurrentUser() synchronously) keeps working
+   unchanged. Returns true/false like the old synchronous version did, via
+   an async function the caller must await. */
+async function login(username, password) {
+  let res;
+  try {
+    res = await fetch(_API_BASE + '/auth/login', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ username, password }),
+    });
+  } catch (networkErr) {
+    throw new Error('unreachable'); // distinguish from bad-credentials for login.html
+  }
+
+  if (!res.ok) return false; // 401 invalid credentials
+
+  const { token, user: u } = await res.json();
+  sessionStorage.setItem(_TOKEN_KEY, token);
+  sessionStorage.setItem(_SESSION_KEY, JSON.stringify({
     userId:    u.id,
     username:  u.username,
     name:      u.name,
     role:      u.role,
     dept:      u.dept,
     loginTime: Date.now(),
-  };
-  sessionStorage.setItem(_SESSION_KEY, JSON.stringify(session));
+  }));
   _writeAudit('LOGIN', '—', '—', '—', '—', u.name + ' logged in from ' + (window.location.pathname.split('/').pop() || 'browser'));
   return true;
 }
 
-function logout() {
+async function logout() {
   const user = getCurrentUser();
   if (user) _writeAudit('LOGOUT', '—', '—', '—', '—', user.name + ' logged out');
+  try {
+    await fetch(_API_BASE + '/auth/logout', {
+      method:  'POST',
+      headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+    });
+  } catch { /* best-effort — still log out locally even if server is unreachable */ }
   sessionStorage.removeItem(_SESSION_KEY);
-  window.location.href = 'login.html';
+  sessionStorage.removeItem(_TOKEN_KEY);
+  window.location.href = window.location.pathname.includes('/forms/') ? '../login.html' : 'login.html';
 }
 
 function getCurrentUser() {
@@ -228,10 +235,48 @@ function getCurrentUser() {
   } catch { return null; }
 }
 
+function getAuthToken() {
+  return sessionStorage.getItem(_TOKEN_KEY);
+}
+
+/* login.html lives at the app root; pages inside /forms/ need the ../
+   prefix or the redirect 404s on forms/login.html. The return param is
+   resolved FROM login.html (at the root), so forms pages must carry their
+   forms/ prefix for the post-login bounce-back to land on the right page. */
+function _loginUrl() {
+  const inForms = window.location.pathname.includes('/forms/');
+  const page    = window.location.pathname.split('/').pop() || 'index.html';
+  const ret     = inForms ? 'forms/' + page : page;
+  return (inForms ? '../' : '') + 'login.html?return=' + encodeURIComponent(ret);
+}
+
 function requireAuth() {
   if (!getCurrentUser()) {
-    const page = window.location.pathname.split('/').pop() || 'index.html';
-    window.location.href = 'login.html?return=' + encodeURIComponent(page);
+    window.location.href = _loginUrl();
+    return;
+  }
+  // Fast path above is synchronous (no flash of protected content). Also
+  // verify the token is still valid in the background — catches an expired
+  // JWT (8h) or a server-side secret rotation without blocking page render.
+  _verifySessionOrRedirect();
+}
+
+async function _verifySessionOrRedirect() {
+  let invalid = false;
+  try {
+    const res = await fetch(_API_BASE + '/auth/me', {
+      headers: { 'Authorization': 'Bearer ' + getAuthToken() },
+    });
+    invalid = (res.status === 401 || res.status === 403);
+  } catch {
+    // Network failure ≠ invalid session: don't log the user out just
+    // because the backend is briefly unreachable — offline fallbacks
+    // elsewhere are designed for exactly that case.
+  }
+  if (invalid) {
+    sessionStorage.removeItem(_SESSION_KEY);
+    sessionStorage.removeItem(_TOKEN_KEY);
+    window.location.href = _loginUrl();
   }
 }
 
@@ -776,6 +821,39 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 /* ══════════════════════════════════════════════════════════════════════
+   FORM-TYPE ACCESS — which roles may SUBMIT which formType (daily_reports
+   rows). Distinct from _DAILY_ACCESS (which gates the 3 hub pages) and
+   _IE_BTN_ROLES (which gates inline sub-panels on daily-report.html) —
+   this covers the 10 standalone forms/*.html pages, which previously had
+   no role mapping at all and were stuck permanently view-only for everyone.
+   Mirrored server-side in backend/config/formAccess.js — keep both in sync.
+══════════════════════════════════════════════════════════════════════ */
+const _FORM_TYPE_ACCESS = {
+  production: ['production','quality','kiln','cement-mill','materials','limestone','pile-quality','stoppage'],
+  pm:         ['production','stoppage'],
+  logistics:  ['production','dispatch'],
+  cpp:        ['production','power-plant','power-cons','cpp'],
+  mining:     ['mines'],
+  hr: [], stores: [], it: [], md: [], admin: [], management: [], finance: [],
+};
+
+/* Standalone forms/*.html pages don't carry their formId in the URL, and
+   applyDailyPermissions() runs before initFormPersist() sets
+   window._nyatiFormId — so map filename → formType statically instead. */
+const _STANDALONE_FORM_TYPE = {
+  'quality-form.html':      'quality',
+  'dispatch-form.html':     'dispatch',
+  'kiln-form.html':         'kiln',
+  'cement-mill-form.html':  'cement-mill',
+  'limestone-form.html':    'limestone',
+  'materials-form.html':    'materials',
+  'pile-quality-form.html': 'pile-quality',
+  'power-form.html':        'power-cons',
+  'cpp-form.html':          'cpp',
+  'stoppage-form.html':     'stoppage',
+};
+
+/* ══════════════════════════════════════════════════════════════════════
    APPLY PERMISSIONS — DAILY REPORT PAGE & ALL SUB-FORMS
    Call this on every daily-report page (daily-report.html,
    power-plant-report.html, mines-report.html, forms/*.html, etc.)
@@ -787,7 +865,14 @@ function applyDailyPermissions() {
   const role       = user.role;
   const access     = _DAILY_ACCESS[role] || { edit: [], nav: [] };
   const currentPage = window.location.pathname.split('/').pop() || 'daily-report.html';
-  const canEditPage = access.edit.includes(currentPage);
+
+  // Standalone forms/*.html pages are gated by formType (_FORM_TYPE_ACCESS),
+  // not by the page-filename-keyed _DAILY_ACCESS (that only ever lists the
+  // 3 hub pages, so every standalone form used to be forced view-only).
+  const standaloneFormType = _STANDALONE_FORM_TYPE[currentPage];
+  const canEditPage = standaloneFormType
+    ? (_FORM_TYPE_ACCESS[role] || []).includes(standaloneFormType)
+    : access.edit.includes(currentPage);
 
   /* ── 1. Build role-aware split nav (FILL | VIEW ONLY) ──────────── */
   buildDailyNav();

@@ -114,8 +114,27 @@
     }
   }
 
-  /* ── Read snapshot from localStorage ────────────────────────────── */
-  function _read(formId, date) {
+  /* ── Read snapshot — server first (source of truth), localStorage
+     fallback (offline / server unreachable). Server records don't carry
+     a draft/submitted distinction of their own (daily_reports has no
+     status column), so that status rides along inside the JSONB `data`
+     blob as `_status`, written by _syncToServer below. ─────────────── */
+  async function _read(formId, date) {
+    if (global.NyatiAPI) {
+      try {
+        const record = await global.NyatiAPI.getForm(formId, date);
+        if (record && record.data) {
+          const status = record.data._status || 'submitted';
+          const payload = { _m: { formId, date, savedAt: record.updated_at || record.submitted_at, status }, inputs: [], data: record.data };
+          _restore(document.body, payload);
+          // Mirror into localStorage as an offline cache for _showHistory().
+          localStorage.setItem(_key(formId, date), JSON.stringify(payload));
+          return payload._m;
+        }
+      } catch (e) {
+        // Server unreachable / error — fall through to localStorage.
+      }
+    }
     const raw = localStorage.getItem(_key(formId, date));
     if (!raw) return null;
     try {
@@ -124,6 +143,19 @@
       return p._m;
     } catch (e) {
       return null;
+    }
+  }
+
+  /* ── Sync a saved snapshot to the server. Best-effort: local save/lock
+     UX always proceeds regardless of server reachability; this only adds
+     durability on top of it. ────────────────────────────────────────── */
+  async function _syncToServer(formId, date, named, status) {
+    if (!global.NyatiAPI) return { ok: false };
+    try {
+      await global.NyatiAPI.submitForm(formId, date, 'day', Object.assign({}, named, { _status: status }));
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: e };
     }
   }
 
@@ -293,14 +325,17 @@
     const body      = document.body;
     const dateInput = body.querySelector('input[type="date"]');
 
-    /* Save Draft */
+    /* Save Draft — saves locally immediately, syncs to server best-effort */
     body.querySelectorAll('.btn-save').forEach(btn => {
-      btn.addEventListener('click', e => {
+      btn.addEventListener('click', async e => {
         e.preventDefault();
-        const { date } = _write(formId, 'draft');
+        const { date, payload } = _write(formId, 'draft');
         _toast(`Draft saved — ${date}`, 'ok');
         _updateSavedChip('draft');
         document.dispatchEvent(new CustomEvent('nyati:saved', { detail: { formId, date } }));
+
+        const sync = await _syncToServer(formId, date, payload.data, 'draft');
+        if (!sync.ok) _toast(`Saved locally — server sync failed, will retry`, 'warn');
       });
     });
 
@@ -313,9 +348,11 @@
       });
     });
 
-    /* Submit Report */
+    /* Submit Report — local save + JSON download + lock happen regardless
+       of server reachability (never lose the existing guarantee); the
+       server call adds durability on top. */
     body.querySelectorAll('.btn-sub').forEach(btn => {
-      btn.addEventListener('click', e => {
+      btn.addEventListener('click', async e => {
         e.preventDefault();
         const date = _dateVal(body);
         if (!confirm(
@@ -337,16 +374,22 @@
         URL.revokeObjectURL(a.href);
 
         _lockForm();
-        _toast(`Report submitted — nyati-${formId}-${date}.json downloaded`, 'ok');
         _updateSavedChip('submitted');
         document.dispatchEvent(new CustomEvent('nyati:submitted', { detail: { formId, date } }));
+
+        const sync = await _syncToServer(formId, date, payload.data, 'submitted');
+        if (sync.ok) {
+          _toast(`Report submitted — nyati-${formId}-${date}.json downloaded`, 'ok');
+        } else {
+          _toast(`Submitted & downloaded locally — did NOT reach the server. Retry or contact IT.`, 'warn');
+        }
       });
     });
 
     /* On date change → load saved data for that date */
     if (dateInput) {
-      dateInput.addEventListener('change', () => {
-        const meta = _read(formId, dateInput.value);
+      dateInput.addEventListener('change', async () => {
+        const meta = await _read(formId, dateInput.value);
         if (meta) {
           _toast(`Loaded ${meta.status} — ${meta.date}`, 'ok');
           if (meta.status === 'submitted') _lockForm();
@@ -354,7 +397,9 @@
       });
     }
 
-    /* Auto-save every 60 seconds (silent, draft only) */
+    /* Auto-save every 60 seconds (silent, local-only — draft autosave does
+       not hit the server; only explicit Save Draft / Submit clicks do, to
+       avoid unattended-tab write load and audit-log noise). */
     setInterval(() => {
       if (!document.querySelector('.btn-sub[disabled]')) {
         _write(formId, 'draft');
@@ -365,8 +410,9 @@
 
     /* On page load → silently restore today's data if saved */
     if (dateInput && dateInput.value) {
-      const meta = _read(formId, dateInput.value);
-      if (meta && meta.status === 'submitted') _lockForm();
+      _read(formId, dateInput.value).then(meta => {
+        if (meta && meta.status === 'submitted') _lockForm();
+      });
     }
   };
 

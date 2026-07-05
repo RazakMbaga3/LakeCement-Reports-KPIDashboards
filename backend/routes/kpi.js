@@ -9,7 +9,8 @@
 
 const express = require('express');
 const db      = require('../db');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth }          = require('../middleware/auth');
+const { requireKpiDeptAccess } = require('../middleware/kpiAccess');
 
 const router = express.Router();
 
@@ -68,9 +69,10 @@ router.get('/:dept/:year/:month', requireAuth, async (req, res) => {
 });
 
 // ── PUT /api/kpi/:dept/:year/:month ─────────────────────────
-// Save KPI values — management/admin only (md is view-only)
+// Save KPI values — dept-aware: admin/management edit any dept, each
+// department HOD only their own (see config/kpiAccess.js). md is view-only.
 // Body: [ { kpi_key, target, actual, unit }, ... ]
-router.put('/:dept/:year/:month', requireAuth, requireRole('admin', 'management'), async (req, res) => {
+router.put('/:dept/:year/:month', requireAuth, requireKpiDeptAccess, async (req, res) => {
   try {
     const { dept, year, month } = req.params;
     const kpis = req.body; // array of KPI rows

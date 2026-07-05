@@ -324,7 +324,7 @@
     }
   })();
 
-  function handleLogin(e) {
+  async function handleLogin(e) {
     e.preventDefault();
     const btn   = document.getElementById('login-btn');
     const uEl   = document.getElementById('username');
@@ -338,25 +338,31 @@
     btn.classList.add('loading');
     btn.disabled = true;
 
-    setTimeout(() => {
-      const ok = login(uEl.value, pEl.value);
-      btn.classList.remove('loading');
-      btn.disabled = false;
+    let ok = false, unreachable = false;
+    try {
+      ok = await login(uEl.value, pEl.value);
+    } catch (err) {
+      unreachable = true;
+    }
 
-      if (ok) {
-        btn.style.background = '#10B981';
-        btn.querySelector('.btn-label').textContent = 'Redirecting…';
-        const p = new URLSearchParams(window.location.search);
-        setTimeout(() => { window.location.href = p.get('return') || 'portal.html'; }, 400);
-      } else {
-        uEl.classList.add('err');
-        pEl.classList.add('err');
-        document.getElementById('err-text').textContent = 'Invalid username or password. Please try again.';
-        errBox.classList.add('show');
-        pEl.value = '';
-        pEl.focus();
-      }
-    }, 300);
+    btn.classList.remove('loading');
+    btn.disabled = false;
+
+    if (ok) {
+      btn.style.background = '#10B981';
+      btn.querySelector('.btn-label').textContent = 'Redirecting…';
+      const p = new URLSearchParams(window.location.search);
+      setTimeout(() => { window.location.href = p.get('return') || 'portal.html'; }, 400);
+    } else {
+      uEl.classList.add('err');
+      pEl.classList.add('err');
+      document.getElementById('err-text').textContent = unreachable
+        ? 'Cannot reach the server — is the backend running?'
+        : 'Invalid username or password. Please try again.';
+      errBox.classList.add('show');
+      pEl.value = '';
+      pEl.focus();
+    }
   }
 
   function togglePw() {

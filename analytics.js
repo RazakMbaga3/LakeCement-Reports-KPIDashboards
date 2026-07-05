@@ -142,23 +142,51 @@
     },
   ];
 
-  /* ── Harvest localStorage ──────────────────────────────────────── */
-  function harvest(days) {
-    var cutoff = buildRange(days)[0];
-    var store  = {};
-    for (var i = 0; i < localStorage.length; i++) {
-      var key = localStorage.key(i);
-      if (!key) continue;
-      var m = key.match(/^nyati-([\w-]+)-(\d{4}-\d{2}-\d{2})$/);
-      if (!m) continue;
-      var formId = m[1], date = m[2];
-      if (date < cutoff) continue;
-      try {
-        var payload = JSON.parse(localStorage.getItem(key));
-        if (!store[formId]) store[formId] = {};
-        store[formId][date] = payload.data || {};
-      } catch(_) {}
-    }
+  /* ── Harvest form data for the trend window ───────────────────────
+     Per form: read local snapshots first (covers offline data AND
+     seedDemoData(), which is intentionally local-only — see below),
+     then overlay server records for the same date range, server taking
+     precedence when both exist for a date. This is a merge, not a
+     try-server-else-local fallback, specifically so demo data (which the
+     server has never heard of and always returns "no rows" for) still
+     renders — a thrown/failed server call falls back the same way. ──── */
+  async function harvest(days) {
+    var range   = buildRange(days);
+    var cutoff  = range[0];
+    var todayIso = range[range.length - 1];
+    var forms = [];
+    METRICS.forEach(function(m) { if (forms.indexOf(m.form) === -1) forms.push(m.form); });
+
+    var store = {};
+
+    await Promise.all(forms.map(async function(formId) {
+      store[formId] = {};
+
+      var re = new RegExp('^nyati-' + formId + '-(\\d{4}-\\d{2}-\\d{2})$');
+      for (var i = 0; i < localStorage.length; i++) {
+        var key = localStorage.key(i);
+        if (!key) continue;
+        var m = key.match(re);
+        if (!m) continue;
+        var date = m[1];
+        if (date < cutoff || date > todayIso) continue;
+        try {
+          var payload = JSON.parse(localStorage.getItem(key));
+          store[formId][date] = payload.data || {};
+        } catch(_) {}
+      }
+
+      if (window.NyatiAPI) {
+        try {
+          var records = await window.NyatiAPI.getFormRange(formId, cutoff, todayIso);
+          records.forEach(function(r) {
+            var d = r.record_date ? String(r.record_date).slice(0, 10) : null;
+            if (d) store[formId][d] = r.data || {};
+          });
+        } catch (e) { /* server unreachable — local-only data above still stands */ }
+      }
+    }));
+
     return store;
   }
 
@@ -461,10 +489,10 @@
   ═══════════════════════════════════════════════════════════════ */
   var _currentDays = 30;
 
-  function render(days) {
+  async function render(days) {
     _currentDays = days;
     var dates  = buildRange(days);
-    var store  = harvest(days);
+    var store  = await harvest(days);
 
     /* Check if any data exists */
     var hasAny = METRICS.some(function(m) { return store[m.form] && Object.keys(store[m.form]).length > 0; });

@@ -12,21 +12,24 @@
 
 const express = require('express');
 const db      = require('../db');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth }       = require('../middleware/auth');
+const { requireFormAccess } = require('../middleware/formAccess');
 
 const router = express.Router();
 
 // Valid form types — prevents someone injecting garbage form types
+// Must match the formId strings the frontend actually sends via
+// initFormPersist('...') across all 13 form/report pages.
 const VALID_FORMS = [
-  'production', 'dispatch', 'quality', 'power',
-  'kiln', 'cement-mill', 'limestone', 'materials',
-  'pile-quality', 'stoppage'
+  'production', 'mines', 'power-plant', 'dispatch', 'quality',
+  'power-cons', 'kiln', 'cement-mill', 'limestone', 'materials',
+  'pile-quality', 'cpp', 'stoppage'
 ];
 
 // ── POST /api/reports/:formType ──────────────────────────────
 // Submit or update a daily form
 // The browser sends: { date: "2026-06-08", shift: "day", data: { field1: val, ... } }
-router.post('/:formType', requireAuth, async (req, res) => {
+router.post('/:formType', requireAuth, requireFormAccess, async (req, res) => {
   try {
     const { formType } = req.params;
     const { date, shift = 'day', data } = req.body;

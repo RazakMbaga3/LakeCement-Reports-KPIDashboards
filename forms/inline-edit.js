@@ -36,13 +36,13 @@
 
   global.InlineEdit = {
 
-    open: function (sectionId, formId) {
+    open: async function (sectionId, formId) {
       var viewEl = document.getElementById(sectionId + '-view');
       var editEl = document.getElementById(sectionId + '-edit');
       if (viewEl) viewEl.style.display = 'none';
       if (editEl) {
         editEl.style.display = '';
-        this._load(editEl, formId);
+        await this._load(editEl, formId);
         editEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
     },
@@ -54,20 +54,33 @@
       if (editEl) editEl.style.display = 'none';
     },
 
-    _load: function (panelEl, formId) {
-      var key = NS + '-' + formId + '-' + _getDate();
-      var raw = localStorage.getItem(key);
-      if (!raw) return;
-      try {
-        var data = JSON.parse(raw).data || {};
-        panelEl.querySelectorAll('[data-inline]').forEach(function (el) {
-          var f = el.getAttribute('data-inline');
-          if (data[f] !== undefined) el.value = data[f];
-        });
-      } catch (e) {}
+    /* Server first (source of truth), localStorage fallback (offline). */
+    _load: async function (panelEl, formId) {
+      var date = _getDate();
+      var data = null;
+
+      if (global.NyatiAPI) {
+        try {
+          var record = await global.NyatiAPI.getForm(formId, date);
+          if (record && record.data) data = record.data;
+        } catch (e) { /* fall through to localStorage */ }
+      }
+
+      if (!data) {
+        var raw = localStorage.getItem(NS + '-' + formId + '-' + date);
+        if (!raw) return;
+        try { data = JSON.parse(raw).data || {}; } catch (e) { return; }
+      }
+
+      panelEl.querySelectorAll('[data-inline]').forEach(function (el) {
+        var f = el.getAttribute('data-inline');
+        if (data[f] !== undefined) el.value = data[f];
+      });
     },
 
-    save: function (sectionId, formId) {
+    /* Local write happens immediately (unchanged fallback/cache behavior);
+       server sync is best-effort on top of it. */
+    save: async function (sectionId, formId) {
       var editEl = document.getElementById(sectionId + '-edit');
       if (!editEl) return;
 
@@ -81,17 +94,27 @@
       var existing = {};
       try { existing = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) {}
 
+      var merged = Object.assign({}, existing.data || {}, data);
       var payload = {
         _m: { formId: formId, date: date, savedAt: new Date().toISOString(), status: 'draft' },
         inputs: existing.inputs || [],
-        data: Object.assign({}, existing.data || {}, data),
+        data: merged,
       };
       localStorage.setItem(key, JSON.stringify(payload));
 
       document.dispatchEvent(new CustomEvent('nyati:inline-saved', { detail: { formId: formId } }));
       if (typeof global.refreshReportLoader === 'function') global.refreshReportLoader();
 
-      _toast('Saved — ' + formId.replace(/-/g, ' ') + ' data updated', 'ok');
+      var synced = true;
+      if (global.NyatiAPI) {
+        try {
+          await global.NyatiAPI.submitForm(formId, date, 'day', Object.assign({}, merged, { _status: 'draft' }));
+        } catch (e) { synced = false; }
+      }
+
+      _toast(synced
+        ? 'Saved — ' + formId.replace(/-/g, ' ') + ' data updated'
+        : 'Saved locally — ' + formId.replace(/-/g, ' ') + ' did not reach the server', synced ? 'ok' : 'warn');
       this.close(sectionId);
     },
   };

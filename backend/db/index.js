@@ -6,8 +6,14 @@
   Think of it as keeping 10 phone lines open instead of dialing every time.
 */
 
-const { Pool } = require('pg');
+const { Pool, types } = require('pg');
 require('dotenv').config();
+
+// Return SQL DATE columns as plain 'YYYY-MM-DD' strings instead of JS Date
+// objects. Without this, a record_date of 2026-07-05 serializes as
+// '2026-07-04T21:00:00.000Z' (local UTC+3 shifted to UTC) and the frontend
+// maps it to the wrong day.
+types.setTypeParser(1082, v => v);
 
 const pool = new Pool({
   host:     process.env.DB_HOST,

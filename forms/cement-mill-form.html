@@ -496,6 +496,7 @@
   const str  = now.toLocaleDateString('en-GB', opts);
   ['live-date','footer-date'].forEach(id => { const e = document.getElementById(id); if (e) e.textContent = str; });
 </script>
+<script src="api-client.js"></script>
 <script src="form-persist.js"></script>
 <script>initFormPersist('cement-mill');</script>
 <script src="nav-status.js"></script>

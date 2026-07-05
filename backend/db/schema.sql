@@ -85,7 +85,9 @@ CREATE TABLE IF NOT EXISTS kpi_monthly (
 -- ── INDEXES (speeds up common queries) ──────────────────────
 CREATE INDEX IF NOT EXISTS idx_daily_reports_date     ON daily_reports(record_date);
 CREATE INDEX IF NOT EXISTS idx_daily_reports_form     ON daily_reports(form_type);
-CREATE INDEX IF NOT EXISTS idx_daily_reports_month    ON daily_reports(DATE_TRUNC('month', record_date));
+-- DATE_TRUNC('month', date) is not IMMUTABLE in this Postgres build, so it
+-- can't be used directly in an index expression — EXTRACT year/month is.
+CREATE INDEX IF NOT EXISTS idx_daily_reports_month    ON daily_reports((EXTRACT(YEAR FROM record_date)), (EXTRACT(MONTH FROM record_date)));
 CREATE INDEX IF NOT EXISTS idx_stoppages_date         ON stoppages(record_date);
 CREATE INDEX IF NOT EXISTS idx_kpi_monthly_dept_year  ON kpi_monthly(department, year, month);
 CREATE INDEX IF NOT EXISTS idx_audit_log_user         ON audit_log(user_id);

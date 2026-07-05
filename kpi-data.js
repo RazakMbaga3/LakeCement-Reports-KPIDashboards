@@ -105,15 +105,61 @@ const KPI_AUTO = [
   },
 ];
 
+/* ─── Backend KPI API helpers ────────────────────────────── */
+function _kpiApiBase() { return (typeof _API_BASE !== 'undefined') ? _API_BASE : 'http://localhost:5000/api'; }
+function _kpiHeaders() {
+  const h = { 'Content-Type': 'application/json' };
+  const token = (typeof getAuthToken === 'function') ? getAuthToken() : null;
+  if (token) h['Authorization'] = 'Bearer ' + token;
+  return h;
+}
+/* GET current target/actual/unit for every kpi_key in a dept/month — used
+   to prefer server values over localStorage without one call per row. */
+async function _kpiGet(dept, yr, mo) {
+  const res = await fetch(`${_kpiApiBase()}/kpi/${dept}/${yr}/${mo}`, { headers: _kpiHeaders() });
+  if (!res.ok) throw new Error('kpi GET failed: ' + res.status);
+  return res.json(); // array of {kpi_key, target, actual, unit}
+}
+/* PUT one or more {kpi_key,target,actual,unit} rows — server upserts. */
+async function _kpiPut(dept, yr, mo, kpis) {
+  const res = await fetch(`${_kpiApiBase()}/kpi/${dept}/${yr}/${mo}`, {
+    method: 'PUT', headers: _kpiHeaders(), body: JSON.stringify(kpis),
+  });
+  if (!res.ok) throw new Error('kpi PUT failed: ' + res.status);
+  return res.json();
+}
+
 /* ─── Helpers ────────────────────────────────────────────── */
 function padMo(mo) { return String(mo).padStart(2, '0'); }
+function daysInMonth(yr, mo) { return new Date(+yr, +mo, 0).getDate(); }
 
 function kpiSlug(text) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-/* Collect all daily localStorage entries for a form in a given month */
-function getMonthEntries(formId, year, month) {
+function _withDispatchTotal(formId, data) {
+  if (formId === 'dispatch') {
+    const tot = ['dispatch_425r','dispatch_425n','dispatch_bulker','dispatch_bigbag']
+      .reduce((s, f) => s + (parseFloat(data[f]) || 0), 0);
+    data.__dispatch_total = tot;
+  }
+  return data;
+}
+
+/* Collect a form's daily entries for a given month — server first (source
+   of truth), localStorage scan as fallback (offline / server unreachable). */
+async function getMonthEntries(formId, year, month) {
+  if (window.NyatiAPI) {
+    try {
+      const from = `${year}-${padMo(month)}-01`;
+      const to   = `${year}-${padMo(month)}-${padMo(daysInMonth(year, month))}`;
+      const records = await window.NyatiAPI.getFormRange(formId, from, to);
+      return records.map(r => _withDispatchTotal(formId, r.data ?? {}));
+    } catch (e) {
+      // fall through to localStorage scan below
+    }
+  }
+
   const prefix  = `nyati-${formId}-${year}-${padMo(month)}-`;
   const entries = [];
   for (let d = 1; d <= 31; d++) {
@@ -121,14 +167,7 @@ function getMonthEntries(formId, year, month) {
     if (!raw) continue;
     try {
       const parsed = JSON.parse(raw);
-      const data   = parsed.data ?? {};
-      // Compute synthetic dispatch total from individual product streams
-      if (formId === 'dispatch') {
-        const tot = ['dispatch_425r','dispatch_425n','dispatch_bulker','dispatch_bigbag']
-          .reduce((s, f) => s + (parseFloat(data[f]) || 0), 0);
-        data.__dispatch_total = tot;
-      }
-      entries.push(data);
+      entries.push(_withDispatchTotal(formId, parsed.data ?? {}));
     } catch { /* skip corrupt entries */ }
   }
   return entries;
@@ -204,7 +243,7 @@ function makeEditable(cell, dept, slug, yr, mo, isAutoCell) {
   sel.removeAllRanges();
   sel.addRange(range);
 
-  function commit() {
+  async function commit() {
     delete cell.dataset.editing;
     cell.contentEditable = 'false';
     cell.classList.remove('cell-editing');
@@ -226,6 +265,19 @@ function makeEditable(cell, dept, slug, yr, mo, isAutoCell) {
 
     // If this is the ACTUAL column, update row status
     if (colIdx === 4) updateRowStatus(cell.parentElement);
+
+    // Sync to the backend KPI store — read target/unit from this row so
+    // the upsert doesn't null them out (local write above already
+    // guarantees the value isn't lost if this fails).
+    const rowCells = cell.parentElement.querySelectorAll('td');
+    const unit     = rowCells[1]?.textContent.trim() || '';
+    const target   = parseFloat(rowCells[3]?.textContent.replace(/,/g, ''));
+    const actual   = parseFloat(val.replace(/,/g, ''));
+    if (!isNaN(actual)) {
+      try {
+        await _kpiPut(dept, yr, cellMo, [{ kpi_key: slug, target: isNaN(target) ? null : target, actual, unit }]);
+      } catch (e) { /* local value already saved above; not blocking the user */ }
+    }
   }
 
   cell.addEventListener('blur',    commit, { once: true });
@@ -271,13 +323,13 @@ function normLabel(s) {
 }
 
 /* ─── Load auto-calculated values ────────────────────────── */
-function loadAutoCalcValues(mo, yr) {
-  KPI_AUTO.forEach(({ label, form, field, agg, dp, compute }) => {
-    const entries = getMonthEntries(form, yr, mo);
+async function loadAutoCalcValues(mo, yr) {
+  for (const { label, form, field, agg, dp, compute } of KPI_AUTO) {
+    const entries = await getMonthEntries(form, yr, mo);
     const value   = compute
       ? compute(entries)
       : aggregateField(entries, field, agg, dp);
-    if (value === null) return;
+    if (value === null) continue;
 
     const normTarget = normLabel(label);
 
@@ -325,29 +377,57 @@ function loadAutoCalcValues(mo, yr) {
         moCell.classList.remove('edited-cell');
       }
     });
-  });
+  }
 }
 
-/* ─── Load manually saved values ────────────────────────── */
-function loadManualValues(mo, yr) {
-  document.querySelectorAll('.kpi-table .data-row').forEach(row => {
+/* ─── Load manually saved values ──────────────────────────
+   Batches one GET per dept-section (not per row) against the backend KPI
+   API; falls back to the existing per-row localStorage read if that dept's
+   fetch fails (offline / server unreachable). ────────────────────────── */
+async function loadManualValues(mo, yr) {
+  const rows = Array.from(document.querySelectorAll('.kpi-table .data-row'));
+
+  // Collect distinct depts present on the page, fetch each dept's KPI rows once.
+  const depts = [...new Set(rows.map(row => {
+    const section = row.closest('.dept-section');
+    return section ? section.id.replace('dept-', '') : 'unknown';
+  }))];
+
+  const deptMaps = {};
+  await Promise.all(depts.map(async dept => {
+    try {
+      const kpis = await _kpiGet(dept, yr, mo);
+      deptMaps[dept] = new Map(kpis.map(k => [k.kpi_key, k]));
+    } catch (e) {
+      deptMaps[dept] = null; // signals "use localStorage fallback for this dept"
+    }
+  }));
+
+  rows.forEach(row => {
     const labelCell = row.querySelector('td');
     if (!labelCell) return;
     const section = row.closest('.dept-section');
     const dept    = section ? section.id.replace('dept-', '') : 'unknown';
     const slug    = kpiSlug(labelCell.textContent.trim());
+    const map     = deptMaps[dept];
 
-    // Check all 12 monthly cells + ACTUAL
     const cells = row.querySelectorAll('td');
 
     // ACTUAL column (col 4) — use selected month key
-    const actKey = manualKey(dept, slug, yr, mo);
-    const actVal = localStorage.getItem(actKey);
+    const serverRow = map ? map.get(slug) : undefined;
+    const actVal = map
+      ? (serverRow && serverRow.actual != null ? String(serverRow.actual) : null)
+      : localStorage.getItem(manualKey(dept, slug, yr, mo));
     if (actVal !== null && !cells[4]?.classList.contains('auto-cell')) {
       if (cells[4]) cells[4].textContent = actVal;
     }
 
-    // Monthly columns (cols 6–17)
+    // Monthly columns (cols 6–17) — edits to any of these still sync to
+    // the server (see makeEditable's commit() below, keyed by that cell's
+    // own month), but this load only prefetches the selected month (one
+    // GET per dept instead of twelve); the other 11 still read their
+    // last-known value from the localStorage cache until re-edited or the
+    // month is selected directly.
     for (let m = 1; m <= 12; m++) {
       const colIdx = moToColIdx(m);
       const cell   = cells[colIdx];
@@ -360,15 +440,15 @@ function loadManualValues(mo, yr) {
 }
 
 /* ─── Public entry point called from applyFilters() ─────── */
-function loadKpiData(mo, yr) {
-  loadAutoCalcValues(mo, yr);
-  loadManualValues(mo, yr);
+async function loadKpiData(mo, yr) {
+  await loadAutoCalcValues(mo, yr);
+  await loadManualValues(mo, yr);
 }
 
 /* ══════════════════════════════════════════════════════════
    FILL MONTHLY DATA MODAL
 ══════════════════════════════════════════════════════════ */
-function openMonthlyModal() {
+async function openMonthlyModal() {
   const mo   = +document.getElementById('month-select').value;
   const yr   =  document.getElementById('year-select').value;
   const dept =  typeof currentDept !== 'undefined' ? currentDept : 'summary';
@@ -395,6 +475,14 @@ function openMonthlyModal() {
     return;
   }
 
+  // One prefetch for the whole dept/month instead of N synchronous
+  // localStorage reads per row; null on failure signals "use localStorage".
+  let serverMap = null;
+  try {
+    const kpis = await _kpiGet(dept, yr, mo);
+    serverMap = new Map(kpis.map(k => [k.kpi_key, k]));
+  } catch (e) { /* fall back to localStorage below */ }
+
   // Build modal HTML
   const autoLabels = new Set(KPI_AUTO.map(k => k.label));
 
@@ -404,15 +492,21 @@ function openMonthlyModal() {
     if (cells.length < 5) return;
     const label   = cells[0].textContent.trim();
     const unit    = cells[1].textContent.trim();
+    const target  = cells[3].textContent.trim();
     const slug    = kpiSlug(label);
     const isAuto  = autoLabels.has(label);
 
-    // Current value: from ACTUAL cell or manual storage
+    // Current value: server first, then localStorage manual/override
     let currentVal = cells[4].textContent.trim();
-    const stored   = localStorage.getItem(manualKey(dept, slug, yr, mo));
-    const override = localStorage.getItem(overrideKey(dept, slug, yr, mo));
-    if (stored !== null)   currentVal = stored;
-    if (override !== null) currentVal = override;
+    if (serverMap && serverMap.has(slug)) {
+      const serverVal = serverMap.get(slug).actual;
+      if (serverVal != null) currentVal = String(serverVal);
+    } else {
+      const stored   = localStorage.getItem(manualKey(dept, slug, yr, mo));
+      const override = localStorage.getItem(overrideKey(dept, slug, yr, mo));
+      if (stored !== null)   currentVal = stored;
+      if (override !== null) currentVal = override;
+    }
 
     const badge = isAuto ? '<span class="modal-auto-badge">⚡ auto</span>' : '';
 
@@ -421,7 +515,7 @@ function openMonthlyModal() {
         <td class="modal-kpi-label">${label}</td>
         <td><input class="modal-input" type="text"
             data-slug="${slug}" data-mo="${mo}" data-yr="${yr}" data-dept="${dept}"
-            data-is-auto="${isAuto}"
+            data-is-auto="${isAuto}" data-target="${target}" data-unit="${unit}"
             value="${currentVal}" placeholder="—" />${badge}</td>
         <td class="modal-unit">${unit}</td>
       </tr>`;
@@ -467,31 +561,51 @@ function closeMonthlyModal() {
   if (overlay) overlay.remove();
 }
 
-function saveAllModalValues() {
+async function saveAllModalValues() {
   const inputs = document.querySelectorAll('.modal-input');
+  let dept = null, yr = null, mo = null;
+  const kpis = []; // batched for a single PUT to the backend
+
   inputs.forEach(input => {
     const val    = input.value.trim();
     const slug   = input.dataset.slug;
-    const mo     = +input.dataset.mo;
-    const yr     = input.dataset.yr;
-    const dept   = input.dataset.dept;
+    const rowMo  = +input.dataset.mo;
+    const rowYr  = input.dataset.yr;
+    const rowDept = input.dataset.dept;
     const isAuto = input.dataset.isAuto === 'true';
+    const target = parseFloat(input.dataset.target.replace(/,/g, ''));
+    const unit   = input.dataset.unit || '';
+
+    dept = rowDept; yr = rowYr; mo = rowMo; // same for every row in this modal
 
     if (val === '' || val === '—') return;
-    if (typeof canFillKPIDept === 'function' && !canFillKPIDept(dept)) return;
+    if (typeof canFillKPIDept === 'function' && !canFillKPIDept(rowDept)) return;
 
+    // Local write stays as the offline fallback cache, unchanged.
     if (isAuto) {
-      localStorage.setItem(overrideKey(dept, slug, yr, mo), val);
+      localStorage.setItem(overrideKey(rowDept, slug, rowYr, rowMo), val);
     } else {
-      localStorage.setItem(manualKey(dept, slug, yr, mo), val);
+      localStorage.setItem(manualKey(rowDept, slug, rowYr, rowMo), val);
+    }
+
+    const actual = parseFloat(val.replace(/,/g, ''));
+    if (!isNaN(actual)) {
+      kpis.push({ kpi_key: slug, target: isNaN(target) ? null : target, actual, unit });
     }
   });
 
   closeMonthlyModal();
+
+  if (kpis.length && dept) {
+    try {
+      await _kpiPut(dept, yr, mo, kpis);
+    } catch (e) { /* local values already saved above; not blocking the user */ }
+  }
+
   // Reload cells
-  const mo = +document.getElementById('month-select').value;
-  const yr =  document.getElementById('year-select').value;
-  loadKpiData(mo, yr);
+  const selMo = +document.getElementById('month-select').value;
+  const selYr =  document.getElementById('year-select').value;
+  loadKpiData(selMo, selYr);
 }
 
 /* ─── INIT ───────────────────────────────────────────────── */
