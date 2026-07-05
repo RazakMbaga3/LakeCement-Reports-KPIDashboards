@@ -15,7 +15,20 @@ CREATE TABLE IF NOT EXISTS users (
   department   VARCHAR(50),
   active       BOOLEAN      DEFAULT true,
   created_at   TIMESTAMP    DEFAULT NOW(),
-  last_login   TIMESTAMP
+  last_login   TIMESTAMP,
+  failed_attempts      INTEGER NOT NULL DEFAULT 0,     -- consecutive bad logins
+  locked_until         TIMESTAMP,                      -- lockout expiry (NULL = not locked)
+  must_change_password BOOLEAN NOT NULL DEFAULT false, -- gate all routes until password set
+  token_version        INTEGER NOT NULL DEFAULT 0      -- bump to revoke all outstanding JWTs
+);
+
+-- ── SCHEMA MIGRATIONS ───────────────────────────────────────
+-- Tracks applied db/migrations/*.sql files (see db/migrate.js).
+-- This schema.sql is always the canonical CURRENT state; migrations
+-- upgrade databases created from an older version of it.
+CREATE TABLE IF NOT EXISTS schema_migrations (
+  name       VARCHAR(255) PRIMARY KEY,
+  applied_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- ── AUDIT LOG ───────────────────────────────────────────────

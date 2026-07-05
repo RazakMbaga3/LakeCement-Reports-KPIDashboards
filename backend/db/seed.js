@@ -42,14 +42,17 @@ async function seed() {
   for (const u of USERS) {
     try {
       const hash = await bcrypt.hash(u.password, SALT_ROUNDS);
+      // must_change_password = true: these defaults are committed in git,
+      // so every seeded account must set its own password at first login.
       await db.query(`
-        INSERT INTO users (username, password_hash, full_name, role, department)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO users (username, password_hash, full_name, role, department, must_change_password)
+        VALUES ($1, $2, $3, $4, $5, true)
         ON CONFLICT (username) DO UPDATE SET
-          password_hash = EXCLUDED.password_hash,
-          full_name     = EXCLUDED.full_name,
-          role          = EXCLUDED.role,
-          department    = EXCLUDED.department
+          password_hash        = EXCLUDED.password_hash,
+          full_name            = EXCLUDED.full_name,
+          role                 = EXCLUDED.role,
+          department           = EXCLUDED.department,
+          must_change_password = true
       `, [u.username, hash, u.name, u.role, u.dept]);
 
       console.log(`  ✅ ${u.username.padEnd(12)} (${u.role})`);

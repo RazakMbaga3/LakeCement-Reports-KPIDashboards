@@ -184,8 +184,10 @@ const PERMISSIONS = {
 /* Real backend login — POSTs credentials, stores the JWT + a session object
    shaped exactly like the old client-side one so every existing permission
    helper below (which all read getCurrentUser() synchronously) keeps working
-   unchanged. Returns true/false like the old synchronous version did, via
-   an async function the caller must await. */
+   unchanged. Returns { ok, mustChangePassword, error } — login.html branches
+   on it (mustChangePassword shows the set-new-password panel; error carries
+   the server's message, e.g. the account-locked countdown). Throws
+   Error('unreachable') only when the server can't be reached at all. */
 async function login(username, password) {
   let res;
   try {
@@ -198,9 +200,14 @@ async function login(username, password) {
     throw new Error('unreachable'); // distinguish from bad-credentials for login.html
   }
 
-  if (!res.ok) return false; // 401 invalid credentials
+  let body = null;
+  try { body = await res.json(); } catch { /* non-JSON error response */ }
 
-  const { token, user: u } = await res.json();
+  if (!res.ok) {
+    return { ok: false, error: (body && body.error) || 'Invalid username or password. Please try again.' };
+  }
+
+  const { token, user: u, mustChangePassword } = body;
   sessionStorage.setItem(_TOKEN_KEY, token);
   sessionStorage.setItem(_SESSION_KEY, JSON.stringify({
     userId:    u.id,
@@ -211,7 +218,28 @@ async function login(username, password) {
     loginTime: Date.now(),
   }));
   _writeAudit('LOGIN', '—', '—', '—', '—', u.name + ' logged in from ' + (window.location.pathname.split('/').pop() || 'browser'));
-  return true;
+  return { ok: true, mustChangePassword: !!mustChangePassword };
+}
+
+/* Change the logged-in user's password. On success the server revokes all
+   old tokens (token_version bump) and returns a fresh one, which we swap in
+   so the current session continues seamlessly. */
+async function changePassword(currentPassword, newPassword) {
+  let res;
+  try {
+    res = await fetch(_API_BASE + '/auth/change-password', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+      body:    JSON.stringify({ currentPassword, newPassword }),
+    });
+  } catch {
+    return { ok: false, error: 'Cannot reach the server — is the backend running?' };
+  }
+  let body = null;
+  try { body = await res.json(); } catch { /* non-JSON error response */ }
+  if (!res.ok) return { ok: false, error: (body && body.error) || 'Password change failed.' };
+  sessionStorage.setItem(_TOKEN_KEY, body.token);
+  return { ok: true };
 }
 
 async function logout() {
@@ -268,6 +296,15 @@ async function _verifySessionOrRedirect() {
       headers: { 'Authorization': 'Bearer ' + getAuthToken() },
     });
     invalid = (res.status === 401 || res.status === 403);
+    if (res.ok) {
+      // Sliding session: server hands back a fresh token near expiry
+      const renewed = res.headers.get('X-Renewed-Token');
+      if (renewed) sessionStorage.setItem(_TOKEN_KEY, renewed);
+      // Flagged accounts must set a new password before using the app —
+      // bounce through login, which shows the set-new-password panel.
+      const me = await res.json();
+      if (me && me.must_change_password) invalid = true;
+    }
   } catch {
     // Network failure ≠ invalid session: don't log the user out just
     // because the backend is briefly unreachable — offline fallbacks

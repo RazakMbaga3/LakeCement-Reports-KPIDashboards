@@ -14,9 +14,10 @@
 */
 
 require('dotenv').config();
-const express = require('express');
-const cors    = require('cors');
-const path    = require('path');
+const express       = require('express');
+const cors          = require('cors');
+const helmet        = require('helmet');
+const { rateLimit } = require('express-rate-limit');
 
 // Import route files
 const authRoutes    = require('./routes/auth');
@@ -26,14 +27,38 @@ const kpiRoutes     = require('./routes/kpi');
 const app  = express();
 const PORT = process.env.PORT || 5000;
 
+// Loud warnings for unsafe configuration — better than silently running open
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.includes('change-me')) {
+  console.warn('⚠️  JWT_SECRET is missing or a placeholder — set a real secret in .env');
+}
+if ((process.env.ALLOWED_ORIGIN || '*').trim() === '*') {
+  console.warn('⚠️  CORS is open to all origins (ALLOWED_ORIGIN=*) — restrict in production');
+}
+
 // ── MIDDLEWARE ───────────────────────────────────────────────
 
-// CORS — allows the browser (on the same network) to call this API
-// In production on LAN, restrict origin to your server's IP
+// Security headers (X-Content-Type-Options, HSTS, frame denial, …)
+app.use(helmet());
+
+// CORS — allows the browser (on the same network) to call this API.
+// ALLOWED_ORIGIN accepts a comma-separated list of exact origins,
+// e.g. "http://192.168.1.20,http://mis.lakecement.local"
+const allowedOrigins = (process.env.ALLOWED_ORIGIN || '*').split(',').map(s => s.trim());
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGIN || '*', // restrict in production
+  origin: allowedOrigins.includes('*') ? '*' : allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['X-Renewed-Token'], // sliding-session renewal (middleware/auth.js)
+}));
+
+// Rate-limit the auth endpoints — blunts password brute-forcing from one IP;
+// per-account lockout in routes/auth.js covers distributed attempts.
+app.use('/api/auth', rateLimit({
+  windowMs: 5 * 60 * 1000,
+  limit: parseInt(process.env.AUTH_RATE_LIMIT || '30', 10),
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Too many attempts from this device. Wait a few minutes and try again.' },
 }));
 
 // Parse incoming JSON request bodies
@@ -69,7 +94,8 @@ app.get('/api/health', (req, res) => {
 // ── SERVE FRONTEND (Production) ──────────────────────────────
 // In production, Nginx serves the frontend.
 // In development, the browser opens the HTML files directly.
-// Uncomment these lines only if you want Node to serve the frontend too:
+// Uncomment these lines (and require 'path') if Node should serve it too:
+// const path = require('path');
 // app.use(express.static(path.join(__dirname, '..')));
 // app.get('*', (req, res) => res.sendFile(path.join(__dirname, '..', 'index.html')));
 
@@ -79,8 +105,11 @@ app.use((req, res) => {
 });
 
 // ── GLOBAL ERROR HANDLER ─────────────────────────────────────
+// Route handlers call next(err); the stack is logged here, and the client
+// only ever sees a generic message — never internals.
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  console.error(`Unhandled error on ${req.method} ${req.path}:`, err.stack || err);
+  if (res.headersSent) return next(err);
   res.status(500).json({ error: 'Internal server error.' });
 });
 

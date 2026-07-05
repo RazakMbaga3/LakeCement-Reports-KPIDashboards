@@ -10,18 +10,27 @@ Last audit: 2026-07-05.
 - [x] `npm run smoke` — boots server on a scratch port, asserts `/api/health` 200
 - [x] Accept: server boots, health green, git history clean
 
-## Phase 1 — Security & Auth Hardening — ▶ IN PROGRESS
+## Phase 1 — Security & Auth Hardening — ✅ DONE (2026-07-05)
 - [x] bcrypt on all users (seed.js, 12 rounds); no plaintext user array on frontend
 - [x] Frontend login/logout/me delegate to API (auth.js)
-- [x] Login/logout writes to audit_log
-- [ ] Refresh flow or sliding session + server-side revocation on logout
-- [ ] helmet
-- [ ] Rate limiting on /api/auth/* + account lockout after N failures
-- [ ] CORS restricted via ALLOWED_ORIGIN in production (.env default is `*`)
-- [ ] Input validation on every route (zod / express-validator)
-- [ ] Seed passwords are committed in db/seed.js — force password change on first
-      login, or move seed passwords to .env
-- [ ] Accept criteria run end-to-end
+- [x] Login/logout/lockout/password-change all write to audit_log
+- [x] Server-side revocation: JWT carries `ver`, checked against users.token_version
+      on every request; logout/password-change bumps it (all devices). Sliding
+      session via X-Renewed-Token header when < 2h of token life remains.
+- [x] helmet
+- [x] Rate limiting on /api/auth/* (AUTH_RATE_LIMIT/5min) + account lockout
+      (LOCKOUT_MAX_ATTEMPTS → locked LOCKOUT_MINUTES)
+- [x] CORS via ALLOWED_ORIGIN (comma-separated list; boot warning when `*`)
+      — must be set to the real origin at deployment (Phase 7)
+- [x] zod validation on every route (middleware/validate.js); consistent
+      { error } shape; central error handler logs stack, client sees generic 500
+- [x] Seed-password exposure mitigated: must_change_password forces a new
+      password at first login (migration 001 flagged all existing users);
+      login.html shows a set-new-password panel. Rotate at go-live regardless.
+- [x] Migrations system: db/migrate.js + db/migrations/ (`npm run migrate`)
+- [x] Accept criteria: scripts/accept-phase1.js — 19 checks green 2026-07-05
+      (tampered token 401, lockout 423, RBAC 403, revocation, must-change gate,
+      validation 400s). Browser-side login/change-password JS syntax-checked.
 
 ## Phase 2 — Data Layer Migration — ▶ IN PROGRESS (further along than expected)
 - [x] forms/api-client.js complete (submitForm / getForm / getFormRange, auth header)
