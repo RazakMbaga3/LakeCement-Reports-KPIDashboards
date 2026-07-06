@@ -177,7 +177,30 @@ read-only Odoo credentials + dataset selection from the user.)
   test. All scripts are ready; the reboot criterion is verified at
   deployment, not on this dev laptop.
 
-## Phase 8 — Moat features — ⬜ NOT STARTED
+## Phase 8 — Moat features — ✅ DONE (first tranche, 2026-07-06)
+- [x] Anomaly flags at entry: submitting a form fetches the 30-day per-field
+      baseline (/api/insights/baseline) and the confirm dialog warns on
+      values outside mean ± 2σ ("kiln_prod_mt: 1200 is 40% below the 30-day
+      average"). Advisory only, never blocks, silent when offline.
+- [x] Historical benchmarking (/api/insights/benchmark): every KPI vs prev
+      month, same month last year, best-ever (direction-aware via signage)
+      and rolling-3 — and the columns render in the monthly MIS report
+      (HTML + Excel), so management reads each number against its history.
+- [x] Stoppage intelligence (/api/insights/stoppages): Pareto of downtime
+      causes with cumulative %, per-equipment hours/MTTR/MTBF/availability,
+      parsed from the stoppage form's equipment × cause matrix.
+- [x] Institutional memory (/api/insights/search + memory.html): full-text
+      search across all form entries, KPI override reasons, and the audit
+      trail — "what did we do last time the cooler tripped?" has an answer.
+- [x] Accept: scripts/accept-phase8.js — 12 checks green 2026-07-06
+      (baseline math vs hand stats, benchmark periods/best-ever/rolling,
+      report columns, Pareto + MTTR/MTBF, search across all three sources,
+      structural wiring of the entry check). accept-phase5 re-run green
+      after the report layout change.
+- Deferred (next tranche, on request): stoppage insights UI page/charts,
+  benchmark chips on the KPI dashboard itself, cost-of-stoppage estimates
+  (needs a TZS/hour rate per equipment from Finance), bilingual EN/SW
+  labels across the plant-floor forms.
 
 ---
 

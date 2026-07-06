@@ -5,8 +5,9 @@
   single source for WHAT goes in a report.
 */
 
-const db     = require('../db');
-const engine = require('./formulaEngine');
+const db       = require('../db');
+const engine   = require('./formulaEngine');
+const insights = require('./insights');
 
 /* Display names + section order for the report */
 const FORM_LABELS = {
@@ -84,9 +85,15 @@ async function gatherMonthly(year, month) {
   const from = `${year}-${String(month).padStart(2, '0')}-01`;
   const to   = `${year}-${String(month).padStart(2, '0')}-${String(new Date(year, month, 0).getDate()).padStart(2, '0')}`;
 
-  // KPIs: monthly aggregates (overrides applied) + the daily series behind them
-  const [kpis, daily] = await Promise.all([engine.evalMonth(year, month), engine.evalDaily(from, to)]);
+  // KPIs: monthly aggregates (overrides applied) + the daily series behind
+  // them + historical benchmarks (prev month / last year / best-ever)
+  const [kpis, daily, benchmarks] = await Promise.all([
+    engine.evalMonth(year, month),
+    engine.evalDaily(from, to),
+    insights.benchmark(year, month),
+  ]);
   const series = Object.fromEntries(Object.entries(daily).map(([k, v]) => [k, v.series]));
+  const benchByKey = Object.fromEntries(benchmarks.map(b => [b.key, b]));
 
   // Per-form day-by-day table: union of field keys across the month
   const rows = await db.query(
@@ -121,7 +128,7 @@ async function gatherMonthly(year, month) {
   return {
     kind: 'monthly', year, month, from, to,
     monthName: new Date(year, month - 1, 1).toLocaleString('en-GB', { month: 'long' }),
-    kpis, series, forms, generatedAt: new Date().toISOString(),
+    kpis, series, forms, benchmarks: benchByKey, generatedAt: new Date().toISOString(),
   };
 }
 

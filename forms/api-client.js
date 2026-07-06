@@ -103,9 +103,18 @@
     return res.json();
   }
 
+  /* GET /api/insights/baseline/:formType — 30-day mean/σ per field, used
+     by form-persist.js to flag unusual values at submit time */
+  async function getBaseline(formType) {
+    const res = await fetch(BASE + '/insights/baseline/' + encodeURIComponent(formType), { headers: _headers() });
+    if (!res.ok) throw _httpError('getBaseline', formType, res);
+    return res.json();
+  }
+
   global.NyatiAPI = {
     submitForm, getForm, getFormRange,
     evalFormulas, getDailySeries, setOverride, clearOverride, getOverrides,
+    getBaseline,
   };
 
 }(window));

@@ -30,6 +30,7 @@ const reportsRoutes = require('./routes/reports');
 const kpiRoutes     = require('./routes/kpi');
 const formulaRoutes = require('./routes/formula');
 const misRoutes     = require('./routes/mis');
+const insightsRoutes = require('./routes/insights');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -97,8 +98,9 @@ app.use('/api/auth',    authRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/kpi',     kpiRoutes);
 app.use('/api/formula', formulaRoutes);
-app.use('/api/mis',     misRoutes);
-app.use('/api/monitor', monitorRouter);
+app.use('/api/mis',      misRoutes);
+app.use('/api/insights', insightsRoutes);
+app.use('/api/monitor',  monitorRouter);
 app.get('/api/metrics', metricsAuth, metricsHandler);
 
 // Browser error reports — rate-limited hard (they can come from any page,

@@ -20,13 +20,7 @@ const { formSubmissions } = require('../services/metrics');
 
 const router = express.Router();
 
-// Valid form types — must match the formId strings the frontend sends via
-// initFormPersist('...') across all 13 form/report pages.
-const VALID_FORMS = [
-  'production', 'mines', 'power-plant', 'dispatch', 'quality',
-  'power-cons', 'kiln', 'cement-mill', 'limestone', 'materials',
-  'pile-quality', 'cpp', 'stoppage'
-];
+const { VALID_FORMS } = require('../config/forms');
 
 const formTypeParams = z.object({ formType: z.enum(VALID_FORMS) });
 const formDateParams = formTypeParams.extend({ date: zDate });

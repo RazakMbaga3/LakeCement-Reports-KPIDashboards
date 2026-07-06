@@ -69,19 +69,29 @@ ${body}
 </body></html>`;
 }
 
-function kpiTable(kpis, valueHeader) {
+/* benchmarks (optional): map key → {prevMonth, lastYear, bestEver} — the
+   monthly report passes it so KPIs read against their own history. */
+function kpiTable(kpis, valueHeader, benchmarks) {
+  const benchCell = b => b && b.value != null
+    ? `<td class="num">${fmt(b.value)}<span class="meta"> ${esc(b.period || '')}</span></td>`
+    : '<td class="num">—</td>';
+
   const rows = kpis.map(k => {
     const st = kpiStatus(k);
+    const b  = benchmarks ? benchmarks[k.key] : null;
     return `<tr>
       <td>${esc(k.label)}</td>
       <td>${esc(k.unit || '')}</td>
       <td class="num">${k.target == null ? '—' : esc(k.signage || '') + ' ' + fmt(k.target, k.dp)}</td>
       <td class="num">${fmt(k.value, k.dp)}${k.overridden ? ' <span class="ov" title="Manual override">⚑</span>' : ''}</td>
+      ${benchmarks ? benchCell(b && b.prevMonth) + benchCell(b && b.lastYear) + benchCell(b && b.bestEver) : ''}
       <td class="${st.cls}">${st.text}</td>
       ${k.overridden && k.override ? `<td>${esc(k.override.by || '')}: ${esc(k.override.reason || '')}</td>` : '<td></td>'}
     </tr>`;
   }).join('');
-  return `<table><tr><th>KPI</th><th>Unit</th><th>Target</th><th>${esc(valueHeader)}</th><th>Status</th><th>Override note</th></tr>${rows}</table>`;
+
+  const benchHead = benchmarks ? '<th>Prev month</th><th>Same month LY</th><th>Best ever</th>' : '';
+  return `<table><tr><th>KPI</th><th>Unit</th><th>Target</th><th>${esc(valueHeader)}</th>${benchHead}<th>Status</th><th>Override note</th></tr>${rows}</table>`;
 }
 
 /* ── Daily ─────────────────────────────────────────────────── */
@@ -105,7 +115,7 @@ function renderDailyHtml(p) {
 
 /* ── Monthly ───────────────────────────────────────────────── */
 function renderMonthlyHtml(p) {
-  let body = '<h2>Monthly KPI Summary</h2>' + kpiTable(p.kpis, 'Actual (month)');
+  let body = '<h2>Monthly KPI Summary</h2>' + kpiTable(p.kpis, 'Actual (month)', p.benchmarks);
 
   for (const f of p.forms) {
     body += `<h2>${esc(f.label)} — day by day</h2>`;

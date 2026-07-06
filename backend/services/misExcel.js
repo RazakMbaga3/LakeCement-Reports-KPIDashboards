@@ -31,26 +31,43 @@ function sheetName(s) {
   return s.replace(/[[\]:*?/\\]/g, ' ').slice(0, 31);
 }
 
-function addKpiSheet(wb, kpis, valueHeader) {
+function addKpiSheet(wb, kpis, valueHeader, benchmarks) {
   const ws = wb.addWorksheet('KPI Summary');
-  ws.columns = [
+  const cols = [
     { header: 'KPI', width: 42 }, { header: 'Unit', width: 10 },
     { header: 'Target', width: 12 }, { header: valueHeader, width: 16 },
-    { header: 'Status', width: 14 }, { header: 'Override', width: 50 },
   ];
+  if (benchmarks) {
+    cols.push({ header: 'Prev month', width: 13 }, { header: 'Same month LY', width: 14 },
+              { header: 'Best ever', width: 13 }, { header: 'Best (when)', width: 12 });
+  }
+  cols.push({ header: 'Status', width: 14 }, { header: 'Override', width: 50 });
+  ws.columns = cols;
   styleHeaderRow(ws.getRow(1), NAVY);
 
   for (const k of kpis) {
     const st = kpiStatus(k);
-    const row = ws.addRow([
+    const vals = [
       k.label, k.unit || '',
       k.target == null ? null : asNumber(k.target),
       k.value == null ? null : asNumber(k.value),
-      st.text,
-      k.overridden && k.override ? `${k.override.by || ''}: ${k.override.reason || ''}` : '',
-    ]);
+    ];
+    if (benchmarks) {
+      const b = benchmarks[k.key] || {};
+      vals.push(
+        b.prevMonth && b.prevMonth.value != null ? asNumber(b.prevMonth.value) : null,
+        b.lastYear && b.lastYear.value != null ? asNumber(b.lastYear.value) : null,
+        b.bestEver ? asNumber(b.bestEver.value) : null,
+        b.bestEver ? b.bestEver.period : null,
+      );
+    }
+    vals.push(st.text,
+      k.overridden && k.override ? `${k.override.by || ''}: ${k.override.reason || ''}` : '');
+    const row = ws.addRow(vals);
+
+    const statusCol = benchmarks ? 9 : 5;
     if (st.text) {
-      row.getCell(5).font = { bold: true, color: { argb: st.cls === 'ok' ? 'FF239557' : 'FFDC2626' } };
+      row.getCell(statusCol).font = { bold: true, color: { argb: st.cls === 'ok' ? 'FF239557' : 'FFDC2626' } };
     }
     if (k.overridden) {
       row.getCell(4).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } };
@@ -84,7 +101,7 @@ async function monthlyWorkbook(p) {
   const wb = new ExcelJS.Workbook();
   wb.creator = 'Lake Cement MIS';
 
-  addKpiSheet(wb, p.kpis, `Actual ${p.monthName} ${p.year}`);
+  addKpiSheet(wb, p.kpis, `Actual ${p.monthName} ${p.year}`, p.benchmarks);
 
   for (const f of p.forms) {
     const ws = wb.addWorksheet(sheetName(f.label));

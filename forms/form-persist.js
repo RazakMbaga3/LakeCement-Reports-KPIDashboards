@@ -326,6 +326,39 @@
     }
   }
 
+  /* ── Anomaly check at submit time ─────────────────────────────────
+     Compares the entry against the 30-day per-field baseline from the
+     server and returns human-readable warnings for values outside
+     mean ± 2σ (with a 10% relative floor so tight-σ fields don't nag).
+     Purely advisory — never blocks; offline/timeout → no warnings. */
+  async function _unusualValues(formId, named) {
+    if (!global.NyatiAPI || !global.NyatiAPI.getBaseline) return [];
+    let baseline;
+    try {
+      baseline = await Promise.race([
+        global.NyatiAPI.getBaseline(formId),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 2500)),
+      ]);
+    } catch (e) {
+      return []; // offline or slow — data quality prompt is best-effort
+    }
+    const warnings = [];
+    for (const [field, raw] of Object.entries(named || {})) {
+      if (field.startsWith('_')) continue;
+      const v = parseFloat(raw);
+      const s = baseline.fields && baseline.fields[field];
+      if (isNaN(v) || !s || s.n < 5 || s.mean === 0) continue;
+      const dev    = Math.abs(v - s.mean);
+      const relPct = (dev / Math.abs(s.mean)) * 100;
+      const beyondBand = s.sd > 0 ? dev > 2 * s.sd : relPct > 30;
+      if (beyondBand && relPct >= 10) {
+        warnings.push(`• ${field}: ${v} is ${Math.round(relPct)}% ${v > s.mean ? 'above' : 'below'} the 30-day average (${s.mean.toLocaleString('en-US', { maximumFractionDigits: 1 })})`);
+      }
+      if (warnings.length >= 4) break;
+    }
+    return warnings;
+  }
+
   /* ══ Public entry point ════════════════════════════════════════════ */
   global.initFormPersist = function (formId) {
     global._nyatiFormId = formId;
@@ -366,7 +399,16 @@
       btn.addEventListener('click', async e => {
         e.preventDefault();
         const date = _dateVal(body);
+
+        // Data-quality prompt: flag values far outside the 30-day norm
+        const { named } = _collect(document.body);
+        const unusual = await _unusualValues(formId, named);
+        const warnBlock = unusual.length
+          ? `⚠ UNUSUAL VALUES — please double-check:\n${unusual.join('\n')}\n\n`
+          : '';
+
         if (!confirm(
+          warnBlock +
           `Submit the ${formId} report for ${date}?\n\n` +
           `• A JSON file will download to your computer.\n` +
           `• The form will be locked against further edits.\n\n` +

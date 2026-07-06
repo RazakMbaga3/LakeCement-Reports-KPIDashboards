@@ -212,8 +212,9 @@ async function main() {
     await mwb.xlsx.load(mx.buffer);
     const mKilnWs = mwb.getWorksheet('Kiln Operation');
     let mKpiCell = null;
+    // monthly KPI sheet layout (with benchmark cols): 4=Actual … 10=Override note
     mwb.getWorksheet('KPI Summary')?.eachRow(r => {
-      if (r.getCell(1).value === 'Kiln Output') mKpiCell = { v: r.getCell(4).value, note: r.getCell(6).value };
+      if (r.getCell(1).value === 'Kiln Output') mKpiCell = { v: r.getCell(4).value, note: r.getCell(10).value };
     });
     check('monthly XLSX parses: override value + note, 3 day rows on Kiln sheet',
       mx.status === 200 && mKpiCell && mKpiCell.v === 2050 &&

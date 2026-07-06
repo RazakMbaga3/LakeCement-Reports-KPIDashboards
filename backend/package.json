@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "backend",
   "version": "1.0.0",
   "main": "server.js",
@@ -14,6 +14,7 @@
     "accept:phase5": "node scripts/accept-phase5.js",
     "accept:phase6": "node scripts/accept-phase6.js",
     "accept:phase7": "node scripts/accept-phase7.js",
+    "accept:phase8": "node scripts/accept-phase8.js",
     "watchdog": "node scripts/watchdog-once.js",
     "backup": "node scripts/backup-once.js",
     "restore:drill": "node scripts/restore-drill.js",
