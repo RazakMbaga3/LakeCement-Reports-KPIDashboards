@@ -24,6 +24,7 @@ const authRoutes    = require('./routes/auth');
 const reportsRoutes = require('./routes/reports');
 const kpiRoutes     = require('./routes/kpi');
 const formulaRoutes = require('./routes/formula');
+const misRoutes     = require('./routes/mis');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -80,6 +81,25 @@ app.use('/api/auth',    authRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/kpi',     kpiRoutes);
 app.use('/api/formula', formulaRoutes);
+app.use('/api/mis',     misRoutes);
+
+// ── SCHEDULED MORNING DIGEST ─────────────────────────────────
+// Runs only when mail + recipients are configured; a failed send is
+// logged, never fatal. Manual trigger: POST /api/mis/digest/send.
+if (process.env.SMTP_HOST && process.env.DIGEST_TO) {
+  const cron = require('node-cron');
+  const { sendDigest } = require('./services/digest');
+  const spec = process.env.DIGEST_CRON || '0 6 * * *';
+  cron.schedule(spec, async () => {
+    try {
+      const r = await sendDigest();
+      console.log(`📧 Daily digest: ${r.sent ? 'sent to ' + r.to.join(', ') : 'skipped — ' + r.reason}`);
+    } catch (err) {
+      console.error('📧 Daily digest failed:', err.message);
+    }
+  });
+  console.log(`📧 Morning digest scheduled (${spec}) → ${process.env.DIGEST_TO}`);
+}
 
 // ── HEALTH CHECK ─────────────────────────────────────────────
 // A simple endpoint to verify the server is running

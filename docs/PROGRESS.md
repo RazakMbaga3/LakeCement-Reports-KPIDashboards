@@ -89,8 +89,32 @@ Last audit: 2026-07-05.
 
 ## Phase 4 — Odoo Integration (read-only) — ⬜ NOT STARTED
 
-## Phase 5 — Reporting & Distribution — ⬜ NOT STARTED
-(Report HTML pages exist and render; no server-side PDF/XLSX export, no digest.)
+## Phase 5 — Reporting & Distribution — ✅ DONE (2026-07-06)
+(Phase 4 Odoo integration intentionally skipped for now — blocked on
+read-only Odoo credentials + dataset selection from the user.)
+- [x] Server-rendered daily + monthly MIS reports (backend/services/misReport
+      → misRender/misExcel; routes /api/mis/...): JSON payload, printable
+      branded HTML (browser print → PDF, no headless-browser dependency),
+      and XLSX via exceljs (KPI Summary sheet + one sheet per form; numbers
+      stay numbers). KPIs come from the formula layer — overrides carry the
+      ⚑ flag + who/why note into both HTML and Excel.
+- [x] Daily report includes a missing-submissions warning (precursor to
+      Phase 6 missed-entry alerts).
+- [x] Morning digest (services/digest.js): yesterday's KPIs vs target +
+      missing forms, emailed via SMTP config in .env on DIGEST_CRON
+      (default 06:00); skips silently when unconfigured; manual trigger
+      POST /api/mis/digest/send (admin/md). DIGEST_TRANSPORT=json exercises
+      the real pipeline without a mail server. **Real SMTP credentials
+      still needed from the user for live email.**
+- [x] Frontend: reports-export.html — date/month pickers, print view (blob
+      tab), Excel download, admin digest button.
+- [x] Accept: scripts/accept-phase5.js — 10 checks green 2026-07-06 (daily
+      + monthly JSON/HTML/XLSX incl. parsing the workbook back and override
+      propagation; digest pipeline + RBAC).
+- Deferred: pixel-mirroring the 30+ departmental Excel MIS templates in
+  reportsscreensdevelopment MIS/ — the generated workbook is a clean
+  general format; specific template replicas can be added per department
+  on request.
 
 ## Phase 6 — Monitoring & Observability — ⬜ NOT STARTED
 Current state: console.log request logging; shallow `/api/health` (no DB check).
