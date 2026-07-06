@@ -95,6 +95,28 @@ CREATE TABLE IF NOT EXISTS kpi_monthly (
   UNIQUE (department, year, month, kpi_key)
 );
 
+-- ── KPI OVERRIDES ───────────────────────────────────────────
+-- Audited manual overrides of formula-computed KPI values (see
+-- forms/formula-registry.js + backend/services/formulaEngine.js).
+-- Rows are permanent: cleared/superseded, never deleted.
+CREATE TABLE IF NOT EXISTS kpi_overrides (
+  id              SERIAL PRIMARY KEY,
+  kpi_key         VARCHAR(100)  NOT NULL,
+  year            SMALLINT      NOT NULL,
+  month           SMALLINT      NOT NULL CHECK (month BETWEEN 1 AND 12),
+  value_override  NUMERIC(14,4) NOT NULL,
+  value_computed  NUMERIC(14,4),            -- what the formula said at override time
+  reason          TEXT          NOT NULL,
+  created_by      INTEGER REFERENCES users(id),
+  created_by_name VARCHAR(100),
+  created_at      TIMESTAMP NOT NULL DEFAULT NOW(),
+  cleared_at      TIMESTAMP,
+  cleared_by      INTEGER REFERENCES users(id)
+);
+CREATE INDEX IF NOT EXISTS idx_kpi_overrides_period ON kpi_overrides(kpi_key, year, month);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_kpi_overrides_active
+  ON kpi_overrides(kpi_key, year, month) WHERE cleared_at IS NULL;
+
 -- ── INDEXES (speeds up common queries) ──────────────────────
 CREATE INDEX IF NOT EXISTS idx_daily_reports_date     ON daily_reports(record_date);
 CREATE INDEX IF NOT EXISTS idx_daily_reports_form     ON daily_reports(form_type);

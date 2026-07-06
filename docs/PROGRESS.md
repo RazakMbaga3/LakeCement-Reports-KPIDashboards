@@ -55,9 +55,37 @@ Last audit: 2026-07-05.
       reconnect syncs, newer-server conflict, both resolutions, 403 review).
       Kill-server-mid-entry is covered by B1/B2 against the real queue module.
 
-## Phase 3 — KPI Formula Layer — ⬜ NOT STARTED
-Facts registry + formula registry + audited manual override (design agreed — see
-MASTER_BUILD_PROMPT §Phase 3). Schema has `kpi_monthly` but no facts/formula tables.
+## Phase 3 — KPI Formula Layer — ✅ DONE (2026-07-06)
+- [x] forms/formula-registry.js — the single source of truth: 38 FACTS (each
+      declaring one source: manual now, flip to 'odoo' per-fact in Phase 4)
+      and 11 FORMULAS as plain reviewed functions (per the agreed design —
+      no string DSL), each with label/unit/dp/target/signage/version.
+      Loaded by BOTH the backend engine and the browser (UMD), so the
+      offline/demo path in analytics.js runs the identical functions.
+- [x] backend/services/formulaEngine.js — joins each day's facts across
+      forms, evaluates daily + monthly (avg / sum / production-weighted),
+      applies active overrides. Routes: /api/formula/{registry,eval,daily,
+      override,overrides}.
+- [x] Manual override (migration 002, kpi_overrides): reason mandatory,
+      admin/md only, computed value preserved alongside, superseding keeps
+      the old row, clearing never deletes, every action in audit_log.
+      Dashboard cells flag overrides (edited-cell) with a tooltip showing
+      who/when/why + the underlying formula value.
+- [x] kpi-data.js and analytics.js contain ZERO formula math (asserted by
+      the acceptance script) — the duplicated STE/SPC/free-lime formulas
+      and twice-hardcoded targets are gone; targets now render from the
+      registry. Editing an auto cell prompts for the mandatory reason and
+      posts a server override.
+- [x] Accept: scripts/accept-phase3.js — 25 checks green 2026-07-06
+      (all 11 formulas vs independently hand-coded arithmetic, daily
+      series, override RBAC/reason/supersede/clear/permanence/audit,
+      structural no-math-in-pages). "Change formula → all dashboards
+      change" holds structurally: pages render only /api/formula output.
+- NOTE for formula review with the plant: the ported Specific Thermal
+  Energy formula (coal × NCV × 1000 / prod) yields ~600,000 against a
+  target of 780 kcal/kg — the ×1000 factor looks unit-inconsistent. It was
+  ported verbatim (both old copies had it); fixing it is now a one-line,
+  versioned registry change once production confirms the intended units.
 
 ## Phase 4 — Odoo Integration (read-only) — ⬜ NOT STARTED
 

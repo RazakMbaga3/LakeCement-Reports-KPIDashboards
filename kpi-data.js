@@ -3,107 +3,13 @@
    Auto-aggregation from daily forms + inline/modal editing
    ══════════════════════════════════════════════════════════════ */
 
-/* ─── Auto-calc row definitions ─────────────────────────────
-   Each entry maps a KPI row (by exact label text) to a daily
-   form field. Cells with these labels get ⚡ treatment.
+/* ─── Auto-calculated KPI values ────────────────────────────
+   NO FORMULA MATH LIVES HERE. Every computed KPI is defined once in
+   forms/formula-registry.js and evaluated server-side by
+   backend/services/formulaEngine.js; this file only renders what
+   GET /api/formula/eval/:year/:month returns (values, targets,
+   override flags). Rows are matched by kpiSlug(label) === result.key.
 ─────────────────────────────────────────────────────────────── */
-const KPI_AUTO = [
-  // ── Quality form ────────────────────────────────────────────
-  {
-    label: 'Clinker Free Lime',
-    form:  'quality',
-    field: 'free_lime',
-    agg:   'avg',
-    dp:    1,
-  },
-  // ── Dispatch form ────────────────────────────────────────────
-  {
-    label: 'Despatch / Day',
-    form:  'dispatch',
-    field: '__dispatch_total',   // synthetic — summed in getMonthEntries
-    agg:   'avg',
-    dp:    0,
-  },
-  // ── Kiln form ────────────────────────────────────────────────
-  {
-    label: 'Kiln Output',
-    form:  'kiln',
-    field: 'kiln_prod_mt',
-    agg:   'avg',
-    dp:    0,
-  },
-  {
-    label:   'Specific Thermal Energy Consumption',
-    form:    'kiln',
-    // Weighted average: ∑(coal×NCV×1000) / ∑(prod)
-    compute: function(entries) {
-      var heatSum = 0, prodSum = 0;
-      entries.forEach(function(d) {
-        var prod = parseFloat(d.kiln_prod_mt);
-        var coal = parseFloat(d.kiln_coal_cons);
-        var ncv  = parseFloat(d.kiln_coal_ncv);
-        if (prod > 0 && coal > 0 && ncv > 0) {
-          heatSum += coal * ncv * 1000;
-          prodSum += prod;
-        }
-      });
-      return prodSum > 0 ? parseFloat((heatSum / prodSum).toFixed(0)) : null;
-    },
-    dp: 0,
-  },
-  // ── Power form ───────────────────────────────────────────────
-  {
-    label:   'Specific Power Consumption – Total',
-    form:    'power-cons',
-    compute: function(entries) {
-      var kwhFields = ['pwr_crusher_kwh','pwr_rawmill_kwh','pwr_coalmill_kwh','pwr_kiln_kwh',
-                       'pwr_cm2_kwh','pwr_packing_kwh','pwr_utils_kwh','pwr_lighting_kwh'];
-      var kwhSum = 0, prodSum = 0;
-      entries.forEach(function(d) {
-        var prod = (parseFloat(d.pwr_kiln_prod_mt) || 0) + (parseFloat(d.pwr_cm2_prod_mt) || 0);
-        if (prod > 0) {
-          kwhSum  += kwhFields.reduce(function(s, f) { return s + (parseFloat(d[f]) || 0); }, 0);
-          prodSum += prod;
-        }
-      });
-      return prodSum > 0 ? parseFloat((kwhSum / prodSum).toFixed(2)) : null;
-    },
-    dp: 2,
-  },
-  {
-    label:   'Specific Power Consumption – Up to Clinker',
-    form:    'power-cons',
-    compute: function(entries) {
-      var kwhFields = ['pwr_crusher_kwh','pwr_rawmill_kwh','pwr_coalmill_kwh','pwr_kiln_kwh'];
-      var kwhSum = 0, prodSum = 0;
-      entries.forEach(function(d) {
-        var prod = parseFloat(d.pwr_kiln_prod_mt) || 0;
-        if (prod > 0) {
-          kwhSum  += kwhFields.reduce(function(s, f) { return s + (parseFloat(d[f]) || 0); }, 0);
-          prodSum += prod;
-        }
-      });
-      return prodSum > 0 ? parseFloat((kwhSum / prodSum).toFixed(2)) : null;
-    },
-    dp: 2,
-  },
-  {
-    label:   'Specific Power Consumption – Cement Grinding',
-    form:    'power-cons',
-    compute: function(entries) {
-      var kwhSum = 0, prodSum = 0;
-      entries.forEach(function(d) {
-        var prod = parseFloat(d.pwr_cm2_prod_mt) || 0;
-        if (prod > 0) {
-          kwhSum  += parseFloat(d.pwr_cm2_kwh) || 0;
-          prodSum += prod;
-        }
-      });
-      return prodSum > 0 ? parseFloat((kwhSum / prodSum).toFixed(2)) : null;
-    },
-    dp: 2,
-  },
-];
 
 /* ─── Backend KPI API helpers ────────────────────────────── */
 function _kpiApiBase() { return (typeof _API_BASE !== 'undefined') ? _API_BASE : 'http://localhost:5000/api'; }
@@ -137,50 +43,8 @@ function kpiSlug(text) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-function _withDispatchTotal(formId, data) {
-  if (formId === 'dispatch') {
-    const tot = ['dispatch_425r','dispatch_425n','dispatch_bulker','dispatch_bigbag']
-      .reduce((s, f) => s + (parseFloat(data[f]) || 0), 0);
-    data.__dispatch_total = tot;
-  }
-  return data;
-}
-
-/* Collect a form's daily entries for a given month — server first (source
-   of truth), localStorage scan as fallback (offline / server unreachable). */
-async function getMonthEntries(formId, year, month) {
-  if (window.NyatiAPI) {
-    try {
-      const from = `${year}-${padMo(month)}-01`;
-      const to   = `${year}-${padMo(month)}-${padMo(daysInMonth(year, month))}`;
-      const records = await window.NyatiAPI.getFormRange(formId, from, to);
-      return records.map(r => _withDispatchTotal(formId, r.data ?? {}));
-    } catch (e) {
-      // fall through to localStorage scan below
-    }
-  }
-
-  const prefix  = `nyati-${formId}-${year}-${padMo(month)}-`;
-  const entries = [];
-  for (let d = 1; d <= 31; d++) {
-    const raw = localStorage.getItem(prefix + String(d).padStart(2, '0'));
-    if (!raw) continue;
-    try {
-      const parsed = JSON.parse(raw);
-      entries.push(_withDispatchTotal(formId, parsed.data ?? {}));
-    } catch { /* skip corrupt entries */ }
-  }
-  return entries;
-}
-
-function aggregateField(entries, field, agg, dp) {
-  const vals = entries.map(e => parseFloat(e[field])).filter(v => !isNaN(v) && v > 0);
-  if (!vals.length) return null;
-  let result;
-  if (agg === 'sum') result = vals.reduce((a, b) => a + b, 0);
-  else               result = vals.reduce((a, b) => a + b, 0) / vals.length;
-  return parseFloat(result.toFixed(dp ?? 2));
-}
+/* (Client-side month aggregation removed — the formula engine on the
+   server is the only place KPI math happens. See loadAutoCalcValues.) */
 
 /* ─── Cell column helpers ────────────────────────────────── */
 const EDITABLE_COL_MIN = 4;   // 0-based: col 4 = ACTUAL
@@ -194,12 +58,11 @@ function getColIndex(cell) {
 /* Month column index in the 19-col table: Jan=6, Feb=7 … Dec=17 (0-based) */
 function moToColIdx(mo) { return mo + 5; }
 
-/* ─── Storage keys ───────────────────────────────────────── */
+/* ─── Storage keys ───────────────────────────────────────────
+   (manual values only — overrides of computed KPIs live server-side
+   in kpi_overrides, audited, with a mandatory reason) */
 function manualKey(dept, slug, yr, mo) {
   return `nyati-kpi-${dept}-${slug}-${yr}-${padMo(mo)}`;
-}
-function overrideKey(dept, slug, yr, mo) {
-  return `nyati-kpi-override-${dept}-${slug}-${yr}-${padMo(mo)}`;
 }
 
 /* ─── Row status auto-update ─────────────────────────────── */
@@ -255,13 +118,30 @@ function makeEditable(cell, dept, slug, yr, mo, isAutoCell) {
     const cellMo = colIdx >= 6 ? colIdx - 5 : mo;  // derive month from column
 
     if (isAutoCell) {
-      // Override: store separately, swap badge
-      localStorage.setItem(overrideKey(dept, slug, yr, cellMo), val);
-      cell.classList.remove('auto-cell');
-      cell.classList.add('edited-cell');
-    } else {
-      localStorage.setItem(manualKey(dept, slug, yr, cellMo), val);
+      // Auto-calculated value → server-side audited override, reason mandatory
+      const num = parseFloat(val.replace(/,/g, ''));
+      const reason = isNaN(num) ? '' :
+        (prompt('This value is auto-calculated from daily reports.\n' +
+                'Overriding it is recorded permanently with your name.\n\n' +
+                'Reason for the override (required, min 5 characters):') || '').trim();
+      if (isNaN(num) || reason.length < 5) {
+        alert('Override cancelled — a numeric value and a reason (min 5 characters) are required.');
+      } else {
+        try {
+          await NyatiAPI.setOverride(slug, yr, cellMo, num, reason);
+        } catch (e) {
+          alert(e && e.status === 403
+            ? 'You do not have permission to override KPI values (admin/MD only).'
+            : 'Override failed — server unreachable or rejected it.');
+        }
+      }
+      // Re-render from the formula layer either way (revert or show flag)
+      loadKpiData(+document.getElementById('month-select').value,
+                  document.getElementById('year-select').value);
+      return;
     }
+
+    localStorage.setItem(manualKey(dept, slug, yr, cellMo), val);
 
     // If this is the ACTUAL column, update row status
     if (colIdx === 4) updateRowStatus(cell.parentElement);
@@ -317,67 +197,62 @@ function attachInlineEditing() {
   });
 }
 
-/* Normalize dashes so HTML en/em-dash (&ndash; &mdash;) match JS string literals */
-function normLabel(s) {
-  return s.replace(/[–—]/g, '–').trim();
-}
+/* Set of formula keys seen in the last eval — used by the modal and the
+   inline editor to know which rows are auto/override-gated. */
+window._nyAutoKeys = window._nyAutoKeys || new Set();
 
-/* ─── Load auto-calculated values ────────────────────────── */
+/* ─── Load auto-calculated values from the formula layer ──────
+   One GET returns every KPI: computed value, active override (with
+   who/why — shown as a tooltip on the flagged cell), and the target
+   from the registry (single source of truth — overwrites whatever
+   the HTML table had hardcoded). Offline: cells keep whatever
+   loadManualValues restores; no client-side math. */
 async function loadAutoCalcValues(mo, yr) {
-  for (const { label, form, field, agg, dp, compute } of KPI_AUTO) {
-    const entries = await getMonthEntries(form, yr, mo);
-    const value   = compute
-      ? compute(entries)
-      : aggregateField(entries, field, agg, dp);
-    if (value === null) continue;
+  if (!window.NyatiAPI || !NyatiAPI.evalFormulas) return;
+  let results;
+  try {
+    results = await NyatiAPI.evalFormulas(yr, mo);
+  } catch (e) {
+    return; // offline / server unreachable — manual cached values still load
+  }
 
-    const normTarget = normLabel(label);
+  const byKey = new Map(results.map(r => [r.key, r]));
+  window._nyAutoKeys = new Set(results.map(r => r.key));
 
-    document.querySelectorAll('.kpi-table .data-row').forEach(row => {
-      const labelCell = row.querySelector('td');
-      if (!labelCell) return;
-      if (normLabel(labelCell.textContent) !== normTarget) return;
+  document.querySelectorAll('.kpi-table .data-row').forEach(row => {
+    const labelCell = row.querySelector('td');
+    if (!labelCell) return;
+    const r = byKey.get(kpiSlug(labelCell.textContent));
+    if (!r) return;
 
-      const section = row.closest('.dept-section');
-      const dept    = section ? section.id.replace('dept-', '') : 'unknown';
-      const slug    = kpiSlug(label);
+    const cells = row.querySelectorAll('td');
 
-      // Skip if a manual override exists
-      const ovKey = overrideKey(dept, slug, yr, mo);
-      if (localStorage.getItem(ovKey) !== null) {
-        const actualCell = row.querySelectorAll('td')[4];
-        if (actualCell) {
-          actualCell.textContent = localStorage.getItem(ovKey);
-          actualCell.classList.add('edited-cell');
-        }
-        const moCell = row.querySelectorAll('td')[moToColIdx(mo)];
-        if (moCell) {
-          moCell.textContent = localStorage.getItem(ovKey);
-          moCell.classList.add('edited-cell');
-        }
-        return;
-      }
+    // Registry target overrides the hardcoded table cell
+    if (r.target != null && cells[3]) {
+      cells[3].textContent = Number(r.target).toLocaleString('en-US');
+    }
+    if (r.signage && cells[2] && r.signage !== cells[2].textContent.trim()) {
+      cells[2].textContent = r.signage;
+    }
 
-      const displayVal = value.toLocaleString('en-US');
+    if (r.value == null) return;
+    const displayVal = Number(r.value).toLocaleString('en-US');
 
-      // Fill ACTUAL column (index 4)
-      const actualCell = row.querySelectorAll('td')[4];
-      if (actualCell) {
-        actualCell.textContent = displayVal;
-        actualCell.classList.add('auto-cell');
-        actualCell.classList.remove('edited-cell');
-        updateRowStatus(row);
-      }
-
-      // Fill the matching monthly column
-      const moCell = row.querySelectorAll('td')[moToColIdx(mo)];
-      if (moCell) {
-        moCell.textContent = displayVal;
-        moCell.classList.add('auto-cell');
-        moCell.classList.remove('edited-cell');
+    [cells[4], cells[moToColIdx(mo)]].forEach(cell => {
+      if (!cell) return;
+      cell.textContent = displayVal;
+      cell.classList.toggle('auto-cell',   !r.overridden);
+      cell.classList.toggle('edited-cell', !!r.overridden);
+      if (r.overridden && r.override) {
+        cell.title = 'Manual override by ' + (r.override.by || 'unknown') +
+          ' on ' + String(r.override.at).slice(0, 10) + ': ' + r.override.reason +
+          '  (formula value: ' + (r.computed == null ? '—' : r.computed) + ')';
+      } else {
+        cell.removeAttribute('title');
       }
     });
-  }
+    updateRowStatus(row);
+  });
 }
 
 /* ─── Load manually saved values ──────────────────────────
@@ -483,8 +358,10 @@ async function openMonthlyModal() {
     serverMap = new Map(kpis.map(k => [k.kpi_key, k]));
   } catch (e) { /* fall back to localStorage below */ }
 
-  // Build modal HTML
-  const autoLabels = new Set(KPI_AUTO.map(k => k.label));
+  // Build modal HTML — auto rows come from the formula layer and can only
+  // be changed via the audited override flow (click the cell in the table),
+  // so their inputs are disabled here.
+  const autoKeys = window._nyAutoKeys || new Set();
 
   let tableRows = '';
   rows.forEach(row => {
@@ -494,21 +371,19 @@ async function openMonthlyModal() {
     const unit    = cells[1].textContent.trim();
     const target  = cells[3].textContent.trim();
     const slug    = kpiSlug(label);
-    const isAuto  = autoLabels.has(label);
+    const isAuto  = autoKeys.has(slug);
 
-    // Current value: server first, then localStorage manual/override
+    // Current value: server first, then localStorage manual
     let currentVal = cells[4].textContent.trim();
     if (serverMap && serverMap.has(slug)) {
       const serverVal = serverMap.get(slug).actual;
       if (serverVal != null) currentVal = String(serverVal);
     } else {
-      const stored   = localStorage.getItem(manualKey(dept, slug, yr, mo));
-      const override = localStorage.getItem(overrideKey(dept, slug, yr, mo));
-      if (stored !== null)   currentVal = stored;
-      if (override !== null) currentVal = override;
+      const stored = localStorage.getItem(manualKey(dept, slug, yr, mo));
+      if (stored !== null) currentVal = stored;
     }
 
-    const badge = isAuto ? '<span class="modal-auto-badge">⚡ auto</span>' : '';
+    const badge = isAuto ? '<span class="modal-auto-badge">⚡ auto — override via the table cell</span>' : '';
 
     tableRows += `
       <tr>
@@ -516,7 +391,7 @@ async function openMonthlyModal() {
         <td><input class="modal-input" type="text"
             data-slug="${slug}" data-mo="${mo}" data-yr="${yr}" data-dept="${dept}"
             data-is-auto="${isAuto}" data-target="${target}" data-unit="${unit}"
-            value="${currentVal}" placeholder="—" />${badge}</td>
+            value="${currentVal}" placeholder="—" ${isAuto ? 'disabled' : ''} />${badge}</td>
         <td class="modal-unit">${unit}</td>
       </tr>`;
   });
@@ -579,14 +454,11 @@ async function saveAllModalValues() {
     dept = rowDept; yr = rowYr; mo = rowMo; // same for every row in this modal
 
     if (val === '' || val === '—') return;
+    if (isAuto) return; // formula-layer rows change only via the audited override flow
     if (typeof canFillKPIDept === 'function' && !canFillKPIDept(rowDept)) return;
 
     // Local write stays as the offline fallback cache, unchanged.
-    if (isAuto) {
-      localStorage.setItem(overrideKey(rowDept, slug, rowYr, rowMo), val);
-    } else {
-      localStorage.setItem(manualKey(rowDept, slug, rowYr, rowMo), val);
-    }
+    localStorage.setItem(manualKey(rowDept, slug, rowYr, rowMo), val);
 
     const actual = parseFloat(val.replace(/,/g, ''));
     if (!isNaN(actual)) {

@@ -23,6 +23,7 @@ const { rateLimit } = require('express-rate-limit');
 const authRoutes    = require('./routes/auth');
 const reportsRoutes = require('./routes/reports');
 const kpiRoutes     = require('./routes/kpi');
+const formulaRoutes = require('./routes/formula');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -78,6 +79,7 @@ app.use((req, res, next) => {
 app.use('/api/auth',    authRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/kpi',     kpiRoutes);
+app.use('/api/formula', formulaRoutes);
 
 // ── HEALTH CHECK ─────────────────────────────────────────────
 // A simple endpoint to verify the server is running

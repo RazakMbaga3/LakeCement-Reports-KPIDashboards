@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "accept:phase1": "node scripts/accept-phase1.js",
     "accept:phase2": "node scripts/accept-phase2.js",
+    "accept:phase3": "node scripts/accept-phase3.js",
     "smoke": "node scripts/smoke.js",
     "test": "npm run lint && npm run smoke"
   },

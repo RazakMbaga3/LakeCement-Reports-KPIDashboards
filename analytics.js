@@ -37,110 +37,66 @@
   }
 
   /* ══════════════════════════════════════════════════════════════
-     METRIC DEFINITIONS
-     metric(dayData) → number | null
+     METRIC DEFINITIONS — driven by the shared formula registry.
+
+     NO FORMULA MATH HERE: forms/formula-registry.js (loaded before
+     this file) is the single source for label/unit/dp/target and the
+     daily() functions. This block only maps registry keys to chart
+     DOM ids and colors. Values prefer the server's formula engine
+     (/api/formula/daily); the registry's own daily() runs locally
+     as the offline/demo-data fallback — same functions, same math.
   ══════════════════════════════════════════════════════════════ */
-  var METRICS = [
-    {
-      id:     'free-cao',
-      form:   'quality',
-      label:  'Free CaO (%)',
-      unit:   '%',
-      dec:    2,
-      metric: function(d) { return nvl(d.free_lime); },
-      target: 3.0, targetDir: '<=', targetLabel: 'Spec 3.0%',
-      color:  '#e53935', fillColor: 'rgba(229,57,53,0.08)',
-    },
-    {
-      id:     'blaine',
-      form:   'quality',
-      label:  'Blaine 425R (cm²/g)',
-      unit:   '',
-      dec:    0,
-      metric: function(d) { return nvl(d.blaine_425r); },
-      target: 3500, targetDir: '>=', targetLabel: 'Min 3,500',
-      color:  '#239557', fillColor: 'rgba(35,149,87,0.08)',
-    },
-    {
-      id:     'strength',
-      form:   'quality',
-      label:  '28-Day Strength (MPa)',
-      unit:   'MPa',
-      dec:    1,
-      metric: function(d) { return nvl(d.strength_28d); },
-      target: 42.5, targetDir: '>=', targetLabel: 'Min 42.5',
-      color:  '#4F74B2', fillColor: 'rgba(79,116,178,0.08)',
-    },
-    {
-      id:     'pile-cao',
-      form:   'pile-quality',
-      label:  'Pile CaO Avg (%)',
-      unit:   '%',
-      dec:    2,
-      metric: function(d) {
-        var vals = [];
-        for (var i = 1; i <= 18; i++) {
-          var v = nvl(d['cao_h' + i]);
-          if (v !== null && v > 0) vals.push(v);
-        }
-        return vals.length ? vals.reduce(function(a, b) { return a + b; }, 0) / vals.length : null;
-      },
-      target: 44.0, targetDir: '>=', targetLabel: 'Target 44%',
-      color:  '#7c3aed', fillColor: 'rgba(124,58,237,0.08)',
-    },
-    {
-      id:     'dispatch',
-      form:   'dispatch',
-      label:  'Daily Dispatch (MT)',
-      unit:   'MT',
-      dec:    1,
-      metric: function(d) {
-        var t = n(d.dispatch_425r) + n(d.dispatch_425n) + n(d.dispatch_bulker) + n(d.dispatch_bigbag);
-        return t > 0 ? t : null;
-      },
-      target: null,
-      color:  '#F49545', fillColor: 'rgba(244,149,69,0.08)',
-    },
-    {
-      id:     'power',
-      form:   'power-cons',
-      label:  'Total Power (kWh)',
-      unit:   'kWh',
-      dec:    0,
-      metric: function(d) {
-        var t = n(d.pwr_crusher_kwh) + n(d.pwr_rawmill_kwh) + n(d.pwr_coalmill_kwh) +
-                n(d.pwr_kiln_kwh)   + n(d.pwr_cm2_kwh)     + n(d.pwr_packing_kwh)  +
-                n(d.pwr_utils_kwh)  + n(d.pwr_lighting_kwh);
-        return t > 500 ? t : null;
-      },
-      target: null,
-      color:  '#0d9488', fillColor: 'rgba(13,148,136,0.08)',
-    },
-    {
-      id:     'clinker',
-      form:   'kiln',
-      label:  'Clinker Production (MT)',
-      unit:   'MT',
-      dec:    0,
-      metric: function(d) { var v = nvl(d.kiln_prod_mt); return (v && v > 0) ? v : null; },
-      target: 2000, targetDir: '>=', targetLabel: 'Target ≥ 2,000 MT/day',
-      color:  '#F49545', fillColor: 'rgba(244,149,69,0.08)',
-    },
-    {
-      id:     'sp-heat',
-      form:   'kiln',
-      label:  'Specific Heat (kcal/kg)',
-      unit:   'kcal/kg',
-      dec:    0,
-      metric: function(d) {
-        var prod = nvl(d.kiln_prod_mt), coal = nvl(d.kiln_coal_cons), ncv = nvl(d.kiln_coal_ncv);
-        return (prod && prod > 0 && coal && coal > 0 && ncv && ncv > 0)
-          ? coal * ncv * 1000 / prod : null;
-      },
-      target: 780, targetDir: '<=', targetLabel: 'Target < 780 kcal/kg',
-      color:  '#7c3aed', fillColor: 'rgba(124,58,237,0.08)',
-    },
+  var REG = window.NyatiFormulas || { FACTS: {}, FORMULAS: {} };
+
+  var CHART_STYLE = [
+    { id: 'free-cao',  key: 'clinker-free-lime',                    color: '#e53935', fillColor: 'rgba(229,57,53,0.08)' },
+    { id: 'blaine',    key: 'blaine-425r',                          color: '#239557', fillColor: 'rgba(35,149,87,0.08)' },
+    { id: 'strength',  key: 'strength-28d',                         color: '#4F74B2', fillColor: 'rgba(79,116,178,0.08)' },
+    { id: 'pile-cao',  key: 'pile-cao-avg',                         color: '#7c3aed', fillColor: 'rgba(124,58,237,0.08)' },
+    { id: 'dispatch',  key: 'despatch-day',                         color: '#F49545', fillColor: 'rgba(244,149,69,0.08)' },
+    { id: 'power',     key: 'total-power-kwh',                      color: '#0d9488', fillColor: 'rgba(13,148,136,0.08)' },
+    { id: 'clinker',   key: 'kiln-output',                          color: '#F49545', fillColor: 'rgba(244,149,69,0.08)' },
+    { id: 'sp-heat',   key: 'specific-thermal-energy-consumption',  color: '#7c3aed', fillColor: 'rgba(124,58,237,0.08)' },
   ];
+
+  /* Resolve one day's fact values for a formula from the harvested store */
+  function factsFor(formula, store, date) {
+    var facts = {}, any = false;
+    formula.inputs.forEach(function (k) {
+      var fact = REG.FACTS[k];
+      var day  = fact && store[fact.form] ? store[fact.form][date] : null;
+      var v    = day ? nvl(day[fact.field]) : null;
+      facts[k] = v;
+      if (v !== null) any = true;
+    });
+    return any ? facts : null;
+  }
+
+  var METRICS = CHART_STYLE.filter(function (cs) { return REG.FORMULAS[cs.key]; })
+    .map(function (cs) {
+      var f = REG.FORMULAS[cs.key];
+      var forms = [];
+      f.inputs.forEach(function (k) {
+        var form = REG.FACTS[k] && REG.FACTS[k].form;
+        if (form && forms.indexOf(form) === -1) forms.push(form);
+      });
+      return {
+        id: cs.id, key: cs.key, forms: forms,
+        label: f.label + (f.unit ? ' (' + f.unit + ')' : ''),
+        unit: f.unit, dec: f.dp,
+        target: f.target === undefined ? null : f.target,
+        targetDir: f.signage === '<' ? '<=' : (f.signage === '>' ? '>=' : f.signage),
+        targetLabel: f.targetLabel,
+        color: cs.color, fillColor: cs.fillColor,
+        metric: function (store, date) {
+          var facts = factsFor(f, store, date);
+          if (!facts) return null;
+          var v;
+          try { v = f.daily(facts); } catch (e) { v = null; }
+          return (v === null || v === undefined || isNaN(v)) ? null : v;
+        },
+      };
+    });
 
   /* ── Harvest form data for the trend window ───────────────────────
      Per form: read local snapshots first (covers offline data AND
@@ -155,7 +111,9 @@
     var cutoff  = range[0];
     var todayIso = range[range.length - 1];
     var forms = [];
-    METRICS.forEach(function(m) { if (forms.indexOf(m.form) === -1) forms.push(m.form); });
+    METRICS.forEach(function(m) {
+      m.forms.forEach(function(f) { if (forms.indexOf(f) === -1) forms.push(f); });
+    });
 
     var store = {};
 
@@ -495,7 +453,9 @@
     var store  = await harvest(days);
 
     /* Check if any data exists */
-    var hasAny = METRICS.some(function(m) { return store[m.form] && Object.keys(store[m.form]).length > 0; });
+    var hasAny = METRICS.some(function(m) {
+      return m.forms.some(function(f) { return store[f] && Object.keys(store[f]).length > 0; });
+    });
 
     var emptyEl   = document.getElementById('an-empty');
     var contentEl = document.getElementById('an-content');
@@ -509,13 +469,30 @@
 
     updateCoverage(store, days, dates);
 
+    /* Server-computed daily series (the formula engine — same registry).
+       Where the server has a value for a date, it wins; dates it doesn't
+       know (offline, demo-seeded local data) fall back to the SAME
+       registry functions computed locally over the harvested store. */
+    var serverByKey = {};
+    if (window.NyatiAPI && NyatiAPI.getDailySeries) {
+      try {
+        var daily = await NyatiAPI.getDailySeries(dates[0], dates[dates.length - 1]);
+        Object.keys(daily).forEach(function (key) {
+          var byDate = {};
+          (daily[key].series || []).forEach(function (p) { byDate[p.date] = p.value; });
+          serverByKey[key] = byDate;
+        });
+      } catch (e) { /* offline — local registry compute below covers it */ }
+    }
+
     var allAnomalies = [];
 
     METRICS.forEach(function(metric) {
-      var formData = store[metric.form] || {};
-      var values   = dates.map(function(date) {
-        var day = formData[date];
-        return day ? metric.metric(day) : null;
+      var serverSeries = serverByKey[metric.key] || {};
+      var values = dates.map(function(date) {
+        var sv = serverSeries[date];
+        if (sv !== undefined && sv !== null) return sv;
+        return metric.metric(store, date);
       });
 
       renderChart(metric, dates, values);

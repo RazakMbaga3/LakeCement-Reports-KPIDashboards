@@ -60,6 +60,52 @@
     return res.json();
   }
 
-  global.NyatiAPI = { submitForm, getForm, getFormRange };
+  /* ── Formula layer (backend/routes/formula.js) ─────────────────────
+     Dashboards render KPI values exclusively from these — formula math
+     lives in forms/formula-registry.js + the server engine, never in
+     page JS. */
+
+  /* GET /api/formula/eval/:year/:month — all KPIs for a month, overrides applied */
+  async function evalFormulas(year, month) {
+    const res = await fetch(BASE + '/formula/eval/' + year + '/' + month, { headers: _headers() });
+    if (!res.ok) throw _httpError('evalFormulas', year + '-' + month, res);
+    return res.json();
+  }
+
+  /* GET /api/formula/daily?from=&to= — daily series per KPI (trend charts) */
+  async function getDailySeries(from, to) {
+    const res = await fetch(BASE + '/formula/daily?' + new URLSearchParams({ from, to }), { headers: _headers() });
+    if (!res.ok) throw _httpError('getDailySeries', from + '..' + to, res);
+    return res.json();
+  }
+
+  /* POST /api/formula/override — manual override; reason is mandatory */
+  async function setOverride(kpiKey, year, month, value, reason) {
+    const res = await fetch(BASE + '/formula/override', {
+      method: 'POST', headers: _headers(),
+      body: JSON.stringify({ kpi_key: kpiKey, year: Number(year), month: Number(month), value, reason }),
+    });
+    if (!res.ok) throw _httpError('setOverride', kpiKey, res);
+    return res.json();
+  }
+
+  /* DELETE /api/formula/override/:id — clear (row is kept + audited) */
+  async function clearOverride(id) {
+    const res = await fetch(BASE + '/formula/override/' + id, { method: 'DELETE', headers: _headers() });
+    if (!res.ok) throw _httpError('clearOverride', String(id), res);
+    return res.json();
+  }
+
+  /* GET /api/formula/overrides/:year/:month — full override history */
+  async function getOverrides(year, month) {
+    const res = await fetch(BASE + '/formula/overrides/' + year + '/' + month, { headers: _headers() });
+    if (!res.ok) throw _httpError('getOverrides', year + '-' + month, res);
+    return res.json();
+  }
+
+  global.NyatiAPI = {
+    submitForm, getForm, getFormRange,
+    evalFormulas, getDailySeries, setOverride, clearOverride, getOverrides,
+  };
 
 }(window));
