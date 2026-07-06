@@ -34,6 +34,10 @@ const misRoutes     = require('./routes/mis');
 const app  = express();
 const PORT = process.env.PORT || 5000;
 
+// Behind Nginx/IIS (Phase 7 deployment) req.ip must come from
+// X-Forwarded-For or rate limiting and audit logs see only the proxy.
+if (process.env.TRUST_PROXY === '1') app.set('trust proxy', 1);
+
 // Loud warnings for unsafe configuration — better than silently running open
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.includes('change-me')) {
   logger.warn('JWT_SECRET is missing or a placeholder — set a real secret in .env');
@@ -127,6 +131,21 @@ app.use('/api/client-errors', rateLimit({
       }
     });
     logger.info(`morning digest scheduled (${spec}) → ${process.env.DIGEST_TO}`);
+  }
+
+  if (process.env.BACKUP_DIR && process.env.BACKUP_CRON !== 'off') {
+    const { runBackup } = require('./services/backup');
+    const spec = process.env.BACKUP_CRON || '30 2 * * *';
+    cron.schedule(spec, async () => {
+      try {
+        const r = await runBackup();
+        logger.info({ file: r.file, bytes: r.bytes, pruned: r.pruned.length }, 'nightly backup complete');
+      } catch (err) {
+        // health/watchdog will also flag the growing backup age
+        logger.error({ err }, 'nightly backup FAILED');
+      }
+    });
+    logger.info(`nightly backup scheduled (${spec}) → ${process.env.BACKUP_DIR}`);
   }
 
   if (process.env.WATCHDOG_CRON !== 'off') {

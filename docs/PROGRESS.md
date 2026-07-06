@@ -147,8 +147,35 @@ read-only Odoo credentials + dataset selection from the user.)
   before this repo's git history — cosmetic (mostly CSS comments); a
   one-off re-encode cleanup can be done separately if desired.
 
-## Phase 7 — Deployment, Backup & DR — ⬜ NOT STARTED
-Runs via `npm run dev` only. No service, no Nginx, no pg_dump schedule, no runbook.
+## Phase 7 — Deployment, Backup & DR — ✅ DONE (2026-07-06)
+- [x] Nightly pg_dump (services/backup.js, BACKUP_CRON default 02:30 into
+      BACKUP_DIR, custom format, BACKUP_KEEP_DAYS retention; `npm run backup`).
+      pg tools auto-resolved incl. the Odoo-bundled PostgreSQL layout (PG_BIN
+      override). Backup freshness feeds /api/health + watchdog alerts (wired
+      in Phase 6, verified live here).
+- [x] Restore tooling: `npm run restore:drill` restores the newest dump into
+      a scratch DB, verifies tables + user count vs live, drops it — never
+      touches the live database. scripts/restore.js restores into a NEW
+      database with a runbook'd switchover (refuses to overwrite live).
+      PG_ADMIN_* override for CREATE DATABASE rights; lcl_admin was granted
+      CREATEDB once on this machine.
+- [x] Windows service: `npm run service:install` / `service:uninstall`
+      (node-windows) — auto-start at boot + crash restart. TRUST_PROXY env
+      for correct client IPs behind the proxy.
+- [x] deploy/nginx.conf — static frontend + /api reverse proxy template.
+- [x] docs/RUNBOOK.md — start/stop, logs, backup/restore/drill + switchover,
+      user admin (add/unlock/force-logout/disable), secret rotation, alert
+      meanings, update procedure, first-time server checklist.
+- [x] Accept: scripts/accept-phase7.js — 8 checks green 2026-07-06 (dump
+      valid, retention prune, health ok-with-fresh/degraded-when-missing,
+      REAL restore drill on a scratch DB, collateral present).
+- ⚠ SECURITY FINDING: Odoo's bundled Postgres superuser `openpg` still has
+  the default password (openpgpwd). Documented in RUNBOOK §6 — change it.
+- Remaining for go-live on the plant server (needs the machine/user):
+  run the first-time checklist in RUNBOOK §9 — install service (admin
+  shell), set BACKUP_DIR to a second disk/share, configure Nginx, reboot
+  test. All scripts are ready; the reboot criterion is verified at
+  deployment, not on this dev laptop.
 
 ## Phase 8 — Moat features — ⬜ NOT STARTED
 
