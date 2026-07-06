@@ -117,6 +117,35 @@ CREATE INDEX IF NOT EXISTS idx_kpi_overrides_period ON kpi_overrides(kpi_key, ye
 CREATE UNIQUE INDEX IF NOT EXISTS uq_kpi_overrides_active
   ON kpi_overrides(kpi_key, year, month) WHERE cleared_at IS NULL;
 
+-- ── CLIENT ERRORS ───────────────────────────────────────────
+-- Browser error reports from plant-floor pages (see routes/monitor.js);
+-- 60-day retention enforced on insert.
+CREATE TABLE IF NOT EXISTS client_errors (
+  id         SERIAL PRIMARY KEY,
+  username   VARCHAR(50),
+  page       VARCHAR(120),
+  message    VARCHAR(500) NOT NULL,
+  source     VARCHAR(300),
+  line       INTEGER,
+  stack      VARCHAR(2000),
+  user_agent VARCHAR(300),
+  ip_address VARCHAR(45),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_client_errors_date ON client_errors(created_at);
+
+-- ── ALERTS ──────────────────────────────────────────────────
+-- Operational alerts fired by the watchdog (services/watchdog.js);
+-- also its once-per-day dedupe store.
+CREATE TABLE IF NOT EXISTS alerts (
+  id         SERIAL PRIMARY KEY,
+  kind       VARCHAR(80)  NOT NULL,
+  detail     TEXT,
+  emailed    BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_alerts_kind_date ON alerts(kind, created_at);
+
 -- ── INDEXES (speeds up common queries) ──────────────────────
 CREATE INDEX IF NOT EXISTS idx_daily_reports_date     ON daily_reports(record_date);
 CREATE INDEX IF NOT EXISTS idx_daily_reports_form     ON daily_reports(form_type);

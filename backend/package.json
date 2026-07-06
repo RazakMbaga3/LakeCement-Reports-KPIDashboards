@@ -12,6 +12,8 @@
     "accept:phase2": "node scripts/accept-phase2.js",
     "accept:phase3": "node scripts/accept-phase3.js",
     "accept:phase5": "node scripts/accept-phase5.js",
+    "accept:phase6": "node scripts/accept-phase6.js",
+    "watchdog": "node scripts/watchdog-once.js",
     "smoke": "node scripts/smoke.js",
     "test": "npm run lint && npm run smoke"
   },
@@ -31,6 +33,10 @@
     "node-cron": "^4.6.0",
     "nodemailer": "^9.0.3",
     "pg": "^8.21.0",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0",
+    "pino-roll": "^4.0.0",
+    "prom-client": "^15.1.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {

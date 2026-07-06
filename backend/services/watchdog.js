@@ -1,0 +1,123 @@
+/*
+  services/watchdog.js — operational alerting.
+
+  Every run (WATCHDOG_CRON, default every 15 min; also POST
+  /api/monitor/watchdog/run and `npm run watchdog`):
+
+    • deep health not 'ok'      → 'health-degraded' / 'health-down'
+    • disk below threshold      → included in health-degraded detail
+    • backup stale/missing      → included in health-degraded detail
+    • missed entries: after MISSED_ENTRY_CUTOFF (default 10:00), any form
+      in MISSED_ENTRY_FORMS with no submission for the day
+                                 → 'missed-entry:<form>'
+
+  Each alert fires ONCE per day per kind (deduped against the alerts
+  table) and is emailed to ALERT_TO (falls back to DIGEST_TO) via the
+  shared mailer. If the database itself is down, dedupe/recording are
+  impossible — the email is still sent (that's the moment you most want
+  it), so expect repeats until the DB returns.
+*/
+
+const db = require('../db');
+const { deepHealth } = require('./health');
+const { sendMail } = require('./mailer');
+
+function localDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function pastCutoff() {
+  const [h, m] = (process.env.MISSED_ENTRY_CUTOFF || '10:00').split(':').map(Number);
+  const now = new Date();
+  return now.getHours() > h || (now.getHours() === h && now.getMinutes() >= (m || 0));
+}
+
+async function missedEntries(date) {
+  const watch = (process.env.MISSED_ENTRY_FORMS ||
+    'kiln,cement-mill,quality,dispatch,power-cons,mines')
+    .split(',').map(s => s.trim()).filter(Boolean);
+  if (!watch.length || !pastCutoff()) return [];
+
+  const rows = await db.query(
+    'SELECT DISTINCT form_type FROM daily_reports WHERE record_date = $1', [date]);
+  const submitted = new Set(rows.rows.map(r => r.form_type));
+
+  return watch.filter(f => !submitted.has(f)).map(f => ({
+    kind: 'missed-entry:' + f,
+    detail: `No ${f} submission for ${date} by the ${process.env.MISSED_ENTRY_CUTOFF || '10:00'} cutoff.`,
+  }));
+}
+
+/* true if this kind already alerted today */
+async function alreadyFired(kind) {
+  const r = await db.query(
+    `SELECT 1 FROM alerts WHERE kind = $1 AND created_at::date = CURRENT_DATE LIMIT 1`, [kind]);
+  return !!r.rows[0];
+}
+
+function alertEmailHtml(alerts) {
+  const items = alerts.map(a =>
+    `<li style="margin:6px 0"><strong>${a.kind}</strong><br>
+     <span style="color:#64748B;font-size:13px">${a.detail}</span></li>`).join('');
+  return `
+  <div style="font-family:Segoe UI,system-ui,sans-serif;max-width:640px;color:#173158">
+    <div style="background:#DC2626;color:white;padding:12px 18px;border-radius:8px 8px 0 0;font-weight:800">
+      ⚠ NYATI MIS — OPERATIONAL ALERT</div>
+    <div style="border:1px solid #DDE3EC;border-top:none;padding:14px 18px;border-radius:0 0 8px 8px">
+      <ul style="padding-left:18px;margin:0">${items}</ul>
+      <p style="color:#94A3B8;font-size:11px;margin-top:12px">
+        Sent by the MIS watchdog at ${new Date().toLocaleString('en-GB')}.
+        Details: MIS → Monitor page.</p>
+    </div>
+  </div>`;
+}
+
+/* opts.date — override the day checked for missed entries (tests/backfill) */
+async function runWatchdog(opts = {}) {
+  const date = opts.date || localDateStr(new Date());
+  const candidates = [];
+
+  const health = await deepHealth().catch(err =>
+    ({ status: 'down', checks: { error: err.message } }));
+  if (health.status !== 'ok') {
+    candidates.push({
+      kind: 'health-' + health.status,
+      detail: JSON.stringify(health.checks),
+    });
+  }
+
+  const dbUp = health.status !== 'down';
+  if (dbUp) {
+    try { candidates.push(...await missedEntries(date)); }
+    catch (err) { candidates.push({ kind: 'watchdog-error', detail: 'missed-entry check failed: ' + err.message }); }
+  }
+
+  // Dedupe: one alert per kind per day (only possible while the DB is up)
+  const fired = [], skipped = [];
+  for (const a of candidates) {
+    if (dbUp && await alreadyFired(a.kind).catch(() => false)) skipped.push(a.kind);
+    else fired.push(a);
+  }
+
+  let email = { sent: false, reason: 'no alerts' };
+  if (fired.length) {
+    email = await sendMail({
+      subject: `⚠ Nyati MIS alert: ${fired.map(a => a.kind).join(', ')}`,
+      html: alertEmailHtml(fired),
+      to: process.env.ALERT_TO || process.env.DIGEST_TO,
+    }).catch(err => ({ sent: false, reason: err.message }));
+
+    if (dbUp) {
+      for (const a of fired) {
+        await db.query(
+          'INSERT INTO alerts (kind, detail, emailed) VALUES ($1, $2, $3)',
+          [a.kind, a.detail, !!email.sent]
+        ).catch(() => { /* alert already emailed — recording is best-effort */ });
+      }
+    }
+  }
+
+  return { date, health: { status: health.status, checks: health.checks }, fired, skipped, email };
+}
+
+module.exports = { runWatchdog };

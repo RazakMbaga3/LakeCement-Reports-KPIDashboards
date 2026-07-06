@@ -116,8 +116,36 @@ read-only Odoo credentials + dataset selection from the user.)
   general format; specific template replicas can be added per department
   on request.
 
-## Phase 6 — Monitoring & Observability — ⬜ NOT STARTED
-Current state: console.log request logging; shallow `/api/health` (no DB check).
+## Phase 6 — Monitoring & Observability — ✅ DONE (2026-07-06)
+- [x] Structured logging: pino (services/logger.js) → stdout + daily-rotated
+      files in backend/logs/ (14-day retention); pino-http request logs with
+      user/status/latency; central error handler logs stacks via pino.
+- [x] Deep health: /api/health checks DB latency, disk free (DISK_MIN_FREE_GB),
+      backup age (once BACKUP_DIR is set, Phase 7) → ok/degraded/down, HTTP 503
+      when down. Odoo check joins in Phase 4 ('not_configured' until then).
+- [x] Metrics: prom-client at /api/metrics (admin/md/it JWT or static
+      METRICS_TOKEN for scrapers) — request rate/latency/status by route
+      template, pg pool gauges, form_submissions_total by form type.
+- [x] Client error reporting: forms/client-errors.js (all 15 pages +
+      monitor.html) posts window.onerror/unhandledrejection to
+      /api/client-errors (rate-limited, soft-attributed, 60-day retention).
+- [x] Watchdog (services/watchdog.js, cron every 15 min + manual runs):
+      health degraded/down, disk low, backup stale, and missed-entry
+      detection (MISSED_ENTRY_FORMS after MISSED_ENTRY_CUTOFF). One alert
+      per kind per day (alerts table dedupe), emailed to ALERT_TO via the
+      shared mailer; when the DB itself is down the email still goes out.
+      CLI: npm run watchdog.
+- [x] Admin dashboard: monitor.html — live health chips, alerts, browser
+      errors, login/lockout events, KPI override trail; manual "run checks".
+- [x] Accept: scripts/accept-phase6.js — 16 checks green 2026-07-06
+      (deep health ok + 503-when-down, metrics auth/content/submission
+      counter, client errors anonymous+attributed, RBAC, missed-entry
+      fire + email + dedupe + table row, DB-down watchdog still emails,
+      log files on disk).
+- NOTE: analytics.html/kiln-form.html (and some other pages) contain
+  pre-existing UTF-8 double-encoding (— rendered as â€“ etc.) dating from
+  before this repo's git history — cosmetic (mostly CSS comments); a
+  one-off re-encode cleanup can be done separately if desired.
 
 ## Phase 7 — Deployment, Backup & DR — ⬜ NOT STARTED
 Runs via `npm run dev` only. No service, no Nginx, no pg_dump schedule, no runbook.

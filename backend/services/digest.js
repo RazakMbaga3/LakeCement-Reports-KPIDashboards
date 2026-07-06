@@ -13,7 +13,7 @@
   and send pipeline can be tested without a mail server (acceptance tests).
 */
 
-const nodemailer = require('nodemailer');
+const { sendMail } = require('./mailer');
 const { gatherDaily } = require('./misReport');
 const { kpiStatus, fmt, esc } = require('./misRender');
 
@@ -72,42 +72,12 @@ function composeDigest(payload) {
   return { subject: `Nyati MIS Daily Digest — ${payload.date}`, html };
 }
 
-function makeTransport() {
-  if (process.env.SMTP_HOST) {
-    return { kind: 'smtp', t: nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587', 10),
-      secure: process.env.SMTP_PORT === '465',
-      auth: process.env.SMTP_USER
-        ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
-        : undefined,
-    }) };
-  }
-  if (process.env.DIGEST_TRANSPORT === 'json') {
-    return { kind: 'json', t: nodemailer.createTransport({ jsonTransport: true }) };
-  }
-  return null;
-}
-
 /* Send the digest for `date` (default: yesterday, local time). */
 async function sendDigest(date) {
-  const to = (process.env.DIGEST_TO || '').split(',').map(s => s.trim()).filter(Boolean);
-  if (!to.length) return { sent: false, reason: 'DIGEST_TO not configured' };
-
-  const transport = makeTransport();
-  if (!transport) return { sent: false, reason: 'SMTP not configured' };
-
   const payload = await gatherDaily(date || yesterday());
   const { subject, html } = composeDigest(payload);
-
-  const info = await transport.t.sendMail({
-    from: process.env.SMTP_FROM || 'mis@lakecement.co.tz',
-    to: to.join(', '),
-    subject, html,
-  });
-
-  return { sent: true, transport: transport.kind, to, subject, date: payload.date,
-           message: transport.kind === 'json' ? JSON.parse(info.message) : undefined };
+  const result = await sendMail({ subject, html, to: process.env.DIGEST_TO });
+  return { ...result, date: payload.date };
 }
 
 module.exports = { sendDigest, composeDigest, yesterday };

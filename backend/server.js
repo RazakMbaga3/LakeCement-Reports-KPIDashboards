@@ -18,6 +18,11 @@ const express       = require('express');
 const cors          = require('cors');
 const helmet        = require('helmet');
 const { rateLimit } = require('express-rate-limit');
+const logger        = require('./services/logger');
+const pinoHttp      = require('pino-http');
+const metrics       = require('./services/metrics');
+const { deepHealth } = require('./services/health');
+const { monitorRouter, clientErrorsRouter, metricsAuth, metricsHandler } = require('./routes/monitor');
 
 // Import route files
 const authRoutes    = require('./routes/auth');
@@ -31,10 +36,10 @@ const PORT = process.env.PORT || 5000;
 
 // Loud warnings for unsafe configuration — better than silently running open
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET.includes('change-me')) {
-  console.warn('⚠️  JWT_SECRET is missing or a placeholder — set a real secret in .env');
+  logger.warn('JWT_SECRET is missing or a placeholder — set a real secret in .env');
 }
 if ((process.env.ALLOWED_ORIGIN || '*').trim() === '*') {
-  console.warn('⚠️  CORS is open to all origins (ALLOWED_ORIGIN=*) — restrict in production');
+  logger.warn('CORS is open to all origins (ALLOWED_ORIGIN=*) — restrict in production');
 }
 
 // ── MIDDLEWARE ───────────────────────────────────────────────
@@ -67,11 +72,18 @@ app.use('/api/auth', rateLimit({
 // Without this, req.body would be undefined
 app.use(express.json({ limit: '10mb' }));
 
-// Log every incoming request (useful during development)
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
-  next();
-});
+// Structured request logging (pino → stdout + daily-rotated backend/logs/)
+// and Prometheus request metrics. Health/metrics polls stay out of the log.
+app.use(pinoHttp({
+  logger,
+  autoLogging: { ignore: req => req.url === '/api/health' || req.url === '/api/metrics' },
+  customProps: req => ({ user: req.user && req.user.username }),
+  serializers: {
+    req: req => ({ method: req.method, url: req.url }),
+    res: res => ({ status: res.statusCode }),
+  },
+}));
+app.use(metrics.middleware);
 
 // ── API ROUTES ───────────────────────────────────────────────
 // All routes are prefixed with /api/
@@ -82,35 +94,64 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/kpi',     kpiRoutes);
 app.use('/api/formula', formulaRoutes);
 app.use('/api/mis',     misRoutes);
+app.use('/api/monitor', monitorRouter);
+app.get('/api/metrics', metricsAuth, metricsHandler);
 
-// ── SCHEDULED MORNING DIGEST ─────────────────────────────────
-// Runs only when mail + recipients are configured; a failed send is
-// logged, never fatal. Manual trigger: POST /api/mis/digest/send.
-if (process.env.SMTP_HOST && process.env.DIGEST_TO) {
+// Browser error reports — rate-limited hard (they can come from any page,
+// authenticated or not) so a crash-looping tab can't flood the table.
+app.use('/api/client-errors', rateLimit({
+  windowMs: 5 * 60 * 1000,
+  limit: parseInt(process.env.CLIENT_ERROR_RATE_LIMIT || '60', 10),
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Too many error reports from this device.' },
+}), clientErrorsRouter);
+
+// ── SCHEDULED JOBS ───────────────────────────────────────────
+// Morning digest (needs SMTP + recipients) and the alerting watchdog
+// (always on — deep health, missed entries, disk, backup). Failures are
+// logged, never fatal. Manual triggers: POST /api/mis/digest/send,
+// POST /api/monitor/watchdog/run.
+{
   const cron = require('node-cron');
-  const { sendDigest } = require('./services/digest');
-  const spec = process.env.DIGEST_CRON || '0 6 * * *';
-  cron.schedule(spec, async () => {
-    try {
-      const r = await sendDigest();
-      console.log(`📧 Daily digest: ${r.sent ? 'sent to ' + r.to.join(', ') : 'skipped — ' + r.reason}`);
-    } catch (err) {
-      console.error('📧 Daily digest failed:', err.message);
-    }
-  });
-  console.log(`📧 Morning digest scheduled (${spec}) → ${process.env.DIGEST_TO}`);
+
+  if (process.env.SMTP_HOST && process.env.DIGEST_TO) {
+    const { sendDigest } = require('./services/digest');
+    const spec = process.env.DIGEST_CRON || '0 6 * * *';
+    cron.schedule(spec, async () => {
+      try {
+        const r = await sendDigest();
+        logger.info({ digest: r.sent ? r.to : r.reason }, 'daily digest run');
+      } catch (err) {
+        logger.error({ err }, 'daily digest failed');
+      }
+    });
+    logger.info(`morning digest scheduled (${spec}) → ${process.env.DIGEST_TO}`);
+  }
+
+  if (process.env.WATCHDOG_CRON !== 'off') {
+    const { runWatchdog } = require('./services/watchdog');
+    const spec = process.env.WATCHDOG_CRON || '*/15 * * * *';
+    cron.schedule(spec, async () => {
+      try {
+        const r = await runWatchdog();
+        if (r.fired.length) logger.warn({ fired: r.fired, email: r.email }, 'watchdog alerts fired');
+      } catch (err) {
+        logger.error({ err }, 'watchdog run failed');
+      }
+    });
+    logger.info(`watchdog scheduled (${spec})`);
+  }
 }
 
 // ── HEALTH CHECK ─────────────────────────────────────────────
-// A simple endpoint to verify the server is running
-// Visit http://localhost:5000/api/health in your browser to test
-app.get('/api/health', (req, res) => {
-  res.json({
-    status:    'ok',
-    app:       'Lake Cement MIS Backend',
-    version:   '1.0.0',
-    timestamp: new Date().toISOString(),
-  });
+// Deep health: DB connectivity + latency, disk free space, backup age.
+// 200 for ok/degraded (body carries the detail), 503 when the DB is down —
+// so LAN monitoring tools can alarm on status code alone.
+// Unauthenticated by design; it exposes no data, only service state.
+app.get('/api/health', async (req, res) => {
+  const h = await deepHealth();
+  res.status(h.status === 'down' ? 503 : 200).json(h);
 });
 
 // ── SERVE FRONTEND (Production) ──────────────────────────────
@@ -130,7 +171,8 @@ app.use((req, res) => {
 // Route handlers call next(err); the stack is logged here, and the client
 // only ever sees a generic message — never internals.
 app.use((err, req, res, next) => {
-  console.error(`Unhandled error on ${req.method} ${req.path}:`, err.stack || err);
+  logger.error({ err, method: req.method, path: req.path, user: req.user && req.user.username },
+    'unhandled request error');
   if (res.headersSent) return next(err);
   res.status(500).json({ error: 'Internal server error.' });
 });

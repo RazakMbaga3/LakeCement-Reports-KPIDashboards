@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Monitor — Lake Cement MIS</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',system-ui,sans-serif; background:#F4F6FA; color:#173158; min-height:100vh; }
+  .top { background:#173158; color:white; padding:14px 22px; display:flex; align-items:center; gap:14px; }
+  .top h1 { font-size:15px; font-weight:800; letter-spacing:.4px; }
+  .top a { color:#F49545; font-size:12px; font-weight:700; text-decoration:none; margin-left:auto; }
+  .wrap { max-width:1100px; margin:22px auto; padding:0 18px; }
+  .chips { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; align-items:center; }
+  .chip { background:white; border:1.5px solid #DDE3EC; border-radius:10px; padding:12px 18px; min-width:150px; }
+  .chip .lbl { font-size:10px; text-transform:uppercase; letter-spacing:.6px; color:#94A3B8; font-weight:700; }
+  .chip .val { font-size:16px; font-weight:800; margin-top:3px; }
+  .val.ok { color:#239557; } .val.warn { color:#D97706; } .val.bad { color:#DC2626; }
+  .btn { border:none; border-radius:7px; padding:9px 15px; font:700 12px 'Inter',sans-serif; cursor:pointer; background:#F49545; color:white; margin-left:auto; }
+  .card { background:white; border:1.5px solid #DDE3EC; border-radius:12px; overflow:hidden; margin-bottom:18px; }
+  .card h2 { font-size:11px; text-transform:uppercase; letter-spacing:.7px; background:#173158; color:white; padding:9px 16px; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th { text-align:left; padding:7px 14px; background:#F7F8FA; color:#64748B; font-size:10px; text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid #EEF2F7; }
+  td { padding:7px 14px; border-bottom:1px solid #F0F4F8; vertical-align:top; }
+  .mono { font-family:Consolas,monospace; font-size:11px; color:#64748B; word-break:break-word; }
+  .tag { font-size:9px; font-weight:700; padding:2px 7px; border-radius:3px; }
+  .t-ok { background:#BBF7D0; color:#14532D; } .t-warn { background:#FEF3C7; color:#92400E; } .t-bad { background:#FECACA; color:#7F1D1D; }
+  .empty { padding:20px; text-align:center; color:#94A3B8; font-size:12px; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <img src="NYATI-LOGO.png" alt="Nyati" style="height:30px">
+  <h1>SYSTEM MONITOR</h1>
+  <a href="index.html">← Back to Dashboard</a>
+</div>
+
+<div class="wrap">
+  <div class="chips" id="chips">
+    <div class="chip"><div class="lbl">Overall</div><div class="val" id="c-status">…</div></div>
+    <div class="chip"><div class="lbl">Database</div><div class="val" id="c-db">…</div></div>
+    <div class="chip"><div class="lbl">Disk free</div><div class="val" id="c-disk">…</div></div>
+    <div class="chip"><div class="lbl">Backup</div><div class="val" id="c-backup">…</div></div>
+    <div class="chip"><div class="lbl">Uptime</div><div class="val" id="c-uptime">…</div></div>
+    <button class="btn" onclick="runWatchdog()" id="wd-btn">▶ Run checks now</button>
+  </div>
+
+  <div class="card"><h2>Alerts (fired by the watchdog)</h2><div id="t-alerts"><div class="empty">Loading…</div></div></div>
+  <div class="card"><h2>Browser errors (plant-floor pages)</h2><div id="t-errors"><div class="empty">Loading…</div></div></div>
+  <div class="card"><h2>Logins &amp; account events</h2><div id="t-logins"><div class="empty">Loading…</div></div></div>
+  <div class="card"><h2>KPI overrides</h2><div id="t-overrides"><div class="empty">Loading…</div></div></div>
+</div>
+
+<script src="auth.js"></script>
+<script src="forms/client-errors.js"></script>
+<script>
+  requireAuth();
+  (function () {
+    const u = getCurrentUser();
+    if (u && !['admin', 'md', 'it'].includes(u.role)) window.location.href = 'index.html';
+  })();
+
+  const API = (typeof _API_BASE !== 'undefined') ? _API_BASE : 'http://localhost:5000/api';
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+  const when = t => t ? new Date(t).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
+
+  function table(el, headers, rows) {
+    const box = document.getElementById(el);
+    if (!rows.length) { box.innerHTML = '<div class="empty">Nothing recorded yet.</div>'; return; }
+    box.innerHTML = '<table><tr>' + headers.map(h => '<th>' + h + '</th>').join('') + '</tr>' +
+      rows.map(r => '<tr>' + r.map(c => '<td>' + c + '</td>').join('') + '</tr>').join('') + '</table>';
+  }
+
+  function setChip(id, text, cls) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = 'val ' + (cls || '');
+  }
+
+  async function load() {
+    let s;
+    try {
+      const res = await fetch(API + '/monitor/summary', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      s = await res.json();
+    } catch (e) {
+      setChip('c-status', 'UNREACHABLE', 'bad');
+      return;
+    }
+
+    const h = s.health;
+    setChip('c-status', h.status.toUpperCase(), h.status === 'ok' ? 'ok' : h.status === 'degraded' ? 'warn' : 'bad');
+    setChip('c-db', h.checks.db.ok ? (h.checks.db.latency_ms + ' ms') : 'DOWN', h.checks.db.ok ? 'ok' : 'bad');
+    setChip('c-disk', (h.checks.disk.free_gb ?? '—') + ' GB', h.checks.disk.ok ? 'ok' : 'warn');
+    setChip('c-backup', h.checks.backup === 'not_configured' ? 'n/a'
+      : (h.checks.backup.ok ? (h.checks.backup.age_hours + ' h old') : 'STALE'),
+      h.checks.backup === 'not_configured' ? '' : (h.checks.backup.ok ? 'ok' : 'warn'));
+    setChip('c-uptime', Math.floor(h.uptime_s / 3600) + 'h ' + Math.floor((h.uptime_s % 3600) / 60) + 'm', 'ok');
+
+    table('t-alerts', ['When', 'Kind', 'Detail', 'Emailed'],
+      s.alerts.map(a => [when(a.created_at),
+        '<span class="tag t-bad">' + esc(a.kind) + '</span>',
+        '<span class="mono">' + esc(a.detail) + '</span>',
+        a.emailed ? '✓' : '—']));
+
+    table('t-errors', ['When', 'User', 'Page', 'Message', 'Source'],
+      s.clientErrors.map(e => [when(e.created_at), esc(e.username || 'anon'), esc(e.page || ''),
+        esc(e.message), '<span class="mono">' + esc((e.source || '') + (e.line ? ':' + e.line : '')) + '</span>']));
+
+    table('t-logins', ['When', 'User', 'Event', 'IP'],
+      s.logins.map(l => [when(l.created_at), esc(l.username),
+        '<span class="tag ' + (l.action === 'LOGIN' || l.action === 'LOGOUT' || l.action === 'PASSWORD_CHANGED'
+          ? 't-ok' : 't-warn') + '">' + esc(l.action) + '</span>', esc(l.ip_address || '')]));
+
+    table('t-overrides', ['When', 'KPI', 'Period', 'Computed → Override', 'By', 'Reason', 'State'],
+      s.overrides.map(o => [when(o.created_at), esc(o.kpi_key), o.year + '-' + String(o.month).padStart(2, '0'),
+        esc(o.value_computed ?? '—') + ' → <strong>' + esc(o.value_override) + '</strong>',
+        esc(o.created_by_name || ''), esc(o.reason),
+        o.cleared_at ? '<span class="tag t-warn">cleared</span>' : '<span class="tag t-ok">active</span>']));
+  }
+
+  async function runWatchdog() {
+    const btn = document.getElementById('wd-btn');
+    btn.disabled = true; btn.textContent = 'Running…';
+    try {
+      await fetch(API + '/monitor/watchdog/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+        body: '{}',
+      });
+    } catch (e) { /* summary reload shows the outcome either way */ }
+    btn.disabled = false; btn.textContent = '▶ Run checks now';
+    load();
+  }
+
+  load();
+  setInterval(load, 60000);
+</script>
+</body>
+</html>

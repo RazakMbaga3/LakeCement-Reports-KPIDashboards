@@ -16,6 +16,7 @@ const db      = require('../db');
 const { requireAuth }       = require('../middleware/auth');
 const { requireFormAccess } = require('../middleware/formAccess');
 const { validate, z, zDate, zShift } = require('../middleware/validate');
+const { formSubmissions } = require('../services/metrics');
 
 const router = express.Router();
 
@@ -64,6 +65,7 @@ router.post('/:formType',
         'INSERT INTO audit_log (user_id, username, action, form_type, record_date, ip_address) VALUES ($1,$2,$3,$4,$5,$6)',
         [req.user.id, req.user.username, 'FORM_SUBMIT', formType, date, req.ip]
       );
+      formSubmissions.inc({ form_type: formType });
 
       res.json({ success: true, record: result.rows[0] });
     } catch (err) { next(err); }
