@@ -72,14 +72,23 @@ const DISPATCH = [
 ];
 const POWER = [
   { pwr_crusher_kwh: 5000, pwr_rawmill_kwh: 10000, pwr_coalmill_kwh: 5000, pwr_kiln_kwh: 15000,
-    pwr_cm2_kwh: 8000, pwr_packing_kwh: 3000, pwr_utils_kwh: 2000, pwr_lighting_kwh: 2000,
-    pwr_kiln_prod_mt: 1500, pwr_cm2_prod_mt: 500 },   // total 50000, clinker subset 35000
+    pwr_cm1_kwh: 6000, pwr_cm2_kwh: 8000, pwr_packing_kwh: 3000, pwr_packing2_kwh: 500,
+    pwr_utils_kwh: 2000, pwr_lighting_kwh: 2000,
+    pwr_kiln_prod_mt: 1500, pwr_cm1_prod_mt: 300, pwr_cm2_prod_mt: 500 }, // clinker subset 35000
   { pwr_crusher_kwh: 5000, pwr_rawmill_kwh: 11000, pwr_coalmill_kwh: 5000, pwr_kiln_kwh: 16000,
-    pwr_cm2_kwh: 8000, pwr_packing_kwh: 1000, pwr_utils_kwh: 1000, pwr_lighting_kwh: 1000,
-    pwr_kiln_prod_mt: 1600, pwr_cm2_prod_mt: 400 },   // total 48000, clinker subset 37000
+    pwr_cm1_kwh: 6000, pwr_cm2_kwh: 8000, pwr_packing_kwh: 1000, pwr_packing2_kwh: 0,
+    pwr_utils_kwh: 1000, pwr_lighting_kwh: 1000,
+    pwr_kiln_prod_mt: 1600, pwr_cm1_prod_mt: 250, pwr_cm2_prod_mt: 400 }, // clinker subset 37000
   { pwr_crusher_kwh: 5000, pwr_rawmill_kwh: 9000, pwr_coalmill_kwh: 4000, pwr_kiln_kwh: 15000,
-    pwr_cm2_kwh: 7000, pwr_packing_kwh: 1000, pwr_utils_kwh: 500, pwr_lighting_kwh: 500,
-    pwr_kiln_prod_mt: 1400, pwr_cm2_prod_mt: 600 },   // total 42000, clinker subset 33000
+    pwr_cm1_kwh: 5000, pwr_cm2_kwh: 7000, pwr_packing_kwh: 1000, pwr_packing2_kwh: 0,
+    pwr_utils_kwh: 500, pwr_lighting_kwh: 500,
+    pwr_kiln_prod_mt: 1400, pwr_cm1_prod_mt: 200, pwr_cm2_prod_mt: 600 }, // clinker subset 33000
+];
+// clinker consumed = 80% of total cement produced each day (clean clinker factor)
+const CEMENT_MILL = [
+  { cm_clinker_cons: 640, cm1_425r_mt: 300, cm2_425r_mt: 500 }, // total prod 800
+  { cm_clinker_cons: 520, cm1_425r_mt: 250, cm2_425r_mt: 400 }, // total prod 650
+  { cm_clinker_cons: 640, cm1_425r_mt: 200, cm2_425r_mt: 600 }, // total prod 800
 ];
 const PILE = [
   { cao_h1: 44, cao_h2: 46 }, // daily avg 45
@@ -95,12 +104,18 @@ const EXPECTED = {
   'blaine-425r':        (3400 + 3500 + 3600) / 3,                                     // 3500
   'strength-28d':       (42 + 43 + 44) / 3,                                           // 43
   'pile-cao-avg':       (45 + 43) / 2,                                                // 44
-  'total-power-kwh':    50000 + 48000 + 42000,                                        // 140000
+  'total-power-kwh':    56500 + 54000 + 47000,                                        // 157500
   'specific-thermal-energy-consumption':
-    (250 * 4800 * 1000 + 260 * 4900 * 1000 + 240 * 4700 * 1000) / (2000 + 2100 + 1900),
-  'specific-power-consumption-total':        (50000 + 48000 + 42000) / (2000 + 2000 + 2000),
+    (250 * 4800 + 260 * 4900 + 240 * 4700) / (2000 + 2100 + 1900),
+  // upstream-of-clinker kWh per ton clinker, unaffected by the cement-mill split
   'specific-power-consumption-up-to-clinker': (35000 + 37000 + 33000) / (1500 + 1600 + 1400),
-  'specific-power-consumption-cement-grinding': (8000 + 8000 + 7000) / (500 + 400 + 600),
+  // both cement mills combined (CM-1 + CM-2), weighted by their combined production
+  'specific-power-consumption-cement-grinding':
+    ((6000 + 8000) + (6000 + 8000) + (5000 + 7000)) / (800 + 650 + 800),
+  // 3-layer build: Σ(upstream kWh/ton-clinker × clinker consumed) + Σ(downstream kWh), ÷ Σ cement produced
+  'specific-power-consumption-total':
+    ((35000 / 1500 * 640) + (37000 / 1600 * 520) + (33000 / 1400 * 640) +
+     (21500 + 17000 + 14000)) / (800 + 650 + 800),
 };
 
 async function seedTestUsers() {
@@ -171,6 +186,7 @@ async function main() {
       await submit(tok.production, 'quality',      DATES[i], QUALITY[i]);
       await submit(tok.logistics,  'dispatch',     DATES[i], DISPATCH[i]);
       await submit(tok.cpp,        'power-cons',   DATES[i], POWER[i]);
+      await submit(tok.production, 'cement-mill',  DATES[i], CEMENT_MILL[i]);
       if (Object.keys(PILE[i]).length) {
         await submit(tok.production, 'pile-quality', DATES[i], PILE[i]);
       }

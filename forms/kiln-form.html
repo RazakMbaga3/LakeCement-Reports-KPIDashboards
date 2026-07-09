@@ -40,7 +40,7 @@
 <div class="toolbar">
   <div class="tb-group">
     <span class="tb-lbl">Date</span>
-    <input type="date" class="tb-ctl" value="2026-06-04" data-field="date" />
+    <input type="date" class="tb-ctl" data-field="date" />
   </div>
   <div class="tb-sep"></div>
   <div class="tb-group">
@@ -491,18 +491,18 @@ initKpiLive([
   },
   /* Running hours KPI */
   { kpi:'kiln_run_kpi', field:'kiln_run_hrs', fmt:'n1' },
-  /* Specific heat â€” coal_cons(MT) Ã— NCV(kcal/kg) Ã— 1000 Ã· clinker(MT) */
+  /* Specific heat â€” coal_cons(MT) Ã— NCV(kcal/kg) Ã· clinker(MT); MT/MT cancels, no Ã—1000 */
   { kpi:'kiln_sp_heat_kpi', fmt:'n0',
     compute: function(f,n){
       var prod = n(f.kiln_prod_mt), coal = n(f.kiln_coal_cons), ncv = n(f.kiln_coal_ncv);
-      return (prod > 0 && ncv > 0) ? coal * ncv * 1000 / prod : null;
+      return (prod > 0 && ncv > 0) ? coal * ncv / prod : null;
     },
     target:800, sign:'<=', targetLabel:'Target: < 800 kcal/kg'
   },
   { kpi:'kiln_sp_heat_kpi2', fmt:'n0',
     compute: function(f,n){
       var prod = n(f.kiln_prod_mt), coal = n(f.kiln_coal_cons), ncv = n(f.kiln_coal_ncv);
-      return (prod > 0 && ncv > 0) ? coal * ncv * 1000 / prod : null;
+      return (prod > 0 && ncv > 0) ? coal * ncv / prod : null;
     }
   },
   /* Coal % of clinker */

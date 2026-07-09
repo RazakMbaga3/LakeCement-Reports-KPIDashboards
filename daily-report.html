@@ -43,6 +43,7 @@
       font-size:11px; font-weight:700; background:#FFF3E0; color:var(--orange);
       border:1px solid #FDE68A;
     }
+    .rpt-pill.is-submitted { background:#E8F5EC; color:var(--green); border-color:#B7E4C7; }
     .rpt-pill::before { content:''; width:7px; height:7px; border-radius:50%; background:currentColor; }
     .btn { padding:6px 16px; border-radius:var(--radius); font-family:var(--font); font-size:12px; font-weight:700; cursor:pointer; border:1.5px solid transparent; transition:all .15s; }
     .btn-save   { background:var(--orange); color:white; border-color:var(--orange); }
@@ -369,7 +370,7 @@
 <div class="toolbar">
   <div class="tb-group">
     <span class="tb-lbl">Date</span>
-    <input type="date" class="tb-ctl" value="2026-05-03" data-field="date" />
+    <input type="date" class="tb-ctl" data-field="date" />
   </div>
   <div class="tb-sep"></div>
   <div class="tb-group">

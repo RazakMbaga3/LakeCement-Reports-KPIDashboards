@@ -6,6 +6,11 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Hide number input spin arrows everywhere (Chrome/Safari/Edge + Firefox) */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+
 :root {
   --navy:        #173158;
   --navy-light:  #1E3D70;

@@ -81,11 +81,25 @@ Last audit: 2026-07-05.
       series, override RBAC/reason/supersede/clear/permanence/audit,
       structural no-math-in-pages). "Change formula → all dashboards
       change" holds structurally: pages render only /api/formula output.
-- NOTE for formula review with the plant: the ported Specific Thermal
-  Energy formula (coal × NCV × 1000 / prod) yields ~600,000 against a
-  target of 780 kcal/kg — the ×1000 factor looks unit-inconsistent. It was
-  ported verbatim (both old copies had it); fixing it is now a one-line,
-  versioned registry change once production confirms the intended units.
+- [x] RESOLVED 2026-07-09: Specific Thermal Energy formula's ×1000 factor
+  confirmed wrong against the source Excel (Production Report / Master
+  production report — Q54 = NCV × coal%, no ×1000; coal MT and clinker MT
+  cancel directly). Fixed in formula-registry.js (v1→v2) and the leftover
+  inline duplicate in kiln-form.html; accept-phase3.js expectation updated
+  to match.
+- [x] RESOLVED 2026-07-09: Specific Power Consumption formulas rebuilt to
+  match the source Excel's 3-layer method (per-department kWh → per-ton
+  clinker → clinker-factor-scaled to per-ton equivalent cement), using new
+  cement-mill facts (cm_clinker_cons + CM1/CM2 grade tonnages). Also found
+  Cement Mill-1's kWh/production inputs on power-form.html existed with no
+  data-field — CM-1 power was silently excluded from every SPC KPI and the
+  form's own live-preview total. Wired up (pwr_cm1_kwh, pwr_cm1_prod_mt)
+  plus a same class of gap on Packing Plant-2 (pwr_packing2_kwh). "Up to
+  Clinker" remains a documented simplification (direct kWh/clinker-MT,
+  not the Excel per-department 1.55×/coal%/limestone-ratio build) because
+  Crusher/Raw Mill/Coal Mill output tonnages aren't captured by any form
+  yet — needed for full parity. accept-phase3.js fixtures/expectations
+  updated and verified against the live registry code.
 
 ## Phase 4 — Odoo Integration (read-only) — ⬜ NOT STARTED
 

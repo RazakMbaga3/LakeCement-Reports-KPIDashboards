@@ -36,6 +36,21 @@
     return { values, named };
   }
 
+  /* ── Clear: blank every editable input (leaves the date field alone —
+     it already holds the newly-picked date). Used when switching to a
+     date that has no saved snapshot, so stale values from the previously
+     loaded date don't linger and get mistaken for that date's data. ──── */
+  function _clearForm(scope) {
+    [...scope.querySelectorAll(_SEL)].forEach(el => {
+      if (el.type === 'date') return;
+      el.value = '';
+    });
+    scope.querySelectorAll('.cao-input').forEach(inp => {
+      inp.dispatchEvent(new Event('change'));
+    });
+    document.dispatchEvent(new CustomEvent('nyati:restored'));
+  }
+
   /* ── Restore: positional first, named fields override ───────────── */
   function _restore(scope, payload) {
     // Support both old format (plain array) and new format (object with inputs/data)
@@ -62,7 +77,12 @@
   /* ── Get the toolbar date input value ──────────────────────────── */
   function _dateVal(scope) {
     const d = scope.querySelector('input[type="date"]');
-    return d ? d.value : new Date().toISOString().slice(0, 10);
+    return d ? d.value : _todayStr();
+  }
+
+  /* ── Today, as YYYY-MM-DD ─────────────────────────────────────── */
+  function _todayStr() {
+    return new Date().toISOString().slice(0, 10);
   }
 
   /* ── localStorage key ───────────────────────────────────────────── */
@@ -293,6 +313,9 @@
   /* ── Lock form after submission ──────────────────────────────────── */
   function _lockForm() {
     document.querySelectorAll('.ci, .tb-ctl').forEach(inp => {
+      // The date picker itself stays live — locking it would trap the
+      // user on this date with no way to move to a fresh, unsubmitted one.
+      if (inp.type === 'date') return;
       inp.setAttribute('readonly', '');
       inp.style.opacity  = '.65';
       inp.style.cursor   = 'not-allowed';
@@ -324,6 +347,32 @@
       });
       document.body.prepend(banner);
     }
+  }
+
+  /* ── Unlock form — reverses _lockForm(), used when the date is
+     changed away from a previously-submitted date. ─────────────────── */
+  function _unlockForm() {
+    document.querySelectorAll('.ci, .tb-ctl').forEach(inp => {
+      inp.removeAttribute('readonly');
+      inp.style.opacity = '';
+      inp.style.cursor  = '';
+      inp.style.pointerEvents = '';
+    });
+    document.querySelectorAll('.btn-save, .btn-sub').forEach(b => {
+      b.disabled = false;
+      b.style.opacity = '';
+      b.style.cursor  = '';
+    });
+    document.getElementById('_nyb')?.remove();
+  }
+
+  /* ── Sync the toolbar DRAFT/SUBMITTED pill to the real status ──────── */
+  function _updateStatusPill(status) {
+    const pill = document.querySelector('.rpt-pill');
+    if (!pill) return;
+    const submitted = status === 'submitted';
+    pill.textContent = submitted ? 'SUBMITTED' : 'DRAFT';
+    pill.classList.toggle('is-submitted', submitted);
   }
 
   /* ── Anomaly check at submit time ─────────────────────────────────
@@ -365,6 +414,12 @@
     const body      = document.body;
     const dateInput = body.querySelector('input[type="date"]');
 
+    /* Default to today, not whatever demo date is baked into the HTML —
+       a daily report should open on the current day, every day. */
+    if (dateInput && !dateInput.value) {
+      dateInput.value = _todayStr();
+    }
+
     /* Save Draft — saves locally immediately, syncs to server best-effort */
     body.querySelectorAll('.btn-save').forEach(btn => {
       btn.addEventListener('click', async e => {
@@ -372,6 +427,7 @@
         const { date, payload } = _write(formId, 'draft');
         _toast(`Draft saved — ${date}`, 'ok');
         _updateSavedChip('draft');
+        _updateStatusPill('draft');
         document.dispatchEvent(new CustomEvent('nyati:saved', { detail: { formId, date } }));
 
         const sync = await _syncToServer(formId, date, payload.data, 'draft');
@@ -428,6 +484,7 @@
 
         _lockForm();
         _updateSavedChip('submitted');
+        _updateStatusPill('submitted');
         document.dispatchEvent(new CustomEvent('nyati:submitted', { detail: { formId, date } }));
 
         const sync = await _syncToServer(formId, date, payload.data, 'submitted');
@@ -441,13 +498,20 @@
       });
     });
 
-    /* On date change → load saved data for that date */
+    /* On date change → load saved data for that date, or start a clean
+       draft if none exists. Always unlock first: a date switch away from
+       a submitted day must never leave the new day's fields frozen. */
     if (dateInput) {
       dateInput.addEventListener('change', async () => {
+        _unlockForm();
         const meta = await _read(formId, dateInput.value);
         if (meta) {
           _toast(`Loaded ${meta.status} — ${meta.date}`, 'ok');
+          _updateStatusPill(meta.status);
           if (meta.status === 'submitted') _lockForm();
+        } else {
+          _clearForm(body);
+          _updateStatusPill('draft');
         }
       });
     }
@@ -463,9 +527,12 @@
       }
     }, 60000);
 
-    /* On page load → silently restore today's data if saved */
+    /* On page load → silently restore today's data if saved, and reflect
+       the real status on the toolbar pill (was previously stuck on the
+       static "DRAFT" text baked into the HTML). */
     if (dateInput && dateInput.value) {
       _read(formId, dateInput.value).then(meta => {
+        _updateStatusPill(meta ? meta.status : 'draft');
         if (meta && meta.status === 'submitted') _lockForm();
       });
     }
