@@ -21,6 +21,10 @@ const pool = new Pool({
   database: process.env.DB_NAME,
   user:     process.env.DB_USER,
   password: process.env.DB_PASSWORD,
+  // Render's external Postgres endpoint requires SSL; its internal endpoint
+  // (used by the deployed backend itself) doesn't need it. Opt in via env
+  // so local scripts can reach the external host without affecting prod.
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
 });
 
 // Test the connection when the server starts
