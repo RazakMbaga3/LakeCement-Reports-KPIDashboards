@@ -1,0 +1,48 @@
+databases:
+  - name: lakecement-mis-db
+    plan: free
+    databaseName: lcl_mis
+    user: lcl_admin
+
+services:
+  - type: web
+    name: lakecement-mis-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run db:init && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: lakecement-mis-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: lakecement-mis-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: lakecement-mis-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: lakecement-mis-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: lakecement-mis-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 8h
+      - key: ALLOWED_ORIGIN
+        value: https://lake-cement-reports-kpi-dashboards.vercel.app
+      - key: TRUST_PROXY
+        value: "1"
+      - key: WATCHDOG_CRON
+        value: "off"
+      - key: BACKUP_CRON
+        value: "off"
