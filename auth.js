@@ -376,6 +376,15 @@ function getMyDailyAccess() {
   return u ? (_DAILY_ACCESS[u.role] || { edit:[], nav:[] }) : { edit:[], nav:[] };
 }
 
+/* Which standalone forms/*.html formTypes this role may submit — mirrors
+   _FORM_TYPE_ACCESS (declared further down this file). Used by portal.js
+   to decide which "Daily Reports" tiles to show, same way getMyDailyAccess()
+   drives tile visibility for the 3 hub-style pages. */
+function getMyFormAccess() {
+  const u = getCurrentUser();
+  return u ? (_FORM_TYPE_ACCESS[u.role] || []) : [];
+}
+
 function getAllowedKPIDepts() {
   const p = _getPerms();
   return p.kpi?.depts || [];
