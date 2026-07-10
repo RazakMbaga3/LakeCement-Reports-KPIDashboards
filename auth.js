@@ -774,11 +774,11 @@ const _DAILY_ACCESS = {
   cpp:        { edit: ['daily-report.html','power-plant-report.html'],
                 nav:  ['daily-report.html','power-plant-report.html'] },
   pm:         { edit: ['daily-report.html'],
-                nav:  ['daily-report.html'] },
+                nav:  ['daily-report.html','power-form.html'] },
   it:         { edit: [],
                 nav:  ['daily-report.html'] },
   logistics:  { edit: ['daily-report.html'],
-                nav:  ['daily-report.html'] },
+                nav:  ['daily-report.html','dispatch-form.html'] },
   mining:     { edit: ['mines-report.html'],
                 nav:  ['daily-report.html','mines-report.html'] },
   production: { edit: ['daily-report.html'],
@@ -789,9 +789,11 @@ const _DAILY_ACCESS = {
    DAILY NAV CATALOGUE — single source of truth for the reports stripe
 ══════════════════════════════════════════════════════════════════════ */
 const _DAILY_NAV_ITEMS = [
-  { page:'daily-report.html',       label:'Production',  icon:'factory',  hRoot:'daily-report.html',       hForm:'../daily-report.html' },
-  { page:'power-plant-report.html', label:'Power Plant', icon:'zap',      hRoot:'power-plant-report.html', hForm:'../power-plant-report.html' },
-  { page:'mines-report.html',       label:'Mines',       icon:'pickaxe',  hRoot:'mines-report.html',       hForm:'../mines-report.html' },
+  { page:'daily-report.html',       label:'Production',   icon:'factory',   hRoot:'daily-report.html',       hForm:'../daily-report.html' },
+  { page:'power-plant-report.html', label:'Power Plant',  icon:'zap',       hRoot:'power-plant-report.html', hForm:'../power-plant-report.html' },
+  { page:'mines-report.html',       label:'Mines',        icon:'pickaxe',   hRoot:'mines-report.html',       hForm:'../mines-report.html' },
+  { page:'power-form.html',         label:'Power Cons.',  icon:'activity',  hRoot:'forms/power-form.html',    hForm:'power-form.html' },
+  { page:'dispatch-form.html',      label:'Dispatch & SO', icon:'truck',    hRoot:'forms/dispatch-form.html', hForm:'dispatch-form.html' },
 ];
 
 function buildDailyNav() {
@@ -870,9 +872,9 @@ document.addEventListener('DOMContentLoaded', function () {
 ══════════════════════════════════════════════════════════════════════ */
 const _FORM_TYPE_ACCESS = {
   production: ['production','quality','kiln','cement-mill','materials','limestone','pile-quality','stoppage'],
-  pm:         ['production','stoppage'],
+  pm:         ['production','stoppage','power-cons'],
   logistics:  ['production','dispatch'],
-  cpp:        ['production','power-plant','power-cons','cpp'],
+  cpp:        ['production','power-plant','cpp'],
   mining:     ['mines'],
   hr: [], stores: [], it: [], md: [], admin: [], management: [], finance: [],
 };
@@ -921,8 +923,6 @@ function applyDailyPermissions() {
   const _IE_BTN_ROLES = {
     'ie-btn-quality':   ['production'],
     'ie-btn-stoppages': ['pm', 'production'],
-    'ie-btn-dispatch':  ['logistics'],
-    'ie-btn-power':     ['cpp'],
   };
   Object.entries(_IE_BTN_ROLES).forEach(([btnId, allowedRoles]) => {
     const btn = document.getElementById(btnId);

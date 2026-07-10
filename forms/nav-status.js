@@ -6,8 +6,9 @@
      – green  = submitted today
      – amber  = draft saved today
      – grey   = not started / no data
-   • Dot is role-aware: logistics sees dispatch fill status on the
-     Production tab, PM sees stoppage status, etc.
+   • Dot is role-aware: PM sees stoppage fill status on the shared
+     Production tab; each hub page (incl. the standalone Power Cons. /
+     Dispatch & SO tabs) otherwise shows its own form's fill status.
    ══════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -20,13 +21,13 @@
     'daily-report.html':       'production',
     'power-plant-report.html': 'power-plant',
     'mines-report.html':       'mines',
+    'power-form.html':         'power-cons',
+    'dispatch-form.html':      'dispatch',
   };
 
   /* Role → { pageName: formId } — which form ID to check for fill status */
   const ROLE_SECTION_MAP = {
-    logistics:  { 'daily-report.html': 'dispatch' },
     pm:         { 'daily-report.html': 'stoppage' },
-    cpp:        { 'daily-report.html': 'power-cons', 'power-plant-report.html': 'power-plant' },
     production: { 'daily-report.html': 'quality', 'power-plant-report.html': 'power-plant', 'mines-report.html': 'mines' },
     mining:     { 'mines-report.html': 'mines', 'daily-report.html': 'mines' },
     stores:     { 'daily-report.html': 'materials' },

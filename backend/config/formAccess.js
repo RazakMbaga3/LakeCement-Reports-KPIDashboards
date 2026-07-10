@@ -9,9 +9,9 @@
 */
 const ROLE_FORM_ACCESS = {
   production: ['production', 'quality', 'kiln', 'cement-mill', 'materials', 'limestone', 'pile-quality', 'stoppage'],
-  pm:         ['production', 'stoppage'],
+  pm:         ['production', 'stoppage', 'power-cons'],
   logistics:  ['production', 'dispatch'],
-  cpp:        ['production', 'power-plant', 'power-cons', 'cpp'],
+  cpp:        ['production', 'power-plant', 'cpp'],
   mining:     ['mines'],
   hr: [], stores: [], it: [], md: [], admin: [], management: [], finance: [],
 };

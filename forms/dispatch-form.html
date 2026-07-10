@@ -134,21 +134,27 @@
       </div>
     </div>
     <div class="tbl-scroll">
-      <table class="rt" style="min-width:1200px">
+      <table class="rt" style="min-width:1900px">
         <thead>
           <tr>
-            <th class="tl grp-hdr" rowspan="2" style="min-width:140px">Metric</th>
-            <th class="grp-hdr" colspan="3">42.5 R — Regular Bags</th>
-            <th class="grp-hdr" colspan="3">42.5 N / B-M — Bags</th>
+            <th class="tl grp-hdr" rowspan="2" style="min-width:120px">Metric</th>
+            <th class="grp-hdr" colspan="3">42.5 R</th>
+            <th class="grp-hdr" colspan="3">42.5 N B-M</th>
+            <th class="grp-hdr" colspan="3">42.5 N</th>
+            <th class="grp-hdr" colspan="3">32.5 N</th>
+            <th class="grp-hdr" colspan="3">OPC 42.5 N</th>
             <th class="grp-hdr" colspan="2">Bulker</th>
             <th class="grp-hdr" colspan="2">Big Bags</th>
+            <th class="grp-hdr" rowspan="2">Clinker<br><small style="font-size:8px;font-weight:400;color:rgba(255,255,255,.6)">(MT)</small></th>
             <th class="grp-hdr" colspan="2">TOTAL</th>
             <th class="grp-hdr" rowspan="2">Avg Daily<br>Dispatch</th>
           </tr>
           <tr>
             <th>On Date<br><small style="font-size:8px;font-weight:400;color:rgba(255,255,255,.6)">(MT)</small></th>
-            <th>MTD<br><small style="font-size:8px;font-weight:400;color:rgba(255,255,255,.6)">(MT)</small></th>
-            <th>YTD<br><small style="font-size:8px;font-weight:400;color:rgba(255,255,255,.6)">(MT)</small></th>
+            <th>MTD</th><th>YTD</th>
+            <th>On Date</th><th>MTD</th><th>YTD</th>
+            <th>On Date</th><th>MTD</th><th>YTD</th>
+            <th>On Date</th><th>MTD</th><th>YTD</th>
             <th>On Date</th><th>MTD</th><th>YTD</th>
             <th>On Date</th><th>MTD</th>
             <th>On Date</th><th>MTD</th>
@@ -157,21 +163,31 @@
         </thead>
         <tbody>
           <!-- SALES ON DATE -->
-          <tr class="srow"><td colspan="14">Sales Dispatch</td></tr>
+          <tr class="srow"><td colspan="22">Sales Dispatch</td></tr>
 
           <tr>
             <td class="tp">Sales On Date</td>
             <td class="cm"><input class="ci" type="number" value="346.5" data-field="dispatch_425r" /></td>
             <td class="cf"><div class="cv">7,412</div></td>
             <td class="cf"><div class="cv">26,890</div></td>
-            <td class="cm"><input class="ci" type="number" value="30" data-field="dispatch_425n" /></td>
+            <td class="cm"><input class="ci" type="number" value="30" data-field="dispatch_425nbm" /></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_425n" /></td>
             <td class="cf"><div class="cv">880</div></td>
             <td class="cf"><div class="cv">3,200</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_325n" /></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_opc425n" /></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_bulker" /></td>
             <td class="cf"><div class="cv">0</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_bigbag" /></td>
             <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">376.5</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_clinker" /></td>
+            <td class="cf"><div class="cv" data-kpi="dispatch_total_col">376.5</div></td>
             <td class="cf"><div class="cv">8,292</div></td>
             <td class="cf"><div class="cv">415.1</div></td>
           </tr>
@@ -181,12 +197,21 @@
             <td class="cf"><div class="cv">7,412</div></td>
             <td class="cs"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">880</div></td>
             <td class="cs"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">0</div></td>
             <td class="cs"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">0</div></td>
+            <td class="cs"><div class="cv">—</div></td>
             <td class="cs"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">8,292</div></td>
             <td class="cs"><div class="cv">—</div></td>
@@ -198,35 +223,52 @@
             <td class="cf"><div class="cv">26,890</div></td>
             <td class="cf"><div class="cv">—</div></td>
             <td class="cs"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">3,200</div></td>
             <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
             <td class="cs"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">0</div></td>
             <td class="cf"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">0</div></td>
             <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">30,090</div></td>
             <td class="cf"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">389.5</div></td>
           </tr>
 
-          <tr class="srow"><td colspan="14">Sales Orders &amp; Pendency</td></tr>
+          <tr class="srow"><td colspan="22">Sales Orders &amp; Pendency</td></tr>
 
           <tr>
             <td class="tp">SO Pendency</td>
             <td class="cm"><input class="ci" type="number" value="1,240" data-field="so_425r" /></td>
             <td class="cf"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="315" data-field="so_425nbm" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
             <td class="cm"><input class="ci" type="number" value="320" data-field="so_425n" /></td>
             <td class="cf"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="so_bulker" /></td>
+            <td class="cm"><input class="ci" type="number" value="154" data-field="so_325n" /></td>
             <td class="cf"><div class="cv">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="so_bigbag" /></td>
             <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">1,560</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="so_opc425n" /></td>
             <td class="cf"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="30" data-field="so_bulker" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="60" data-field="so_bigbag" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="so_clinker" /></td>
+            <td class="cf"><div class="cv" data-kpi="so_total_col">1,879</div></td>
+            <td class="cf"><div class="cv">—</div></td>
           </tr>
 
           <tr class="trow">
@@ -235,19 +277,32 @@
             <td class="cm"><input class="ci" type="number" value="9,000" /></td>
             <td class="cf"><div class="cv">—</div></td>
             <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="900" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
             <td class="cm"><input class="ci" type="number" value="1,200" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="300" /></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cf"><div class="cv">—</div></td>
             <td class="cs"><div class="cv">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cs"><div class="cv">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cs"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
             <td class="cm"><input class="ci" type="number" value="10,200" /></td>
             <td class="cf"><div class="cv">510.0</div></td>
           </tr>
 
         </tbody>
       </table>
+    </div>
+    <div class="rcard-sub" style="padding:8px 20px 4px;font-style:italic">
+      MTD/YTD columns for 42.5N B-M, 32.5N, OPC 42.5N &amp; Clinker are not yet
+      auto-accumulated from daily entries — shown as "—" until that rollup is built.
     </div>
   </div>
 
@@ -257,8 +312,8 @@
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="truck" class="title-icon"></i> Vehicles Status @ 6:00 AM</div>
-        <div class="rcard-sub">Trucks present at plant gate / loading bay</div>
+        <div class="rcard-title"><i data-lucide="truck" class="title-icon"></i> Vehicle Queue Status</div>
+        <div class="rcard-sub">Trucks loaded / waiting at plant gate &amp; loading bay — matches source Excel's vehicle tracking categories</div>
       </div>
       <div class="rcard-chips">
         <span class="rcard-chip orange">PACKING DEPT</span>
@@ -269,39 +324,39 @@
         <thead>
           <tr>
             <th class="tl grp-hdr" style="min-width:180px">Vehicle Type</th>
-            <th class="grp-hdr">Count @ 6 AM</th>
-            <th class="grp-hdr">Loaded by EOD</th>
-            <th class="grp-hdr">Pending Loading</th>
+            <th class="grp-hdr">Loaded After 12 PM</th>
+            <th class="grp-hdr">Inside Plant for Loading</th>
+            <th class="grp-hdr">Outside Plant Waiting</th>
             <th class="grp-hdr">Remarks</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td class="tp">Regular Trucks (Bags)</td>
-            <td class="cm"><input class="ci" type="number" value="14" /></td>
-            <td class="cm"><input class="ci" type="number" value="14" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="text" value="All cleared" style="text-align:left;padding-left:10px" /></td>
+            <td class="cm"><input class="ci" type="number" value="5" data-field="veh_reg_loaded_after12" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="veh_reg_inside_waiting" /></td>
+            <td class="cm"><input class="ci" type="number" value="1" data-field="veh_reg_outside_waiting" /></td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:10px" /></td>
           </tr>
           <tr>
             <td class="tp">Bulker Trucks</td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="veh_bulker_loaded_after12" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="veh_bulker_inside_waiting" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="veh_bulker_outside_waiting" /></td>
             <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:10px" /></td>
           </tr>
           <tr>
             <td class="tp">Big Bag Trucks</td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="veh_bigbag_loaded_after12" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="veh_bigbag_inside_waiting" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="veh_bigbag_outside_waiting" /></td>
             <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:10px" /></td>
           </tr>
           <tr class="trow">
             <td class="tp">TOTAL</td>
-            <td class="cf"><div class="cv">14</div></td>
-            <td class="cf"><div class="cv">14</div></td>
-            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv" data-kpi="veh_loaded_total">5</div></td>
+            <td class="cf"><div class="cv" data-kpi="veh_inside_total">0</div></td>
+            <td class="cf"><div class="cv" data-kpi="veh_outside_total">1</div></td>
             <td class="cs"><div class="cv" style="text-align:left;padding-left:10px">—</div></td>
           </tr>
         </tbody>
@@ -574,17 +629,30 @@
 <script src="excel-export.js"></script>
 <script src="kpi-live.js"></script>
 <script>
+function _dispatchTotal(f, n) {
+  return n(f.dispatch_425r)+n(f.dispatch_425nbm)+n(f.dispatch_425n)+n(f.dispatch_325n)
+        +n(f.dispatch_opc425n)+n(f.dispatch_bulker)+n(f.dispatch_bigbag)+n(f.dispatch_clinker);
+}
+function _soTotal(f, n) {
+  return n(f.so_425r)+n(f.so_425nbm)+n(f.so_425n)+n(f.so_325n)
+        +n(f.so_opc425n)+n(f.so_bulker)+n(f.so_bigbag)+n(f.so_clinker);
+}
 initKpiLive([
-  { kpi:'dispatch_total', compute: function(f,n){ return n(f.dispatch_425r)+n(f.dispatch_425n)+n(f.dispatch_bulker)+n(f.dispatch_bigbag); }, fmt:'n1',
+  { kpi:'dispatch_total', compute: function(f,n){ return _dispatchTotal(f,n); }, fmt:'n1',
     rag: function(v){ return v>=350 ? 'on-track' : v>=250 ? 'watch' : 'concern'; } },
-  { kpi:'so_pendency',    compute: function(f,n){ return n(f.so_425r)+n(f.so_425n)+n(f.so_bulker)+n(f.so_bigbag); }, fmt:'n0' },
+  { kpi:'dispatch_total_col', compute: function(f,n){ return _dispatchTotal(f,n); }, fmt:'n1' },
+  { kpi:'so_pendency',    compute: function(f,n){ return _soTotal(f,n); }, fmt:'n0' },
+  { kpi:'so_total_col',   compute: function(f,n){ return _soTotal(f,n); }, fmt:'n0' },
   { kpi:'bags_packed',    compute: function(f,n){ return n(f.bags_pl1)+n(f.bags_pl2); }, fmt:'n0',
     target:7000, sign:'>=', targetLabel:'Target: ≥ 7,000 / day' },
   { kpi:'burst_rate',     compute: function(f,n){
       var b1=n(f.bags_pl1), b2=n(f.bags_pl2), tot=b1+b2;
       return tot ? (n(f.burst_rate_pl1)*b1 + n(f.burst_rate_pl2)*b2) / tot : null;
   }, fmt:'pct2',
-    target:0.30, sign:'<=', targetLabel:'Target: ≤ 0.30%' }
+    target:0.30, sign:'<=', targetLabel:'Target: ≤ 0.30%' },
+  { kpi:'veh_loaded_total',  compute: function(f,n){ return n(f.veh_reg_loaded_after12)+n(f.veh_bulker_loaded_after12)+n(f.veh_bigbag_loaded_after12); }, fmt:'n0' },
+  { kpi:'veh_inside_total',  compute: function(f,n){ return n(f.veh_reg_inside_waiting)+n(f.veh_bulker_inside_waiting)+n(f.veh_bigbag_inside_waiting); }, fmt:'n0' },
+  { kpi:'veh_outside_total', compute: function(f,n){ return n(f.veh_reg_outside_waiting)+n(f.veh_bulker_outside_waiting)+n(f.veh_bigbag_outside_waiting); }, fmt:'n0' }
 ]);
 </script>
 </body>

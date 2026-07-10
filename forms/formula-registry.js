@@ -37,10 +37,14 @@
     strength_28d: { source: 'manual', form: 'quality', field: 'strength_28d', unit: 'MPa' },
 
     // dispatch form
-    dispatch_425r:   { source: 'manual', form: 'dispatch', field: 'dispatch_425r',   unit: 'MT' },
-    dispatch_425n:   { source: 'manual', form: 'dispatch', field: 'dispatch_425n',   unit: 'MT' },
-    dispatch_bulker: { source: 'manual', form: 'dispatch', field: 'dispatch_bulker', unit: 'MT' },
-    dispatch_bigbag: { source: 'manual', form: 'dispatch', field: 'dispatch_bigbag', unit: 'MT' },
+    dispatch_425r:    { source: 'manual', form: 'dispatch', field: 'dispatch_425r',    unit: 'MT' },
+    dispatch_425nbm:  { source: 'manual', form: 'dispatch', field: 'dispatch_425nbm',  unit: 'MT' },
+    dispatch_425n:    { source: 'manual', form: 'dispatch', field: 'dispatch_425n',    unit: 'MT' },
+    dispatch_325n:    { source: 'manual', form: 'dispatch', field: 'dispatch_325n',    unit: 'MT' },
+    dispatch_opc425n: { source: 'manual', form: 'dispatch', field: 'dispatch_opc425n', unit: 'MT' },
+    dispatch_bulker:  { source: 'manual', form: 'dispatch', field: 'dispatch_bulker',  unit: 'MT' },
+    dispatch_bigbag:  { source: 'manual', form: 'dispatch', field: 'dispatch_bigbag',  unit: 'MT' },
+    dispatch_clinker: { source: 'manual', form: 'dispatch', field: 'dispatch_clinker', unit: 'MT' },
 
     // kiln form
     kiln_prod_mt:   { source: 'manual', form: 'kiln', field: 'kiln_prod_mt',   unit: 'MT' },
@@ -50,6 +54,7 @@
     // power consumption form
     pwr_crusher_kwh:   { source: 'manual', form: 'power-cons', field: 'pwr_crusher_kwh',   unit: 'kWh' },
     pwr_rawmill_kwh:   { source: 'manual', form: 'power-cons', field: 'pwr_rawmill_kwh',   unit: 'kWh' },
+    pwr_rawmill2_kwh:  { source: 'manual', form: 'power-cons', field: 'pwr_rawmill2_kwh',  unit: 'kWh' },
     pwr_coalmill_kwh:  { source: 'manual', form: 'power-cons', field: 'pwr_coalmill_kwh',  unit: 'kWh' },
     pwr_kiln_kwh:      { source: 'manual', form: 'power-cons', field: 'pwr_kiln_kwh',      unit: 'kWh' },
     pwr_cm1_kwh:       { source: 'manual', form: 'power-cons', field: 'pwr_cm1_kwh',       unit: 'kWh' },
@@ -58,9 +63,20 @@
     pwr_packing2_kwh:  { source: 'manual', form: 'power-cons', field: 'pwr_packing2_kwh',  unit: 'kWh' },
     pwr_utils_kwh:     { source: 'manual', form: 'power-cons', field: 'pwr_utils_kwh',     unit: 'kWh' },
     pwr_lighting_kwh:  { source: 'manual', form: 'power-cons', field: 'pwr_lighting_kwh',  unit: 'kWh' },
+    pwr_colony_kwh:    { source: 'manual', form: 'power-cons', field: 'pwr_colony_kwh',    unit: 'kWh' },
     pwr_kiln_prod_mt:  { source: 'manual', form: 'power-cons', field: 'pwr_kiln_prod_mt',  unit: 'MT' },
     pwr_cm1_prod_mt:   { source: 'manual', form: 'power-cons', field: 'pwr_cm1_prod_mt',   unit: 'MT' },
     pwr_cm2_prod_mt:   { source: 'manual', form: 'power-cons', field: 'pwr_cm2_prod_mt',   unit: 'MT' },
+
+    // power consumption form — source split & allocation (manual until meter/SCADA feed lands)
+    pwr_tanesco_kwh:         { source: 'manual', form: 'power-cons', field: 'pwr_tanesco_kwh',         unit: 'kWh' },
+    pwr_cpp_kwh:             { source: 'manual', form: 'power-cons', field: 'pwr_cpp_kwh',             unit: 'kWh' },
+    pwr_tanesco_clinker_kwh: { source: 'manual', form: 'power-cons', field: 'pwr_tanesco_clinker_kwh', unit: 'kWh' },
+    pwr_cpp_clinker_kwh:     { source: 'manual', form: 'power-cons', field: 'pwr_cpp_clinker_kwh',     unit: 'kWh' },
+    pwr_tanesco_cement_kwh:  { source: 'manual', form: 'power-cons', field: 'pwr_tanesco_cement_kwh',  unit: 'kWh' },
+    pwr_cpp_cement_kwh:      { source: 'manual', form: 'power-cons', field: 'pwr_cpp_cement_kwh',      unit: 'kWh' },
+    pwr_tanesco_colony_kwh:  { source: 'manual', form: 'power-cons', field: 'pwr_tanesco_colony_kwh',  unit: 'kWh' },
+    pwr_cpp_colony_kwh:      { source: 'manual', form: 'power-cons', field: 'pwr_cpp_colony_kwh',      unit: 'kWh' },
 
     // cement-mill form — clinker factor inputs (clinker consumed vs total cement produced)
     cm_clinker_cons: { source: 'manual', form: 'cement-mill', field: 'cm_clinker_cons', unit: 'MT' },
@@ -79,16 +95,17 @@
     FACTS['cao_h' + h] = { source: 'manual', form: 'pile-quality', field: 'cao_h' + h, unit: '%' };
   }
 
-  var KWH_ALL       = ['pwr_crusher_kwh', 'pwr_rawmill_kwh', 'pwr_coalmill_kwh', 'pwr_kiln_kwh',
+  var KWH_ALL       = ['pwr_crusher_kwh', 'pwr_rawmill_kwh', 'pwr_rawmill2_kwh', 'pwr_coalmill_kwh', 'pwr_kiln_kwh',
                        'pwr_cm1_kwh', 'pwr_cm2_kwh', 'pwr_packing_kwh', 'pwr_packing2_kwh',
-                       'pwr_utils_kwh', 'pwr_lighting_kwh'];
-  var KWH_CLINKER   = ['pwr_crusher_kwh', 'pwr_rawmill_kwh', 'pwr_coalmill_kwh', 'pwr_kiln_kwh'];
+                       'pwr_utils_kwh', 'pwr_lighting_kwh', 'pwr_colony_kwh'];
+  var KWH_CLINKER   = ['pwr_crusher_kwh', 'pwr_rawmill_kwh', 'pwr_rawmill2_kwh', 'pwr_coalmill_kwh', 'pwr_kiln_kwh'];
   var KWH_DOWNSTREAM = ['pwr_cm1_kwh', 'pwr_cm2_kwh', 'pwr_packing_kwh', 'pwr_packing2_kwh',
                         'pwr_utils_kwh', 'pwr_lighting_kwh'];
   var KWH_GRINDING  = ['pwr_cm1_kwh', 'pwr_cm2_kwh'];
   var CM_GRADES     = ['cm1_425r_mt', 'cm1_425n_mt', 'cm1_325n_mt', 'cm1_opc_mt',
                        'cm2_425r_mt', 'cm2_425n_mt', 'cm2_425n_bm_mt', 'cm2_325n_mt'];
-  var DISPATCH      = ['dispatch_425r', 'dispatch_425n', 'dispatch_bulker', 'dispatch_bigbag'];
+  var DISPATCH      = ['dispatch_425r', 'dispatch_425nbm', 'dispatch_425n', 'dispatch_325n',
+                       'dispatch_opc425n', 'dispatch_bulker', 'dispatch_bigbag', 'dispatch_clinker'];
   var CAO_HOLES     = Object.keys(FACTS).filter(function (k) { return k.indexOf('cao_h') === 0; });
 
   function sumOf(keys, f) { return keys.reduce(function (s, k) { return s + z0(f[k]); }, 0); }
