@@ -30,7 +30,7 @@ const PORT      = process.env.ACCEPT_PORT || 5906;
 const DOWN_PORT = 5907;
 const BASE      = `http://localhost:${PORT}/api`;
 const PW        = 'Accept@67890';
-const USERS     = { admin: 'p6_admin', production: 'p6_prod' };
+const USERS     = { admin: 'p6_admin', pm: 'p6_pm' };   /* pm — kiln is P&M-owned now */
 const MTOKEN    = 'accept6-metrics-token';
 const TEST_DATE = '1999-06-01'; // watchdog checks this day: kiln is missing
 const KILN_DATE = '1999-06-02'; // a real kiln submission for the metrics counter
@@ -130,7 +130,7 @@ async function main() {
     }
 
     const adminTok = await loginToken(USERS.admin);
-    const prodTok  = await loginToken(USERS.production);
+    const pmTok    = await loginToken(USERS.pm);
 
     // ── 1. Deep health ──────────────────────────────────────────
     const h = await api('GET', '/health');
@@ -150,7 +150,7 @@ async function main() {
     downChild.kill();
 
     // ── 3. Metrics ──────────────────────────────────────────────
-    await api('POST', '/reports/kiln', { token: prodTok, body: { date: KILN_DATE, data: { kiln_prod_mt: 1234 } } });
+    await api('POST', '/reports/kiln', { token: pmTok, body: { date: KILN_DATE, data: { kiln_prod_mt: 1234 } } });
 
     const mAnon = await api('GET', '/metrics');
     check('metrics endpoint rejects anonymous (401)', mAnon.status === 401, `got ${mAnon.status}`);
@@ -167,7 +167,7 @@ async function main() {
     // ── 4. Client error reporting ───────────────────────────────
     const e1 = await api('POST', '/client-errors', { body: { message: 'ACCEPT6 anonymous boom', page: 'login.html' } });
     const e2 = await api('POST', '/client-errors', {
-      token: prodTok,
+      token: pmTok,
       body: { message: 'ACCEPT6 attributed boom', page: 'kiln-form.html', source: 'kiln-form.html', line: 42, stack: 'Error: boom\n  at test' },
     });
     check('browser errors accepted (anonymous + attributed)',
@@ -178,7 +178,7 @@ async function main() {
     check('errors appear in the admin summary with attribution',
       sum.status === 200 &&
       errs.some(e => e.message === 'ACCEPT6 anonymous boom' && e.username === null) &&
-      errs.some(e => e.message === 'ACCEPT6 attributed boom' && e.username === USERS.production),
+      errs.some(e => e.message === 'ACCEPT6 attributed boom' && e.username === USERS.pm),
       `status ${sum.status}, ${errs.length} errors`);
     check('summary carries health + logins + overrides + alerts blocks',
       sum.body && sum.body.health && Array.isArray(sum.body.logins) &&
@@ -186,8 +186,8 @@ async function main() {
       sum.body.logins.some(l => l.username === USERS.admin && l.action === 'LOGIN'));
 
     // ── 5. RBAC ─────────────────────────────────────────────────
-    const sumProd = await api('GET', '/monitor/summary', { token: prodTok });
-    check('monitor summary is admin/md/it-only (403 for production)', sumProd.status === 403, `got ${sumProd.status}`);
+    const sumProd = await api('GET', '/monitor/summary', { token: pmTok });
+    check('monitor summary is admin/md/it-only (403 for pm)', sumProd.status === 403, `got ${sumProd.status}`);
 
     // ── 6. Missed-entry alert + dedupe ──────────────────────────
     const w1 = await api('POST', '/monitor/watchdog/run', { token: adminTok, body: { date: TEST_DATE } });

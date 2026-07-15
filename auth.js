@@ -783,7 +783,7 @@ const _DAILY_ACCESS = {
   cpp:        { edit: ['power-plant-report.html'],
                 nav:  ['daily-report.html','power-plant-report.html'] },
   pm:         { edit: [],
-                nav:  ['daily-report.html','power-form.html'] },
+                nav:  ['daily-report.html','kiln-form.html','cement-mill-form.html','stoppage-form.html','power-form.html'] },
   it:         { edit: [],
                 nav:  ['daily-report.html'] },
   logistics:  { edit: [],
@@ -801,6 +801,9 @@ const _DAILY_NAV_ITEMS = [
   { page:'daily-report.html',       label:'Production',   icon:'factory',   hRoot:'daily-report.html',       hForm:'../daily-report.html' },
   { page:'power-plant-report.html', label:'Power Plant',  icon:'zap',       hRoot:'power-plant-report.html', hForm:'../power-plant-report.html' },
   { page:'mines-report.html',       label:'Mines',        icon:'pickaxe',   hRoot:'mines-report.html',       hForm:'../mines-report.html' },
+  { page:'kiln-form.html',          label:'Kiln',         icon:'flame',     hRoot:'forms/kiln-form.html',     hForm:'kiln-form.html' },
+  { page:'cement-mill-form.html',   label:'Cement Mill',  icon:'settings',  hRoot:'forms/cement-mill-form.html', hForm:'cement-mill-form.html' },
+  { page:'stoppage-form.html',      label:'Stoppages',    icon:'alert-triangle', hRoot:'forms/stoppage-form.html', hForm:'stoppage-form.html' },
   { page:'power-form.html',         label:'Power Cons.',  icon:'activity',  hRoot:'forms/power-form.html',    hForm:'power-form.html' },
   { page:'dispatch-form.html',      label:'Dispatch & SO', icon:'truck',    hRoot:'forms/dispatch-form.html', hForm:'dispatch-form.html' },
   { page:'materials-form.html',     label:'Raw Materials', icon:'package',  hRoot:'forms/materials-form.html', hForm:'materials-form.html' },
@@ -888,8 +891,8 @@ document.addEventListener('DOMContentLoaded', function () {
    Mirrored server-side in backend/config/formAccess.js — keep both in sync.
 ══════════════════════════════════════════════════════════════════════ */
 const _FORM_TYPE_ACCESS = {
-  production: ['production','quality','kiln','cement-mill','limestone','pile-quality','stoppage'],
-  pm:         ['stoppage','power-cons'],
+  production: ['production','quality','limestone','pile-quality'],
+  pm:         ['kiln','cement-mill','stoppage','power-cons'],   /* P&M owns Kiln, Cement Mill & Stoppage reports */
   logistics:  ['dispatch'],
   cpp:        ['power-plant','cpp'],
   mining:     ['mines'],
@@ -940,7 +943,7 @@ function applyDailyPermissions() {
   /* ── 1b. Show inline-edit buttons only to the owning department ──── */
   const _IE_BTN_ROLES = {
     'ie-btn-quality':   ['production'],
-    'ie-btn-stoppages': ['pm', 'production'],
+    'ie-btn-stoppages': ['pm'],   /* P&M owns stoppage data — production views only */
   };
   Object.entries(_IE_BTN_ROLES).forEach(([btnId, allowedRoles]) => {
     const btn = document.getElementById(btnId);

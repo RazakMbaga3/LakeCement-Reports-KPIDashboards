@@ -62,7 +62,7 @@ async function seedTestUsers() {
       failed_attempts = 0, locked_until = NULL, token_version = 0
   `, [username, hash, 'Phase1 Test ' + username, role, mustChange]);
 
-  await mk('p1_prod', 'production', false); // may submit kiln
+  await mk('p1_prod', 'pm',         false); // may submit kiln (P&M owns it now)
   await mk('p1_hr',   'hr',         false); // may NOT submit kiln
   await mk('p1_lock', 'production', false); // gets locked out
   await mk('p1_mcp',  'production', true);  // must change password

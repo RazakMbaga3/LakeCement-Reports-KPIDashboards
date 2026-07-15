@@ -8,8 +8,8 @@
   correct client-side) mapping at all before this.
 */
 const ROLE_FORM_ACCESS = {
-  production: ['production', 'quality', 'kiln', 'cement-mill', 'limestone', 'pile-quality', 'stoppage'],
-  pm:         ['stoppage', 'power-cons'],
+  production: ['production', 'quality', 'limestone', 'pile-quality'],
+  pm:         ['kiln', 'cement-mill', 'stoppage', 'power-cons'],   /* P&M owns Kiln, Cement Mill & Stoppage reports */
   logistics:  ['dispatch'],
   cpp:        ['power-plant', 'cpp'],
   mining:     ['mines'],

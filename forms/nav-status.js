@@ -6,9 +6,10 @@
      – green  = submitted today
      – amber  = draft saved today
      – grey   = not started / no data
-   • Dot is role-aware: PM sees stoppage fill status on the shared
-     Production tab; each hub page (incl. the standalone Power Cons. /
-     Dispatch & SO tabs) otherwise shows its own form's fill status.
+   • Dot is role-aware: production sees quality fill status on its own
+     Production tab; each hub page (incl. the standalone Kiln / Cement
+     Mill / Stoppages / Power Cons. / Dispatch & SO tabs) otherwise
+     shows its own form's fill status.
    ══════════════════════════════════════════════════════════════════ */
 
 (function () {
@@ -21,16 +22,20 @@
     'daily-report.html':       'production',
     'power-plant-report.html': 'power-plant',
     'mines-report.html':       'mines',
+    'kiln-form.html':          'kiln',
+    'cement-mill-form.html':   'cement-mill',
+    'stoppage-form.html':      'stoppage',
     'power-form.html':         'power-cons',
     'dispatch-form.html':      'dispatch',
     'materials-form.html':     'materials',
   };
 
   /* Role → { pageName: formId } — which form ID to check for fill status.
-     (stores no longer piggybacks materials status on the Production tab —
-      Raw Materials is a first-class nav tab with its own dot now.) */
+     (stores no longer piggybacks materials status on the Production tab,
+      and pm no longer piggybacks stoppage status there either — Raw
+      Materials, Kiln, Cement Mill and Stoppages are first-class nav tabs
+      with their own dots now.) */
   const ROLE_SECTION_MAP = {
-    pm:         { 'daily-report.html': 'stoppage' },
     production: { 'daily-report.html': 'quality', 'power-plant-report.html': 'power-plant', 'mines-report.html': 'mines' },
     mining:     { 'mines-report.html': 'mines', 'daily-report.html': 'mines' },
   };

@@ -29,7 +29,7 @@ const BASE  = `http://localhost:${PORT}/api`;
 const PW    = 'Accept@34567';
 const YEAR  = 1999, MONTH = 3;
 const DATES = ['1999-03-01', '1999-03-02', '1999-03-03'];
-const USERS = { production: 'p3_production', logistics: 'p3_logistics', cpp: 'p3_cpp', admin: 'p3_admin' };
+const USERS = { production: 'p3_production', logistics: 'p3_logistics', cpp: 'p3_cpp', pm: 'p3_pm', admin: 'p3_admin' };
 
 let passCount = 0, failCount = 0;
 function check(name, cond, extra) {
@@ -182,11 +182,11 @@ async function main() {
     const submit = (token, form, date, data) =>
       api('POST', `/reports/${form}`, { token, body: { date, data } });
     for (let i = 0; i < DATES.length; i++) {
-      await submit(tok.production, 'kiln',         DATES[i], KILN[i]);
+      await submit(tok.pm,         'kiln',         DATES[i], KILN[i]);
       await submit(tok.production, 'quality',      DATES[i], QUALITY[i]);
       await submit(tok.logistics,  'dispatch',     DATES[i], DISPATCH[i]);
       await submit(tok.cpp,        'power-cons',   DATES[i], POWER[i]);
-      await submit(tok.production, 'cement-mill',  DATES[i], CEMENT_MILL[i]);
+      await submit(tok.pm,         'cement-mill',  DATES[i], CEMENT_MILL[i]);
       if (Object.keys(PILE[i]).length) {
         await submit(tok.production, 'pile-quality', DATES[i], PILE[i]);
       }

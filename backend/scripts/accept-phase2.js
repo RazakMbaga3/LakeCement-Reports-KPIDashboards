@@ -33,7 +33,8 @@ const DEAD_BASE  = `http://localhost:59021/api`; // nothing listens here
 const PW         = 'Accept@23456';
 const DATE_A     = '1999-02-11'; // round-trip date (all 13 forms)
 const DATE_CLEAN = ['1999-02-11', '1999-02-20']; // cleanup range
-const USERS      = { production: 'p2_production', cpp: 'p2_cpp', logistics: 'p2_logistics', mining: 'p2_mining' };
+const USERS      = { production: 'p2_production', cpp: 'p2_cpp', logistics: 'p2_logistics', mining: 'p2_mining',
+                     pm: 'p2_pm', stores: 'p2_stores' };
 const ALL_FORMS  = ['production', 'mines', 'power-plant', 'dispatch', 'quality', 'power-cons',
                     'kiln', 'cement-mill', 'limestone', 'materials', 'pile-quality', 'cpp', 'stoppage'];
 
@@ -164,12 +165,12 @@ async function main() {
 
     // ── Part B: the real offline queue module ──────────────────────────
     console.log('\nPart B — offline queue (forms/offline-queue.js, the shipped code):');
-    const prodToken = () => tokens.production;
+    const pmToken = () => tokens.pm;   // kiln is P&M-owned — production is view-only now
 
     // B1: server down → stays queued
     {
       const storage = fakeStorage();
-      const q = createQueue({ storage, api: () => makeApi(DEAD_BASE, prodToken) });
+      const q = createQueue({ storage, api: () => makeApi(DEAD_BASE, pmToken) });
       q.enqueue('kiln', '1999-02-12', 'day', { _q: 'b1', _status: 'submitted' });
       await q.flush();
       const c = q.counts();
@@ -177,10 +178,10 @@ async function main() {
         JSON.stringify(c));
 
       // B2: server comes back → same queue flushes into Postgres
-      const q2 = createQueue({ storage, api: () => makeApi(BASE, prodToken) });
+      const q2 = createQueue({ storage, api: () => makeApi(BASE, pmToken) });
       await q2.flush();
       const c2 = q2.counts();
-      const rec = await makeApi(BASE, prodToken).getForm('kiln', '1999-02-12', 'day');
+      const rec = await makeApi(BASE, pmToken).getForm('kiln', '1999-02-12', 'day');
       check('B2: queued entry syncs when server returns', c2.pending === 0 && rec && rec.data._q === 'b1',
         JSON.stringify(c2));
     }
@@ -188,7 +189,7 @@ async function main() {
     // B3: server record NEWER than queued item → conflict, server wins
     {
       const storage = fakeStorage();
-      const live = makeApi(BASE, prodToken);
+      const live = makeApi(BASE, pmToken);
       const q = createQueue({ storage, api: () => live, now: () => '1999-02-01T00:00:00.000Z' });
       q.enqueue('kiln', '1999-02-13', 'day', { _q: 'mine-stale', _status: 'submitted' });
       await live.submitForm('kiln', '1999-02-13', 'day', { _q: 'server-newer', _status: 'submitted' });
@@ -208,7 +209,7 @@ async function main() {
     // B5: resolve "keep server" → discard mine, server intact
     {
       const storage = fakeStorage();
-      const live = makeApi(BASE, prodToken);
+      const live = makeApi(BASE, pmToken);
       const q = createQueue({ storage, api: () => live, now: () => '1999-02-01T00:00:00.000Z' });
       q.enqueue('kiln', '1999-02-14', 'day', { _q: 'mine-discard', _status: 'submitted' });
       await live.submitForm('kiln', '1999-02-14', 'day', { _q: 'server-keeps', _status: 'submitted' });

@@ -66,10 +66,28 @@ const _CARDS = [
     url:'forms/materials-form.html',
     d:'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
 
+  { id:'rpt-kiln', cat:'reports', badge:'VIEW', formType:'kiln',
+    title:'Kiln Report',
+    sub:'View kiln production, coal & run-hours data',
+    url:'forms/kiln-form.html',
+    d:'M12 2C8 6 6 9 6 13a6 6 0 0012 0c0-4-2-7-6-11z' },
+
+  { id:'rpt-cement-mill', cat:'reports', badge:'VIEW', formType:'cement-mill',
+    title:'Cement Mill Report',
+    sub:'View CM-1/CM-2 grade-wise production data',
+    url:'forms/cement-mill-form.html',
+    d:'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z' },
+
+  { id:'rpt-stoppage', cat:'reports', badge:'VIEW', formType:'stoppage',
+    title:'Stoppage Report',
+    sub:'View section-wise equipment stoppage log',
+    url:'forms/stoppage-form.html',
+    d:'M12 9v4m0 4h.01M4.93 19h14.14a1 1 0 00.86-1.5L12.86 4.5a1 1 0 00-1.72 0L4.07 17.5a1 1 0 00.86 1.5z' },
+
   /* ── Daily Reports with inline fill access ─────────────── */
   { id:'frm-daily', cat:'forms', badge:'SUBMIT',
     title:'Production Report',
-    sub:'Fill & view today\'s production, quality, stoppages & dispatch',
+    sub:'Fill today\'s production & quality; view stoppages & dispatch',
     url:'daily-report.html',
     d:'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
 
@@ -178,6 +196,9 @@ function _visibleIds(user) {
   if (nav('power-form.html')         && !submitForm('power-cons'))          ids.add('rpt-power-cons');
   if (nav('dispatch-form.html')      && !submitForm('dispatch'))            ids.add('rpt-dispatch');
   if (nav('materials-form.html')     && !submitForm('materials'))           ids.add('rpt-materials');
+  if (nav('kiln-form.html')          && !submitForm('kiln'))                ids.add('rpt-kiln');
+  if (nav('cement-mill-form.html')   && !submitForm('cement-mill'))         ids.add('rpt-cement-mill');
+  if (nav('stoppage-form.html')      && !submitForm('stoppage'))            ids.add('rpt-stoppage');
 
   /* Submittable report pages (inline editing now lives inside the reports) */
   if (submit('daily-report.html'))       ids.add('frm-daily');

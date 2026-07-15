@@ -27,7 +27,7 @@ const PW     = 'Accept@56789';
 const YEAR   = 1999, MONTH = 5;
 const DATES  = ['1999-05-01', '1999-05-02', '1999-05-03'];
 const DAY2   = DATES[1];
-const USERS  = { production: 'p5_production', logistics: 'p5_logistics', cpp: 'p5_cpp', admin: 'p5_admin' };
+const USERS  = { production: 'p5_production', logistics: 'p5_logistics', cpp: 'p5_cpp', pm: 'p5_pm', admin: 'p5_admin' };
 const DIGEST_TO = 'md@test.local';
 
 let passCount = 0, failCount = 0;
@@ -145,7 +145,7 @@ async function main() {
     const submit = (token, form, date, data) =>
       api('POST', `/reports/${form}`, { token, body: { date, data } });
     for (let i = 0; i < DATES.length; i++) {
-      await submit(tok.production, 'kiln',       DATES[i], KILN[i]);
+      await submit(tok.pm,         'kiln',       DATES[i], KILN[i]);
       await submit(tok.production, 'quality',    DATES[i], QUALITY[i]);
       await submit(tok.logistics,  'dispatch',   DATES[i], DISPATCH[i]);
       await submit(tok.cpp,        'power-cons', DATES[i], POWER[i]);
