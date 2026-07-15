@@ -8,12 +8,13 @@
   correct client-side) mapping at all before this.
 */
 const ROLE_FORM_ACCESS = {
-  production: ['production', 'quality', 'kiln', 'cement-mill', 'materials', 'limestone', 'pile-quality', 'stoppage'],
+  production: ['production', 'quality', 'kiln', 'cement-mill', 'limestone', 'pile-quality', 'stoppage'],
   pm:         ['stoppage', 'power-cons'],
   logistics:  ['dispatch'],
   cpp:        ['power-plant', 'cpp'],
   mining:     ['mines'],
-  hr: [], stores: [], it: [], md: [], admin: [], management: [], finance: [],
+  stores:     ['materials'],   /* Raw Materials report is owned by Purchase & Stores */
+  hr: [], it: [], md: [], admin: [], management: [], finance: [],
 };
 
 module.exports = { ROLE_FORM_ACCESS };

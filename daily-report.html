@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
-  <script src="auth.js?v=6"></script>
+  <script src="auth.js?v=7"></script>
   <style>
     /* ══════════════════════════════════════════════════════════════
        PRODUCTION DAILY REPORT — page-specific styles
@@ -1717,16 +1717,28 @@ initReportLoader({
   ],
 
   fills: [
-    /* ── Coal Kiln: pre-populate from materials form supplier totals ─ */
+    /* ── Coal Kiln / CPP: pre-populate from the materials form's
+       supplier-wise on-date consumption (ck_/cc_ …_cons fields).
+       Falls back to the legacy coal_k_s1-5 / coal_cpp_s1-3 fields
+       so snapshots saved before the form rebuild still pre-fill. ── */
     { field: 'coal_kiln',
       compute: function(d, n) {
+        var sum = 0, hit = false;
+        Object.keys(d).forEach(function(k) {
+          if (/^ck_\w+_cons$/.test(k)) { sum += n(d[k]); hit = true; }
+        });
+        if (hit) return sum;
         return n(d.coal_k_s1) + n(d.coal_k_s2) + n(d.coal_k_s3)
              + n(d.coal_k_s4) + n(d.coal_k_s5);
       }
     },
-    /* ── Coal CPP: pre-populate from materials form CPP totals ──────── */
     { field: 'coal_cpp',
       compute: function(d, n) {
+        var sum = 0, hit = false;
+        Object.keys(d).forEach(function(k) {
+          if (/^cc_\w+_cons$/.test(k)) { sum += n(d[k]); hit = true; }
+        });
+        if (hit) return sum;
         return n(d.coal_cpp_s1) + n(d.coal_cpp_s2) + n(d.coal_cpp_s3);
       }
     }

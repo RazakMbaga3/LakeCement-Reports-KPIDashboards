@@ -173,7 +173,7 @@ const PERMISSIONS = {
     hr:         null,
     assets:     null,
     compliance: null,
-    store:      { rawmat:'edit',   spares:'own',    amc:null },
+    store:      { rawmat:'view',   spares:'own',    amc:null },
     kpi:        { depts:['summary','production','packing'], editDepts:['production'], daily:true },
     canViewAudit:  false,
     canManageUsers:false,
@@ -779,7 +779,7 @@ const _DAILY_ACCESS = {
   hr:         { edit: [],
                 nav:  ['daily-report.html'] },
   stores:     { edit: [],
-                nav:  ['daily-report.html'] },
+                nav:  ['daily-report.html','materials-form.html'] },
   cpp:        { edit: ['power-plant-report.html'],
                 nav:  ['daily-report.html','power-plant-report.html'] },
   pm:         { edit: [],
@@ -803,6 +803,7 @@ const _DAILY_NAV_ITEMS = [
   { page:'mines-report.html',       label:'Mines',        icon:'pickaxe',   hRoot:'mines-report.html',       hForm:'../mines-report.html' },
   { page:'power-form.html',         label:'Power Cons.',  icon:'activity',  hRoot:'forms/power-form.html',    hForm:'power-form.html' },
   { page:'dispatch-form.html',      label:'Dispatch & SO', icon:'truck',    hRoot:'forms/dispatch-form.html', hForm:'dispatch-form.html' },
+  { page:'materials-form.html',     label:'Raw Materials', icon:'package',  hRoot:'forms/materials-form.html', hForm:'materials-form.html' },
 ];
 
 function buildDailyNav() {
@@ -819,8 +820,15 @@ function buildDailyNav() {
     ? _DAILY_NAV_ITEMS
     : _DAILY_NAV_ITEMS.filter(it => access.nav.includes(it.page));
 
-  const fillItems = visible.filter(it => access.edit.includes(it.page));
-  const viewItems = visible.filter(it => !access.edit.includes(it.page));
+  /* A nav item belongs in the FILL zone if the role can edit it — hub pages
+     via access.edit (page-filename keyed), standalone forms/*.html pages via
+     their formType in _FORM_TYPE_ACCESS (same rule applyDailyPermissions uses
+     to decide edit vs view-only on the page itself). */
+  const formTypes  = _FORM_TYPE_ACCESS[user.role] || [];
+  const canFill    = it => access.edit.includes(it.page) ||
+                          formTypes.includes(_STANDALONE_FORM_TYPE[it.page]);
+  const fillItems = visible.filter(it => canFill(it));
+  const viewItems = visible.filter(it => !canFill(it));
 
   function btn(item, isFill) {
     const href   = inForms ? item.hForm : item.hRoot;
@@ -880,12 +888,13 @@ document.addEventListener('DOMContentLoaded', function () {
    Mirrored server-side in backend/config/formAccess.js — keep both in sync.
 ══════════════════════════════════════════════════════════════════════ */
 const _FORM_TYPE_ACCESS = {
-  production: ['production','quality','kiln','cement-mill','materials','limestone','pile-quality','stoppage'],
+  production: ['production','quality','kiln','cement-mill','limestone','pile-quality','stoppage'],
   pm:         ['stoppage','power-cons'],
   logistics:  ['dispatch'],
   cpp:        ['power-plant','cpp'],
   mining:     ['mines'],
-  hr: [], stores: [], it: [], md: [], admin: [], management: [], finance: [],
+  stores:     ['materials'],   /* Raw Materials report is owned by Purchase & Stores */
+  hr: [], it: [], md: [], admin: [], management: [], finance: [],
 };
 
 /* Standalone forms/*.html pages don't carry their formId in the URL, and

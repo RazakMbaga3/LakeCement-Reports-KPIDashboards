@@ -171,43 +171,79 @@
       return result;
     },
 
-    /* ── Raw Materials ────────────────────────────────────────── */
+    /* ── Raw Materials ─────────────────────────────────────────────
+       Mirrors the "RAW MATERIAL REPORT" workbook 1:1. Row catalogue
+       comes from window.MATERIALS_SECTIONS (defined by the form page)
+       so form and importer can never drift apart. Layout (0-indexed):
+       B1=SN  C2=description  F5=opening  G6/H7/I8=received d/m/y
+       J9/K10/L11=consumption d/m/y  M12=closing(calc)  N13=pending GRN
+       O14=min  P15=max  Q16=variance(calc). Date sits right of the
+       "DATE" label near the top. Sections repeat supplier names, so
+       matching is section-scoped via the header rows in column C.  */
     materials: function (wb) {
+      var secs = window.MATERIALS_SECTIONS;
+      if (!secs) return { _error: 'Row catalogue missing — open this import from the Raw Materials form page.' };
+
       var ws   = wb.Sheets[wb.SheetNames[0]];
       var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
 
-      /* Date: row 2 col 14, or "DD.MM.YYYY" label in row 2 */
-      var dateVal = anyDate(rows[2][14]) || anyDate(rows[2][15]) || anyDate(rows[2][13]);
+      /* Date: find the row holding a "DATE" label, take the first
+         date-parsable cell to its right (fallback: scan rows 1-4). */
+      var dateVal = '';
+      for (var di = 0; di < Math.min(rows.length, 6) && !dateVal; di++) {
+        for (var dj = 0; dj < rows[di].length && !dateVal; dj++) {
+          dateVal = anyDate(rows[di][dj]);
+        }
+      }
 
-      /* Row-finder helpers */
-      function mat(test) { return findRow(rows, function (r) { return test(String(r[1]).trim()); }); }
+      function norm(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9.]/g, ''); }
 
-      var ironRow   = mat(function (s) { return /iron.?ore/i.test(s); });
-      var gypsumRow = mat(function (s) { return /^gypsum$/i.test(s); });
-      var lmhgRow   = mat(function (s) { return /lmhg|limestone.?hg|lm.?hg|high.?grade/i.test(s); });
+      /* Section header text (col C) → MATERIALS_SECTIONS id */
+      var HDRS = [
+        [/COAL\s*[-–]\s*KILN/i,  'ck'],
+        [/COAL\s*[-–]\s*CPP/i,   'cc'],
+        [/CEMENT\s+BAGS/i,       'bag'],
+        [/GRINDING\s+AID/i,      'ga'],
+        [/^DIESEL/i,             'dsl'],
+      ];
+      function secById(id) {
+        for (var i = 0; i < secs.length; i++) if (secs[i].id === id) return secs[i];
+        return null;
+      }
 
-      /* Bags: inside "CEMENT BAGS" section */
-      var inBags = false;
-      var bags425r = null, bags425n = null;
+      var out = { date: dateVal };
+      var current = secById('main');   /* Iron Ore / Gypsum / Clinker come first */
+
       rows.forEach(function (r) {
-        if (/CEMENT\s+BAGS/i.test(String(r[1]))) { inBags = true; return; }
-        if (inBags && typeof r[0] === 'number' && r[0] > 0) { inBags = false; return; } // next section
-        if (inBags && /42\.5.?R/i.test(String(r[1])) && !/OPC/i.test(String(r[1])) && !bags425r) bags425r = r;
-        if (inBags && /42\.5.?N/i.test(String(r[1])) && !/OPC/i.test(String(r[1])) && !bags425n) bags425n = r;
+        var label = String(r[2] || '').trim();
+        if (!label) return;
+
+        for (var h = 0; h < HDRS.length; h++) {
+          if (HDRS[h][0].test(label)) { current = secById(HDRS[h][1]); return; }
+        }
+        if (!current || /^(sub\s*)?total/i.test(label)) return;
+
+        var nl = norm(label);
+        for (var i = 0; i < current.rows.length; i++) {
+          var row = current.rows[i];
+          if (norm(row.label) !== nl && norm(row.xl || '') !== nl) continue;
+          out[row.f + '_cons']     = fmt(toNum(r[9]));
+          out[row.f + '_cons_mtd'] = fmt(toNum(r[10]));
+          out[row.f + '_cons_ytd'] = fmt(toNum(r[11]));
+          if (!row.consOnly) {
+            out[row.f + '_open']     = fmt(toNum(r[5]));
+            out[row.f + '_rcvd']     = fmt(toNum(r[6]));
+            out[row.f + '_rcvd_mtd'] = fmt(toNum(r[7]));
+            out[row.f + '_rcvd_ytd'] = fmt(toNum(r[8]));
+            out[row.f + '_grn']      = fmt(toNum(r[13]));
+            out[row.f + '_min']      = fmt(toNum(r[14]));
+            out[row.f + '_max']      = fmt(toNum(r[15]));
+          }
+          break;
+        }
       });
 
-      /* Col layout: 4=opening, 5=rcvd_date, 8=cons_date */
-      return {
-        date:          dateVal,
-        iron_ore_rcvd: fmt(toNum(ironRow   ? ironRow[5]   : null)),
-        iron_ore_cons: fmt(toNum(ironRow   ? ironRow[8]   : null)),
-        gypsum_rcvd:   fmt(toNum(gypsumRow ? gypsumRow[5] : null)),
-        gypsum_cons:   fmt(toNum(gypsumRow ? gypsumRow[8] : null)),
-        lmhg_rcvd:     fmt(toNum(lmhgRow   ? lmhgRow[5]  : null)),
-        lmhg_cons:     fmt(toNum(lmhgRow   ? lmhgRow[8]  : null)),
-        pp_bags_425r:  fmt(toNum(bags425r  ? bags425r[5]  : null)),
-        pp_bags_425n:  fmt(toNum(bags425n  ? bags425n[5]  : null)),
-      };
+      return out;
     },
 
     /* ── Power Consumption ────────────────────────────────────── */
@@ -565,6 +601,9 @@
     if (grp) grp.insertBefore(btn, grp.firstChild);
     else toolbar.appendChild(btn);
   }
+
+  /* Exposed so extractors can be exercised outside the page (tests) */
+  window._nyatiExtractors = EXTRACTORS;
 
   /* ── Bootstrap ────────────────────────────────────────────────── */
   function init() {

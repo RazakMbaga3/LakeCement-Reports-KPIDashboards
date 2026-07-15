@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lake Cement – Raw Materials &amp; Stores Report</title>
+  <title>Lake Cement – Raw Material Report</title>
   <link rel="icon" type="image/png" href="../favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
-  <script src="../auth.js?v=6"></script>
+  <script src="../auth.js?v=7"></script>
   <link rel="stylesheet" href="forms.css" />
 </head>
 <body>
@@ -44,14 +44,13 @@
   </div>
   <div class="tb-sep"></div>
   <div class="tb-group">
-    <span class="tb-lbl">Stores Officer</span>
-    <input type="text" class="tb-ctl" data-field="prepared_by" placeholder="Stores Head…" style="min-width:140px;width:auto" />
+    <span class="tb-lbl">Prepared By</span>
+    <input type="text" class="tb-ctl" data-field="prepared_by" placeholder="P&amp;S Officer…" style="min-width:140px;width:auto" />
   </div>
   <div class="tb-sep"></div>
   <span class="rpt-pill">DRAFT</span>
   <div class="tb-leg">
     <div class="leg"><div class="ld" style="background:#FDE68A;border:1px solid #B45309"></div>Manual</div>
-    <div class="leg"><div class="ld" style="background:#BFDBFE;border:1px solid #1D4ED8"></div>System</div>
     <div class="leg"><div class="ld" style="background:#BBF7D0;border:1px solid #15803D"></div>Formula</div>
   </div>
   <div class="btn-grp">
@@ -64,512 +63,276 @@
 <!-- ══════════════════ MAIN ══════════════════ -->
 <main class="fm-main">
 
-
-  <!-- ══ KPI SUMMARY STRIP ════════════════════════════════════════ -->
+  <!-- ══ KPI SUMMARY STRIP (all live-computed from the tables below) ══ -->
   <div class="kpi-strip">
-    <div class="kt kt-s">
-      <span class="kt-badge">System</span>
-      <div class="kt-lbl">Limestone HG Stock</div>
-      <div class="kt-val">18,578</div>
-      <div class="kt-unit">MT — Closing Balance</div>
-      <div class="kt-vs vs-ok">▲ 11.4 days at current feed rate</div>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
+      <div class="kt-lbl">Total Raw Coal Stock</div>
+      <div class="kt-val" data-calc="kpi_coal">—</div>
+      <div class="kt-unit">MT — Kiln + CPP piles closing</div>
+      <div class="kt-vs vs-ok">Closing after today's kiln &amp; CPP draws</div>
     </div>
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
-      <div class="kt-lbl">Total Coal Stock</div>
-      <div class="kt-val">1,216</div>
-      <div class="kt-unit">MT — Kiln 746 + CPP 470</div>
-      <div class="kt-vs vs-wa">▼ 9.2 days cover — reorder threshold 10 days</div>
-    </div>
-    <div class="kt kt-s">
-      <span class="kt-badge">System</span>
-      <div class="kt-lbl">Iron Ore Stock</div>
-      <div class="kt-val">4,432</div>
+      <div class="kt-lbl">Clinker Stock</div>
+      <div class="kt-val" data-calc="kpi_clinker">—</div>
       <div class="kt-unit">MT — Closing Balance</div>
-      <div class="kt-vs vs-ok">▲ 74 days cover — ample stock</div>
+      <div class="kt-vs vs-ok">Own production + purchased receipts</div>
     </div>
-    <div class="kt kt-s">
-      <span class="kt-badge">System</span>
-      <div class="kt-lbl">PP Bags Stock</div>
-      <div class="kt-val">42,870</div>
-      <div class="kt-unit">Bags — Closing Balance</div>
-      <div class="kt-vs vs-ok">▲ 5.7 days at current packing rate</div>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
+      <div class="kt-lbl">Cement Bags Stock</div>
+      <div class="kt-val" data-calc="kpi_bags">—</div>
+      <div class="kt-unit">No. — All grades closing</div>
+      <div class="kt-vs vs-ok">42.5R · 32.5N · 42.5N · OPC · Jumbo</div>
     </div>
-    <div class="kt kt-s">
-      <span class="kt-badge">System</span>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Diesel Stock</div>
-      <div class="kt-val">19,740</div>
-      <div class="kt-unit">Litres — Closing Balance</div>
-      <div class="kt-vs vs-ok">▲ Mines &amp; generator supply adequate</div>
+      <div class="kt-val" data-calc="kpi_diesel">—</div>
+      <div class="kt-unit">Ltr — Plant tank closing</div>
+      <div class="kt-vs vs-ok">After issues to all cost centres</div>
     </div>
-    <div class="kt kt-s">
-      <span class="kt-badge">System</span>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Gypsum Stock</div>
-      <div class="kt-val">1,222</div>
+      <div class="kt-val" data-calc="kpi_gypsum">—</div>
       <div class="kt-unit">MT — Closing Balance</div>
-      <div class="kt-vs vs-ok">▲ 16 days cover at current dosing rate</div>
+      <div class="kt-vs vs-ok">Recommended band 3,000 – 6,000 MT</div>
+    </div>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
+      <div class="kt-lbl">Iron Ore Stock</div>
+      <div class="kt-val" data-calc="kpi_ironore">—</div>
+      <div class="kt-unit">MT — Closing Balance</div>
+      <div class="kt-vs vs-ok">Recommended band 3,000 – 6,000 MT</div>
     </div>
   </div>
 
   <!-- ════════════════════════════════════════════════
-       GROUP 1 — PRIMARY RAW MATERIALS
+       SECTION 1-3 — IRON ORE · GYPSUM · CLINKER
   ════════════════════════════════════════════════ -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="mountain" class="title-icon"></i> Primary Raw Materials</div>
-        <div class="rcard-sub">Limestone, clay, iron ore, gypsum — stock movement — 21-Apr-2026</div>
+        <div class="rcard-title"><i data-lucide="mountain" class="title-icon"></i> Primary Materials — Iron Ore · Gypsum · Clinker</div>
+        <div class="rcard-sub">SN 1–3 of the Raw Material Report — opening / received / consumption / closing (MT)</div>
       </div>
       <div class="rcard-chips">
-        <span class="rcard-chip">21-Apr-2026</span>
-        <span class="rcard-chip orange">STORES</span>
+        <span class="rcard-chip orange">PURCHASE &amp; STORES</span>
       </div>
     </div>
     <div class="tbl-scroll">
-      <table class="rt" style="min-width:1600px">
+      <table class="rt" style="min-width:1700px">
         <thead>
           <tr>
-            <th class="tl grp-hdr" style="min-width:30px">SN</th>
-            <th class="tl grp-hdr" style="min-width:180px">Material</th>
-            <th class="grp-hdr">Opening<br>Stock</th>
-            <th class="grp-hdr" colspan="3">Received (MT)</th>
-            <th class="grp-hdr" colspan="3">Consumption (MT)</th>
-            <th class="grp-hdr">Closing<br>Stock</th>
-            <th class="grp-hdr">Pending<br>GRN</th>
-            <th class="grp-hdr">Rec. Min<br>(Days)</th>
-            <th class="grp-hdr">Rec. Max<br>(Days)</th>
-            <th class="grp-hdr">Variance</th>
+            <th class="tl grp-hdr" rowspan="2" style="min-width:30px">SN</th>
+            <th class="tl grp-hdr" rowspan="2" style="min-width:210px">Description</th>
+            <th class="grp-hdr" rowspan="2">Opening<br>Stock</th>
+            <th class="grp-hdr" colspan="3">Received Quantity (MT)</th>
+            <th class="grp-hdr" colspan="3">Material Consumption (MT)</th>
+            <th class="grp-hdr" rowspan="2">Closing<br>Stock</th>
+            <th class="grp-hdr" rowspan="2">Pending<br>GRN Qty</th>
+            <th class="grp-hdr" colspan="2">Recommended</th>
+            <th class="grp-hdr" rowspan="2">Variance<span class="spec-range">Closing − Min</span></th>
           </tr>
           <tr>
-            <th class="tl grp-hdr"></th>
-            <th class="tl grp-hdr"></th>
-            <th class="grp-hdr"></th>
-            <th class="grp-hdr">On Date</th>
-            <th class="grp-hdr">MTD</th>
-            <th class="grp-hdr">YTD</th>
-            <th class="grp-hdr">On Date</th>
-            <th class="grp-hdr">MTD</th>
-            <th class="grp-hdr">YTD</th>
-            <th class="grp-hdr"></th>
-            <th class="grp-hdr"></th>
-            <th class="grp-hdr"></th>
-            <th class="grp-hdr"></th>
-            <th class="grp-hdr"></th>
+            <th class="grp-hdr">On Date</th><th class="grp-hdr">MTD</th><th class="grp-hdr">YTD</th>
+            <th class="grp-hdr">On Date</th><th class="grp-hdr">MTD</th><th class="grp-hdr">YTD</th>
+            <th class="grp-hdr">Min</th><th class="grp-hdr">Max</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td class="ts">1</td>
-            <td class="tp">Limestone HG</td>
-            <td class="cs"><div class="cv">18,391</div></td>
-            <td class="cm"><input class="ci" type="number" value="2727" data-field="lmhg_rcvd" /></td>
-            <td class="cf"><div class="cv">57,267</div></td>
-            <td class="cf"><div class="cv">201,435</div></td>
-            <td class="cm"><input class="ci" type="number" value="2540" data-field="lmhg_cons" /></td>
-            <td class="cf"><div class="cv">53,340</div></td>
-            <td class="cf"><div class="cv">186,690</div></td>
-            <td class="cf"><div class="cv">18,578</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="number" value="5" /></td>
-            <td class="cm"><input class="ci" type="number" value="15" /></td>
-            <td class="cf"><div class="cv">+187</div></td>
-          </tr>
-          <tr>
-            <td class="ts">2</td>
-            <td class="tp">OB Clay</td>
-            <td class="cs"><div class="cv">1,909</div></td>
-            <td class="cm"><input class="ci" type="number" value="349" /></td>
-            <td class="cf"><div class="cv">7,329</div></td>
-            <td class="cf"><div class="cv">25,713</div></td>
-            <td class="cm"><input class="ci" type="number" value="74" /></td>
-            <td class="cf"><div class="cv">1,554</div></td>
-            <td class="cf"><div class="cv">5,439</div></td>
-            <td class="cf"><div class="cv">2,184</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="number" value="10" /></td>
-            <td class="cm"><input class="ci" type="number" value="30" /></td>
-            <td class="cf"><div class="cv">+275</div></td>
-          </tr>
-          <tr>
-            <td class="ts">3</td>
-            <td class="tp">ID Clay</td>
-            <td class="cs"><div class="cv">3,971</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">798</div></td>
-            <td class="cm"><input class="ci" type="number" value="54" /></td>
-            <td class="cf"><div class="cv">1,134</div></td>
-            <td class="cf"><div class="cv">3,969</div></td>
-            <td class="cf"><div class="cv">3,917</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="number" value="30" /></td>
-            <td class="cm"><input class="ci" type="number" value="60" /></td>
-            <td class="cf"><div class="cv">-54</div></td>
-          </tr>
-          <tr>
-            <td class="ts">4</td>
-            <td class="tp">Iron Ore</td>
-            <td class="cs"><div class="cv">4,479</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="iron_ore_rcvd" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">1,155</div></td>
-            <td class="cm"><input class="ci" type="number" value="47" data-field="iron_ore_cons" /></td>
-            <td class="cf"><div class="cv">987</div></td>
-            <td class="cf"><div class="cv">3,455</div></td>
-            <td class="cf"><div class="cv">4,432</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="number" value="60" /></td>
-            <td class="cm"><input class="ci" type="number" value="120" /></td>
-            <td class="cf"><div class="cv">-47</div></td>
-          </tr>
-          <tr>
-            <td class="ts">5</td>
-            <td class="tp">Gypsum</td>
-            <td class="cs"><div class="cv">1,240</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="gypsum_rcvd" /></td>
-            <td class="cf"><div class="cv">420</div></td>
-            <td class="cf"><div class="cv">1,470</div></td>
-            <td class="cm"><input class="ci" type="number" value="18" data-field="gypsum_cons" /></td>
-            <td class="cf"><div class="cv">378</div></td>
-            <td class="cf"><div class="cv">1,323</div></td>
-            <td class="cf"><div class="cv">1,222</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="number" value="30" /></td>
-            <td class="cm"><input class="ci" type="number" value="60" /></td>
-            <td class="cf"><div class="cv">-18</div></td>
-          </tr>
-          <tr>
-            <td class="ts">6</td>
-            <td class="tp">Purchased Clinker</td>
-            <td class="cs"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-          </tr>
-        </tbody>
+        <tbody id="tb-main"></tbody>
       </table>
     </div>
   </div>
 
   <!-- ════════════════════════════════════════════════
-       GROUP 2 — COAL (KILN)
+       SECTION — COAL (KILN)
   ════════════════════════════════════════════════ -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="flame" class="title-icon"></i> Coal — Kiln Consumption</div>
-        <div class="rcard-sub">Coal suppliers for kiln firing — stock movement by source — 21-Apr-2026</div>
+        <div class="rcard-title"><i data-lucide="flame" class="title-icon"></i> Coal — Kiln (Supplier-wise Stock)</div>
+        <div class="rcard-sub">All kiln coal piles by supplier (MT). Closing also deducts CPP draws made from the same supplier's pile (see CPP section).</div>
       </div>
       <div class="rcard-chips">
-        <span class="rcard-chip orange">STORES</span>
+        <span class="rcard-chip orange">PURCHASE &amp; STORES</span>
       </div>
     </div>
     <div class="tbl-scroll">
-      <table class="rt" style="min-width:1600px">
+      <table class="rt" style="min-width:1700px">
         <thead>
           <tr>
-            <th class="tl grp-hdr" style="min-width:30px">SN</th>
-            <th class="tl grp-hdr" style="min-width:180px">Supplier / Source</th>
-            <th class="grp-hdr">Opening</th>
-            <th class="grp-hdr">Recd On Date</th>
-            <th class="grp-hdr">Recd MTD</th>
-            <th class="grp-hdr">Recd YTD</th>
-            <th class="grp-hdr">Cons On Date</th>
-            <th class="grp-hdr">Cons MTD</th>
-            <th class="grp-hdr">Cons YTD</th>
-            <th class="grp-hdr">Closing</th>
-            <th class="grp-hdr">Pending GRN</th>
+            <th class="tl grp-hdr" rowspan="2" style="min-width:30px">SN</th>
+            <th class="tl grp-hdr" rowspan="2" style="min-width:210px">Supplier / Source</th>
+            <th class="grp-hdr" rowspan="2">Opening<br>Stock</th>
+            <th class="grp-hdr" colspan="3">Received Quantity (MT)</th>
+            <th class="grp-hdr" colspan="3">Kiln Consumption (MT)</th>
+            <th class="grp-hdr" rowspan="2">Closing<br>Stock</th>
+            <th class="grp-hdr" rowspan="2">Pending<br>GRN Qty</th>
+            <th class="grp-hdr" colspan="2">Recommended</th>
+            <th class="grp-hdr" rowspan="2">Variance<span class="spec-range">Closing − Min</span></th>
+          </tr>
+          <tr>
+            <th class="grp-hdr">On Date</th><th class="grp-hdr">MTD</th><th class="grp-hdr">YTD</th>
+            <th class="grp-hdr">On Date</th><th class="grp-hdr">MTD</th><th class="grp-hdr">YTD</th>
+            <th class="grp-hdr">Min</th><th class="grp-hdr">Max</th>
           </tr>
         </thead>
-        <tbody>
-          <tr class="srow"><td colspan="11">Coal Kiln — Supplier Breakdown</td></tr>
-          <!-- Sample top suppliers; rest as blank rows for operator entry -->
-          <tr>
-            <td class="ts">1</td>
-            <td class="tp">STAMICO</td>
-            <td class="cs"><div class="cv">480</div></td>
-            <td class="cm"><input class="ci" type="number" value="66" /></td>
-            <td class="cf"><div class="cv">1,386</div></td>
-            <td class="cf"><div class="cv">4,851</div></td>
-            <td class="cm"><input class="ci" type="number" value="70" data-field="coal_k_s1" /></td>
-            <td class="cf"><div class="cv">1,470</div></td>
-            <td class="cf"><div class="cv">5,145</div></td>
-            <td class="cf"><div class="cv">476</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-          </tr>
-          <tr>
-            <td class="ts">2</td>
-            <td class="tp">Ruvuma Coal</td>
-            <td class="cs"><div class="cv">320</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">4,200</div></td>
-            <td class="cm"><input class="ci" type="number" value="50" data-field="coal_k_s2" /></td>
-            <td class="cf"><div class="cv">1,050</div></td>
-            <td class="cf"><div class="cv">3,675</div></td>
-            <td class="cf"><div class="cv">270</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-          </tr>
-          <tr>
-            <td class="ts">3</td>
-            <td class="tp">Market Coal</td>
-            <td class="cs"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="coal_k_s3" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-          </tr>
-          <tr>
-            <td class="ts">4</td>
-            <td class="tp">Connect Energy</td>
-            <td class="cs"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="coal_k_s4" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-          </tr>
-          <tr>
-            <td class="ts">5</td>
-            <td class="tp">Mchekanai</td>
-            <td class="cs"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="coal_k_s5" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-          </tr>
-          <tr class="trow">
-            <td class="ts" colspan="2" style="text-align:right;padding-right:12px">KILN COAL TOTAL</td>
-            <td class="cf"><div class="cv">800</div></td>
-            <td class="cf"><div class="cv">66</div></td>
-            <td class="cf"><div class="cv">1,386</div></td>
-            <td class="cf"><div class="cv">9,051</div></td>
-            <td class="cf"><div class="cv" data-kpi="coal_k_total_cons">120</div></td>
-            <td class="cf"><div class="cv">2,520</div></td>
-            <td class="cf"><div class="cv">8,820</div></td>
-            <td class="cf"><div class="cv">746</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-          </tr>
-        </tbody>
+        <tbody id="tb-ck"></tbody>
       </table>
     </div>
   </div>
 
   <!-- ════════════════════════════════════════════════
-       GROUP 3 — COAL (CPP)
+       SECTION — COAL (CPP)
   ════════════════════════════════════════════════ -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="zap" class="title-icon"></i> Coal — CPP Consumption</div>
-        <div class="rcard-sub">Coal suppliers for CPP boiler — stock movement by source — 21-Apr-2026</div>
+        <div class="rcard-title"><i data-lucide="zap" class="title-icon"></i> Coal — CPP (Supplier-wise Stock &amp; Draws)</div>
+        <div class="rcard-sub">CPP-dedicated piles carry full stock columns. Rows marked "kiln pile" record CPP consumption drawn from that supplier's Coal — Kiln pile above (MT).</div>
       </div>
       <div class="rcard-chips">
-        <span class="rcard-chip orange">STORES · POWER PLANT</span>
+        <span class="rcard-chip orange">PURCHASE &amp; STORES</span>
       </div>
     </div>
     <div class="tbl-scroll">
-      <table class="rt" style="min-width:1600px">
+      <table class="rt" style="min-width:1700px">
         <thead>
           <tr>
-            <th class="tl grp-hdr" style="min-width:30px">SN</th>
-            <th class="tl grp-hdr" style="min-width:180px">Supplier / Source</th>
-            <th class="grp-hdr">Opening</th>
-            <th class="grp-hdr">Recd On Date</th>
-            <th class="grp-hdr">Recd MTD</th>
-            <th class="grp-hdr">Recd YTD</th>
-            <th class="grp-hdr">Cons On Date</th>
-            <th class="grp-hdr">Cons MTD</th>
-            <th class="grp-hdr">Cons YTD</th>
-            <th class="grp-hdr">Closing</th>
-            <th class="grp-hdr">Pending GRN</th>
+            <th class="tl grp-hdr" rowspan="2" style="min-width:30px">SN</th>
+            <th class="tl grp-hdr" rowspan="2" style="min-width:210px">Supplier / Source</th>
+            <th class="grp-hdr" rowspan="2">Opening<br>Stock</th>
+            <th class="grp-hdr" colspan="3">Received Quantity (MT)</th>
+            <th class="grp-hdr" colspan="3">CPP Consumption (MT)</th>
+            <th class="grp-hdr" rowspan="2">Closing<br>Stock</th>
+            <th class="grp-hdr" rowspan="2">Pending<br>GRN Qty</th>
+            <th class="grp-hdr" colspan="2">Recommended</th>
+            <th class="grp-hdr" rowspan="2">Variance<span class="spec-range">Closing − Min</span></th>
+          </tr>
+          <tr>
+            <th class="grp-hdr">On Date</th><th class="grp-hdr">MTD</th><th class="grp-hdr">YTD</th>
+            <th class="grp-hdr">On Date</th><th class="grp-hdr">MTD</th><th class="grp-hdr">YTD</th>
+            <th class="grp-hdr">Min</th><th class="grp-hdr">Max</th>
           </tr>
         </thead>
-        <tbody>
-          <tr class="srow"><td colspan="11">Coal CPP — Supplier Breakdown</td></tr>
-          <tr>
-            <td class="ts">1</td>
-            <td class="tp">STAMICO (CPP)</td>
-            <td class="cs"><div class="cv">280</div></td>
-            <td class="cm"><input class="ci" type="number" value="66" /></td>
-            <td class="cf"><div class="cv">1,386</div></td>
-            <td class="cf"><div class="cv">4,851</div></td>
-            <td class="cm"><input class="ci" type="number" value="66" data-field="coal_cpp_s1" /></td>
-            <td class="cf"><div class="cv">1,386</div></td>
-            <td class="cf"><div class="cv">4,851</div></td>
-            <td class="cf"><div class="cv">280</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-          </tr>
-          <tr>
-            <td class="ts">2</td>
-            <td class="tp">Ruvuma (CPP)</td>
-            <td class="cs"><div class="cv">190</div></td>
-            <td class="cm"><input class="ci" type="number" value="66" /></td>
-            <td class="cf"><div class="cv">1,386</div></td>
-            <td class="cf"><div class="cv">4,851</div></td>
-            <td class="cm"><input class="ci" type="number" value="66" data-field="coal_cpp_s2" /></td>
-            <td class="cf"><div class="cv">1,386</div></td>
-            <td class="cf"><div class="cv">4,851</div></td>
-            <td class="cf"><div class="cv">190</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-          </tr>
-          <tr>
-            <td class="ts">3</td>
-            <td class="tp">Market (CPP)</td>
-            <td class="cs"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="coal_cpp_s3" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-          </tr>
-          <tr class="trow">
-            <td class="ts" colspan="2" style="text-align:right;padding-right:12px">CPP COAL TOTAL</td>
-            <td class="cf"><div class="cv">470</div></td>
-            <td class="cf"><div class="cv">132</div></td>
-            <td class="cf"><div class="cv">2,772</div></td>
-            <td class="cf"><div class="cv">9,702</div></td>
-            <td class="cf"><div class="cv" data-kpi="coal_cpp_total_cons">132</div></td>
-            <td class="cf"><div class="cv">2,772</div></td>
-            <td class="cf"><div class="cv">9,702</div></td>
-            <td class="cf"><div class="cv">470</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-          </tr>
-        </tbody>
+        <tbody id="tb-cc"></tbody>
       </table>
     </div>
   </div>
 
   <!-- ════════════════════════════════════════════════
-       GROUP 4 — CEMENT BAGS, GRINDING AID, DIESEL
+       SECTION 4 — CEMENT BAGS
   ════════════════════════════════════════════════ -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="package" class="title-icon"></i> Packaging, Grinding Aid &amp; Diesel</div>
-        <div class="rcard-sub">Consumables — stock &amp; usage — 21-Apr-2026</div>
+        <div class="rcard-title"><i data-lucide="package" class="title-icon"></i> Cement Bags</div>
+        <div class="rcard-sub">SN 4 — all bag grades incl. Jumbo (No. of bags) — opening / received / issued to packing / closing</div>
       </div>
       <div class="rcard-chips">
-        <span class="rcard-chip orange">STORES</span>
+        <span class="rcard-chip orange">PURCHASE &amp; STORES</span>
       </div>
     </div>
     <div class="tbl-scroll">
-      <table class="rt" style="min-width:1400px">
+      <table class="rt" style="min-width:1700px">
         <thead>
           <tr>
-            <th class="tl grp-hdr" style="min-width:30px">SN</th>
-            <th class="tl grp-hdr" style="min-width:200px">Item</th>
-            <th class="grp-hdr">Unit</th>
-            <th class="grp-hdr">Opening</th>
-            <th class="grp-hdr">Recd On Date</th>
-            <th class="grp-hdr">Recd MTD</th>
-            <th class="grp-hdr">Issued On Date</th>
-            <th class="grp-hdr">Issued MTD</th>
-            <th class="grp-hdr">Closing</th>
-            <th class="grp-hdr">Pending GRN</th>
-            <th class="grp-hdr">Rec. Min</th>
-            <th class="grp-hdr">Rec. Max</th>
+            <th class="tl grp-hdr" rowspan="2" style="min-width:30px">SN</th>
+            <th class="tl grp-hdr" rowspan="2" style="min-width:210px">Bag Grade</th>
+            <th class="grp-hdr" rowspan="2">Opening<br>Stock</th>
+            <th class="grp-hdr" colspan="3">Received Quantity (No.)</th>
+            <th class="grp-hdr" colspan="3">Consumption (No.)</th>
+            <th class="grp-hdr" rowspan="2">Closing<br>Stock</th>
+            <th class="grp-hdr" rowspan="2">Pending<br>GRN Qty</th>
+            <th class="grp-hdr" colspan="2">Recommended</th>
+            <th class="grp-hdr" rowspan="2">Variance<span class="spec-range">Closing − Min</span></th>
+          </tr>
+          <tr>
+            <th class="grp-hdr">On Date</th><th class="grp-hdr">MTD</th><th class="grp-hdr">YTD</th>
+            <th class="grp-hdr">On Date</th><th class="grp-hdr">MTD</th><th class="grp-hdr">YTD</th>
+            <th class="grp-hdr">Min</th><th class="grp-hdr">Max</th>
           </tr>
         </thead>
-        <tbody>
-          <tr class="srow"><td colspan="12">Cement Bags</td></tr>
-          <tr>
-            <td class="ts">1</td>
-            <td class="tp">PP Bags — 42.5 R (50 kg)</td>
-            <td class="ts">No.</td>
-            <td class="cs"><div class="cv">42,000</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">420,000</div></td>
-            <td class="cm"><input class="ci" type="number" value="6,930" data-field="pp_bags_425r" /></td>
-            <td class="cf"><div class="cv">145,530</div></td>
-            <td class="cf"><div class="cv">35,070</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="number" value="50000" /></td>
-            <td class="cm"><input class="ci" type="number" value="150000" /></td>
-          </tr>
-          <tr>
-            <td class="ts">2</td>
-            <td class="tp">PP Bags — 42.5 N (50 kg)</td>
-            <td class="ts">No.</td>
-            <td class="cs"><div class="cv">8,400</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">84,000</div></td>
-            <td class="cm"><input class="ci" type="number" value="600" data-field="pp_bags_425n" /></td>
-            <td class="cf"><div class="cv">12,600</div></td>
-            <td class="cf"><div class="cv">7,800</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="number" value="10000" /></td>
-            <td class="cm"><input class="ci" type="number" value="30000" /></td>
-          </tr>
+        <tbody id="tb-bag"></tbody>
+      </table>
+    </div>
+  </div>
 
-          <tr class="srow"><td colspan="12">Grinding Aid</td></tr>
+  <!-- ════════════════════════════════════════════════
+       SECTION 5 — GRINDING AID
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="droplets" class="title-icon"></i> Grinding Aid</div>
+        <div class="rcard-sub">SN 5 — grinding aid by brand (MT / Ltr) — opening / received / dosed / closing</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip orange">PURCHASE &amp; STORES</span>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:1700px">
+        <thead>
           <tr>
-            <td class="ts">3</td>
-            <td class="tp">Grinding Aid (SIKA / equiv.)</td>
-            <td class="ts">Kg</td>
-            <td class="cs"><div class="cv">2,400</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="60" /></td>
-            <td class="cf"><div class="cv">1,260</div></td>
-            <td class="cf"><div class="cv">2,340</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="number" value="1000" /></td>
-            <td class="cm"><input class="ci" type="number" value="5000" /></td>
+            <th class="tl grp-hdr" rowspan="2" style="min-width:30px">SN</th>
+            <th class="tl grp-hdr" rowspan="2" style="min-width:210px">Brand</th>
+            <th class="grp-hdr" rowspan="2">Opening<br>Stock</th>
+            <th class="grp-hdr" colspan="3">Received Quantity (MT / Ltr)</th>
+            <th class="grp-hdr" colspan="3">Consumption (MT / Ltr)</th>
+            <th class="grp-hdr" rowspan="2">Closing<br>Stock</th>
+            <th class="grp-hdr" rowspan="2">Pending<br>GRN Qty</th>
+            <th class="grp-hdr" colspan="2">Recommended</th>
+            <th class="grp-hdr" rowspan="2">Variance<span class="spec-range">Closing − Min</span></th>
           </tr>
+          <tr>
+            <th class="grp-hdr">On Date</th><th class="grp-hdr">MTD</th><th class="grp-hdr">YTD</th>
+            <th class="grp-hdr">On Date</th><th class="grp-hdr">MTD</th><th class="grp-hdr">YTD</th>
+            <th class="grp-hdr">Min</th><th class="grp-hdr">Max</th>
+          </tr>
+        </thead>
+        <tbody id="tb-ga"></tbody>
+      </table>
+    </div>
+  </div>
 
-          <tr class="srow"><td colspan="12">Diesel</td></tr>
+  <!-- ════════════════════════════════════════════════
+       SECTION 6 — DIESEL
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="fuel" class="title-icon"></i> Diesel</div>
+        <div class="rcard-sub">SN 6 — Plant tank plus issues to each cost centre (Litres). All consumption depletes the Plant tank closing.</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip orange">PURCHASE &amp; STORES</span>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:1700px">
+        <thead>
           <tr>
-            <td class="ts">4</td>
-            <td class="tp">Diesel (Plant vehicles &amp; equip)</td>
-            <td class="ts">Litres</td>
-            <td class="cs"><div class="cv">12,800</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">42,000</div></td>
-            <td class="cm"><input class="ci" type="number" value="620" /></td>
-            <td class="cf"><div class="cv">13,020</div></td>
-            <td class="cf"><div class="cv">12,180</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="number" value="10000" /></td>
-            <td class="cm"><input class="ci" type="number" value="30000" /></td>
+            <th class="tl grp-hdr" rowspan="2" style="min-width:30px">SN</th>
+            <th class="tl grp-hdr" rowspan="2" style="min-width:210px">Tank / Cost Centre</th>
+            <th class="grp-hdr" rowspan="2">Opening<br>Stock</th>
+            <th class="grp-hdr" colspan="3">Received Quantity (Ltr)</th>
+            <th class="grp-hdr" colspan="3">Consumption (Ltr)</th>
+            <th class="grp-hdr" rowspan="2">Closing<br>Stock</th>
+            <th class="grp-hdr" rowspan="2">Pending<br>GRN Qty</th>
+            <th class="grp-hdr" colspan="2">Recommended</th>
+            <th class="grp-hdr" rowspan="2">Variance<span class="spec-range">Closing − Min</span></th>
           </tr>
           <tr>
-            <td class="ts">5</td>
-            <td class="tp">Diesel (Mines dump trucks)</td>
-            <td class="ts">Litres</td>
-            <td class="cs"><div class="cv">8,400</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">21,000</div></td>
-            <td class="cm"><input class="ci" type="number" value="840" /></td>
-            <td class="cf"><div class="cv">17,640</div></td>
-            <td class="cf"><div class="cv">7,560</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="number" value="5000" /></td>
-            <td class="cm"><input class="ci" type="number" value="20000" /></td>
+            <th class="grp-hdr">On Date</th><th class="grp-hdr">MTD</th><th class="grp-hdr">YTD</th>
+            <th class="grp-hdr">On Date</th><th class="grp-hdr">MTD</th><th class="grp-hdr">YTD</th>
+            <th class="grp-hdr">Min</th><th class="grp-hdr">Max</th>
           </tr>
-        </tbody>
+        </thead>
+        <tbody id="tb-dsl"></tbody>
       </table>
     </div>
   </div>
@@ -579,35 +342,29 @@
     <div class="rcard-hdr"><div class="rcard-title"><i data-lucide="pen-line" class="title-icon"></i> Report Sign-off &amp; Approval</div></div>
     <div class="signoff">
       <div class="so-cell">
-        <div class="so-role">Stores Head</div>
-        <input class="so-in" placeholder="Full name…" />
-        <input class="so-time" placeholder="Time signed" />
+        <div class="so-role">Purchase &amp; Stores Head</div>
+        <input class="so-in" placeholder="Full name…" data-field="so_stores" />
+        <input class="so-time" placeholder="Time signed" data-field="so_stores_t" />
       </div>
       <div class="so-cell">
         <div class="so-role">Production Head</div>
-        <input class="so-in" placeholder="Full name…" />
-        <input class="so-time" placeholder="Time reviewed" />
+        <input class="so-in" placeholder="Full name…" data-field="so_prod" />
+        <input class="so-time" placeholder="Time reviewed" data-field="so_prod_t" />
       </div>
       <div class="so-cell">
         <div class="so-role">Plant Manager</div>
-        <input class="so-in" placeholder="Full name…" />
-        <input class="so-time" placeholder="Time approved" />
+        <input class="so-in" placeholder="Full name…" data-field="so_pm" />
+        <input class="so-time" placeholder="Time approved" data-field="so_pm_t" />
       </div>
       <div class="so-cell">
         <div class="so-role">General Manager</div>
-        <input class="so-in" placeholder="Full name…" />
-        <input class="so-time" placeholder="Time approved" />
+        <input class="so-in" placeholder="Full name…" data-field="so_gm" />
+        <input class="so-time" placeholder="Time approved" data-field="so_gm_t" />
       </div>
     </div>
-    <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <span style="font-size:11px;color:var(--text-muted)">
-        Status: <strong style="color:var(--orange)">DRAFT</strong> &nbsp;·&nbsp;
-        Date: <strong>21 April 2026</strong>
-      </span>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-out"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
-        <button class="btn btn-sub"><i data-lucide="lock" class="btn-icon"></i> Submit &amp; Lock</button>
-      </div>
+    <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px">
+      <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+      <button class="btn btn-sub"><i data-lucide="lock" class="btn-icon"></i> Submit &amp; Lock</button>
     </div>
   </div>
 
@@ -615,9 +372,276 @@
 
 <footer class="dash-footer">
   <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
-  <span>Raw Materials &amp; Stores Report &mdash; <span id="footer-date"></span></span>
+  <span>Raw Material Report &mdash; Purchase &amp; Stores &mdash; <span id="footer-date"></span></span>
 </footer>
 <div class="brand-accent-bar"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   RAW MATERIAL REPORT — row catalogue + live calculation engine
+   ─────────────────────────────────────────────────────────────────
+   Mirrors "7. Materials Report" Excel workbook 1:1 — every section,
+   row and column. Baked values are the 21.04.2026 reference day.
+
+   Row value array v = [ open, rcvd, rcvdMTD, rcvdYTD,
+                         cons, consMTD, consYTD, grn, min, max ]
+   Row flags:
+     consOnly — CPP draw from the same supplier's KILN pile: only the
+                three consumption cells are editable (Excel rows 34-47).
+     pair     — on a KILN row: field prefix of its CPP draw row, whose
+                on-date consumption is also deducted from this closing.
+     tank     — diesel Plant tank: closing deducts the WHOLE section's
+                on-date consumption (all issues come out of this tank).
+   ══════════════════════════════════════════════════════════════════ */
+'use strict';
+
+const MATERIALS_SECTIONS = [
+  { id:'main', tbody:'tb-main', sub:null, rows:[
+    { f:'iron_ore', label:'Iron Ore', v:[4479.45,0,0,0,47,932,932,0,3000,6000] },
+    { f:'gypsum',   label:'Gypsum',   v:[7514.83,22.96,1879.42,1879.42,49.75,1835.2,1835.2,0,3000,6000] },
+    { f:'clinker',  label:'Clinker',  v:[21531.47,1665.42,38360.14,38360.14,728.6,28025.26,28025.26,178.76,'',''] },
+  ]},
+  { id:'ck', tbody:'tb-ck', sub:'Sub Total — Coal Kiln', rows:[
+    { f:'ck_tancoal',   label:'Tancoal Energy Limited',  pair:'cc_tancoal',   v:[0,0,0,0,0,0,0,0,'',''] },
+    { f:'ck_ruvuma',    label:'Ruvuma Coal Limited',     pair:'cc_ruvuma',    v:[6350.89,0,0,0,163,3617.99,3617.99,0,'',''] },
+    { f:'ck_market',    label:'Market Insight Limited',                       v:[4708.95,0,181.5,181.5,41,1007.65,1007.65,0,'',''] },
+    { f:'ck_ariim',     label:'Ariim Coal',              pair:'cc_ariim',     v:[0,0,0,0,0,0,0,0,'',''] },
+    { f:'ck_coalash',   label:'Coal Ash',                                     v:[0,0,0,0,0,0,0,0,'',''] },
+    { f:'ck_jitegemee', label:'Jitegemee coal',          pair:'cc_jitegemee', v:[0.3,0,0,0,0,0,0,0,5000,9000] },
+    { f:'ck_maxcoal',   label:'Max coal',                pair:'cc_maxcoal',   v:[0,0,0,0,0,0,0,0,'',''] },
+    { f:'ck_melt',      label:'MELT coal',               pair:'cc_melt',      v:[0,0,0,0,0,0,0,0,'',''] },
+    { f:'ck_ibrico',    label:'IBRICO coal',             pair:'cc_ibrico',    v:[0,0,0,0,0,0,0,0,'',''] },
+    { f:'ck_megacj',    label:'Mega CJ',                 pair:'cc_megacj',    v:[0,0,0,0,0,0,0,0,'',''] },
+    { f:'ck_mabenga',   label:'Mabenga coal',                                 v:[0,0,0,0,0,0,0,0,'',''] },
+    { f:'ck_yongda',    label:'Yongda',                  pair:'cc_yongda',    v:[0,0,0,0,0,0,0,0,'',''] },
+    { f:'ck_kindaini',  label:'Kindaini coal',           pair:'cc_kindaini',  v:[0,0,0,0,0,0,0,0,'',''] },
+    { f:'ck_montreal',  label:'Montreal',                pair:'cc_montreal',  v:[306,0,0,0,0,0,0,0,'',''] },
+    { f:'ck_ludewa',    label:'Ludewa coal',             pair:'cc_ludewa',    v:[0,0,0,0,0,0,0,0,'',''] },
+    { f:'ck_mchekane',  label:'Mchekane',                pair:'cc_mchekane',  v:[0,0,0,0,0,0,0,0,5000,9000] },
+    { f:'ck_siaas',     label:'SIAAS',                                        v:[0,0,0,0,0,0,0,0,'',''] },
+  ]},
+  { id:'cc', tbody:'tb-cc', sub:'Sub Total — Coal CPP', rows:[
+    { f:'cc_edenville',  label:'Edenville International Limited',        v:[0,0,0,0,0,0,0,0,'',''] },
+    { f:'cc_mathayo',    label:"Mathayo Sons's Enterprises Limited",     v:[0,0,0,0,0,0,0,0,'',''] },
+    { f:'cc_elita',      label:'Elita Company',                          v:[0,0,0,0,0,0,0,0,'',''] },
+    { f:'cc_market',     label:'Market Insight Limited',                 v:[0,0,0,0,0,20,20,0,'',''] },
+    { f:'cc_mbuyu',      label:'Mbuyu Investement Limited',              v:[0,0,0,0,0,0,0,0,'',''] },
+    { f:'cc_ruvuma',     label:'Ruvuma Coal Limited',     consOnly:true, v:['','','','',66,274,274,'','',''] },
+    { f:'cc_tancoal',    label:'Tancoal Energy Limited',  consOnly:true, v:['','','','',0,0,0,'','',''] },
+    { f:'cc_ariim',      label:'Ariim Coal',              consOnly:true, v:['','','','',0,0,0,'','',''] },
+    { f:'cc_lik',        label:'Lik & Lambert coal',      consOnly:true, v:['','','','',0,0,0,'','',''] },
+    { f:'cc_jitegemee',  label:'Jitegemee coal',          consOnly:true, v:['','','','',0,0,0,'','',''] },
+    { f:'cc_maxcoal',    label:'Max coal',                consOnly:true, v:['','','','',0,0,0,'','',''] },
+    { f:'cc_melt',       label:'MELT coal',               consOnly:true, v:['','','','',0,0,0,'','',''] },
+    { f:'cc_ibrico',     label:'IBRICO coal',             consOnly:true, v:['','','','',0,0,0,'','',''] },
+    { f:'cc_megacj',     label:'Mega CJ',                 consOnly:true, v:['','','','',0,0,0,'','',''] },
+    { f:'cc_yongda',     label:'Yongda',                  consOnly:true, v:['','','','',0,0,0,'','',''] },
+    { f:'cc_kindaini',   label:'Kindaini',                consOnly:true, v:['','','','',0,0,0,'','',''] },
+    { f:'cc_montreal',   label:'Montreal',                consOnly:true, v:['','','','',0,0,0,'','',''] },
+    { f:'cc_ludewa',     label:'Ludewa',                  consOnly:true, v:['','','','',0,0,0,'','',''] },
+    { f:'cc_mchekane',   label:'Mchekane',                consOnly:true, v:['','','','',0,0,0,'','',''] },
+    { f:'cc_rutanza',    label:'Rutanza',                                v:[0.05,0,0,0,0,0,0,0,1500,3000] },
+    { f:'cc_tenco',      label:'TENCO',                                  v:[0,0,0,0,0,0,0,0,'',''] },
+    { f:'cc_scolastica', label:'Scolastica',                             v:[0,0,0,0,0,0,0,0,'',''] },
+    { f:'cc_stamico',    label:'State Mining Corporation',               v:[10574.65,0,155.05,155.05,66,2432,2432,0,1500,3000] },
+    { f:'cc_godmwanga',  label:'God Mwanga Gems Limited',                v:[0,0,0,0,0,0,0,0,'',''] },
+  ]},
+  { id:'bag', tbody:'tb-bag', sub:'Total — Cement Bags', rows:[
+    { f:'bag_425r',    label:'42.5 R',       v:[1359532,0,821500,821500,0,513537,513537,'',400000,800000] },
+    { f:'bag_325n',    label:'32.5 N',       v:[423301,0,49000,49000,0,25981,25981,'',100000,250000] },
+    { f:'bag_425n',    label:'42.5 N',       v:[445924,0,76500,76500,0,36631,36631,'',50000,150000] },
+    { f:'bag_425nopc', label:'42.5 N OPC',   v:[78879,0,0,0,0,4822,4822,'','',''] },
+    { f:'bag_j425r',   label:'Jumbo 42.5 R', v:[0,0,0,0,0,0,0,'',1000,5000] },
+    { f:'bag_j325n',   label:'Jumbo 32.5 N', v:[0,0,0,0,0,0,0,'',500,2000] },
+  ]},
+  { id:'ga', tbody:'tb-ga', sub:'Total — Grinding Aid', rows:[
+    { f:'ga_starex', label:'Starex', v:[0,0,0,0,0,0,0,'','',''] },
+    { f:'ga_mapie',  label:'Mapie',  v:[0,0,0,0,0,0,0,'','',''] },
+  ]},
+  { id:'dsl', tbody:'tb-dsl', sub:'Total — Diesel', rows:[
+    { f:'dsl_plant',     label:'Plant (Main Tank)', xl:'Plant', tank:true, v:[38986,0,30000,30000,0,0,0,'',30000,60000] },
+    { f:'dsl_kiln',      label:'Kiln',                          v:[0,0,0,0,0,13000,13000,'','',''] },
+    { f:'dsl_genset',    label:'Genset',                        v:[0,0,0,0,0,433,433,'','',''] },
+    { f:'dsl_mining',    label:'Mining Vehicles',               v:[0,0,0,0,0,14550,14550,'','',''] },
+    { f:'dsl_pmh',       label:'Plant Material Handling',       v:[0,0,0,0,553,12675,12675,'','',''] },
+    { f:'dsl_admin',     label:'Admin Vehicles',                v:[0,0,0,0,0,0,0,'','',''] },
+    { f:'dsl_logistics', label:'Logistics Division',            v:[0,0,0,0,0,0,0,'','',''] },
+    { f:'dsl_others',    label:'Others (Crane, Tanker, Bouser..etc)', v:[0,0,0,0,0,0,0,'','',''] },
+  ]},
+];
+/* excel-import.js reads this to map workbook rows → data-fields */
+window.MATERIALS_SECTIONS = MATERIALS_SECTIONS;
+
+/* ── Build the table rows ─────────────────────────────────────── */
+(function buildTables() {
+  const SUFF = ['open','rcvd','rcvd_mtd','rcvd_ytd','cons','cons_mtd','cons_ytd','grn','min','max'];
+
+  function inp(f, suffix, val) {
+    return '<td class="cm"><input class="ci" type="number" step="any" value="' + val + '" data-field="' + f + '_' + suffix + '" /></td>';
+  }
+  function calc(id) { return '<td class="cf"><div class="cv" data-calc="' + id + '">—</div></td>'; }
+  function dash()   { return '<td class="ts" style="text-align:center;color:#CBD5E1">—</td>'; }
+
+  MATERIALS_SECTIONS.forEach(sec => {
+    const tb = document.getElementById(sec.tbody);
+    if (!tb) return;
+    let html = '';
+
+    sec.rows.forEach((r, i) => {
+      const v = {};
+      SUFF.forEach((s, k) => { v[s] = r.v[k]; });
+      const noteAttr = r.consOnly
+        ? ' title="Stock held under Coal — Kiln (same supplier). This row records the CPP draw only."'
+        : (r.tank ? ' title="Main diesel tank — closing deducts every cost centre\'s on-date consumption."' : '');
+      const note = r.consOnly
+        ? ' <span style="font-size:8.5px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:.4px">kiln pile</span>'
+        : '';
+
+      html += '<tr>' +
+        '<td class="ts">' + (i + 1) + '</td>' +
+        '<td class="tp"' + noteAttr + '>' + r.label + note + '</td>';
+
+      if (r.consOnly) {
+        html += dash() + dash() + dash() + dash() +
+          inp(r.f, 'cons', v.cons) + inp(r.f, 'cons_mtd', v.cons_mtd) + inp(r.f, 'cons_ytd', v.cons_ytd) +
+          dash() + dash() + dash() + dash() + dash();
+      } else {
+        html += inp(r.f, 'open', v.open) +
+          inp(r.f, 'rcvd', v.rcvd) + inp(r.f, 'rcvd_mtd', v.rcvd_mtd) + inp(r.f, 'rcvd_ytd', v.rcvd_ytd) +
+          inp(r.f, 'cons', v.cons) + inp(r.f, 'cons_mtd', v.cons_mtd) + inp(r.f, 'cons_ytd', v.cons_ytd) +
+          calc(r.f + '_close') +
+          inp(r.f, 'grn', v.grn) +
+          inp(r.f, 'min', v.min) + inp(r.f, 'max', v.max) +
+          calc(r.f + '_var');
+      }
+      html += '</tr>';
+    });
+
+    if (sec.sub) {
+      const p = sec.id + '_sub';
+      html += '<tr class="trow">' +
+        '<td class="ts"></td><td class="tp">' + sec.sub + '</td>' +
+        calc(p + '_open') +
+        calc(p + '_rcvd') + calc(p + '_rcvd_mtd') + calc(p + '_rcvd_ytd') +
+        calc(p + '_cons') + calc(p + '_cons_mtd') + calc(p + '_cons_ytd') +
+        calc(p + '_close') + calc(p + '_grn') +
+        calc(p + '_min') + calc(p + '_max') + calc(p + '_var') +
+        '</tr>';
+    }
+
+    /* Grand total row lives at the foot of the CPP card (Excel row 54) */
+    if (sec.id === 'cc') {
+      html += '<tr class="trow" style="border-top:3px double var(--navy)">' +
+        '<td class="ts"></td><td class="tp" style="font-size:10.5px">TOTAL RAW COAL (Kiln + CPP)</td>' +
+        calc('coal_tot_open') +
+        calc('coal_tot_rcvd') + calc('coal_tot_rcvd_mtd') + calc('coal_tot_rcvd_ytd') +
+        calc('coal_tot_cons') + calc('coal_tot_cons_mtd') + calc('coal_tot_cons_ytd') +
+        calc('coal_tot_close') + calc('coal_tot_grn') +
+        calc('coal_tot_min') + calc('coal_tot_max') + calc('coal_tot_var') +
+        '</tr>';
+    }
+
+    tb.innerHTML = html;
+  });
+})();
+
+/* ── Live calculation engine ──────────────────────────────────── */
+(function calcEngine() {
+  const COLS = ['open','rcvd','rcvd_mtd','rcvd_ytd','cons','cons_mtd','cons_ytd','grn','min','max'];
+
+  function num(v) {
+    if (v === '' || v == null) return 0;
+    const n = +(String(v).replace(/,/g, ''));
+    return isNaN(n) ? 0 : n;
+  }
+  function fmt(v) {
+    return (+v.toFixed(2)).toLocaleString('en-US', { maximumFractionDigits: 2 });
+  }
+  function put(id, v) {
+    const el = document.querySelector('[data-calc="' + id + '"]');
+    if (el) el.textContent = (v === null) ? '—' : fmt(v);
+  }
+  function putVar(id, close, minRaw) {
+    const el = document.querySelector('[data-calc="' + id + '"]');
+    if (!el) return;
+    if (minRaw === '' || minRaw == null || isNaN(+String(minRaw).replace(/,/g, ''))) {
+      el.innerHTML = '<span class="var-chip var-na">—</span>';
+      return;
+    }
+    const d   = close - num(minRaw);
+    const cls = d >= 0 ? 'var-g' : 'var-r';
+    el.innerHTML = '<span class="var-chip ' + cls + '">' + (d >= 0 ? '+' : '−') + fmt(Math.abs(d)) + '</span>';
+  }
+
+  function recompute() {
+    const F = {};
+    document.querySelectorAll('[data-field]').forEach(el => { F[el.getAttribute('data-field')] = el.value; });
+    const g = (f, s) => num(F[f + '_' + s]);
+
+    const secSums = {};
+
+    MATERIALS_SECTIONS.forEach(sec => {
+      const sums = { close: 0 };
+      COLS.forEach(c => { sums[c] = 0; });
+
+      /* Diesel: total on-date issues, deducted from the main tank */
+      const tankDraw = sec.rows.reduce((s, r) => s + g(r.f, 'cons'), 0);
+
+      sec.rows.forEach(r => {
+        ['cons', 'cons_mtd', 'cons_ytd'].forEach(c => { sums[c] += g(r.f, c); });
+        if (r.consOnly) return;    /* stock lives in the kiln pile */
+
+        ['open', 'rcvd', 'rcvd_mtd', 'rcvd_ytd', 'grn', 'min', 'max'].forEach(c => { sums[c] += g(r.f, c); });
+
+        let close;
+        if (r.tank) {
+          close = g(r.f, 'open') + g(r.f, 'rcvd') - tankDraw;
+        } else if (sec.id === 'dsl') {
+          /* Issue rows hold no stock of their own — their consumption
+             depletes the Plant tank, not this row. */
+          close = g(r.f, 'open') + g(r.f, 'rcvd');
+        } else {
+          close = g(r.f, 'open') + g(r.f, 'rcvd') - g(r.f, 'cons');
+          if (r.pair) close -= g(r.pair, 'cons');   /* CPP draw off this kiln pile */
+        }
+        sums.close += close;
+        put(r.f + '_close', close);
+        putVar(r.f + '_var', close, F[r.f + '_min']);
+      });
+
+      secSums[sec.id] = sums;
+
+      if (sec.sub) {
+        const p = sec.id + '_sub';
+        COLS.forEach(c => { put(p + '_' + c, sums[c]); });
+        put(p + '_close', sums.close);
+        putVar(p + '_var', sums.close, sums.min > 0 ? sums.min : '');
+      }
+    });
+
+    /* TOTAL RAW COAL = Kiln section + CPP section (Excel row 54) */
+    const ck = secSums.ck, cc = secSums.cc;
+    if (ck && cc) {
+      COLS.forEach(c => { put('coal_tot_' + c, ck[c] + cc[c]); });
+      put('coal_tot_close', ck.close + cc.close);
+      putVar('coal_tot_var', ck.close + cc.close, (ck.min + cc.min) > 0 ? (ck.min + cc.min) : '');
+    }
+
+    /* KPI strip */
+    if (ck && cc)      put('kpi_coal',    ck.close + cc.close);
+    put('kpi_clinker', num(F.clinker_open) + num(F.clinker_rcvd) - num(F.clinker_cons));
+    if (secSums.bag)   put('kpi_bags',    secSums.bag.close);
+    if (secSums.dsl)   put('kpi_diesel',  secSums.dsl.close);
+    put('kpi_gypsum',  num(F.gypsum_open)   + num(F.gypsum_rcvd)   - num(F.gypsum_cons));
+    put('kpi_ironore', num(F.iron_ore_open) + num(F.iron_ore_rcvd) - num(F.iron_ore_cons));
+  }
+
+  document.addEventListener('input',  recompute);
+  document.addEventListener('change', recompute);
+  document.addEventListener('nyati:restored', recompute);
+  recompute();
+})();
+</script>
 
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>
@@ -641,22 +665,5 @@
 <script src="collapsible.js"></script>
 <script src="excel-import.js"></script>
 <script src="excel-export.js"></script>
-<script src="kpi-live.js"></script>
-<script>
-initKpiLive([
-  { kpi:'coal_k_total_cons', fmt:'n0',
-    compute: function(f,n){ return n(f.coal_k_s1)+n(f.coal_k_s2)+n(f.coal_k_s3)+n(f.coal_k_s4)+n(f.coal_k_s5); }
-  },
-  { kpi:'coal_cpp_total_cons', fmt:'n0',
-    compute: function(f,n){ return n(f.coal_cpp_s1)+n(f.coal_cpp_s2)+n(f.coal_cpp_s3); }
-  }
-]);
-</script>
 </body>
 </html>
-
-
-
-
-
-

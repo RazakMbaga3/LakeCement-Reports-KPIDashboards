@@ -23,14 +23,16 @@
     'mines-report.html':       'mines',
     'power-form.html':         'power-cons',
     'dispatch-form.html':      'dispatch',
+    'materials-form.html':     'materials',
   };
 
-  /* Role → { pageName: formId } — which form ID to check for fill status */
+  /* Role → { pageName: formId } — which form ID to check for fill status.
+     (stores no longer piggybacks materials status on the Production tab —
+      Raw Materials is a first-class nav tab with its own dot now.) */
   const ROLE_SECTION_MAP = {
     pm:         { 'daily-report.html': 'stoppage' },
     production: { 'daily-report.html': 'quality', 'power-plant-report.html': 'power-plant', 'mines-report.html': 'mines' },
     mining:     { 'mines-report.html': 'mines', 'daily-report.html': 'mines' },
-    stores:     { 'daily-report.html': 'materials' },
   };
 
   function today() {

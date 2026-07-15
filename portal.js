@@ -60,6 +60,12 @@ const _CARDS = [
     url:'forms/dispatch-form.html',
     d:'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v9a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 11-4 0' },
 
+  { id:'rpt-materials', cat:'reports', badge:'VIEW', formType:'materials',
+    title:'Raw Materials Report',
+    sub:'View stock movement — coal by supplier, bags, grinding aid & diesel',
+    url:'forms/materials-form.html',
+    d:'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
+
   /* ── Daily Reports with inline fill access ─────────────── */
   { id:'frm-daily', cat:'forms', badge:'SUBMIT',
     title:'Production Report',
@@ -113,7 +119,7 @@ const _CARDS = [
     d:'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z' },
   { id:'frm-materials', cat:'forms', badge:'SUBMIT', formType:'materials',
     title:'Raw Materials Report',
-    sub:'Fill materials opening/received/consumed/closing data',
+    sub:'Fill full stock movement — every material, coal supplier, bags, grinding aid & diesel',
     url:'forms/materials-form.html',
     d:'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
   { id:'frm-limestone', cat:'forms', badge:'SUBMIT', formType:'limestone',
@@ -171,6 +177,7 @@ function _visibleIds(user) {
   if (nav('mines-report.html')       && !submit('mines-report.html'))       ids.add('rpt-mines');
   if (nav('power-form.html')         && !submitForm('power-cons'))          ids.add('rpt-power-cons');
   if (nav('dispatch-form.html')      && !submitForm('dispatch'))            ids.add('rpt-dispatch');
+  if (nav('materials-form.html')     && !submitForm('materials'))           ids.add('rpt-materials');
 
   /* Submittable report pages (inline editing now lives inside the reports) */
   if (submit('daily-report.html'))       ids.add('frm-daily');
