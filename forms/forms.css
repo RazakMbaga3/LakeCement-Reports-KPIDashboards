@@ -110,14 +110,15 @@ input[type="date"].tb-ctl { min-width:148px; cursor:text; }
   text-transform:uppercase; letter-spacing:.5px; padding:9px 10px;
   border-bottom:2px solid var(--border); text-align:center;
 }
-.rt thead th.tl { text-align:left; }
+.rt thead th.tl { text-align:left; padding-left:18px; }
 .rt thead .grp-hdr { background:var(--navy-light); color:rgba(255,255,255,.85); font-size:9px; letter-spacing:.7px; }
-.rt tbody td { border-bottom:1px solid var(--border); padding:0; vertical-align:middle; }
+.rt tbody td { border-bottom:1px solid var(--border); vertical-align:middle; }
+.rt tbody td.cm, .rt tbody td.cs, .rt tbody td.cf { padding:0; }
 .rt tbody tr:last-child td { border-bottom:none; }
 .rt tbody tr:hover td { filter:brightness(.975); }
 
 /* section label row */
-.srow td { background:var(--section-bg); padding:10px 12px 8px; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--navy-mid); border-top:2px solid #D4DCE8; border-bottom:1px solid var(--border); }
+.srow td { background:var(--section-bg); padding:10px 14px 8px 18px; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--navy-mid); border-top:2px solid #D4DCE8; border-bottom:1px solid var(--border); }
 .srow:first-child td { border-top:none; }
 
 /* total row */
@@ -128,7 +129,7 @@ input[type="date"].tb-ctl { min-width:148px; cursor:text; }
 
 /* sub rows */
 .grow td { background:#FAFBFE; }
-.grow .tp { padding-left:24px !important; font-weight:500; color:var(--text-muted); font-size:11px; }
+.grow .tp { padding-left:32px !important; font-weight:500; color:var(--text-muted); font-size:11px; }
 
 /* cell types */
 td.cm { background:var(--m-bg); }
@@ -136,7 +137,7 @@ td.cs { background:var(--s-bg); }
 td.cf { background:var(--f-bg); }
 
 /* standard cell paddings */
-.tp { padding:7px 12px; font-weight:600; color:var(--text-main); min-width:160px; }
+.tp { padding:7px 14px 7px 18px; font-weight:600; color:var(--text-main); min-width:160px; }
 .ts { padding:8px 10px; color:var(--text-muted); font-size:10px; font-weight:600; text-align:center; }
 .tc { padding:8px 8px; color:var(--text-muted); font-size:10px; font-weight:600; text-align:center; }
 .tr { padding:8px 8px; text-align:center; font-weight:600; font-size:11px; }
@@ -378,7 +379,7 @@ td.cf .cv { color:var(--f-fg); }
 
   /* shrink font slightly for dense tables */
   .rt { font-size: 10.5px; }
-  .tp { min-width: 140px; padding: 5px 10px; }
+  .tp { min-width: 140px; padding: 5px 10px 5px 14px; }
   .ci { font-size: 10.5px; padding: 5px 4px; }
 }
 
