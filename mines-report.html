@@ -3,31 +3,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lake Cement – Mines Daily Material Movement Report</title>
+  <title>Lake Cement – Mining Report (Daily TMH &amp; MIS)</title>
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <script src="auth.js?v=7"></script>
   <style>
     /* ══════════════════════════════════════════════════════════════
-       MINES DAILY MATERIAL MOVEMENT REPORT — page-specific styles
-       Color legend (matches actual Excel colour coding):
-         Manual  (Red    in Excel) → Amber  #FFFBEB / #B45309
-         System  (Yellow in Excel) → Blue   #EFF6FF / #1D4ED8
-         Formula (Blue   in Excel) → Green  #F0FDF4 / #15803D
+       MINING REPORT — Daily TMH matrix + MIS stock statement
+       Both views are computed client-side from the Odoo weighbridge
+       ticket log (Uploaded_Data sheet), replicating the Excel
+       "5. Mining Report" workbook formulas.
+       Legend:  System/Odoo = blue · Manual = amber · Formula = green
     ══════════════════════════════════════════════════════════════ */
     :root {
       --m-bg:#FFFBEB; --m-fg:#B45309; --m-bd:#FDE68A;
       --s-bg:#EFF6FF; --s-fg:#1D4ED8; --s-bd:#BFDBFE;
       --f-bg:#F0FDF4; --f-fg:#15803D; --f-bd:#BBF7D0;
+      --chart-a:#4F74B2; --chart-b:#C9702A;
     }
     body { display:flex; flex-direction:column; min-height:100vh; background:var(--off-white); }
 
     /* ── toolbar ── */
     .toolbar {
       background:white; border:1px solid var(--border); border-top:none;
-      padding:9px 24px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;
-      box-shadow:var(--shadow-sm);
+      padding:9px 24px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+      box-shadow:var(--shadow-sm); position:sticky; top:var(--header-h,64px); z-index:60;
     }
     .tb-sep { width:1px; height:26px; background:var(--border); }
     .tb-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--text-muted); }
@@ -38,248 +39,271 @@
     }
     .tb-ctl:focus { border-color:var(--orange); background:white; }
     input[type="date"].tb-ctl { min-width:148px; }
-    .btn { padding:6px 16px; border-radius:var(--radius); font-family:var(--font); font-size:12px; font-weight:700; cursor:pointer; border:1.5px solid transparent; }
-    .btn-save   { background:var(--orange); color:white; border-color:var(--orange); }
-    .btn-sub    { background:var(--navy);   color:white; border-color:var(--navy); }
-
-    /* ── legend chips ── */
+    .btn { padding:6px 14px; border-radius:var(--radius); font-family:var(--font); font-size:12px;
+           font-weight:700; cursor:pointer; border:1.5px solid transparent; transition:all .15s;
+           display:inline-flex; align-items:center; gap:6px; }
+    .btn-save { background:var(--orange); color:white; border-color:var(--orange); }
+    .btn-save:hover { background:#D97F30; }
+    .btn-out  { background:transparent; color:var(--navy); border-color:#CBD5E1; }
+    .btn-out:hover { border-color:var(--navy); }
+    .btn-grp { display:flex; gap:6px; margin-left:auto; flex-wrap:wrap; }
     .leg { display:flex; align-items:center; gap:5px; font-size:10px; color:var(--text-muted); }
     .ld  { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
 
+    /* data status chip */
+    .data-chip {
+      display:flex; align-items:center; gap:8px; background:var(--off-white);
+      border:1.5px solid var(--border); border-radius:var(--radius); padding:5px 12px;
+    }
+    .data-chip .dc-dot { width:8px; height:8px; border-radius:50%; background:#CBD5E1; }
+    .data-chip.has-data .dc-dot { background:var(--green); }
+    .dc-txt { font-size:10.5px; font-weight:600; color:var(--text-muted); line-height:1.3; }
+    .dc-txt strong { color:var(--navy); }
+
     /* ── page body ── */
-    .page-body { flex:1; padding:16px 24px 32px; display:flex; flex-direction:column; gap:20px; }
+    .page-body { flex:1; padding:14px 24px 32px; display:flex; flex-direction:column; gap:16px; }
+
+    /* ── KPI strip ── */
+    .kpi-strip { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; padding:12px 24px 0; }
+    .kt { background:white; border:1px solid var(--border); border-radius:var(--radius);
+          padding:12px 14px 10px; position:relative; overflow:hidden; box-shadow:var(--shadow-sm); }
+    .kt::before { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; }
+    .kt-s::before { background:#1D4ED8; } .kt-f::before { background:#15803D; } .kt-m::before { background:#B45309; }
+    .kt-badge { position:absolute; top:7px; right:7px; font-size:8px; font-weight:800; padding:2px 6px;
+                border-radius:3px; text-transform:uppercase; letter-spacing:.4px; }
+    .kt-s .kt-badge { background:#BFDBFE; color:#1E3A8A; }
+    .kt-f .kt-badge { background:#BBF7D0; color:#14532D; }
+    .kt-m .kt-badge { background:#FDE68A; color:#92400E; }
+    .kt-lbl { font-size:9.5px; font-weight:600; text-transform:uppercase; letter-spacing:.5px;
+              color:var(--text-muted); margin-bottom:4px; padding-right:38px; }
+    .kt-val { font-size:22px; font-weight:800; color:var(--navy); line-height:1.1; }
+    .kt-unit { font-size:10px; color:var(--text-muted); margin-top:2px; }
+    .kt-vs { margin-top:5px; font-size:10px; font-weight:700; }
+    .vs-ok { color:#15803D; } .vs-ng { color:#DC2626; } .vs-wa { color:#D97706; }
+
+    /* ── tabs ── */
+    .rpt-tabs { display:flex; gap:0; border-bottom:2.5px solid var(--navy); }
+    .rpt-tab {
+      padding:10px 22px; font-size:12px; font-weight:700; letter-spacing:.4px; cursor:pointer;
+      background:white; color:var(--text-muted); border:1px solid var(--border); border-bottom:none;
+      border-radius:var(--radius) var(--radius) 0 0; margin-right:4px; text-transform:uppercase;
+      display:flex; align-items:center; gap:8px;
+    }
+    .rpt-tab.active { background:var(--navy); color:white; border-color:var(--navy); }
+    .rpt-tab .tab-sub { font-size:9px; font-weight:600; opacity:.65; text-transform:none; letter-spacing:0; }
+    .tab-pane { display:none; flex-direction:column; gap:16px; }
+    .tab-pane.active { display:flex; }
 
     /* ── section card ── */
     .sc { background:#fff; border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-sm); overflow:hidden; }
-    .sc-hdr { background:var(--navy); color:#fff; padding:9px 16px; display:flex; align-items:center; justify-content:space-between; }
+    .sc-hdr { background:var(--navy); color:#fff; padding:9px 16px; display:flex; align-items:center;
+              justify-content:space-between; gap:10px; flex-wrap:wrap; }
     .sc-hdr h3 { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin:0; }
     .sc-note { font-size:9px; color:rgba(255,255,255,.55); }
+    .sc-hdr .hdr-ctl { display:flex; align-items:center; gap:10px; }
+    .hdr-toggle { display:flex; align-items:center; gap:5px; font-size:10px; color:rgba(255,255,255,.8);
+                  cursor:pointer; user-select:none; }
+    .hdr-toggle input { accent-color:var(--orange); cursor:pointer; }
 
-    /* ── scrollable table wrapper ── */
-    .tbl-scroll { overflow-x:auto; }
+    .tbl-scroll { overflow:auto; max-height:max(420px, calc(100vh - 235px)); }
 
-    /* ══ MINES MATRIX TABLE ══════════════════════════════════════ */
-    .mt { border-collapse:collapse; font-size:10px; white-space:nowrap; min-width:3200px; }
-    .mt th, .mt td {
-      padding:4px 5px; border:1px solid #C8D6E5;
-      text-align:center; vertical-align:middle; min-width:58px;
-    }
-
-    /* Group-header row colours (match Excel band colours) */
-    .gh-hs   { background:#B71C1C; color:#fff; font-size:9px; font-weight:700; letter-spacing:.5px; }
-    .gh-lg1  { background:#BF360C; color:#fff; font-size:9px; font-weight:700; letter-spacing:.5px; }
-    .gh-ob   { background:#4E342E; color:#fff; font-size:9px; font-weight:700; letter-spacing:.5px; }
-    .gh-mghg { background:#0D47A1; color:#fff; font-size:9px; font-weight:700; letter-spacing:.5px; }
-    .gh-mglg { background:#1B5E20; color:#fff; font-size:9px; font-weight:700; letter-spacing:.5px; }
-    .gh-oth  { background:#4A148C; color:#fff; font-size:9px; font-weight:700; letter-spacing:.5px; }
-    .gh-tot  { background:#173158; color:#fff; font-size:9px; font-weight:700; letter-spacing:.5px; }
-
-    /* Sub-header row */
+    /* ══ TMH MATRIX ══ */
+    .mt { border-collapse:separate; border-spacing:0; font-size:10px; white-space:nowrap; }
+    .mt th, .mt td { padding:4px 6px; border-right:1px solid #C8D6E5; border-bottom:1px solid #C8D6E5;
+                     text-align:right; vertical-align:middle; min-width:56px; }
+    .mt thead th { position:sticky; z-index:3; text-align:center; box-sizing:border-box; }
+    .mt thead tr:first-child th { top:0; height:26px; }
+    .mt thead tr:nth-child(2) th { top:26px; }
+    .mt .datec { position:sticky; left:0; z-index:2; background:#F7F8FA; text-align:left;
+                 font-weight:700; color:var(--navy); min-width:86px; border-right:2px solid var(--navy); }
+    .mt thead .datec { z-index:4; }
+    /* group header colours (match Excel band colours) */
+    .gh-hg  { background:#B71C1C; color:#fff; font-size:9px; font-weight:700; letter-spacing:.4px; }
+    .gh-lg1 { background:#BF360C; color:#fff; font-size:9px; font-weight:700; letter-spacing:.4px; }
+    .gh-spg { background:#8D6E63; color:#fff; font-size:9px; font-weight:700; letter-spacing:.4px; }
+    .gh-ob  { background:#4E342E; color:#fff; font-size:9px; font-weight:700; letter-spacing:.4px; }
+    .gh-mghg{ background:#0D47A1; color:#fff; font-size:9px; font-weight:700; letter-spacing:.4px; }
+    .gh-mglg{ background:#1B5E20; color:#fff; font-size:9px; font-weight:700; letter-spacing:.4px; }
+    .gh-oth { background:#4A148C; color:#fff; font-size:9px; font-weight:700; letter-spacing:.4px; }
+    .gh-man { background:#92400E; color:#fff; font-size:9px; font-weight:700; letter-spacing:.4px; }
+    .gh-tot { background:#173158; color:#fff; font-size:9px; font-weight:700; letter-spacing:.4px; }
     .mt .sh th { background:#1A4070; color:rgba(255,255,255,.85); font-size:8.5px; font-weight:600; padding:3px 5px; }
-    .mt .sh .sh-m { background:#7F1D1D; }
-    .mt .sh .sh-s { background:#1E3A8A; }
-    .mt .sh .sh-f { background:#14532D; }
-
-    /* Row number */
-    .rn { min-width:30px !important; max-width:30px; background:#F7F8FA !important; color:var(--text-muted) !important; font-weight:700; font-size:9px; border:1px solid #C8D6E5 !important; }
-
-    /* Data cell types */
-    .cm { background:var(--m-bg); color:var(--m-fg); }
+    /* cell types */
     .cs { background:var(--s-bg); color:var(--s-fg); }
-    .cf { background:var(--f-bg); color:var(--f-fg); }
-    .ci {
-      width:54px; border:none; background:transparent;
-      font-size:10px; font-family:var(--font); color:inherit;
-      text-align:right; padding:1px 2px;
+    .cf { background:var(--f-bg); color:var(--f-fg); font-weight:600; }
+    .cm { background:var(--m-bg); color:var(--m-fg); }
+    .cm input { width:56px; border:none; background:transparent; font-size:10px; font-family:var(--font);
+                color:var(--m-fg); text-align:right; padding:0; outline:none; font-weight:600; }
+    .cm input:focus { background:#fff; box-shadow:inset 0 0 0 1.5px var(--orange); border-radius:2px; }
+    .zz { color:#B9C4D4; font-weight:400; }
+    .clickable { cursor:pointer; }
+    .clickable:hover { box-shadow:inset 0 0 0 1.5px var(--orange); }
+    .mt tbody tr.today-row td { box-shadow:inset 0 1.5px 0 var(--orange), inset 0 -1.5px 0 var(--orange); }
+    .mt tbody tr.sel-row .datec { background:var(--orange); color:#fff; }
+    .mt tfoot td { background:#E8F0FA; color:var(--navy); font-weight:800; border-top:2px solid #173158;
+                   font-size:10px; position:sticky; bottom:0; z-index:2; }
+    .mt tfoot td.datec { background:#173158; color:#fff; z-index:3; }
+
+    /* ══ CHART ══ */
+    .chart-wrap { padding:14px 18px 8px; }
+    .chart-legend { display:flex; gap:16px; align-items:center; padding:0 18px 10px; flex-wrap:wrap; }
+    .cl-item { display:flex; align-items:center; gap:6px; font-size:10.5px; font-weight:600; color:var(--text-muted); }
+    .cl-sw { width:11px; height:11px; border-radius:3px; }
+    .chart-tip {
+      position:fixed; z-index:9998; pointer-events:none; background:#173158; color:#fff;
+      border-radius:6px; padding:8px 12px; font-size:11px; line-height:1.5; box-shadow:var(--shadow-md);
+      display:none; max-width:240px;
     }
-    .cv { font-weight:600; }
+    .chart-tip .ct-d { font-weight:800; margin-bottom:2px; }
+    .bar-hit { cursor:pointer; }
 
-    /* Empty / zero cell */
-    .ed { color:#CBD5E1; font-size:9px; }
-
-    /* Total row */
-    .mt .trow td { background:#E8F0FA; color:var(--navy); font-weight:700; border-top:2px solid #173158; font-size:10px; }
-    .mt .trow td.cf { background:var(--f-bg); color:var(--f-fg); font-weight:700; }
-    .mt .trow td.rn { background:#173158 !important; color:#fff !important; }
-
-    /* Hover */
-    .mt tbody tr:hover td { filter:brightness(.97); }
-
-    /* ══ SUMMARY SECTION ═════════════════════════════════════════ */
+    /* ══ SUMMARY TABLES ══ */
     .sum-layout { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:#C8D6E5; }
-    .sum-panel { background:#fff; padding:0; }
-
+    .sum-panel { background:#fff; }
     .sum-tbl { border-collapse:collapse; width:100%; font-size:11px; }
     .sum-tbl td { padding:6px 14px; border-bottom:1px solid #DDE3EC; }
-    .sl { font-weight:500; color:var(--text-main); background:var(--s-bg); }
-    .sv { font-weight:700; color:var(--s-fg); background:var(--s-bg); text-align:right; min-width:110px; }
+    .sl { font-weight:500; color:var(--text-main); }
+    .sv { font-weight:700; text-align:right; min-width:110px; white-space:nowrap; }
     .sl.f, .sv.f { background:var(--f-bg); color:var(--f-fg); }
     .sl.m, .sv.m { background:var(--m-bg); color:var(--m-fg); }
+    .sv.m input { width:90px; border:1px solid var(--m-bd); border-radius:4px; background:#fff;
+                  font-family:var(--font); font-size:11px; font-weight:700; color:var(--m-fg);
+                  text-align:right; padding:2px 6px; outline:none; }
+    .sv.m input:focus { border-color:var(--orange); }
     .sum-grp td { background:#173158; color:#fff; font-weight:700; font-size:9px; letter-spacing:1px; text-transform:uppercase; }
     .sum-tot td { background:var(--orange); color:#fff; font-weight:800; font-size:12px; }
-    .sum-tbl .dash { color:#CBD5E1; font-weight:400; }
 
-    /* ══ CONTRACTOR BREAKDOWN — mobile-first 2 cols, 3 on desktop ═ */
+    /* ══ MONTH SETUP ══ */
+    .setup-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; padding:14px 18px; }
+    .setup-cell label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.6px;
+                        color:var(--text-muted); display:block; margin-bottom:4px; }
+    .setup-cell input { width:100%; border:1.5px solid var(--m-bd); background:var(--m-bg); border-radius:var(--radius);
+                        padding:6px 10px; font-family:var(--font); font-size:12px; font-weight:700;
+                        color:var(--m-fg); text-align:right; outline:none; }
+    .setup-cell input:focus { border-color:var(--orange); background:#fff; }
+    .setup-foot { padding:0 18px 14px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .setup-note { font-size:10px; color:var(--text-muted); }
+
+    /* ══ MIS TABLE ══ */
+    .mis { border-collapse:separate; border-spacing:0; font-size:10.5px; white-space:nowrap; width:100%; }
+    .mis th, .mis td { padding:5px 8px; border-right:1px solid #C8D6E5; border-bottom:1px solid #C8D6E5;
+                       text-align:right; vertical-align:middle; }
+    .mis thead th { background:#1A4070; color:#fff; text-align:center; font-size:9px; font-weight:700;
+                    letter-spacing:.4px; position:sticky; z-index:3; box-sizing:border-box; }
+    .mis thead tr:first-child th { background:#173158; top:0; height:38px; }
+    .mis thead tr:nth-child(2) th { top:38px; height:22px; }
+    .mis thead tr:nth-child(3) th { top:60px; height:22px; }
+    .mis .gradec { position:sticky; left:0; z-index:2; background:#F7F8FA; text-align:left; min-width:120px;
+                   border-right:2px solid var(--navy); }
+    .mis thead .gradec { z-index:4; }
+    .mis-grp td { background:#173158 !important; color:#fff; font-weight:700; font-size:9.5px;
+                  letter-spacing:.8px; text-transform:uppercase; text-align:left; padding:6px 10px; }
+    .grade-b { font-weight:800; color:var(--navy); font-size:10.5px; }
+    .grade-code { font-size:8.5px; color:var(--text-muted); font-weight:600; letter-spacing:.3px; }
+    .mis .c-open { background:#FFF7ED; color:#9A3412; font-weight:700; }
+    .mis .c-close { background:#ECFDF5; color:#065F46; font-weight:800; }
+    .mis .c-mtd { background:#F8FAFF; }
+    .mis .c-ytd { background:#F1F5FB; }
+    .mis .na { color:#C3CBD8; font-weight:400; }
+    .mis-sub { font-size:8.5px; font-weight:600; opacity:.8; }
+    .mis tbody tr:hover td:not(.gradec) { filter:brightness(.965); }
+
+    /* ══ CONTRACTOR TILES ══ */
     .contr-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; padding:14px; }
-    .contr-card {
-      border:1.5px solid var(--border); border-radius:var(--radius);
-      padding:12px 14px; background:var(--off-white);
-    }
+    .contr-card { border:1.5px solid var(--border); border-radius:var(--radius); padding:12px 14px; background:var(--off-white); }
     .contr-card.active { border-color:var(--orange); background:#FFF8F0; }
     .cc-name { font-size:10px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:var(--navy); margin-bottom:6px; }
     .cc-val { font-size:20px; font-weight:800; color:var(--orange); line-height:1; }
     .cc-unit { font-size:9px; color:var(--text-muted); margin-top:2px; }
-    .cc-royalty { font-size:10px; font-weight:600; color:var(--green); margin-top:6px; padding-top:6px; border-top:1px solid var(--border); }
 
-    /* Toolbar button group */
-    .btn-grp { display:flex; gap:6px; margin-left:auto; }
-    .btn { padding:6px 14px; border-radius:var(--radius); font-family:var(--font); font-size:12px;
-           font-weight:700; cursor:pointer; border:1.5px solid transparent; transition:all .15s; }
-    .btn-save { background:var(--orange); color:white; border-color:var(--orange); }
-    .btn-save:hover { background:#D97F30; }
-    .btn-sub  { background:var(--navy);   color:white; border-color:var(--navy); }
-    .btn-sub:hover { background:var(--navy-light); }
-
-    /* ══ SIGN-OFF — mobile-first 2 cols, expands to 3 on desktop ═══ */
-    .signoff { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; padding:16px 20px; background:var(--white); border-top:1px solid var(--border); }
+    /* ══ SIGN-OFF ══ */
+    .signoff { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; padding:16px 20px; }
     .sign-slot { border-top:2px solid var(--navy); padding-top:8px; }
-    .sign-slot label { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); display:block; margin-bottom:6px; }
-    .sign-slot input { width:100%; border:1.5px solid var(--border); border-radius:var(--radius); padding:6px 10px; font-size:12px; font-family:var(--font); color:var(--text-main); background:var(--off-white); }
+    .sign-slot label { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+                       color:var(--text-muted); display:block; margin-bottom:6px; }
+    .sign-slot input { width:100%; border:1.5px solid var(--border); border-radius:var(--radius); padding:6px 10px;
+                       font-size:12px; font-family:var(--font); color:var(--text-main); background:var(--off-white); }
 
-    /* ══ FOOTER ══════════════════════════════════════════════════ */
-    .dash-footer { background:var(--navy); color:rgba(255,255,255,.45); font-size:10px; display:flex; justify-content:space-between; align-items:center; padding:10px 28px; letter-spacing:.3px; }
+    /* ══ NOTES / footnote card ══ */
+    .fn-list { padding:10px 20px 14px; font-size:10.5px; color:var(--text-muted); line-height:1.7; }
+    .fn-list li { margin-left:16px; }
 
-    /* ══ RESPONSIVE ════════════════════════════════════════════ */
+    /* ══ MODALS ══ */
+    .modal-bg { position:fixed; inset:0; background:rgba(23,49,88,.55); z-index:9990; display:none;
+                align-items:center; justify-content:center; padding:16px; }
+    .modal-bg.open { display:flex; }
+    .modal { background:#fff; border-radius:10px; max-width:640px; width:100%; max-height:86vh;
+             display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,.28); }
+    .modal-hdr { background:#173158; border-radius:10px 10px 0 0; padding:13px 18px; display:flex;
+                 align-items:center; justify-content:space-between; flex-shrink:0; }
+    .modal-hdr .mh-t { color:#fff; font-size:12px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; }
+    .modal-hdr .mh-s { color:rgba(255,255,255,.55); font-size:10px; margin-top:2px; }
+    .modal-x { background:rgba(255,255,255,.12); border:none; color:#fff; width:26px; height:26px;
+               border-radius:4px; cursor:pointer; font-size:15px; line-height:1; }
+    .modal-body { padding:14px 18px; overflow-y:auto; flex:1; }
+    .tk-tbl { width:100%; border-collapse:collapse; font-size:11px; }
+    .tk-tbl th { background:#F7F8FA; padding:5px 10px; font-size:9px; font-weight:700; text-transform:uppercase;
+                 letter-spacing:.5px; color:var(--text-muted); text-align:left; }
+    .tk-tbl td { padding:5px 10px; border-bottom:1px solid #EEF2F7; }
+    .tk-tbl td.r { text-align:right; font-weight:700; color:var(--navy); }
+    .spill-tag { background:#FDE68A; color:#92400E; font-size:8.5px; font-weight:800; border-radius:3px;
+                 padding:1px 5px; margin-left:6px; }
+    .modal-foot { padding:12px 18px; border-top:1px solid #EEF2F7; display:flex; gap:8px;
+                  justify-content:flex-end; flex-shrink:0; align-items:center; }
 
-    /* Toolbar: sits below sticky header */
-    .toolbar { position:sticky; top:var(--header-h,64px); z-index:60; }
+    /* toast */
+    .toast { position:fixed; bottom:24px; right:24px; z-index:9999; color:#fff; padding:11px 20px;
+             border-radius:9px; font-size:13px; font-weight:600; box-shadow:0 4px 24px rgba(0,0,0,.22);
+             display:flex; align-items:center; gap:10px; }
 
-    /* Mobile: < 768px */
+    /* drop overlay */
+    #drop-ovl { display:none; position:fixed; inset:0; background:rgba(23,49,88,.75); z-index:9980;
+                flex-direction:column; align-items:center; justify-content:center; color:#fff; pointer-events:none; }
+    #drop-ovl .dz { border:3px dashed rgba(255,255,255,.55); border-radius:16px; padding:52px 80px; text-align:center; }
+
+    /* empty state */
+    .empty-state { padding:44px 20px; text-align:center; color:var(--text-muted); }
+    .empty-state .es-ico { font-size:40px; margin-bottom:10px; }
+    .empty-state .es-t { font-size:14px; font-weight:700; color:var(--navy); margin-bottom:6px; }
+    .empty-state .es-s { font-size:11.5px; max-width:460px; margin:0 auto 14px; line-height:1.6; }
+
+    .dash-footer { background:var(--navy); color:rgba(255,255,255,.45); font-size:10px; display:flex;
+                   justify-content:space-between; align-items:center; padding:10px 28px; letter-spacing:.3px; }
+
+    /* ── responsive ── */
     @media (max-width:767px) {
-      .toolbar  { position:relative; top:auto; flex-wrap:wrap; gap:8px; padding:8px 12px; }
-      .tb-sep   { display:none; }
-      input[type="date"].tb-ctl { min-width:0; width:100%; }
-      .tb-ctl   { min-width:0; font-size:13px; min-height:38px; }
-      .btn      { font-size:11px; padding:8px 10px; min-height:40px;
-                  justify-content:center; display:flex; align-items:center; }
-
-      /* Page body */
-      .page-body { padding:10px 10px 24px; gap:14px; }
-
-      /* Section card header */
-      .sc-hdr { padding:8px 12px; }
-      .sc-hdr h3 { font-size:10px; letter-spacing:.6px; }
-
-      /* Matrix table scroll */
-      .tbl-scroll { -webkit-overflow-scrolling:touch; }
-
-      /* Summary: single column */
-      .sum-layout { grid-template-columns:1fr; gap:1px; }
-
-      /* Contractor grid: 2 columns */
-      .contr-grid { grid-template-columns:repeat(2,1fr); gap:8px; padding:12px; }
-      .cc-val     { font-size:17px; }
-
-      /* Sign-off: 2 columns */
-      .signoff { grid-template-columns:repeat(2,1fr); gap:12px; padding:14px 16px; }
-
-      /* Footer */
+      .toolbar { position:relative; top:auto; gap:8px; padding:8px 12px; }
+      .tb-sep { display:none; }
+      .page-body { padding:10px 10px 24px; gap:12px; }
+      .kpi-strip { padding:10px 12px 0; gap:6px; } .kt-val { font-size:18px; }
+      .sum-layout { grid-template-columns:1fr; }
+      .setup-grid { grid-template-columns:repeat(2,1fr); }
+      .rpt-tab { padding:8px 12px; font-size:10.5px; }
       .dash-footer { flex-direction:column; gap:4px; text-align:center; padding:10px 14px; }
     }
-
-    /* Extra small: < 480px */
-    @media (max-width:479px) {
-      .contr-grid { grid-template-columns:1fr 1fr; padding:10px; }
-      .signoff    { grid-template-columns:1fr 1fr; padding:12px; gap:10px; }
-    }
-
-    /* Tablet: 768–1023px */
     @media (min-width:768px) and (max-width:1023px) {
-      .sum-layout  { grid-template-columns:1fr 1fr; }
-      .contr-grid  { grid-template-columns:repeat(3,1fr); }
-      .page-body   { padding:12px 16px 32px; }
+      .contr-grid { grid-template-columns:repeat(4,1fr); }
+      .setup-grid { grid-template-columns:repeat(4,1fr); }
     }
-
-    /* Desktop: 3-col sign-off, 3-col contractors, 2-col summary */
-    @media (min-width:1024px) {
-      .signoff    { grid-template-columns:repeat(3,1fr); gap:20px; padding:20px 24px; }
-      .contr-grid { grid-template-columns:repeat(3,1fr); gap:12px; padding:16px; }
-      .sum-layout { grid-template-columns:1fr 1fr; }
-    }
-
-    @media print {
-      .toolbar, .dept-nav, .brand-accent-bar { display:none !important; }
-      .top-header::after { display:none !important; }
-      .top-header { position:static !important; height:auto; }
-      .tbl-scroll { overflow:visible; }
-      .mt { min-width:0; }
-    }
-
-    /* ══ KPI SUMMARY STRIP ══════════════════════════════════════════ */
-    .kpi-strip {
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:8px;
-      padding:12px 24px 0;
-    }
-    .kt {
-      background:white;
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      padding:12px 14px 10px;
-      position:relative;
-      overflow:hidden;
-      box-shadow:var(--shadow-sm);
-    }
-    .kt::before {
-      content:'';
-      position:absolute;
-      bottom:0; left:0; right:0;
-      height:3px;
-      border-radius:0 0 var(--radius) var(--radius);
-    }
-    .kt-m::before { background:#B45309; }
-    .kt-s::before { background:#1D4ED8; }
-    .kt-f::before { background:#15803D; }
-    .kt-badge {
-      position:absolute;
-      top:7px; right:7px;
-      font-size:8px; font-weight:800;
-      padding:2px 6px;
-      border-radius:3px;
-      text-transform:uppercase;
-      letter-spacing:.4px;
-    }
-    .kt-m .kt-badge { background:#FDE68A; color:#92400E; }
-    .kt-s .kt-badge { background:#BFDBFE; color:#1E3A8A; }
-    .kt-f .kt-badge { background:#BBF7D0; color:#14532D; }
-    .kt-lbl {
-      font-size:9.5px; font-weight:600;
-      text-transform:uppercase; letter-spacing:.5px;
-      color:var(--text-muted);
-      margin-bottom:4px;
-      padding-right:38px;
-    }
-    .kt-val { font-size:22px; font-weight:800; color:var(--navy); line-height:1.1; }
-    .kt-unit { font-size:10px; color:var(--text-muted); margin-top:2px; }
-    .kt-vs { margin-top:5px; font-size:10px; font-weight:700; }
-    .vs-ok { color:#15803D; }
-    .vs-ng { color:#DC2626; }
-    .vs-wa { color:#D97706; }
-
     @media (min-width:1024px) {
       .kpi-strip { grid-template-columns:repeat(6,1fr); gap:10px; padding-bottom:4px; }
-      .page-body { padding-top:14px; }
+      .signoff { grid-template-columns:repeat(3,1fr); gap:20px; padding:20px 24px; }
+      .contr-grid { grid-template-columns:repeat(4,1fr); gap:12px; padding:16px; }
+      .setup-grid { grid-template-columns:repeat(4,1fr); }
     }
-    @media (max-width:767px) {
-      .kpi-strip { padding:10px 12px 0; gap:6px; }
-      .kt-val { font-size:18px; }
+    @media print {
+      .toolbar, .dept-nav, .brand-accent-bar, .rpt-tabs, .btn, #drop-ovl { display:none !important; }
+      .top-header::after { display:none !important; }
+      .top-header { position:static !important; height:auto; }
+      .tbl-scroll { overflow:visible; max-height:none; }
+      .tab-pane { display:flex !important; }
+      .kt, .sc { break-inside:avoid; box-shadow:none; }
     }
   </style>
 </head>
 <body>
 
-  <!-- ══ TOP HEADER ══════════════════════════════════════════════ -->
+  <!-- ══ TOP HEADER ══ -->
   <header class="top-header">
     <div class="header-left">
       <a href="portal.html" class="home-btn">
@@ -299,557 +323,1232 @@
     </div>
   </header>
 
-  <!-- ══ DEPT NAV ════════════════════════════════════════════════ -->
+  <!-- ══ DEPT NAV ══ -->
   <nav class="dept-nav"><div class="nav-inner"></div></nav>
 
-  <!-- ══ TOOLBAR ═════════════════════════════════════════════════ -->
+  <!-- ══ TOOLBAR ══ -->
   <div class="toolbar">
     <div style="display:flex;flex-direction:column;gap:2px">
       <span class="tb-lbl">Report Date</span>
-      <input type="date" class="tb-ctl" data-field="date" />
+      <input type="date" class="tb-ctl" id="rpt-date" />
     </div>
-    <div style="display:flex;flex-direction:column;gap:2px">
-      <span class="tb-lbl">Month</span>
-      <input type="text" class="tb-ctl" value="May 2026" style="min-width:80px;width:auto" />
-    </div>
-    <div style="display:flex;flex-direction:column;gap:2px">
-      <span class="tb-lbl">Report By</span>
-      <input type="text" class="tb-ctl" data-field="prepared_by" placeholder="Mines Engineer / Supervisor" style="min-width:140px;width:auto" />
+    <div class="data-chip" id="data-chip">
+      <div class="dc-dot"></div>
+      <div class="dc-txt" id="data-chip-txt">No weighbridge data loaded</div>
     </div>
     <div class="tb-sep"></div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <div class="leg"><div class="ld" style="background:#FDE68A;border:1px solid #B45309"></div>Manual Entry</div>
       <div class="leg"><div class="ld" style="background:#BFDBFE;border:1px solid #1D4ED8"></div>System / Odoo</div>
+      <div class="leg"><div class="ld" style="background:#FDE68A;border:1px solid #B45309"></div>Manual Entry</div>
       <div class="leg"><div class="ld" style="background:#BBF7D0;border:1px solid #15803D"></div>Formula</div>
     </div>
     <div class="btn-grp">
-      <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
-      <button class="btn btn-sub">✓ Submit Report</button>
+      <button class="btn btn-out" id="btn-import" title="Import weighbridge Excel (Uploaded_Data)">
+        <i data-lucide="file-spreadsheet" class="btn-icon"></i> Import Excel
+      </button>
+      <button class="btn btn-out" id="btn-print"><i data-lucide="printer" class="btn-icon"></i> Print</button>
     </div>
+    <input type="file" id="file-inp" accept=".xlsx,.xls" style="display:none" />
   </div>
 
-  <!-- ══ KPI SUMMARY STRIP ════════════════════════════════════════ -->
-  <div class="kpi-strip">
-    <div class="kt kt-m">
-      <span class="kt-badge">Manual</span>
-      <div class="kt-lbl">Limestone Blasted</div>
-      <div class="kt-val">4,820</div>
-      <div class="kt-unit">MT / On Date</div>
-      <div class="kt-vs vs-ok">▲ 2 faces blasted — HS South &amp; LG1 North</div>
-    </div>
-    <div class="kt kt-m">
-      <span class="kt-badge">Manual</span>
-      <div class="kt-lbl">Limestone Hauled to Crusher</div>
-      <div class="kt-val">3,976</div>
-      <div class="kt-unit">MT / On Date</div>
-      <div class="kt-vs vs-wa">▼ 82.5% of blasted — haul gap 844 MT</div>
-    </div>
-    <div class="kt kt-m">
-      <span class="kt-badge">Manual</span>
-      <div class="kt-lbl">Overburden Removed</div>
-      <div class="kt-val">1,240</div>
-      <div class="kt-unit">BCM / On Date</div>
-      <div class="kt-vs vs-ok">▲ OB:Ore ratio 0.31 — within plan</div>
-    </div>
-    <div class="kt kt-f">
-      <span class="kt-badge">Formula</span>
-      <div class="kt-lbl">Equipment Availability</div>
-      <div class="kt-val">87.5%</div>
-      <div class="kt-unit">Fleet Avg / Today</div>
-      <div class="kt-vs vs-ok">▲ Above 85% target</div>
-    </div>
-    <div class="kt kt-f">
-      <span class="kt-badge">Formula</span>
-      <div class="kt-lbl">Drilling Achieved vs Target</div>
-      <div class="kt-val">94.2%</div>
-      <div class="kt-unit">Metres / Plan</div>
-      <div class="kt-vs vs-ok">▲ 282 m of 299 m target</div>
-    </div>
-    <div class="kt kt-s">
-      <span class="kt-badge">System</span>
-      <div class="kt-lbl">Total Hauler Trips</div>
-      <div class="kt-val">148</div>
-      <div class="kt-unit">Trips / On Date</div>
-      <div class="kt-vs vs-ok">▲ 12.7 t avg payload per trip</div>
-    </div>
-  </div>
+  <!-- ══ KPI STRIP ══ -->
+  <div class="kpi-strip" id="kpi-strip"></div>
 
-  <!-- ══ PAGE BODY ═══════════════════════════════════════════════ -->
+  <!-- ══ PAGE BODY ══ -->
   <div class="page-body">
 
-    <!-- ── SECTION 1: MATERIAL MOVEMENT MATRIX ─────────────────── -->
-    <div class="sc">
-      <div class="sc-hdr">
-        <h3><i data-lucide="pickaxe" class="title-icon"></i> Material Movement Matrix — Blasting &amp; Hauling Records</h3>
-        <span class="sc-note">Tonnage data auto-fetched from Odoo weighbridge · Amber cells = manual corrections</span>
+    <!-- tabs -->
+    <div class="rpt-tabs">
+      <div class="rpt-tab active" data-tab="tmh">
+        <i data-lucide="table-2" class="title-icon"></i>
+        <span>Daily TMH<br><span class="tab-sub">Total Material Hauled — month matrix</span></span>
       </div>
-      <div class="tbl-scroll">
-        <table class="mt">
-          <thead>
-            <!-- GROUP HEADER ROW -->
-            <tr>
-              <th rowspan="2" class="gh-tot rn" style="min-width:30px">#</th>
-              <!-- HS Limestone -->
-              <th colspan="3" class="gh-hs">HS from South</th>
-              <th colspan="3" class="gh-hs">HS from North</th>
-              <th colspan="3" class="gh-hs">HS from Stock</th>
-              <!-- LG1 Limestone -->
-              <th colspan="3" class="gh-lg1">LG1 from South</th>
-              <th colspan="3" class="gh-lg1">LG1 from North</th>
-              <th colspan="3" class="gh-lg1">LG1 from Stock</th>
-              <th colspan="2" class="gh-lg1">LIMESTONE SPS</th>
-              <!-- Overburden -->
-              <th colspan="3" class="gh-ob">OB from South</th>
-              <th colspan="3" class="gh-ob">OB from North</th>
-              <th colspan="3" class="gh-ob">OB from Stock</th>
-              <!-- MG High Grade -->
-              <th colspan="3" class="gh-mghg">MG-HG from South</th>
-              <th colspan="2" class="gh-mghg">MC HG</th>
-              <!-- MG Low Grade -->
-              <th colspan="3" class="gh-mglg">MG-LG from South</th>
-              <th colspan="1" class="gh-mglg">MG US Stock</th>
-              <!-- Other Materials -->
-              <th colspan="1" class="gh-oth">Gypsum</th>
-              <th colspan="3" class="gh-oth">Id Clay</th>
-              <!-- Grand Totals -->
-              <th colspan="5" class="gh-tot">TOTALS</th>
-            </tr>
-            <!-- SUB-HEADER ROW -->
-            <tr class="sh">
-              <!-- HS South -->
-              <th class="sh-m">Crusher</th><th class="sh-s">D. to Pile</th><th class="sh-s">Stock</th>
-              <!-- HS North -->
-              <th class="sh-m">Crusher</th><th class="sh-s">D. to Pile</th><th class="sh-s">Stock</th>
-              <!-- HS Stock -->
-              <th class="sh-m">Crusher</th><th class="sh-s">D. to Pile</th><th class="sh-s">Stock</th>
-              <!-- LG1 South -->
-              <th class="sh-m">Crusher</th><th class="sh-s">D. to Pile</th><th class="sh-s">Stock</th>
-              <!-- LG1 North -->
-              <th class="sh-m">Crusher</th><th class="sh-s">D. to Pile</th><th class="sh-s">Stock</th>
-              <!-- LG1 Stock -->
-              <th class="sh-m">Crusher</th><th class="sh-s">D. to Pile</th><th class="sh-s">Stock</th>
-              <!-- LIMESTONE SPS -->
-              <th class="sh-m">Crusher</th><th class="sh-s">Direct(lcl)</th>
-              <!-- OB South -->
-              <th class="sh-m">Crusher</th><th class="sh-s">D. to Pile</th><th class="sh-m">W. Dump</th>
-              <!-- OB North -->
-              <th class="sh-m">Crusher</th><th class="sh-s">W. Dump</th><th class="sh-s">Stock</th>
-              <!-- OB Stock -->
-              <th class="sh-f">Crusher</th><th class="sh-s">Other</th><th class="sh-s">D. to Pile</th>
-              <!-- MG-HG South -->
-              <th class="sh-m">Crusher</th><th class="sh-s">D. to Pile</th><th class="sh-s">Stock</th>
-              <!-- MC HG -->
-              <th class="sh-s">S. to Pile</th><th class="sh-s">S. to Crush.</th>
-              <!-- MG-LG South -->
-              <th class="sh-m">Crusher</th><th class="sh-s">D. to Pile</th><th class="sh-s">Stock</th>
-              <!-- MG US Stock -->
-              <th class="sh-s">S. to Crush.</th>
-              <!-- Gypsum -->
-              <th class="sh-m">Crusher</th>
-              <!-- Id Clay -->
-              <th class="sh-s">Other</th><th class="sh-s">S. to Pile</th><th class="sh-s">Kijaka</th>
-              <!-- Grand Totals -->
-              <th class="sh-f">Total TMH</th>
-              <th class="sh-f">w/o OB</th>
-              <th class="sh-f">LG1 LCL</th>
-              <th class="sh-f">Via Crusher</th>
-              <th class="sh-f">TOTAL</th>
-            </tr>
-          </thead>
-          <tbody>
-
-            <!-- ── SAMPLE DATA ROWS (Odoo-fetched, system blue) ── -->
-            <tr>
-              <td class="rn">1</td>
-              <td class="cs"><span class="cv">349.41</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td>
-              <td class="cm ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cf cv">349.41</td><td class="cf cv">349.41</td><td class="cf ed">—</td><td class="cf cv">349.41</td><td class="cf cv">349.41</td>
-            </tr>
-
-            <tr>
-              <td class="rn">2</td>
-              <td class="cs"><span class="cv">586.44</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs"><span class="cv">240.76</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td>
-              <td class="cm ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cf cv">827.20</td><td class="cf cv">827.20</td><td class="cf ed">—</td><td class="cf cv">827.20</td><td class="cf cv">827.20</td>
-            </tr>
-
-            <tr>
-              <td class="rn">3</td>
-              <td class="cs"><span class="cv">723.34</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs"><span class="cv">907.20</span></td><td class="cs ed">—</td>
-              <td class="cs"><span class="cv">581.16</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td>
-              <td class="cm ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cf cv">2,211.70</td><td class="cf cv">2,211.70</td><td class="cf ed">—</td><td class="cf cv">2,211.70</td><td class="cf cv">2,211.70</td>
-            </tr>
-
-            <tr>
-              <td class="rn">4</td>
-              <td class="cs"><span class="cv">109.05</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs"><span class="cv">118.68</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs"><span class="cv">125.42</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs"><span class="cv">425.40</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs"><span class="cv">553.52</span></td><td class="cs"><span class="cv">486.30</span></td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td>
-              <td class="cm ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cf cv">1,818.37</td><td class="cf cv">1,818.37</td><td class="cf cv">486.30</td><td class="cf cv">1,332.07</td><td class="cf cv">1,818.37</td>
-            </tr>
-
-            <tr>
-              <td class="rn">5</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs"><span class="cv">107.00</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs"><span class="cv">331.34</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs"><span class="cv">1,109.18</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs"><span class="cv">624.90</span></td><td class="cs"><span class="cv">795.90</span></td><td class="cs"><span class="cv">80.10</span></td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td>
-              <td class="cm ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cf cv">3,048.42</td><td class="cf cv">3,048.42</td><td class="cf cv">876.00</td><td class="cf cv">2,172.42</td><td class="cf cv">3,048.42</td>
-            </tr>
-
-            <tr>
-              <td class="rn">6</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs"><span class="cv">622.48</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs"><span class="cv">657.98</span></td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td>
-              <td class="cm ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cf cv">1,280.46</td><td class="cf cv">1,280.46</td><td class="cf ed">—</td><td class="cf cv">1,280.46</td><td class="cf cv">1,280.46</td>
-            </tr>
-
-            <tr>
-              <td class="rn">7</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs"><span class="cv">392.70</span></td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td>
-              <td class="cm ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cf cv">392.70</td><td class="cf ed">—</td><td class="cf ed">—</td><td class="cf ed">—</td><td class="cf cv">392.70</td>
-            </tr>
-
-            <tr>
-              <td class="rn">8</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cs ed">—</td>
-              <td class="cm ed">—</td>
-              <td class="cs ed">—</td><td class="cs ed">—</td><td class="cs ed">—</td>
-              <td class="cf cv">1,321.52</td><td class="cf cv">1,321.52</td><td class="cf ed">—</td><td class="cf cv">1,321.52</td><td class="cf cv">1,321.52</td>
-            </tr>
-
-            <!-- ── JS-generated empty rows appended here ── -->
-
-          </tbody>
-          <tfoot>
-            <!-- TOTALS ROW -->
-            <tr class="trow">
-              <td class="rn" style="font-size:8px;text-transform:uppercase;letter-spacing:.5px">TOT</td>
-              <!-- HS South -->
-              <td class="cf cv">1,768.24</td><td class="cf ed">—</td><td class="cf ed">—</td>
-              <!-- HS North -->
-              <td class="cf cv">1,266.44</td><td class="cf cv">907.20</td><td class="cf ed">—</td>
-              <!-- HS Stock -->
-              <td class="cf cv">2,037.92</td><td class="cf ed">—</td><td class="cf ed">—</td>
-              <!-- LG1 South -->
-              <td class="cf cv">1,534.58</td><td class="cf ed">—</td><td class="cf ed">—</td>
-              <!-- LG1 North -->
-              <td class="cf cv">1,178.42</td><td class="cf cv">1,282.20</td><td class="cf cv">80.10</td>
-              <!-- LG1 Stock -->
-              <td class="cf ed">—</td><td class="cf ed">—</td><td class="cf ed">—</td>
-              <!-- LIMESTONE SPS -->
-              <td class="cf ed">—</td><td class="cf ed">—</td>
-              <!-- OB South -->
-              <td class="cf ed">—</td><td class="cf ed">—</td><td class="cf ed">—</td>
-              <!-- OB North -->
-              <td class="cf ed">—</td><td class="cf ed">—</td><td class="cf ed">—</td>
-              <!-- OB Stock -->
-              <td class="cf cv">392.70</td><td class="cf ed">—</td><td class="cf ed">—</td>
-              <!-- MG-HG South -->
-              <td class="cf cv">622.48</td><td class="cf ed">—</td><td class="cf ed">—</td>
-              <!-- MC HG -->
-              <td class="cf ed">—</td><td class="cf cv">609.42</td>
-              <!-- MG-LG South -->
-              <td class="cf cv">657.98</td><td class="cf ed">—</td><td class="cf ed">—</td>
-              <!-- MG US Stock -->
-              <td class="cf ed">—</td>
-              <!-- Gypsum -->
-              <td class="cf ed">—</td>
-              <!-- Id Clay -->
-              <td class="cf ed">—</td><td class="cf ed">—</td><td class="cf ed">—</td>
-              <!-- Grand Totals -->
-              <td class="cf cv" style="font-size:11px">13,249.78</td>
-              <td class="cf cv">13,249.78</td>
-              <td class="cf cv">1,362.30</td>
-              <td class="cf cv">8,573.02</td>
-              <td class="cf cv" style="font-size:11px">13,249.78</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div><!-- /tbl-scroll -->
-    </div><!-- /section-card -->
-
-    <!-- ── SECTION 2: SUMMARY + CONTRACTOR BREAKDOWN ───────────── -->
-    <div class="sc">
-      <div class="sc-hdr">
-        <h3><i data-lucide="bar-chart-2" class="title-icon"></i> Summary — Tonnage, Royalty &amp; Contractor Breakdown</h3>
-        <span class="sc-note">Formula values auto-calculated from movement matrix above</span>
-      </div>
-      <div class="sum-layout">
-
-        <!-- LEFT: Summary Metrics -->
-        <div class="sum-panel">
-          <table class="sum-tbl">
-            <tr class="sum-grp"><td colspan="2">Tonnage Summary</td></tr>
-            <tr><td class="sl f">Total Tonnage VIA Odoo</td><td class="sv f">13,249.78</td></tr>
-            <tr><td class="sl f">Tonnage Exclusive Waste</td><td class="sv f">13,249.78</td></tr>
-
-            <tr class="sum-grp"><td colspan="2">Limestone Royalty (Kimbiji)</td></tr>
-            <tr><td class="sl f">KIMBIJI ROYALTY</td><td class="sv f">8,652.36</td></tr>
-            <tr><td class="sl f">Lime Consumption (MT)</td><td class="sv f">8,180.32</td></tr>
-
-            <tr class="sum-grp"><td colspan="2">OB / Clay Royalty</td></tr>
-            <tr><td class="sl f">OB/CLAY ROYALTY</td><td class="sv f dash">—</td></tr>
-            <tr><td class="sl f">OB/CLAY Consumption (MT)</td><td class="sv f">392.70</td></tr>
-
-            <tr class="sum-grp"><td colspan="2">Kijaka (ID Clay)</td></tr>
-            <tr><td class="sl f">Kijaka Tonnage (MT)</td><td class="sv f dash">—</td></tr>
-            <tr><td class="sl f">Kijaka Royalty</td><td class="sv f dash">—</td></tr>
-
-            <tr class="sum-grp"><td colspan="2">Waste Disposal</td></tr>
-            <tr><td class="sl m">Waste to Dump — Remieli</td><td class="sv m dash">—</td></tr>
-            <tr><td class="sl m">Waste to Dump — Amin</td><td class="sv m dash">—</td></tr>
-            <tr><td class="sl m">Waste to Dump — Digalla</td><td class="sv m dash">—</td></tr>
-            <tr><td class="sl f">Hauled by LCL Truck</td><td class="sv f dash">—</td></tr>
-          </table>
-        </div>
-
-        <!-- RIGHT: Contractor Tonnage -->
-        <div class="sum-panel">
-          <table class="sum-tbl">
-            <tr class="sum-grp"><td colspan="2">Tonnage by Contractor</td></tr>
-            <tr><td class="sl f">Total Tonnage by Remieli</td><td class="sv f">13,249.78</td></tr>
-            <tr><td class="sl f">Total Tonnage by Amin</td><td class="sv f dash">—</td></tr>
-            <tr><td class="sl f">Total Tonnage by Digalla</td><td class="sv f dash">—</td></tr>
-            <tr class="sum-tot"><td colspan="2" style="text-align:center">Total Tonnage in Month &nbsp;·&nbsp; 13,249.78 MT</td></tr>
-
-            <tr class="sum-grp"><td colspan="2">Material Source Breakdown</td></tr>
-            <tr><td class="sl f">HS Limestone (South + North + Stock)</td><td class="sv f">4,979.80</td></tr>
-            <tr><td class="sl f">LG1 Limestone (South + North + Stock)</td><td class="sv f">4,075.30</td></tr>
-            <tr><td class="sl f">Overburden (OB) Total</td><td class="sv f">392.70</td></tr>
-            <tr><td class="sl f">MG-HG (Mine Grade High)</td><td class="sv f">1,231.90</td></tr>
-            <tr><td class="sl f">MG-LG (Mine Grade Low)</td><td class="sv f">657.98</td></tr>
-            <tr><td class="sl f">LIMESTONE SPS</td><td class="sv f dash">—</td></tr>
-            <tr><td class="sl f">Gypsum to Crusher</td><td class="sv f dash">—</td></tr>
-            <tr><td class="sl f">Id Clay (Other + Pile + Kijaka)</td><td class="sv f dash">—</td></tr>
-
-            <tr class="sum-grp"><td colspan="2">Routing Split</td></tr>
-            <tr><td class="sl f">Via Crusher (MT)</td><td class="sv f">8,573.02</td></tr>
-            <tr><td class="sl f">Via LG1 LCL Truck (MT)</td><td class="sv f">1,362.30</td></tr>
-            <tr><td class="sl f">Without Overburden (MT)</td><td class="sv f">13,249.78</td></tr>
-          </table>
-        </div>
-      </div><!-- /sum-layout -->
-    </div><!-- /section summary -->
-
-    <!-- ── SECTION 3: CONTRACTOR TILES ─────────────────────────── -->
-    <div class="sc">
-      <div class="sc-hdr">
-        <h3><i data-lucide="truck" class="title-icon"></i> Contractor Daily Tonnage Overview</h3>
-        <span class="sc-note">System-fetched from Odoo contractor records</span>
-      </div>
-      <div class="contr-grid">
-        <div class="contr-card active">
-          <div class="cc-name">Remieli</div>
-          <div class="cc-val">13,249.78</div>
-          <div class="cc-unit">MT hauled today</div>
-          <div class="cc-royalty">Royalty: TZS 8,652.36</div>
-        </div>
-        <div class="contr-card">
-          <div class="cc-name">Amin</div>
-          <div class="cc-val" style="color:var(--text-muted)">—</div>
-          <div class="cc-unit">No activity today</div>
-          <div class="cc-royalty" style="color:var(--text-muted)">Royalty: —</div>
-        </div>
-        <div class="contr-card">
-          <div class="cc-name">Digalla</div>
-          <div class="cc-val" style="color:var(--text-muted)">—</div>
-          <div class="cc-unit">No activity today</div>
-          <div class="cc-royalty" style="color:var(--text-muted)">Royalty: —</div>
-        </div>
+      <div class="rpt-tab" data-tab="mis">
+        <i data-lucide="warehouse" class="title-icon"></i>
+        <span>MIS<br><span class="tab-sub">Daily stock &amp; movement statement</span></span>
       </div>
     </div>
 
-    <!-- ── SIGN-OFF ──────────────────────────────────────────────── -->
+    <!-- ═══════════ TAB 1 — DAILY TMH ═══════════ -->
+    <div class="tab-pane active" id="pane-tmh">
+
+      <!-- trend chart -->
+      <div class="sc">
+        <div class="sc-hdr">
+          <h3><i data-lucide="bar-chart-3" class="title-icon"></i> Daily Total Material Hauled — <span id="chart-month-lbl"></span></h3>
+          <span class="sc-note">Click a bar to jump to that date</span>
+        </div>
+        <div class="chart-legend">
+          <div class="cl-item"><div class="cl-sw" style="background:var(--chart-a)"></div> Material (excl. waste to dump)</div>
+          <div class="cl-item"><div class="cl-sw" style="background:var(--chart-b)"></div> Waste / OB to dump</div>
+        </div>
+        <div class="chart-wrap"><svg id="tmh-chart" width="100%" height="180" role="img" aria-label="Daily total material hauled, stacked bar chart"></svg></div>
+      </div>
+
+      <!-- matrix -->
+      <div class="sc">
+        <div class="sc-hdr">
+          <h3><i data-lucide="pickaxe" class="title-icon"></i> Material Movement Matrix — <span id="tmh-month-lbl"></span></h3>
+          <div class="hdr-ctl">
+            <label class="hdr-toggle"><input type="checkbox" id="hide-empty" checked /> Hide empty columns</label>
+            <span class="sc-note">Blue = weighbridge tickets (click any figure to audit) · Amber = manual</span>
+          </div>
+        </div>
+        <div class="tbl-scroll" id="tmh-scroll"></div>
+      </div>
+
+      <!-- monthly summary -->
+      <div class="sc">
+        <div class="sc-hdr">
+          <h3><i data-lucide="bar-chart-2" class="title-icon"></i> Monthly Summary — Tonnage, Royalty &amp; Contractors</h3>
+          <span class="sc-note">All formula values derived from the matrix above</span>
+        </div>
+        <div class="sum-layout" id="tmh-summary"></div>
+      </div>
+
+      <!-- contractor tiles -->
+      <div class="sc">
+        <div class="sc-hdr">
+          <h3><i data-lucide="truck" class="title-icon"></i> Contractor Tonnage — Month to Date</h3>
+          <span class="sc-note">From weighbridge vendor records + manual allocations</span>
+        </div>
+        <div class="contr-grid" id="contr-grid"></div>
+      </div>
+
+      <!-- month setup -->
+      <div class="sc">
+        <div class="sc-hdr">
+          <h3><i data-lucide="settings-2" class="title-icon"></i> Month Setup — Opening Stock &amp; Options (<span id="setup-month-lbl"></span>)</h3>
+          <span class="sc-note">Manual — entered once per month, feeds the MIS stock ledger</span>
+        </div>
+        <div class="setup-grid" id="setup-grid"></div>
+        <div class="setup-foot">
+          <button class="btn btn-out" id="btn-carry"><i data-lucide="corner-down-right" class="btn-icon"></i> Carry forward previous month's closing</button>
+          <label class="hdr-toggle" style="color:var(--text-muted)">
+            <input type="checkbox" id="day1-rule" checked />
+            Day&nbsp;1 includes previous month's last-day tickets (Excel convention)
+          </label>
+          <span class="setup-note" id="setup-saved"></span>
+        </div>
+      </div>
+
+    </div><!-- /pane-tmh -->
+
+    <!-- ═══════════ TAB 2 — MIS ═══════════ -->
+    <div class="tab-pane" id="pane-mis">
+      <div class="sc">
+        <div class="sc-hdr">
+          <h3><i data-lucide="warehouse" class="title-icon"></i> MIS — Raw Material Stock &amp; Movement Statement · <span id="mis-date-lbl"></span></h3>
+          <span class="sc-note">ON DATE · MTD (month-to-date) · YTD (fiscal year from 1 April) — all in MT</span>
+        </div>
+        <div class="tbl-scroll" id="mis-scroll"></div>
+      </div>
+
+      <div class="sc">
+        <div class="sc-hdr"><h3><i data-lucide="info" class="title-icon"></i> Method Notes &amp; Differences vs Excel Workbook</h3></div>
+        <ul class="fn-list">
+          <li><strong>Closing stock</strong> = opening + <em>all</em> receipts into the stock yard (South, North, Kijaka) − issues out of stock. The Excel MIS omitted North receipts from closing while the "Supply to date" ledger included them; this report follows the ledger, so closing always equals the next day's opening.</li>
+          <li><strong>Deliver to Plant</strong> counts every flow reaching the pile (South + North + Stock Yard, through-crusher and bypass). The Excel column omitted North mine direct deliveries.</li>
+          <li><strong>LG1 — Other Usages</strong> uses the LG1 stock-to-other-usage tickets plus the manual LCL/Digalla/On Africa columns. <strong>OB — Other Usages</strong> uses OB stock-to-other-usage tickets. (The Excel cells referenced neighbouring columns by off-by-one lookup.)</li>
+          <li><strong>Gypsum — Deliver to Plant</strong> uses the Gypsum crusher + Direct (LCL) columns (the Excel cell referenced the MG-HG columns).</li>
+          <li><strong>ID Clay receipts (Kijaka)</strong> use "Kijaka Mine to Stock Yard" tickets; stock-to-pile is shown under Bypass Crusher, matching the ticket movement type.</li>
+          <li><strong>MTD</strong> accumulates from the 1st of the month to the selected date. <strong>YTD</strong> accumulates over the fiscal year starting 1 April (matching the workbook's April→March layout). Months without imported tickets contribute zero — import each month's file to keep YTD complete.</li>
+          <li><strong>Via Crusher &amp; Lime Consumption</strong> additionally include MG-LG stock-to-crusher, which the Excel formula skipped.</li>
+        </ul>
+      </div>
+    </div><!-- /pane-mis -->
+
+    <!-- ── SIGN-OFF (shared) ── -->
     <div class="sc" style="overflow:visible">
-      <div class="sc-hdr"><h3><i data-lucide="pen-line" class="title-icon"></i> Report Sign-Off</h3></div>
+      <div class="sc-hdr"><h3><i data-lucide="pen-line" class="title-icon"></i> Report Sign-Off — <span id="so-date-lbl"></span></h3></div>
       <div class="signoff">
         <div class="sign-slot">
           <label>Mines Shift Supervisor</label>
-          <input type="text" placeholder="Name &amp; Signature" />
+          <input type="text" id="so-sup" placeholder="Name &amp; Signature" />
         </div>
         <div class="sign-slot">
           <label>Mines Engineer</label>
-          <input type="text" placeholder="Name &amp; Signature" />
+          <input type="text" id="so-eng" placeholder="Name &amp; Signature" />
         </div>
         <div class="sign-slot">
           <label>Mines Manager / HOD</label>
-          <input type="text" placeholder="Name &amp; Signature" />
+          <input type="text" id="so-mgr" placeholder="Name &amp; Signature" />
         </div>
       </div>
     </div>
 
   </div><!-- /page-body -->
 
-  <!-- ══ FOOTER ═════════════════════════════════════════════════ -->
+  <!-- ══ FOOTER ══ -->
   <footer class="dash-footer">
-    <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Mines Daily Material Movement Report</span>
+    <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Mining Report — Daily TMH &amp; MIS</span>
     <span id="fts"></span>
     <span>Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
   </footer>
   <div class="brand-accent-bar"></div>
 
-  <script>
-    /* ── timestamp + live header date ── */
-    const _d = new Date();
-    const _ds = _d.toLocaleDateString('en-GB',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
-    const _liveEl = document.getElementById('live-date');
-    if (_liveEl) _liveEl.textContent = _ds;
-    document.getElementById('fts').textContent =
-      'Generated: ' + _d.toLocaleString('en-GB', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  <!-- drop overlay -->
+  <div id="drop-ovl"><div class="dz">
+    <div style="font-size:52px;margin-bottom:14px">⛏️</div>
+    <div style="font-size:20px;font-weight:700">Drop weighbridge Excel to import</div>
+    <div style="font-size:12px;opacity:.6;margin-top:8px">.xlsx with an "Uploaded_Data" ticket sheet</div>
+  </div></div>
 
-    /* ── generate empty data rows ── */
-    (function() {
-      const COLS = 44; /* data columns before the 5 total cols */
-      const tbody = document.querySelector('.mt tbody');
-      for (let i = 9; i <= 25; i++) {
-        const tr = document.createElement('tr');
-        const rn = document.createElement('td');
-        rn.className = 'rn'; rn.textContent = i;
-        tr.appendChild(rn);
-        for (let c = 0; c < COLS; c++) {
-          const td = document.createElement('td');
-          td.className = 'cs ed'; td.textContent = '—';
-          tr.appendChild(td);
-        }
-        /* 5 total formula cells */
-        const totClasses = ['cf','cf','cf','cf','cf'];
-        totClasses.forEach(cls => {
-          const td = document.createElement('td');
-          td.className = cls + ' ed'; td.textContent = '—';
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
+  <!-- ticket inspector modal -->
+  <div class="modal-bg" id="insp-bg">
+    <div class="modal">
+      <div class="modal-hdr">
+        <div><div class="mh-t" id="insp-title">Ticket Audit</div><div class="mh-s" id="insp-sub"></div></div>
+        <button class="modal-x" id="insp-x">✕</button>
+      </div>
+      <div class="modal-body" id="insp-body"></div>
+      <div class="modal-foot"><span style="font-size:11px;color:var(--text-muted);margin-right:auto" id="insp-tot"></span>
+        <button class="btn btn-out" id="insp-close">Close</button></div>
+    </div>
+  </div>
+
+  <!-- chart tooltip -->
+  <div class="chart-tip" id="chart-tip"></div>
+
+  <script>
+  /* ════════════════════════════════════════════════════════════════
+     MINING REPORT ENGINE
+     Replicates "5. Mining Report" workbook (DAILY TMH + MIS sheets)
+     from the Odoo weighbridge ticket log.
+  ════════════════════════════════════════════════════════════════ */
+  'use strict';
+
+  /* ── constants ─────────────────────────────────────────────── */
+  var LS_TXNS    = 'lcMinesTxns.v1';
+  var LS_OPEN    = 'lcMinesOpenings.v1';
+  var LS_MANUAL  = 'lcMinesManual.v1';
+  var XLSX_CDN   = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+  var FY_START_MONTH = 4;   /* fiscal year runs April → March (workbook convention) */
+
+  /* Movement-type strings exactly as exported by the Odoo weighbridge */
+  var MV = {
+    S_CR:'South Mine to Pile (through Crusher)',
+    S_DP:'South Mine to Direct Pile (Bypass Crusher)',
+    S_SY:'South Mine to Stock Yard',
+    S_WD:'South Mine to Golani Waste dump',
+    N_CR:'North Mine to Pile (through Crusher)',
+    N_DP:'North Mine to Direct Pile (Bypass Crusher)',
+    N_SY:'North Mine to Stock Yard',
+    N_WD:'North Mine to Golani Waste dump',
+    Y_CR:'Stock Yard to Pile (through Crusher)',
+    Y_DP:'Stock Yard to Direct Pile (Bypass Crusher)',
+    Y_OU:'Stock Yard to Other Usages',
+    K_SY:'Kijaka Mine to Stock Yard'
+  };
+
+  /* Every system column of the DAILY TMH sheet.
+     id = Excel column letter (kept for traceability against the workbook). */
+  var TMH_COLS = [
+    /* HG */
+    { id:'B',  grp:'hg_s',  sub:'Crusher',        mv:MV.S_CR, pr:'HG' },
+    { id:'C',  grp:'hg_s',  sub:'Direct to Pile', mv:MV.S_DP, pr:'HG' },
+    { id:'D',  grp:'hg_s',  sub:'Stock',          mv:MV.S_SY, pr:'HG' },
+    { id:'E',  grp:'hg_n',  sub:'Crusher',        mv:MV.N_CR, pr:'HG' },
+    { id:'F',  grp:'hg_n',  sub:'Direct to Pile', mv:MV.N_DP, pr:'HG' },
+    { id:'G',  grp:'hg_n',  sub:'Stock',          mv:MV.N_SY, pr:'HG' },
+    { id:'H',  grp:'hg_y',  sub:'Crusher',        mv:MV.Y_CR, pr:'HG' },
+    { id:'I',  grp:'hg_y',  sub:'Direct to Pile', mv:MV.Y_DP, pr:'HG' },
+    /* LG1 */
+    { id:'J',  grp:'lg_s',  sub:'Crusher',        mv:MV.S_CR, pr:'LG1' },
+    { id:'K',  grp:'lg_s',  sub:'Direct to Pile', mv:MV.S_DP, pr:'LG1' },
+    { id:'L',  grp:'lg_s',  sub:'Stock',          mv:MV.S_SY, pr:'LG1' },
+    { id:'M',  grp:'lg_n',  sub:'Crusher',        mv:MV.N_CR, pr:'LG1' },
+    { id:'N',  grp:'lg_n',  sub:'Direct to Pile', mv:MV.N_DP, pr:'LG1' },
+    { id:'O',  grp:'lg_n',  sub:'Stock',          mv:MV.N_SY, pr:'LG1' },
+    { id:'P',  grp:'lg_y',  sub:'Crusher',        mv:MV.Y_CR, pr:'LG1' },
+    { id:'Q',  grp:'lg_y',  sub:'Direct to Pile', mv:MV.Y_DP, pr:'LG1' },
+    { id:'R',  grp:'lg_y',  sub:'Other Usage',    mv:MV.Y_OU, pr:'LG1' },
+    /* LIMESTONE SPG */
+    { id:'S',  grp:'spg',   sub:'Crusher',        mv:MV.Y_CR, pr:'LIMESTONE SPG' },
+    { id:'T',  grp:'spg',   sub:'Direct to Pile', mv:MV.Y_DP, pr:'LIMESTONE SPG' },
+    /* OB / CLAY */
+    { id:'U',  grp:'ob_s',  sub:'Crusher',        mv:MV.S_CR, pr:'OB/CLAY' },
+    { id:'V',  grp:'ob_s',  sub:'Direct to Pile', mv:MV.S_DP, pr:'OB/CLAY' },
+    { id:'W',  grp:'ob_s',  sub:'Stock',          mv:MV.S_SY, pr:'OB/CLAY' },
+    { id:'X',  grp:'ob_s',  sub:'Waste Dump',     mv:MV.S_WD, pr:'WASTE' },
+    { id:'Y',  grp:'ob_n',  sub:'Crusher',        mv:MV.N_CR, pr:'OB/CLAY' },
+    { id:'Z',  grp:'ob_n',  sub:'Direct to Pile', mv:MV.N_DP, pr:'OB/CLAY' },
+    { id:'AA', grp:'ob_n',  sub:'Stock',          mv:MV.N_SY, pr:'OB/CLAY' },
+    { id:'AB', grp:'ob_n',  sub:'Waste Dump',     mv:MV.N_WD, pr:'WASTE' },
+    { id:'AC', grp:'ob_y',  sub:'Crusher',        mv:MV.Y_CR, pr:'OB/CLAY' },
+    { id:'AD', grp:'ob_y',  sub:'Other Usages',   mv:MV.Y_OU, pr:'OB/CLAY' },
+    { id:'AE', grp:'ob_y',  sub:'Direct to Pile', mv:MV.Y_DP, pr:'OB/CLAY' },
+    /* MG-HG (HGHMGO) */
+    { id:'AF', grp:'mghg_s', sub:'Crusher',        mv:MV.S_CR, pr:'HGHMGO' },
+    { id:'AG', grp:'mghg_s', sub:'Direct to Pile', mv:MV.S_DP, pr:'HGHMGO' },
+    { id:'AH', grp:'mghg_s', sub:'Stock',          mv:MV.S_SY, pr:'HGHMGO' },
+    { id:'AI', grp:'mghg_y', sub:'Crusher',        mv:MV.Y_CR, pr:'HGHMGO' },
+    /* MG-LG (LGHMGO) */
+    { id:'AJ', grp:'mglg_s', sub:'Crusher',        mv:MV.S_CR, pr:'LGHMGO' },
+    { id:'AK', grp:'mglg_s', sub:'Direct to Pile', mv:MV.S_DP, pr:'LGHMGO' },
+    { id:'AL', grp:'mglg_s', sub:'Stock',          mv:MV.S_SY, pr:'LGHMGO' },
+    { id:'AM', grp:'mglg_y', sub:'Crusher',        mv:MV.Y_CR, pr:'LGHMGO' },
+    /* GYPSUM */
+    { id:'AP', grp:'gyp',   sub:'Crusher',        mv:MV.Y_CR, pr:'GYPSUM' },
+    { id:'AQ', grp:'gyp',   sub:'Direct (LCL)',   mv:MV.Y_DP, pr:'GYPSUM' },
+    /* ID CLAY */
+    { id:'AR', grp:'clay',  sub:'Stock to Other Usages', mv:MV.Y_OU, pr:'ID Clay' },
+    { id:'AS', grp:'clay',  sub:'Stock to Pile',         mv:MV.Y_DP, pr:'ID Clay' },
+    { id:'AT', grp:'clay',  sub:'Kijaka → Stock',        mv:MV.K_SY, pr:'ID Clay' }
+  ];
+  var COL_BY_ID = {};
+  TMH_COLS.forEach(function (c) { COL_BY_ID[c.id] = c; });
+
+  /* Manual daily columns (no weighbridge source — typed in by mines office) */
+  var MANUAL_COLS = [
+    { id:'AW', key:'aw', lbl:'LG1 hauled by LCL truck' },
+    { id:'AX', key:'ax', lbl:'LG1 other usage — Digalla' },
+    { id:'AY', key:'ay', lbl:'LG1 other usage — On Africa' }
+  ];
+
+  /* Matrix header groups (order = Excel order) */
+  var TMH_GROUPS = [
+    { cls:'gh-hg',   lbl:'HG from South',        cols:['B','C','D'] },
+    { cls:'gh-hg',   lbl:'HG from North',        cols:['E','F','G'] },
+    { cls:'gh-hg',   lbl:'HG from Stock',        cols:['H','I'] },
+    { cls:'gh-lg1',  lbl:'LG1 from South',       cols:['J','K','L'] },
+    { cls:'gh-lg1',  lbl:'LG1 from North',       cols:['M','N','O'] },
+    { cls:'gh-lg1',  lbl:'LG1 from Stock',       cols:['P','Q','R'] },
+    { cls:'gh-spg',  lbl:'Limestone SPG',        cols:['S','T'] },
+    { cls:'gh-ob',   lbl:'OB from South',        cols:['U','V','W','X'] },
+    { cls:'gh-ob',   lbl:'OB from North',        cols:['Y','Z','AA','AB'] },
+    { cls:'gh-ob',   lbl:'OB from Stock',        cols:['AC','AD','AE'] },
+    { cls:'gh-mghg', lbl:'MG-HG from South',     cols:['AF','AG','AH'] },
+    { cls:'gh-mghg', lbl:'MG-HG Stock→Crusher',  cols:['AI'] },
+    { cls:'gh-mglg', lbl:'MG-LG from South',     cols:['AJ','AK','AL'] },
+    { cls:'gh-mglg', lbl:'MG-LG Stock→Crusher',  cols:['AM'] },
+    { cls:'gh-tot',  lbl:'TMH',                  cols:['TMH'] },
+    { cls:'gh-oth',  lbl:'Gypsum to Crusher',    cols:['AP','AQ'] },
+    { cls:'gh-oth',  lbl:'ID Clay',              cols:['AR','AS','AT'] },
+    { cls:'gh-tot',  lbl:'Totals',               cols:['TOTAL','WO_OB'] },
+    { cls:'gh-man',  lbl:'Manual — LG1 other haulage', cols:['AW','AX','AY'] },
+    { cls:'gh-tot',  lbl:'Routing',              cols:['VIA_CR','GRAND'] }
+  ];
+  var DERIVED_SUBS = { TMH:'Σ B..AM', TOTAL:'Total TMH', WO_OB:'w/o Overburden', VIA_CR:'Via Crusher', GRAND:'TOTAL' };
+
+  /* Formula sets (Excel column letters). AM added to crusher/consumption sets —
+     see Method Notes; the Excel formula skipped it. */
+  var SET_TMH      = ['B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ','AK','AL','AM'];
+  var SET_EXTRA    = ['AP','AQ','AR','AS','AT'];                 /* added on top of TMH for TOTAL */
+  var SET_WASTE    = ['X','AB'];
+  var SET_VIA_CR   = ['B','E','H','J','M','P','S','U','Y','AC','AF','AI','AJ','AM','AP'];
+  var SET_KIMBIJI  = ['B','C','D','E','F','G','J','K','L','M','N','O','AF','AG','AH','AJ','AK','AL'];
+  var SET_LIMECONS = ['B','C','E','F','H','I','J','K','M','N','P','Q','R','AF','AG','AI','AJ','AK','AM'];
+  var SET_OB_ROY   = ['U','V','W'];
+  var SET_OB_CONS  = ['U','V','AC'];
+  var SET_LCL      = ['AR','AQ'];                                 /* "hauled by LCL truck" per workbook */
+
+  /* Stock-yard ledger — receipts into stock / issues out of stock, per grade.
+     Mirrors the "Supply to date 2026" sheet. Manual cols in lowercase keys. */
+  var LEDGER = {
+    HG:     { into:['D','G'],  out:['H','I'] },
+    LG1:    { into:['L','O'],  out:['P','Q','R','AW','AX','AY'] },
+    HGHMGO: { into:['AH'],     out:['AI'] },
+    OB:     { into:['W','AA'], out:['AC','AD','AE'] },
+    IDCLAY: { into:['AT'],     out:['AR','AS'] },
+    SPG:    { into:[],         out:['S','T'] }
+  };
+  var GRADES = {
+    HG:     { lbl:'HG',            code:'QRM001' },
+    LG1:    { lbl:'LG1',           code:'QRM003' },
+    HGHMGO: { lbl:'HGHMGO',        code:'QRM005' },
+    OB:     { lbl:'OB',            code:'QRM007' },
+    IDCLAY: { lbl:'ID Clay',       code:'QRM008' },
+    SPG:    { lbl:'LIMESTONE SPG', code:'RM000005' },
+    GYPSUM: { lbl:'GYPSUM',        code:'RM000003' }
+  };
+  var STOCK_GRADES = ['HG','LG1','HGHMGO','OB','IDCLAY'];
+
+  /* MIS row groups. Region arrays hold TMH column ids feeding that cell. */
+  var MIS_GROUPS = [
+    { lbl:'MINES TO STOCK YARD', summary:true, rows:[
+      { g:'HG',     north:['G'],  south:['D'] },
+      { g:'LG1',    north:['O'],  south:['L'] },
+      { g:'HGHMGO',               south:['AH'] },
+      { g:'OB',     north:['AA'], south:['W'] },
+      { g:'IDCLAY', kijaka:['AT'] },
+      { g:'SPG' }
+    ]},
+    { lbl:'MINES TO PILE — THROUGH CRUSHER', rows:[
+      { g:'HG',     north:['E'], south:['B'] },
+      { g:'LG1',    north:['M'], south:['J'] },
+      { g:'HGHMGO',              south:['AF'] },
+      { g:'OB',     north:['Y'], south:['U'] },
+      { g:'IDCLAY' }
+    ]},
+    { lbl:'MINES TO PILE — BYPASS CRUSHER', rows:[
+      { g:'HG',     north:['F'], south:['C'] },
+      { g:'LG1',    north:['N'], south:['K'] },
+      { g:'HGHMGO',              south:['AG'] },
+      { g:'OB',     north:['Z'], south:['V'] },
+      { g:'IDCLAY' }
+    ]},
+    { lbl:'STOCK YARD TO PILE — THROUGH CRUSHER', rows:[
+      { g:'HG',     south:['H'] },
+      { g:'LG1',    south:['P'] },
+      { g:'HGHMGO', south:['AI'] },
+      { g:'OB',     south:['AC'] },
+      { g:'SPG',    spg:['S'] }
+    ]},
+    { lbl:'STOCK YARD TO PILE — BYPASS CRUSHER', rows:[
+      { g:'HG',     south:['I'] },
+      { g:'LG1',    south:['Q'] },
+      { g:'OB',     south:['AE'] },
+      { g:'IDCLAY', kijaka:['AS'] },
+      { g:'SPG',    spg:['T'] }
+    ]},
+    { lbl:'GYPSUM — STOCK YARD TO PILE', rows:[
+      { g:'GYPSUM', deliver:['AP','AQ'] }
+    ]},
+    { lbl:'MINES TO DUMP (WASTE)', rows:[
+      { g:'OB', north:['AB'], south:['X'] }
+    ]}
+  ];
+  /* Summary columns shown only on the MINES TO STOCK YARD rows */
+  var MIS_DELIVER = {
+    HG:['B','C','E','F','H','I'], LG1:['J','K','M','N','P','Q','AW'],
+    HGHMGO:['AF','AG','AI'], OB:['U','V','Y','Z','AC','AE'],
+    IDCLAY:['AS'], SPG:['S','T']
+  };
+  var MIS_OTHER = { LG1:['R','AX','AY'], OB:['AD'], IDCLAY:['AR'] };
+
+  /* ── tiny utils ────────────────────────────────────────────── */
+  function $(id) { return document.getElementById(id); }
+  function lsGet(k, def) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch (e) { return def; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { alert('Could not save — browser storage is full.'); return false; } }
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function isoOf(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function dateOf(iso) { var p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function ymOf(iso) { return iso.slice(0, 7); }
+  function daysInMonth(ym) { var p = ym.split('-'); return new Date(+p[0], +p[1], 0).getDate(); }
+  function lastDayPrevMonth(ym) { var p = ym.split('-'); return isoOf(new Date(+p[0], +p[1] - 1, 0)); }
+  function monthLabel(ym) { var p = ym.split('-'); return new Date(+p[0], +p[1] - 1, 1).toLocaleDateString('en-GB', { month:'long', year:'numeric' }); }
+  function fmt(n, blankZero) {
+    if (n === null || n === undefined || isNaN(n)) return '–';
+    if (Math.abs(n) < 0.005) return blankZero === false ? '0.00' : '–';
+    return n.toLocaleString('en-GB', { minimumFractionDigits:2, maximumFractionDigits:2 });
+  }
+  function toast(msg, bad) {
+    var t = document.createElement('div');
+    t.className = 'toast';
+    t.style.background = bad ? '#C62828' : '#239557';
+    t.innerHTML = '<span style="font-size:15px">' + (bad ? '✕' : '✓') + '</span><span>' + msg + '</span>';
+    document.body.appendChild(t);
+    setTimeout(function () { t.remove(); }, 3600);
+  }
+
+  /* ── stores ───────────────────────────────────────────────── */
+  var store = {
+    txns: lsGet(LS_TXNS, null),      /* {v, meta:{importedAt}, rows:[[ticket,vendor,vehicle,transfer,movement,product,date,qty,time],…]} */
+    openings: lsGet(LS_OPEN, null),  /* { '2026-04': {HG:…, LG1:…, HGHMGO:…, OB:…, IDCLAY:…} } */
+    manual: lsGet(LS_MANUAL, null)   /* { daily:{date:{aw,ax,ay}}, monthly:{ym:{wasteAmin,wasteDigalla,day1Rule}}, signoff:{date:{sup,eng,mgr}} } */
+  };
+  if (!store.openings) {
+    /* Seed with the April 2026 openings from the reference workbook so first
+       parity check against Excel works out of the box. Fully editable. */
+    store.openings = { '2026-04': { HG:44414.57, LG1:394234.20, HGHMGO:9895.62, OB:11123.38, IDCLAY:148.76 } };
+    lsSet(LS_OPEN, store.openings);
+  }
+  if (!store.manual) store.manual = { daily:{}, monthly:{}, signoff:{} };
+  if (!store.manual.daily) store.manual.daily = {};
+  if (!store.manual.monthly) store.manual.monthly = {};
+  if (!store.manual.signoff) store.manual.signoff = {};
+
+  function monthCfg(ym) {
+    var m = store.manual.monthly[ym];
+    return {
+      wasteAmin:   m && isFinite(+m.wasteAmin)   ? +m.wasteAmin   : 0,
+      wasteDigalla:m && isFinite(+m.wasteDigalla)? +m.wasteDigalla: 0,
+      day1Rule:    m && m.day1Rule !== undefined ? !!m.day1Rule   : true
+    };
+  }
+  function saveManual() { lsSet(LS_MANUAL, store.manual); flashSaved(); }
+  var _savedT = null;
+  function flashSaved() {
+    var el = $('setup-saved'); if (!el) return;
+    el.textContent = 'Saved ✓';
+    clearTimeout(_savedT); _savedT = setTimeout(function () { el.textContent = ''; }, 2000);
+  }
+
+  /* ── aggregation index ────────────────────────────────────────
+     idx[date][colId] = qty ;  tickets[date][colId] = [row,…]      */
+  var idx = {}, tickets = {}, dataDates = [];
+  function rebuildIndex() {
+    idx = {}; tickets = {}; dataDates = [];
+    if (!store.txns || !store.txns.rows) return;
+    var mvpr = {}; /* movement|product → colId */
+    TMH_COLS.forEach(function (c) { mvpr[c.mv + '|' + c.pr] = c.id; });
+    store.txns.rows.forEach(function (r) {
+      var col = mvpr[r[4] + '|' + r[5]];
+      if (!col) return;                        /* unmapped movement/product — ignored like Excel */
+      var d = r[6];
+      if (!idx[d]) { idx[d] = {}; tickets[d] = {}; }
+      idx[d][col] = (idx[d][col] || 0) + (+r[7] || 0);
+      (tickets[d][col] = tickets[d][col] || []).push(r);
+    });
+    dataDates = Object.keys(idx).sort();
+  }
+
+  /* value of one column on the report day (Excel day-1 rule on the 1st) */
+  function reportDates(dateISO) {
+    var ym = ymOf(dateISO);
+    if (dateISO.slice(8) === '01' && monthCfg(ym).day1Rule) return [lastDayPrevMonth(ym), dateISO];
+    return [dateISO];
+  }
+  function dayVal(colId, dateISO) {
+    if (colId === 'AW' || colId === 'AX' || colId === 'AY') {
+      var mkey = { AW:'aw', AX:'ax', AY:'ay' }[colId];
+      var d = store.manual.daily[dateISO];
+      return d && isFinite(+d[mkey]) ? +d[mkey] : 0;
+    }
+    var s = 0;
+    reportDates(dateISO).forEach(function (d) { if (idx[d]) s += idx[d][colId] || 0; });
+    return s;
+  }
+  function dayTickets(colId, dateISO) {
+    var out = [];
+    reportDates(dateISO).forEach(function (d, i, arr) {
+      var spill = arr.length > 1 && i === 0;
+      ((tickets[d] || {})[colId] || []).forEach(function (r) { out.push({ r:r, spill:spill }); });
+    });
+    return out;
+  }
+  function sumSet(set, dateISO) { var s = 0; set.forEach(function (c) { s += dayVal(c, dateISO); }); return s; }
+
+  /* derived per-day metrics */
+  function dayTotals(dateISO) {
+    var tmh = sumSet(SET_TMH, dateISO);
+    var total = tmh + sumSet(SET_EXTRA, dateISO);
+    var waste = sumSet(SET_WASTE, dateISO);
+    return { tmh:tmh, total:total, waste:waste, woOb:total - waste, viaCr:sumSet(SET_VIA_CR, dateISO) };
+  }
+
+  /* iterate all days of month ym up to (and incl.) limitISO if given */
+  function monthDays(ym, limitISO) {
+    var out = [], n = daysInMonth(ym);
+    for (var d = 1; d <= n; d++) {
+      var iso = ym + '-' + pad2(d);
+      if (limitISO && iso > limitISO) break;
+      out.push(iso);
+    }
+    return out;
+  }
+  /* MTD sum of a column set at date */
+  function mtdSet(set, dateISO) {
+    var s = 0;
+    monthDays(ymOf(dateISO), dateISO).forEach(function (d) { s += sumSet(set, d); });
+    return s;
+  }
+  /* fiscal-YTD (from 1 April) sum of a column set at date */
+  function fyStartYM(dateISO) {
+    var y = +dateISO.slice(0, 4), m = +dateISO.slice(5, 7);
+    return (m >= FY_START_MONTH ? y : y - 1) + '-' + pad2(FY_START_MONTH);
+  }
+  function ytdSet(set, dateISO) {
+    var s = 0, ym = fyStartYM(dateISO), last = ymOf(dateISO);
+    while (ym <= last) {
+      monthDays(ym, dateISO).forEach(function (d) { s += sumSet(set, d); });
+      var p = ym.split('-'); var nx = new Date(+p[0], +p[1], 1);
+      ym = nx.getFullYear() + '-' + pad2(nx.getMonth() + 1);
+    }
+    return s;
+  }
+
+  /* ── stock ledger ──────────────────────────────────────────────
+     opening(grade, date): walk forward from the latest month with a
+     configured opening. Cached per render cycle.                    */
+  var _openCache = {};
+  function clearCaches() { _openCache = {}; }
+  function configuredOpening(ym) { return store.openings[ym] || null; }
+  function openingStock(grade, dateISO) {
+    var key = grade + '|' + dateISO;
+    if (key in _openCache) return _openCache[key];
+    /* find anchor month ≤ date having a configured opening */
+    var ym = ymOf(dateISO), anchor = null, guard = 0;
+    var cur = ym;
+    while (guard++ < 36) {
+      if (configuredOpening(cur)) { anchor = cur; break; }
+      var p = cur.split('-'); var pv = new Date(+p[0], +p[1] - 2, 1);
+      cur = pv.getFullYear() + '-' + pad2(pv.getMonth() + 1);
+      if (cur < '2020-01') break;
+    }
+    var val = 0;
+    if (anchor) {
+      var cfgv = configuredOpening(anchor)[grade];
+      val = isFinite(+cfgv) ? +cfgv : 0;
+      /* walk day by day from anchor month start to the day before dateISO */
+      var led = LEDGER[grade] || { into:[], out:[] };
+      var d = anchor + '-01';
+      while (d < dateISO) {
+        val += sumSet(led.into, d) - sumSet(led.out, d);
+        var nd = dateOf(d); nd.setDate(nd.getDate() + 1); d = isoOf(nd);
       }
-    })();
+    }
+    _openCache[key] = val;
+    return val;
+  }
+  function closingStock(grade, dateISO) {
+    var led = LEDGER[grade] || { into:[], out:[] };
+    return openingStock(grade, dateISO) + sumSet(led.into, dateISO) - sumSet(led.out, dateISO);
+  }
+
+  /* ══════════════════ RENDERING ══════════════════ */
+  var selDate = isoOf(new Date());
+
+  function latestDataDate() { return dataDates.length ? dataDates[dataDates.length - 1] : null; }
+
+  function renderAll() {
+    clearCaches();
+    renderDataChip();
+    renderKpis();
+    renderChart();
+    renderMatrix();
+    renderSummary();
+    renderContractors();
+    renderSetup();
+    renderMis();
+    renderSignoff();
+    $('so-date-lbl').textContent = dateOf(selDate).toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+    if (window.lucide) lucide.createIcons();
+  }
+
+  /* ── data chip ── */
+  function renderDataChip() {
+    var chip = $('data-chip'), txt = $('data-chip-txt');
+    if (!store.txns || !store.txns.rows || !store.txns.rows.length) {
+      chip.classList.remove('has-data');
+      txt.innerHTML = 'No weighbridge data — <strong>Import Excel</strong> to begin';
+      return;
+    }
+    chip.classList.add('has-data');
+    txt.innerHTML = '<strong>' + store.txns.rows.length.toLocaleString() + '</strong> tickets · ' +
+      dataDates[0] + ' → ' + dataDates[dataDates.length - 1] +
+      (store.txns.meta && store.txns.meta.importedAt ? ' · imported ' + store.txns.meta.importedAt.slice(0, 10) : '');
+  }
+
+  /* ── KPI strip ── */
+  function kpiTile(cls, badge, lbl, val, unit, vs, vsCls) {
+    return '<div class="kt ' + cls + '"><span class="kt-badge">' + badge + '</span>' +
+      '<div class="kt-lbl">' + lbl + '</div><div class="kt-val">' + val + '</div>' +
+      '<div class="kt-unit">' + unit + '</div>' +
+      (vs ? '<div class="kt-vs ' + (vsCls || '') + '">' + vs + '</div>' : '') + '</div>';
+  }
+  function renderKpis() {
+    var t = dayTotals(selDate);
+    var prev = dateOf(selDate); prev.setDate(prev.getDate() - 1);
+    var tp = dayTotals(isoOf(prev));
+    var mtdTot = mtdSet(SET_TMH, selDate) + mtdSet(SET_EXTRA, selDate);
+    var mtdWaste = mtdSet(SET_WASTE, selDate);
+    var mtdVia = mtdSet(SET_VIA_CR, selDate);
+    var limeToday = sumSet(SET_LIMECONS, selDate);
+    var stock = 0, top = { g:'', v:-1 };
+    STOCK_GRADES.forEach(function (g) {
+      var c = closingStock(g, selDate); stock += c;
+      if (c > top.v) top = { g:GRADES[g].lbl, v:c };
+    });
+    var dayN = +selDate.slice(8);
+    var delta = t.total - tp.total;
+    var deltaTxt = tp.total > 0 || t.total > 0
+      ? (delta >= 0 ? '▲ ' : '▼ ') + fmt(Math.abs(delta), false) + ' MT vs previous day' : 'No movement recorded';
+    $('kpi-strip').innerHTML =
+      kpiTile('kt-f', 'Formula', 'Total TMH — On Date', fmt(t.total, false), 'MT · ' + selDate, deltaTxt, delta >= 0 ? 'vs-ok' : 'vs-ng') +
+      kpiTile('kt-f', 'Formula', 'Total TMH — MTD', fmt(mtdTot, false), 'MT · ' + monthLabel(ymOf(selDate)),
+        '▲ avg ' + fmt(dayN ? mtdTot / dayN : 0, false) + ' MT/day over ' + dayN + ' days', 'vs-ok') +
+      kpiTile('kt-f', 'Formula', 'Via Crusher — On Date', t.total > 0 ? (100 * t.viaCr / t.total).toFixed(1) + '%' : '–',
+        fmt(t.viaCr, false) + ' MT crushed', 'MTD via crusher: ' + fmt(mtdVia, false) + ' MT', 'vs-wa') +
+      kpiTile('kt-s', 'System', 'Limestone to Plant — On Date', fmt(limeToday, false), 'MT · lime consumption basis',
+        'MTD: ' + fmt(mtdSet(SET_LIMECONS, selDate), false) + ' MT', 'vs-ok') +
+      kpiTile('kt-f', 'Formula', 'Waste to Dump — MTD', fmt(mtdWaste, false), 'MT · Golani dump',
+        mtdTot > 0 ? (100 * mtdWaste / mtdTot).toFixed(1) + '% of total hauled' : '—', mtdWaste > 0 ? 'vs-wa' : 'vs-ok') +
+      kpiTile('kt-f', 'Formula', 'Stock Yard — Closing Stock', fmt(stock, false), 'MT · all grades · end of ' + selDate,
+        'Largest: ' + top.g + ' (' + fmt(top.v, false) + ' MT)', 'vs-ok');
+  }
+
+  /* ── chart (stacked bars: material + waste) ── */
+  function renderChart() {
+    var ym = ymOf(selDate);
+    $('chart-month-lbl').textContent = monthLabel(ym);
+    var svg = $('tmh-chart');
+    var days = monthDays(ym);
+    var data = days.map(function (d) {
+      var t = dayTotals(d);
+      return { d:d, mat:t.woOb, waste:t.waste, total:t.total, via:t.viaCr };
+    });
+    var W = svg.clientWidth || 900, H = 180, padL = 52, padR = 8, padT = 12, padB = 22;
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+    var max = Math.max.apply(null, data.map(function (x) { return x.total; }).concat([1]));
+    var niceMax = Math.ceil(max / 1000) * 1000 || 1000;
+    var iw = (W - padL - padR) / days.length;
+    var bw = Math.max(3, Math.min(26, iw - 4));
+    var y = function (v) { return padT + (H - padT - padB) * (1 - v / niceMax); };
+    var html = '';
+    /* gridlines */
+    for (var g = 0; g <= 4; g++) {
+      var gv = niceMax * g / 4, gy = y(gv);
+      html += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + gy + '" y2="' + gy + '" stroke="#E5EAF2" stroke-width="1"/>' +
+        '<text x="' + (padL - 6) + '" y="' + (gy + 3) + '" text-anchor="end" font-size="9" fill="#8A94A6" font-family="Inter,sans-serif">' +
+        (gv >= 1000 ? (gv / 1000) + 'k' : gv) + '</text>';
+    }
+    var maxIdx = -1, maxV = -1;
+    data.forEach(function (x, i) { if (x.total > maxV) { maxV = x.total; maxIdx = i; } });
+    data.forEach(function (x, i) {
+      var cx = padL + i * iw + (iw - bw) / 2;
+      var mh = (H - padT - padB) * x.mat / niceMax;
+      var wh = (H - padT - padB) * x.waste / niceMax;
+      var yMat = y(x.mat);
+      if (x.mat > 0) html += '<rect x="' + cx + '" y="' + yMat + '" width="' + bw + '" height="' + mh + '" rx="' + (x.waste > 0 ? 0 : 3) + '" fill="var(--chart-a)"/>';
+      if (x.waste > 0) html += '<rect x="' + cx + '" y="' + (yMat - wh - 2) + '" width="' + bw + '" height="' + wh + '" rx="3" fill="var(--chart-b)"/>';
+      if (i === maxIdx && x.total > 0)
+        html += '<text x="' + (cx + bw / 2) + '" y="' + (y(x.total) - (x.waste > 0 ? 7 : 4)) + '" text-anchor="middle" font-size="9" font-weight="700" fill="#5A6270" font-family="Inter,sans-serif">' + Math.round(x.total).toLocaleString() + '</text>';
+      /* x labels every 2nd day */
+      if ((i + 1) % 2 === 1)
+        html += '<text x="' + (cx + bw / 2) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="8.5" fill="' + (x.d === selDate ? '#F49545' : '#8A94A6') + '" font-weight="' + (x.d === selDate ? '800' : '400') + '" font-family="Inter,sans-serif">' + (i + 1) + '</text>';
+      /* hover hit area */
+      html += '<rect class="bar-hit" data-i="' + i + '" x="' + (padL + i * iw) + '" y="' + padT + '" width="' + iw + '" height="' + (H - padT - padB) + '" fill="transparent"/>';
+    });
+    svg.innerHTML = html;
+    var tip = $('chart-tip');
+    svg.querySelectorAll('.bar-hit').forEach(function (r) {
+      r.addEventListener('mousemove', function (e) {
+        var x = data[+r.getAttribute('data-i')];
+        tip.style.display = 'block';
+        tip.style.left = Math.min(e.clientX + 14, window.innerWidth - 250) + 'px';
+        tip.style.top = (e.clientY + 14) + 'px';
+        tip.innerHTML = '<div class="ct-d">' + dateOf(x.d).toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' }) + '</div>' +
+          'Total: <strong>' + fmt(x.total, false) + '</strong> MT<br>' +
+          'Material: ' + fmt(x.mat, false) + ' · Waste: ' + fmt(x.waste, false) + '<br>' +
+          'Via crusher: ' + fmt(x.via, false) + ' MT';
+      });
+      r.addEventListener('mouseleave', function () { tip.style.display = 'none'; });
+      r.addEventListener('click', function () {
+        selDate = data[+r.getAttribute('data-i')].d;
+        $('rpt-date').value = selDate;
+        renderAll();
+      });
+    });
+  }
+
+  /* ── TMH matrix ── */
+  function visibleCols(ym) {
+    var hide = $('hide-empty').checked;
+    var days = monthDays(ym);
+    return TMH_COLS.filter(function (c) {
+      if (!hide) return true;
+      return days.some(function (d) { return dayVal(c.id, d) > 0.004; });
+    }).map(function (c) { return c.id; });
+  }
+  function renderMatrix() {
+    var ym = ymOf(selDate);
+    $('tmh-month-lbl').textContent = monthLabel(ym);
+    $('setup-month-lbl').textContent = monthLabel(ym);
+    var vis = {}, hideEmpty = $('hide-empty').checked;
+    visibleCols(ym).forEach(function (id) { vis[id] = true; });
+    var days = monthDays(ym);
+    var manualVisible = {};
+    MANUAL_COLS.forEach(function (mc) {
+      manualVisible[mc.id] = !hideEmpty || days.some(function (d) { return dayVal(mc.id, d) > 0.004; });
+    });
+
+    /* build header */
+    var h1 = '<tr><th class="datec gh-tot" rowspan="2">Date</th>', h2 = '<tr class="sh">';
+    TMH_GROUPS.forEach(function (grp) {
+      var cols = grp.cols.filter(function (id) {
+        if (COL_BY_ID[id]) return vis[id];
+        if (id === 'AW' || id === 'AX' || id === 'AY') return manualVisible[id];
+        return true; /* derived always shown */
+      });
+      if (!cols.length) return;
+      h1 += '<th class="' + grp.cls + '" colspan="' + cols.length + '">' + grp.lbl + '</th>';
+      cols.forEach(function (id) {
+        var sub = COL_BY_ID[id] ? COL_BY_ID[id].sub :
+          (DERIVED_SUBS[id] || (MANUAL_COLS.find(function (m) { return m.id === id; }) || {}).lbl || id);
+        h2 += '<th title="' + (COL_BY_ID[id] ? COL_BY_ID[id].mv + ' · ' + COL_BY_ID[id].pr : sub) + '">' + sub + '</th>';
+      });
+    });
+    h1 += '</tr>'; h2 += '</tr>';
+
+    /* body rows + totals */
+    var colOrder = [];
+    TMH_GROUPS.forEach(function (grp) {
+      grp.cols.forEach(function (id) {
+        if (COL_BY_ID[id] && !vis[id]) return;
+        if ((id === 'AW' || id === 'AX' || id === 'AY') && !manualVisible[id]) return;
+        colOrder.push(id);
+      });
+    });
+    var totals = {};
+    colOrder.forEach(function (id) { totals[id] = 0; });
+    var today = isoOf(new Date());
+    var body = '';
+    days.forEach(function (d) {
+      var t = dayTotals(d);
+      var derived = { TMH:t.tmh, TOTAL:t.total, WO_OB:t.woOb, VIA_CR:t.viaCr, GRAND:t.total };
+      var rowCls = (d === today ? 'today-row ' : '') + (d === selDate ? 'sel-row' : '');
+      body += '<tr class="' + rowCls + '"><td class="datec">' +
+        dateOf(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short' }) +
+        ' <span style="color:#94A3B8;font-weight:500">' + dateOf(d).toLocaleDateString('en-GB', { weekday:'short' }) + '</span></td>';
+      colOrder.forEach(function (id) {
+        var v;
+        if (derived[id] !== undefined) {
+          v = derived[id]; totals[id] += v;
+          body += '<td class="cf' + (v < 0.005 ? ' zz' : '') + '">' + fmt(v) + '</td>';
+        } else if (id === 'AW' || id === 'AX' || id === 'AY') {
+          v = dayVal(id, d); totals[id] += v;
+          body += '<td class="cm"><input type="number" min="0" step="0.01" data-mdate="' + d + '" data-mcol="' + id + '" value="' + (v > 0 ? v : '') + '" placeholder="–"/></td>';
+        } else {
+          v = dayVal(id, d); totals[id] += v;
+          body += v > 0.004
+            ? '<td class="cs clickable" data-cell="' + id + '|' + d + '">' + fmt(v) + '</td>'
+            : '<td class="cs zz">–</td>';
+        }
+      });
+      body += '</tr>';
+    });
+    var foot = '<tr><td class="datec">TOTAL</td>';
+    colOrder.forEach(function (id) {
+      foot += '<td' + (totals[id] < 0.005 ? ' class="zz"' : '') + '>' + fmt(totals[id]) + '</td>';
+    });
+    foot += '</tr>';
+
+    $('tmh-scroll').innerHTML = (store.txns && store.txns.rows && store.txns.rows.length)
+      ? '<table class="mt"><thead>' + h1 + h2 + '</thead><tbody>' + body + '</tbody><tfoot>' + foot + '</tfoot></table>'
+      : emptyState();
+
+    /* cell audit + manual input wiring */
+    $('tmh-scroll').querySelectorAll('[data-cell]').forEach(function (td) {
+      td.addEventListener('click', function () {
+        var p = td.getAttribute('data-cell').split('|');
+        openInspector(p[0], p[1]);
+      });
+    });
+    $('tmh-scroll').querySelectorAll('input[data-mdate]').forEach(function (inp) {
+      inp.addEventListener('change', function () {
+        var d = inp.getAttribute('data-mdate'), col = inp.getAttribute('data-mcol');
+        var key = { AW:'aw', AX:'ax', AY:'ay' }[col];
+        var rec = store.manual.daily[d] || (store.manual.daily[d] = {});
+        rec[key] = parseFloat(inp.value) || 0;
+        saveManual(); renderAll();
+      });
+    });
+  }
+  function emptyState() {
+    return '<div class="empty-state"><div class="es-ico">⛏️</div>' +
+      '<div class="es-t">No weighbridge tickets loaded yet</div>' +
+      '<div class="es-s">Import the Odoo weighbridge export (or the full "Mining Report" workbook — its <strong>Uploaded_Data</strong> sheet is read automatically). ' +
+      'Every figure in both reports is then computed from the ticket log, exactly like the Excel formulas.</div>' +
+      '<button class="btn btn-save" onclick="document.getElementById(\'file-inp\').click()">Import Excel now</button></div>';
+  }
+
+  /* ── monthly summary panels ── */
+  function mSum(set, ym) { var s = 0; monthDays(ym).forEach(function (d) { s += sumSet(set, d); }); return s; }
+  function renderSummary() {
+    var ym = ymOf(selDate);
+    var cfg = monthCfg(ym);
+    var totalOdoo = mSum(SET_TMH, ym) + mSum(SET_EXTRA, ym);
+    var woOb = totalOdoo - mSum(SET_WASTE, ym);
+    var kimbiji = mSum(SET_KIMBIJI, ym);
+    var lime = mSum(SET_LIMECONS, ym);
+    var obRoy = mSum(SET_OB_ROY, ym), obCons = mSum(SET_OB_CONS, ym);
+    var kijaka = mSum(['AT'], ym);
+    var wasteS = mSum(['X'], ym), wasteN = mSum(['AB'], ym);
+    var lcl = mSum(SET_LCL, ym);
+    var remieli = totalOdoo - (cfg.wasteAmin + cfg.wasteDigalla + lcl);
+    var totMonth = remieli + cfg.wasteAmin + lcl + cfg.wasteDigalla;
+    function row(lbl, v, cls) { return '<tr><td class="sl ' + (cls || 'f') + '">' + lbl + '</td><td class="sv ' + (cls || 'f') + '">' + fmt(v) + '</td></tr>'; }
+    function mrow(lbl, key, v) {
+      return '<tr><td class="sl m">' + lbl + '</td><td class="sv m">' +
+        '<input type="number" min="0" step="0.01" data-mkey="' + key + '" value="' + (v > 0 ? v : '') + '" placeholder="0.00"/></td></tr>';
+    }
+    var left =
+      '<table class="sum-tbl">' +
+      '<tr class="sum-grp"><td colspan="2">Tonnage Summary — ' + monthLabel(ym) + '</td></tr>' +
+      row('Total Tonnage VIA Odoo', totalOdoo) +
+      row('Tonnage Exclusive Waste', woOb) +
+      '<tr class="sum-grp"><td colspan="2">Limestone Royalty (Kimbiji)</td></tr>' +
+      row('KIMBIJI ROYALTY — royalty-bearing tonnage', kimbiji) +
+      row('Lime Consumption (to crusher / pile)', lime) +
+      '<tr class="sum-grp"><td colspan="2">OB / Clay</td></tr>' +
+      row('OB/CLAY ROYALTY (South mine)', obRoy) +
+      row('OB/CLAY Consumption', obCons) +
+      '<tr class="sum-grp"><td colspan="2">Kijaka (ID Clay)</td></tr>' +
+      row('Kijaka Tonnage', kijaka) +
+      row('Kijaka Royalty', kijaka) +
+      '<tr class="sum-grp"><td colspan="2">Waste Disposal</td></tr>' +
+      row('Waste to Dump — Remieli (South → Golani)', wasteS) +
+      row('Waste to Dump — North → Golani', wasteN) +
+      mrow('Waste to Dump — Amin (manual)', 'wasteAmin', cfg.wasteAmin) +
+      mrow('Waste to Dump — Digalla (manual)', 'wasteDigalla', cfg.wasteDigalla) +
+      row('Hauled by LCL Truck', lcl) +
+      '</table>';
+    var breakdown = [
+      ['HG (South + North + Stock)', mSum(['B','C','D','E','F','G','H','I'], ym)],
+      ['LG1 (South + North + Stock)', mSum(['J','K','L','M','N','O','P','Q','R'], ym)],
+      ['LIMESTONE SPG', mSum(['S','T'], ym)],
+      ['Overburden / Clay (incl. waste)', mSum(['U','V','W','X','Y','Z','AA','AB','AC','AD','AE'], ym)],
+      ['MG-HG (HGHMGO)', mSum(['AF','AG','AH','AI'], ym)],
+      ['MG-LG (LGHMGO)', mSum(['AJ','AK','AL','AM'], ym)],
+      ['Gypsum to Crusher / Pile', mSum(['AP','AQ'], ym)],
+      ['ID Clay (Other + Pile + Kijaka)', mSum(['AR','AS','AT'], ym)]
+    ];
+    var right =
+      '<table class="sum-tbl">' +
+      '<tr class="sum-grp"><td colspan="2">Tonnage by Contractor</td></tr>' +
+      row('Total Tonnage by Remieli', remieli) +
+      row('Total Tonnage by Amin', cfg.wasteAmin) +
+      row('Total Tonnage by Digalla', cfg.wasteDigalla) +
+      row('Hauled by LCL Truck', lcl) +
+      '<tr class="sum-tot"><td colspan="2" style="text-align:center">Total Tonnage in ' + monthLabel(ym) + ' &nbsp;·&nbsp; ' + fmt(totMonth, false) + ' MT</td></tr>' +
+      '<tr class="sum-grp"><td colspan="2">Material Source Breakdown</td></tr>' +
+      breakdown.map(function (b) { return row(b[0], b[1]); }).join('') +
+      '<tr class="sum-grp"><td colspan="2">Routing Split</td></tr>' +
+      row('Via Crusher', mSum(SET_VIA_CR, ym)) +
+      row('Without Overburden / Waste', woOb) +
+      '</table>';
+    $('tmh-summary').innerHTML = '<div class="sum-panel">' + left + '</div><div class="sum-panel">' + right + '</div>';
+    $('tmh-summary').querySelectorAll('input[data-mkey]').forEach(function (inp) {
+      inp.addEventListener('change', function () {
+        var rec = store.manual.monthly[ym] || (store.manual.monthly[ym] = {});
+        rec[inp.getAttribute('data-mkey')] = parseFloat(inp.value) || 0;
+        saveManual(); renderAll();
+      });
+    });
+  }
+
+  /* ── contractor tiles (from actual vendor field + manual) ── */
+  function renderContractors() {
+    var ym = ymOf(selDate);
+    var cfg = monthCfg(ym);
+    var byVendor = {};
+    if (store.txns && store.txns.rows) {
+      store.txns.rows.forEach(function (r) {
+        if (ymOf(r[6]) !== ym) return;
+        var v = r[1] || 'Unknown';
+        byVendor[v] = (byVendor[v] || 0) + (+r[7] || 0);
+      });
+    }
+    var html = Object.keys(byVendor).sort(function (a, b) { return byVendor[b] - byVendor[a]; })
+      .map(function (v) {
+        var name = v.replace(/^\[[^\]]*\]\s*/, '');
+        return '<div class="contr-card active"><div class="cc-name">' + name + '</div>' +
+          '<div class="cc-val">' + fmt(byVendor[v], false) + '</div>' +
+          '<div class="cc-unit">MT weighed this month (ticket dates)</div></div>';
+      }).join('');
+    html += '<div class="contr-card' + (cfg.wasteAmin > 0 ? ' active' : '') + '"><div class="cc-name">Amin (manual)</div>' +
+      '<div class="cc-val"' + (cfg.wasteAmin > 0 ? '' : ' style="color:var(--text-muted)"') + '>' + (cfg.wasteAmin > 0 ? fmt(cfg.wasteAmin, false) : '–') + '</div>' +
+      '<div class="cc-unit">MT waste allocation</div></div>';
+    html += '<div class="contr-card' + (cfg.wasteDigalla > 0 ? ' active' : '') + '"><div class="cc-name">Digalla (manual)</div>' +
+      '<div class="cc-val"' + (cfg.wasteDigalla > 0 ? '' : ' style="color:var(--text-muted)"') + '>' + (cfg.wasteDigalla > 0 ? fmt(cfg.wasteDigalla, false) : '–') + '</div>' +
+      '<div class="cc-unit">MT waste allocation</div></div>';
+    $('contr-grid').innerHTML = html;
+  }
+
+  /* ── month setup ── */
+  function renderSetup() {
+    var ym = ymOf(selDate);
+    var op = store.openings[ym] || {};
+    var html = STOCK_GRADES.map(function (g) {
+      var v = isFinite(+op[g]) ? +op[g] : '';
+      return '<div class="setup-cell"><label>Opening Stock — ' + GRADES[g].lbl + ' (MT)</label>' +
+        '<input type="number" step="0.01" data-og="' + g + '" value="' + v + '" placeholder="0.00"/></div>';
+    }).join('');
+    $('setup-grid').innerHTML = html;
+    $('day1-rule').checked = monthCfg(ym).day1Rule;
+    $('setup-grid').querySelectorAll('input[data-og]').forEach(function (inp) {
+      inp.addEventListener('change', function () {
+        var rec = store.openings[ym] || (store.openings[ym] = {});
+        rec[inp.getAttribute('data-og')] = parseFloat(inp.value) || 0;
+        lsSet(LS_OPEN, store.openings); flashSaved(); renderAll();
+      });
+    });
+  }
+
+  /* ── MIS ── */
+  function misRegionCells(ids, dateISO) {
+    if (!ids || !ids.length) return '<td class="na">N/A</td><td class="na c-mtd">N/A</td><td class="na c-ytd">N/A</td>';
+    var on = sumSet(ids, dateISO), mtd = mtdSet(ids, dateISO), ytd = ytdSet(ids, dateISO);
+    var auditable = ids.some(function (id) { return COL_BY_ID[id]; });
+    var onCell = auditable && on > 0.004
+      ? '<td class="clickable" data-miscell="' + ids.join(',') + '">' + fmt(on) + '</td>'
+      : '<td class="' + (on < 0.005 ? 'zz' : '') + '">' + fmt(on) + '</td>';
+    return onCell +
+      '<td class="c-mtd' + (mtd < 0.005 ? ' zz' : '') + '">' + fmt(mtd) + '</td>' +
+      '<td class="c-ytd' + (ytd < 0.005 ? ' zz' : '') + '">' + fmt(ytd) + '</td>';
+  }
+  function renderMis() {
+    var d = selDate;
+    $('mis-date-lbl').textContent = dateOf(d).toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    if (!store.txns || !store.txns.rows || !store.txns.rows.length) { $('mis-scroll').innerHTML = emptyState(); return; }
+    var head =
+      '<tr><th class="gradec" rowspan="3">Grade / Material</th><th rowspan="3" style="min-width:70px">Code</th>' +
+      '<th rowspan="3" style="min-width:84px">Opening<br>Stock<span class="mis-sub"><br>on date</span></th>' +
+      '<th colspan="12">RECEIPT / MOVEMENT — MT</th>' +
+      '<th colspan="3">Deliver to Plant</th><th colspan="3">Other Usages / Dump</th>' +
+      '<th rowspan="3" style="min-width:84px">Closing<br>Stock<span class="mis-sub"><br>on date</span></th></tr>' +
+      '<tr><th colspan="3">Kijaka</th><th colspan="3">North</th><th colspan="3">South / Stock Yard</th><th colspan="3">Limestone SPG</th>' +
+      '<th colspan="3" class="mis-sub">to pile (all routes)</th><th colspan="3" class="mis-sub">from stock yard</th></tr>' +
+      '<tr>' + new Array(6).fill('<th>On Date</th><th>MTD</th><th>YTD</th>').join('') + '</tr>';
+    var body = '';
+    MIS_GROUPS.forEach(function (grp) {
+      body += '<tr class="mis-grp"><td colspan="25">' + grp.lbl + '</td></tr>';
+      grp.rows.forEach(function (row) {
+        var g = GRADES[row.g];
+        body += '<tr><td class="gradec"><span class="grade-b">' + g.lbl + '</span></td>' +
+          '<td style="text-align:center"><span class="grade-code">' + g.code + '</span></td>';
+        /* opening */
+        if (grp.summary && LEDGER[row.g]) body += '<td class="c-open">' + fmt(openingStock(row.g, d), false) + '</td>';
+        else body += '<td class="na">N/A</td>';
+        /* receipts: kijaka, north, south, spg */
+        body += misRegionCells(row.kijaka, d) + misRegionCells(row.north, d) + misRegionCells(row.south, d) + misRegionCells(row.spg, d);
+        /* deliver + other + closing (summary rows and gypsum) */
+        if (grp.summary) {
+          body += misRegionCells(MIS_DELIVER[row.g], d) + misRegionCells(MIS_OTHER[row.g], d);
+          body += LEDGER[row.g] ? '<td class="c-close">' + fmt(closingStock(row.g, d), false) + '</td>' : '<td class="na">N/A</td>';
+        } else if (row.deliver) {
+          body += misRegionCells(row.deliver, d) + misRegionCells(null, d) + '<td class="na">N/A</td>';
+        } else {
+          body += misRegionCells(null, d) + misRegionCells(null, d) + '<td class="na">N/A</td>';
+        }
+        body += '</tr>';
+      });
+    });
+    $('mis-scroll').innerHTML = '<table class="mis"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
+    $('mis-scroll').querySelectorAll('[data-miscell]').forEach(function (td) {
+      td.addEventListener('click', function () {
+        var ids = td.getAttribute('data-miscell').split(',').filter(function (id) { return COL_BY_ID[id]; });
+        openInspectorMulti(ids, selDate);
+      });
+    });
+  }
+
+  /* ── sign-off ── */
+  function renderSignoff() {
+    var so = store.manual.signoff[selDate] || {};
+    $('so-sup').value = so.sup || ''; $('so-eng').value = so.eng || ''; $('so-mgr').value = so.mgr || '';
+  }
+  ['so-sup', 'so-eng', 'so-mgr'].forEach(function (id) {
+    document.addEventListener('change', function (e) {
+      if (e.target.id !== id) return;
+      var rec = store.manual.signoff[selDate] || (store.manual.signoff[selDate] = {});
+      rec[id.slice(3)] = e.target.value;
+      saveManual();
+    });
+  });
+
+  /* ── ticket inspector ── */
+  function openInspectorMulti(colIds, dateISO) {
+    var list = [];
+    colIds.forEach(function (id) { dayTickets(id, dateISO).forEach(function (t) { list.push(t); }); });
+    showInspector(list, colIds.map(function (id) {
+      var c = COL_BY_ID[id]; return c ? c.pr + ' · ' + c.mv : id;
+    }).join('  |  '), dateISO);
+  }
+  function openInspector(colId, dateISO) { openInspectorMulti([colId], dateISO); }
+  function showInspector(list, subtitle, dateISO) {
+    list.sort(function (a, b) { return (a.r[8] || '').localeCompare(b.r[8] || ''); });
+    var tot = 0;
+    var rows = list.map(function (t) {
+      tot += +t.r[7] || 0;
+      return '<tr><td>' + t.r[0] + (t.spill ? '<span class="spill-tag">prev-month spillover</span>' : '') + '</td>' +
+        '<td>' + (t.r[2] || '–') + '</td><td>' + (t.r[8] || t.r[6]) + '</td>' +
+        '<td>' + (t.r[1] || '').replace(/^\[[^\]]*\]\s*/, '') + '</td>' +
+        '<td class="r">' + fmt(+t.r[7], false) + '</td></tr>';
+    }).join('');
+    $('insp-title').textContent = 'Ticket Audit — ' + dateISO;
+    $('insp-sub').textContent = subtitle;
+    $('insp-body').innerHTML = list.length
+      ? '<table class="tk-tbl"><thead><tr><th>Ticket</th><th>Vehicle</th><th>Weighed at</th><th>Vendor</th><th style="text-align:right">Net MT</th></tr></thead><tbody>' + rows + '</tbody></table>'
+      : '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">No tickets for this cell.</div>';
+    $('insp-tot').textContent = list.length + ' tickets · ' + fmt(tot, false) + ' MT';
+    $('insp-bg').classList.add('open');
+  }
+  $('insp-x').addEventListener('click', function () { $('insp-bg').classList.remove('open'); });
+  $('insp-close').addEventListener('click', function () { $('insp-bg').classList.remove('open'); });
+  $('insp-bg').addEventListener('click', function (e) { if (e.target === $('insp-bg')) $('insp-bg').classList.remove('open'); });
+
+  /* ══════════════════ EXCEL IMPORT ══════════════════ */
+  var _xlsxLoaded = false, _xlsxQ = [];
+  function loadXLSX(cb) {
+    if (_xlsxLoaded) { cb(); return; }
+    _xlsxQ.push(cb);
+    if (_xlsxQ.length > 1) return;
+    var s = document.createElement('script');
+    s.src = XLSX_CDN;
+    s.onload = function () { _xlsxLoaded = true; _xlsxQ.splice(0).forEach(function (f) { f(); }); };
+    s.onerror = function () { toast('Could not load SheetJS — check internet connection.', true); _xlsxQ.length = 0; };
+    document.head.appendChild(s);
+  }
+  function excelDateISO(v) {
+    if (v == null || v === '') return '';
+    if (v instanceof Date) return isoOf(v);
+    if (typeof v === 'number' && v > 20000) {
+      var d = new Date(Math.round((v - 25569) * 86400000));
+      return d.getUTCFullYear() + '-' + pad2(d.getUTCMonth() + 1) + '-' + pad2(d.getUTCDate());
+    }
+    var s = String(v).trim();
+    var m = s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})/);        /* DD/MM/YYYY */
+    if (m) return m[3] + '-' + pad2(+m[2]) + '-' + pad2(+m[1]);
+    m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);                        /* ISO */
+    if (m) return m[1] + '-' + pad2(+m[2]) + '-' + pad2(+m[3]);
+    return '';
+  }
+  function importWorkbook(wb) {
+    var shName = wb.SheetNames.find(function (n) { return /uploaded[_ ]?data/i.test(n); }) || wb.SheetNames[0];
+    var rows = XLSX.utils.sheet_to_json(wb.Sheets[shName], { header:1, defval:'' });
+    if (!rows.length) return { error:'Sheet "' + shName + '" is empty.' };
+    /* locate header row + columns by name (robust to column re-ordering) */
+    var hIdx = -1, cmap = {};
+    for (var i = 0; i < Math.min(rows.length, 10); i++) {
+      var low = rows[i].map(function (c) { return String(c).trim().toLowerCase(); });
+      var t = low.indexOf('ticket_no');
+      if (t >= 0) {
+        hIdx = i;
+        cmap.ticket = t;
+        cmap.vendor = low.findIndex(function (c) { return c === 'vendor'; });
+        cmap.vehicle = low.findIndex(function (c) { return /vehicle/.test(c); });
+        cmap.transfer = low.findIndex(function (c) { return /transfer\s*type/.test(c); });
+        cmap.movement = low.findIndex(function (c) { return /movement\s*type/.test(c); });
+        cmap.product = low.findIndex(function (c) { return /input\s*product/.test(c); });
+        cmap.gdate = low.findIndex(function (c) { return c === 'grossdate'; });
+        cmap.gdt = low.findIndex(function (c) { return /grossdate\s*&\s*time/.test(c); });
+        cmap.qty = low.findIndex(function (c) { return c === 'net_qty'; });
+        break;
+      }
+    }
+    if (hIdx < 0 || cmap.movement < 0 || cmap.qty < 0 || cmap.gdate < 0)
+      return { error:'Could not find the weighbridge columns (Ticket_No / Movement Type / GrossDate / Net_Qty) in sheet "' + shName + '". Is this the Odoo Uploaded_Data export?' };
+
+    var existing = {};
+    if (store.txns && store.txns.rows) store.txns.rows.forEach(function (r) { existing[r[0]] = r; });
+    var added = 0, updated = 0, skipped = 0, dmin = null, dmax = null;
+    for (var j = hIdx + 1; j < rows.length; j++) {
+      var r = rows[j];
+      var tk = String(r[cmap.ticket]).trim();
+      var dt = excelDateISO(r[cmap.gdate]);
+      var q = parseFloat(r[cmap.qty]);
+      if (!tk || !dt || isNaN(q)) { if (r.some(function (c) { return c !== ''; })) skipped++; continue; }
+      var rec = [tk,
+        String(r[cmap.vendor] || '').trim(),
+        String(r[cmap.vehicle] || '').trim(),
+        String(r[cmap.transfer] || '').trim(),
+        String(r[cmap.movement] || '').trim(),
+        String(r[cmap.product] || '').trim(),
+        dt, q,
+        cmap.gdt >= 0 ? String(r[cmap.gdt] || '').trim() : ''];
+      if (existing[tk]) updated++; else added++;
+      existing[tk] = rec;
+      if (!dmin || dt < dmin) dmin = dt;
+      if (!dmax || dt > dmax) dmax = dt;
+    }
+    var all = Object.keys(existing).map(function (k) { return existing[k]; });
+    all.sort(function (a, b) { return a[6] === b[6] ? String(a[0]).localeCompare(String(b[0])) : (a[6] < b[6] ? -1 : 1); });
+    store.txns = { v:1, meta:{ importedAt:new Date().toISOString() }, rows:all };
+    if (!lsSet(LS_TXNS, store.txns)) return { error:'Browser storage full — could not persist tickets.' };
+    return { added:added, updated:updated, skipped:skipped, dmin:dmin, dmax:dmax, sheet:shName, total:all.length };
+  }
+  function processFile(file) {
+    if (!/\.xlsx?$/i.test(file.name)) { toast('Please choose an .xlsx file.', true); return; }
+    loadXLSX(function () {
+      var rd = new FileReader();
+      rd.onload = function (e) {
+        try {
+          var wb = XLSX.read(e.target.result, { type:'array', cellDates:true });
+          var res = importWorkbook(wb);
+          if (res.error) { toast(res.error, true); return; }
+          rebuildIndex();
+          /* jump to the newest imported data so the user sees the result */
+          if (res.dmax) { selDate = res.dmax; $('rpt-date').value = selDate; }
+          renderAll();
+          toast('Imported "' + res.sheet + '": ' + res.added + ' new, ' + res.updated + ' updated tickets (' + res.dmin + ' → ' + res.dmax + ')');
+        } catch (err) { toast('Could not parse Excel: ' + err.message, true); }
+      };
+      rd.readAsArrayBuffer(file);
+    });
+  }
+  $('btn-import').addEventListener('click', function () { $('file-inp').click(); });
+  $('file-inp').addEventListener('change', function () {
+    if (this.files[0]) processFile(this.files[0]);
+    this.value = '';
+  });
+  /* drag & drop */
+  (function () {
+    var ovl = $('drop-ovl'), depth = 0;
+    document.addEventListener('dragenter', function (e) {
+      if (e.dataTransfer && Array.prototype.slice.call(e.dataTransfer.types).indexOf('Files') >= 0)
+        if (++depth === 1) ovl.style.display = 'flex';
+    });
+    document.addEventListener('dragleave', function () { if (--depth <= 0) { depth = 0; ovl.style.display = 'none'; } });
+    document.addEventListener('dragover', function (e) { e.preventDefault(); });
+    document.addEventListener('drop', function (e) {
+      e.preventDefault(); depth = 0; ovl.style.display = 'none';
+      if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+    });
+  })();
+
+  /* ══════════════════ WIRING ══════════════════ */
+  document.querySelectorAll('.rpt-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.rpt-tab').forEach(function (t) { t.classList.remove('active'); });
+      document.querySelectorAll('.tab-pane').forEach(function (p) { p.classList.remove('active'); });
+      tab.classList.add('active');
+      $('pane-' + tab.getAttribute('data-tab')).classList.add('active');
+    });
+  });
+  $('rpt-date').addEventListener('change', function () {
+    if (this.value) { selDate = this.value; renderAll(); }
+  });
+  $('hide-empty').addEventListener('change', renderMatrix);
+  $('day1-rule').addEventListener('change', function () {
+    var ym = ymOf(selDate);
+    var rec = store.manual.monthly[ym] || (store.manual.monthly[ym] = {});
+    rec.day1Rule = $('day1-rule').checked;
+    saveManual(); renderAll();
+  });
+  $('btn-carry').addEventListener('click', function () {
+    var ym = ymOf(selDate);
+    var p = ym.split('-'); var pv = new Date(+p[0], +p[1] - 2, 1);
+    var prevYm = pv.getFullYear() + '-' + pad2(pv.getMonth() + 1);
+    var lastPrev = lastDayPrevMonth(ym);
+    if (!configuredOpening(prevYm) && !dataDates.some(function (d) { return ymOf(d) === prevYm; })) {
+      toast('No data or opening configured for ' + monthLabel(prevYm) + '.', true); return;
+    }
+    clearCaches();
+    var rec = store.openings[ym] || (store.openings[ym] = {});
+    STOCK_GRADES.forEach(function (g) { rec[g] = Math.round(closingStock(g, lastPrev) * 100) / 100; });
+    lsSet(LS_OPEN, store.openings);
+    toast('Opening stock for ' + monthLabel(ym) + ' set from ' + monthLabel(prevYm) + ' closing.');
+    renderAll();
+  });
+  $('btn-print').addEventListener('click', function () { window.print(); });
+  window.addEventListener('resize', function () { renderChart(); });
+
+  /* ── boot ── */
+  (function () {
+    var d = new Date();
+    $('fts').textContent = 'Generated: ' + d.toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    rebuildIndex();
+    /* default to the most recent day that actually has tickets */
+    var last = latestDataDate();
+    if (last) selDate = last;
+    $('rpt-date').value = selDate;
+    renderAll();
+  })();
   </script>
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-<script>
-  lucide.createIcons();
-  requireAuth();
-  applyDailyPermissions();
-</script>
-<script src="forms/api-client.js"></script>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script>
+    lucide.createIcons();
+    requireAuth();
+    applyDailyPermissions();
+  </script>
+  <script src="forms/api-client.js"></script>
   <script src="forms/offline-queue.js"></script>
   <script src="forms/client-errors.js"></script>
-<script src="forms/form-persist.js"></script>
-<script>initFormPersist('mines');</script>
-<script src="forms/nav-status.js"></script>
-<script src="forms/collapsible.js"></script>
+  <script src="forms/nav-status.js"></script>
+  <script src="forms/collapsible.js"></script>
 </body>
 </html>
-
-
-
-
-
-
