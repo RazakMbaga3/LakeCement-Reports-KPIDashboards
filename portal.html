@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lake Cement â€” Home</title>
+  <title>Lake Cement — Home</title>
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <script src="auth.js?v=7"></script>
   <style>
     /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-       PORTAL HOME â€” page styles
+       PORTAL HOME — page styles
     â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
     body {
       display: flex;
@@ -19,7 +19,7 @@
       background: var(--off-white, #F8FAFC);
     }
 
-    /* â”€â”€ Greeting bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Greeting bar ────────────────────────────────── */
     .portal-greeting {
       background: white;
       border-bottom: 1px solid var(--border, #E2E8F0);
@@ -54,7 +54,7 @@
       border-radius: 20px;
     }
 
-    /* â”€â”€ Main content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Main content ────────────────────────────────── */
     .portal-main {
       flex: 1;
       padding: 28px 28px 56px;
@@ -63,7 +63,7 @@
       margin: 0 auto;
     }
 
-    /* â”€â”€ Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Section ─────────────────────────────────────── */
     .portal-section { margin-bottom: 34px; }
     .portal-section-hdr {
       display: flex;
@@ -93,14 +93,14 @@
       padding: 1px 7px;
     }
 
-    /* â”€â”€ Card grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Card grid ───────────────────────────────────── */
     .portal-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
       gap: 18px;
     }
 
-    /* â”€â”€ Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Card ─────────────────────────────────────────── */
     .pcard {
       position: relative;
       display: flex;
@@ -167,7 +167,7 @@
     }
     .pcard:hover .pcard-arrow { transform: translateX(3px); color: var(--navy, #173158); }
 
-    /* â”€â”€ Empty state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Empty state ─────────────────────────────────── */
     .portal-empty {
       padding: 64px 24px;
       text-align: center;
@@ -176,7 +176,7 @@
       font-weight: 500;
     }
 
-    /* â”€â”€ Footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Footer ─────────────────────────────────────── */
     .portal-footer {
       text-align: center;
       padding: 14px 24px;
@@ -188,7 +188,7 @@
       background: white;
     }
 
-    /* â”€â”€ Responsive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+    /* ── Responsive ─────────────────────────────────── */
     /* ── Desktop no-scroll: lock page to viewport ──────────────── */
     @media (min-width: 769px) {
       html { height: 100%; }
@@ -241,19 +241,19 @@
 <section class="portal-greeting">
   <div>
     <h1 class="pg-title" id="pg-greeting">Welcome</h1>
-    <p  class="pg-sub"   id="pg-sub">Loading your workspaceâ€¦</p>
+    <p  class="pg-sub"   id="pg-sub">Loading your workspace…</p>
   </div>
   <div class="pg-date" id="pg-date"></div>
 </section>
 
 <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• CARDS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <main class="portal-main" id="portal-main">
-  <div class="portal-empty">Loadingâ€¦</div>
+  <div class="portal-empty">Loading…</div>
 </main>
 
 <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• FOOTER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <footer class="portal-footer">
-  Lake Cement Ltd &nbsp;Â·&nbsp; Operations MIS &nbsp;Â·&nbsp; <span id="portal-year"></span>
+  Lake Cement Ltd &nbsp;·&nbsp; Operations MIS &nbsp;·&nbsp; <span id="portal-year"></span>
 </footer>
 
 <script src="portal.js?v=2"></script>
