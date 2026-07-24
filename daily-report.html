@@ -1571,7 +1571,7 @@ initReportLoader({
       compute: function(d, n) {
         return n(d.pwr_crusher_kwh) + n(d.pwr_rawmill_kwh) + n(d.pwr_coalmill_kwh)
              + n(d.pwr_kiln_kwh)   + n(d.pwr_cm2_kwh)     + n(d.pwr_packing_kwh)
-             + n(d.pwr_utils_kwh)  + n(d.pwr_lighting_kwh);
+             + n(d.pwr_lighting_kwh);
       }
     },
 
@@ -1758,7 +1758,6 @@ initReportLoader({
     { kpi: 'pwr_disp_kiln',     fmt: 'n0', compute: function(d,n){ return n(d.pwr_kiln_kwh)||null; } },
     { kpi: 'pwr_disp_cm2',      fmt: 'n0', compute: function(d,n){ return n(d.pwr_cm2_kwh)||null; } },
     { kpi: 'pwr_disp_packing',  fmt: 'n0', compute: function(d,n){ return n(d.pwr_packing_kwh)||null; } },
-    { kpi: 'pwr_disp_utils',    fmt: 'n0', compute: function(d,n){ return n(d.pwr_utils_kwh)||null; } },
     { kpi: 'pwr_disp_lighting', fmt: 'n0', compute: function(d,n){ return n(d.pwr_lighting_kwh)||null; } }
   ],
 

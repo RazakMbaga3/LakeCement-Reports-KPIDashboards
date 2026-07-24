@@ -7,7 +7,7 @@
 > `npm run docs:kpi` (in `backend/`) and commit both files together.
 
 This document defines every KPI the dashboards, MIS reports, and morning
-digest display: **13 KPIs** computed from **71 raw facts**.
+digest display: **13 KPIs** computed from **70 raw facts**.
 
 ## How a number gets onto a dashboard
 
@@ -36,14 +36,14 @@ formulas do not change when that happens.
 | [Despatch / Day](#despatch-day) | MT | — | Average | v2 |
 | [Kiln Output](#kiln-output) | MT | Target ≥ 2,000 MT/day | Average | v1 |
 | [Specific Thermal Energy Consumption](#specific-thermal-energy-consumption) | kcal/kg | Target < 780 kcal/kg | Weighted average | v2 |
-| [Specific Power Consumption – Total](#specific-power-consumption-total) | kWh/MT eq. cement | — | Weighted average | v3 |
-| [Specific Power Consumption – Up to Clinker](#specific-power-consumption-up-to-clinker) | kWh/MT clinker | — | Weighted average | v2 |
-| [Specific Power Consumption – Cement Grinding](#specific-power-consumption-cement-grinding) | kWh/MT | — | Weighted average | v3 |
-| [Power Distribution Loss %](#power-distribution-loss-pct) | % | Keep < 2% | Weighted average | v1 |
+| [Specific Power Consumption – Total](#specific-power-consumption-total) | kWh/MT eq. cement | — | Weighted average | v4 |
+| [Specific Power Consumption – Up to Clinker](#specific-power-consumption-up-to-clinker) | kWh/MT clinker | — | Weighted average | v3 |
+| [Specific Power Consumption – Cement Grinding](#specific-power-consumption-cement-grinding) | kWh/MT | — | Weighted average | v4 |
+| [Power Distribution Loss %](#power-distribution-loss-pct) | % | Keep < 2% | Weighted average | v2 |
 | [Blaine 425R](#blaine-425r) | cm²/g | Min 3,500 | Average | v1 |
 | [28-Day Strength](#strength-28d) | MPa | Min 42.5 | Average | v1 |
 | [Pile CaO Average](#pile-cao-avg) | % | Target 44% | Average | v1 |
-| [Total Power Consumption](#total-power-kwh) | kWh | — | Sum | v2 |
+| [Total Power Consumption](#total-power-kwh) | kWh | — | Sum | v3 |
 | [Purchased Clinker Share](#purchased-clinker-share) | % | — | Weighted average | v1 |
 
 ---
@@ -160,14 +160,14 @@ function (f) { return pos(f.kiln_prod_mt) || 0; }
 |---|---|
 | Unit | kWh/MT eq. cement (shown to 2 decimal places) |
 | Target | No fixed target — lower is better |
-| Formula version | v3 |
+| Formula version | v4 |
 | Registry key | `specific-power-consumption-total` |
 
-Mirrors the source Excel’s 3-layer build (M54): upstream-of-clinker kWh (crusher, raw mills, coal mill, kiln) is expressed per ton of clinker, then scaled to a per-ton-cement basis by the clinker factor (total clinker consumed, own + purchased, ÷ total cement produced by both mills); downstream kWh (cement mills, packing, utilities, lighting) is divided by cement produced directly and added.
+Mirrors the source Excel’s 3-layer build (M54): upstream-of-clinker kWh (crusher, raw mills, coal mill, kiln) is expressed per ton of clinker, then scaled to a per-ton-cement basis by the clinker factor (total clinker consumed, own + purchased, ÷ total cement produced by both mills); downstream kWh (cement mills, packing, lighting) is divided by cement produced directly and added. v4: Compressed Air/Utilities is no longer a tracked fact (removed from the power-cons form), so it no longer contributes here — this KPI now understates true total power by whatever utilities used to draw.
 
 **Inputs**
 
-- **power-cons form:** pwr_crusher_kwh (kWh), pwr_rawmill_kwh (kWh), pwr_rawmill2_kwh (kWh), pwr_coalmill_kwh (kWh), pwr_kiln_kwh (kWh), pwr_cm1_kwh (kWh), pwr_cm2_kwh (kWh), pwr_packing_kwh (kWh), pwr_packing2_kwh (kWh), pwr_utils_kwh (kWh), pwr_lighting_kwh (kWh), pwr_kiln_prod_mt (MT)
+- **power-cons form:** pwr_crusher_kwh (kWh), pwr_rawmill_kwh (kWh), pwr_rawmill2_kwh (kWh), pwr_coalmill_kwh (kWh), pwr_kiln_kwh (kWh), pwr_cm1_kwh (kWh), pwr_cm2_kwh (kWh), pwr_packing_kwh (kWh), pwr_packing2_kwh (kWh), pwr_lighting_kwh (kWh), pwr_kiln_prod_mt (MT)
 - **production form:** cm_clinker_own_cons (MT), cm_clinker_purch_cons (MT), cm1_425r_mt (MT), cm1_425n_mt (MT), cm1_325n_mt (MT), cm1_opc_mt (MT), cm2_425r_mt (MT), cm2_425n_mt (MT), cm2_425n_bm_mt (MT), cm2_325n_mt (MT)
 
 **Daily calculation** (the exact code the engine runs)
@@ -198,23 +198,21 @@ function (f) { return totalCementProd(f); }
 |---|---|
 | Unit | kWh/MT clinker (shown to 2 decimal places) |
 | Target | No fixed target — lower is better |
-| Formula version | v2 |
+| Formula version | v3 |
 | Registry key | `specific-power-consumption-up-to-clinker` |
 
-v2: upstream department kWh (crusher, raw mills, coal mill, kiln) plus 60% of Utilities kWh, ÷ clinker produced. The 60/40 utilities split (clinker-stage vs cement-stage) is the plant's own real allocation rule, confirmed against the "CUMULATIVE DAILY" sheet of the plant's IMS power workbooks (Apr–Jun 2026 master power reports) — every shared-utility row there splits 60% to the CLINKER total and 40% to the CEMENT total. Remaining known simplification: those workbooks split utilities+distribution-losses together (60/40), but this app has no fact yet for the raw "power import to cement plant" meter needed to isolate losses, so only the utilities share is added here, not losses.
+v3: back to upstream department kWh only (crusher, raw mills, coal mill, kiln) ÷ clinker produced, with no utilities share. v2 had added 60% of Utilities kWh — the plant's own real allocation rule, confirmed against the "CUMULATIVE DAILY" sheet of the IMS power workbooks (Apr–Jun 2026 master power reports) — but Compressed Air/Utilities was subsequently removed as a tracked fact (2026-07-24, deleted from the power-cons form), so there is no longer a utilities figure to allocate. This KPI now understates true up-to-clinker power by its 60% share of whatever utilities used to draw. KNOWN SIMPLIFICATION vs the source Excel regardless: the plant's report ideally builds this per department (crusher, raw mill, coal mill each ÷ their own throughput, × a material ratio) — crusher/raw-mill/coal-mill output tonnages aren't captured by any form.
 
 **Inputs**
 
-- **power-cons form:** pwr_crusher_kwh (kWh), pwr_rawmill_kwh (kWh), pwr_rawmill2_kwh (kWh), pwr_coalmill_kwh (kWh), pwr_kiln_kwh (kWh), pwr_utils_kwh (kWh), pwr_kiln_prod_mt (MT)
+- **power-cons form:** pwr_crusher_kwh (kWh), pwr_rawmill_kwh (kWh), pwr_rawmill2_kwh (kWh), pwr_coalmill_kwh (kWh), pwr_kiln_kwh (kWh), pwr_kiln_prod_mt (MT)
 
 **Daily calculation** (the exact code the engine runs)
 
 ```js
 function (f) {
         var prod = pos(f.pwr_kiln_prod_mt);
-        if (!prod) return null;
-        var kwh = sumOf(KWH_CLINKER, f) + 0.6 * z0(f.pwr_utils_kwh);
-        return kwh / prod;
+        return prod ? sumOf(KWH_CLINKER, f) / prod : null;
       }
 ```
 
@@ -231,14 +229,14 @@ function (f) { return pos(f.pwr_kiln_prod_mt) || 0; }
 |---|---|
 | Unit | kWh/MT (shown to 2 decimal places) |
 | Target | No fixed target — lower is better |
-| Formula version | v3 |
+| Formula version | v4 |
 | Registry key | `specific-power-consumption-cement-grinding` |
 
-v3: CM-1 + CM-2 grinding kWh plus both packing plants plus 40% of Utilities kWh, ÷ combined mill production — matching the plant's real IMS allocation rule (CEMENT total = CM1+CM2+PP1+PP2 + 40%*(utilities+losses)), confirmed against the "CUMULATIVE DAILY" sheet of the Apr–Jun 2026 IMS power workbooks. v2 fix (CM-1 wiring) is preserved; v3 adds packing plants and the utilities share, both previously omitted entirely.
+v4: CM-1 + CM-2 grinding kWh plus both packing plants (kept from v3 — matches the source Excel's combined CEMENT bucket, CM1+CM2+PP1+PP2), ÷ combined mill production. The 40% Utilities share added in v3 is removed: Compressed Air/Utilities was deleted as a tracked fact (2026-07-24), so there is no longer a utilities figure to allocate — this KPI now understates true cement-grinding power by its 40% share of whatever utilities used to draw.
 
 **Inputs**
 
-- **power-cons form:** pwr_cm1_kwh (kWh), pwr_cm2_kwh (kWh), pwr_packing_kwh (kWh), pwr_packing2_kwh (kWh), pwr_utils_kwh (kWh), pwr_cm1_prod_mt (MT), pwr_cm2_prod_mt (MT)
+- **power-cons form:** pwr_cm1_kwh (kWh), pwr_cm2_kwh (kWh), pwr_packing_kwh (kWh), pwr_packing2_kwh (kWh), pwr_cm1_prod_mt (MT), pwr_cm2_prod_mt (MT)
 
 **Daily calculation** (the exact code the engine runs)
 
@@ -246,7 +244,7 @@ v3: CM-1 + CM-2 grinding kWh plus both packing plants plus 40% of Utilities kWh,
 function (f) {
         var prod = z0(f.pwr_cm1_prod_mt) + z0(f.pwr_cm2_prod_mt);
         if (prod <= 0) return null;
-        var kwh = sumOf(KWH_GRINDING, f) + z0(f.pwr_packing_kwh) + z0(f.pwr_packing2_kwh) + 0.4 * z0(f.pwr_utils_kwh);
+        var kwh = sumOf(KWH_GRINDING, f) + z0(f.pwr_packing_kwh) + z0(f.pwr_packing2_kwh);
         return kwh / prod;
       }
 ```
@@ -264,14 +262,14 @@ function (f) { return z0(f.pwr_cm1_prod_mt) + z0(f.pwr_cm2_prod_mt); }
 |---|---|
 | Unit | % (shown to 2 decimal places) |
 | Target | Keep < 2% — good is below 2 % |
-| Formula version | v1 |
+| Formula version | v2 |
 | Registry key | `power-distribution-loss-pct` |
 
-Gap between total power supplied (TANESCO import + CPP generation) and the sum of all metered department sections, as a % of the metered total — the plant's internal distribution/measurement loss. Formula and behaviour verified identical to the source IMS workbook's "Total losses" / "% of Loss" rows (CUMULATIVE DAILY sheet, Apr–Jun 2026 master power reports) on a spot-checked day. This calculation already existed as a live, unsaved preview on the power-cons entry form (kpi-live.js: pwr_total_loss / pwr_loss_pct); this registry entry is the first place it becomes a tracked, historical, dashboard-visible KPI rather than a number that only ever appeared while someone had the form open.
+Gap between total power supplied (TANESCO import + CPP generation) and the sum of all metered department sections, as a % of the metered total — the plant's internal distribution/measurement loss. Formula verified identical to the source IMS workbook's "Total losses" / "% of Loss" rows (CUMULATIVE DAILY sheet, Apr–Jun 2026 master power reports) on a spot-checked day, back when Utilities was still a tracked section. v2: Compressed Air/Utilities was removed as a tracked fact (2026-07-24), so its real kWh draw is no longer subtracted out on the "consumed" side — this KPI now overstates true distribution loss by whatever utilities draws, since that untracked consumption reads as "loss" instead. Interpret accordingly (or re-add a utilities fact) before trusting this against the < 2% target. This calculation originated as a live, unsaved preview on the power-cons entry form (kpi-live.js: pwr_total_loss / pwr_loss_pct); this registry entry is the first place it became a tracked, historical, dashboard-visible KPI rather than a number that only ever appeared while someone had the form open.
 
 **Inputs**
 
-- **power-cons form:** pwr_crusher_kwh (kWh), pwr_rawmill_kwh (kWh), pwr_rawmill2_kwh (kWh), pwr_coalmill_kwh (kWh), pwr_kiln_kwh (kWh), pwr_cm1_kwh (kWh), pwr_cm2_kwh (kWh), pwr_packing_kwh (kWh), pwr_packing2_kwh (kWh), pwr_utils_kwh (kWh), pwr_lighting_kwh (kWh), pwr_colony_kwh (kWh), pwr_tanesco_kwh (kWh), pwr_cpp_kwh (kWh)
+- **power-cons form:** pwr_crusher_kwh (kWh), pwr_rawmill_kwh (kWh), pwr_rawmill2_kwh (kWh), pwr_coalmill_kwh (kWh), pwr_kiln_kwh (kWh), pwr_cm1_kwh (kWh), pwr_cm2_kwh (kWh), pwr_packing_kwh (kWh), pwr_packing2_kwh (kWh), pwr_lighting_kwh (kWh), pwr_colony_kwh (kWh), pwr_tanesco_kwh (kWh), pwr_cpp_kwh (kWh)
 
 **Daily calculation** (the exact code the engine runs)
 
@@ -373,14 +371,14 @@ function (f) {
 |---|---|
 | Unit | kWh (shown to 0 decimal places) |
 | Target | Tracking only — no target |
-| Formula version | v2 |
+| Formula version | v3 |
 | Registry key | `total-power-kwh` |
 
-Sum of all metered plant sections including colony. Daily totals of 500 kWh or below are treated as meters-not-read (no data) rather than a real total. Monthly value is the straight sum of reported days.
+Sum of all metered plant sections including colony. v3: Compressed Air/Utilities is no longer a tracked section (removed as a fact, 2026-07-24) — this total now understates true plant power by whatever utilities draws. Daily totals of 500 kWh or below are treated as meters-not-read (no data) rather than a real total. Monthly value is the straight sum of reported days.
 
 **Inputs**
 
-- **power-cons form:** pwr_crusher_kwh (kWh), pwr_rawmill_kwh (kWh), pwr_rawmill2_kwh (kWh), pwr_coalmill_kwh (kWh), pwr_kiln_kwh (kWh), pwr_cm1_kwh (kWh), pwr_cm2_kwh (kWh), pwr_packing_kwh (kWh), pwr_packing2_kwh (kWh), pwr_utils_kwh (kWh), pwr_lighting_kwh (kWh), pwr_colony_kwh (kWh)
+- **power-cons form:** pwr_crusher_kwh (kWh), pwr_rawmill_kwh (kWh), pwr_rawmill2_kwh (kWh), pwr_coalmill_kwh (kWh), pwr_kiln_kwh (kWh), pwr_cm1_kwh (kWh), pwr_cm2_kwh (kWh), pwr_packing_kwh (kWh), pwr_packing2_kwh (kWh), pwr_lighting_kwh (kWh), pwr_colony_kwh (kWh)
 
 **Daily calculation** (the exact code the engine runs)
 
@@ -474,7 +472,7 @@ that feed goes live).
 | `cm2_425n_bm_mt` | MT | manual |
 | `cm2_325n_mt` | MT | manual |
 
-### power-cons form (23 facts)
+### power-cons form (22 facts)
 
 | Fact key | Unit | Source |
 |---|---|---|
@@ -487,7 +485,6 @@ that feed goes live).
 | `pwr_cm2_kwh` | kWh | manual |
 | `pwr_packing_kwh` | kWh | manual |
 | `pwr_packing2_kwh` | kWh | manual |
-| `pwr_utils_kwh` | kWh | manual |
 | `pwr_lighting_kwh` | kWh | manual |
 | `pwr_colony_kwh` | kWh | manual |
 | `pwr_kiln_prod_mt` | MT | manual |

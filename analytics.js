@@ -610,7 +610,6 @@
           pwr_kiln_kwh:     Math.round(rnd(basePower * 0.267, 1400)),
           pwr_cm2_kwh:      Math.round(rnd(basePower * 0.242, 1300)),
           pwr_packing_kwh:  Math.round(rnd(4200, 300)),
-          pwr_utils_kwh:    Math.round(rnd(4100, 250)),
           pwr_lighting_kwh: Math.round(rnd(3500, 200)),
         }, inputs: [],
       });

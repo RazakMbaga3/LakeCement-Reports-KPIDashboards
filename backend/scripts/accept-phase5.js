@@ -67,13 +67,13 @@ const DISPATCH = [
 ];
 const POWER = [
   { pwr_crusher_kwh: 5000, pwr_rawmill_kwh: 10000, pwr_coalmill_kwh: 5000, pwr_kiln_kwh: 15000,
-    pwr_cm2_kwh: 8000, pwr_packing_kwh: 3000, pwr_utils_kwh: 2000, pwr_lighting_kwh: 2000,
+    pwr_cm2_kwh: 8000, pwr_packing_kwh: 3000, pwr_lighting_kwh: 2000,
     pwr_kiln_prod_mt: 1500, pwr_cm2_prod_mt: 500 },
   { pwr_crusher_kwh: 5000, pwr_rawmill_kwh: 11000, pwr_coalmill_kwh: 5000, pwr_kiln_kwh: 16000,
-    pwr_cm2_kwh: 8000, pwr_packing_kwh: 1000, pwr_utils_kwh: 1000, pwr_lighting_kwh: 1000,
+    pwr_cm2_kwh: 8000, pwr_packing_kwh: 1000, pwr_lighting_kwh: 1000,
     pwr_kiln_prod_mt: 1600, pwr_cm2_prod_mt: 400 },
   { pwr_crusher_kwh: 5000, pwr_rawmill_kwh: 9000, pwr_coalmill_kwh: 4000, pwr_kiln_kwh: 15000,
-    pwr_cm2_kwh: 7000, pwr_packing_kwh: 1000, pwr_utils_kwh: 500, pwr_lighting_kwh: 500,
+    pwr_cm2_kwh: 7000, pwr_packing_kwh: 1000, pwr_lighting_kwh: 500,
     pwr_kiln_prod_mt: 1400, pwr_cm2_prod_mt: 600 },
 ];
 

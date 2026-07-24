@@ -21,18 +21,30 @@
     10 cement mill-2                -> pwr_cm2_kwh
     11 packing plant-1              -> pwr_packing_kwh
     12 packing plant-2              -> pwr_packing2_kwh
-    13 utilities                    -> pwr_utils_kwh
     14 Colony                       -> pwr_colony_kwh
     24 TANESCO UNIT                 -> pwr_tanesco_kwh
     25 CPP UNIT                     -> pwr_cpp_kwh
-    28 TANESCO UNITS FOR CLINKER    -> pwr_tanesco_clinker_kwh
+    28 TANESCO UNITS FOR CLINKER    -> pwr_tanesco_clinker_kwh  (resolved, see below)
     29 CPP UNIT FOR CLINKER         -> pwr_cpp_clinker_kwh
     30 TANESCO UNITS FOR CEMENT     -> pwr_tanesco_cement_kwh
     32 CPP UNIT FOR CEMENT          -> pwr_cpp_cement_kwh
     33 CPP UNIT FOR COLONY          -> pwr_cpp_colony_kwh
-    34 TANESCO UNIT FOR COLONY      -> pwr_tanesco_colony_kwh
+    34 TANESCO UNIT FOR COLONY      -> pwr_tanesco_colony_kwh   (resolved, see below)
+
+  Rows 28 and 34 have no cached formula result on almost every day (Excel
+  never recalculated them), so cellNumber() alone would leave them absent.
+  resolveConstantFormula() (below) evaluates them directly instead:
+  row 28 is pure constant arithmetic with no cell reference; row 34's
+  reference bottoms out at Energy Readings' "TANESCO-COLONY" meter, whose
+  raw totalizer reading is a flat 86815 in every single column across all
+  three months — i.e. a dead/unread meter, so its true delta is 0 every
+  day except the manual "+N" adjustment some day-1 formulas carry. Both
+  values are now filled for all 91 days (previously absent on ~88-90/91).
 
   NOT sourced from this workbook (left absent from the submitted payload):
+    pwr_utils_kwh (row 13, "utilities") — removed from the registry and
+      the power-cons form entirely on 2026-07-24 at the user's request, so
+      it's no longer submitted even though the source sheet has the figure.
     pwr_lighting_kwh — no independent circuit in this data; lighting
       feeders (LC-1/LC-2/LC-2A/LC-4) are already folded into row 13
       "utilities" upstream in IMS DATA. Splitting it out would be a guess.
@@ -85,6 +97,38 @@ function cellNumber(cell) {
   return typeof v === 'number' ? v : undefined;
 }
 
+/*
+  Rows 28 ("TANESCO UNITS FOR CLINKER") and 34 ("TANESCO UNIT FOR COLONY")
+  have no cached formula result on almost every day (see the 2026-07-24
+  import notes) — but both formulas are simple enough to resolve without
+  the cache, verified against the source workbooks rather than guessed:
+
+  Row 28's formula is always pure arithmetic with no cell reference at all
+  (literally "0" on every day except one workbook's day 1, which was
+  "0+6215") — safe to evaluate directly.
+
+  Row 34's formula is a single reference into IMS DATA row 71
+  ("'IMS DATA'!<col>71", occasionally "...+1108" on day 1), which itself
+  just forwards Energy Readings row 71 ("TANESCO-COLONY"). That meter's
+  raw totalizer reading is a literal 86815 in EVERY column across all
+  three months (checked directly, not inferred) — i.e. it was never
+  actually re-read after being entered once, so its true day-to-day
+  consumption is 0 for the whole quarter. The only real value in row 34
+  is whatever manual "+N" adjustment the plant appended to the formula
+  text on top of that dead meter.
+*/
+function resolveConstantFormula(cell) {
+  if (!cell) return undefined;
+  const v = cell.value;
+  if (typeof v === 'number') return v;
+  if (!v || typeof v !== 'object' || typeof v.formula !== 'string') return undefined;
+  if (/^[\d.\s+-]+$/.test(v.formula)) {
+    return Function('"use strict"; return (' + v.formula + ');')(); // pure arithmetic, no cell refs
+  }
+  const trailing = v.formula.match(/\+(\d+(?:\.\d+)?)\s*$/);
+  return trailing ? Number(trailing[1]) : 0; // reference-only, and the referenced meter is verified dead (0)
+}
+
 async function api(method, pathname, { token, body } = {}) {
   const headers = {};
   if (body) headers['Content-Type'] = 'application/json';
@@ -117,7 +161,10 @@ async function main() {
       const col = day + 1; // column B = day 1
       const data = {};
       for (const [row, fact] of Object.entries(ROW_FACT)) {
-        const n = cellNumber(sheet.getRow(Number(row)).getCell(col));
+        const cell = sheet.getRow(Number(row)).getCell(col);
+        const n = (Number(row) === 28 || Number(row) === 34)
+          ? resolveConstantFormula(cell)
+          : cellNumber(cell);
         if (n !== undefined) data[fact] = Math.round(n * 100) / 100;
       }
       // Guard against a day where every meter reads exactly 0 — almost

@@ -72,21 +72,23 @@ const DISPATCH = [
   { dispatch_reg_425r:  700, dispatch_reg_425n: 300, dispatch_blk_425r: 200, dispatch_bag_425r: 300 },  // 1500
   { dispatch_reg_425r: 1200, dispatch_reg_425n: 400, dispatch_blk_425r: 400, dispatch_bag_425r: 500 },  // 2500
 ];
+// pwr_utils_kwh removed 2026-07-24 (Compressed Air/Utilities deleted from
+// the power-cons form) — consumed/supplied comments below reflect that.
 const POWER = [
   { pwr_crusher_kwh: 5000, pwr_rawmill_kwh: 10000, pwr_coalmill_kwh: 5000, pwr_kiln_kwh: 15000,
     pwr_cm1_kwh: 6000, pwr_cm2_kwh: 8000, pwr_packing_kwh: 3000, pwr_packing2_kwh: 500,
-    pwr_utils_kwh: 2000, pwr_lighting_kwh: 2000,
-    pwr_tanesco_kwh: 30000, pwr_cpp_kwh: 27200, // supplied 57200 vs consumed 56500 -> +700 loss
+    pwr_lighting_kwh: 2000,
+    pwr_tanesco_kwh: 30000, pwr_cpp_kwh: 27200, // supplied 57200 vs consumed 54500 -> +2700 loss
     pwr_kiln_prod_mt: 1500, pwr_cm1_prod_mt: 300, pwr_cm2_prod_mt: 500 }, // clinker subset 35000
   { pwr_crusher_kwh: 5000, pwr_rawmill_kwh: 11000, pwr_coalmill_kwh: 5000, pwr_kiln_kwh: 16000,
     pwr_cm1_kwh: 6000, pwr_cm2_kwh: 8000, pwr_packing_kwh: 1000, pwr_packing2_kwh: 0,
-    pwr_utils_kwh: 1000, pwr_lighting_kwh: 1000,
-    pwr_tanesco_kwh: 28000, pwr_cpp_kwh: 26500, // supplied 54500 vs consumed 54000 -> +500 loss
+    pwr_lighting_kwh: 1000,
+    pwr_tanesco_kwh: 28000, pwr_cpp_kwh: 26500, // supplied 54500 vs consumed 53000 -> +1500 loss
     pwr_kiln_prod_mt: 1600, pwr_cm1_prod_mt: 250, pwr_cm2_prod_mt: 400 }, // clinker subset 37000
   { pwr_crusher_kwh: 5000, pwr_rawmill_kwh: 9000, pwr_coalmill_kwh: 4000, pwr_kiln_kwh: 15000,
     pwr_cm1_kwh: 5000, pwr_cm2_kwh: 7000, pwr_packing_kwh: 1000, pwr_packing2_kwh: 0,
-    pwr_utils_kwh: 500, pwr_lighting_kwh: 500,
-    pwr_tanesco_kwh: 24000, pwr_cpp_kwh: 23200, // supplied 47200 vs consumed 47000 -> +200 loss
+    pwr_lighting_kwh: 500,
+    pwr_tanesco_kwh: 24000, pwr_cpp_kwh: 23200, // supplied 47200 vs consumed 46500 -> +700 loss
     pwr_kiln_prod_mt: 1400, pwr_cm1_prod_mt: 200, pwr_cm2_prod_mt: 600 }, // clinker subset 33000
 ];
 // clinker consumed = 80% of total cement produced each day (clean clinker factor),
@@ -110,23 +112,24 @@ const EXPECTED = {
   'blaine-425r':        (3400 + 3500 + 3600) / 3,                                     // 3500
   'strength-28d':       (42 + 43 + 44) / 3,                                           // 43
   'pile-cao-avg':       (45 + 43) / 2,                                                // 44
-  'total-power-kwh':    56500 + 54000 + 47000,                                        // 157500
+  // v3: no longer includes utilities (removed 2026-07-24)
+  'total-power-kwh':    54500 + 53000 + 46500,                                        // 154000
   'specific-thermal-energy-consumption':
     (250 * 4800 + 260 * 4900 + 240 * 4700) / (2000 + 2100 + 1900),
-  // v2: upstream-of-clinker kWh + 60% of utilities, ÷ clinker (utils: 2000, 1000, 500)
+  // v3: back to upstream-of-clinker kWh only, no utilities share (fact removed 2026-07-24)
   'specific-power-consumption-up-to-clinker':
-    ((35000 + 0.6 * 2000) + (37000 + 0.6 * 1000) + (33000 + 0.6 * 500)) / (1500 + 1600 + 1400),
-  // v3: both cement mills + both packing plants + 40% of utilities, weighted by combined production
+    (35000 + 37000 + 33000) / (1500 + 1600 + 1400),
+  // v4: both cement mills + both packing plants, no utilities share (fact removed 2026-07-24)
   'specific-power-consumption-cement-grinding':
-    (((6000 + 8000) + (3000 + 500) + 0.4 * 2000) +
-     ((6000 + 8000) + (1000 + 0)   + 0.4 * 1000) +
-     ((5000 + 7000) + (1000 + 0)   + 0.4 * 500)) / (800 + 650 + 800),
-  // 3-layer build: Σ(upstream kWh/ton-clinker × clinker consumed) + Σ(downstream kWh), ÷ Σ cement produced
+    (((6000 + 8000) + (3000 + 500)) +
+     ((6000 + 8000) + (1000 + 0))   +
+     ((5000 + 7000) + (1000 + 0))) / (800 + 650 + 800),
+  // v4: downstream no longer includes utilities (was 21500/17000/14000 with utils)
   'specific-power-consumption-total':
     ((35000 / 1500 * 640) + (37000 / 1600 * 520) + (33000 / 1400 * 640) +
-     (21500 + 17000 + 14000)) / (800 + 650 + 800),
-  // supplied (tanesco+cpp) minus consumed (KWH_ALL), as % of consumed, weighted by consumed
-  'power-distribution-loss-pct': (700 + 500 + 200) * 100 / (56500 + 54000 + 47000),
+     (19500 + 16000 + 13500)) / (800 + 650 + 800),
+  // v2: supplied (tanesco+cpp) minus consumed (KWH_ALL, no utilities) as % of consumed
+  'power-distribution-loss-pct': (2700 + 1500 + 700) * 100 / (54500 + 53000 + 46500),
   // purchased ÷ (own+purchased) clinker consumed, weighted by total clinker consumed
   'purchased-clinker-share': (200 + 0 + 340) / (640 + 520 + 640) * 100,                 // 30
 };
