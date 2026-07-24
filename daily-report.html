@@ -1577,7 +1577,13 @@ initReportLoader({
 
     /* ── Dispatch — every loading channel × grade, matching the registry's
        DISPATCH fact list, plus clinker. Was a static "—" with a data-kpi
-       attribute nothing ever wrote to (found 2026-07-25). ──────────── */
+       attribute nothing ever wrote to (found 2026-07-25). v2: falls back
+       to the pre-channel-split flat fields (dispatch_425r etc.) when the
+       new reg/blk/bag fields are all empty — real submissions made before
+       the dispatch form's channel-split rebuild are stored under the old
+       names (confirmed on Render: 2026-07-22 has 376.5 MT under
+       dispatch_425r/_bulker/etc., which the new-only sum silently
+       dropped). ──────────────────────────────────────────────────── */
     { kpi: 'total_dispatch', fmt: 'n0',
       compute: function(d, n) {
         var t = n(d.dispatch_reg_425r) + n(d.dispatch_reg_425nbm) + n(d.dispatch_reg_425n)
@@ -1586,6 +1592,10 @@ initReportLoader({
               + n(d.dispatch_blk_325n) + n(d.dispatch_blk_opc425n)
               + n(d.dispatch_bag_425r) + n(d.dispatch_bag_425nbm) + n(d.dispatch_bag_425n)
               + n(d.dispatch_clinker);
+        if (t <= 0) {
+          t = n(d.dispatch_425r) + n(d.dispatch_425nbm) + n(d.dispatch_425n) + n(d.dispatch_325n)
+            + n(d.dispatch_opc425n) + n(d.dispatch_bulker) + n(d.dispatch_bigbag) + n(d.dispatch_clinker);
+        }
         return t > 0 ? t : null;
       }
     },

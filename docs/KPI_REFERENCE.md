@@ -7,7 +7,7 @@
 > `npm run docs:kpi` (in `backend/`) and commit both files together.
 
 This document defines every KPI the dashboards, MIS reports, and morning
-digest display: **13 KPIs** computed from **70 raw facts**.
+digest display: **13 KPIs** computed from **77 raw facts**.
 
 ## How a number gets onto a dashboard
 
@@ -33,7 +33,7 @@ formulas do not change when that happens.
 | KPI | Unit | Target | Monthly roll-up | Version |
 |---|---|---|---|---|
 | [Clinker Free Lime](#clinker-free-lime) | % | Spec 3.0% | Average | v1 |
-| [Despatch / Day](#despatch-day) | MT | — | Average | v2 |
+| [Despatch / Day](#despatch-day) | MT | — | Average | v3 |
 | [Kiln Output](#kiln-output) | MT | Target ≥ 2,000 MT/day | Average | v1 |
 | [Specific Thermal Energy Consumption](#specific-thermal-energy-consumption) | kcal/kg | Target < 780 kcal/kg | Weighted average | v3 |
 | [Specific Power Consumption – Total](#specific-power-consumption-total) | kWh/MT eq. cement | — | Weighted average | v4 |
@@ -81,19 +81,23 @@ function (f) { return pos(f.free_lime); }
 |---|---|
 | Unit | MT (shown to 0 decimal places) |
 | Target | Tracking only — no target |
-| Formula version | v2 |
+| Formula version | v3 |
 | Registry key | `despatch-day` |
 
-Total cement + clinker dispatched for the day, summed across every loading channel (Regular Bags, Bulker, Big Bags — three independently loaded streams, matching the source Dispatch Report) and grade (42.5R, 42.5N BM, 42.5N, 32.5N, OPC 42.5N; Big Bags only packed for 42.5R/42.5N B-M/42.5N) plus clinker. v2: previously Bulker/Big Bags were single un-graded totals, so a grade’s dispatch across all channels could not be reconstructed — now every channel×grade cell is its own fact. A zero total is treated as no data, not a zero-dispatch day.
+Total cement + clinker dispatched for the day, summed across every loading channel (Regular Bags, Bulker, Big Bags — three independently loaded streams, matching the source Dispatch Report) and grade (42.5R, 42.5N BM, 42.5N, 32.5N, OPC 42.5N; Big Bags only packed for 42.5R/42.5N B-M/42.5N) plus clinker. v2: previously Bulker/Big Bags were single un-graded totals, so a grade’s dispatch across all channels could not be reconstructed — now every channel×grade cell is its own fact. v3: falls back to the pre-channel-split flat fields when the new channel×grade fields are all empty — a real submission (2026-07-22, 376.5 MT) made before the channel-split rebuild was going uncounted, silently reading as no-dispatch. A zero total (both new and legacy) is treated as no data, not a zero-dispatch day.
 
 **Inputs**
 
-- **dispatch form:** dispatch_reg_425r (MT), dispatch_reg_425nbm (MT), dispatch_reg_425n (MT), dispatch_reg_325n (MT), dispatch_reg_opc425n (MT), dispatch_blk_425r (MT), dispatch_blk_425nbm (MT), dispatch_blk_425n (MT), dispatch_blk_325n (MT), dispatch_blk_opc425n (MT), dispatch_bag_425r (MT), dispatch_bag_425nbm (MT), dispatch_bag_425n (MT), dispatch_clinker (MT)
+- **dispatch form:** dispatch_reg_425r (MT), dispatch_reg_425nbm (MT), dispatch_reg_425n (MT), dispatch_reg_325n (MT), dispatch_reg_opc425n (MT), dispatch_blk_425r (MT), dispatch_blk_425nbm (MT), dispatch_blk_425n (MT), dispatch_blk_325n (MT), dispatch_blk_opc425n (MT), dispatch_bag_425r (MT), dispatch_bag_425nbm (MT), dispatch_bag_425n (MT), dispatch_clinker (MT), dispatch_legacy_425r (MT), dispatch_legacy_425nbm (MT), dispatch_legacy_425n (MT), dispatch_legacy_325n (MT), dispatch_legacy_opc425n (MT), dispatch_legacy_bulker (MT), dispatch_legacy_bigbag (MT), dispatch_clinker (MT)
 
 **Daily calculation** (the exact code the engine runs)
 
 ```js
-function (f) { var t = sumOf(DISPATCH, f); return t > 0 ? t : null; }
+function (f) {
+        var t = sumOf(DISPATCH, f);
+        if (t <= 0) t = sumOf(DISPATCH_LEGACY, f);
+        return t > 0 ? t : null;
+      }
 ```
 
 **Monthly roll-up.** Average of the days that have a value (missing days are excluded, not counted as zero).
@@ -436,7 +440,7 @@ that feed goes live).
 | `blaine_425r` | cm²/g | manual |
 | `strength_28d` | MPa | manual |
 
-### dispatch form (14 facts)
+### dispatch form (21 facts)
 
 | Fact key | Unit | Source |
 |---|---|---|
@@ -454,6 +458,13 @@ that feed goes live).
 | `dispatch_bag_425nbm` | MT | manual |
 | `dispatch_bag_425n` | MT | manual |
 | `dispatch_clinker` | MT | manual |
+| `dispatch_legacy_425r` | MT | manual |
+| `dispatch_legacy_425nbm` | MT | manual |
+| `dispatch_legacy_425n` | MT | manual |
+| `dispatch_legacy_325n` | MT | manual |
+| `dispatch_legacy_opc425n` | MT | manual |
+| `dispatch_legacy_bulker` | MT | manual |
+| `dispatch_legacy_bigbag` | MT | manual |
 
 ### production form (12 facts)
 

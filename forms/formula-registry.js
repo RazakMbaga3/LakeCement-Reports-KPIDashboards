@@ -58,6 +58,20 @@
     dispatch_bag_425n:    { source: 'manual', form: 'dispatch', field: 'dispatch_bag_425n',    unit: 'MT' },
     dispatch_clinker:     { source: 'manual', form: 'dispatch', field: 'dispatch_clinker',     unit: 'MT' },
 
+    // legacy pre-channel-split dispatch fields — real submissions made
+    // before the reg/blk/bag rebuild are stored under these flat names
+    // (confirmed on Render: a 2026-07-22 submission with 376.5 MT was
+    // going uncounted because 'despatch-day' only read the new facts).
+    // Kept only as a fallback in despatch-day's daily() below — never
+    // used as a primary source for new data.
+    dispatch_legacy_425r:    { source: 'manual', form: 'dispatch', field: 'dispatch_425r',    unit: 'MT' },
+    dispatch_legacy_425nbm:  { source: 'manual', form: 'dispatch', field: 'dispatch_425nbm',  unit: 'MT' },
+    dispatch_legacy_425n:    { source: 'manual', form: 'dispatch', field: 'dispatch_425n',    unit: 'MT' },
+    dispatch_legacy_325n:    { source: 'manual', form: 'dispatch', field: 'dispatch_325n',    unit: 'MT' },
+    dispatch_legacy_opc425n: { source: 'manual', form: 'dispatch', field: 'dispatch_opc425n', unit: 'MT' },
+    dispatch_legacy_bulker:  { source: 'manual', form: 'dispatch', field: 'dispatch_bulker',  unit: 'MT' },
+    dispatch_legacy_bigbag:  { source: 'manual', form: 'dispatch', field: 'dispatch_bigbag',  unit: 'MT' },
+
     // kiln fields — captured on the Production Report (Plant Operations).
     // kiln_coal_cons/kiln_coal_ncv previously pointed at form fields that
     // don't exist (kiln_coal_cons/kiln_coal_ncv were never real data-field
@@ -130,6 +144,8 @@
                        'dispatch_blk_425r', 'dispatch_blk_425nbm', 'dispatch_blk_425n', 'dispatch_blk_325n', 'dispatch_blk_opc425n',
                        'dispatch_bag_425r', 'dispatch_bag_425nbm', 'dispatch_bag_425n',
                        'dispatch_clinker'];
+  var DISPATCH_LEGACY = ['dispatch_legacy_425r', 'dispatch_legacy_425nbm', 'dispatch_legacy_425n', 'dispatch_legacy_325n',
+                         'dispatch_legacy_opc425n', 'dispatch_legacy_bulker', 'dispatch_legacy_bigbag', 'dispatch_clinker'];
   var CAO_HOLES     = Object.keys(FACTS).filter(function (k) { return k.indexOf('cao_h') === 0; });
 
   function sumOf(keys, f) { return keys.reduce(function (s, k) { return s + z0(f[k]); }, 0); }
@@ -157,11 +173,15 @@
     },
 
     'despatch-day': {
-      label: 'Despatch / Day', unit: 'MT', dp: 0, version: 2,
+      label: 'Despatch / Day', unit: 'MT', dp: 0, version: 3,
       target: null, signage: null, targetLabel: null,
-      notes: 'Total cement + clinker dispatched for the day, summed across every loading channel (Regular Bags, Bulker, Big Bags — three independently loaded streams, matching the source Dispatch Report) and grade (42.5R, 42.5N BM, 42.5N, 32.5N, OPC 42.5N; Big Bags only packed for 42.5R/42.5N B-M/42.5N) plus clinker. v2: previously Bulker/Big Bags were single un-graded totals, so a grade’s dispatch across all channels could not be reconstructed — now every channel×grade cell is its own fact. A zero total is treated as no data, not a zero-dispatch day.',
-      inputs: DISPATCH,
-      daily: function (f) { var t = sumOf(DISPATCH, f); return t > 0 ? t : null; },
+      notes: 'Total cement + clinker dispatched for the day, summed across every loading channel (Regular Bags, Bulker, Big Bags — three independently loaded streams, matching the source Dispatch Report) and grade (42.5R, 42.5N BM, 42.5N, 32.5N, OPC 42.5N; Big Bags only packed for 42.5R/42.5N B-M/42.5N) plus clinker. v2: previously Bulker/Big Bags were single un-graded totals, so a grade’s dispatch across all channels could not be reconstructed — now every channel×grade cell is its own fact. v3: falls back to the pre-channel-split flat fields when the new channel×grade fields are all empty — a real submission (2026-07-22, 376.5 MT) made before the channel-split rebuild was going uncounted, silently reading as no-dispatch. A zero total (both new and legacy) is treated as no data, not a zero-dispatch day.',
+      inputs: DISPATCH.concat(DISPATCH_LEGACY),
+      daily: function (f) {
+        var t = sumOf(DISPATCH, f);
+        if (t <= 0) t = sumOf(DISPATCH_LEGACY, f);
+        return t > 0 ? t : null;
+      },
       monthlyAgg: 'avg',
     },
 
