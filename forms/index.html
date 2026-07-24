@@ -129,25 +129,8 @@
 <body>
 
 <!-- ══════════════════ HEADER ══════════════════ -->
-<header class="top-header">
-  <div class="header-left">
-    <a href="../portal.html" class="home-btn">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
-      Home
-    </a>
-    <span class="sh-sep"></span>
-    <div class="logo-block">
-      <img class="nyati-logo" src="../NYATI-LOGO.png" alt="Nyati Cement" />
-      <div class="logo-text">
-        <img class="lc-wordmark" src="../lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
-      </div>
-    </div>
-  </div>
-  </div>
-  <div class="header-right">
-    <div id="auth-user-info"></div>
-  </div>
-</header>
+<header class="top-header" id="app-header"></header>
+<script>renderTopHeader();</script>
 
 <!-- ══════════════════ NAV ══════════════════ -->
 <nav class="dept-nav">
@@ -307,9 +290,16 @@ const _todayISO  = _today.toISOString().slice(0, 10);
 const _todayFmt  = _today.toLocaleDateString('en-GB', { weekday:'short', day:'2-digit', month:'short', year:'numeric' });
 const _todayShort= _today.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
 
-document.getElementById('live-date').textContent   = _todayFmt;
-document.getElementById('footer-date').textContent = _todayFmt;
-document.getElementById('sb-date-badge').textContent = _todayShort;
+/* Guarded: #live-date was removed from the markup at some point, and the
+   bare assignment threw, aborting this whole <script> block — which killed
+   requireAuth(), renderUserHeader() and buildBoard() further down. */
+const _setText = (id, txt) => {
+  const el = document.getElementById(id);
+  if (el) el.textContent = txt;
+};
+_setText('live-date',     _todayFmt);
+_setText('footer-date',   _todayFmt);
+_setText('sb-date-badge', _todayShort);
 
 /* ── Form definitions ───────────────────────────────────────────── */
 const FORMS = [

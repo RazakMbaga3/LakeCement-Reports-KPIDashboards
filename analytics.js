@@ -411,7 +411,7 @@
 
     var defs = [
       { key: 'quality',      label: 'Quality' },
-      { key: 'kiln',         label: 'Kiln' },
+      { key: 'production',   label: 'Production' },
       { key: 'dispatch',     label: 'Dispatch' },
       { key: 'power-cons',   label: 'Power' },
       { key: 'pile-quality', label: 'Pile' },
@@ -433,11 +433,11 @@
     var pqDays = store['pile-quality'] ? Object.keys(store['pile-quality']).length : 0;
     var dDays  = store['dispatch']     ? Object.keys(store['dispatch']).length      : 0;
     var pwDays = store['power-cons']   ? Object.keys(store['power-cons']).length   : 0;
-    var kDays  = store['kiln']         ? Object.keys(store['kiln']).length          : 0;
+    var prDays = store['production']   ? Object.keys(store['production']).length     : 0;
     var el = document.getElementById('badge-quality');
     if (el) el.textContent = (qDays + pqDays) + ' form-days';
     el = document.getElementById('badge-production');
-    if (el) el.textContent = kDays + ' form-days';
+    if (el) el.textContent = prDays + ' form-days';
     el = document.getElementById('badge-operations');
     if (el) el.textContent = (dDays + pwDays) + ' form-days';
   }
@@ -578,13 +578,25 @@
       });
 
       var baseDispatch = rnd(stressed ? 310 : 390, 28);
+      var dispReg = baseDispatch * 0.70, dispBlk = baseDispatch * 0.22, dispBag = baseDispatch * 0.08;
       setDemo('nyati-dispatch-' + iso, {
         _m: { formId: 'dispatch', date: iso, status: 'submitted', savedAt: iso + 'T18:00:00Z' },
         data: {
-          dispatch_425r:   Math.max(0, rnd(baseDispatch * 0.55, 12)).toFixed(1),
-          dispatch_425n:   Math.max(0, rnd(baseDispatch * 0.18, 8)).toFixed(1),
-          dispatch_bulker: Math.max(0, rnd(baseDispatch * 0.20, 10)).toFixed(1),
-          dispatch_bigbag: Math.max(0, rnd(baseDispatch * 0.07, 5)).toFixed(1),
+          /* three independently loaded channels, each broken down by grade */
+          dispatch_reg_425r:    Math.max(0, rnd(dispReg * 0.60, 10)).toFixed(1),
+          dispatch_reg_425nbm:  Math.max(0, rnd(dispReg * 0.05, 3)).toFixed(1),
+          dispatch_reg_425n:    Math.max(0, rnd(dispReg * 0.25, 8)).toFixed(1),
+          dispatch_reg_325n:    Math.max(0, rnd(dispReg * 0.07, 4)).toFixed(1),
+          dispatch_reg_opc425n: Math.max(0, rnd(dispReg * 0.03, 2)).toFixed(1),
+          dispatch_blk_425r:    Math.max(0, rnd(dispBlk * 0.55, 8)).toFixed(1),
+          dispatch_blk_425nbm:  '0',
+          dispatch_blk_425n:    Math.max(0, rnd(dispBlk * 0.30, 6)).toFixed(1),
+          dispatch_blk_325n:    Math.max(0, rnd(dispBlk * 0.15, 4)).toFixed(1),
+          dispatch_blk_opc425n: '0',
+          dispatch_bag_425r:    Math.max(0, rnd(dispBag * 0.60, 4)).toFixed(1),
+          dispatch_bag_425nbm:  Math.max(0, rnd(dispBag * 0.15, 2)).toFixed(1),
+          dispatch_bag_425n:    Math.max(0, rnd(dispBag * 0.25, 3)).toFixed(1),
+          dispatch_clinker:     '0',
         }, inputs: [],
       });
 
@@ -606,12 +618,11 @@
       var clinkerProd = Math.round(rnd(stressed ? 1410 : 1620, 55));
       var coalCons    = Math.round(rnd(stressed ? 258 : 245, 12));
       var ncv         = Math.round(rnd(4850, 120));
-      setDemo('nyati-kiln-' + iso, {
-        _m: { formId: 'kiln', date: iso, status: 'submitted', savedAt: iso + 'T06:00:00Z' },
+      setDemo('nyati-production-' + iso, {
+        _m: { formId: 'production', date: iso, status: 'submitted', savedAt: iso + 'T06:00:00Z' },
         data: {
           kiln_prod_mt:   clinkerProd,
           kiln_run_hrs:   (stressed ? rnd(20.5, 1.2) : 24).toFixed(2),
-          kiln_stop_min:  stressed ? Math.round(rnd(180, 60)) : 0,
           kiln_coal_cons: coalCons,
           kiln_coal_ncv:  ncv,
         }, inputs: [],

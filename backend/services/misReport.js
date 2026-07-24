@@ -11,8 +11,6 @@ const insights = require('./insights');
 
 /* Display names + section order for the report */
 const FORM_LABELS = {
-  'kiln':         'Kiln Operation',
-  'cement-mill':  'Cement Mill',
   'production':   'Production Summary',
   'quality':      'Quality Control',
   'pile-quality': 'Pile Quality (CaO)',

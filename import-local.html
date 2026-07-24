@@ -63,7 +63,7 @@
   requireAuth();
 
   const FORM_IDS = ['production','mines','power-plant','dispatch','quality','power-cons',
-                    'kiln','cement-mill','limestone','materials','pile-quality','cpp','stoppage'];
+                    'limestone','materials','pile-quality','cpp','stoppage'];
   const KEY_RE = new RegExp('^nyati-(' + FORM_IDS.join('|') + ')-(\\d{4}-\\d{2}-\\d{2})$');
 
   let entries = []; // { key, formId, date, status, savedAt, data, importable, note }

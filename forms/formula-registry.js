@@ -17,6 +17,10 @@
                 subsets). Each carries label/unit/dp/target/signage/
                 version. daily(f) gets fact values (number|null) for
                 one day; monthlyAgg says how days roll up.
+                `notes` is a plain-English statement of the method and
+                any caveats — it feeds the generated KPI reference
+                (backend: npm run docs:kpi → docs/KPI_REFERENCE.md),
+                so keep it current when the formula changes.
 
    Changing a formula here changes every dashboard that renders it —
    bump `version` and note the change in the commit message.
@@ -36,20 +40,28 @@
     blaine_425r:  { source: 'manual', form: 'quality', field: 'blaine_425r',  unit: 'cm²/g' },
     strength_28d: { source: 'manual', form: 'quality', field: 'strength_28d', unit: 'MPa' },
 
-    // dispatch form
-    dispatch_425r:    { source: 'manual', form: 'dispatch', field: 'dispatch_425r',    unit: 'MT' },
-    dispatch_425nbm:  { source: 'manual', form: 'dispatch', field: 'dispatch_425nbm',  unit: 'MT' },
-    dispatch_425n:    { source: 'manual', form: 'dispatch', field: 'dispatch_425n',    unit: 'MT' },
-    dispatch_325n:    { source: 'manual', form: 'dispatch', field: 'dispatch_325n',    unit: 'MT' },
-    dispatch_opc425n: { source: 'manual', form: 'dispatch', field: 'dispatch_opc425n', unit: 'MT' },
-    dispatch_bulker:  { source: 'manual', form: 'dispatch', field: 'dispatch_bulker',  unit: 'MT' },
-    dispatch_bigbag:  { source: 'manual', form: 'dispatch', field: 'dispatch_bigbag',  unit: 'MT' },
-    dispatch_clinker: { source: 'manual', form: 'dispatch', field: 'dispatch_clinker', unit: 'MT' },
+    // dispatch form — three independently loaded channels (Regular Bags, Bulker,
+    // Big Bags), each broken down by grade, matching the source Dispatch Report's
+    // own column layout. Big Bags is only packed for 42.5R/42.5N B-M/42.5N.
+    dispatch_reg_425r:    { source: 'manual', form: 'dispatch', field: 'dispatch_reg_425r',    unit: 'MT' },
+    dispatch_reg_425nbm:  { source: 'manual', form: 'dispatch', field: 'dispatch_reg_425nbm',  unit: 'MT' },
+    dispatch_reg_425n:    { source: 'manual', form: 'dispatch', field: 'dispatch_reg_425n',    unit: 'MT' },
+    dispatch_reg_325n:    { source: 'manual', form: 'dispatch', field: 'dispatch_reg_325n',    unit: 'MT' },
+    dispatch_reg_opc425n: { source: 'manual', form: 'dispatch', field: 'dispatch_reg_opc425n', unit: 'MT' },
+    dispatch_blk_425r:    { source: 'manual', form: 'dispatch', field: 'dispatch_blk_425r',    unit: 'MT' },
+    dispatch_blk_425nbm:  { source: 'manual', form: 'dispatch', field: 'dispatch_blk_425nbm',  unit: 'MT' },
+    dispatch_blk_425n:    { source: 'manual', form: 'dispatch', field: 'dispatch_blk_425n',    unit: 'MT' },
+    dispatch_blk_325n:    { source: 'manual', form: 'dispatch', field: 'dispatch_blk_325n',    unit: 'MT' },
+    dispatch_blk_opc425n: { source: 'manual', form: 'dispatch', field: 'dispatch_blk_opc425n', unit: 'MT' },
+    dispatch_bag_425r:    { source: 'manual', form: 'dispatch', field: 'dispatch_bag_425r',    unit: 'MT' },
+    dispatch_bag_425nbm:  { source: 'manual', form: 'dispatch', field: 'dispatch_bag_425nbm',  unit: 'MT' },
+    dispatch_bag_425n:    { source: 'manual', form: 'dispatch', field: 'dispatch_bag_425n',    unit: 'MT' },
+    dispatch_clinker:     { source: 'manual', form: 'dispatch', field: 'dispatch_clinker',     unit: 'MT' },
 
-    // kiln form
-    kiln_prod_mt:   { source: 'manual', form: 'kiln', field: 'kiln_prod_mt',   unit: 'MT' },
-    kiln_coal_cons: { source: 'manual', form: 'kiln', field: 'kiln_coal_cons', unit: 'MT' },
-    kiln_coal_ncv:  { source: 'manual', form: 'kiln', field: 'kiln_coal_ncv',  unit: 'kcal/kg' },
+    // kiln fields — captured on the Production Report (Plant Operations)
+    kiln_prod_mt:   { source: 'manual', form: 'production', field: 'kiln_prod_mt',   unit: 'MT' },
+    kiln_coal_cons: { source: 'manual', form: 'production', field: 'kiln_coal_cons', unit: 'MT' },
+    kiln_coal_ncv:  { source: 'manual', form: 'production', field: 'kiln_coal_ncv',  unit: 'kcal/kg' },
 
     // power consumption form
     pwr_crusher_kwh:   { source: 'manual', form: 'power-cons', field: 'pwr_crusher_kwh',   unit: 'kWh' },
@@ -78,16 +90,19 @@
     pwr_tanesco_colony_kwh:  { source: 'manual', form: 'power-cons', field: 'pwr_tanesco_colony_kwh',  unit: 'kWh' },
     pwr_cpp_colony_kwh:      { source: 'manual', form: 'power-cons', field: 'pwr_cpp_colony_kwh',      unit: 'kWh' },
 
-    // cement-mill form — clinker factor inputs (clinker consumed vs total cement produced)
-    cm_clinker_cons: { source: 'manual', form: 'cement-mill', field: 'cm_clinker_cons', unit: 'MT' },
-    cm1_425r_mt:     { source: 'manual', form: 'cement-mill', field: 'cm1_425r_mt',     unit: 'MT' },
-    cm1_425n_mt:     { source: 'manual', form: 'cement-mill', field: 'cm1_425n_mt',     unit: 'MT' },
-    cm1_325n_mt:     { source: 'manual', form: 'cement-mill', field: 'cm1_325n_mt',     unit: 'MT' },
-    cm1_opc_mt:      { source: 'manual', form: 'cement-mill', field: 'cm1_opc_mt',      unit: 'MT' },
-    cm2_425r_mt:     { source: 'manual', form: 'cement-mill', field: 'cm2_425r_mt',     unit: 'MT' },
-    cm2_425n_mt:     { source: 'manual', form: 'cement-mill', field: 'cm2_425n_mt',     unit: 'MT' },
-    cm2_425n_bm_mt:  { source: 'manual', form: 'cement-mill', field: 'cm2_425n_bm_mt',  unit: 'MT' },
-    cm2_325n_mt:     { source: 'manual', form: 'cement-mill', field: 'cm2_325n_mt',     unit: 'MT' },
+    // clinker factor inputs (clinker consumed vs total cement produced), split by source
+    // since own-produced and purchased clinker sit on different cost bases — captured on
+    // the Production Report (Raw Material Consumption / Plant Operations)
+    cm_clinker_own_cons:   { source: 'manual', form: 'production', field: 'cm_clinker_own_cons',   unit: 'MT' },
+    cm_clinker_purch_cons: { source: 'manual', form: 'production', field: 'cm_clinker_purch_cons', unit: 'MT' },
+    cm1_425r_mt:     { source: 'manual', form: 'production', field: 'cm1_425r_mt',     unit: 'MT' },
+    cm1_425n_mt:     { source: 'manual', form: 'production', field: 'cm1_425n_mt',     unit: 'MT' },
+    cm1_325n_mt:     { source: 'manual', form: 'production', field: 'cm1_325n_mt',     unit: 'MT' },
+    cm1_opc_mt:      { source: 'manual', form: 'production', field: 'cm1_opc_mt',      unit: 'MT' },
+    cm2_425r_mt:     { source: 'manual', form: 'production', field: 'cm2_425r_mt',     unit: 'MT' },
+    cm2_425n_mt:     { source: 'manual', form: 'production', field: 'cm2_425n_mt',     unit: 'MT' },
+    cm2_425n_bm_mt:  { source: 'manual', form: 'production', field: 'cm2_425n_bm_mt',  unit: 'MT' },
+    cm2_325n_mt:     { source: 'manual', form: 'production', field: 'cm2_325n_mt',     unit: 'MT' },
   };
 
   // pile-quality form: 18 CaO hole samples
@@ -104,13 +119,18 @@
   var KWH_GRINDING  = ['pwr_cm1_kwh', 'pwr_cm2_kwh'];
   var CM_GRADES     = ['cm1_425r_mt', 'cm1_425n_mt', 'cm1_325n_mt', 'cm1_opc_mt',
                        'cm2_425r_mt', 'cm2_425n_mt', 'cm2_425n_bm_mt', 'cm2_325n_mt'];
-  var DISPATCH      = ['dispatch_425r', 'dispatch_425nbm', 'dispatch_425n', 'dispatch_325n',
-                       'dispatch_opc425n', 'dispatch_bulker', 'dispatch_bigbag', 'dispatch_clinker'];
+  var DISPATCH      = ['dispatch_reg_425r', 'dispatch_reg_425nbm', 'dispatch_reg_425n', 'dispatch_reg_325n', 'dispatch_reg_opc425n',
+                       'dispatch_blk_425r', 'dispatch_blk_425nbm', 'dispatch_blk_425n', 'dispatch_blk_325n', 'dispatch_blk_opc425n',
+                       'dispatch_bag_425r', 'dispatch_bag_425nbm', 'dispatch_bag_425n',
+                       'dispatch_clinker'];
   var CAO_HOLES     = Object.keys(FACTS).filter(function (k) { return k.indexOf('cao_h') === 0; });
 
   function sumOf(keys, f) { return keys.reduce(function (s, k) { return s + z0(f[k]); }, 0); }
   /* total cement produced by both mills that day (matches source Excel J42+J48) */
   function totalCementProd(f) { return sumOf(CM_GRADES, f); }
+  /* total clinker consumed by the cement mills that day, own + purchased combined
+     (matches source Excel's I20+I21 — the two ledgers are summed for the clinker factor) */
+  function totalClinkerCons(f) { return z0(f.cm_clinker_own_cons) + z0(f.cm_clinker_purch_cons); }
 
   /* ── FORMULAS ──────────────────────────────────────────────────────
      Keys are the kpiSlug() of the dashboard row label — that's how
@@ -123,14 +143,16 @@
     'clinker-free-lime': {
       label: 'Clinker Free Lime', unit: '%', dp: 1, version: 1,
       target: 3.0, signage: '<', targetLabel: 'Spec 3.0%',
+      notes: 'Daily free-lime measurement as reported by the quality lab. Lower is better; spec is < 3.0%.',
       inputs: ['free_lime'],
       daily: function (f) { return pos(f.free_lime); },
       monthlyAgg: 'avg',
     },
 
     'despatch-day': {
-      label: 'Despatch / Day', unit: 'MT', dp: 0, version: 1,
+      label: 'Despatch / Day', unit: 'MT', dp: 0, version: 2,
       target: null, signage: null, targetLabel: null,
+      notes: 'Total cement + clinker dispatched for the day, summed across every loading channel (Regular Bags, Bulker, Big Bags — three independently loaded streams, matching the source Dispatch Report) and grade (42.5R, 42.5N BM, 42.5N, 32.5N, OPC 42.5N; Big Bags only packed for 42.5R/42.5N B-M/42.5N) plus clinker. v2: previously Bulker/Big Bags were single un-graded totals, so a grade’s dispatch across all channels could not be reconstructed — now every channel×grade cell is its own fact. A zero total is treated as no data, not a zero-dispatch day.',
       inputs: DISPATCH,
       daily: function (f) { var t = sumOf(DISPATCH, f); return t > 0 ? t : null; },
       monthlyAgg: 'avg',
@@ -139,6 +161,7 @@
     'kiln-output': {
       label: 'Kiln Output', unit: 'MT', dp: 0, version: 1,
       target: 2000, signage: '>=', targetLabel: 'Target ≥ 2,000 MT/day',
+      notes: 'Clinker produced by the kiln that day, as entered on the kiln form.',
       inputs: ['kiln_prod_mt'],
       daily: function (f) { return pos(f.kiln_prod_mt); },
       monthlyAgg: 'avg',
@@ -147,6 +170,7 @@
     'specific-thermal-energy-consumption': {
       label: 'Specific Thermal Energy Consumption', unit: 'kcal/kg', dp: 0, version: 2,
       target: 780, signage: '<', targetLabel: 'Target < 780 kcal/kg',
+      notes: 'Heat input per kg of clinker: coal consumed (MT) × coal NCV (kcal/kg) ÷ clinker produced (MT) — the MT units cancel, so there is no ×1000 factor (v2 fix, verified against the source Excel where Q54 = NCV × coal%). The monthly figure is the production-weighted mean, identical to Σ(coal×NCV) ÷ Σclinker.',
       inputs: ['kiln_prod_mt', 'kiln_coal_cons', 'kiln_coal_ncv'],
       // per-day: coal(MT) × NCV(kcal/kg) / clinker(MT) — MT/MT cancels, no ×1000
       // (verified against source Excel: Q54 = NCV × coal%, no extra scale factor)
@@ -159,9 +183,10 @@
     },
 
     'specific-power-consumption-total': {
-      label: 'Specific Power Consumption – Total', unit: 'kWh/MT eq. cement', dp: 2, version: 2,
+      label: 'Specific Power Consumption – Total', unit: 'kWh/MT eq. cement', dp: 2, version: 3,
       target: null, signage: '<', targetLabel: null,
-      inputs: KWH_CLINKER.concat(KWH_DOWNSTREAM, ['pwr_kiln_prod_mt', 'cm_clinker_cons'], CM_GRADES),
+      notes: 'Mirrors the source Excel’s 3-layer build (M54): upstream-of-clinker kWh (crusher, raw mills, coal mill, kiln) is expressed per ton of clinker, then scaled to a per-ton-cement basis by the clinker factor (total clinker consumed, own + purchased, ÷ total cement produced by both mills); downstream kWh (cement mills, packing, utilities, lighting) is divided by cement produced directly and added.',
+      inputs: KWH_CLINKER.concat(KWH_DOWNSTREAM, ['pwr_kiln_prod_mt', 'cm_clinker_own_cons', 'cm_clinker_purch_cons'], CM_GRADES),
       // Matches source Excel's 3-layer build (row 54, M54): upstream-of-clinker
       // kWh (crusher/raw mill/coal mill/kiln) is expressed per ton clinker, then
       // scaled by the clinker factor (clinker consumed ÷ cement produced) to put
@@ -170,7 +195,7 @@
       daily: function (f) {
         var cementProd = totalCementProd(f);
         if (cementProd <= 0) return null;
-        var clinkerFactor = z0(f.cm_clinker_cons) / cementProd;
+        var clinkerFactor = totalClinkerCons(f) / cementProd;
         var kilnProd = pos(f.pwr_kiln_prod_mt);
         var upstreamPerTonClinker = kilnProd ? sumOf(KWH_CLINKER, f) / kilnProd : 0;
         var upstreamPerTonCement = upstreamPerTonClinker * clinkerFactor;
@@ -181,40 +206,58 @@
     },
 
     'specific-power-consumption-up-to-clinker': {
-      label: 'Specific Power Consumption – Up to Clinker', unit: 'kWh/MT clinker', dp: 2, version: 1,
+      label: 'Specific Power Consumption – Up to Clinker', unit: 'kWh/MT clinker', dp: 2, version: 2,
       target: null, signage: '<', targetLabel: null,
-      inputs: KWH_CLINKER.concat(['pwr_kiln_prod_mt']),
-      // Simplification vs source Excel: the plant's report builds this per
-      // department (crusher/raw mill/coal mill each ÷ their OWN throughput,
-      // then × a material ratio — e.g. a fixed 1.55 raw-meal-to-clinker
-      // factor) because crusher/raw-mill/coal-mill output tonnages aren't
-      // captured anywhere in this app yet. Until those fields exist, this
-      // divides the same upstream kWh total directly by clinker produced.
+      notes: 'v2: upstream department kWh (crusher, raw mills, coal mill, kiln) plus 60% of Utilities kWh, ÷ clinker produced. The 60/40 utilities split (clinker-stage vs cement-stage) is the plant\'s own real allocation rule, confirmed against the "CUMULATIVE DAILY" sheet of the plant\'s IMS power workbooks (Apr–Jun 2026 master power reports) — every shared-utility row there splits 60% to the CLINKER total and 40% to the CEMENT total. Remaining known simplification: those workbooks split utilities+distribution-losses together (60/40), but this app has no fact yet for the raw "power import to cement plant" meter needed to isolate losses, so only the utilities share is added here, not losses.',
+      inputs: KWH_CLINKER.concat(['pwr_utils_kwh', 'pwr_kiln_prod_mt']),
+      // v2: added 60% of pwr_utils_kwh, matching the plant's real IMS
+      // Cumulative-Daily allocation (CLINKER total = upstream departments +
+      // 60%*(utilities+losses); losses aren't captured as a fact here yet,
+      // so only the utilities share is included).
       daily: function (f) {
         var prod = pos(f.pwr_kiln_prod_mt);
-        return prod ? sumOf(KWH_CLINKER, f) / prod : null;
+        if (!prod) return null;
+        var kwh = sumOf(KWH_CLINKER, f) + 0.6 * z0(f.pwr_utils_kwh);
+        return kwh / prod;
       },
       monthlyAgg: { type: 'weighted', weight: function (f) { return pos(f.pwr_kiln_prod_mt) || 0; } },
     },
 
     'specific-power-consumption-cement-grinding': {
-      label: 'Specific Power Consumption – Cement Grinding', unit: 'kWh/MT', dp: 2, version: 2,
+      label: 'Specific Power Consumption – Cement Grinding', unit: 'kWh/MT', dp: 2, version: 3,
       target: null, signage: '<', targetLabel: null,
-      inputs: KWH_GRINDING.concat(['pwr_cm1_prod_mt', 'pwr_cm2_prod_mt']),
-      // v2: was CM-2 only — CM-1's kWh/production inputs existed on the form
-      // but weren't wired to a data-field, so CM-1 power silently never
-      // counted. Now sums both mills, matching source Excel's combined
-      // "Cem Mill" meter reading.
+      notes: 'v3: CM-1 + CM-2 grinding kWh plus both packing plants plus 40% of Utilities kWh, ÷ combined mill production — matching the plant\'s real IMS allocation rule (CEMENT total = CM1+CM2+PP1+PP2 + 40%*(utilities+losses)), confirmed against the "CUMULATIVE DAILY" sheet of the Apr–Jun 2026 IMS power workbooks. v2 fix (CM-1 wiring) is preserved; v3 adds packing plants and the utilities share, both previously omitted entirely.',
+      inputs: KWH_GRINDING.concat(['pwr_packing_kwh', 'pwr_packing2_kwh', 'pwr_utils_kwh', 'pwr_cm1_prod_mt', 'pwr_cm2_prod_mt']),
+      // v3: added packing plant-1/2 kWh and 40% of pwr_utils_kwh, matching
+      // the plant's real IMS Cumulative-Daily allocation. Previously this
+      // KPI silently excluded packing-plant power and all utilities share.
       daily: function (f) {
         var prod = z0(f.pwr_cm1_prod_mt) + z0(f.pwr_cm2_prod_mt);
-        return prod > 0 ? sumOf(KWH_GRINDING, f) / prod : null;
+        if (prod <= 0) return null;
+        var kwh = sumOf(KWH_GRINDING, f) + z0(f.pwr_packing_kwh) + z0(f.pwr_packing2_kwh) + 0.4 * z0(f.pwr_utils_kwh);
+        return kwh / prod;
       },
       monthlyAgg: { type: 'weighted', weight: function (f) { return z0(f.pwr_cm1_prod_mt) + z0(f.pwr_cm2_prod_mt); } },
+    },
+
+    'power-distribution-loss-pct': {
+      label: 'Power Distribution Loss %', unit: '%', dp: 2, version: 1,
+      target: 2.0, signage: '<', targetLabel: 'Keep < 2%',
+      notes: 'Gap between total power supplied (TANESCO import + CPP generation) and the sum of all metered department sections, as a % of the metered total — the plant\'s internal distribution/measurement loss. Formula and behaviour verified identical to the source IMS workbook\'s "Total losses" / "% of Loss" rows (CUMULATIVE DAILY sheet, Apr–Jun 2026 master power reports) on a spot-checked day. This calculation already existed as a live, unsaved preview on the power-cons entry form (kpi-live.js: pwr_total_loss / pwr_loss_pct); this registry entry is the first place it becomes a tracked, historical, dashboard-visible KPI rather than a number that only ever appeared while someone had the form open.',
+      inputs: KWH_ALL.concat(['pwr_tanesco_kwh', 'pwr_cpp_kwh']),
+      daily: function (f) {
+        var consumed = sumOf(KWH_ALL, f);
+        if (consumed <= 0) return null;
+        var supplied = z0(f.pwr_tanesco_kwh) + z0(f.pwr_cpp_kwh);
+        return ((supplied - consumed) / consumed) * 100;
+      },
+      monthlyAgg: { type: 'weighted', weight: function (f) { return sumOf(KWH_ALL, f); } },
     },
 
     'blaine-425r': {
       label: 'Blaine 425R', unit: 'cm²/g', dp: 0, version: 1,
       target: 3500, signage: '>=', targetLabel: 'Min 3,500',
+      notes: 'Daily Blaine fineness of the 42.5R grade as measured by the quality lab.',
       inputs: ['blaine_425r'],
       daily: function (f) { return pos(f.blaine_425r); },
       monthlyAgg: 'avg',
@@ -223,6 +266,7 @@
     'strength-28d': {
       label: '28-Day Strength', unit: 'MPa', dp: 1, version: 1,
       target: 42.5, signage: '>=', targetLabel: 'Min 42.5',
+      notes: '28-day compressive strength result reported by the quality lab (relates to samples cast 28 days earlier).',
       inputs: ['strength_28d'],
       daily: function (f) { return pos(f.strength_28d); },
       monthlyAgg: 'avg',
@@ -231,6 +275,7 @@
     'pile-cao-avg': {
       label: 'Pile CaO Average', unit: '%', dp: 2, version: 1,
       target: 44.0, signage: '>=', targetLabel: 'Target 44%',
+      notes: 'Mean CaO% across the pile-quality form’s hole samples (up to 18 holes); holes left blank are excluded from the average rather than counted as zero.',
       inputs: CAO_HOLES,
       daily: function (f) {
         var vals = [];
@@ -243,9 +288,22 @@
     'total-power-kwh': {
       label: 'Total Power Consumption', unit: 'kWh', dp: 0, version: 2,
       target: null, signage: null, targetLabel: null,
+      notes: 'Sum of all metered plant sections including colony. Daily totals of 500 kWh or below are treated as meters-not-read (no data) rather than a real total. Monthly value is the straight sum of reported days.',
       inputs: KWH_ALL,
       daily: function (f) { var t = sumOf(KWH_ALL, f); return t > 500 ? t : null; },
       monthlyAgg: 'sum',
+    },
+
+    'purchased-clinker-share': {
+      label: 'Purchased Clinker Share', unit: '%', dp: 1, version: 1,
+      target: null, signage: null, targetLabel: null,
+      notes: 'Share of total clinker consumed by the cement mills (own + purchased) that came from purchased clinker rather than own kiln production. The two sources sit on different cost bases, so this is the basis for cost/margin-by-clinker-source reporting.',
+      inputs: ['cm_clinker_own_cons', 'cm_clinker_purch_cons'],
+      daily: function (f) {
+        var total = totalClinkerCons(f);
+        return total > 0 ? (z0(f.cm_clinker_purch_cons) / total) * 100 : null;
+      },
+      monthlyAgg: { type: 'weighted', weight: function (f) { return totalClinkerCons(f); } },
     },
   };
 

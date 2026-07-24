@@ -1,7 +1,7 @@
 /*
   scripts/accept-phase2.js — Phase 2 acceptance tests (see docs/MASTER_BUILD_PROMPT.md).
 
-  Part A — data layer: every one of the 13 form types submits to Postgres via
+  Part A — data layer: every one of the 11 form types submits to Postgres via
   the API (using a role allowed to submit it) and reads back identically from
   a SECOND authenticated session (the "two browsers see the same data" rule).
 
@@ -36,7 +36,7 @@ const DATE_CLEAN = ['1999-02-11', '1999-02-20']; // cleanup range
 const USERS      = { production: 'p2_production', cpp: 'p2_cpp', logistics: 'p2_logistics', mining: 'p2_mining',
                      pm: 'p2_pm', stores: 'p2_stores' };
 const ALL_FORMS  = ['production', 'mines', 'power-plant', 'dispatch', 'quality', 'power-cons',
-                    'kiln', 'cement-mill', 'limestone', 'materials', 'pile-quality', 'cpp', 'stoppage'];
+                    'limestone', 'materials', 'pile-quality', 'cpp', 'stoppage'];
 
 let passCount = 0, failCount = 0;
 function check(name, cond, extra) {
@@ -144,8 +144,8 @@ async function main() {
     check('every form type has a submitting role in config', ALL_FORMS.every(f => roleFor[f]),
       ALL_FORMS.filter(f => !roleFor[f]).join(', '));
 
-    // ── Part A: all 13 forms round-trip; second session reads identically ──
-    console.log('\nPart A — all 13 form types round-trip through Postgres:');
+    // ── Part A: all 11 forms round-trip; second session reads identically ──
+    console.log('\nPart A — all 11 form types round-trip through Postgres:');
     for (const form of ALL_FORMS) {
       const api  = makeApi(BASE, () => tokens[roleFor[form]]);
       const data = { _accept2: form, _status: 'submitted' };
@@ -165,23 +165,23 @@ async function main() {
 
     // ── Part B: the real offline queue module ──────────────────────────
     console.log('\nPart B — offline queue (forms/offline-queue.js, the shipped code):');
-    const pmToken = () => tokens.pm;   // kiln is P&M-owned — production is view-only now
+    const prodToken = () => tokens.production;   // production report — owned by Production
 
     // B1: server down → stays queued
     {
       const storage = fakeStorage();
-      const q = createQueue({ storage, api: () => makeApi(DEAD_BASE, pmToken) });
-      q.enqueue('kiln', '1999-02-12', 'day', { _q: 'b1', _status: 'submitted' });
+      const q = createQueue({ storage, api: () => makeApi(DEAD_BASE, prodToken) });
+      q.enqueue('production', '1999-02-12', 'day', { _q: 'b1', _status: 'submitted' });
       await q.flush();
       const c = q.counts();
       check('B1: submission while server is down stays queued', c.pending === 1 && c.conflicts === 0,
         JSON.stringify(c));
 
       // B2: server comes back → same queue flushes into Postgres
-      const q2 = createQueue({ storage, api: () => makeApi(BASE, pmToken) });
+      const q2 = createQueue({ storage, api: () => makeApi(BASE, prodToken) });
       await q2.flush();
       const c2 = q2.counts();
-      const rec = await makeApi(BASE, pmToken).getForm('kiln', '1999-02-12', 'day');
+      const rec = await makeApi(BASE, prodToken).getForm('production', '1999-02-12', 'day');
       check('B2: queued entry syncs when server returns', c2.pending === 0 && rec && rec.data._q === 'b1',
         JSON.stringify(c2));
     }
@@ -189,19 +189,19 @@ async function main() {
     // B3: server record NEWER than queued item → conflict, server wins
     {
       const storage = fakeStorage();
-      const live = makeApi(BASE, pmToken);
+      const live = makeApi(BASE, prodToken);
       const q = createQueue({ storage, api: () => live, now: () => '1999-02-01T00:00:00.000Z' });
-      q.enqueue('kiln', '1999-02-13', 'day', { _q: 'mine-stale', _status: 'submitted' });
-      await live.submitForm('kiln', '1999-02-13', 'day', { _q: 'server-newer', _status: 'submitted' });
+      q.enqueue('production', '1999-02-13', 'day', { _q: 'mine-stale', _status: 'submitted' });
+      await live.submitForm('production', '1999-02-13', 'day', { _q: 'server-newer', _status: 'submitted' });
       await q.flush();
       const c = q.counts();
-      const rec = await live.getForm('kiln', '1999-02-13', 'day');
+      const rec = await live.getForm('production', '1999-02-13', 'day');
       check('B3: newer server record is NOT overwritten; item flagged for review',
         c.pending === 0 && c.conflicts === 1 && rec.data._q === 'server-newer', JSON.stringify(c));
 
       // B4: resolve "use mine" → queued data pushed
       const r = await q.resolveConflict(0, 'mine');
-      const rec2 = await live.getForm('kiln', '1999-02-13', 'day');
+      const rec2 = await live.getForm('production', '1999-02-13', 'day');
       check('B4: resolving "use mine" pushes the queued data',
         r.ok && q.counts().conflicts === 0 && rec2.data._q === 'mine-stale');
     }
@@ -209,13 +209,13 @@ async function main() {
     // B5: resolve "keep server" → discard mine, server intact
     {
       const storage = fakeStorage();
-      const live = makeApi(BASE, pmToken);
+      const live = makeApi(BASE, prodToken);
       const q = createQueue({ storage, api: () => live, now: () => '1999-02-01T00:00:00.000Z' });
-      q.enqueue('kiln', '1999-02-14', 'day', { _q: 'mine-discard', _status: 'submitted' });
-      await live.submitForm('kiln', '1999-02-14', 'day', { _q: 'server-keeps', _status: 'submitted' });
+      q.enqueue('production', '1999-02-14', 'day', { _q: 'mine-discard', _status: 'submitted' });
+      await live.submitForm('production', '1999-02-14', 'day', { _q: 'server-keeps', _status: 'submitted' });
       await q.flush();
       const r = await q.resolveConflict(0, 'server');
-      const rec = await live.getForm('kiln', '1999-02-14', 'day');
+      const rec = await live.getForm('production', '1999-02-14', 'day');
       check('B5: resolving "keep server" discards queued data, server intact',
         r.ok && q.counts().conflicts === 0 && rec.data._q === 'server-keeps');
     }
@@ -224,7 +224,7 @@ async function main() {
     {
       const storage = fakeStorage();
       const q = createQueue({ storage, api: () => makeApi(BASE, () => tokens.mining) });
-      q.enqueue('kiln', '1999-02-15', 'day', { _q: 'b6', _status: 'submitted' }); // mining can't submit kiln
+      q.enqueue('production', '1999-02-15', 'day', { _q: 'b6', _status: 'submitted' }); // mining can't submit production
       await q.flush();
       const c = q.counts();
       const conflict = q.list().conflicts[0];

@@ -62,8 +62,8 @@ async function seedTestUsers() {
       failed_attempts = 0, locked_until = NULL, token_version = 0
   `, [username, hash, 'Phase1 Test ' + username, role, mustChange]);
 
-  await mk('p1_prod', 'pm',         false); // may submit kiln (P&M owns it now)
-  await mk('p1_hr',   'hr',         false); // may NOT submit kiln
+  await mk('p1_prod', 'production', false); // may submit the production report
+  await mk('p1_hr',   'hr',         false); // may NOT submit the production report
   await mk('p1_lock', 'production', false); // gets locked out
   await mk('p1_mcp',  'production', true);  // must change password
 }
@@ -76,7 +76,7 @@ async function cleanup() {
     [USERS]
   );
   await db.query(
-    `DELETE FROM daily_reports WHERE form_type = 'kiln' AND record_date = $1`,
+    `DELETE FROM daily_reports WHERE form_type = 'production' AND record_date = $1`,
     [TEST_DATE]
   );
   await db.query('DELETE FROM users WHERE username = ANY($1)', [USERS]);
@@ -138,7 +138,7 @@ async function main() {
     const prodToken = l1.body.token;
 
     // ── 2. Tampered token → 401 ────────────────────────────────────
-    const t2 = await api('GET', `/reports/kiln/${TEST_DATE}`, { token: tamper(prodToken) });
+    const t2 = await api('GET', `/reports/production/${TEST_DATE}`, { token: tamper(prodToken) });
     check('tampered token → 401', t2.status === 401, `got ${t2.status}`);
 
     // ── 3. Lockout after repeated failures ─────────────────────────
@@ -147,51 +147,51 @@ async function main() {
     check('locked account rejects even the CORRECT password (423)',
       t3.status === 423, `got ${t3.status}: ${JSON.stringify(t3.body)}`);
 
-    // ── 4. RBAC: hr may not submit kiln → 403 ──────────────────────
+    // ── 4. RBAC: hr may not submit the production report → 403 ─────
     const hrToken = (await login('p1_hr', PW)).body.token;
-    const t4 = await api('POST', '/reports/kiln', {
+    const t4 = await api('POST', '/reports/production', {
       token: hrToken, body: { date: TEST_DATE, data: { x: 1 } },
     });
     check('unauthorized role submitting a form → 403', t4.status === 403, `got ${t4.status}`);
 
     // ── 5. Authorized submit + read-back ───────────────────────────
-    const t5 = await api('POST', '/reports/kiln', {
+    const t5 = await api('POST', '/reports/production', {
       token: prodToken, body: { date: TEST_DATE, data: { _accept: 1 } },
     });
     check('authorized submit → 200', t5.status === 200 && t5.body.success === true, `got ${t5.status}`);
-    const t5b = await api('GET', `/reports/kiln/${TEST_DATE}`, { token: prodToken });
+    const t5b = await api('GET', `/reports/production/${TEST_DATE}`, { token: prodToken });
     check('submitted form reads back', t5b.status === 200 && t5b.body && t5b.body.data && t5b.body.data._accept === 1);
 
     // ── 6. Logout revokes the token server-side ────────────────────
     await api('POST', '/auth/logout', { token: prodToken });
-    const t6 = await api('GET', `/reports/kiln/${TEST_DATE}`, { token: prodToken });
+    const t6 = await api('GET', `/reports/production/${TEST_DATE}`, { token: prodToken });
     check('token used after logout → 401 (revoked server-side)', t6.status === 401, `got ${t6.status}`);
 
     // ── 7. Forced password change gate ─────────────────────────────
     const l7 = await login('p1_mcp', PW);
     check('flagged account logs in with mustChangePassword=true', l7.body.mustChangePassword === true);
     const mcpToken = l7.body.token;
-    const t7a = await api('GET', `/reports/kiln/${TEST_DATE}`, { token: mcpToken });
+    const t7a = await api('GET', `/reports/production/${TEST_DATE}`, { token: mcpToken });
     check('data routes blocked until password changed (403 + code)',
       t7a.status === 403 && t7a.body.code === 'PASSWORD_CHANGE_REQUIRED', `got ${t7a.status}`);
     const t7b = await api('POST', '/auth/change-password', {
       token: mcpToken, body: { currentPassword: PW, newPassword: NEW_PW },
     });
     check('change-password succeeds and returns a fresh token', t7b.status === 200 && !!t7b.body.token);
-    const t7c = await api('GET', `/reports/kiln/${TEST_DATE}`, { token: mcpToken });
+    const t7c = await api('GET', `/reports/production/${TEST_DATE}`, { token: mcpToken });
     check('pre-change token is revoked (401)', t7c.status === 401, `got ${t7c.status}`);
-    const t7d = await api('GET', `/reports/kiln/${TEST_DATE}`, { token: t7b.body.token });
+    const t7d = await api('GET', `/reports/production/${TEST_DATE}`, { token: t7b.body.token });
     check('fresh token passes the cleared gate (200)', t7d.status === 200, `got ${t7d.status}`);
 
     // ── 8. Validation rejects malformed input ──────────────────────
     const prodToken2 = (await login('p1_prod', PW)).body.token; // re-login (revoked in step 6)
-    const t8a = await api('POST', '/reports/kiln', {
+    const t8a = await api('POST', '/reports/production', {
       token: prodToken2, body: { date: 'not-a-date', data: { x: 1 } },
     });
     check('bad date → 400', t8a.status === 400, `got ${t8a.status}`);
     const t8b = await api('GET', `/reports/not-a-form/${TEST_DATE}`, { token: prodToken2 });
     check('unknown form type → 400', t8b.status === 400, `got ${t8b.status}`);
-    const t8c = await api('POST', '/reports/kiln', {
+    const t8c = await api('POST', '/reports/production', {
       token: prodToken2, body: { date: TEST_DATE, data: {} },
     });
     check('empty form data → 400', t8c.status === 400, `got ${t8c.status}`);

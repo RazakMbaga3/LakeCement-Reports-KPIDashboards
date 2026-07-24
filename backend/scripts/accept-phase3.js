@@ -65,30 +65,36 @@ const QUALITY = [
   { free_lime: 2.8, blaine_425r: 3500, strength_28d: 43 },
   { free_lime: 3.1, blaine_425r: 3600, strength_28d: 44 },
 ];
+// old flat totals renamed 1:1 onto the new channel×grade facts (reg/blk/bag),
+// keeping each day's grand total identical to the pre-split fixtures
 const DISPATCH = [
-  { dispatch_425r: 1000, dispatch_425n: 200, dispatch_bulker: 300, dispatch_bigbag: 500 },  // 2000
-  { dispatch_425r:  700, dispatch_425n: 300, dispatch_bulker: 200, dispatch_bigbag: 300 },  // 1500
-  { dispatch_425r: 1200, dispatch_425n: 400, dispatch_bulker: 400, dispatch_bigbag: 500 },  // 2500
+  { dispatch_reg_425r: 1000, dispatch_reg_425n: 200, dispatch_blk_425r: 300, dispatch_bag_425r: 500 },  // 2000
+  { dispatch_reg_425r:  700, dispatch_reg_425n: 300, dispatch_blk_425r: 200, dispatch_bag_425r: 300 },  // 1500
+  { dispatch_reg_425r: 1200, dispatch_reg_425n: 400, dispatch_blk_425r: 400, dispatch_bag_425r: 500 },  // 2500
 ];
 const POWER = [
   { pwr_crusher_kwh: 5000, pwr_rawmill_kwh: 10000, pwr_coalmill_kwh: 5000, pwr_kiln_kwh: 15000,
     pwr_cm1_kwh: 6000, pwr_cm2_kwh: 8000, pwr_packing_kwh: 3000, pwr_packing2_kwh: 500,
     pwr_utils_kwh: 2000, pwr_lighting_kwh: 2000,
+    pwr_tanesco_kwh: 30000, pwr_cpp_kwh: 27200, // supplied 57200 vs consumed 56500 -> +700 loss
     pwr_kiln_prod_mt: 1500, pwr_cm1_prod_mt: 300, pwr_cm2_prod_mt: 500 }, // clinker subset 35000
   { pwr_crusher_kwh: 5000, pwr_rawmill_kwh: 11000, pwr_coalmill_kwh: 5000, pwr_kiln_kwh: 16000,
     pwr_cm1_kwh: 6000, pwr_cm2_kwh: 8000, pwr_packing_kwh: 1000, pwr_packing2_kwh: 0,
     pwr_utils_kwh: 1000, pwr_lighting_kwh: 1000,
+    pwr_tanesco_kwh: 28000, pwr_cpp_kwh: 26500, // supplied 54500 vs consumed 54000 -> +500 loss
     pwr_kiln_prod_mt: 1600, pwr_cm1_prod_mt: 250, pwr_cm2_prod_mt: 400 }, // clinker subset 37000
   { pwr_crusher_kwh: 5000, pwr_rawmill_kwh: 9000, pwr_coalmill_kwh: 4000, pwr_kiln_kwh: 15000,
     pwr_cm1_kwh: 5000, pwr_cm2_kwh: 7000, pwr_packing_kwh: 1000, pwr_packing2_kwh: 0,
     pwr_utils_kwh: 500, pwr_lighting_kwh: 500,
+    pwr_tanesco_kwh: 24000, pwr_cpp_kwh: 23200, // supplied 47200 vs consumed 47000 -> +200 loss
     pwr_kiln_prod_mt: 1400, pwr_cm1_prod_mt: 200, pwr_cm2_prod_mt: 600 }, // clinker subset 33000
 ];
-// clinker consumed = 80% of total cement produced each day (clean clinker factor)
+// clinker consumed = 80% of total cement produced each day (clean clinker factor),
+// split own/purchased to also exercise totalClinkerCons() summing both facts
 const CEMENT_MILL = [
-  { cm_clinker_cons: 640, cm1_425r_mt: 300, cm2_425r_mt: 500 }, // total prod 800
-  { cm_clinker_cons: 520, cm1_425r_mt: 250, cm2_425r_mt: 400 }, // total prod 650
-  { cm_clinker_cons: 640, cm1_425r_mt: 200, cm2_425r_mt: 600 }, // total prod 800
+  { cm_clinker_own_cons: 440, cm_clinker_purch_cons: 200, cm1_425r_mt: 300, cm2_425r_mt: 500 }, // total prod 800, total clinker 640
+  { cm_clinker_own_cons: 520, cm_clinker_purch_cons:   0, cm1_425r_mt: 250, cm2_425r_mt: 400 }, // total prod 650, total clinker 520
+  { cm_clinker_own_cons: 300, cm_clinker_purch_cons: 340, cm1_425r_mt: 200, cm2_425r_mt: 600 }, // total prod 800, total clinker 640
 ];
 const PILE = [
   { cao_h1: 44, cao_h2: 46 }, // daily avg 45
@@ -107,15 +113,20 @@ const EXPECTED = {
   'total-power-kwh':    56500 + 54000 + 47000,                                        // 157500
   'specific-thermal-energy-consumption':
     (250 * 4800 + 260 * 4900 + 240 * 4700) / (2000 + 2100 + 1900),
-  // upstream-of-clinker kWh per ton clinker, unaffected by the cement-mill split
-  'specific-power-consumption-up-to-clinker': (35000 + 37000 + 33000) / (1500 + 1600 + 1400),
-  // both cement mills combined (CM-1 + CM-2), weighted by their combined production
+  // v2: upstream-of-clinker kWh + 60% of utilities, ÷ clinker (utils: 2000, 1000, 500)
+  'specific-power-consumption-up-to-clinker':
+    ((35000 + 0.6 * 2000) + (37000 + 0.6 * 1000) + (33000 + 0.6 * 500)) / (1500 + 1600 + 1400),
+  // v3: both cement mills + both packing plants + 40% of utilities, weighted by combined production
   'specific-power-consumption-cement-grinding':
-    ((6000 + 8000) + (6000 + 8000) + (5000 + 7000)) / (800 + 650 + 800),
+    (((6000 + 8000) + (3000 + 500) + 0.4 * 2000) +
+     ((6000 + 8000) + (1000 + 0)   + 0.4 * 1000) +
+     ((5000 + 7000) + (1000 + 0)   + 0.4 * 500)) / (800 + 650 + 800),
   // 3-layer build: Σ(upstream kWh/ton-clinker × clinker consumed) + Σ(downstream kWh), ÷ Σ cement produced
   'specific-power-consumption-total':
     ((35000 / 1500 * 640) + (37000 / 1600 * 520) + (33000 / 1400 * 640) +
      (21500 + 17000 + 14000)) / (800 + 650 + 800),
+  // supplied (tanesco+cpp) minus consumed (KWH_ALL), as % of consumed, weighted by consumed
+  'power-distribution-loss-pct': (700 + 500 + 200) * 100 / (56500 + 54000 + 47000),
 };
 
 async function seedTestUsers() {
@@ -179,14 +190,17 @@ async function main() {
     for (const [role, username] of Object.entries(USERS)) tok[role] = await loginToken(username);
 
     // Seed the month's daily data via the real reports API
-    const submit = (token, form, date, data) =>
-      api('POST', `/reports/${form}`, { token, body: { date, data } });
+    const submit = async (token, form, date, data) => {
+      const r = await api('POST', `/reports/${form}`, { token, body: { date, data } });
+      if (r.status >= 300) throw new Error(`seed submit ${form} ${date}: HTTP ${r.status}`);
+      return r;
+    };
     for (let i = 0; i < DATES.length; i++) {
-      await submit(tok.pm,         'kiln',         DATES[i], KILN[i]);
+      // kiln + cement-mill fields now live on the Production Report — one combined submit
+      await submit(tok.production, 'production',   DATES[i], { ...KILN[i], ...CEMENT_MILL[i] });
       await submit(tok.production, 'quality',      DATES[i], QUALITY[i]);
       await submit(tok.logistics,  'dispatch',     DATES[i], DISPATCH[i]);
-      await submit(tok.cpp,        'power-cons',   DATES[i], POWER[i]);
-      await submit(tok.pm,         'cement-mill',  DATES[i], CEMENT_MILL[i]);
+      await submit(tok.pm,         'power-cons',   DATES[i], POWER[i]);
       if (Object.keys(PILE[i]).length) {
         await submit(tok.production, 'pile-quality', DATES[i], PILE[i]);
       }

@@ -100,16 +100,35 @@
 
       if (!salesRow) return { _error: 'Could not find "Sales on Date" row. Is this a Dispatch report?' };
 
+      /* Column layout (0-indexed after the row's leading SR-NO/label cells):
+         Regular Bags: [2]=42.5R [3]=42.5N B-M [4]=42.5N [5]=32.5N [6]=OPC 42.5N
+         Bulker:       [7]=32.5N [8]=42.5R [9]=42.5N B-M [10]=42.5N [11]=OPC 42.5N
+         Big Bags:     [12]=42.5R [13]=42.5N B-M [14]=42.5N
+         Clinker:      [15]                                                        */
       return {
-        date:            dateVal,
-        dispatch_425r:   fmt(toNum(salesRow[2])),
-        dispatch_425n:   fmt((toNum(salesRow[3]) || 0) + (toNum(salesRow[4]) || 0)),
-        dispatch_bulker: fmt(sumCols(salesRow, [7, 8, 9, 10, 11])),
-        dispatch_bigbag: fmt(sumCols(salesRow, [12, 13, 14])),
+        date:                 dateVal,
+        dispatch_reg_425r:    fmt(toNum(salesRow[2])),
+        dispatch_reg_425nbm:  fmt(toNum(salesRow[3])),
+        dispatch_reg_425n:    fmt(toNum(salesRow[4])),
+        dispatch_reg_325n:    fmt(toNum(salesRow[5])),
+        dispatch_reg_opc425n: fmt(toNum(salesRow[6])),
+        dispatch_blk_425r:    fmt(toNum(salesRow[8])),
+        dispatch_blk_425nbm:  fmt(toNum(salesRow[9])),
+        dispatch_blk_425n:    fmt(toNum(salesRow[10])),
+        dispatch_blk_325n:    fmt(toNum(salesRow[7])),
+        dispatch_blk_opc425n: fmt(toNum(salesRow[11])),
+        dispatch_bag_425r:    fmt(toNum(salesRow[12])),
+        dispatch_bag_425nbm:  fmt(toNum(salesRow[13])),
+        dispatch_bag_425n:    fmt(toNum(salesRow[14])),
+        dispatch_clinker:     fmt(toNum(salesRow[15])),
         so_425r:         fmt(toNum(soRow ? soRow[2] : null)),
-        so_425n:         fmt((toNum(soRow ? soRow[3] : null) || 0) + (toNum(soRow ? soRow[4] : null) || 0)),
+        so_425nbm:       fmt(toNum(soRow ? soRow[3] : null)),
+        so_425n:         fmt(toNum(soRow ? soRow[4] : null)),
+        so_325n:         fmt(toNum(soRow ? soRow[5] : null)),
+        so_opc425n:      fmt(toNum(soRow ? soRow[6] : null)),
         so_bulker:       fmt(sumCols(soRow || [], [7, 8, 9, 10, 11])),
         so_bigbag:       fmt(sumCols(soRow || [], [12, 13, 14])),
+        so_clinker:      fmt(toNum(soRow ? soRow[15] : null)),
       };
     },
 

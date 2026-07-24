@@ -95,8 +95,8 @@
     function update() {
       const f = _fields();
       rules.forEach(function (rule) {
-        const el = document.querySelector('[data-kpi="' + rule.kpi + '"]');
-        if (!el) return;
+        const els = document.querySelectorAll('[data-kpi="' + rule.kpi + '"]');
+        if (!els.length) return;
 
         let val;
         if (typeof rule.compute === 'function') {
@@ -108,8 +108,10 @@
         if (val === null || val === undefined) return;
         const display = _fmt(val, rule.fmt || 'n0');
         if (display !== '—') {
-          el.textContent = display;
-          _rag(el, _num(val), rule);
+          els.forEach(function (el) {
+            el.textContent = display;
+            _rag(el, _num(val), rule);
+          });
         }
       });
     }

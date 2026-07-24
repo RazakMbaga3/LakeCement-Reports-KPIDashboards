@@ -27,7 +27,7 @@ const PW     = 'Accept@56789';
 const YEAR   = 1999, MONTH = 5;
 const DATES  = ['1999-05-01', '1999-05-02', '1999-05-03'];
 const DAY2   = DATES[1];
-const USERS  = { production: 'p5_production', logistics: 'p5_logistics', cpp: 'p5_cpp', pm: 'p5_pm', admin: 'p5_admin' };
+const USERS  = { production: 'p5_production', logistics: 'p5_logistics', cpp: 'p5_cpp', admin: 'p5_admin' };
 const DIGEST_TO = 'md@test.local';
 
 let passCount = 0, failCount = 0;
@@ -61,9 +61,9 @@ const KILN = [
 ];
 const QUALITY  = [{ free_lime: 2.5 }, { free_lime: 2.8 }, { free_lime: 3.1 }];
 const DISPATCH = [
-  { dispatch_425r: 1000, dispatch_425n: 200, dispatch_bulker: 300, dispatch_bigbag: 500 },
-  { dispatch_425r:  700, dispatch_425n: 300, dispatch_bulker: 200, dispatch_bigbag: 300 },
-  { dispatch_425r: 1200, dispatch_425n: 400, dispatch_bulker: 400, dispatch_bigbag: 500 },
+  { dispatch_reg_425r: 1000, dispatch_reg_425n: 200, dispatch_blk_425r: 300, dispatch_bag_425r: 500 },
+  { dispatch_reg_425r:  700, dispatch_reg_425n: 300, dispatch_blk_425r: 200, dispatch_bag_425r: 300 },
+  { dispatch_reg_425r: 1200, dispatch_reg_425n: 400, dispatch_blk_425r: 400, dispatch_bag_425r: 500 },
 ];
 const POWER = [
   { pwr_crusher_kwh: 5000, pwr_rawmill_kwh: 10000, pwr_coalmill_kwh: 5000, pwr_kiln_kwh: 15000,
@@ -145,7 +145,7 @@ async function main() {
     const submit = (token, form, date, data) =>
       api('POST', `/reports/${form}`, { token, body: { date, data } });
     for (let i = 0; i < DATES.length; i++) {
-      await submit(tok.pm,         'kiln',       DATES[i], KILN[i]);
+      await submit(tok.production, 'production', DATES[i], KILN[i]);
       await submit(tok.production, 'quality',    DATES[i], QUALITY[i]);
       await submit(tok.logistics,  'dispatch',   DATES[i], DISPATCH[i]);
       await submit(tok.cpp,        'power-cons', DATES[i], POWER[i]);
@@ -154,7 +154,7 @@ async function main() {
     // ── A. Daily JSON ───────────────────────────────────────────
     console.log('Part A–C — daily report:');
     const dj = await api('GET', `/mis/daily/${DAY2}`, { token: tok.production });
-    const kilnForm = dj.body?.forms?.find(f => f.formType === 'kiln');
+    const kilnForm = dj.body?.forms?.find(f => f.formType === 'production');
     const kilnKpi  = dj.body?.kpis?.find(k => k.key === 'kiln-output');
     check('daily JSON: submissions + KPIs + missing list',
       dj.status === 200 && kilnForm &&
@@ -166,7 +166,7 @@ async function main() {
     const dh = await api('GET', `/mis/daily/${DAY2}/html`, { token: tok.production });
     check('daily HTML renders real data (printable view)',
       dh.status === 200 && /text\/html/.test(dh.type) &&
-      dh.text.includes('Daily MIS Report') && dh.text.includes('Kiln Operation') &&
+      dh.text.includes('Daily MIS Report') && dh.text.includes('Production Summary') &&
       dh.text.includes('2,100') && dh.text.includes('No submission received'),
       `status ${dh.status}`);
 
@@ -180,8 +180,8 @@ async function main() {
     const dKpiWs = dwb.getWorksheet('KPI Summary');
     let dailyKilnCell = null;
     dKpiWs?.eachRow(r => { if (r.getCell(1).value === 'Kiln Output') dailyKilnCell = r.getCell(4).value; });
-    check('daily XLSX parses: KPI Summary + Kiln sheet + correct value',
-      !!dKpiWs && !!dwb.getWorksheet('Kiln Operation') && dailyKilnCell === 2100,
+    check('daily XLSX parses: KPI Summary + Production sheet + correct value',
+      !!dKpiWs && !!dwb.getWorksheet('Production Summary') && dailyKilnCell === 2100,
       `kiln cell = ${JSON.stringify(dailyKilnCell)}`);
 
     // ── Override flows into the monthly report ──────────────────
@@ -194,7 +194,7 @@ async function main() {
     console.log('Part D–F — monthly report:');
     const mj = await api('GET', `/mis/monthly/${YEAR}/${MONTH}`, { token: tok.production });
     const mKiln = mj.body?.kpis?.find(k => k.key === 'kiln-output');
-    const mKilnForm = mj.body?.forms?.find(f => f.formType === 'kiln');
+    const mKilnForm = mj.body?.forms?.find(f => f.formType === 'production');
     check('monthly JSON: override applied, computed preserved, 3 day rows',
       mj.status === 200 && mKiln && mKiln.value === 2050 && mKiln.computed === 2000 &&
       mKiln.overridden === true && mKilnForm && mKilnForm.days.length === 3, `status ${mj.status}`);
@@ -210,13 +210,13 @@ async function main() {
     const mx = await api('GET', `/mis/monthly/${YEAR}/${MONTH}/xlsx`, { token: tok.production, raw: true });
     const mwb = new ExcelJS.Workbook();
     await mwb.xlsx.load(mx.buffer);
-    const mKilnWs = mwb.getWorksheet('Kiln Operation');
+    const mKilnWs = mwb.getWorksheet('Production Summary');
     let mKpiCell = null;
     // monthly KPI sheet layout (with benchmark cols): 4=Actual … 10=Override note
     mwb.getWorksheet('KPI Summary')?.eachRow(r => {
       if (r.getCell(1).value === 'Kiln Output') mKpiCell = { v: r.getCell(4).value, note: r.getCell(10).value };
     });
-    check('monthly XLSX parses: override value + note, 3 day rows on Kiln sheet',
+    check('monthly XLSX parses: override value + note, 3 day rows on Production sheet',
       mx.status === 200 && mKpiCell && mKpiCell.v === 2050 &&
       /Weighbridge/.test(String(mKpiCell.note)) && mKilnWs && mKilnWs.rowCount === 4,
       JSON.stringify(mKpiCell));

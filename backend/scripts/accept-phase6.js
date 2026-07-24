@@ -30,10 +30,10 @@ const PORT      = process.env.ACCEPT_PORT || 5906;
 const DOWN_PORT = 5907;
 const BASE      = `http://localhost:${PORT}/api`;
 const PW        = 'Accept@67890';
-const USERS     = { admin: 'p6_admin', pm: 'p6_pm' };   /* pm — kiln is P&M-owned now */
+const USERS     = { admin: 'p6_admin', production: 'p6_production' };
 const MTOKEN    = 'accept6-metrics-token';
-const TEST_DATE = '1999-06-01'; // watchdog checks this day: kiln is missing
-const KILN_DATE = '1999-06-02'; // a real kiln submission for the metrics counter
+const TEST_DATE = '1999-06-01'; // watchdog checks this day: production is missing
+const KILN_DATE = '1999-06-02'; // a real production submission for the metrics counter
 
 let passCount = 0, failCount = 0;
 function check(name, cond, extra) {
@@ -90,7 +90,7 @@ function startServer(port, extraEnv) {
       WATCHDOG_CRON: 'off',            // manual trigger only during tests
       DIGEST_TRANSPORT: 'json',
       ALERT_TO: 'ops@test.local',
-      MISSED_ENTRY_FORMS: 'kiln',
+      MISSED_ENTRY_FORMS: 'production',
       MISSED_ENTRY_CUTOFF: '00:00',    // always past the cutoff
       METRICS_TOKEN: MTOKEN,
       ...extraEnv,
@@ -130,7 +130,7 @@ async function main() {
     }
 
     const adminTok = await loginToken(USERS.admin);
-    const pmTok    = await loginToken(USERS.pm);
+    const prodTok    = await loginToken(USERS.production);
 
     // ── 1. Deep health ──────────────────────────────────────────
     const h = await api('GET', '/health');
@@ -150,7 +150,7 @@ async function main() {
     downChild.kill();
 
     // ── 3. Metrics ──────────────────────────────────────────────
-    await api('POST', '/reports/kiln', { token: pmTok, body: { date: KILN_DATE, data: { kiln_prod_mt: 1234 } } });
+    await api('POST', '/reports/production', { token: prodTok, body: { date: KILN_DATE, data: { kiln_prod_mt: 1234 } } });
 
     const mAnon = await api('GET', '/metrics');
     check('metrics endpoint rejects anonymous (401)', mAnon.status === 401, `got ${mAnon.status}`);
@@ -159,7 +159,7 @@ async function main() {
       mAdmin.status === 200 && mAdmin.text.includes('http_requests_total') &&
       mAdmin.text.includes('pg_pool_total_clients'), `status ${mAdmin.status}`);
     check('metrics count form submissions per form type',
-      /form_submissions_total\{[^}]*form_type="kiln"[^}]*\}\s+[1-9]/.test(mAdmin.text));
+      /form_submissions_total\{[^}]*form_type="production"[^}]*\}\s+[1-9]/.test(mAdmin.text));
     const mTok = await api('GET', '/metrics', { token: MTOKEN });
     check('static METRICS_TOKEN works for scrapers', mTok.status === 200 && mTok.text.includes('http_requests_total'),
       `got ${mTok.status}`);
@@ -167,8 +167,8 @@ async function main() {
     // ── 4. Client error reporting ───────────────────────────────
     const e1 = await api('POST', '/client-errors', { body: { message: 'ACCEPT6 anonymous boom', page: 'login.html' } });
     const e2 = await api('POST', '/client-errors', {
-      token: pmTok,
-      body: { message: 'ACCEPT6 attributed boom', page: 'kiln-form.html', source: 'kiln-form.html', line: 42, stack: 'Error: boom\n  at test' },
+      token: prodTok,
+      body: { message: 'ACCEPT6 attributed boom', page: 'daily-report.html', source: 'daily-report.html', line: 42, stack: 'Error: boom\n  at test' },
     });
     check('browser errors accepted (anonymous + attributed)',
       e1.status === 200 && e1.body.logged === true && e2.status === 200 && e2.body.logged === true);
@@ -178,7 +178,7 @@ async function main() {
     check('errors appear in the admin summary with attribution',
       sum.status === 200 &&
       errs.some(e => e.message === 'ACCEPT6 anonymous boom' && e.username === null) &&
-      errs.some(e => e.message === 'ACCEPT6 attributed boom' && e.username === USERS.pm),
+      errs.some(e => e.message === 'ACCEPT6 attributed boom' && e.username === USERS.production),
       `status ${sum.status}, ${errs.length} errors`);
     check('summary carries health + logins + overrides + alerts blocks',
       sum.body && sum.body.health && Array.isArray(sum.body.logins) &&
@@ -186,26 +186,26 @@ async function main() {
       sum.body.logins.some(l => l.username === USERS.admin && l.action === 'LOGIN'));
 
     // ── 5. RBAC ─────────────────────────────────────────────────
-    const sumProd = await api('GET', '/monitor/summary', { token: pmTok });
-    check('monitor summary is admin/md/it-only (403 for pm)', sumProd.status === 403, `got ${sumProd.status}`);
+    const sumProd = await api('GET', '/monitor/summary', { token: prodTok });
+    check('monitor summary is admin/md/it-only (403 for production)', sumProd.status === 403, `got ${sumProd.status}`);
 
     // ── 6. Missed-entry alert + dedupe ──────────────────────────
     const w1 = await api('POST', '/monitor/watchdog/run', { token: adminTok, body: { date: TEST_DATE } });
     const fired = (w1.body && w1.body.fired) || [];
-    check('watchdog fires missed-entry alert for kiln',
-      w1.status === 200 && fired.some(a => a.kind === 'missed-entry:kiln'), JSON.stringify(fired.map(f => f.kind)));
+    check('watchdog fires missed-entry alert for production',
+      w1.status === 200 && fired.some(a => a.kind === 'missed-entry:production'), JSON.stringify(fired.map(f => f.kind)));
     check('missed-entry alert is emailed (pipeline verified via jsonTransport)',
       w1.body.email && w1.body.email.sent === true && w1.body.email.transport === 'json' &&
-      /kiln/.test(w1.body.email.message.html || ''), JSON.stringify(w1.body.email));
+      /production/.test(w1.body.email.message.html || ''), JSON.stringify(w1.body.email));
 
     const w2 = await api('POST', '/monitor/watchdog/run', { token: adminTok, body: { date: TEST_DATE } });
     check('same alert does not fire twice in one day (dedupe)',
-      w2.status === 200 && !(w2.body.fired || []).some(a => a.kind === 'missed-entry:kiln') &&
-      (w2.body.skipped || []).includes('missed-entry:kiln'), JSON.stringify(w2.body && w2.body.skipped));
+      w2.status === 200 && !(w2.body.fired || []).some(a => a.kind === 'missed-entry:production') &&
+      (w2.body.skipped || []).includes('missed-entry:production'), JSON.stringify(w2.body && w2.body.skipped));
 
     const alerts = await api('GET', '/monitor/alerts', { token: adminTok });
     check('fired alert recorded in the alerts table (emailed=true)',
-      alerts.status === 200 && alerts.body.some(a => a.kind === 'missed-entry:kiln' && a.emailed === true));
+      alerts.status === 200 && alerts.body.some(a => a.kind === 'missed-entry:production' && a.emailed === true));
 
     // ── 7. DB down → watchdog still emails health-down ──────────
     const wd = spawn(process.execPath, [path.join(__dirname, 'watchdog-once.js')], {

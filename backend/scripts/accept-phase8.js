@@ -111,27 +111,27 @@ async function main() {
     }
 
     const prod  = await loginToken(USERS.production);
-    const pm    = await loginToken(USERS.pm);   // kiln & stoppage are P&M-owned now
+    const pm    = await loginToken(USERS.pm);   // stoppage is P&M-owned
     const admin = await loginToken(USERS.admin);
     const submit = (token, form, date, data) =>
       api('POST', `/reports/${form}`, { token, body: { date, data } });
 
-    // ── Seed: kiln 1999-07-01..10 → mean 2000, population σ ≈ 70.71 ──
+    // ── Seed: production (kiln fields) 1999-07-01..10 → mean 2000, population σ ≈ 70.71 ──
     const PRODS = [2000, 2100, 1900, 2050, 1950, 2000, 2100, 1900, 2050, 1950];
     for (let i = 0; i < PRODS.length; i++) {
-      await submit(pm, 'kiln', `1999-07-${String(i + 1).padStart(2, '0')}`, { kiln_prod_mt: PRODS[i] });
+      await submit(prod, 'production', `1999-07-${String(i + 1).padStart(2, '0')}`, { kiln_prod_mt: PRODS[i] });
     }
     // benchmark months: 1999-06 (avg 2000) and 1998-07 (avg 1800)
     for (const [d, v] of [['1999-06-10', 1950], ['1999-06-11', 2000], ['1999-06-12', 2050]]) {
-      await submit(pm, 'kiln', d, { kiln_prod_mt: v });
+      await submit(prod, 'production', d, { kiln_prod_mt: v });
     }
     for (const [d, v] of [['1998-07-10', 1750], ['1998-07-11', 1800], ['1998-07-12', 1850]]) {
-      await submit(pm, 'kiln', d, { kiln_prod_mt: v });
+      await submit(prod, 'production', d, { kiln_prod_mt: v });
     }
 
     // ── A. Baseline stats ───────────────────────────────────────
     console.log('Part A — field baseline (anomaly-at-entry math):');
-    const bl = await api('GET', '/insights/baseline/kiln?days=15&before=1999-07-11', { token: prod });
+    const bl = await api('GET', '/insights/baseline/production?days=15&before=1999-07-11', { token: prod });
     const f = bl.body?.fields?.kiln_prod_mt;
     check('baseline returns n / mean / σ for kiln_prod_mt',
       bl.status === 200 && f && f.n === 10, f ? JSON.stringify(f) : `status ${bl.status}`);
@@ -141,7 +141,7 @@ async function main() {
     // ── B. Benchmarking ─────────────────────────────────────────
     console.log('Part B — historical benchmarking:');
     // 1999-07 mean = (sum PRODS)/10 = 2000 — bump it so it differs from prev month
-    await submit(pm, 'kiln', '1999-07-11', { kiln_prod_mt: 4200 }); // pulls avg to ≈2200
+    await submit(prod, 'production', '1999-07-11', { kiln_prod_mt: 4200 }); // pulls avg to ≈2200
     const bm = await api('GET', '/insights/benchmark/1999/7', { token: prod });
     const kb = (bm.body || []).find(b => b.key === 'kiln-output');
     check('benchmark: current / prev month / same month last year',

@@ -13,25 +13,8 @@
 <body>
 
 <!-- ══════════════════ HEADER ══════════════════ -->
-<header class="top-header">
-  <div class="header-left">
-    <a href="../portal.html" class="home-btn">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
-      Home
-    </a>
-    <span class="sh-sep"></span>
-    <div class="logo-block">
-      <img class="nyati-logo" src="../NYATI-LOGO.png" alt="Nyati Cement" />
-      <div class="logo-text">
-        <img class="lc-wordmark" src="../lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
-      </div>
-    </div>
-  </div>
-  </div>
-  <div class="header-right">
-    <div id="auth-user-info"></div>
-  </div>
-</header>
+<header class="top-header" id="app-header"></header>
+<script>renderTopHeader();</script>
 
 <!-- ══════════════════ NAV ══════════════════ -->
 <nav class="dept-nav"><div class="nav-inner"></div></nav>
@@ -120,16 +103,124 @@
   </div>
 
   <!-- ════════════════════════════════════════════════
-       SECTION 1 — DISPATCH MATRIX
+       SECTION 1 — DISPATCH MATRIX (channel × grade)
+       Regular Bags, Bulker and Big Bags are three independently loaded
+       streams; each is broken down by grade so a grade's total across
+       every channel can be reconstructed (Big Bags is only packed for
+       42.5R / 42.5N B-M / 42.5N — matches the source Dispatch Report).
   ════════════════════════════════════════════════ -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="truck" class="title-icon"></i> Cement Dispatch Summary</div>
-        <div class="rcard-sub">All grades — bags, bulker &amp; big-bags · Date: 21-Apr-2026</div>
+        <div class="rcard-title"><i data-lucide="truck" class="title-icon"></i> Cement Dispatch — by Channel &amp; Grade</div>
+        <div class="rcard-sub">Regular Bags, Bulker &amp; Big Bags, each by grade · Date: 21-Apr-2026</div>
       </div>
       <div class="rcard-chips">
         <span class="rcard-chip">21-Apr-2026</span>
+        <span class="rcard-chip orange">SALES &amp; PACKING</span>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:3100px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" rowspan="3" style="min-width:120px">Metric</th>
+            <th class="grp-hdr" colspan="15">Regular Bags</th>
+            <th class="grp-hdr" colspan="10">Bulker</th>
+            <th class="grp-hdr" colspan="6">Big Bags</th>
+            <th class="grp-hdr" rowspan="3">Clinker<br><small style="font-size:8px;font-weight:400;color:rgba(255,255,255,.6)">(MT)</small></th>
+            <th class="grp-hdr" colspan="2">TOTAL</th>
+            <th class="grp-hdr" rowspan="3">Avg Daily<br>Dispatch</th>
+          </tr>
+          <tr>
+            <th colspan="3">42.5 R</th><th colspan="3">42.5 N B-M</th><th colspan="3">42.5 N</th><th colspan="3">32.5 N</th><th colspan="3">OPC 42.5 N</th>
+            <th colspan="2">42.5 R</th><th colspan="2">42.5 N B-M</th><th colspan="2">42.5 N</th><th colspan="2">32.5 N</th><th colspan="2">OPC 42.5 N</th>
+            <th colspan="2">42.5 R</th><th colspan="2">42.5 N B-M</th><th colspan="2">42.5 N</th>
+            <th rowspan="2">On Date</th><th rowspan="2">MTD</th>
+          </tr>
+          <tr>
+            <th>On Date</th><th>MTD</th><th>YTD</th>
+            <th>On Date</th><th>MTD</th><th>YTD</th>
+            <th>On Date</th><th>MTD</th><th>YTD</th>
+            <th>On Date</th><th>MTD</th><th>YTD</th>
+            <th>On Date</th><th>MTD</th><th>YTD</th>
+            <th>On Date</th><th>MTD</th>
+            <th>On Date</th><th>MTD</th>
+            <th>On Date</th><th>MTD</th>
+            <th>On Date</th><th>MTD</th>
+            <th>On Date</th><th>MTD</th>
+            <th>On Date</th><th>MTD</th>
+            <th>On Date</th><th>MTD</th>
+            <th>On Date</th><th>MTD</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- SALES ON DATE -->
+          <tr class="srow"><td colspan="36">Sales Dispatch — On Date / MTD / YTD per cell (Bulker &amp; Big Bags: On Date / MTD)</td></tr>
+
+          <tr>
+            <td class="tp">Sales On Date</td>
+            <!-- Regular Bags -->
+            <td class="cm"><input class="ci" type="number" value="346.5" data-field="dispatch_reg_425r" /></td>
+            <td class="cf"><div class="cv">7,412</div></td>
+            <td class="cf"><div class="cv">26,890</div></td>
+            <td class="cm"><input class="ci" type="number" value="30" data-field="dispatch_reg_425nbm" /></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_reg_425n" /></td>
+            <td class="cf"><div class="cv">880</div></td>
+            <td class="cf"><div class="cv">3,200</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_reg_325n" /></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_reg_opc425n" /></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <!-- Bulker -->
+            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_425r" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_425nbm" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_425n" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_325n" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_opc425n" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <!-- Big Bags -->
+            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_bag_425r" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_bag_425nbm" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_bag_425n" /></td>
+            <td class="cf"><div class="cv">0</div></td>
+            <!-- Clinker / Total -->
+            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_clinker" /></td>
+            <td class="cf"><div class="cv" data-kpi="dispatch_total_col">376.5</div></td>
+            <td class="cf"><div class="cv">8,292</div></td>
+            <td class="cf"><div class="cv">415.1</div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="rcard-sub" style="padding:8px 20px 4px;font-style:italic">
+      MTD/YTD for grades other than Regular-Bags 42.5R/42.5N are not yet
+      auto-accumulated from daily entries — shown as "—" until that rollup is built.
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════
+       SECTION 1b — SALES ORDERS, PENDENCY &amp; TARGET
+       Planning figures, not tied to a KPI formula — kept at the
+       coarser flat grade + channel-total breakdown.
+  ════════════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="list-checks" class="title-icon"></i> Sales Orders, Pendency &amp; Monthly Target</div>
+        <div class="rcard-sub">Open sales orders and monthly dispatch plan · Date: 21-Apr-2026</div>
+      </div>
+      <div class="rcard-chips">
         <span class="rcard-chip orange">SALES &amp; PACKING</span>
       </div>
     </div>
@@ -162,87 +253,6 @@
           </tr>
         </thead>
         <tbody>
-          <!-- SALES ON DATE -->
-          <tr class="srow"><td colspan="22">Sales Dispatch</td></tr>
-
-          <tr>
-            <td class="tp">Sales On Date</td>
-            <td class="cm"><input class="ci" type="number" value="346.5" data-field="dispatch_425r" /></td>
-            <td class="cf"><div class="cv">7,412</div></td>
-            <td class="cf"><div class="cv">26,890</div></td>
-            <td class="cm"><input class="ci" type="number" value="30" data-field="dispatch_425nbm" /></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_425n" /></td>
-            <td class="cf"><div class="cv">880</div></td>
-            <td class="cf"><div class="cv">3,200</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_325n" /></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_opc425n" /></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_bulker" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_bigbag" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_clinker" /></td>
-            <td class="cf"><div class="cv" data-kpi="dispatch_total_col">376.5</div></td>
-            <td class="cf"><div class="cv">8,292</div></td>
-            <td class="cf"><div class="cv">415.1</div></td>
-          </tr>
-
-          <tr>
-            <td class="tp">MTD Sales</td>
-            <td class="cf"><div class="cv">7,412</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">880</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">8,292</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">415.1</div></td>
-          </tr>
-
-          <tr>
-            <td class="tp">YTD Sales</td>
-            <td class="cf"><div class="cv">26,890</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">3,200</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">30,090</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">389.5</div></td>
-          </tr>
-
           <tr class="srow"><td colspan="22">Sales Orders &amp; Pendency</td></tr>
 
           <tr>
@@ -299,10 +309,6 @@
 
         </tbody>
       </table>
-    </div>
-    <div class="rcard-sub" style="padding:8px 20px 4px;font-style:italic">
-      MTD/YTD columns for 42.5N B-M, 32.5N, OPC 42.5N &amp; Clinker are not yet
-      auto-accumulated from daily entries — shown as "—" until that rollup is built.
     </div>
   </div>
 
@@ -630,8 +636,10 @@
 <script src="kpi-live.js"></script>
 <script>
 function _dispatchTotal(f, n) {
-  return n(f.dispatch_425r)+n(f.dispatch_425nbm)+n(f.dispatch_425n)+n(f.dispatch_325n)
-        +n(f.dispatch_opc425n)+n(f.dispatch_bulker)+n(f.dispatch_bigbag)+n(f.dispatch_clinker);
+  return n(f.dispatch_reg_425r)+n(f.dispatch_reg_425nbm)+n(f.dispatch_reg_425n)+n(f.dispatch_reg_325n)+n(f.dispatch_reg_opc425n)
+        +n(f.dispatch_blk_425r)+n(f.dispatch_blk_425nbm)+n(f.dispatch_blk_425n)+n(f.dispatch_blk_325n)+n(f.dispatch_blk_opc425n)
+        +n(f.dispatch_bag_425r)+n(f.dispatch_bag_425nbm)+n(f.dispatch_bag_425n)
+        +n(f.dispatch_clinker);
 }
 function _soTotal(f, n) {
   return n(f.so_425r)+n(f.so_425nbm)+n(f.so_425n)+n(f.so_325n)

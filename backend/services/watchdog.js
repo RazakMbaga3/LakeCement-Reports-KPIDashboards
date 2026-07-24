@@ -34,7 +34,7 @@ function pastCutoff() {
 
 async function missedEntries(date) {
   const watch = (process.env.MISSED_ENTRY_FORMS ||
-    'kiln,cement-mill,quality,dispatch,power-cons,mines')
+    'production,quality,dispatch,power-cons,mines')
     .split(',').map(s => s.trim()).filter(Boolean);
   if (!watch.length || !pastCutoff()) return [];
 

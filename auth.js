@@ -623,6 +623,42 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
 })();
 
 /* ══════════════════════════════════════════════════════════════════════
+   RENDER TOP HEADER — home button + Nyati/Lake Cement logos.
+   Single source for markup that used to be copy-pasted into
+   <header class="top-header"> on every page; call it inline right after
+   <header id="app-header"></header> so it fills in before any later
+   script (e.g. applyDailyPermissions -> renderUserHeader) touches
+   #auth-user-info. portal.html omits the Home button (it IS home).
+══════════════════════════════════════════════════════════════════════ */
+function renderTopHeader() {
+  const mount = document.getElementById('app-header');
+  if (!mount) return;
+  const path     = window.location.pathname;
+  const base     = path.includes('/forms/') ? '../' : '';
+  const isPortal = (path.split('/').pop() || '') === 'portal.html';
+
+  const homeBtn = isPortal ? '' : `
+      <a href="${base}portal.html" class="home-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5M5 12l7-7M5 12l7 7"/></svg>
+        Home
+      </a>
+      <span class="sh-sep"></span>`;
+
+  mount.innerHTML = `
+    <div class="header-left">${homeBtn}
+      <div class="logo-block">
+        <img class="nyati-logo" src="${base}NYATI-LOGO.png" alt="Nyati Cement" />
+        <div class="logo-text">
+          <img class="lc-wordmark" src="${base}lake-cement-ltd logo (Good Times Regular).png" alt="Lake Cement Ltd" />
+        </div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div id="auth-user-info"></div>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
    RENDER USER INFO IN HEADER
 ══════════════════════════════════════════════════════════════════════ */
 function renderUserHeader() {
@@ -783,7 +819,7 @@ const _DAILY_ACCESS = {
   cpp:        { edit: ['power-plant-report.html'],
                 nav:  ['daily-report.html','power-plant-report.html'] },
   pm:         { edit: [],
-                nav:  ['daily-report.html','kiln-form.html','cement-mill-form.html','stoppage-form.html','power-form.html'] },
+                nav:  ['stoppage-form.html','power-form.html'] },
   it:         { edit: [],
                 nav:  ['daily-report.html'] },
   logistics:  { edit: [],
@@ -801,8 +837,6 @@ const _DAILY_NAV_ITEMS = [
   { page:'daily-report.html',       label:'Production',   icon:'factory',   hRoot:'daily-report.html',       hForm:'../daily-report.html' },
   { page:'power-plant-report.html', label:'Power Plant',  icon:'zap',       hRoot:'power-plant-report.html', hForm:'../power-plant-report.html' },
   { page:'mines-report.html',       label:'Mines',        icon:'pickaxe',   hRoot:'mines-report.html',       hForm:'../mines-report.html' },
-  { page:'kiln-form.html',          label:'Kiln',         icon:'flame',     hRoot:'forms/kiln-form.html',     hForm:'kiln-form.html' },
-  { page:'cement-mill-form.html',   label:'Cement Mill',  icon:'settings',  hRoot:'forms/cement-mill-form.html', hForm:'cement-mill-form.html' },
   { page:'stoppage-form.html',      label:'Stoppages',    icon:'alert-triangle', hRoot:'forms/stoppage-form.html', hForm:'stoppage-form.html' },
   { page:'power-form.html',         label:'Power Cons.',  icon:'activity',  hRoot:'forms/power-form.html',    hForm:'power-form.html' },
   { page:'dispatch-form.html',      label:'Dispatch & SO', icon:'truck',    hRoot:'forms/dispatch-form.html', hForm:'dispatch-form.html' },
@@ -892,7 +926,7 @@ document.addEventListener('DOMContentLoaded', function () {
 ══════════════════════════════════════════════════════════════════════ */
 const _FORM_TYPE_ACCESS = {
   production: ['production','quality','limestone','pile-quality'],
-  pm:         ['kiln','cement-mill','stoppage','power-cons'],   /* P&M owns Kiln, Cement Mill & Stoppage reports */
+  pm:         ['stoppage','power-cons'],   /* P&M owns Stoppage & Power Cons. reports (Kiln/Cement Mill folded into Production Report) */
   logistics:  ['dispatch'],
   cpp:        ['power-plant','cpp'],
   mining:     ['mines'],
@@ -906,8 +940,6 @@ const _FORM_TYPE_ACCESS = {
 const _STANDALONE_FORM_TYPE = {
   'quality-form.html':      'quality',
   'dispatch-form.html':     'dispatch',
-  'kiln-form.html':         'kiln',
-  'cement-mill-form.html':  'cement-mill',
   'limestone-form.html':    'limestone',
   'materials-form.html':    'materials',
   'pile-quality-form.html': 'pile-quality',

@@ -9,7 +9,7 @@
 */
 const ROLE_FORM_ACCESS = {
   production: ['production', 'quality', 'limestone', 'pile-quality'],
-  pm:         ['kiln', 'cement-mill', 'stoppage', 'power-cons'],   /* P&M owns Kiln, Cement Mill & Stoppage reports */
+  pm:         ['stoppage', 'power-cons'],   /* P&M owns Stoppage & Power Cons. reports (Kiln/Cement Mill folded into Production Report) */
   logistics:  ['dispatch'],
   cpp:        ['power-plant', 'cpp'],
   mining:     ['mines'],

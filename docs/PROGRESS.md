@@ -101,6 +101,13 @@ Last audit: 2026-07-05.
   yet — needed for full parity. accept-phase3.js fixtures/expectations
   updated and verified against the live registry code.
 
+- [x] RESOLVED 2026-07-17: accept-phase3 had silently broken (4 power KPIs
+  null) after the ownership transfer gave power-cons to the pm role — the
+  script still seeded it as the cpp user and its submit helper ignored the
+  403. Seed now submits power-cons as pm and submit() throws on non-2xx so
+  RBAC drift fails loudly. 25/25 green again. Also added `notes` metadata
+  per formula and `npm run docs:kpi` → generated docs/KPI_REFERENCE.md.
+
 ## Phase 4 — Odoo Integration (read-only) — ⬜ NOT STARTED
 
 ## Phase 5 — Reporting & Distribution — ✅ DONE (2026-07-06)
