@@ -58,10 +58,18 @@
     dispatch_bag_425n:    { source: 'manual', form: 'dispatch', field: 'dispatch_bag_425n',    unit: 'MT' },
     dispatch_clinker:     { source: 'manual', form: 'dispatch', field: 'dispatch_clinker',     unit: 'MT' },
 
-    // kiln fields — captured on the Production Report (Plant Operations)
-    kiln_prod_mt:   { source: 'manual', form: 'production', field: 'kiln_prod_mt',   unit: 'MT' },
-    kiln_coal_cons: { source: 'manual', form: 'production', field: 'kiln_coal_cons', unit: 'MT' },
-    kiln_coal_ncv:  { source: 'manual', form: 'production', field: 'kiln_coal_ncv',  unit: 'kcal/kg' },
+    // kiln fields — captured on the Production Report (Plant Operations).
+    // kiln_coal_cons/kiln_coal_ncv previously pointed at form fields that
+    // don't exist (kiln_coal_cons/kiln_coal_ncv were never real data-field
+    // names anywhere in the app — confirmed 2026-07-24 by grepping every
+    // form's HTML). The real fields are 'coal_kiln' on the production
+    // report (Fuel — Coal section) and 'ncv' on the limestone form (NCV &
+    // Average Clinker Consumption section) — this had silently made
+    // Specific Thermal Energy Consumption uncomputable for every real
+    // submission, not just backfilled data.
+    kiln_prod_mt:   { source: 'manual', form: 'production', field: 'kiln_prod_mt', unit: 'MT' },
+    kiln_coal_cons: { source: 'manual', form: 'production', field: 'coal_kiln',    unit: 'MT' },
+    kiln_coal_ncv:  { source: 'manual', form: 'limestone',  field: 'ncv',          unit: 'kcal/kg' },
 
     // power consumption form
     pwr_crusher_kwh:   { source: 'manual', form: 'power-cons', field: 'pwr_crusher_kwh',   unit: 'kWh' },
@@ -167,9 +175,9 @@
     },
 
     'specific-thermal-energy-consumption': {
-      label: 'Specific Thermal Energy Consumption', unit: 'kcal/kg', dp: 0, version: 2,
+      label: 'Specific Thermal Energy Consumption', unit: 'kcal/kg', dp: 0, version: 3,
       target: 780, signage: '<', targetLabel: 'Target < 780 kcal/kg',
-      notes: 'Heat input per kg of clinker: coal consumed (MT) × coal NCV (kcal/kg) ÷ clinker produced (MT) — the MT units cancel, so there is no ×1000 factor (v2 fix, verified against the source Excel where Q54 = NCV × coal%). The monthly figure is the production-weighted mean, identical to Σ(coal×NCV) ÷ Σclinker.',
+      notes: 'Heat input per kg of clinker: coal consumed (MT) × coal NCV (kcal/kg) ÷ clinker produced (MT) — the MT units cancel, so there is no ×1000 factor (v2 fix, verified against the source Excel where Q54 = NCV × coal%). The monthly figure is the production-weighted mean, identical to Σ(coal×NCV) ÷ Σclinker. v3: the kiln_coal_cons/kiln_coal_ncv FACTS entries pointed at form fields that never existed anywhere in the app (confirmed 2026-07-24) — silently making this KPI uncomputable for every real submission, not just backfilled data. Repointed to the real fields: coal_kiln on the production report, ncv on the limestone form.',
       inputs: ['kiln_prod_mt', 'kiln_coal_cons', 'kiln_coal_ncv'],
       // per-day: coal(MT) × NCV(kcal/kg) / clinker(MT) — MT/MT cancels, no ×1000
       // (verified against source Excel: Q54 = NCV × coal%, no extra scale factor)

@@ -35,7 +35,7 @@ formulas do not change when that happens.
 | [Clinker Free Lime](#clinker-free-lime) | % | Spec 3.0% | Average | v1 |
 | [Despatch / Day](#despatch-day) | MT | — | Average | v2 |
 | [Kiln Output](#kiln-output) | MT | Target ≥ 2,000 MT/day | Average | v1 |
-| [Specific Thermal Energy Consumption](#specific-thermal-energy-consumption) | kcal/kg | Target < 780 kcal/kg | Weighted average | v2 |
+| [Specific Thermal Energy Consumption](#specific-thermal-energy-consumption) | kcal/kg | Target < 780 kcal/kg | Weighted average | v3 |
 | [Specific Power Consumption – Total](#specific-power-consumption-total) | kWh/MT eq. cement | — | Weighted average | v4 |
 | [Specific Power Consumption – Up to Clinker](#specific-power-consumption-up-to-clinker) | kWh/MT clinker | — | Weighted average | v3 |
 | [Specific Power Consumption – Cement Grinding](#specific-power-consumption-cement-grinding) | kWh/MT | — | Weighted average | v4 |
@@ -129,14 +129,15 @@ function (f) { return pos(f.kiln_prod_mt); }
 |---|---|
 | Unit | kcal/kg (shown to 0 decimal places) |
 | Target | Target < 780 kcal/kg — good is below 780 kcal/kg |
-| Formula version | v2 |
+| Formula version | v3 |
 | Registry key | `specific-thermal-energy-consumption` |
 
-Heat input per kg of clinker: coal consumed (MT) × coal NCV (kcal/kg) ÷ clinker produced (MT) — the MT units cancel, so there is no ×1000 factor (v2 fix, verified against the source Excel where Q54 = NCV × coal%). The monthly figure is the production-weighted mean, identical to Σ(coal×NCV) ÷ Σclinker.
+Heat input per kg of clinker: coal consumed (MT) × coal NCV (kcal/kg) ÷ clinker produced (MT) — the MT units cancel, so there is no ×1000 factor (v2 fix, verified against the source Excel where Q54 = NCV × coal%). The monthly figure is the production-weighted mean, identical to Σ(coal×NCV) ÷ Σclinker. v3: the kiln_coal_cons/kiln_coal_ncv FACTS entries pointed at form fields that never existed anywhere in the app (confirmed 2026-07-24) — silently making this KPI uncomputable for every real submission, not just backfilled data. Repointed to the real fields: coal_kiln on the production report, ncv on the limestone form.
 
 **Inputs**
 
-- **production form:** kiln_prod_mt (MT), kiln_coal_cons (MT), kiln_coal_ncv (kcal/kg)
+- **production form:** kiln_prod_mt (MT), kiln_coal_cons (MT)
+- **limestone form:** kiln_coal_ncv (kcal/kg)
 
 **Daily calculation** (the exact code the engine runs)
 
@@ -454,13 +455,12 @@ that feed goes live).
 | `dispatch_bag_425n` | MT | manual |
 | `dispatch_clinker` | MT | manual |
 
-### production form (13 facts)
+### production form (12 facts)
 
 | Fact key | Unit | Source |
 |---|---|---|
 | `kiln_prod_mt` | MT | manual |
 | `kiln_coal_cons` | MT | manual |
-| `kiln_coal_ncv` | kcal/kg | manual |
 | `cm_clinker_own_cons` | MT | manual |
 | `cm_clinker_purch_cons` | MT | manual |
 | `cm1_425r_mt` | MT | manual |
@@ -471,6 +471,12 @@ that feed goes live).
 | `cm2_425n_mt` | MT | manual |
 | `cm2_425n_bm_mt` | MT | manual |
 | `cm2_325n_mt` | MT | manual |
+
+### limestone form (1 fact)
+
+| Fact key | Unit | Source |
+|---|---|---|
+| `kiln_coal_ncv` | kcal/kg | manual |
 
 ### power-cons form (22 facts)
 

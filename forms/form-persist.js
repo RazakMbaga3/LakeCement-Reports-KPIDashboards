@@ -48,6 +48,7 @@
     scope.querySelectorAll('.cao-input').forEach(inp => {
       inp.dispatchEvent(new Event('change'));
     });
+    _syncDateChips(scope);
     document.dispatchEvent(new CustomEvent('nyati:restored'));
   }
 
@@ -70,6 +71,7 @@
     scope.querySelectorAll('.cao-input').forEach(inp => {
       inp.dispatchEvent(new Event('change'));
     });
+    _syncDateChips(scope);
     // Notify kpi-live.js that data has been restored
     document.dispatchEvent(new CustomEvent('nyati:restored'));
   }
@@ -78,6 +80,32 @@
   function _dateVal(scope) {
     const d = scope.querySelector('input[type="date"]');
     return d ? d.value : _todayStr();
+  }
+
+  const _MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  /* ── Sync stale "21-Apr-2026" / "Date: 03-May-2026" style chips ────
+     Several report pages were built from an April-21-2026 mockup and
+     ship a `.rcard-chip` per section whose text is the literal mockup
+     date, never wired to anything — so switching the toolbar date
+     updates the real KPI figures below it but this chip just sits
+     there unchanged, making it look like nothing happened. Rewrites
+     only chips that are ENTIRELY a recognizable date (optionally
+     "Date: " prefixed) — leaves category chips like "ALL SECTIONS" or
+     "PRODUCTION HEAD" untouched. */
+  function _syncDateChips(scope) {
+    const dateVal = _dateVal(scope);
+    if (!dateVal) return;
+    const d = new Date(dateVal + 'T00:00:00');
+    if (isNaN(d)) return;
+    const formatted = String(d.getDate()).padStart(2, '0') + '-' + _MON[d.getMonth()] + '-' + d.getFullYear();
+    const dateChip = /^(\d{1,2}-[A-Za-z]{3}-\d{4})$/;
+    const prefixedDateChip = /^(Date:\s*)\d{1,2}-[A-Za-z]{3}-\d{4}$/i;
+    scope.querySelectorAll('.rcard-chip').forEach(el => {
+      const t = el.textContent.trim();
+      if (dateChip.test(t)) el.textContent = formatted;
+      else if (prefixedDateChip.test(t)) el.textContent = t.replace(prefixedDateChip, '$1') + formatted;
+    });
   }
 
   /* ── Today, as YYYY-MM-DD ─────────────────────────────────────── */

@@ -1575,6 +1575,21 @@ initReportLoader({
       }
     },
 
+    /* ── Dispatch — every loading channel × grade, matching the registry's
+       DISPATCH fact list, plus clinker. Was a static "—" with a data-kpi
+       attribute nothing ever wrote to (found 2026-07-25). ──────────── */
+    { kpi: 'total_dispatch', fmt: 'n0',
+      compute: function(d, n) {
+        var t = n(d.dispatch_reg_425r) + n(d.dispatch_reg_425nbm) + n(d.dispatch_reg_425n)
+              + n(d.dispatch_reg_325n) + n(d.dispatch_reg_opc425n)
+              + n(d.dispatch_blk_425r) + n(d.dispatch_blk_425nbm) + n(d.dispatch_blk_425n)
+              + n(d.dispatch_blk_325n) + n(d.dispatch_blk_opc425n)
+              + n(d.dispatch_bag_425r) + n(d.dispatch_bag_425nbm) + n(d.dispatch_bag_425n)
+              + n(d.dispatch_clinker);
+        return t > 0 ? t : null;
+      }
+    },
+
     /* ── Quality — direct field reads ────────────────────────────── */
     { kpi: 'q_blaine_425r',  fmt: 'n0',
       compute: function(d, n) { return n(d.blaine_425r) || null; }
@@ -1789,6 +1804,63 @@ initReportLoader({
     }
   ]
 });
+</script>
+<script>
+/* ── Specific Heat / Specific Power tiles: pull the authoritative
+   registry-computed value for the loaded date, rather than duplicating
+   the 3-layer clinker-factor / coal×NCV math client-side (formula math
+   lives only in forms/formula-registry.js, per project convention —
+   see accept-phase3.js Part D). Was static placeholder HTML (799 /
+   156.7) with a data-kpi attribute nothing ever wrote to, so it never
+   changed no matter what date was loaded. */
+(function () {
+  function fmt(v, dp) {
+    if (v === null || v === undefined || isNaN(v)) return '—';
+    return Number(v).toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp });
+  }
+  async function updateHeatAndPower() {
+    var dateInput = document.querySelector('input[type="date"]');
+    var date = dateInput && dateInput.value;
+    var heatEl  = document.querySelector('[data-kpi="specific_heat"]');
+    var powerEl = document.querySelector('[data-kpi="specific_power"]');
+    if (!date || typeof NyatiAPI === 'undefined' || (!heatEl && !powerEl)) return;
+    try {
+      var series = await NyatiAPI.getDailySeries(date, date);
+      var heat  = series['specific-thermal-energy-consumption'];
+      var power = series['specific-power-consumption-total'];
+      var heatVal  = heat  && heat.series[0]  && heat.series[0].value;
+      var powerVal = power && power.series[0] && power.series[0].value;
+      if (heatEl) {
+        heatEl.textContent = fmt(heatVal, heat ? heat.dp : 0);
+        // the target%/"within range" footer and progress bar were static
+        // placeholder text — clear them rather than leave a stale "99.9%
+        // within target" badge sitting next to a now-honest "—"
+        var heatCard = heatEl.closest('.kt');
+        if (heatCard) {
+          var pct = heatCard.querySelector('.kt-pct');
+          var vs  = heatCard.querySelector('.kt-vs');
+          var bar = heatCard.querySelector('.kt-bar-fill');
+          if (pct) pct.textContent = (heatVal !== null && heatVal !== undefined) ? Math.round(heatVal / 780 * 100) + '%' : '—';
+          if (vs)  vs.textContent  = (heatVal !== null && heatVal !== undefined) ? (heatVal < 780 ? '▲ Within target range' : '▼ Above target') : 'No data for this date';
+          if (bar) bar.style.width = (heatVal !== null && heatVal !== undefined) ? Math.min(100, Math.round(heatVal / 780 * 100)) + '%' : '0%';
+        }
+      }
+      if (powerEl) {
+        powerEl.textContent = fmt(powerVal, power ? power.dp : 2);
+        var powerCard = powerEl.closest('.kt');
+        var heatRef = powerCard && powerCard.querySelector('.kt-vs');
+        if (heatRef) {
+          heatRef.textContent = (heatVal !== null && heatVal !== undefined)
+            ? 'Heat: ' + fmt(heatVal, heat ? heat.dp : 0) + ' kcal/kg clinker'
+            : 'Heat: no data for this date';
+        }
+      }
+    } catch (e) { /* offline / unreachable — leave last-shown value */ }
+  }
+  document.addEventListener('nyati:restored', updateHeatAndPower);
+  document.addEventListener('DOMContentLoaded', updateHeatAndPower);
+  if (document.readyState !== 'loading') updateHeatAndPower();
+})();
 </script>
 <script>
 /* ── Sign-off footer: sync status label + date from form-persist state ── */
