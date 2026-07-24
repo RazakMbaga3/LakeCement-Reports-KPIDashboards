@@ -127,6 +127,8 @@ const EXPECTED = {
      (21500 + 17000 + 14000)) / (800 + 650 + 800),
   // supplied (tanesco+cpp) minus consumed (KWH_ALL), as % of consumed, weighted by consumed
   'power-distribution-loss-pct': (700 + 500 + 200) * 100 / (56500 + 54000 + 47000),
+  // purchased ÷ (own+purchased) clinker consumed, weighted by total clinker consumed
+  'purchased-clinker-share': (200 + 0 + 340) / (640 + 520 + 640) * 100,                 // 30
 };
 
 async function seedTestUsers() {
