@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – Material &amp; Power Balance</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="auth.js?v=7"></script>
+  <script src="forms/date-picker.js"></script>
+  <style>
+    .bl-bar {
+      background: white; border-bottom: 1px solid var(--border);
+      position: sticky; top: var(--header-h, 68px); z-index: 80; box-shadow: var(--shadow-sm);
+    }
+    .bl-bar-inner { display: flex; align-items: center; gap: 14px; padding: 10px 28px; flex-wrap: wrap; }
+    .bl-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); }
+    .bl-input {
+      padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--off-white); font-family: var(--font); font-size: 11px; font-weight: 600;
+      color: var(--navy); cursor: pointer;
+    }
+
+    .bl-main { max-width: 1300px; margin: 0 auto; padding: 20px 28px 60px; }
+    .bl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    @media (max-width: 900px) { .bl-grid { grid-template-columns: 1fr; } }
+
+    .bl-card { background: white; border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; }
+    .bl-card-hdr { background: var(--navy); color: white; padding: 12px 18px; }
+    .bl-card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; }
+    .bl-card-sub { font-size: 10.5px; color: rgba(255,255,255,.65); margin-top: 2px; }
+    .bl-card-body { padding: 16px 18px; }
+    .bl-chart-wrap { height: 220px; }
+
+    .bl-figures { display: flex; justify-content: space-between; margin-top: 12px; font-size: 11px; }
+    .bl-fig { text-align: center; flex: 1; }
+    .bl-fig-val { font-size: 15px; font-weight: 800; color: var(--navy); }
+    .bl-fig-lbl { color: var(--text-muted); font-size: 9.5px; text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+
+    .bl-gap-note {
+      background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 10px;
+      padding: 12px 18px; font-size: 11.5px; color: #92400E; margin-bottom: 20px; line-height: 1.5;
+    }
+    .bl-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 12px; }
+  </style>
+</head>
+<body>
+
+<header class="top-header" id="app-header"></header>
+<script>renderTopHeader();</script>
+
+<div class="bl-bar">
+  <div class="bl-bar-inner">
+    <span class="bl-lbl">Date</span>
+    <input type="date" id="bl-date" class="bl-input" />
+    <span id="bl-status" style="font-size:11px;color:var(--text-muted)"></span>
+  </div>
+</div>
+
+<main class="bl-main">
+  <div class="bl-gap-note">
+    <strong>Scope note:</strong> these three balances (clinker stock, power, coal/heat) are built entirely from facts already captured on the Production Report and Power Consumption form. A true raw-meal-to-clinker material balance (limestone/clay/iron/sand → raw meal → clinker, with kiln loss-on-ignition) is <strong>not included</strong> — those raw-material-consumption fields exist visually on the Production Report but aren't wired to live data yet, so there's nothing real to reconcile against. This page will not silently fake that balance.
+  </div>
+
+  <div id="bl-content" style="display:none">
+    <div class="bl-grid">
+      <div class="bl-card">
+        <div class="bl-card-hdr">
+          <div class="bl-card-title">Clinker Stock — Own Production</div>
+          <div class="bl-card-sub">Kiln output ledger, MT</div>
+        </div>
+        <div class="bl-card-body">
+          <div class="bl-chart-wrap"><canvas id="chart-clinker-own"></canvas></div>
+        </div>
+      </div>
+
+      <div class="bl-card">
+        <div class="bl-card-hdr">
+          <div class="bl-card-title">Clinker Stock — Purchased</div>
+          <div class="bl-card-sub">Bought-in clinker ledger, MT</div>
+        </div>
+        <div class="bl-card-body">
+          <div class="bl-chart-wrap"><canvas id="chart-clinker-purch"></canvas></div>
+        </div>
+      </div>
+
+      <div class="bl-card">
+        <div class="bl-card-hdr">
+          <div class="bl-card-title">Power Balance</div>
+          <div class="bl-card-sub">Supplied (TANESCO + CPP) vs. metered consumption</div>
+        </div>
+        <div class="bl-card-body">
+          <div class="bl-chart-wrap"><canvas id="chart-power"></canvas></div>
+        </div>
+      </div>
+
+      <div class="bl-card">
+        <div class="bl-card-hdr">
+          <div class="bl-card-title">Coal → Thermal Energy</div>
+          <div class="bl-card-sub">Kiln + CPP coal consumption vs. specific heat consumption</div>
+        </div>
+        <div class="bl-card-body">
+          <div class="bl-figures">
+            <div class="bl-fig"><div class="bl-fig-val" id="fig-coal-kiln">—</div><div class="bl-fig-lbl">Kiln coal, MT</div></div>
+            <div class="bl-fig"><div class="bl-fig-val" id="fig-coal-cpp">—</div><div class="bl-fig-lbl">CPP coal, MT</div></div>
+            <div class="bl-fig"><div class="bl-fig-val" id="fig-coal-total">—</div><div class="bl-fig-lbl">Total coal, MT</div></div>
+          </div>
+          <div style="height:1px;background:var(--border);margin:16px 0"></div>
+          <div class="bl-figures">
+            <div class="bl-fig"><div class="bl-fig-val" id="fig-clinker-out">—</div><div class="bl-fig-lbl">Clinker out, MT</div></div>
+            <div class="bl-fig"><div class="bl-fig-val" id="fig-ste" style="color:#7c3aed">—</div><div class="bl-fig-lbl">kcal / kg clinker</div></div>
+          </div>
+          <div style="font-size:10.5px;color:var(--text-muted);margin-top:14px;line-height:1.5">
+            No separate "heat losses" fact exists yet — this is an input/output
+            pair (coal in, thermal efficiency out), not a full balance with a
+            reconciled loss term.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bl-empty" id="bl-empty">Loading…</div>
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span id="footer-date"></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  lucide.createIcons();
+  requireAuth();
+  applyBalancePermissions();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="forms/api-client.js"></script>
+<script src="forms/client-errors.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  function n(v) { var x = parseFloat(v); return isNaN(x) ? null : x; }
+  function z0(v) { var x = parseFloat(v); return isNaN(x) ? 0 : x; }
+  function fmt(v, dec) { return v === null || v === undefined ? '—' : v.toFixed(dec != null ? dec : 1); }
+
+  var KWH_ALL = ['pwr_crusher_kwh', 'pwr_rawmill_kwh', 'pwr_rawmill2_kwh', 'pwr_coalmill_kwh', 'pwr_kiln_kwh',
+                 'pwr_cm1_kwh', 'pwr_cm2_kwh', 'pwr_packing_kwh', 'pwr_packing2_kwh',
+                 'pwr_lighting_kwh', 'pwr_colony_kwh'];
+  function sumOf(keys, f) { return keys.reduce(function (s, k) { return s + z0(f[k]); }, 0); }
+
+  var _charts = {};
+
+  /* Generic waterfall: steps = [{label, value, type:'total'|'increase'|'decrease'}].
+     'total' draws a full bar from 0; 'increase'/'decrease' float from the
+     running total before the step to the running total after it. */
+  function renderWaterfall(canvasId, steps) {
+    var labels = [], data = [], colors = [];
+    var running = 0;
+    steps.forEach(function (s) {
+      if (s.type === 'total') {
+        running = s.value;
+        data.push([0, s.value]);
+        colors.push('#173158');
+      } else {
+        var before = running;
+        running += (s.type === 'increase' ? s.value : -s.value);
+        data.push([Math.min(before, running), Math.max(before, running)]);
+        colors.push(s.type === 'increase' ? '#239557' : '#e53935');
+      }
+      labels.push(s.label);
+    });
+
+    var ctx = document.getElementById(canvasId);
+    if (!ctx) return;
+    if (_charts[canvasId]) _charts[canvasId].destroy();
+
+    _charts[canvasId] = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderRadius: 4, borderSkipped: false }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(23,49,88,0.92)', titleColor: 'rgba(255,255,255,0.6)', bodyColor: 'white',
+            padding: 10, cornerRadius: 7,
+            callbacks: {
+              label: function (ctx) {
+                var raw = ctx.raw;
+                var delta = Math.abs(raw[1] - raw[0]);
+                return steps[ctx.dataIndex].type === 'total'
+                  ? 'Total: ' + delta.toFixed(1) + ' MT'
+                  : (steps[ctx.dataIndex].type === 'increase' ? '+' : '−') + delta.toFixed(1) + ' MT';
+              },
+            },
+          },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 10, weight: '600' }, color: '#64748B' } },
+          y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 9 }, color: '#9CA3AF' } },
+        },
+        animation: { duration: 300 },
+      },
+    });
+  }
+
+  var dateEl = document.getElementById('bl-date');
+
+  async function load() {
+    var date = dateEl.value;
+    if (!date) return;
+
+    document.getElementById('bl-content').style.display = 'none';
+    document.getElementById('bl-empty').style.display = 'block';
+    document.getElementById('bl-empty').textContent = 'Loading…';
+    document.getElementById('bl-status').textContent = '';
+
+    var prod = null, power = null;
+    try {
+      var r1 = await NyatiAPI.getForm('production', date);
+      prod = r1 && r1.data ? r1.data : null;
+    } catch (e) { /* offline */ }
+    try {
+      var r2 = await NyatiAPI.getForm('power-cons', date);
+      power = r2 && r2.data ? r2.data : null;
+    } catch (e) { /* offline */ }
+
+    if (!prod && !power) {
+      document.getElementById('bl-empty').textContent = 'No Production or Power Consumption data for this date.';
+      return;
+    }
+
+    document.getElementById('bl-empty').style.display = 'none';
+    document.getElementById('bl-content').style.display = 'block';
+    var haveBoth = prod && power;
+    document.getElementById('bl-status').textContent = haveBoth ? '' : ('Partial data — missing ' + (prod ? 'Power Consumption' : 'Production') + ' for this date.');
+
+    prod = prod || {};
+    power = power || {};
+
+    /* ── Clinker — own production ─────────────────────────────── */
+    var ownOpen = n(prod.kiln_clinker_open), ownProd = n(prod.kiln_prod_mt), ownCons = n(prod.cm_clinker_own_cons);
+    if (ownOpen !== null || ownProd !== null || ownCons !== null) {
+      var ownClose = z0(ownOpen) + z0(ownProd) - z0(ownCons);
+      renderWaterfall('chart-clinker-own', [
+        { label: 'Opening', value: z0(ownOpen), type: 'total' },
+        { label: 'Production', value: z0(ownProd), type: 'increase' },
+        { label: 'Consumed', value: z0(ownCons), type: 'decrease' },
+        { label: 'Closing', value: ownClose, type: 'total' },
+      ]);
+    }
+
+    /* ── Clinker — purchased ──────────────────────────────────── */
+    var puOpen = n(prod.cm_clinker_purch_open), puRecv = n(prod.cm_clinker_purch_recv), puCons = n(prod.cm_clinker_purch_cons);
+    if (puOpen !== null || puRecv !== null || puCons !== null) {
+      var puClose = z0(puOpen) + z0(puRecv) - z0(puCons);
+      renderWaterfall('chart-clinker-purch', [
+        { label: 'Opening', value: z0(puOpen), type: 'total' },
+        { label: 'Received', value: z0(puRecv), type: 'increase' },
+        { label: 'Consumed', value: z0(puCons), type: 'decrease' },
+        { label: 'Closing', value: puClose, type: 'total' },
+      ]);
+    }
+
+    /* ── Power balance ────────────────────────────────────────── */
+    var supplied = z0(power.pwr_tanesco_kwh) + z0(power.pwr_cpp_kwh);
+    var consumed = sumOf(KWH_ALL, power);
+    if (supplied || consumed) {
+      var loss = supplied - consumed;
+      renderWaterfall('chart-power', [
+        { label: 'Supplied', value: supplied, type: 'total' },
+        { label: 'Metered', value: consumed, type: 'decrease' },
+        { label: loss >= 0 ? 'Unaccounted' : 'Over-metered', value: Math.abs(loss), type: 'total' },
+      ]);
+    }
+
+    /* ── Coal → thermal ───────────────────────────────────────── */
+    var coalKiln = n(prod.coal_kiln), coalCpp = n(prod.coal_cpp), clinkerOut = n(prod.kiln_prod_mt);
+    document.getElementById('fig-coal-kiln').textContent  = fmt(coalKiln, 1);
+    document.getElementById('fig-coal-cpp').textContent   = fmt(coalCpp, 1);
+    document.getElementById('fig-coal-total').textContent = fmt((z0(coalKiln) + z0(coalCpp)) || null, 1);
+    document.getElementById('fig-clinker-out').textContent = fmt(clinkerOut, 0);
+    /* Uses the same registry formula as specific-thermal-energy-consumption
+       (kiln coal × NCV ÷ clinker) — NCV isn't captured per-day on this
+       form, so this reads coal tonnage vs. clinker only if the registry's
+       server-computed KPI is available; otherwise shows kiln coal alone. */
+    if (window.NyatiAPI && NyatiAPI.getDailySeries && clinkerOut) {
+      try {
+        var series = await NyatiAPI.getDailySeries(date, date);
+        var ste = series['specific-thermal-energy-consumption'];
+        var val = ste && ste.series && ste.series.length ? ste.series[0].value : null;
+        document.getElementById('fig-ste').textContent = val !== null && val !== undefined ? fmt(val, 0) : '—';
+      } catch (e) { document.getElementById('fig-ste').textContent = '—'; }
+    }
+  }
+
+  dateEl.addEventListener('change', load);
+  dateEl.value = new Date().toISOString().slice(0, 10);
+  load();
+
+  var _dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+  var fEl = document.getElementById('footer-date');
+  if (fEl) fEl.textContent = _dateStr;
+}());
+</script>
+</body>
+</html>

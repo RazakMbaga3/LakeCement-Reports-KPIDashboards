@@ -29,6 +29,24 @@ const _CARDS = [
     url:'analytics.html',
     d:'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' },
 
+  { id:'completeness', cat:'kpi', badge:'VIEW',
+    title:'Entry Completeness',
+    sub:'Which forms were entered by cutoff, by day',
+    url:'completeness.html',
+    d:'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
+
+  { id:'balance', cat:'kpi', badge:'VIEW',
+    title:'Material & Power Balance',
+    sub:'Clinker stock, power and coal/heat reconciliation',
+    url:'balance.html',
+    d:'M4 6h16M4 12h10M4 18h16' },
+
+  { id:'insights', cat:'kpi', badge:'VIEW',
+    title:'Operational Insights',
+    sub:'Output vs. downtime, energy vs. quality trade-off',
+    url:'insights.html',
+    d:'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2' },
+
   /* ── Reports (view-only) ───────────────────────────── */
   { id:'rpt-daily', cat:'reports', badge:'VIEW',
     title:'Daily Production Report',

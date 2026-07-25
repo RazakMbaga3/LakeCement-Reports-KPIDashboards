@@ -1049,6 +1049,28 @@ function applyAnalyticsPermissions() {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
+   APPLY PERMISSIONS — COMPLETENESS PAGE (completeness.html)
+   Read-only, cross-department view — same as analytics.html, no
+   role-based content filtering, just the shared header. ═══════════════ */
+function applyCompletenessPermissions() {
+  renderUserHeader();
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   APPLY PERMISSIONS — BALANCE PAGE (balance.html)
+   Read-only reconciliation view — same as analytics.html. ══════════════ */
+function applyBalancePermissions() {
+  renderUserHeader();
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   APPLY PERMISSIONS — INSIGHTS PAGE (insights.html)
+   Read-only correlation view — same as analytics.html. ═══════════════ */
+function applyInsightsPermissions() {
+  renderUserHeader();
+}
+
+/* ══════════════════════════════════════════════════════════════════════
    AUDIT HOOK — intercept localStorage writes for key MIS actions
 ══════════════════════════════════════════════════════════════════════ */
 function _hookLocalStorageAudit() {

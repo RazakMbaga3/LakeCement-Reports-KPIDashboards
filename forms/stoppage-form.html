@@ -10,7 +10,7 @@
   <script src="../auth.js?v=7"></script>
   <script src="date-picker.js"></script>
   <link rel="stylesheet" href="forms.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style>
     /* ── Dashboard panel layout ── */
     .sd-filter {
@@ -807,6 +807,21 @@
     <!-- Overview strip -->
     <div class="sd-overview" id="sd-overview"></div>
 
+    <!-- Pareto — what to fix first, ranked by hours lost -->
+    <div class="sc-card" style="margin-bottom:20px">
+      <div class="sc-card-header">
+        <div class="sc-card-title"><i data-lucide="bar-chart-3" class="sc-card-icon" style="width:16px;height:16px"></i> Pareto — Section &times; Category</div>
+        <span class="sc-total-badge" id="sd-pareto-badge">—</span>
+      </div>
+      <div class="sc-card-body" style="display:block">
+        <div style="font-size:10.5px;color:var(--text-muted);padding:0 0 10px">
+          Ranked by hours lost, with cumulative %. Bucketed by section &times; category (mechanical/E&amp;I/production/planned/power/other) —
+          the incident-level "reason" text isn't persisted anywhere yet, so this can't yet be a Pareto of specific causes.
+        </div>
+        <div style="height:280px"><canvas id="sd-pareto-chart"></canvas></div>
+      </div>
+    </div>
+
     <!-- Section cards grid -->
     <div class="sd-grid" id="sd-grid"></div>
 
@@ -891,10 +906,10 @@ const STOPPAGE_BASE_DATA = {
   sections: {
     crusher: {
       label: 'Crusher', icon: 'hammer',
-      categories: { mech:6, ei:14, prod:74.56, planned:45.85, power:0, others:57 },
+      categories: { mech:6, ei:14, prod:74.56, planned:45.85, power:0, other:57 },
       total: 197.41,
       reasons: [
-        {dept:'others',  reason:'Pile full',                              hrs:54.00},
+        {dept:'other',  reason:'Pile full',                              hrs:54.00},
         {dept:'planned', reason:'Planned maintenance',                    hrs:45.85},
         {dept:'prod',    reason:'Crusher / hopper cleaning',             hrs:33.56},
         {dept:'prod',    reason:'Apron Feeder Jamming',                  hrs:23.00},
@@ -910,12 +925,12 @@ const STOPPAGE_BASE_DATA = {
     },
     rawmill: {
       label: 'Raw Mill', icon: 'wind',
-      categories: { mech:12.52, ei:3.35, prod:57.43, planned:79.60, power:0, others:33.87 },
+      categories: { mech:12.52, ei:3.35, prod:57.43, planned:79.60, power:0, other:33.87 },
       total: 186.77,
       reasons: [
         {dept:'planned', reason:'Planned maintenance',                                        hrs:79.60},
         {dept:'prod',    reason:'Hopper level low / Reclaimer / Pile change',                hrs:35.11},
-        {dept:'others',  reason:'Kiln stopped',                                              hrs:33.87},
+        {dept:'other',  reason:'Kiln stopped',                                              hrs:33.87},
         {dept:'prod',    reason:'Surge Hopper Jammed',                                       hrs:14.30},
         {dept:'prod',    reason:'Proportioning Hopper Jammed',                               hrs:6.52},
         {dept:'mech',    reason:'Hopper level low due to Reclaimer / Transport Belt',        hrs:4.49},
@@ -933,13 +948,13 @@ const STOPPAGE_BASE_DATA = {
     },
     coalmill: {
       label: 'Coal Mill', icon: 'flame',
-      categories: { mech:4.5, ei:1.4, prod:9.63, planned:24, power:0, others:161.72 },
+      categories: { mech:4.5, ei:1.4, prod:9.63, planned:24, power:0, other:161.72 },
       total: 201.25,
       reasons: [
-        {dept:'others',  reason:'Bin Full',                             hrs:125.14},
-        {dept:'others',  reason:'Kiln stopped',                        hrs:25.75},
+        {dept:'other',  reason:'Bin Full',                             hrs:125.14},
+        {dept:'other',  reason:'Kiln stopped',                        hrs:25.75},
         {dept:'planned', reason:'Planned maintenance',                  hrs:24.00},
-        {dept:'others',  reason:'Raw coal hopper empty',               hrs:10.83},
+        {dept:'other',  reason:'Raw coal hopper empty',               hrs:10.83},
         {dept:'prod',    reason:'Mill inlet RAL 521 RS1 jamming',      hrs:9.63},
         {dept:'mech',    reason:'Planned maintenance (Mech)',           hrs:4.50},
         {dept:'ei',      reason:'Coal mill main drive motor tripped',   hrs:0.98},
@@ -948,24 +963,24 @@ const STOPPAGE_BASE_DATA = {
     },
     kiln: {
       label: 'Kiln', icon: 'thermometer',
-      categories: { mech:38.98, ei:0.5, prod:0, planned:60.38, power:0, others:0.7 },
+      categories: { mech:38.98, ei:0.5, prod:0, planned:60.38, power:0, other:0.7 },
       total: 100.56,
       reasons: [
         {dept:'planned', reason:'Planned maintenance',                          hrs:60.38},
         {dept:'mech',    reason:'Clinker breaker maintenance / jammed',         hrs:25.48},
         {dept:'mech',    reason:'PH fan Mech inspection / Breakdown',           hrs:11.12},
         {dept:'mech',    reason:'Kiln support roller bearing inspection',       hrs:2.21},
-        {dept:'others',  reason:'Low level in fine coal bin',                   hrs:0.70},
+        {dept:'other',  reason:'Low level in fine coal bin',                   hrs:0.70},
         {dept:'ei',      reason:'Kiln main drive VFD problem',                  hrs:0.50},
       ]
     },
     cm1: {
       label: 'Cement Mill 1', icon: 'settings',
-      categories: { mech:3.75, ei:0, prod:3.82, planned:153.53, power:1.69, others:100.93 },
+      categories: { mech:3.75, ei:0, prod:3.82, planned:153.53, power:1.69, other:100.93 },
       total: 263.72,
       reasons: [
         {dept:'planned', reason:'Planned maintenance',                            hrs:153.53},
-        {dept:'others',  reason:'Silo full / No Orders',                          hrs:100.93},
+        {dept:'other',  reason:'Silo full / No Orders',                          hrs:100.93},
         {dept:'prod',    reason:'Clinker hopper level low',                       hrs:3.82},
         {dept:'mech',    reason:'Hopper level low due to transport belt problem', hrs:1.98},
         {dept:'power',   reason:'Power restriction from CPP / TANESCO',           hrs:1.69},
@@ -975,10 +990,10 @@ const STOPPAGE_BASE_DATA = {
     },
     cm2: {
       label: 'Cement Mill 2', icon: 'settings-2',
-      categories: { mech:14.35, ei:4.97, prod:3.66, planned:4.33, power:6.10, others:90.33 },
+      categories: { mech:14.35, ei:4.97, prod:3.66, planned:4.33, power:6.10, other:90.33 },
       total: 123.74,
       reasons: [
-        {dept:'others',  reason:'Silo full / No Orders',                           hrs:90.33},
+        {dept:'other',  reason:'Silo full / No Orders',                           hrs:90.33},
         {dept:'mech',    reason:'Girth gear spray nozzle fault',                   hrs:7.58},
         {dept:'power',   reason:'Power restriction from TANESCO / CPP',            hrs:6.10},
         {dept:'planned', reason:'Planned maintenance',                              hrs:4.33},
@@ -993,20 +1008,20 @@ const STOPPAGE_BASE_DATA = {
     },
     packing: {
       label: 'Packing Plant', icon: 'package',
-      categories: { mech:114.13, ei:26.19, prod:3.21, planned:45.24, power:0, others:183.09 },
+      categories: { mech:114.13, ei:26.19, prod:3.21, planned:45.24, power:0, other:183.09 },
       total: 371.86,
       reasons: [
-        {dept:'others',  reason:'No trucks available to load',                                  hrs:132.39},
+        {dept:'other',  reason:'No trucks available to load',                                  hrs:132.39},
         {dept:'planned', reason:'Planned maintenance of Packer / Truck loaders',               hrs:45.24},
         {dept:'mech',    reason:'Silo extraction problem / Blower tripped / Gate problem',     hrs:41.96},
         {dept:'mech',    reason:'Belt conveyor plate adjustment / bag jamming',                hrs:24.66},
-        {dept:'others',  reason:'Cleaning and drying of trailers due to rainfall',             hrs:18.05},
+        {dept:'other',  reason:'Cleaning and drying of trailers due to rainfall',             hrs:18.05},
         {dept:'mech',    reason:'Vibrating screen damaged / leakage',                         hrs:14.66},
         {dept:'ei',      reason:'Silo extraction problem / Blower tripped (E&I)',             hrs:13.84},
         {dept:'mech',    reason:'Air slide jammed',                                            hrs:13.63},
-        {dept:'others',  reason:'Shift change',                                               hrs:10.25},
+        {dept:'other',  reason:'Shift change',                                               hrs:10.25},
         {dept:'mech',    reason:'Truck Loader maintenance',                                    hrs:8.14},
-        {dept:'others',  reason:'Single/Double truck to load and silo changeover',            hrs:4.82},
+        {dept:'other',  reason:'Single/Double truck to load and silo changeover',            hrs:4.82},
         {dept:'ei',      reason:'Spout maintenance',                                           hrs:3.63},
         {dept:'ei',      reason:'ERP server upgrading / System failure',                       hrs:3.63},
         {dept:'mech',    reason:'Spout maintenance (Mech)',                                    hrs:3.37},
@@ -1034,9 +1049,9 @@ const DEPT_CONFIG = {
   prod:    { label:'Production',     color:'#10B981' },
   planned: { label:'Planned Maint.', color:'#8B5CF6' },
   power:   { label:'Power / CPP',    color:'#F59E0B' },
-  others:  { label:'Others',         color:'#94A3B8' },
+  other:   { label:'Others',         color:'#94A3B8' },
 };
-const DEPT_KEYS = ['mech','ei','prod','planned','power','others'];
+const DEPT_KEYS = ['mech','ei','prod','planned','power','other'];
 const SD_MONTHS = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 function fmtHrs(h) { return (h === 0 ? '0.00' : h.toFixed(2)); }
@@ -1045,40 +1060,64 @@ function sdAvailability(totalHrs, daysInMonth) {
   return Math.max(0, ((cap - totalHrs) / cap * 100)).toFixed(1);
 }
 
-function readLiveData(yr, mo) {
+/* Aggregate stop_<section>_<cat> minute fields (the only stoppage facts
+   actually persisted — see forms.css/stoppage-form.html header) into
+   { section: { category: hours } }. Shared by both the server and
+   localStorage-scan sources below so their output is identical shape. */
+function _aggregateStopFields(dataByDay) {
   const agg = {};
-  const moStr = String(mo).padStart(2,'0');
   let hasData = false;
-  for (let d = 1; d <= 31; d++) {
-    const key = 
-yati-stoppage-${yr}-${moStr}-${String(d).padStart(2,'0')}`;
-    const raw = localStorage.getItem(key);
-    if (!raw) continue;
-    try {
-      const data = JSON.parse(raw).data ?? {};
-      Object.entries(data).forEach(([k, v]) => {
-        if (!k.startsWith('stop_')) return;
-        const parts = k.split('_');
-        if (parts.length < 3) return;
-        const section = parts.slice(1, -1).join('_');
-        const cat     = parts[parts.length - 1];
-        agg[section] = agg[section] ?? {};
-        agg[section][cat] = (agg[section][cat] ?? 0) + (parseFloat(v) || 0);
-        hasData = true;
-      });
-    } catch(e) {}
-  }
+  dataByDay.forEach(function (data) {
+    Object.entries(data || {}).forEach(function ([k, v]) {
+      if (!k.startsWith('stop_')) return;
+      const parts = k.split('_');
+      if (parts.length < 3) return;
+      const section = parts.slice(1, -1).join('_');
+      const cat     = parts[parts.length - 1];
+      agg[section] = agg[section] || {};
+      agg[section][cat] = (agg[section][cat] || 0) + (parseFloat(v) || 0);
+      hasData = true;
+    });
+  });
   if (!hasData) return null;
   const KEY_MAP = { rm:'rawmill', cm_coal:'coalmill', cm1:'cm1', cm2:'cm2', packing:'packing', crusher:'crusher', kiln:'kiln' };
   const result = {};
-  Object.entries(agg).forEach(([sec, cats]) => {
-    const dsKey = KEY_MAP[sec] ?? sec;
+  Object.entries(agg).forEach(function ([sec, cats]) {
+    const dsKey = KEY_MAP[sec] || sec;
     result[dsKey] = {};
-    Object.entries(cats).forEach(([cat, mins]) => {
+    Object.entries(cats).forEach(function ([cat, mins]) {
       result[dsKey][cat] = Math.round((mins / 60) * 100) / 100;
     });
   });
   return result;
+}
+
+function _readLocalStoppageData(yr, mo) {
+  const moStr = String(mo).padStart(2, '0');
+  const days = [];
+  for (let d = 1; d <= 31; d++) {
+    const key = 'nyati-stoppage-' + yr + '-' + moStr + '-' + String(d).padStart(2, '0');
+    const raw = localStorage.getItem(key);
+    if (!raw) continue;
+    try { days.push(JSON.parse(raw).data || {}); } catch (e) { /* skip */ }
+  }
+  return _aggregateStopFields(days);
+}
+
+/* Server is the source of truth (real submissions from every department,
+   not just this browser); localStorage is the offline-fallback if the
+   server can't be reached — same precedence used throughout the app. */
+async function readLiveData(yr, mo) {
+  const from = yr + '-' + String(mo).padStart(2, '0') + '-01';
+  const to   = yr + '-' + String(mo).padStart(2, '0') + '-' + String(new Date(yr, mo, 0).getDate()).padStart(2, '0');
+  if (window.NyatiAPI) {
+    try {
+      const records = await NyatiAPI.getFormRange('stoppage', from, to);
+      const agg = _aggregateStopFields(records.map(function (r) { return r.data; }));
+      if (agg) return agg;
+    } catch (e) { /* offline — fall through to localStorage */ }
+  }
+  return _readLocalStoppageData(yr, mo);
 }
 
 const sdCharts = {};
@@ -1108,7 +1147,7 @@ function buildOverview(data, maxHrs) {
   if (gt) gt.textContent = fmtHrs(grandTotal) + ' hrs';
 }
 
-function buildCard(key, sec, liveOverride) {
+function buildCard(key, sec, liveOverride, isLive) {
   const cats  = liveOverride ?? sec.categories;
   const total = Object.values(cats).reduce((a,b)=>a+b,0);
   const legendHTML = DEPT_KEYS.map(function(dk) {
@@ -1121,6 +1160,12 @@ function buildCard(key, sec, liveOverride) {
     const col = (DEPT_CONFIG[r.dept] || {color:'#94A3B8'}).color;
     return '<tr><td><span class="sc-dept-dot" style="background:' + col + '"></span>' + r.reason + '</td><td>' + fmtHrs(r.hrs) + '</td></tr>';
   }).join('');
+  /* Incident-level "reason" text is never persisted server-side (only
+     category-level minute totals are) — say so plainly rather than
+     showing an unexplained blank table once live data is in view. */
+  const noReasonMsg = isLive && total > 0
+    ? 'No incident-level detail captured — only category totals are recorded'
+    : 'No data';
   const card = document.createElement('div');
   card.className = 'sc-card' + (key === 'packing' ? ' full-row' : '');
   card.id = 'section-' + key;
@@ -1137,7 +1182,7 @@ function buildCard(key, sec, liveOverride) {
       '<div class="sc-table-wrap">' +
         '<table class="sc-table">' +
           '<thead><tr><th>Reason / Description</th><th>Hrs</th></tr></thead>' +
-          '<tbody>' + (reasonRows || '<tr><td colspan="2" class="sc-no-data">No data</td></tr>') + '</tbody>' +
+          '<tbody>' + (reasonRows || '<tr><td colspan="2" class="sc-no-data">' + noReasonMsg + '</td></tr>') + '</tbody>' +
           '<tfoot><tr><td>TOTAL STOPPAGE</td><td>' + fmtHrs(total) + '</td></tr></tfoot>' +
         '</table>' +
       '</div>' +
@@ -1168,46 +1213,107 @@ function sdRenderChart(key, cats) {
   });
 }
 
-function renderDashboard() {
+/* Pareto by section × category, ranked by hours, with cumulative %.
+   Bucketed (not per-reason) because incident-level reason text isn't
+   persisted anywhere server-side — see the card's own note in the HTML. */
+let sdParetoChart = null;
+function renderPareto(sections, hasAnyData) {
+  const ctx = document.getElementById('sd-pareto-chart');
+  const badge = document.getElementById('sd-pareto-badge');
+  if (!ctx) return;
+  if (sdParetoChart) { sdParetoChart.destroy(); sdParetoChart = null; }
+
+  const bars = [];
+  Object.entries(sections).forEach(function ([key, sec]) {
+    DEPT_KEYS.forEach(function (dk) {
+      const v = sec.categories[dk] || 0;
+      if (v > 0) bars.push({ label: sec.label + ' — ' + DEPT_CONFIG[dk].label, hrs: v, color: DEPT_CONFIG[dk].color });
+    });
+  });
+
+  if (!hasAnyData || bars.length === 0) {
+    if (badge) badge.textContent = '—';
+    return;
+  }
+  bars.sort(function (a, b) { return b.hrs - a.hrs; });
+
+  const grandTotal = bars.reduce(function (s, b) { return s + b.hrs; }, 0);
+  if (badge) badge.textContent = bars.length + ' buckets · ' + fmtHrs(grandTotal) + ' hrs';
+
+  let running = 0;
+  const cumPct = bars.map(function (b) { running += b.hrs; return running / grandTotal * 100; });
+
+  sdParetoChart = new Chart(ctx, {
+    data: {
+      labels: bars.map(function (b) { return b.label; }),
+      datasets: [
+        { type: 'bar', label: 'Hours', data: bars.map(function (b) { return b.hrs; }), backgroundColor: bars.map(function (b) { return b.color; }), yAxisID: 'y', borderRadius: 3 },
+        { type: 'line', label: 'Cumulative %', data: cumPct, yAxisID: 'y1', borderColor: '#173158', borderWidth: 2, pointRadius: 2, tension: 0.2 },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { font: { size: 10, weight: '600' }, boxWidth: 12 } } },
+      scales: {
+        x: { ticks: { font: { size: 9 }, maxRotation: 60, minRotation: 60 } },
+        y:  { position: 'left',  title: { display: true, text: 'hours', font: { size: 9 } }, ticks: { font: { size: 9 } } },
+        y1: { position: 'right', title: { display: true, text: 'cumulative %', font: { size: 9 } }, min: 0, max: 100, grid: { display: false }, ticks: { font: { size: 9 } } },
+      },
+    },
+  });
+}
+
+async function renderDashboard() {
   const moEl = document.getElementById('sd-month');
   const yrEl = document.getElementById('sd-year');
   if (!moEl || !yrEl) return;
   const mo = +moEl.value;
   const yr =  yrEl.value;
-  const liveData = readLiveData(yr, mo);
+  const liveData = await readLiveData(yr, mo);
   const isLive   = liveData !== null;
+  /* STOPPAGE_BASE_DATA is real, hand-compiled April 2026 data — but only
+     FOR April 2026. Showing it for any other month/year would silently
+     mislabel one month's numbers as another's. */
+  const isReferenceMonth = (yr + '-' + String(mo).padStart(2, '0')) === STOPPAGE_BASE_DATA.month;
+  const showReference = !isLive && isReferenceMonth;
+  const hasAnyData = isLive || showReference;
 
   const badge = document.getElementById('sd-data-badge');
   if (badge) {
-    badge.textContent = isLive ? 'Live ' + SD_MONTHS[mo] + ' ' + yr : 'Base data ' + SD_MONTHS[mo] + ' ' + yr;
+    badge.textContent = isLive ? ('Live ' + SD_MONTHS[mo] + ' ' + yr)
+      : showReference ? ('Reference data (hand-compiled) · ' + SD_MONTHS[mo] + ' ' + yr)
+      : ('No data · ' + SD_MONTHS[mo] + ' ' + yr);
     badge.className = 'sd-data-chip' + (isLive ? ' live' : '');
   }
 
   const displayData = Object.assign({}, STOPPAGE_BASE_DATA, { sections: {} });
   Object.entries(STOPPAGE_BASE_DATA.sections).forEach(function([key, sec]) {
-    const liveCats = isLive ? liveData[key] : null;
-    displayData.sections[key] = Object.assign({}, sec, {
-      categories: liveCats ?? sec.categories,
-      total: liveCats ? Object.values(liveCats).reduce(function(a,b){return a+b;},0) : sec.total,
-    });
+    const liveCats = isLive ? (liveData[key] || {}) : null;
+    const cats = liveCats || (showReference ? sec.categories : {});
+    displayData.sections[key] = {
+      label: sec.label, icon: sec.icon,
+      categories: cats,
+      total: Object.values(cats).reduce(function (a, b) { return a + b; }, 0),
+      reasons: showReference ? sec.reasons : [],
+    };
   });
 
-  const maxHrs = Math.max.apply(null, Object.values(displayData.sections).map(function(s){return s.total;}));
+  const maxHrs = Math.max(1, Math.max.apply(null, Object.values(displayData.sections).map(function(s){return s.total;})));
   buildOverview(displayData, maxHrs);
+  renderPareto(displayData.sections, hasAnyData);
 
   const grid = document.getElementById('sd-grid');
   if (!grid) return;
   grid.innerHTML = '';
   Object.entries(displayData.sections).forEach(function([key, sec]) {
-    const liveCats = isLive ? liveData[key] : null;
-    grid.appendChild(buildCard(key, sec, liveCats));
+    grid.appendChild(buildCard(key, sec, sec.categories, isLive));
   });
 
   if (window.lucide) lucide.createIcons();
   requireAuth();
   applyDailyPermissions();
   Object.entries(displayData.sections).forEach(function([key, sec]) {
-    sdRenderChart(key, (isLive && liveData[key]) ? liveData[key] : sec.categories);
+    sdRenderChart(key, sec.categories);
   });
 }
 

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – Operational Insights</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="auth.js?v=7"></script>
+  <script src="forms/date-picker.js"></script>
+  <style>
+    .in-bar {
+      background: white; border-bottom: 1px solid var(--border);
+      position: sticky; top: var(--header-h, 68px); z-index: 80; box-shadow: var(--shadow-sm);
+    }
+    .in-bar-inner { display: flex; align-items: center; gap: 14px; padding: 10px 28px; flex-wrap: wrap; }
+    .in-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); }
+    .in-input {
+      padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--off-white); font-family: var(--font); font-size: 11px; font-weight: 600;
+      color: var(--navy); cursor: pointer;
+    }
+    .in-pills { display: flex; gap: 4px; background: var(--off-white); border: 1px solid var(--border); border-radius: 8px; padding: 3px; }
+    .in-pill { padding: 5px 14px; border-radius: 5px; border: none; background: transparent; font-family: var(--font); font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+    .in-pill:hover  { color: var(--navy); background: rgba(23,49,88,.06); }
+    .in-pill.active { background: var(--navy); color: white; }
+
+    .in-main { max-width: 1300px; margin: 0 auto; padding: 20px 28px 60px; }
+    .in-section-hdr { display: flex; align-items: center; gap: 8px; margin: 24px 0 12px; }
+    .in-section-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--navy); }
+    .in-section-sub { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+
+    .in-card { background: white; border: 1.5px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 16px; }
+    .in-card-title { font-size: 11px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+    .in-card-sub { font-size: 10.5px; color: var(--text-muted); margin-bottom: 10px; }
+    .in-chart-wrap { height: 260px; }
+
+    .in-multiples { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 1000px) { .in-multiples { grid-template-columns: 1fr; } }
+    .in-mult-chart { height: 190px; }
+
+    .in-empty { text-align: center; padding: 30px 20px; color: var(--text-muted); font-size: 11.5px; }
+  </style>
+</head>
+<body>
+
+<header class="top-header" id="app-header"></header>
+<script>renderTopHeader();</script>
+
+<div class="in-bar">
+  <div class="in-bar-inner">
+    <div class="in-pills">
+      <button class="in-pill" data-days="30">30 days</button>
+      <button class="in-pill active" data-days="90">90 days</button>
+      <button class="in-pill" data-days="180">180 days</button>
+    </div>
+    <span class="in-lbl">or</span>
+    <input type="date" id="in-from" class="in-input" />
+    <span class="in-lbl">to</span>
+    <input type="date" id="in-to" class="in-input" />
+    <button class="in-pill" id="in-apply" style="background:var(--orange);color:white">Apply</button>
+  </div>
+</div>
+
+<main class="in-main">
+
+  <div class="in-section-hdr">
+    <span class="in-section-title">Output vs. Downtime</span>
+    <span class="in-section-sub">— does a stoppage day show up as an output dip?</span>
+  </div>
+  <div class="in-card">
+    <div class="in-card-title">Kiln Output &amp; Total Stoppage Minutes</div>
+    <div class="in-card-sub">Left axis: clinker output (MT). Right axis: total logged stoppage minutes that day (all sections, all categories).</div>
+    <div class="in-chart-wrap"><canvas id="chart-output-downtime"></canvas></div>
+    <div class="in-empty" id="empty-downtime" style="display:none"></div>
+  </div>
+
+  <div class="in-section-hdr">
+    <span class="in-section-title">Energy ↔ Quality Trade-off</span>
+    <span class="in-section-sub">— cement plants trade fuel for quality; do these three move together?</span>
+  </div>
+  <div class="in-card">
+    <div class="in-multiples">
+      <div>
+        <div class="in-card-title">Specific Power – Total</div>
+        <div class="in-card-sub">kWh / MT eq. cement</div>
+        <div class="in-mult-chart"><canvas id="chart-mult-power"></canvas></div>
+      </div>
+      <div>
+        <div class="in-card-title">Specific Heat Consumption</div>
+        <div class="in-card-sub">kcal / kg clinker</div>
+        <div class="in-mult-chart"><canvas id="chart-mult-heat"></canvas></div>
+      </div>
+      <div>
+        <div class="in-card-title">Clinker Free Lime</div>
+        <div class="in-card-sub">% (lower is better)</div>
+        <div class="in-mult-chart"><canvas id="chart-mult-freelime"></canvas></div>
+      </div>
+    </div>
+    <div class="in-empty" id="empty-multiples" style="display:none"></div>
+  </div>
+
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span id="footer-date"></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  lucide.createIcons();
+  requireAuth();
+  applyInsightsPermissions();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="forms/api-client.js"></script>
+<script src="forms/client-errors.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  function fmtDate(iso) {
+    var d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+  function todayIso() { return new Date().toISOString().slice(0, 10); }
+  function addDays(iso, n) {
+    var d = new Date(iso + 'T00:00:00');
+    d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0, 10);
+  }
+  function z0(v) { var x = parseFloat(v); return isNaN(x) ? 0 : x; }
+
+  var STOP_SECTIONS = ['crusher', 'rm', 'cm_coal', 'kiln', 'cm1', 'cm2', 'packing'];
+  var STOP_CATS = ['mech', 'ei', 'prod', 'planned', 'power', 'other'];
+  var STOP_FIELDS = [];
+  STOP_SECTIONS.forEach(function (s) { STOP_CATS.forEach(function (c) { STOP_FIELDS.push('stop_' + s + '_' + c); }); });
+
+  var fromEl = document.getElementById('in-from'), toEl = document.getElementById('in-to');
+  var _charts = {};
+
+  function setPillsRange(days) {
+    var to = todayIso();
+    fromEl.value = addDays(to, -days);
+    toEl.value = to;
+  }
+
+  function destroyChart(id) { if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; } }
+
+  /* ── Chart 1: dual-axis output + downtime ─────────────────────── */
+  function renderOutputDowntime(dates, outputVals, downtimeVals) {
+    var hasOutput = outputVals.some(function (v) { return v !== null; });
+    var hasDowntime = downtimeVals.some(function (v) { return v > 0; });
+    var empty = document.getElementById('empty-downtime');
+    if (!hasOutput) {
+      empty.style.display = 'block';
+      empty.textContent = 'No Production data in this range.';
+      destroyChart('output-downtime');
+      return;
+    }
+    empty.style.display = hasDowntime ? 'none' : 'block';
+    if (!hasDowntime) empty.textContent = 'No stoppage minutes logged in this range yet — output shown alone.';
+
+    var ctx = document.getElementById('chart-output-downtime');
+    destroyChart('output-downtime');
+    _charts['output-downtime'] = new Chart(ctx, {
+      data: {
+        labels: dates.map(fmtDate),
+        datasets: [
+          {
+            type: 'line', label: 'Kiln Output (MT)', data: outputVals, yAxisID: 'y',
+            borderColor: '#F49545', backgroundColor: 'rgba(244,149,69,0.08)',
+            borderWidth: 2, pointRadius: 2, fill: true, tension: 0.3, spanGaps: true,
+          },
+          {
+            type: 'bar', label: 'Stoppage Minutes', data: downtimeVals, yAxisID: 'y1',
+            backgroundColor: 'rgba(229,57,53,0.35)', borderRadius: 2, barPercentage: 0.6,
+          },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { position: 'top', labels: { font: { size: 10, weight: '600' }, boxWidth: 12 } } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#9CA3AF', maxTicksLimit: 12, maxRotation: 0 } },
+          y:  { position: 'left',  title: { display: true, text: 'MT', font: { size: 9 } }, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 9 } } },
+          y1: { position: 'right', title: { display: true, text: 'minutes', font: { size: 9 } }, grid: { display: false }, ticks: { font: { size: 9 } }, beginAtZero: true },
+        },
+      },
+    });
+  }
+
+  /* ── Small-multiple line chart (no target/anomaly overlay) ────── */
+  function renderSimpleLine(canvasId, dates, values, color, unit) {
+    var hasData = values.some(function (v) { return v !== null; });
+    var ctx = document.getElementById(canvasId);
+    destroyChart(canvasId);
+    if (!hasData) return false;
+    _charts[canvasId] = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: dates.map(fmtDate),
+        datasets: [{
+          data: values, borderColor: color, backgroundColor: color + '14',
+          borderWidth: 2, pointRadius: 1.5, fill: true, tension: 0.3, spanGaps: true,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (c) { return c.parsed.y + (unit ? ' ' + unit : ''); } } } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 8 }, color: '#9CA3AF', maxTicksLimit: 6, maxRotation: 0 } },
+          y: { grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 8 }, color: '#9CA3AF' } },
+        },
+      },
+    });
+    return true;
+  }
+
+  async function load() {
+    var from = fromEl.value, to = toEl.value;
+    if (!from || !to || from > to) return;
+
+    var dates = [];
+    for (var d = from; d <= to; d = addDays(d, 1)) dates.push(d);
+
+    /* KPI series from the server formula engine — one call for everything */
+    var kpiByKey = {};
+    try {
+      var daily = await NyatiAPI.getDailySeries(from, to);
+      Object.keys(daily).forEach(function (key) {
+        var byDate = {};
+        (daily[key].series || []).forEach(function (p) { byDate[p.date] = p.value; });
+        kpiByKey[key] = byDate;
+      });
+    } catch (e) { /* offline */ }
+
+    function seriesFor(key) {
+      var byDate = kpiByKey[key] || {};
+      return dates.map(function (dt) { var v = byDate[dt]; return (v === undefined || v === null) ? null : v; });
+    }
+
+    renderOutputDowntime(dates, seriesFor('kiln-output'), await stoppageMinutes(from, to, dates));
+
+    var okPower = renderSimpleLine('chart-mult-power', dates, seriesFor('specific-power-consumption-total'), '#0d9488', 'kWh/MT');
+    var okHeat  = renderSimpleLine('chart-mult-heat', dates, seriesFor('specific-thermal-energy-consumption'), '#7c3aed', 'kcal/kg');
+    var okLime  = renderSimpleLine('chart-mult-freelime', dates, seriesFor('clinker-free-lime'), '#e53935', '%');
+
+    var emptyM = document.getElementById('empty-multiples');
+    if (!okPower && !okHeat && !okLime) {
+      emptyM.style.display = 'block';
+      emptyM.textContent = 'No data for any of these three KPIs in this range.';
+    } else if (!okLime) {
+      emptyM.style.display = 'block';
+      emptyM.textContent = 'Clinker Free Lime has no data in this range — Quality form entry is sparse in the current backfill.';
+    } else {
+      emptyM.style.display = 'none';
+    }
+  }
+
+  /* Raw stoppage minutes aren't a formula-registry KPI (no target/spec) —
+     fetch the form directly and sum the 42 stop_* fields per day. */
+  async function stoppageMinutes(from, to, dates) {
+    var byDate = {};
+    try {
+      var records = await NyatiAPI.getFormRange('stoppage', from, to);
+      records.forEach(function (r) {
+        var dt = r.record_date ? String(r.record_date).slice(0, 10) : null;
+        if (!dt) return;
+        var total = 0;
+        STOP_FIELDS.forEach(function (f) { total += z0(r.data && r.data[f]); });
+        byDate[dt] = total;
+      });
+    } catch (e) { /* offline */ }
+    return dates.map(function (dt) { return byDate[dt] || 0; });
+  }
+
+  document.querySelectorAll('.in-pill[data-days]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.in-pill[data-days]').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      setPillsRange(parseInt(btn.dataset.days, 10));
+      load();
+    });
+  });
+  document.getElementById('in-apply').addEventListener('click', function () {
+    document.querySelectorAll('.in-pill[data-days]').forEach(function (b) { b.classList.remove('active'); });
+    load();
+  });
+
+  setPillsRange(90);
+  load();
+
+  var _dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+  var fEl = document.getElementById('footer-date');
+  if (fEl) fEl.textContent = _dateStr;
+}());
+</script>
+</body>
+</html>

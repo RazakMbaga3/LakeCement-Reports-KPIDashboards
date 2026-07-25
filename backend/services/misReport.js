@@ -78,6 +78,45 @@ async function gatherDaily(date) {
   return { kind: 'daily', date, forms, missing, kpis, generatedAt: new Date().toISOString() };
 }
 
+/* ── Entry-completeness payload (for a calendar heatmap) ──────────────
+   Same "row exists with non-empty data" rule as gatherDaily's `missing`
+   list, extended across a date range in one query instead of looping
+   gatherDaily per day. Read-only / retrospective — does not touch
+   cutoff-lateness (that's watchdog.js's same-day alerting concern). */
+async function gatherCompleteness(from, to) {
+  const rows = await db.query(
+    `SELECT record_date, form_type, data
+     FROM daily_reports
+     WHERE record_date BETWEEN $1 AND $2`,
+    [from, to]
+  );
+
+  // present[date][formType] = true if any row for that date+form has
+  // non-empty cleaned data (a form can have multiple shifts; one non-empty
+  // shift is enough to count the day as covered)
+  const present = {};
+  for (const r of rows.rows) {
+    const date = String(r.record_date).slice(0, 10);
+    if (!Object.keys(cleanData(r.data)).length) continue;
+    (present[date] || (present[date] = {}))[r.form_type] = true;
+  }
+
+  const days = [];
+  for (let d = new Date(from + 'T00:00:00Z'); d <= new Date(to + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + 1)) {
+    const date = d.toISOString().slice(0, 10);
+    days.push({
+      date,
+      forms: FORM_ORDER.map(formType => ({
+        formType,
+        label: FORM_LABELS[formType] || formType,
+        present: !!(present[date] && present[date][formType]),
+      })),
+    });
+  }
+
+  return { kind: 'completeness', from, to, forms: FORM_ORDER.map(f => ({ formType: f, label: FORM_LABELS[f] })), days };
+}
+
 /* ── Monthly report payload ────────────────────────────────── */
 async function gatherMonthly(year, month) {
   const from = `${year}-${String(month).padStart(2, '0')}-01`;
@@ -130,4 +169,4 @@ async function gatherMonthly(year, month) {
   };
 }
 
-module.exports = { gatherDaily, gatherMonthly, FORM_LABELS, prettifyField };
+module.exports = { gatherDaily, gatherMonthly, gatherCompleteness, FORM_LABELS, prettifyField };

@@ -7,6 +7,7 @@
   GET  /api/mis/monthly/:year/:month       → monthly payload (JSON)
   GET  /api/mis/monthly/:year/:month/html  → printable HTML
   GET  /api/mis/monthly/:year/:month/xlsx  → Excel workbook download
+  GET  /api/mis/completeness?from=&to=     → entry-completeness payload (JSON)
   POST /api/mis/digest/send           → send the digest now (admin/md;
                                         body {date?} for a specific day)
 */
@@ -50,6 +51,14 @@ router.get('/daily/:date/xlsx', requireAuth, validate(dateParams, 'params'), asy
     const buf = await excel.dailyWorkbook(await report.gatherDaily(date));
     xlsxHeaders(res, `Nyati-MIS-Daily-${date}.xlsx`);
     res.send(buf);
+  } catch (err) { next(err); }
+});
+
+// ── Completeness (entry-reliability heatmap) ────────────────────
+router.get('/completeness', requireAuth, validate(z.object({ from: zDate, to: zDate }), 'query'), async (req, res, next) => {
+  try {
+    const { from, to } = req.validated.query;
+    res.json(await report.gatherCompleteness(from, to));
   } catch (err) { next(err); }
 });
 

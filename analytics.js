@@ -36,6 +36,20 @@
     return dates;
   }
 
+  /* Every day in a given calendar month (yearMonth = "YYYY-MM"), regardless
+     of today's date — lets a past month be viewed on its own instead of
+     only trailing windows anchored to today. */
+  function buildRangeForMonth(yearMonth) {
+    var parts = yearMonth.split('-');
+    var year = parseInt(parts[0], 10), month = parseInt(parts[1], 10); // 1-indexed month
+    var daysInMonth = new Date(year, month, 0).getDate();
+    var dates = [];
+    for (var day = 1; day <= daysInMonth; day++) {
+      dates.push(year + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0'));
+    }
+    return dates;
+  }
+
   /* ══════════════════════════════════════════════════════════════
      METRIC DEFINITIONS — driven by the shared formula registry.
 
@@ -57,6 +71,11 @@
     { id: 'power',     key: 'total-power-kwh',                      color: '#0d9488', fillColor: 'rgba(13,148,136,0.08)' },
     { id: 'clinker',   key: 'kiln-output',                          color: '#F49545', fillColor: 'rgba(244,149,69,0.08)' },
     { id: 'sp-heat',   key: 'specific-thermal-energy-consumption',  color: '#7c3aed', fillColor: 'rgba(124,58,237,0.08)' },
+    { id: 'spc-total',    key: 'specific-power-consumption-total',              color: '#0d9488', fillColor: 'rgba(13,148,136,0.08)' },
+    { id: 'spc-clinker',  key: 'specific-power-consumption-up-to-clinker',      color: '#0d9488', fillColor: 'rgba(13,148,136,0.08)' },
+    { id: 'spc-grind',    key: 'specific-power-consumption-cement-grinding',    color: '#0d9488', fillColor: 'rgba(13,148,136,0.08)' },
+    { id: 'pwr-loss',     key: 'power-distribution-loss-pct',                   color: '#e53935', fillColor: 'rgba(229,57,53,0.08)' },
+    { id: 'clinker-src',  key: 'purchased-clinker-share',                       color: '#7c3aed', fillColor: 'rgba(124,58,237,0.08)' },
   ];
 
   /* Resolve one day's fact values for a formula from the harvested store */
@@ -106,10 +125,9 @@
      try-server-else-local fallback, specifically so demo data (which the
      server has never heard of and always returns "no rows" for) still
      renders — a thrown/failed server call falls back the same way. ──── */
-  async function harvest(days) {
-    var range   = buildRange(days);
-    var cutoff  = range[0];
-    var todayIso = range[range.length - 1];
+  async function harvest(dates) {
+    var cutoff  = dates[0];
+    var todayIso = dates[dates.length - 1];
     var forms = [];
     METRICS.forEach(function(m) {
       m.forms.forEach(function(f) { if (forms.indexOf(f) === -1) forms.push(f); });
@@ -155,6 +173,16 @@
     var variance = vals.map(function(v) { return (v - mean) * (v - mean); })
                        .reduce(function(a, b) { return a + b; }, 0) / vals.length;
     return { mean: mean, std: Math.sqrt(variance) };
+  }
+
+  /* Trailing N-day average, gaps-aware (nulls excluded from the window,
+     not treated as zero); null where the window has no data at all. */
+  function rollingAverage(values, windowSize) {
+    return values.map(function (_, i) {
+      var start = Math.max(0, i - windowSize + 1);
+      var slice = values.slice(start, i + 1).filter(function (v) { return v !== null; });
+      return slice.length ? slice.reduce(function (a, b) { return a + b; }, 0) / slice.length : null;
+    });
   }
 
   function anomalyMask(values) {
@@ -245,6 +273,10 @@
     /* Anomaly scatter points */
     var anomData = values.map(function(v, i) { return anom[i] ? v : null; });
 
+    /* 7-day rolling average — smooths day-to-day noise so drift shows up
+       before it's a crisis, without hiding the raw daily points. */
+    var rollingData = rollingAverage(values, 7);
+
     /* Target line (constant) */
     var targetData = metric.target !== null
       ? dates.map(function() { return metric.target; })
@@ -275,6 +307,17 @@
         pointBorderColor: 'white',
         pointBorderWidth: 2,
         showLine: false,
+      },
+      {
+        label: '7-day avg',
+        data: rollingData,
+        borderColor: metric.color,
+        borderWidth: 2,
+        borderDash: [2, 2],
+        pointRadius: 0,
+        fill: false,
+        tension: 0.25,
+        spanGaps: true,
       },
     ];
 
@@ -405,7 +448,8 @@
   }
 
   /* ── Coverage chips ───────────────────────────────────────────── */
-  function updateCoverage(store, days, dates) {
+  function updateCoverage(store, dates) {
+    var days = dates.length;
     var chips = document.getElementById('an-cov-chips');
     if (!chips) return;
 
@@ -440,17 +484,29 @@
     if (el) el.textContent = prDays + ' form-days';
     el = document.getElementById('badge-operations');
     if (el) el.textContent = (dDays + pwDays) + ' form-days';
+    el = document.getElementById('badge-energy');
+    if (el) el.textContent = (prDays + pwDays) + ' form-days';
   }
 
   /* ═══════════════════════════════════════════════════════════════
      MAIN RENDER
   ═══════════════════════════════════════════════════════════════ */
-  var _currentDays = 30;
+  /* Either { type:'days', days:N } (trailing window, re-evaluated against
+     "today" on every render) or { type:'month', yearMonth:"YYYY-MM" }
+     (pinned historical month). render() always re-derives dates from this
+     so a later re-render (storage event, demo data) reflects the same
+     period the user picked, not whatever was current on first load. */
+  var _currentRange = { type: 'days', days: 30 };
 
-  async function render(days) {
-    _currentDays = days;
-    var dates  = buildRange(days);
-    var store  = await harvest(days);
+  function currentDates() {
+    return _currentRange.type === 'month'
+      ? buildRangeForMonth(_currentRange.yearMonth)
+      : buildRange(_currentRange.days);
+  }
+
+  async function render() {
+    var dates = currentDates();
+    var store  = await harvest(dates);
 
     /* Check if any data exists */
     var hasAny = METRICS.some(function(m) {
@@ -467,7 +523,7 @@
     if (emptyEl)   emptyEl.style.display   = 'none';
     if (contentEl) contentEl.style.display = 'block';
 
-    updateCoverage(store, days, dates);
+    updateCoverage(store, dates);
 
     /* Server-computed daily series (the formula engine — same registry).
        Where the server has a value for a date, it wins; dates it doesn't
@@ -639,7 +695,7 @@
       document.querySelector('.an-period-bar').after(banner);
     }
 
-    render(_currentDays);
+    render();
   }
 
   window.clearDemoData = function() {
@@ -647,7 +703,7 @@
     _demoKeys = [];
     var banner = document.getElementById('_demo-banner');
     if (banner) banner.remove();
-    render(_currentDays);
+    render();
   };
 
   window.seedDemoData = seedDemoData;
@@ -657,9 +713,23 @@
     btn.addEventListener('click', function() {
       document.querySelectorAll('.an-pill').forEach(function(b) { b.classList.remove('active'); });
       btn.classList.add('active');
-      render(parseInt(btn.dataset.days, 10));
+      var monthInput = document.getElementById('an-month-input');
+      if (monthInput) monthInput.value = '';
+      _currentRange = { type: 'days', days: parseInt(btn.dataset.days, 10) };
+      render();
     });
   });
+
+  /* ── Month picker — pinned historical month, independent of "today" ── */
+  var _monthInput = document.getElementById('an-month-input');
+  if (_monthInput) {
+    _monthInput.addEventListener('change', function() {
+      if (!_monthInput.value) return;
+      document.querySelectorAll('.an-pill').forEach(function(b) { b.classList.remove('active'); });
+      _currentRange = { type: 'month', yearMonth: _monthInput.value };
+      render();
+    });
+  }
 
   /* ── Live date ────────────────────────────────────────────────── */
   var _dateStr = new Date().toLocaleDateString('en-GB', {
@@ -672,14 +742,14 @@
 
   /* ── React to form submissions in other tabs ──────────────────── */
   window.addEventListener('storage', function(e) {
-    if (e.key && e.key.startsWith('nyati-')) render(_currentDays);
+    if (e.key && e.key.startsWith('nyati-')) render();
   });
 
   /* ── Bootstrap ────────────────────────────────────────────────── */
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() { render(30); });
+    document.addEventListener('DOMContentLoaded', function() { render(); });
   } else {
-    render(30);
+    render();
   }
 
 }());

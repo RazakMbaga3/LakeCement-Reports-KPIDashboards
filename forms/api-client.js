@@ -111,10 +111,18 @@
     return res.json();
   }
 
+  /* GET /api/mis/completeness?from=&to= — per-day, per-form entry status
+     for the completeness heatmap (completeness.html) */
+  async function getCompleteness(from, to) {
+    const res = await fetch(BASE + '/mis/completeness?' + new URLSearchParams({ from, to }), { headers: _headers() });
+    if (!res.ok) throw _httpError('getCompleteness', from + '..' + to, res);
+    return res.json();
+  }
+
   global.NyatiAPI = {
     submitForm, getForm, getFormRange,
     evalFormulas, getDailySeries, setOverride, clearOverride, getOverrides,
-    getBaseline,
+    getBaseline, getCompleteness,
   };
 
 }(window));
