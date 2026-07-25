@@ -986,13 +986,15 @@ function applyDailyPermissions() {
   /* ── 2. View-Only mode when role cannot edit this page ──────────── */
   if (!canEditPage) {
     /* Disable every editable input/textarea/select EXCEPT inline-edit panel
-       inputs and the toolbar's date field — "can't edit this report's data"
-       must not also mean "can't pick which day's report to look at". Without
-       this exception a view-only role (e.g. Plant Head) is stuck on
-       whatever date the page happened to load with, with no way to browse
-       history through the page's own navigation. */
+       inputs and navigation controls (the toolbar's date field, and the
+       Stoppage Dashboard tab's month/year pickers) — "can't edit this
+       report's data" must not also mean "can't pick which day/month's
+       report to look at". Without this exception a view-only role (e.g.
+       Plant Head) is stuck on whatever date/month the page happened to
+       load with, with no way to browse history through the page's own
+       navigation. */
     document.querySelectorAll(
-      'input:not(.ie-input):not([data-field="date"]), textarea:not(.ie-input), select:not(.ie-input)'
+      'input:not(.ie-input):not([data-field="date"]), textarea:not(.ie-input), select:not(.ie-input):not(#sd-month):not(#sd-year)'
     ).forEach(el => {
       el.disabled = true;
       el.style.cursor = 'not-allowed';
