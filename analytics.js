@@ -76,6 +76,10 @@
     { id: 'spc-grind',    key: 'specific-power-consumption-cement-grinding',    color: '#0d9488', fillColor: 'rgba(13,148,136,0.08)' },
     { id: 'pwr-loss',     key: 'power-distribution-loss-pct',                   color: '#e53935', fillColor: 'rgba(229,57,53,0.08)' },
     { id: 'clinker-src',  key: 'purchased-clinker-share',                       color: '#7c3aed', fillColor: 'rgba(124,58,237,0.08)' },
+    { id: 'stop-total',   key: 'total-stoppage-minutes',                        color: '#e53935', fillColor: 'rgba(229,57,53,0.08)' },
+    { id: 'stop-kiln',    key: 'kiln-stoppage-minutes',                         color: '#e53935', fillColor: 'rgba(229,57,53,0.08)' },
+    { id: 'mat-clinker',  key: 'clinker-consumption-day',                       color: '#173158', fillColor: 'rgba(23,49,88,0.08)' },
+    { id: 'mat-coal',     key: 'coal-kiln-consumption-day',                     color: '#173158', fillColor: 'rgba(23,49,88,0.08)' },
   ];
 
   /* Resolve one day's fact values for a formula from the harvested store */
@@ -459,6 +463,8 @@
       { key: 'dispatch',     label: 'Dispatch' },
       { key: 'power-cons',   label: 'Power' },
       { key: 'pile-quality', label: 'Pile' },
+      { key: 'stoppage',     label: 'Stoppage' },
+      { key: 'materials',    label: 'Materials' },
     ];
 
     chips.innerHTML = defs.map(function(d) {
@@ -478,6 +484,8 @@
     var dDays  = store['dispatch']     ? Object.keys(store['dispatch']).length      : 0;
     var pwDays = store['power-cons']   ? Object.keys(store['power-cons']).length   : 0;
     var prDays = store['production']   ? Object.keys(store['production']).length     : 0;
+    var stDays = store['stoppage']     ? Object.keys(store['stoppage']).length       : 0;
+    var mtDays = store['materials']    ? Object.keys(store['materials']).length      : 0;
     var el = document.getElementById('badge-quality');
     if (el) el.textContent = (qDays + pqDays) + ' form-days';
     el = document.getElementById('badge-production');
@@ -486,6 +494,8 @@
     if (el) el.textContent = (dDays + pwDays) + ' form-days';
     el = document.getElementById('badge-energy');
     if (el) el.textContent = (prDays + pwDays) + ' form-days';
+    el = document.getElementById('badge-stoppage-materials');
+    if (el) el.textContent = (stDays + mtDays) + ' form-days';
   }
 
   /* ═══════════════════════════════════════════════════════════════

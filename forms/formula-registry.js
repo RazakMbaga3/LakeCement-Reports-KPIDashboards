@@ -131,6 +131,34 @@
     FACTS['cao_h' + h] = { source: 'manual', form: 'pile-quality', field: 'cao_h' + h, unit: '%' };
   }
 
+  // stoppage form: 7 plant sections × 6 categories (mechanical, electrical &
+  // instrumentation, production, planned, power, other) — 42 fields, minutes.
+  var STOP_SECTIONS = ['crusher', 'rm', 'cm_coal', 'kiln', 'cm1', 'cm2', 'packing'];
+  var STOP_CATEGORIES = ['mech', 'ei', 'prod', 'planned', 'power', 'other'];
+  var STOP_FIELDS = [];
+  STOP_SECTIONS.forEach(function (sec) {
+    STOP_CATEGORIES.forEach(function (cat) {
+      var key = 'stop_' + sec + '_' + cat;
+      FACTS[key] = { source: 'manual', form: 'stoppage', field: key, unit: 'min' };
+      STOP_FIELDS.push(key);
+    });
+  });
+  var STOP_KILN_FIELDS = STOP_CATEGORIES.map(function (cat) { return 'stop_kiln_' + cat; });
+
+  // materials form: daily consumption for the two core raw materials, plus
+  // coal-kiln consumption summed across every supplier (ck_* rows) — matches
+  // the "Sub Total — Coal Kiln" section of the source Raw Material workbooks.
+  FACTS.mat_clinker_cons = { source: 'manual', form: 'materials', field: 'clinker_cons', unit: 'MT' };
+  FACTS.mat_gypsum_cons  = { source: 'manual', form: 'materials', field: 'gypsum_cons',  unit: 'MT' };
+  var CK_SUPPLIERS = ['tancoal', 'ruvuma', 'market', 'ariim', 'coalash', 'stamico', 'jitegemee',
+                      'maxcoal', 'melt', 'ibrico', 'megacj', 'mabenga', 'yongda', 'kindaini',
+                      'montreal', 'ludewa', 'mchekane', 'siaas'];
+  var CK_COAL_CONS_FIELDS = CK_SUPPLIERS.map(function (s) {
+    var key = 'ck_' + s + '_cons';
+    FACTS[key] = { source: 'manual', form: 'materials', field: key, unit: 'MT' };
+    return key;
+  });
+
   var KWH_ALL       = ['pwr_crusher_kwh', 'pwr_rawmill_kwh', 'pwr_rawmill2_kwh', 'pwr_coalmill_kwh', 'pwr_kiln_kwh',
                        'pwr_cm1_kwh', 'pwr_cm2_kwh', 'pwr_packing_kwh', 'pwr_packing2_kwh',
                        'pwr_lighting_kwh', 'pwr_colony_kwh'];
@@ -322,6 +350,60 @@
         return total > 0 ? (z0(f.cm_clinker_purch_cons) / total) * 100 : null;
       },
       monthlyAgg: { type: 'weighted', weight: function (f) { return totalClinkerCons(f); } },
+    },
+
+    'total-stoppage-minutes': {
+      label: 'Total Stoppage', unit: 'min', dp: 0, version: 1,
+      target: null, signage: '<', targetLabel: null,
+      notes: 'Sum of all logged downtime minutes across every plant section (Crusher, Raw Mill, Coal Mill, Kiln, CM-1, CM-2, Packing) and category (Mechanical, Electrical & Instrumentation, Production, Planned, Power, Other) for the day, as entered on the Stoppage Report. A day with no stoppage form submitted is null (no data), not zero downtime.',
+      inputs: STOP_FIELDS,
+      daily: function (f) {
+        var any = STOP_FIELDS.some(function (k) { return f[k] !== null && f[k] !== undefined; });
+        return any ? sumOf(STOP_FIELDS, f) : null;
+      },
+      monthlyAgg: 'avg',
+    },
+
+    'kiln-stoppage-minutes': {
+      label: 'Kiln Stoppage', unit: 'min', dp: 0, version: 1,
+      target: null, signage: '<', targetLabel: null,
+      notes: 'Downtime minutes logged against the Kiln section specifically (all categories combined) — the single section whose stoppage directly halts clinker production, as opposed to a downstream/upstream section stoppage the kiln can sometimes run through.',
+      inputs: STOP_KILN_FIELDS,
+      daily: function (f) {
+        var any = STOP_KILN_FIELDS.some(function (k) { return f[k] !== null && f[k] !== undefined; });
+        return any ? sumOf(STOP_KILN_FIELDS, f) : null;
+      },
+      monthlyAgg: 'avg',
+    },
+
+    'clinker-consumption-day': {
+      label: 'Clinker Consumption', unit: 'MT', dp: 0, version: 1,
+      target: null, signage: null, targetLabel: null,
+      notes: 'Clinker consumed by the cement mills that day, as logged on the Raw Materials Report ledger (opening + received − consumed = closing).',
+      inputs: ['mat_clinker_cons'],
+      daily: function (f) { return pos(f.mat_clinker_cons); },
+      monthlyAgg: 'sum',
+    },
+
+    'gypsum-consumption-day': {
+      label: 'Gypsum Consumption', unit: 'MT', dp: 1, version: 1,
+      target: null, signage: null, targetLabel: null,
+      notes: 'Gypsum consumed that day, as logged on the Raw Materials Report ledger.',
+      inputs: ['mat_gypsum_cons'],
+      daily: function (f) { return pos(f.mat_gypsum_cons); },
+      monthlyAgg: 'sum',
+    },
+
+    'coal-kiln-consumption-day': {
+      label: 'Coal Consumption (Kiln)', unit: 'MT', dp: 1, version: 1,
+      target: null, signage: null, targetLabel: null,
+      notes: 'Total coal consumed by the kiln that day, summed across every supplier ledger in the Raw Materials Report\'s "Sub Total — Coal Kiln" section (Tancoal, Ruvuma, Market Insight, Ariim, Coal Ash, State Mining Corporation/STAMICO, Jitegemee, Max Coal, MELT, IBRICO, Mega CJ, Mabenga, Yongda, Kindaini, Montreal, Ludewa, Mchekane, SIAAS). Feeds Specific Thermal Energy Consumption alongside kiln output and coal NCV.',
+      inputs: CK_COAL_CONS_FIELDS,
+      daily: function (f) {
+        var any = CK_COAL_CONS_FIELDS.some(function (k) { return f[k] !== null && f[k] !== undefined; });
+        return any ? sumOf(CK_COAL_CONS_FIELDS, f) : null;
+      },
+      monthlyAgg: 'sum',
     },
   };
 

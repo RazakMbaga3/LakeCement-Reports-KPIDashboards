@@ -101,6 +101,31 @@
     <div class="in-empty" id="empty-multiples" style="display:none"></div>
   </div>
 
+  <div class="in-section-hdr">
+    <span class="in-section-title">Material Consumption</span>
+    <span class="in-section-sub">— what fed the kiln and mills each day</span>
+  </div>
+  <div class="in-card">
+    <div class="in-multiples">
+      <div>
+        <div class="in-card-title">Clinker Consumption</div>
+        <div class="in-card-sub">MT/day &middot; cement mills</div>
+        <div class="in-mult-chart"><canvas id="chart-mult-clinkercons"></canvas></div>
+      </div>
+      <div>
+        <div class="in-card-title">Coal Consumption (Kiln)</div>
+        <div class="in-card-sub">MT/day &middot; all suppliers combined</div>
+        <div class="in-mult-chart"><canvas id="chart-mult-coalcons"></canvas></div>
+      </div>
+      <div>
+        <div class="in-card-title">Gypsum Consumption</div>
+        <div class="in-card-sub">MT/day &middot; cement mills</div>
+        <div class="in-mult-chart"><canvas id="chart-mult-gypsumcons"></canvas></div>
+      </div>
+    </div>
+    <div class="in-empty" id="empty-materials" style="display:none"></div>
+  </div>
+
 </main>
 
 <footer class="dash-footer">
@@ -259,6 +284,18 @@
       emptyM.textContent = 'Clinker Free Lime has no data in this range — Quality form entry is sparse in the current backfill.';
     } else {
       emptyM.style.display = 'none';
+    }
+
+    var okClinkerCons = renderSimpleLine('chart-mult-clinkercons', dates, seriesFor('clinker-consumption-day'), '#173158', 'MT');
+    var okCoalCons     = renderSimpleLine('chart-mult-coalcons', dates, seriesFor('coal-kiln-consumption-day'), '#173158', 'MT');
+    var okGypsumCons   = renderSimpleLine('chart-mult-gypsumcons', dates, seriesFor('gypsum-consumption-day'), '#173158', 'MT');
+
+    var emptyMat = document.getElementById('empty-materials');
+    if (!okClinkerCons && !okCoalCons && !okGypsumCons) {
+      emptyMat.style.display = 'block';
+      emptyMat.textContent = 'No Raw Materials data in this range.';
+    } else {
+      emptyMat.style.display = 'none';
     }
   }
 

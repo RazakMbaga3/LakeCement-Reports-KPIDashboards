@@ -390,8 +390,365 @@
     <!-- Charts (hidden until data found) -->
     <div id="an-content" style="display:none">
 
-      <!-- Section: Quality -->
+      <!-- Section: Production -->
       <div class="an-section-hdr" style="margin-top:4px">
+        <i data-lucide="factory" class="an-icon-ops" style="width:14px;height:14px;stroke-width:2.2;flex-shrink:0"></i>
+        <span class="an-section-title ops">Kiln &amp; Production</span>
+        <div class="an-section-line"></div>
+        <span class="an-section-badge" id="badge-production">0 days</span>
+      </div>
+      <div class="an-grid" style="margin-bottom:20px">
+
+        <div class="an-card" id="card-clinker">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#F49545"></span>
+                Clinker Production
+              </div>
+              <div class="an-card-sub">Daily output from kiln &middot; Target &ge; 1,650 MT</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat"><span class="an-stat-val" id="stat-clinker-cur">—</span><span class="an-stat-lbl">Latest MT</span></div>
+              <div class="an-stat"><span class="an-stat-val" id="stat-clinker-avg">—</span><span class="an-stat-lbl">Avg MT/day</span></div>
+              <div class="an-stat"><span class="an-stat-trend" id="stat-clinker-trend">—</span><span class="an-stat-lbl">Trend</span></div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-clinker"></canvas></div>
+          <div class="an-card-empty" id="empty-clinker">
+            <div class="emp-icon">ðŸ­</div>
+            <div class="emp-msg">No clinker production data</div>
+            <div class="emp-sub">Submit the Kiln &amp; Pyro form to see trends</div>
+          </div>
+        </div>
+
+        <div class="an-card" id="card-sp-heat">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#7c3aed"></span>
+                Specific Heat Consumption
+              </div>
+              <div class="an-card-sub">Thermal efficiency &middot; Target &lt; 800 kcal/kg clinker</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat"><span class="an-stat-val" id="stat-sp-heat-cur">—</span><span class="an-stat-lbl">Latest</span></div>
+              <div class="an-stat"><span class="an-stat-val" id="stat-sp-heat-avg">—</span><span class="an-stat-lbl">Period avg</span></div>
+              <div class="an-stat"><span class="an-stat-trend" id="stat-sp-heat-trend">—</span><span class="an-stat-lbl">Trend</span></div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-sp-heat"></canvas></div>
+          <div class="an-card-empty" id="empty-sp-heat">
+            <div class="emp-icon">🔥</div>
+            <div class="emp-msg">No heat consumption data</div>
+            <div class="emp-sub">Submit the Kiln &amp; Pyro form to see trends</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Section: Operations -->
+      <div class="an-section-hdr">
+        <i data-lucide="truck" class="an-icon-ops" style="width:14px;height:14px;stroke-width:2.2;flex-shrink:0"></i>
+        <span class="an-section-title ops">Operations &amp; Logistics</span>
+        <div class="an-section-line"></div>
+        <span class="an-section-badge" id="badge-operations">0 days</span>
+      </div>
+      <div class="an-grid" style="margin-bottom:20px">
+        <div class="an-card" id="card-dispatch">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#F49545"></span>
+                Daily Dispatch
+              </div>
+              <div class="an-card-sub">Total cement dispatched &middot; All product types</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat">
+                <span class="an-stat-val" id="stat-dispatch-cur">—</span>
+                <span class="an-stat-lbl">Latest MT</span>
+              </div>
+              <div class="an-stat">
+                <span class="an-stat-val" id="stat-dispatch-avg">—</span>
+                <span class="an-stat-lbl">Avg MT/day</span>
+              </div>
+              <div class="an-stat">
+                <span class="an-stat-trend" id="stat-dispatch-trend">—</span>
+                <span class="an-stat-lbl">Trend</span>
+              </div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-dispatch"></canvas></div>
+          <div class="an-card-empty" id="empty-dispatch">
+            <div class="emp-icon">🚛</div>
+            <div class="emp-msg">No dispatch data</div>
+            <div class="emp-sub">Submit the Dispatch form to see trends</div>
+          </div>
+        </div>
+
+        <div class="an-card" id="card-power">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#0d9488"></span>
+                Total Power Consumption
+              </div>
+              <div class="an-card-sub">Plant electricity &middot; All sections combined</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat">
+                <span class="an-stat-val" id="stat-power-cur">—</span>
+                <span class="an-stat-lbl">Latest kWh</span>
+              </div>
+              <div class="an-stat">
+                <span class="an-stat-val" id="stat-power-avg">—</span>
+                <span class="an-stat-lbl">Avg kWh/day</span>
+              </div>
+              <div class="an-stat">
+                <span class="an-stat-trend" id="stat-power-trend">—</span>
+                <span class="an-stat-lbl">Trend</span>
+              </div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-power"></canvas></div>
+          <div class="an-card-empty" id="empty-power">
+            <div class="emp-icon">⚡</div>
+            <div class="emp-msg">No power data</div>
+            <div class="emp-sub">Submit the Power Consumption form to see trends</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Stoppages & Materials -->
+      <div class="an-section-hdr">
+        <i data-lucide="octagon-pause" class="an-icon-ops" style="width:14px;height:14px;stroke-width:2.2;flex-shrink:0"></i>
+        <span class="an-section-title ops">Stoppages &amp; Materials</span>
+        <div class="an-section-line"></div>
+        <span class="an-section-badge" id="badge-stoppage-materials">0 days</span>
+      </div>
+      <div class="an-grid" style="margin-bottom:20px">
+        <div class="an-card" id="card-stop-total">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#e53935"></span>
+                Total Stoppage
+              </div>
+              <div class="an-card-sub">All sections &middot; All categories &middot; Lower is better</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat"><span class="an-stat-val" id="stat-stop-total-cur">—</span><span class="an-stat-lbl">Latest min</span></div>
+              <div class="an-stat"><span class="an-stat-val" id="stat-stop-total-avg">—</span><span class="an-stat-lbl">Avg min/day</span></div>
+              <div class="an-stat"><span class="an-stat-trend" id="stat-stop-total-trend">—</span><span class="an-stat-lbl">Trend</span></div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-stop-total"></canvas></div>
+          <div class="an-card-empty" id="empty-stop-total">
+            <div class="emp-icon">⏸️</div>
+            <div class="emp-msg">No stoppage data</div>
+            <div class="emp-sub">Submit the Stoppage Report to see trends</div>
+          </div>
+        </div>
+
+        <div class="an-card" id="card-stop-kiln">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#e53935"></span>
+                Kiln Stoppage
+              </div>
+              <div class="an-card-sub">Kiln section only &middot; Directly halts clinker production</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat"><span class="an-stat-val" id="stat-stop-kiln-cur">—</span><span class="an-stat-lbl">Latest min</span></div>
+              <div class="an-stat"><span class="an-stat-val" id="stat-stop-kiln-avg">—</span><span class="an-stat-lbl">Avg min/day</span></div>
+              <div class="an-stat"><span class="an-stat-trend" id="stat-stop-kiln-trend">—</span><span class="an-stat-lbl">Trend</span></div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-stop-kiln"></canvas></div>
+          <div class="an-card-empty" id="empty-stop-kiln">
+            <div class="emp-icon">⏸️</div>
+            <div class="emp-msg">No stoppage data</div>
+            <div class="emp-sub">Submit the Stoppage Report to see trends</div>
+          </div>
+        </div>
+
+        <div class="an-card" id="card-mat-clinker">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#173158"></span>
+                Clinker Consumption
+              </div>
+              <div class="an-card-sub">Consumed by cement mills &middot; Raw Materials ledger</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat"><span class="an-stat-val" id="stat-mat-clinker-cur">—</span><span class="an-stat-lbl">Latest MT</span></div>
+              <div class="an-stat"><span class="an-stat-val" id="stat-mat-clinker-avg">—</span><span class="an-stat-lbl">Avg MT/day</span></div>
+              <div class="an-stat"><span class="an-stat-trend" id="stat-mat-clinker-trend">—</span><span class="an-stat-lbl">Trend</span></div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-mat-clinker"></canvas></div>
+          <div class="an-card-empty" id="empty-mat-clinker">
+            <div class="emp-icon">🧱</div>
+            <div class="emp-msg">No materials data</div>
+            <div class="emp-sub">Submit the Raw Materials form to see trends</div>
+          </div>
+        </div>
+
+        <div class="an-card" id="card-mat-coal">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#173158"></span>
+                Coal Consumption (Kiln)
+              </div>
+              <div class="an-card-sub">All suppliers combined &middot; Feeds Specific Thermal Energy</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat"><span class="an-stat-val" id="stat-mat-coal-cur">—</span><span class="an-stat-lbl">Latest MT</span></div>
+              <div class="an-stat"><span class="an-stat-val" id="stat-mat-coal-avg">—</span><span class="an-stat-lbl">Avg MT/day</span></div>
+              <div class="an-stat"><span class="an-stat-trend" id="stat-mat-coal-trend">—</span><span class="an-stat-lbl">Trend</span></div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-mat-coal"></canvas></div>
+          <div class="an-card-empty" id="empty-mat-coal">
+            <div class="emp-icon">⛏️</div>
+            <div class="emp-msg">No materials data</div>
+            <div class="emp-sub">Submit the Raw Materials form to see trends</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Power & Energy Detail -->
+      <div class="an-section-hdr">
+        <i data-lucide="zap" class="an-icon-ops" style="width:14px;height:14px;stroke-width:2.2;flex-shrink:0"></i>
+        <span class="an-section-title ops">Power &amp; Energy Detail</span>
+        <div class="an-section-line"></div>
+        <span class="an-section-badge" id="badge-energy">0 days</span>
+      </div>
+      <div class="an-grid" style="margin-bottom:20px">
+
+        <div class="an-card" id="card-spc-total">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#0d9488"></span>
+                Specific Power – Total
+              </div>
+              <div class="an-card-sub">Whole plant, per ton equivalent cement</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat"><span class="an-stat-val" id="stat-spc-total-cur">—</span><span class="an-stat-lbl">Latest</span></div>
+              <div class="an-stat"><span class="an-stat-val" id="stat-spc-total-avg">—</span><span class="an-stat-lbl">Period avg</span></div>
+              <div class="an-stat"><span class="an-stat-trend" id="stat-spc-total-trend">—</span><span class="an-stat-lbl">Trend</span></div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-spc-total"></canvas></div>
+          <div class="an-card-empty" id="empty-spc-total">
+            <div class="emp-icon">⚡</div>
+            <div class="emp-msg">No data</div>
+            <div class="emp-sub">Submit Production &amp; Power Consumption forms to see trends</div>
+          </div>
+        </div>
+
+        <div class="an-card" id="card-spc-clinker">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#0d9488"></span>
+                Specific Power – Up to Clinker
+              </div>
+              <div class="an-card-sub">Crusher through kiln, per ton clinker</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat"><span class="an-stat-val" id="stat-spc-clinker-cur">—</span><span class="an-stat-lbl">Latest</span></div>
+              <div class="an-stat"><span class="an-stat-val" id="stat-spc-clinker-avg">—</span><span class="an-stat-lbl">Period avg</span></div>
+              <div class="an-stat"><span class="an-stat-trend" id="stat-spc-clinker-trend">—</span><span class="an-stat-lbl">Trend</span></div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-spc-clinker"></canvas></div>
+          <div class="an-card-empty" id="empty-spc-clinker">
+            <div class="emp-icon">⚡</div>
+            <div class="emp-msg">No data</div>
+            <div class="emp-sub">Submit the Power Consumption form to see trends</div>
+          </div>
+        </div>
+
+        <div class="an-card" id="card-spc-grind">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#0d9488"></span>
+                Specific Power – Cement Grinding
+              </div>
+              <div class="an-card-sub">CM-1 + CM-2 combined, per ton cement</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat"><span class="an-stat-val" id="stat-spc-grind-cur">—</span><span class="an-stat-lbl">Latest</span></div>
+              <div class="an-stat"><span class="an-stat-val" id="stat-spc-grind-avg">—</span><span class="an-stat-lbl">Period avg</span></div>
+              <div class="an-stat"><span class="an-stat-trend" id="stat-spc-grind-trend">—</span><span class="an-stat-lbl">Trend</span></div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-spc-grind"></canvas></div>
+          <div class="an-card-empty" id="empty-spc-grind">
+            <div class="emp-icon">⚡</div>
+            <div class="emp-msg">No data</div>
+            <div class="emp-sub">Submit the Power Consumption form to see trends</div>
+          </div>
+        </div>
+
+        <div class="an-card" id="card-pwr-loss">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#e53935"></span>
+                Power Distribution Loss
+              </div>
+              <div class="an-card-sub">Supplied (TANESCO + CPP) vs. metered consumption &middot; Target &lt; 2%</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat"><span class="an-stat-val" id="stat-pwr-loss-cur">—</span><span class="an-stat-lbl">Latest</span></div>
+              <div class="an-stat"><span class="an-stat-val" id="stat-pwr-loss-avg">—</span><span class="an-stat-lbl">Period avg</span></div>
+              <div class="an-stat"><span class="an-stat-trend" id="stat-pwr-loss-trend">—</span><span class="an-stat-lbl">Trend</span></div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-pwr-loss"></canvas></div>
+          <div class="an-card-empty" id="empty-pwr-loss">
+            <div class="emp-icon">⚡</div>
+            <div class="emp-msg">No data</div>
+            <div class="emp-sub">Submit the Power Consumption form (TANESCO/CPP fields) to see trends</div>
+          </div>
+        </div>
+
+        <div class="an-card" id="card-clinker-src">
+          <div class="an-card-hdr">
+            <div>
+              <div class="an-card-title">
+                <span class="an-card-dot" style="background:#7c3aed"></span>
+                Purchased Clinker Share
+              </div>
+              <div class="an-card-sub">% of clinker consumed that was purchased, not own-produced</div>
+            </div>
+            <div class="an-card-stats">
+              <div class="an-stat"><span class="an-stat-val" id="stat-clinker-src-cur">—</span><span class="an-stat-lbl">Latest</span></div>
+              <div class="an-stat"><span class="an-stat-val" id="stat-clinker-src-avg">—</span><span class="an-stat-lbl">Period avg</span></div>
+              <div class="an-stat"><span class="an-stat-trend" id="stat-clinker-src-trend">—</span><span class="an-stat-lbl">Trend</span></div>
+            </div>
+          </div>
+          <div class="an-chart-wrap"><canvas id="chart-clinker-src"></canvas></div>
+          <div class="an-card-empty" id="empty-clinker-src">
+            <div class="emp-icon">🏭</div>
+            <div class="emp-msg">No data</div>
+            <div class="emp-sub">Submit the Production Report's clinker ledger to see trends</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Section: Quality -->
+      <div class="an-section-hdr">
         <i data-lucide="flask-conical" class="an-icon-quality" style="width:14px;height:14px;stroke-width:2.2;flex-shrink:0"></i>
         <span class="an-section-title quality">Quality &amp; Lab</span>
         <div class="an-section-line"></div>
@@ -525,262 +882,6 @@
             <div class="emp-sub">Submit the Pile Quality form to see trends</div>
           </div>
         </div>
-      </div>
-
-      <!-- Section: Production -->
-      <div class="an-section-hdr">
-        <i data-lucide="factory" class="an-icon-ops" style="width:14px;height:14px;stroke-width:2.2;flex-shrink:0"></i>
-        <span class="an-section-title ops">Kiln &amp; Production</span>
-        <div class="an-section-line"></div>
-        <span class="an-section-badge" id="badge-production">0 days</span>
-      </div>
-      <div class="an-grid" style="margin-bottom:20px">
-
-        <div class="an-card" id="card-clinker">
-          <div class="an-card-hdr">
-            <div>
-              <div class="an-card-title">
-                <span class="an-card-dot" style="background:#F49545"></span>
-                Clinker Production
-              </div>
-              <div class="an-card-sub">Daily output from kiln &middot; Target &ge; 1,650 MT</div>
-            </div>
-            <div class="an-card-stats">
-              <div class="an-stat"><span class="an-stat-val" id="stat-clinker-cur">—</span><span class="an-stat-lbl">Latest MT</span></div>
-              <div class="an-stat"><span class="an-stat-val" id="stat-clinker-avg">—</span><span class="an-stat-lbl">Avg MT/day</span></div>
-              <div class="an-stat"><span class="an-stat-trend" id="stat-clinker-trend">—</span><span class="an-stat-lbl">Trend</span></div>
-            </div>
-          </div>
-          <div class="an-chart-wrap"><canvas id="chart-clinker"></canvas></div>
-          <div class="an-card-empty" id="empty-clinker">
-            <div class="emp-icon">ðŸ­</div>
-            <div class="emp-msg">No clinker production data</div>
-            <div class="emp-sub">Submit the Kiln &amp; Pyro form to see trends</div>
-          </div>
-        </div>
-
-        <div class="an-card" id="card-sp-heat">
-          <div class="an-card-hdr">
-            <div>
-              <div class="an-card-title">
-                <span class="an-card-dot" style="background:#7c3aed"></span>
-                Specific Heat Consumption
-              </div>
-              <div class="an-card-sub">Thermal efficiency &middot; Target &lt; 800 kcal/kg clinker</div>
-            </div>
-            <div class="an-card-stats">
-              <div class="an-stat"><span class="an-stat-val" id="stat-sp-heat-cur">—</span><span class="an-stat-lbl">Latest</span></div>
-              <div class="an-stat"><span class="an-stat-val" id="stat-sp-heat-avg">—</span><span class="an-stat-lbl">Period avg</span></div>
-              <div class="an-stat"><span class="an-stat-trend" id="stat-sp-heat-trend">—</span><span class="an-stat-lbl">Trend</span></div>
-            </div>
-          </div>
-          <div class="an-chart-wrap"><canvas id="chart-sp-heat"></canvas></div>
-          <div class="an-card-empty" id="empty-sp-heat">
-            <div class="emp-icon">🔥</div>
-            <div class="emp-msg">No heat consumption data</div>
-            <div class="emp-sub">Submit the Kiln &amp; Pyro form to see trends</div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Section: Operations -->
-      <div class="an-section-hdr">
-        <i data-lucide="truck" class="an-icon-ops" style="width:14px;height:14px;stroke-width:2.2;flex-shrink:0"></i>
-        <span class="an-section-title ops">Operations &amp; Logistics</span>
-        <div class="an-section-line"></div>
-        <span class="an-section-badge" id="badge-operations">0 days</span>
-      </div>
-      <div class="an-grid" style="margin-bottom:20px">
-        <div class="an-card" id="card-dispatch">
-          <div class="an-card-hdr">
-            <div>
-              <div class="an-card-title">
-                <span class="an-card-dot" style="background:#F49545"></span>
-                Daily Dispatch
-              </div>
-              <div class="an-card-sub">Total cement dispatched &middot; All product types</div>
-            </div>
-            <div class="an-card-stats">
-              <div class="an-stat">
-                <span class="an-stat-val" id="stat-dispatch-cur">—</span>
-                <span class="an-stat-lbl">Latest MT</span>
-              </div>
-              <div class="an-stat">
-                <span class="an-stat-val" id="stat-dispatch-avg">—</span>
-                <span class="an-stat-lbl">Avg MT/day</span>
-              </div>
-              <div class="an-stat">
-                <span class="an-stat-trend" id="stat-dispatch-trend">—</span>
-                <span class="an-stat-lbl">Trend</span>
-              </div>
-            </div>
-          </div>
-          <div class="an-chart-wrap"><canvas id="chart-dispatch"></canvas></div>
-          <div class="an-card-empty" id="empty-dispatch">
-            <div class="emp-icon">🚛</div>
-            <div class="emp-msg">No dispatch data</div>
-            <div class="emp-sub">Submit the Dispatch form to see trends</div>
-          </div>
-        </div>
-
-        <div class="an-card" id="card-power">
-          <div class="an-card-hdr">
-            <div>
-              <div class="an-card-title">
-                <span class="an-card-dot" style="background:#0d9488"></span>
-                Total Power Consumption
-              </div>
-              <div class="an-card-sub">Plant electricity &middot; All sections combined</div>
-            </div>
-            <div class="an-card-stats">
-              <div class="an-stat">
-                <span class="an-stat-val" id="stat-power-cur">—</span>
-                <span class="an-stat-lbl">Latest kWh</span>
-              </div>
-              <div class="an-stat">
-                <span class="an-stat-val" id="stat-power-avg">—</span>
-                <span class="an-stat-lbl">Avg kWh/day</span>
-              </div>
-              <div class="an-stat">
-                <span class="an-stat-trend" id="stat-power-trend">—</span>
-                <span class="an-stat-lbl">Trend</span>
-              </div>
-            </div>
-          </div>
-          <div class="an-chart-wrap"><canvas id="chart-power"></canvas></div>
-          <div class="an-card-empty" id="empty-power">
-            <div class="emp-icon">⚡</div>
-            <div class="emp-msg">No power data</div>
-            <div class="emp-sub">Submit the Power Consumption form to see trends</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Section: Power & Energy Detail -->
-      <div class="an-section-hdr">
-        <i data-lucide="zap" class="an-icon-ops" style="width:14px;height:14px;stroke-width:2.2;flex-shrink:0"></i>
-        <span class="an-section-title ops">Power &amp; Energy Detail</span>
-        <div class="an-section-line"></div>
-        <span class="an-section-badge" id="badge-energy">0 days</span>
-      </div>
-      <div class="an-grid" style="margin-bottom:20px">
-
-        <div class="an-card" id="card-spc-total">
-          <div class="an-card-hdr">
-            <div>
-              <div class="an-card-title">
-                <span class="an-card-dot" style="background:#0d9488"></span>
-                Specific Power – Total
-              </div>
-              <div class="an-card-sub">Whole plant, per ton equivalent cement</div>
-            </div>
-            <div class="an-card-stats">
-              <div class="an-stat"><span class="an-stat-val" id="stat-spc-total-cur">—</span><span class="an-stat-lbl">Latest</span></div>
-              <div class="an-stat"><span class="an-stat-val" id="stat-spc-total-avg">—</span><span class="an-stat-lbl">Period avg</span></div>
-              <div class="an-stat"><span class="an-stat-trend" id="stat-spc-total-trend">—</span><span class="an-stat-lbl">Trend</span></div>
-            </div>
-          </div>
-          <div class="an-chart-wrap"><canvas id="chart-spc-total"></canvas></div>
-          <div class="an-card-empty" id="empty-spc-total">
-            <div class="emp-icon">⚡</div>
-            <div class="emp-msg">No data</div>
-            <div class="emp-sub">Submit Production &amp; Power Consumption forms to see trends</div>
-          </div>
-        </div>
-
-        <div class="an-card" id="card-spc-clinker">
-          <div class="an-card-hdr">
-            <div>
-              <div class="an-card-title">
-                <span class="an-card-dot" style="background:#0d9488"></span>
-                Specific Power – Up to Clinker
-              </div>
-              <div class="an-card-sub">Crusher through kiln, per ton clinker</div>
-            </div>
-            <div class="an-card-stats">
-              <div class="an-stat"><span class="an-stat-val" id="stat-spc-clinker-cur">—</span><span class="an-stat-lbl">Latest</span></div>
-              <div class="an-stat"><span class="an-stat-val" id="stat-spc-clinker-avg">—</span><span class="an-stat-lbl">Period avg</span></div>
-              <div class="an-stat"><span class="an-stat-trend" id="stat-spc-clinker-trend">—</span><span class="an-stat-lbl">Trend</span></div>
-            </div>
-          </div>
-          <div class="an-chart-wrap"><canvas id="chart-spc-clinker"></canvas></div>
-          <div class="an-card-empty" id="empty-spc-clinker">
-            <div class="emp-icon">⚡</div>
-            <div class="emp-msg">No data</div>
-            <div class="emp-sub">Submit the Power Consumption form to see trends</div>
-          </div>
-        </div>
-
-        <div class="an-card" id="card-spc-grind">
-          <div class="an-card-hdr">
-            <div>
-              <div class="an-card-title">
-                <span class="an-card-dot" style="background:#0d9488"></span>
-                Specific Power – Cement Grinding
-              </div>
-              <div class="an-card-sub">CM-1 + CM-2 combined, per ton cement</div>
-            </div>
-            <div class="an-card-stats">
-              <div class="an-stat"><span class="an-stat-val" id="stat-spc-grind-cur">—</span><span class="an-stat-lbl">Latest</span></div>
-              <div class="an-stat"><span class="an-stat-val" id="stat-spc-grind-avg">—</span><span class="an-stat-lbl">Period avg</span></div>
-              <div class="an-stat"><span class="an-stat-trend" id="stat-spc-grind-trend">—</span><span class="an-stat-lbl">Trend</span></div>
-            </div>
-          </div>
-          <div class="an-chart-wrap"><canvas id="chart-spc-grind"></canvas></div>
-          <div class="an-card-empty" id="empty-spc-grind">
-            <div class="emp-icon">⚡</div>
-            <div class="emp-msg">No data</div>
-            <div class="emp-sub">Submit the Power Consumption form to see trends</div>
-          </div>
-        </div>
-
-        <div class="an-card" id="card-pwr-loss">
-          <div class="an-card-hdr">
-            <div>
-              <div class="an-card-title">
-                <span class="an-card-dot" style="background:#e53935"></span>
-                Power Distribution Loss
-              </div>
-              <div class="an-card-sub">Supplied (TANESCO + CPP) vs. metered consumption &middot; Target &lt; 2%</div>
-            </div>
-            <div class="an-card-stats">
-              <div class="an-stat"><span class="an-stat-val" id="stat-pwr-loss-cur">—</span><span class="an-stat-lbl">Latest</span></div>
-              <div class="an-stat"><span class="an-stat-val" id="stat-pwr-loss-avg">—</span><span class="an-stat-lbl">Period avg</span></div>
-              <div class="an-stat"><span class="an-stat-trend" id="stat-pwr-loss-trend">—</span><span class="an-stat-lbl">Trend</span></div>
-            </div>
-          </div>
-          <div class="an-chart-wrap"><canvas id="chart-pwr-loss"></canvas></div>
-          <div class="an-card-empty" id="empty-pwr-loss">
-            <div class="emp-icon">⚡</div>
-            <div class="emp-msg">No data</div>
-            <div class="emp-sub">Submit the Power Consumption form (TANESCO/CPP fields) to see trends</div>
-          </div>
-        </div>
-
-        <div class="an-card" id="card-clinker-src">
-          <div class="an-card-hdr">
-            <div>
-              <div class="an-card-title">
-                <span class="an-card-dot" style="background:#7c3aed"></span>
-                Purchased Clinker Share
-              </div>
-              <div class="an-card-sub">% of clinker consumed that was purchased, not own-produced</div>
-            </div>
-            <div class="an-card-stats">
-              <div class="an-stat"><span class="an-stat-val" id="stat-clinker-src-cur">—</span><span class="an-stat-lbl">Latest</span></div>
-              <div class="an-stat"><span class="an-stat-val" id="stat-clinker-src-avg">—</span><span class="an-stat-lbl">Period avg</span></div>
-              <div class="an-stat"><span class="an-stat-trend" id="stat-clinker-src-trend">—</span><span class="an-stat-lbl">Trend</span></div>
-            </div>
-          </div>
-          <div class="an-chart-wrap"><canvas id="chart-clinker-src"></canvas></div>
-          <div class="an-card-empty" id="empty-clinker-src">
-            <div class="emp-icon">🏭</div>
-            <div class="emp-msg">No data</div>
-            <div class="emp-sub">Submit the Production Report's clinker ledger to see trends</div>
-          </div>
-        </div>
-
       </div>
 
       <!-- Anomaly Panel -->
