@@ -189,14 +189,14 @@
     }
 
     /* ── Responsive ─────────────────────────────────── */
-    /* ── Desktop no-scroll: lock page to viewport ──────────────── */
+    /* ── Desktop: fit viewport when content is short, scroll when it isn't ── */
     @media (min-width: 769px) {
       html { height: 100%; }
-      body { height: 100vh; overflow: hidden; }
+      body { min-height: 100vh; height: auto; }
       .portal-greeting { padding: 10px 28px; }
       .portal-footer   { padding: 7px 24px;  }
       .portal-main {
-        flex: 1; min-height: 0; overflow: hidden; padding: 14px 28px 0;
+        flex: 1; min-height: 0; overflow-y: auto; padding: 14px 28px 0;
       }
       .portal-section     { margin-bottom: 16px; }
       .portal-section-hdr { margin-bottom: 8px;  }
