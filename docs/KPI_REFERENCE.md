@@ -7,7 +7,7 @@
 > `npm run docs:kpi` (in `backend/`) and commit both files together.
 
 This document defines every KPI the dashboards, MIS reports, and morning
-digest display: **13 KPIs** computed from **77 raw facts**.
+digest display: **20 KPIs** computed from **144 raw facts**.
 
 ## How a number gets onto a dashboard
 
@@ -45,6 +45,13 @@ formulas do not change when that happens.
 | [Pile CaO Average](#pile-cao-avg) | % | Target 44% | Average | v1 |
 | [Total Power Consumption](#total-power-kwh) | kWh | — | Sum | v3 |
 | [Purchased Clinker Share](#purchased-clinker-share) | % | — | Weighted average | v1 |
+| [Total Stoppage](#total-stoppage-minutes) | min | — | Average | v1 |
+| [Kiln Stoppage](#kiln-stoppage-minutes) | min | — | Average | v1 |
+| [Clinker Consumption](#clinker-consumption-day) | MT | — | Sum | v1 |
+| [Gypsum Consumption](#gypsum-consumption-day) | MT | — | Sum | v1 |
+| [Coal Consumption (Kiln)](#coal-kiln-consumption-day) | MT | — | Sum | v1 |
+| [CPP Heat Rate](#cpp-heat-rate) | kcal/kWh | Target < 3,800 kcal/kWh | Weighted average | v1 |
+| [CPP Auxiliary Power](#cpp-auxiliary-power) | % | Target < 10.0% | Weighted average | v1 |
 
 ---
 
@@ -424,6 +431,194 @@ function (f) {
 function (f) { return totalClinkerCons(f); }
 ```
 
+<a id="total-stoppage-minutes"></a>
+### Total Stoppage
+
+| | |
+|---|---|
+| Unit | min (shown to 0 decimal places) |
+| Target | No fixed target — lower is better |
+| Formula version | v1 |
+| Registry key | `total-stoppage-minutes` |
+
+Sum of all logged downtime minutes across every plant section (Crusher, Raw Mill, Coal Mill, Kiln, CM-1, CM-2, Packing) and category (Mechanical, Electrical & Instrumentation, Production, Planned, Power, Other) for the day, as entered on the Stoppage Report. A day with no stoppage form submitted is null (no data), not zero downtime.
+
+**Inputs**
+
+- **stoppage form:** stop_crusher_mech (min), stop_crusher_ei (min), stop_crusher_prod (min), stop_crusher_planned (min), stop_crusher_power (min), stop_crusher_other (min), stop_rm_mech (min), stop_rm_ei (min), stop_rm_prod (min), stop_rm_planned (min), stop_rm_power (min), stop_rm_other (min), stop_cm_coal_mech (min), stop_cm_coal_ei (min), stop_cm_coal_prod (min), stop_cm_coal_planned (min), stop_cm_coal_power (min), stop_cm_coal_other (min), stop_kiln_mech (min), stop_kiln_ei (min), stop_kiln_prod (min), stop_kiln_planned (min), stop_kiln_power (min), stop_kiln_other (min), stop_cm1_mech (min), stop_cm1_ei (min), stop_cm1_prod (min), stop_cm1_planned (min), stop_cm1_power (min), stop_cm1_other (min), stop_cm2_mech (min), stop_cm2_ei (min), stop_cm2_prod (min), stop_cm2_planned (min), stop_cm2_power (min), stop_cm2_other (min), stop_packing_mech (min), stop_packing_ei (min), stop_packing_prod (min), stop_packing_planned (min), stop_packing_power (min), stop_packing_other (min)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) {
+        var any = STOP_FIELDS.some(function (k) { return f[k] !== null && f[k] !== undefined; });
+        return any ? sumOf(STOP_FIELDS, f) : null;
+      }
+```
+
+**Monthly roll-up.** Average of the days that have a value (missing days are excluded, not counted as zero).
+
+<a id="kiln-stoppage-minutes"></a>
+### Kiln Stoppage
+
+| | |
+|---|---|
+| Unit | min (shown to 0 decimal places) |
+| Target | No fixed target — lower is better |
+| Formula version | v1 |
+| Registry key | `kiln-stoppage-minutes` |
+
+Downtime minutes logged against the Kiln section specifically (all categories combined) — the single section whose stoppage directly halts clinker production, as opposed to a downstream/upstream section stoppage the kiln can sometimes run through.
+
+**Inputs**
+
+- **stoppage form:** stop_kiln_mech (min), stop_kiln_ei (min), stop_kiln_prod (min), stop_kiln_planned (min), stop_kiln_power (min), stop_kiln_other (min)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) {
+        var any = STOP_KILN_FIELDS.some(function (k) { return f[k] !== null && f[k] !== undefined; });
+        return any ? sumOf(STOP_KILN_FIELDS, f) : null;
+      }
+```
+
+**Monthly roll-up.** Average of the days that have a value (missing days are excluded, not counted as zero).
+
+<a id="clinker-consumption-day"></a>
+### Clinker Consumption
+
+| | |
+|---|---|
+| Unit | MT (shown to 0 decimal places) |
+| Target | Tracking only — no target |
+| Formula version | v1 |
+| Registry key | `clinker-consumption-day` |
+
+Clinker consumed by the cement mills that day, as logged on the Raw Materials Report ledger (opening + received − consumed = closing).
+
+**Inputs**
+
+- **materials form:** mat_clinker_cons (MT)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) { return pos(f.mat_clinker_cons); }
+```
+
+**Monthly roll-up.** Sum across the days that have a value.
+
+<a id="gypsum-consumption-day"></a>
+### Gypsum Consumption
+
+| | |
+|---|---|
+| Unit | MT (shown to 1 decimal place) |
+| Target | Tracking only — no target |
+| Formula version | v1 |
+| Registry key | `gypsum-consumption-day` |
+
+Gypsum consumed that day, as logged on the Raw Materials Report ledger.
+
+**Inputs**
+
+- **materials form:** mat_gypsum_cons (MT)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) { return pos(f.mat_gypsum_cons); }
+```
+
+**Monthly roll-up.** Sum across the days that have a value.
+
+<a id="coal-kiln-consumption-day"></a>
+### Coal Consumption (Kiln)
+
+| | |
+|---|---|
+| Unit | MT (shown to 1 decimal place) |
+| Target | Tracking only — no target |
+| Formula version | v1 |
+| Registry key | `coal-kiln-consumption-day` |
+
+Total coal consumed by the kiln that day, summed across every supplier ledger in the Raw Materials Report's "Sub Total — Coal Kiln" section (Tancoal, Ruvuma, Market Insight, Ariim, Coal Ash, State Mining Corporation/STAMICO, Jitegemee, Max Coal, MELT, IBRICO, Mega CJ, Mabenga, Yongda, Kindaini, Montreal, Ludewa, Mchekane, SIAAS). Feeds Specific Thermal Energy Consumption alongside kiln output and coal NCV.
+
+**Inputs**
+
+- **materials form:** ck_tancoal_cons (MT), ck_ruvuma_cons (MT), ck_market_cons (MT), ck_ariim_cons (MT), ck_coalash_cons (MT), ck_stamico_cons (MT), ck_jitegemee_cons (MT), ck_maxcoal_cons (MT), ck_melt_cons (MT), ck_ibrico_cons (MT), ck_megacj_cons (MT), ck_mabenga_cons (MT), ck_yongda_cons (MT), ck_kindaini_cons (MT), ck_montreal_cons (MT), ck_ludewa_cons (MT), ck_mchekane_cons (MT), ck_siaas_cons (MT)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) {
+        var any = CK_COAL_CONS_FIELDS.some(function (k) { return f[k] !== null && f[k] !== undefined; });
+        return any ? sumOf(CK_COAL_CONS_FIELDS, f) : null;
+      }
+```
+
+**Monthly roll-up.** Sum across the days that have a value.
+
+<a id="cpp-heat-rate"></a>
+### CPP Heat Rate
+
+| | |
+|---|---|
+| Unit | kcal/kWh (shown to 0 decimal places) |
+| Target | Target < 3,800 kcal/kWh — good is below 3800 kcal/kWh |
+| Formula version | v1 |
+| Registry key | `cpp-heat-rate` |
+
+Captive Power Plant heat rate (Plant, 3300 @ MCR basis) as reported daily on FRM-LCL-PP-06 — a lab/DCS-derived figure taken as-is, not re-derived from coal×GCV÷gross_gen (verified against the source workbook: the reported figure differs slightly from that naive formula, similar to Turbine Steam Consumption not equalling Boiler−Bleed — both are independently measured values). Monthly figure is the gross-generation-weighted mean.
+
+**Inputs**
+
+- **cpp form:** cpp_heat_rate_plant (kcal/kWh), cpp_gross_gen_kwh (kWh)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) { return pos(f.cpp_heat_rate_plant); }
+```
+
+**Monthly roll-up.** Weighted average — Σ(daily value × weight) ÷ Σ(weight), where each day's weight is:
+
+```js
+function (f) { return pos(f.cpp_gross_gen_kwh) || 0; }
+```
+
+<a id="cpp-auxiliary-power"></a>
+### CPP Auxiliary Power
+
+| | |
+|---|---|
+| Unit | % (shown to 2 decimal places) |
+| Target | Target < 10.0% — good is below 10 % |
+| Formula version | v1 |
+| Registry key | `cpp-auxiliary-power` |
+
+Captive Power Plant auxiliary (house-load) power consumption as a % of gross generation — verified against FRM-LCL-PP-06 (aux ÷ gross × 100). Monthly figure is Σaux ÷ Σgross (gross-generation-weighted), not a simple average of daily percentages.
+
+**Inputs**
+
+- **cpp form:** cpp_aux_kwh (kWh), cpp_gross_gen_kwh (kWh)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) {
+        var gross = pos(f.cpp_gross_gen_kwh), aux = pos(f.cpp_aux_kwh);
+        return (gross && aux !== null) ? aux / gross * 100 : null;
+      }
+```
+
+**Monthly roll-up.** Weighted average — Σ(daily value × weight) ÷ Σ(weight), where each day's weight is:
+
+```js
+function (f) { return pos(f.cpp_gross_gen_kwh) || 0; }
+```
+
 ---
 
 ## Appendix — raw facts by source form
@@ -516,8 +711,90 @@ that feed goes live).
 | `pwr_tanesco_colony_kwh` | kWh | manual |
 | `pwr_cpp_colony_kwh` | kWh | manual |
 
+### cpp form (5 facts)
+
+| Fact key | Unit | Source |
+|---|---|---|
+| `cpp_gross_gen_kwh` | kWh | manual |
+| `cpp_aux_kwh` | kWh | manual |
+| `cpp_coal_cons` | MT | manual |
+| `cpp_coal_gcv` | kcal/kg | manual |
+| `cpp_heat_rate_plant` | kcal/kWh | manual |
+
 ### pile-quality form (18 facts)
 
 | Fact key | Unit | Source |
 |---|---|---|
 | `cao_h1 … cao_h18` | % | manual |
+
+### stoppage form (42 facts)
+
+| Fact key | Unit | Source |
+|---|---|---|
+| `stop_crusher_mech` | min | manual |
+| `stop_crusher_ei` | min | manual |
+| `stop_crusher_prod` | min | manual |
+| `stop_crusher_planned` | min | manual |
+| `stop_crusher_power` | min | manual |
+| `stop_crusher_other` | min | manual |
+| `stop_rm_mech` | min | manual |
+| `stop_rm_ei` | min | manual |
+| `stop_rm_prod` | min | manual |
+| `stop_rm_planned` | min | manual |
+| `stop_rm_power` | min | manual |
+| `stop_rm_other` | min | manual |
+| `stop_cm_coal_mech` | min | manual |
+| `stop_cm_coal_ei` | min | manual |
+| `stop_cm_coal_prod` | min | manual |
+| `stop_cm_coal_planned` | min | manual |
+| `stop_cm_coal_power` | min | manual |
+| `stop_cm_coal_other` | min | manual |
+| `stop_kiln_mech` | min | manual |
+| `stop_kiln_ei` | min | manual |
+| `stop_kiln_prod` | min | manual |
+| `stop_kiln_planned` | min | manual |
+| `stop_kiln_power` | min | manual |
+| `stop_kiln_other` | min | manual |
+| `stop_cm1_mech` | min | manual |
+| `stop_cm1_ei` | min | manual |
+| `stop_cm1_prod` | min | manual |
+| `stop_cm1_planned` | min | manual |
+| `stop_cm1_power` | min | manual |
+| `stop_cm1_other` | min | manual |
+| `stop_cm2_mech` | min | manual |
+| `stop_cm2_ei` | min | manual |
+| `stop_cm2_prod` | min | manual |
+| `stop_cm2_planned` | min | manual |
+| `stop_cm2_power` | min | manual |
+| `stop_cm2_other` | min | manual |
+| `stop_packing_mech` | min | manual |
+| `stop_packing_ei` | min | manual |
+| `stop_packing_prod` | min | manual |
+| `stop_packing_planned` | min | manual |
+| `stop_packing_power` | min | manual |
+| `stop_packing_other` | min | manual |
+
+### materials form (20 facts)
+
+| Fact key | Unit | Source |
+|---|---|---|
+| `mat_clinker_cons` | MT | manual |
+| `mat_gypsum_cons` | MT | manual |
+| `ck_tancoal_cons` | MT | manual |
+| `ck_ruvuma_cons` | MT | manual |
+| `ck_market_cons` | MT | manual |
+| `ck_ariim_cons` | MT | manual |
+| `ck_coalash_cons` | MT | manual |
+| `ck_stamico_cons` | MT | manual |
+| `ck_jitegemee_cons` | MT | manual |
+| `ck_maxcoal_cons` | MT | manual |
+| `ck_melt_cons` | MT | manual |
+| `ck_ibrico_cons` | MT | manual |
+| `ck_megacj_cons` | MT | manual |
+| `ck_mabenga_cons` | MT | manual |
+| `ck_yongda_cons` | MT | manual |
+| `ck_kindaini_cons` | MT | manual |
+| `ck_montreal_cons` | MT | manual |
+| `ck_ludewa_cons` | MT | manual |
+| `ck_mchekane_cons` | MT | manual |
+| `ck_siaas_cons` | MT | manual |

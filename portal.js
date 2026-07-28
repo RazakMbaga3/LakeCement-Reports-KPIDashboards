@@ -151,11 +151,6 @@ const _CARDS = [
     sub:'Fill section-wise equipment stoppage log',
     url:'forms/stoppage-form.html',
     d:'M12 9v4m0 4h.01M4.93 19h14.14a1 1 0 00.86-1.5L12.86 4.5a1 1 0 00-1.72 0L4.07 17.5a1 1 0 00.86 1.5z' },
-  { id:'frm-cpp', cat:'forms', badge:'SUBMIT', formType:'cpp',
-    title:'CPP Form',
-    sub:'Fill captive power plant operational data',
-    url:'forms/cpp-form.html',
-    d:'M13 10V3L4 14h7v7l9-11h-7z' },
 
   /* ── MIS ───────────────────────────────────────────── */
   { id:'mis', cat:'mis', badge:'VIEW',

@@ -944,7 +944,6 @@ const _STANDALONE_FORM_TYPE = {
   'materials-form.html':    'materials',
   'pile-quality-form.html': 'pile-quality',
   'power-form.html':        'power-cons',
-  'cpp-form.html':          'cpp',
   'stoppage-form.html':     'stoppage',
 };
 

@@ -11,7 +11,7 @@ in `forms/` are designed to replace digitally.
 |------|------|-----------|
 | `2. Dispatch & Stoppage report  21.4.2026 (2).xlsx` | `forms/dispatch-form.html` | Sales & Packing |
 | `3. Stoppage report 21.04.2026 (1).xlsx` | `forms/stoppage-form.html` | Mechanical · E&I · Production |
-| `4. CPP Report 21.04.2026 (2).xlsx` | `forms/cpp-form.html` | Power Plant |
+| `4. CPP Report 21.04.2026 (2).xlsx` | `power-plant-report.html` | Power Plant |
 | `6. Quality Report 21.04.2026 (2).xlsx` | `forms/quality-form.html` | Quality / Lab |
 | `7. Materials Report 21.04.2026 (2).xlsx` | `forms/materials-form.html` | Stores |
 | `8. Power consumption report 21.04.2026 (2).xlsx` | `forms/power-form.html` | E&I · Production |

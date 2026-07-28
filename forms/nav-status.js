@@ -21,7 +21,7 @@
   /* Page → default form ID (used for admin/management/view-only roles) */
   const PAGE_DEFAULT_FORM = {
     'daily-report.html':       'production',
-    'power-plant-report.html': 'power-plant',
+    'power-plant-report.html': 'cpp',
     'mines-report.html':       'mines',
     'stoppage-form.html':      'stoppage',
     'power-form.html':         'power-cons',
@@ -35,7 +35,7 @@
       Materials and Stoppages are first-class nav tabs with their own
       dots now.) */
   const ROLE_SECTION_MAP = {
-    production: { 'daily-report.html': 'quality', 'power-plant-report.html': 'power-plant', 'mines-report.html': 'mines' },
+    production: { 'daily-report.html': 'quality', 'power-plant-report.html': 'cpp', 'mines-report.html': 'mines' },
     mining:     { 'mines-report.html': 'mines', 'daily-report.html': 'mines' },
   };
 

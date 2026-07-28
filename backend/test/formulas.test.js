@@ -96,9 +96,15 @@ const PILE = [
   { cao_h1: 43 },             // daily avg 43
   {},                          // no samples -> null day
 ];
+// CPP (Captive Power Plant) daily generation report fixtures
+const CPP = [
+  { cpp_gross_gen_kwh: 29100, cpp_aux_kwh: 6960, cpp_heat_rate_plant: 4655.08 },
+  { cpp_gross_gen_kwh: 103100, cpp_aux_kwh: 16407, cpp_heat_rate_plant: 4535.88 },
+  { cpp_gross_gen_kwh: 181500, cpp_aux_kwh: 17898, cpp_heat_rate_plant: 3817.33 },
+];
 
 const DAYS = [0, 1, 2].map(i => ({
-  ...KILN[i], ...QUALITY[i], ...DISPATCH[i], ...POWER[i], ...CEMENT_MILL[i], ...PILE[i],
+  ...KILN[i], ...QUALITY[i], ...DISPATCH[i], ...POWER[i], ...CEMENT_MILL[i], ...PILE[i], ...CPP[i],
 }));
 
 const EXPECTED = {
@@ -128,6 +134,9 @@ const EXPECTED = {
   'power-distribution-loss-pct': (2700 + 1500 + 700) * 100 / (54500 + 53000 + 46500),
   // purchased ÷ (own+purchased) clinker consumed, weighted by total clinker consumed
   'purchased-clinker-share': (200 + 0 + 340) / (640 + 520 + 640) * 100,                 // 30
+  // gross-generation-weighted mean heat rate / aux%
+  'cpp-heat-rate': (4655.08 * 29100 + 4535.88 * 103100 + 3817.33 * 181500) / (29100 + 103100 + 181500),
+  'cpp-auxiliary-power': (6960 + 16407 + 17898) / (29100 + 103100 + 181500) * 100,
 };
 
 test('every registered formula matches independently hand-coded monthly arithmetic', () => {

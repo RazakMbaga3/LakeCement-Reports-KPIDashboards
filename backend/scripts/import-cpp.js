@@ -41,10 +41,10 @@
 
   Rows 3, 4, 5, 10, 11, 13, 20, 21 (Net Exported, Aux%, Avg Gen, PLF,
   Specific Steam/Fuel Consumption) are NOT submitted — they are derived
-  in the app itself (forms/cpp-form.html's kpi-live rules and
-  power-plant-report.html's report-loader computes), verified against
-  this same source data to reproduce the cached Excel values exactly
-  (see the 2026-07-28 backfill session notes). Submitting them too would
+  in the app itself (power-plant-report.html's report-loader/ratio-rollup
+  computes — this single page is both the CPP entry form and its report),
+  verified against this same source data to reproduce the cached Excel
+  values exactly (see the 2026-07-28 backfill session notes). Submitting them too would
   create a second, driftable copy of the same numbers.
 
   Usage: node scripts/import-cpp.js [--base-url http://localhost:5000/api]
