@@ -35,7 +35,6 @@
   <span class="rpt-pill">DRAFT</span>
   <div class="tb-leg">
     <div class="leg"><div class="ld" style="background:#FDE68A;border:1px solid #B45309"></div>Manual</div>
-    <div class="leg"><div class="ld" style="background:#BFDBFE;border:1px solid #1D4ED8"></div>System</div>
     <div class="leg"><div class="ld" style="background:#BBF7D0;border:1px solid #15803D"></div>Formula</div>
   </div>
   <div class="btn-grp">
@@ -48,48 +47,16 @@
 <!-- ══════════════════ MAIN ══════════════════ -->
 <main class="fm-main">
 
-
   <!-- ════════════════════════════════════════════════
-       COAL SOURCE CHIP STRIP
-  ════════════════════════════════════════════════ -->
-  <div class="rcard" style="margin-bottom:14px">
-    <div class="rcard-hdr">
-      <div class="rcard-title"><i data-lucide="flame" class="title-icon"></i> Coal Stock by Source — On Date (MT)</div>
-    </div>
-    <div class="coal-strip">
-      <span class="coal-lbl">Coal Sources</span>
-      <div class="coal-chip">
-        STAMICO <span>66</span> <small>MT received</small>
-      </div>
-      <div class="coal-chip">
-        Ruvuma <span>66</span> <small>MT received</small>
-      </div>
-      <div class="coal-chip">
-        Market <span>0</span> <small>MT received</small>
-      </div>
-      <div class="coal-chip">
-        Connect <span>0</span> <small>MT received</small>
-      </div>
-      <div class="coal-chip">
-        Mchekanai <span>0</span> <small>MT received</small>
-      </div>
-      <div class="coal-chip" style="margin-left:auto;border-color:var(--navy);background:var(--section-bg)">
-        Total Received <span>132</span> <small>MT today</small>
-      </div>
-    </div>
-  </div>
-
-  <!-- ════════════════════════════════════════════════
-       BLOCK 1 — POWER GENERATION
+       BLOCK 1 — GENERATION & AVAILABILITY
   ════════════════════════════════════════════════ -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="zap" class="title-icon"></i> Power Generation — CPP</div>
-        <div class="rcard-sub">Generator output, auxiliary consumption &amp; grid performance — 21-Apr-2026</div>
+        <div class="rcard-title"><i data-lucide="zap" class="title-icon"></i> 1×10 MW Captive Power Plant — Generation Report</div>
+        <div class="rcard-sub">FRM-LCL-PP-06 &mdash; Daily, Monthly &amp; Yearly Generation Report</div>
       </div>
       <div class="rcard-chips">
-        <span class="rcard-chip">21-Apr-2026</span>
         <span class="rcard-chip orange">POWER PLANT</span>
       </div>
     </div>
@@ -97,146 +64,142 @@
       <table class="rt" style="min-width:900px">
         <thead>
           <tr>
-            <th class="tl grp-hdr" style="min-width:220px">Parameter</th>
+            <th class="tl grp-hdr" style="min-width:240px">Description</th>
             <th class="grp-hdr">Unit</th>
             <th class="grp-hdr">On Date</th>
-            <th class="grp-hdr">MTD</th>
-            <th class="grp-hdr">YTD</th>
-            <th class="grp-hdr">Target<br>(Day)</th>
-            <th class="grp-hdr">Remarks</th>
+            <th class="grp-hdr">Month to Date</th>
+            <th class="grp-hdr">Year to Date</th>
           </tr>
         </thead>
         <tbody>
-          <tr class="srow"><td colspan="7">Generation</td></tr>
+          <tr class="srow"><td colspan="5">Generation</td></tr>
           <tr>
-            <td class="tp">Gross Generation</td>
-            <td class="ts">kWh</td>
-            <td class="cm"><input class="ci" type="number" value="139400" data-field="cpp_gross_gen_kwh" /></td>
-            <td class="cf"><div class="cv">2,787,600</div></td>
-            <td class="cf"><div class="cv">9,846,200</div></td>
-            <td class="cm"><input class="ci" type="number" value="240000" /></td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+            <td class="tp">Gross Power Generation</td>
+            <td class="ts">kWhr</td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_gross_gen_kwh" placeholder="Enter value" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cpp_gross_gen_kwh">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cpp_gross_gen_kwh">—</div></td>
           </tr>
           <tr>
-            <td class="tp">Auxiliary Consumption</td>
-            <td class="ts">kWh</td>
-            <td class="cm"><input class="ci" type="number" value="17157" data-field="cpp_aux_kwh" /></td>
-            <td class="cf"><div class="cv">347,200</div></td>
-            <td class="cf"><div class="cv">1,228,000</div></td>
-            <td class="cm"><input class="ci" type="number" value="" /></td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+            <td class="tp">Auxiliary Power Consumption</td>
+            <td class="ts">kWhr</td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_aux_kwh" placeholder="Enter value" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cpp_aux_kwh">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cpp_aux_kwh">—</div></td>
           </tr>
-          <tr>
-            <td class="tp">Net Generation</td>
-            <td class="ts">kWh</td>
-            <td class="cf"><div class="cv">122,243</div></td>
-            <td class="cf"><div class="cv">2,440,400</div></td>
-            <td class="cf"><div class="cv">8,618,200</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+          <tr class="frow">
+            <td class="tp">Net Power Exported</td>
+            <td class="ts">kWhr</td>
+            <td class="cf"><div class="cv" data-kpi="cpp_net_gen">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cpp_net_gen_mtd">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cpp_net_gen_ytd">—</div></td>
           </tr>
-          <tr>
-            <td class="tp">Auxiliary % (Aux/Gross)</td>
+          <tr class="frow">
+            <td class="tp">Auxiliary Power Consumption</td>
             <td class="ts">%</td>
-            <td class="cf"><div class="cv">12.31%</div></td>
-            <td class="cf"><div class="cv">12.46%</div></td>
-            <td class="cf"><div class="cv">12.47%</div></td>
-            <td class="cm"><input class="ci" type="number" value="10" /></td>
-            <td class="cs"><div class="cv">Target &lt;10%</div></td>
+            <td class="cf"><div class="cv" data-kpi="cpp_aux_pct">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cpp_aux_pct_mtd">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cpp_aux_pct_ytd">—</div></td>
+          </tr>
+          <tr class="frow">
+            <td class="tp">Average Power Generation</td>
+            <td class="ts">MWhr</td>
+            <td class="cf"><div class="cv" data-kpi="cpp_avg_gen">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cpp_avg_gen_mtd">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cpp_avg_gen_ytd">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Plant Running Hours</td>
+            <td class="ts">Hrs</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cpp_run_hrs" placeholder="0.00" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cpp_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cpp_run_hrs">—</div></td>
+          </tr>
+          <tr class="frow">
+            <td class="tp">PLF (Plant Load Factor)</td>
+            <td class="ts">%</td>
+            <td class="cf"><div class="cv" data-kpi="cpp_plf">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cpp_plf_mtd">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cpp_plf_ytd">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">DG Power Generation</td>
+            <td class="ts">kWhr</td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_dg_gen_kwh" value="0" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cpp_dg_gen_kwh">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cpp_dg_gen_kwh">—</div></td>
           </tr>
 
-          <tr class="srow"><td colspan="7">Plant Performance</td></tr>
+          <tr class="srow"><td colspan="5">Boiler &amp; Steam</td></tr>
           <tr>
-            <td class="tp">Plant Load Factor (PLF)</td>
-            <td class="ts">%</td>
-            <td class="cf"><div class="cv">58.08%</div></td>
-            <td class="cf"><div class="cv">58.1%</div></td>
-            <td class="cf"><div class="cv">57.9%</div></td>
-            <td class="cm"><input class="ci" type="number" value="65" /></td>
-            <td class="cs"><div class="cv">Based on 10 MW installed</div></td>
+            <td class="tp">Feed Water Consumption</td>
+            <td class="ts">MT</td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_feed_water_mt" placeholder="Enter MT" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cpp_feed_water_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cpp_feed_water_mt">—</div></td>
           </tr>
           <tr>
-            <td class="tp">Units Exported to Plant</td>
-            <td class="ts">kWh</td>
-            <td class="cs"><div class="cv">122,243</div></td>
-            <td class="cf"><div class="cv">2,440,400</div></td>
-            <td class="cf"><div class="cv">8,618,200</div></td>
-            <td class="cm"><input class="ci" type="number" value="" /></td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+            <td class="tp">Boiler Steam Generation</td>
+            <td class="ts">MT</td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_boiler_steam_mt" placeholder="Enter MT" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cpp_boiler_steam_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cpp_boiler_steam_mt">—</div></td>
           </tr>
           <tr>
-            <td class="tp">Grid Import (TANESCO)</td>
-            <td class="ts">kWh</td>
-            <td class="cm"><input class="ci" type="number" value="35718" data-field="cpp_tanesco_kwh" /></td>
-            <td class="cf"><div class="cv">714,360</div></td>
-            <td class="cf"><div class="cv">2,523,720</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="text" value="CPP short; grid supplement" style="text-align:left;padding-left:8px" /></td>
+            <td class="tp">Bleed Steam</td>
+            <td class="ts">MT</td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_bleed_steam_mt" placeholder="Enter MT" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cpp_bleed_steam_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cpp_bleed_steam_mt">—</div></td>
           </tr>
           <tr>
-            <td class="tp">Total Power Available</td>
-            <td class="ts">kWh</td>
-            <td class="cf"><div class="cv">157,961</div></td>
-            <td class="cf"><div class="cv">3,154,760</div></td>
-            <td class="cf"><div class="cv">11,141,920</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">CPP + TANESCO</div></td>
-          </tr>
-
-          <tr class="srow"><td colspan="7">Heat Rate &amp; Efficiency</td></tr>
-          <tr>
-            <td class="tp">CPP Heat Rate</td>
-            <td class="ts">kcal/kWh</td>
-            <td class="cf"><div class="cv">3,888</div></td>
-            <td class="cf"><div class="cv">3,902</div></td>
-            <td class="cf"><div class="cv">3,895</div></td>
-            <td class="cm"><input class="ci" type="number" value="3800" /></td>
-            <td class="cs"><div class="cv">Target ≤ 3,800</div></td>
+            <td class="tp">Turbine Steam Consumption</td>
+            <td class="ts">MT</td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_turbine_steam_mt" placeholder="Enter MT" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cpp_turbine_steam_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cpp_turbine_steam_mt">—</div></td>
           </tr>
           <tr>
-            <td class="tp">Steam Pressure (Avg)</td>
-            <td class="ts">kg/cm²</td>
-            <td class="cm"><input class="ci" type="number" value="62" data-field="cpp_steam_pressure" /></td>
-            <td class="cf"><div class="cv">61.8</div></td>
-            <td class="cf"><div class="cv">61.5</div></td>
-            <td class="cm"><input class="ci" type="number" value="63" /></td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+            <td class="tp">Condensate Generation</td>
+            <td class="ts">MT</td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_condensate_mt" placeholder="Enter MT" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cpp_condensate_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cpp_condensate_mt">—</div></td>
           </tr>
           <tr>
-            <td class="tp">Steam Temperature (Avg)</td>
-            <td class="ts">°C</td>
-            <td class="cm"><input class="ci" type="number" value="485" data-field="cpp_steam_temp" /></td>
-            <td class="cf"><div class="cv">484</div></td>
-            <td class="cf"><div class="cv">483</div></td>
-            <td class="cm"><input class="ci" type="number" value="490" /></td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+            <td class="tp">Auxiliary Steam Consumption</td>
+            <td class="ts">MT</td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_aux_steam_mt" placeholder="Enter MT" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cpp_aux_steam_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cpp_aux_steam_mt">—</div></td>
+          </tr>
+          <tr class="frow">
+            <td class="tp">Specific Steam Consumption</td>
+            <td class="ts">Kg/Kwhr</td>
+            <td class="cf"><div class="cv" data-kpi="cpp_ssc">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cpp_ssc_mtd">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cpp_ssc_ytd">—</div></td>
+          </tr>
+          <tr class="frow">
+            <td class="tp">Specific Fuel Consumption</td>
+            <td class="ts">Kg/Kwhr</td>
+            <td class="cf"><div class="cv" data-kpi="cpp_sfc">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cpp_sfc_mtd">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cpp_sfc_ytd">—</div></td>
           </tr>
           <tr>
-            <td class="tp">Running Hours</td>
-            <td class="ts">hrs</td>
-            <td class="cm"><input class="ci" type="number" value="24" data-field="cpp_run_hrs" /></td>
-            <td class="cf"><div class="cv">504</div></td>
-            <td class="cf"><div class="cv">1,764</div></td>
-            <td class="cm"><input class="ci" type="number" value="24" /></td>
-            <td class="cm"><input class="ci" type="text" value="Full 24 hrs" style="text-align:left;padding-left:8px" /></td>
+            <td class="tp">Heat Rate (TG) 2880</td>
+            <td class="ts">Kcal/Kwh</td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_heat_rate_tg" placeholder="Enter value" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cpp_heat_rate_tg">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cpp_heat_rate_tg">—</div></td>
           </tr>
           <tr>
-            <td class="tp">Stoppages</td>
-            <td class="ts">min</td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="cpp_stop_min" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">120</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
-          </tr>
-          <tr>
-            <td class="tp">Availability</td>
-            <td class="ts">%</td>
-            <td class="cf"><div class="cv">100.0%</div></td>
-            <td class="cf"><div class="cv">100.0%</div></td>
-            <td class="cf"><div class="cv">99.7%</div></td>
-            <td class="cm"><input class="ci" type="number" value="98" /></td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+            <td class="tp">Heat Rate (Plant) 3300 @ MCR</td>
+            <td class="ts">Kcal/Kwh</td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_heat_rate_plant" placeholder="Enter value" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cpp_heat_rate_plant">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cpp_heat_rate_plant">—</div></td>
           </tr>
         </tbody>
       </table>
@@ -244,49 +207,43 @@
   </div>
 
   <!-- ════════════════════════════════════════════════
-       BLOCK 2 — FUEL CONSUMPTION
+       BLOCK 2 — FUEL REPORT (COAL)
   ════════════════════════════════════════════════ -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="flame" class="title-icon"></i> Fuel Consumption — Coal</div>
-        <div class="rcard-sub">Coal consumed in boiler; calorific value &amp; specific consumption</div>
+        <div class="rcard-title"><i data-lucide="flame" class="title-icon"></i> Fuel Report — Coal</div>
+        <div class="rcard-sub">Coal consumed in boiler &amp; calorific value</div>
       </div>
       <div class="rcard-chips">
         <span class="rcard-chip orange">POWER PLANT</span>
       </div>
     </div>
     <div class="tbl-scroll">
-      <table class="rt" style="min-width:900px">
+      <table class="rt" style="min-width:800px">
         <thead>
           <tr>
-            <th class="tl grp-hdr" style="min-width:220px">Parameter</th>
+            <th class="tl grp-hdr" style="min-width:220px">Description</th>
             <th class="grp-hdr">Unit</th>
             <th class="grp-hdr">On Date</th>
-            <th class="grp-hdr">MTD</th>
-            <th class="grp-hdr">YTD</th>
-            <th class="grp-hdr">Target</th>
-            <th class="grp-hdr">Remarks</th>
+            <th class="grp-hdr">Month to Date</th>
+            <th class="grp-hdr">Year to Date</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td class="tp">Coal Consumed (CPP)</td>
+            <td class="tp">Coal Consumption</td>
             <td class="ts">MT</td>
-            <td class="cm"><input class="ci" type="number" value="132" data-field="cpp_coal_cons" /></td>
-            <td class="cf"><div class="cv">2,640</div></td>
-            <td class="cf"><div class="cv">9,240</div></td>
-            <td class="cm"><input class="ci" type="number" value="140" /></td>
-            <td class="cm"><input class="ci" type="text" value="STAMICO + Ruvuma 66t each" style="text-align:left;padding-left:8px" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_coal_cons" placeholder="Enter MT" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cpp_coal_cons">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cpp_coal_cons">—</div></td>
           </tr>
           <tr>
-            <td class="tp">GCV (as received)</td>
+            <td class="tp">GCV (ADB)</td>
             <td class="ts">kcal/kg</td>
-            <td class="cm"><input class="ci" type="number" value="4179" data-field="cpp_coal_gcv" /></td>
-            <td class="cf"><div class="cv">4,185</div></td>
-            <td class="cf"><div class="cv">4,192</div></td>
-            <td class="cm"><input class="ci" type="number" value="4200" /></td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_coal_gcv" placeholder="Enter value" /></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
           </tr>
         </tbody>
       </table>
@@ -300,7 +257,7 @@
     <div class="rcard-hdr">
       <div>
         <div class="rcard-title"><i data-lucide="droplets" class="title-icon"></i> Water Treatment Plant (WTP)</div>
-        <div class="rcard-sub">Boiler feed water quality &amp; consumption</div>
+        <div class="rcard-sub">DM water, cooling tower makeup &amp; fly ash quality</div>
       </div>
       <div class="rcard-chips">
         <span class="rcard-chip orange">POWER PLANT</span>
@@ -310,46 +267,48 @@
       <table class="rt" style="min-width:800px">
         <thead>
           <tr>
-            <th class="tl grp-hdr" style="min-width:220px">Parameter</th>
+            <th class="tl grp-hdr" style="min-width:220px">Description</th>
             <th class="grp-hdr">Unit</th>
             <th class="grp-hdr">On Date</th>
-            <th class="grp-hdr">MTD Avg</th>
-            <th class="grp-hdr">Limit / Target</th>
-            <th class="grp-hdr">Status</th>
+            <th class="grp-hdr">Month to Date</th>
+            <th class="grp-hdr">Year to Date</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td class="tp">Raw Water Consumed</td>
+            <td class="tp">DM Water Generation</td>
             <td class="ts">m³</td>
-            <td class="cm"><input class="ci" type="number" value="480" /></td>
-            <td class="cf"><div class="cv">475</div></td>
-            <td class="cm"><input class="ci" type="number" value="500" /></td>
-            <td class="cf"><div class="cv" style="color:var(--f-fg)">OK</div></td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_dm_water_gen_m3" placeholder="Enter m³" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cpp_dm_water_gen_m3">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cpp_dm_water_gen_m3">—</div></td>
           </tr>
           <tr>
-            <td class="tp">Boiler Feed pH</td>
-            <td class="ts">—</td>
-            <td class="cm"><input class="ci" type="number" value="8.8" step="0.1" /></td>
-            <td class="cf"><div class="cv">8.7</div></td>
-            <td class="cs"><div class="cv">8.5–9.0</div></td>
-            <td class="cf"><div class="cv" style="color:var(--f-fg)">OK</div></td>
-          </tr>
-          <tr>
-            <td class="tp">TDS (Boiler Feed)</td>
-            <td class="ts">ppm</td>
-            <td class="cm"><input class="ci" type="number" value="120" /></td>
-            <td class="cf"><div class="cv">118</div></td>
-            <td class="cs"><div class="cv">&lt;150 ppm</div></td>
-            <td class="cf"><div class="cv" style="color:var(--f-fg)">OK</div></td>
-          </tr>
-          <tr>
-            <td class="tp">Blow-down Volume</td>
+            <td class="tp">DM Water Consumption</td>
             <td class="ts">m³</td>
-            <td class="cm"><input class="ci" type="number" value="24" /></td>
-            <td class="cf"><div class="cv">22</div></td>
-            <td class="cm"><input class="ci" type="number" value="30" /></td>
-            <td class="cf"><div class="cv" style="color:var(--f-fg)">OK</div></td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_dm_water_cons_m3" placeholder="Enter m³" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cpp_dm_water_cons_m3">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cpp_dm_water_cons_m3">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">CT Makeup Water Consumption</td>
+            <td class="ts">m³</td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_ct_makeup_m3" placeholder="Enter m³" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cpp_ct_makeup_m3">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cpp_ct_makeup_m3">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Fly Ash Combustible</td>
+            <td class="ts">%</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cpp_flyash_combustible_pct" placeholder="%" /></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Fly Ash GCV</td>
+            <td class="ts">kcal/kg</td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_flyash_gcv" placeholder="kcal/kg" /></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
           </tr>
         </tbody>
       </table>
@@ -357,12 +316,12 @@
   </div>
 
   <!-- ════════════════════════════════════════════════
-       BLOCK 4 — FLY ASH
+       BLOCK 4 — FLY ASH DISPOSAL
   ════════════════════════════════════════════════ -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="cloud" class="title-icon"></i> Fly Ash — Production &amp; Utilisation</div>
+        <div class="rcard-title"><i data-lucide="cloud" class="title-icon"></i> Fly Ash Disposal Report</div>
         <div class="rcard-sub">By-product from boiler — captured in ESP &amp; bag filter</div>
       </div>
       <div class="rcard-chips">
@@ -373,38 +332,34 @@
       <table class="rt" style="min-width:800px">
         <thead>
           <tr>
-            <th class="tl grp-hdr" style="min-width:220px">Parameter</th>
+            <th class="tl grp-hdr" style="min-width:220px">Description</th>
             <th class="grp-hdr">Unit</th>
             <th class="grp-hdr">On Date</th>
-            <th class="grp-hdr">MTD</th>
-            <th class="grp-hdr">YTD</th>
-            <th class="grp-hdr">Remarks</th>
+            <th class="grp-hdr">Month to Date</th>
+            <th class="grp-hdr">Year to Date</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td class="tp">Fly Ash Generated</td>
+            <td class="tp">Fly Ash to Cement Mill</td>
             <td class="ts">MT</td>
-            <td class="cf"><div class="cv">19.8</div></td>
-            <td class="cf"><div class="cv">396</div></td>
-            <td class="cf"><div class="cv">1,386</div></td>
-            <td class="cm"><input class="ci" type="text" value="~15% of coal consumed" style="text-align:left;padding-left:8px" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_flyash_to_cm_mt" placeholder="Enter MT" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cpp_flyash_to_cm_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cpp_flyash_to_cm_mt">—</div></td>
           </tr>
           <tr>
-            <td class="tp">Fly Ash Used (Cement)</td>
-            <td class="ts">MT</td>
-            <td class="cm"><input class="ci" type="number" value="12" /></td>
-            <td class="cf"><div class="cv">240</div></td>
-            <td class="cf"><div class="cv">840</div></td>
-            <td class="cm"><input class="ci" type="text" value="Used in CM-2 blend" style="text-align:left;padding-left:8px" /></td>
+            <td class="tp">Fly Ash to Coal Yard</td>
+            <td class="ts">nos (Truck)</td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_flyash_to_coalyard_nos" placeholder="No. of trucks" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cpp_flyash_to_coalyard_nos">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cpp_flyash_to_coalyard_nos">—</div></td>
           </tr>
           <tr>
-            <td class="tp">Fly Ash Stock (Silo)</td>
-            <td class="ts">MT</td>
-            <td class="cf"><div class="cv">124</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+            <td class="tp">Fly Ash to Dumpyard</td>
+            <td class="ts">nos (Truck)</td>
+            <td class="cm"><input class="ci" type="number" data-field="cpp_flyash_to_dumpyard_nos" placeholder="No. of trucks" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cpp_flyash_to_dumpyard_nos">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cpp_flyash_to_dumpyard_nos">—</div></td>
           </tr>
         </tbody>
       </table>
@@ -440,8 +395,7 @@
     </div>
     <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
       <span style="font-size:11px;color:var(--text-muted)">
-        Status: <strong style="color:var(--orange)">DRAFT</strong> &nbsp;·&nbsp;
-        Date: <strong>21 April 2026</strong>
+        Status: <strong style="color:var(--orange)">DRAFT</strong>
       </span>
       <div style="display:flex;gap:8px">
         <button class="btn btn-out"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
@@ -479,11 +433,117 @@
 <script src="nav-status.js"></script>
 <script src="collapsible.js"></script>
 <script src="excel-export.js"></script>
+<script src="report-rollup.js"></script>
+<script>initReportRollup({ form: 'cpp' });</script>
+<script src="kpi-live.js"></script>
+<script>
+initKpiLive([
+  { kpi:'cpp_net_gen', fmt:'n0',
+    compute: function(f,n){ var g=n(f.cpp_gross_gen_kwh), a=n(f.cpp_aux_kwh); return (g>0) ? g-a : null; } },
+  { kpi:'cpp_aux_pct', fmt:'pct2',
+    compute: function(f,n){ var g=n(f.cpp_gross_gen_kwh), a=n(f.cpp_aux_kwh); return (g>0) ? a/g*100 : null; } },
+  { kpi:'cpp_avg_gen', fmt:'n2',
+    compute: function(f,n){ var g=n(f.cpp_gross_gen_kwh), h=n(f.cpp_run_hrs); return (h>0) ? g/1000/h : null; } },
+  { kpi:'cpp_plf', fmt:'pct2',
+    compute: function(f,n){ var g=n(f.cpp_gross_gen_kwh), h=n(f.cpp_run_hrs); return (h>0) ? (g/1000/h)/10*100 : null; } },
+  { kpi:'cpp_ssc', fmt:'n4',
+    compute: function(f,n){
+      var turbine=n(f.cpp_turbine_steam_mt), g=n(f.cpp_gross_gen_kwh);
+      return (g>0 && turbine>0) ? turbine*1000/g : null;
+    } },
+  { kpi:'cpp_sfc', fmt:'n4',
+    compute: function(f,n){ var coal=n(f.cpp_coal_cons), g=n(f.cpp_gross_gen_kwh); return (g>0 && coal>0) ? coal*1000/g : null; } }
+]);
+</script>
+<script>
+/* ══════════════════════════════════════════════════════════════
+   MTD / YTD ratio rollups — report-rollup.js only sums raw fields;
+   Net Gen / Aux% / Avg Gen / PLF / SSC / SFC are RATIOS, computed
+   from summed components over the range (prior submitted days),
+   plus today's in-progress entry from the form itself.
+   ══════════════════════════════════════════════════════════════ */
+(function () {
+  function num(v) { if (v === '' || v == null) return 0; var n = +(String(v).replace(/,/g, '')); return isNaN(n) ? 0 : n; }
+  function iso(d) { return d.toISOString().slice(0, 10); }
+  function monthStart(dateStr) { return dateStr.slice(0, 8) + '01'; }
+  function fiscalStart(dateStr) {
+    var d = new Date(dateStr + 'T00:00:00');
+    var y = d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1;
+    return y + '-04-01';
+  }
+  function localRange(formId, from, to) {
+    var rows = [], cur = new Date(from + 'T00:00:00'), end = new Date(to + 'T00:00:00');
+    while (cur <= end) {
+      var raw = localStorage.getItem('nyati-' + formId + '-' + iso(cur));
+      if (raw) { try { var p = JSON.parse(raw); if (p.data) rows.push(p.data); } catch (e) {} }
+      cur.setDate(cur.getDate() + 1);
+    }
+    return rows;
+  }
+  async function fetchRange(formId, from, to) {
+    if (window.NyatiAPI) {
+      try {
+        var rows = await window.NyatiAPI.getFormRange(formId, from, to);
+        if (Array.isArray(rows)) return rows.map(function (r) { return r.data || {}; });
+      } catch (e) {}
+    }
+    return localRange(formId, from, to);
+  }
+  function sum(rows, field) { return rows.reduce(function (t, d) { return t + num(d[field]); }, 0); }
+  function paint(id, val, fmt) {
+    var el = document.querySelector('[data-kpi="' + id + '"]');
+    if (!el || val === null || val === undefined || isNaN(val)) return;
+    el.textContent = fmt === 'pct' ? val.toFixed(2) + '%' : val.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  }
+  function currentFormFields() {
+    var d = {};
+    document.querySelectorAll('[data-field]').forEach(function (el) { d[el.getAttribute('data-field')] = el.value; });
+    return d;
+  }
+  function computeRatios(rows) {
+    var gross = sum(rows, 'cpp_gross_gen_kwh'), aux = sum(rows, 'cpp_aux_kwh'),
+        hrs = sum(rows, 'cpp_run_hrs'), turbine = sum(rows, 'cpp_turbine_steam_mt'),
+        coal = sum(rows, 'cpp_coal_cons');
+    return {
+      net:  gross > 0 ? gross - aux : null,
+      aux:  gross > 0 ? aux / gross * 100 : null,
+      avg:  hrs > 0 ? gross / 1000 / hrs : null,
+      plf:  hrs > 0 ? (gross / 1000 / hrs) / 10 * 100 : null,
+      ssc:  gross > 0 && turbine > 0 ? turbine * 1000 / gross : null,
+      sfc:  gross > 0 && coal > 0 ? coal * 1000 / gross : null
+    };
+  }
+  function dayBefore(dateStr) {
+    var d = new Date(dateStr + 'T00:00:00');
+    d.setDate(d.getDate() - 1);
+    return iso(d);
+  }
+  async function run() {
+    var dateEl = document.querySelector('input[type="date"]');
+    var date = dateEl ? dateEl.value : new Date().toISOString().slice(0, 10);
+    if (!date) return;
+    // Range through YESTERDAY only, so today's live (possibly still-unsaved)
+    // form values can be layered on top without any double-counting risk
+    // versus a server row that may or may not already exist for today.
+    var yesterday = dayBefore(date);
+    var mtdRows = yesterday >= monthStart(date) ? await fetchRange('cpp', monthStart(date), yesterday) : [];
+    var ytdRows = await fetchRange('cpp', fiscalStart(date), yesterday);
+    var live = currentFormFields();
+    if (num(live.cpp_gross_gen_kwh) > 0) { mtdRows = mtdRows.concat([live]); ytdRows = ytdRows.concat([live]); }
+    var mtd = computeRatios(mtdRows), ytd = computeRatios(ytdRows);
+    paint('cpp_net_gen_mtd', mtd.net); paint('cpp_net_gen_ytd', ytd.net);
+    paint('cpp_aux_pct_mtd', mtd.aux, 'pct'); paint('cpp_aux_pct_ytd', ytd.aux, 'pct');
+    paint('cpp_avg_gen_mtd', mtd.avg); paint('cpp_avg_gen_ytd', ytd.avg);
+    paint('cpp_plf_mtd', mtd.plf, 'pct'); paint('cpp_plf_ytd', ytd.plf, 'pct');
+    paint('cpp_ssc_mtd', mtd.ssc); paint('cpp_ssc_ytd', ytd.ssc);
+    paint('cpp_sfc_mtd', mtd.sfc); paint('cpp_sfc_ytd', ytd.sfc);
+  }
+  var dateEl = document.querySelector('input[type="date"]');
+  if (dateEl) dateEl.addEventListener('change', function () { setTimeout(run, 220); });
+  document.addEventListener('nyati:restored', function () { setTimeout(run, 220); });
+  document.addEventListener('input', function () { clearTimeout(window.__cppRollTimer); window.__cppRollTimer = setTimeout(run, 400); });
+  setTimeout(run, 300);
+}());
+</script>
 </body>
 </html>
-
-
-
-
-
-

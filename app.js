@@ -84,6 +84,12 @@ function switchDept(dept) {
 
   // Re-evaluate "Fill Monthly Data" visibility for the newly selected dept.
   if (typeof refreshFillButtonVisibility === 'function') refreshFillButtonVisibility();
+
+  if (typeof refreshCompletenessBadge === 'function') {
+    const mo = +document.getElementById('month-select').value;
+    const yr =  document.getElementById('year-select').value;
+    refreshCompletenessBadge(dept, mo, yr);
+  }
 }
 
 /* ─── sync dept dropdown → nav ─────────────────────────────── */
@@ -169,6 +175,7 @@ function applyFilters() {
   if (currentDept === 'summary') updateSummaryDashboard();
   applyPeriodCards(view);
   if (typeof loadKpiData === 'function') loadKpiData(mo, yr);
+  if (typeof refreshCompletenessBadge === 'function') refreshCompletenessBadge(currentDept, mo, yr);
 }
 
 /* ─── compute achieved / not-achieved counts ────────────────── */
@@ -211,14 +218,6 @@ function updateSummaryDashboard() {
     const lblEl = document.getElementById('sc-lbl-' + d);
     if (lblEl) lblEl.textContent = lbl;
   });
-
-  // Days since last LTI (computed from Jan 1 of current year)
-  const ltiEl = document.getElementById('smry-days-lti');
-  if (ltiEl) {
-    const startOfYear = new Date(new Date().getFullYear(), 0, 1);
-    const daysSince = Math.floor((new Date() - startOfYear) / 86400000);
-    ltiEl.textContent = daysSince;
-  }
 }
 
 /* ─── period analysis ───────────────────────────────────────── */
@@ -244,21 +243,18 @@ function applyPeriodCards(view) {
     c.classList.toggle('active', c.dataset.period === view)
   );
 
-  // Swap sk-card values for cards tagged with data-daily
+  // Swap sk-card values for any remaining illustrative cards tagged with
+  // data-daily/data-month/data-ytd/data-full (the formula-backed cards are
+  // populated live by loadHeroCards() instead — see below).
   document.querySelectorAll('.sk-card[data-daily]').forEach(card => {
     const val  = card.dataset[view] ?? card.dataset.month;
     const valEl = card.querySelector('.sk-value');
     if (valEl && val) valEl.textContent = val;
   });
 
-  // Live localStorage override for Today view
-  if (view === 'daily') {
-    const liveFl = getDailyValue('quality', 'free_lime');
-    if (liveFl != null) {
-      const card = document.querySelector('.sk-card[data-kpi-id="free-lime"]');
-      if (card) { const v = card.querySelector('.sk-value'); if (v) v.textContent = liveFl; }
-    }
-  }
+  // Formula-backed hero cards only have a real Month/YTD view — Today and
+  // Full Year aren't computed by evalMonth, so re-fetch on any view change.
+  if (typeof loadHeroCards === 'function') loadHeroCards(mo, yr, view);
 
   // Update period badge and context bar label
   const badge = document.getElementById('smry-period-badge');
@@ -295,9 +291,31 @@ function setDates() {
   if (el2) el2.textContent = str;
 }
 
+/* ─── default the Month/Year filters to today ───────────────────
+   Previously these were hardcoded <option selected> values (Feb 2026)
+   baked into the HTML, so the dashboard opened on a fixed stale period
+   no matter when it was actually viewed. Default to the real current
+   month/year instead — if that year isn't in the dropdown yet (a new
+   year rolling over), fall back to the latest year offered. */
+function setDefaultPeriod() {
+  const now = new Date();
+  const mo  = now.getMonth() + 1;
+  const yr  = now.getFullYear();
+
+  const moSel = document.getElementById('month-select');
+  const yrSel = document.getElementById('year-select');
+  if (moSel) moSel.value = String(mo);
+
+  if (yrSel) {
+    const years = Array.from(yrSel.options).map(o => +o.value);
+    yrSel.value = years.includes(yr) ? String(yr) : String(Math.max(...years));
+  }
+}
+
 /* ─── INIT ──────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   setDates();
+  setDefaultPeriod();
   switchDept('summary');
   applyFilters();
 });

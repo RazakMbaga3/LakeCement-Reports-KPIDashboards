@@ -72,7 +72,27 @@ function updateRowStatus(row) {
   const sign   = cells[2].textContent.trim();
   const target = parseFloat(cells[3].textContent.replace(/,/g, ''));
   const actual = parseFloat(cells[4].textContent.replace(/,/g, ''));
-  if (isNaN(target) || isNaN(actual)) return;
+
+  if (isNaN(actual)) {
+    // No real value at all for this period — don't leave a stale
+    // Achieved/Not-Achieved verdict (or hardcoded figure) on screen from
+    // a previous month.
+    markRowNoData(row);
+    return;
+  }
+  if (isNaN(target)) {
+    // A real computed/entered value exists, but this KPI has no fixed
+    // target by design (e.g. despatch-day, total-power-kwh carry
+    // target:null in the registry) — show the value with no
+    // achieved/not-achieved judgment, rather than treating it as "no data".
+    const statusCell = cells[18];
+    statusCell.textContent = '—';
+    statusCell.className   = 'status';
+    cells[4].className     = 'actual';
+    row.className = row.className.replace(/\b(achieved|not-achieved|no-data)-row\b/g, '');
+    if (typeof updateSummary === 'function') updateSummary();
+    return;
+  }
 
   let achieved = false;
   if (sign === '<')  achieved = actual < target;
@@ -85,10 +105,29 @@ function updateRowStatus(row) {
   statusCell.textContent  = achieved ? 'Achieved' : 'Not Achieved';
   statusCell.className    = 'status ' + (achieved ? 'achieved-tag' : 'not-tag');
   cells[4].className      = 'actual ' + (achieved ? 'green' : 'red');
-  row.className           = row.className.replace(/\b(achieved|not-achieved)-row\b/g, '')
+  row.className           = row.className.replace(/\b(achieved|not-achieved|no-data)-row\b/g, '')
                             + ' ' + (achieved ? 'achieved' : 'not-achieved') + '-row';
 
   // Bubble up to filter summary
+  if (typeof updateSummary === 'function') updateSummary();
+}
+
+/* ─── "No data submitted" state ──────────────────────────────
+   Previously a row with no real value for the selected period silently
+   kept whatever Achieved/Not-Achieved verdict (and ACTUAL figure) was
+   last hardcoded or rendered for a different month — indistinguishable
+   from a genuinely current, genuinely achieved KPI. Any code path that
+   determines "no value exists for this month" must route through here
+   instead of leaving the cell/row alone. */
+function markRowNoData(row) {
+  const cells = row.querySelectorAll('td');
+  if (cells.length < 19) return;
+  const statusCell = cells[18];
+  statusCell.textContent = 'No data';
+  statusCell.className   = 'status no-data-tag';
+  cells[4].className     = 'actual no-data';
+  cells[4].textContent   = '—';
+  row.className = row.className.replace(/\b(achieved|not-achieved|no-data)-row\b/g, '') + ' no-data-row';
   if (typeof updateSummary === 'function') updateSummary();
 }
 
@@ -255,6 +294,128 @@ async function loadAutoCalcValues(mo, yr) {
   });
 }
 
+/* ─── Executive Summary hero cards ────────────────────────────
+   Previously every .sk-card on the Plant Summary tab was static HTML with
+   four hardcoded data-daily/month/ytd/full values baked in at authoring
+   time — selecting a different month changed which of those four canned
+   numbers showed, never a real figure. Cards tagged data-formula-key now
+   render exclusively from GET /api/formula/eval/:year/:month, the same
+   endpoint the department tables use. evalMonth() only computes a
+   month aggregate, so Today/Full-Year views show the month figure with a
+   note rather than inventing a daily/annual number the engine doesn't
+   produce. Cards with no data-formula-key (Equipment Reliability, Safety,
+   etc.) have no formula-registry KPI behind them yet — left alone here,
+   marked .sk-illustrative in the HTML instead. */
+function signageAchieved(signage, actual, target) {
+  if (signage === '<')  return actual < target;
+  if (signage === '>')  return actual > target;
+  if (signage === '<=') return actual <= target;
+  if (signage === '>=') return actual >= target;
+  if (signage === '=')  return actual === target;
+  return null; // no signage — no achieved/not-achieved judgment to make
+}
+
+async function loadHeroCards(mo, yr, view) {
+  const cards = Array.from(document.querySelectorAll('.sk-card[data-formula-key]'));
+  if (!cards.length) return;
+
+  if (!window.NyatiAPI || !NyatiAPI.evalFormulas) {
+    cards.forEach(markHeroCardUnavailable);
+    return;
+  }
+
+  let results;
+  try {
+    results = await NyatiAPI.evalFormulas(yr, mo);
+  } catch (e) {
+    cards.forEach(markHeroCardUnavailable); // offline / server unreachable
+    return;
+  }
+
+  const byKey = new Map(results.map(r => [r.key, r]));
+  const isMonthView = (view === 'month' || view === undefined);
+
+  cards.forEach(card => {
+    const r = byKey.get(card.dataset.formulaKey);
+    const valueEl = card.querySelector('.sk-value');
+    const barEl   = card.querySelector('.sk-bar-fill');
+    const tgtEl   = card.querySelector('.sk-tgt');
+    const pctEl   = card.querySelector('.sk-pct');
+    const statusEl = card.querySelector('.sk-status');
+    const dotSpan  = statusEl ? statusEl.querySelector('.sk-status-dot') : null;
+
+    if (!r || r.value == null) {
+      if (valueEl) valueEl.textContent = '—';
+      if (barEl) barEl.style.width = '0%';
+      if (tgtEl) tgtEl.textContent = 'No data for this period';
+      if (pctEl) pctEl.textContent = '—';
+      if (statusEl) {
+        statusEl.innerHTML = '';
+        if (dotSpan) statusEl.appendChild(dotSpan);
+        statusEl.append(' No data submitted for ' + MONTHS[mo] + ' ' + yr);
+      }
+      card.classList.remove('on-track', 'watch', 'concern');
+      return;
+    }
+
+    const displayVal = Number(r.value).toLocaleString('en-US', { maximumFractionDigits: 2 });
+    if (valueEl) valueEl.textContent = displayVal;
+
+    const note = isMonthView ? '' : ' (shown: ' + MONTHS[mo] + ' ' + yr + ' — daily/full-year not computed)';
+
+    if (r.target == null) {
+      // No fixed target by design (target:null in the registry) — show the
+      // real value with no achieved/not-achieved judgment.
+      if (barEl) barEl.style.width = '100%';
+      if (tgtEl) tgtEl.textContent = 'No fixed target' + note;
+      if (pctEl) pctEl.textContent = '—';
+      if (statusEl) {
+        statusEl.innerHTML = '';
+        if (dotSpan) statusEl.appendChild(dotSpan);
+        statusEl.append(' Informational — no target set');
+      }
+      card.classList.remove('on-track', 'watch', 'concern');
+      return;
+    }
+
+    const achieved = signageAchieved(r.signage, r.value, r.target);
+    const pct = r.target !== 0 ? (r.value / r.target) * 100 : 0;
+
+    if (tgtEl) tgtEl.textContent = (r.targetLabel || ('Target ' + r.signage + ' ' + r.target)) + note;
+    if (pctEl) pctEl.textContent = pct.toFixed(1) + '%';
+    if (barEl) barEl.style.width = Math.max(0, Math.min(100, pct)) + '%';
+
+    card.classList.remove('on-track', 'watch', 'concern');
+    card.classList.add(achieved ? 'on-track' : 'concern');
+    if (statusEl) {
+      statusEl.innerHTML = '';
+      if (dotSpan) statusEl.appendChild(dotSpan);
+      statusEl.append(' ' + (achieved ? 'On Track' : 'Concern') +
+        (r.overridden ? ' (manually overridden)' : ''));
+    }
+    if (r.overridden && r.override) {
+      card.title = 'Manual override by ' + (r.override.by || 'unknown') +
+        ' on ' + String(r.override.at).slice(0, 10) + ': ' + r.override.reason +
+        '  (formula value: ' + (r.computed == null ? '—' : r.computed) + ')';
+    } else {
+      card.removeAttribute('title');
+    }
+  });
+}
+
+function markHeroCardUnavailable(card) {
+  const valueEl = card.querySelector('.sk-value');
+  const statusEl = card.querySelector('.sk-status');
+  const dotSpan  = statusEl ? statusEl.querySelector('.sk-status-dot') : null;
+  if (valueEl) valueEl.textContent = '—';
+  if (statusEl) {
+    statusEl.innerHTML = '';
+    if (dotSpan) statusEl.appendChild(dotSpan);
+    statusEl.append(' Server unreachable');
+  }
+  card.classList.remove('on-track', 'watch', 'concern');
+}
+
 /* ─── Load manually saved values ──────────────────────────
    Batches one GET per dept-section (not per row) against the backend KPI
    API; falls back to the existing per-row localStorage read if that dept's
@@ -287,14 +448,24 @@ async function loadManualValues(mo, yr) {
     const map     = deptMaps[dept];
 
     const cells = row.querySelectorAll('td');
+    const actualCell = cells[4];
+    if (actualCell?.classList.contains('auto-cell')) return; // formula layer owns this cell
 
-    // ACTUAL column (col 4) — use selected month key
+    // ACTUAL column (col 4) — use selected month key. `map` present but with
+    // no matching row (or offline with nothing in localStorage) means there
+    // is genuinely no recorded value for this dept/KPI/month — that must be
+    // shown as "no data", not left as whatever a previous month or the
+    // original hardcoded HTML happened to contain.
     const serverRow = map ? map.get(slug) : undefined;
     const actVal = map
       ? (serverRow && serverRow.actual != null ? String(serverRow.actual) : null)
       : localStorage.getItem(manualKey(dept, slug, yr, mo));
-    if (actVal !== null && !cells[4]?.classList.contains('auto-cell')) {
-      if (cells[4]) cells[4].textContent = actVal;
+
+    if (actVal !== null) {
+      if (actualCell) actualCell.textContent = actVal;
+      updateRowStatus(row); // recompute Achieved/Not-Achieved against the real value just loaded
+    } else {
+      markRowNoData(row);
     }
 
     // Monthly columns (cols 6–17) — edits to any of these still sync to
@@ -302,14 +473,15 @@ async function loadManualValues(mo, yr) {
     // own month), but this load only prefetches the selected month (one
     // GET per dept instead of twelve); the other 11 still read their
     // last-known value from the localStorage cache until re-edited or the
-    // month is selected directly.
+    // month is selected directly. A column with nothing in localStorage
+    // either (i.e. never entered) is shown as "—", not left blank/stale.
     for (let m = 1; m <= 12; m++) {
       const colIdx = moToColIdx(m);
       const cell   = cells[colIdx];
       if (!cell) continue;
       if (cell.classList.contains('auto-cell') || cell.classList.contains('edited-cell')) continue;
       const saved = localStorage.getItem(manualKey(dept, slug, yr, m));
-      if (saved !== null) cell.textContent = saved;
+      cell.textContent = saved !== null ? saved : '—';
     }
   });
 }
@@ -478,6 +650,58 @@ async function saveAllModalValues() {
   const selMo = +document.getElementById('month-select').value;
   const selYr =  document.getElementById('year-select').value;
   loadKpiData(selMo, selYr);
+}
+
+/* ─── Per-department completeness badge ──────────────────────
+   Only departments with a verified daily-report form behind their KPIs
+   are mapped here (checked against forms/formula-registry.js `form:`
+   fields and backend/services/misReport.js's FORM_LABELS — not guessed).
+   E&I, Mechanical, Stores and Mines Workshop have no daily_reports form
+   at all (their KPIs are pure kpi_monthly manual entry), so they show no
+   badge rather than a fabricated completeness figure. 'mines' form_type
+   exists in the DB but isn't reliably the same thing as the Mines KPI
+   department (mines-report.html, a separate TMH/weighbridge engine, does
+   not write it) — left unmapped rather than assumed. */
+const DEPT_FORM_MAP = {
+  production: ['production', 'limestone'],
+  powerplant: ['power-cons'],
+  packing:    ['dispatch'],
+};
+
+async function refreshCompletenessBadge(dept, mo, yr) {
+  const el = document.getElementById('ctx-completeness');
+  if (!el) return;
+
+  const formTypes = DEPT_FORM_MAP[dept];
+  if (!formTypes || !window.NyatiAPI || !NyatiAPI.getCompleteness) {
+    el.classList.add('hidden');
+    return;
+  }
+
+  const from = `${yr}-${padMo(mo)}-01`;
+  const to   = `${yr}-${padMo(mo)}-${String(daysInMonth(yr, mo)).padStart(2, '0')}`;
+
+  let payload;
+  try {
+    payload = await NyatiAPI.getCompleteness(from, to);
+  } catch (e) {
+    el.classList.add('hidden');
+    return;
+  }
+
+  const totalDays = payload.days.length;
+  let coveredDays = 0;
+  for (const day of payload.days) {
+    const anyPresent = day.forms.some(f => formTypes.includes(f.formType) && f.present);
+    if (anyPresent) coveredDays++;
+  }
+
+  const pct = totalDays > 0 ? Math.round((coveredDays / totalDays) * 100) : 0;
+  const tier = pct >= 90 ? 'cc-good' : pct >= 50 ? 'cc-partial' : 'cc-poor';
+
+  el.classList.remove('hidden', 'cc-good', 'cc-partial', 'cc-poor');
+  el.classList.add(tier);
+  el.innerHTML = `<span class="cc-dot"></span> ${coveredDays}/${totalDays} days submitted this month`;
 }
 
 /* ─── INIT ───────────────────────────────────────────────── */

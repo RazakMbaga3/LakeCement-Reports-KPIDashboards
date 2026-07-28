@@ -442,6 +442,21 @@ img { max-width: 100%; }
   color: var(--text-muted);
   margin-top: 2px;
 }
+.ctx-completeness {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .2px;
+  margin-top: 5px; padding: 3px 9px; border-radius: 99px;
+  background: var(--section-bg); border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.ctx-completeness.hidden { display: none; }
+.ctx-completeness .cc-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.ctx-completeness.cc-good .cc-dot { background: var(--green); }
+.ctx-completeness.cc-partial .cc-dot { background: var(--orange); }
+.ctx-completeness.cc-poor .cc-dot { background: var(--red); }
+.ctx-completeness.cc-good    { color: var(--green); }
+.ctx-completeness.cc-partial { color: var(--orange); }
+.ctx-completeness.cc-poor    { color: var(--red); }
 .ctx-tracker {
   font-size: 11px;
   font-weight: 600;
@@ -538,6 +553,8 @@ img { max-width: 100%; }
 /* row backgrounds */
 .achieved-row td     { background: #FAFFFE; }
 .not-achieved-row td { background: #FFFAFA; }
+.no-data-row td       { background: #FAFAFA; }
+.no-data-row td:first-child { color: var(--text-muted); }
 
 /* -- SIGN COLUMN -- */
 .sign { font-weight: 700; font-size: 13px; color: var(--navy-light); }
@@ -563,6 +580,12 @@ img { max-width: 100%; }
 .actual.orange {
   background: #FFF3E0;
   color: var(--orange);
+}
+.actual.no-data {
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-style: italic;
 }
 
 /* -- REMARK CELL -- */
@@ -593,6 +616,16 @@ img { max-width: 100%; }
   white-space: nowrap;
   display: inline-block;
   font-size: 10px;
+}
+.no-data-tag {
+  color: var(--text-muted);
+  background: #ECEDEF;
+  border-radius: 12px;
+  padding: 3px 8px;
+  white-space: nowrap;
+  display: inline-block;
+  font-size: 10px;
+  font-style: italic;
 }
 
 /* -- MONTH COLUMNS -- */
@@ -691,6 +724,7 @@ img { max-width: 100%; }
   .kpi-table tbody td:first-child  { background: var(--white); }
   .achieved-row     td:first-child { background: #FAFFFE !important; }
   .not-achieved-row td:first-child { background: #FFFAFA !important; }
+  .no-data-row      td:first-child { background: #FAFAFA !important; }
   .data-row:hover   td:first-child { background: #F0F5FF !important; }
   .section-row      td:first-child { position: sticky; left: 0; z-index: 2; background: var(--navy); }
 
@@ -853,6 +887,34 @@ img { max-width: 100%; }
 .sk-card.sk-safety .sk-value { font-size: 38px; }
 .sk-card.sk-safety .sk-bar   { display: none; }
 .sk-card.sk-safety .sk-foot  { display: none; }
+
+/* Illustrative cards — not wired to any live data source (see
+   docs/KPI_REFERENCE.md / the formula registry for what IS live). Dashed
+   border + reduced opacity + a corner tag make this visually unmistakable
+   at a glance, rather than looking identical to a real current figure.
+   .sk-card has overflow:hidden (clips its ::before top-bar), so the tag
+   is an inset badge rather than an overflowing ribbon. */
+.sk-card.sk-illustrative {
+  border-style: dashed;
+  opacity: .72;
+}
+.sk-card.sk-illustrative::before {
+  background: repeating-linear-gradient(
+    45deg, var(--text-muted), var(--text-muted) 6px, transparent 6px, transparent 12px
+  );
+}
+.sk-card.sk-illustrative::after {
+  content: 'ILLUSTRATIVE';
+  position: absolute; bottom: 8px; right: 8px;
+  font-size: 7.5px; font-weight: 700; letter-spacing: .5px;
+  color: #fff; background: var(--text-muted);
+  border-radius: 3px; padding: 2px 5px; line-height: 1;
+}
+
+/* Live formula-driven cards (data-formula-key present) while loading, before
+   the first /api/formula/eval response lands — keep neutral, not red/green. */
+.sk-card[data-formula-key] .sk-status { color: var(--text-muted); }
+.sk-card[data-formula-key] .sk-status-dot { background: var(--text-muted); }
 
 /* ── Period Comparison Strip ───────────────────────────── */
 .period-strip {

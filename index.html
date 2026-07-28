@@ -75,7 +75,7 @@
           <label>Month</label>
           <select id="month-select" onchange="applyFilters()">
             <option value="1">January</option>
-            <option value="2" selected>February</option>
+            <option value="2">February</option>
             <option value="3">March</option>
             <option value="4">April</option>
             <option value="5">May</option>
@@ -92,7 +92,7 @@
           <label>Year</label>
           <select id="year-select" onchange="applyFilters()">
             <option value="2025">2025</option>
-            <option value="2026" selected>2026</option>
+            <option value="2026">2026</option>
           </select>
         </div>
         <div class="filter-card">
@@ -123,9 +123,13 @@
     <div class="ctx-left">
       <div class="ctx-dept" id="ctx-dept-name">E &amp; I — Electrical &amp; Instrumentation</div>
       <div class="ctx-resp" id="ctx-resp">Responsibility: Mr. Ramesh Patel &amp; Team</div>
+      <!-- Populated by refreshCompletenessBadge() (kpi-data.js) only for
+           departments with a known daily-report form behind their KPIs;
+           hidden otherwise rather than guessing at a mapping. -->
+      <div class="ctx-completeness hidden" id="ctx-completeness"></div>
     </div>
     <div class="ctx-right">
-      <div class="ctx-tracker">Full Year KPI Tracker — <span id="ctx-period">February 2026</span></div>
+      <div class="ctx-tracker">Full Year KPI Tracker — <span id="ctx-period">—</span></div>
     </div>
   </div>
 
@@ -141,7 +145,7 @@
           <div class="smry-title">Executive Operations Summary</div>
           <div class="smry-sub">Cross-departmental KPI highlights for managerial review — current month actuals vs. targets</div>
         </div>
-        <div class="smry-period-badge" id="smry-period-badge">February 2026</div>
+        <div class="smry-period-badge" id="smry-period-badge">—</div>
       </div>
 
       <!-- Today's report status strip (live from localStorage) -->
@@ -177,69 +181,67 @@
       </div>
       <div class="smry-hero">
 
-        <!-- Kiln Output -->
-        <div class="sk-card concern"
-             data-daily="1,678" data-month="1,678" data-ytd="1,581" data-full="1,581">
+        <!-- Kiln Output — wired live to the formula layer, see app.js#loadHeroCards -->
+        <div class="sk-card" data-formula-key="kiln-output" data-unit-label="TPD">
           <div class="sk-top">
             <div class="sk-label">Kiln Output</div>
             <span class="sk-dept-tag">Production</span>
           </div>
           <div class="sk-value-row">
-            <span class="sk-value">1,678</span>
+            <span class="sk-value">—</span>
             <span class="sk-unit">TPD</span>
-            <span class="sk-delta pos">↑ +195 vs Jan</span>
+            <span class="sk-delta"></span>
           </div>
-          <div class="sk-bar"><div class="sk-bar-fill" style="width:83.9%"></div></div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
           <div class="sk-foot">
-            <span class="sk-tgt">Target: ≥ 2,000 TPD</span>
-            <span class="sk-pct">83.9%</span>
+            <span class="sk-tgt">Target: —</span>
+            <span class="sk-pct">—</span>
           </div>
-          <div class="sk-status"><span class="sk-status-dot"></span> Concern — 322 TPD shortfall</div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Loading…</div>
         </div>
 
-        <!-- Despatch / Day -->
-        <div class="sk-card on-track"
-             data-daily="2,738" data-month="2,738" data-ytd="2,738" data-full="2,738">
+        <!-- Despatch / Day — wired live -->
+        <div class="sk-card" data-formula-key="despatch-day" data-unit-label="MT/day">
           <div class="sk-top">
             <div class="sk-label">Despatch / Day</div>
             <span class="sk-dept-tag">Packing</span>
           </div>
           <div class="sk-value-row">
-            <span class="sk-value">2,738</span>
+            <span class="sk-value">—</span>
             <span class="sk-unit">MT/day</span>
-            <span class="sk-delta flat">→ same as Jan</span>
+            <span class="sk-delta"></span>
           </div>
-          <div class="sk-bar"><div class="sk-bar-fill" style="width:100%"></div></div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
           <div class="sk-foot">
-            <span class="sk-tgt">Target: &gt; 2,700 MT/day</span>
-            <span class="sk-pct">101.4%</span>
+            <span class="sk-tgt">Target: —</span>
+            <span class="sk-pct">—</span>
           </div>
-          <div class="sk-status"><span class="sk-status-dot"></span> On Track</div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Loading…</div>
         </div>
 
-        <!-- Specific Thermal Energy -->
-        <div class="sk-card concern"
-             data-daily="816" data-month="816" data-ytd="821" data-full="821">
+        <!-- Specific Thermal Energy — wired live -->
+        <div class="sk-card" data-formula-key="specific-thermal-energy-consumption" data-unit-label="kcal/kg">
           <div class="sk-top">
             <div class="sk-label">Specific Heat Consumption</div>
             <span class="sk-dept-tag">Production</span>
           </div>
           <div class="sk-value-row">
-            <span class="sk-value">816</span>
+            <span class="sk-value">—</span>
             <span class="sk-unit">kcal/kg</span>
-            <span class="sk-delta pos">↓ −10 vs Jan</span>
+            <span class="sk-delta"></span>
           </div>
-          <div class="sk-bar"><div class="sk-bar-fill" style="width:84.6%"></div></div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
           <div class="sk-foot">
-            <span class="sk-tgt">Target: &lt; 780 kcal/kg</span>
-            <span class="sk-pct">+4.6% over</span>
+            <span class="sk-tgt">Target: —</span>
+            <span class="sk-pct">—</span>
           </div>
-          <div class="sk-status"><span class="sk-status-dot"></span> Concern — improving trend</div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Loading…</div>
         </div>
 
-        <!-- Cement Mill 2 Output -->
-        <div class="sk-card on-track"
-             data-daily="62" data-month="62" data-ytd="63" data-full="63">
+        <!-- Cement Mill 2 Output — no formula-registry KPI covers this yet
+             (registry has combined Cement Grinding SPC, not CM-2 output alone).
+             Left as a clearly-labeled illustrative placeholder, not live data. -->
+        <div class="sk-card on-track sk-illustrative">
           <div class="sk-top">
             <div class="sk-label">Cement Mill 2 Output</div>
             <span class="sk-dept-tag">Production</span>
@@ -254,7 +256,7 @@
             <span class="sk-tgt">Target: ≥ 55 TPH</span>
             <span class="sk-pct">112.7%</span>
           </div>
-          <div class="sk-status"><span class="sk-status-dot"></span> On Track</div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
         </div>
 
       </div><!-- /smry-hero -->
@@ -267,84 +269,83 @@
       </div>
       <div class="smry-row smry-row-4">
 
-        <!-- SPC Total -->
-        <div class="sk-card concern"
-             data-daily="104" data-month="104" data-ytd="107" data-full="107">
+        <!-- SPC Total — wired live. No fixed target in the registry (target:null,
+             signage-only), and self-documented as understated since the Utilities/
+             Compressed Air fact was retired — see formula-registry.js notes. -->
+        <div class="sk-card" data-formula-key="specific-power-consumption-total" data-unit-label="kWh/t">
           <div class="sk-top">
             <div class="sk-label">Specific Power — Total</div>
             <span class="sk-dept-tag">Production</span>
           </div>
           <div class="sk-value-row">
-            <span class="sk-value">104</span>
+            <span class="sk-value">—</span>
             <span class="sk-unit">kWh/t</span>
-            <span class="sk-delta pos">↓ −5 vs Jan</span>
+            <span class="sk-delta"></span>
           </div>
-          <div class="sk-bar"><div class="sk-bar-fill" style="width:86.5%"></div></div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
           <div class="sk-foot">
-            <span class="sk-tgt">Target: &lt; 90 kWh/t</span>
-            <span class="sk-pct">+15.6% over</span>
+            <span class="sk-tgt">No fixed target — see methodology note</span>
+            <span class="sk-pct">—</span>
           </div>
-          <div class="sk-status"><span class="sk-status-dot"></span> Concern — improving</div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Loading…</div>
         </div>
 
-        <!-- SPC Clinker -->
-        <div class="sk-card concern"
-             data-daily="79" data-month="79" data-ytd="79" data-full="79">
+        <!-- SPC Up to Clinker — wired live, same "no fixed target / understated" caveat -->
+        <div class="sk-card" data-formula-key="specific-power-consumption-up-to-clinker" data-unit-label="kWh/t">
           <div class="sk-top">
             <div class="sk-label">SPC — Up to Clinker</div>
             <span class="sk-dept-tag">Production</span>
           </div>
           <div class="sk-value-row">
-            <span class="sk-value">79</span>
+            <span class="sk-value">—</span>
             <span class="sk-unit">kWh/t</span>
-            <span class="sk-delta flat">→ same as Jan</span>
+            <span class="sk-delta"></span>
           </div>
-          <div class="sk-bar"><div class="sk-bar-fill" style="width:77.2%"></div></div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
           <div class="sk-foot">
-            <span class="sk-tgt">Target: &lt; 61 kWh/t</span>
-            <span class="sk-pct">+29.5% over</span>
+            <span class="sk-tgt">No fixed target — see methodology note</span>
+            <span class="sk-pct">—</span>
           </div>
-          <div class="sk-status"><span class="sk-status-dot"></span> Concern</div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Loading…</div>
         </div>
 
-        <!-- CPP Heat Rate -->
-        <div class="sk-card watch"
-             data-daily="3,888" data-month="3,888" data-ytd="3,863" data-full="3,863">
+        <!-- CPP Heat Rate — wired live (backfilled 2026-07-28, 91/91 days
+             Apr-Jun 2026; formula-registry.js 'cpp-heat-rate') -->
+        <div class="sk-card" data-formula-key="cpp-heat-rate" data-unit-label="kcal/kWh">
           <div class="sk-top">
             <div class="sk-label">CPP Heat Rate</div>
             <span class="sk-dept-tag">Power Plant</span>
           </div>
           <div class="sk-value-row">
-            <span class="sk-value">3,888</span>
+            <span class="sk-value">—</span>
             <span class="sk-unit">kcal/kWh</span>
-            <span class="sk-delta neg">↑ +51 vs Jan</span>
+            <span class="sk-delta"></span>
           </div>
-          <div class="sk-bar"><div class="sk-bar-fill" style="width:97.7%"></div></div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: &lt; 3,800 kcal/kWh</span>
-            <span class="sk-pct">+2.3% over</span>
+            <span class="sk-pct">—</span>
           </div>
-          <div class="sk-status"><span class="sk-status-dot"></span> Watch — low load operation</div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Loading…</div>
         </div>
 
-        <!-- CPP Auxiliary Power -->
-        <div class="sk-card watch"
-             data-daily="10.93" data-month="10.93" data-ytd="10.54" data-full="10.54">
+        <!-- CPP Auxiliary Power — wired live, same backfill -->
+        <div class="sk-card" data-formula-key="cpp-auxiliary-power" data-unit-label="%">
           <div class="sk-top">
             <div class="sk-label">CPP Auxiliary Power</div>
             <span class="sk-dept-tag">Power Plant</span>
           </div>
           <div class="sk-value-row">
-            <span class="sk-value">10.93</span>
+            <span class="sk-value">—</span>
             <span class="sk-unit">%</span>
-            <span class="sk-delta neg">↑ +0.78pp vs Jan</span>
+            <span class="sk-delta"></span>
           </div>
-          <div class="sk-bar"><div class="sk-bar-fill" style="width:91.5%"></div></div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: &lt; 10.0%</span>
-            <span class="sk-pct">+9.3% over</span>
+            <span class="sk-pct">—</span>
           </div>
-          <div class="sk-status"><span class="sk-status-dot"></span> Watch — optimisation underway</div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Loading…</div>
         </div>
 
       </div><!-- /energy row -->
@@ -357,8 +358,12 @@
       </div>
       <div class="smry-row smry-row-4">
 
-        <!-- NAI Kiln -->
-        <div class="sk-card on-track">
+        <!-- Equipment Reliability cards: no formula-registry KPI covers Network
+             Availability, MTBF, or Stack Emission — these live only in kpi_monthly
+             (manual entry) and, per the 2026-07-28 audit, kpi_monthly has real rows
+             for exactly one dept/month (E&I, Feb 2026). Marked illustrative rather
+             than silently showing frozen Jan/Feb figures as if current. -->
+        <div class="sk-card on-track sk-illustrative">
           <div class="sk-top">
             <div class="sk-label">Network Availability — Kiln</div>
             <span class="sk-dept-tag">E &amp; I</span>
@@ -373,11 +378,10 @@
             <span class="sk-tgt">Target: &gt; 90%</span>
             <span class="sk-pct">99.5%</span>
           </div>
-          <div class="sk-status"><span class="sk-status-dot"></span> On Track</div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
         </div>
 
-        <!-- MTBF Kiln -->
-        <div class="sk-card concern">
+        <div class="sk-card concern sk-illustrative">
           <div class="sk-top">
             <div class="sk-label">MTBF — Kiln</div>
             <span class="sk-dept-tag">E &amp; I</span>
@@ -392,11 +396,10 @@
             <span class="sk-tgt">Target: &gt; 400 hrs</span>
             <span class="sk-pct">45% of target</span>
           </div>
-          <div class="sk-status"><span class="sk-status-dot"></span> Concern — critical gap</div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
         </div>
 
-        <!-- NAI Kiln Mechanical -->
-        <div class="sk-card on-track">
+        <div class="sk-card on-track sk-illustrative">
           <div class="sk-top">
             <div class="sk-label">NAI Kiln — Mechanical</div>
             <span class="sk-dept-tag">Mechanical</span>
@@ -411,11 +414,10 @@
             <span class="sk-tgt">Target: &gt; 92%</span>
             <span class="sk-pct">98.1%</span>
           </div>
-          <div class="sk-status"><span class="sk-status-dot"></span> On Track</div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
         </div>
 
-        <!-- Stack Emission -->
-        <div class="sk-card concern">
+        <div class="sk-card concern sk-illustrative">
           <div class="sk-top">
             <div class="sk-label">Stack Emission</div>
             <span class="sk-dept-tag">Mechanical</span>
@@ -430,7 +432,7 @@
             <span class="sk-tgt">Target: &lt; 50 mg/m³</span>
             <span class="sk-pct">+20% over</span>
           </div>
-          <div class="sk-status"><span class="sk-status-dot"></span> Concern — regulatory risk</div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
         </div>
 
       </div><!-- /reliability row -->
@@ -443,7 +445,9 @@
       </div>
       <div class="smry-row smry-row-4">
 
-        <div class="sk-card on-track sk-safety">
+        <!-- Safety cards: tracked in kpi_monthly (manual), same near-empty real
+             data state as Equipment Reliability above — marked illustrative. -->
+        <div class="sk-card on-track sk-safety sk-illustrative">
           <div class="sk-top">
             <div class="sk-label">Fatalities</div>
             <span class="sk-dept-tag">All Depts</span>
@@ -452,10 +456,10 @@
             <span class="sk-value">0</span>
             <span class="sk-unit">YTD</span>
           </div>
-          <div class="sk-status"><span class="sk-status-dot"></span> On Track</div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
         </div>
 
-        <div class="sk-card on-track sk-safety">
+        <div class="sk-card on-track sk-safety sk-illustrative">
           <div class="sk-top">
             <div class="sk-label">Lost Time Injuries</div>
             <span class="sk-dept-tag">All Depts</span>
@@ -464,10 +468,10 @@
             <span class="sk-value">0</span>
             <span class="sk-unit">YTD</span>
           </div>
-          <div class="sk-status"><span class="sk-status-dot"></span> On Track — <span id="smry-days-lti">—</span> days since last LTI</div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
         </div>
 
-        <div class="sk-card on-track sk-safety">
+        <div class="sk-card on-track sk-safety sk-illustrative">
           <div class="sk-top">
             <div class="sk-label">Medical Treatment Injuries</div>
             <span class="sk-dept-tag">All Depts</span>
@@ -476,10 +480,10 @@
             <span class="sk-value">0</span>
             <span class="sk-unit">YTD</span>
           </div>
-          <div class="sk-status"><span class="sk-status-dot"></span> On Track</div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
         </div>
 
-        <div class="sk-card watch sk-safety">
+        <div class="sk-card watch sk-safety sk-illustrative">
           <div class="sk-top">
             <div class="sk-label">Hazards Reported</div>
             <span class="sk-dept-tag">All Depts</span>
@@ -488,7 +492,7 @@
             <span class="sk-value" id="smry-hazards-total">21</span>
             <span class="sk-unit">this month</span>
           </div>
-          <div class="sk-status"><span class="sk-status-dot"></span> Watch — some depts under-reporting</div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
         </div>
 
       </div><!-- /safety row -->
@@ -501,8 +505,7 @@
       </div>
       <div class="smry-row smry-row-3">
 
-        <div class="sk-card concern"
-             data-daily="0.50" data-month="0.50" data-ytd="0.50" data-full="0.50">
+        <div class="sk-card concern sk-illustrative">
           <div class="sk-top">
             <div class="sk-label">Burst Bag Generation</div>
             <span class="sk-dept-tag">Packing</span>
@@ -517,10 +520,10 @@
             <span class="sk-tgt">Target: &lt; 0.30%</span>
             <span class="sk-pct">+66.7% over</span>
           </div>
-          <div class="sk-status"><span class="sk-status-dot"></span> Concern — supplier quality action taken</div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
         </div>
 
-        <div class="sk-card on-track">
+        <div class="sk-card on-track sk-illustrative">
           <div class="sk-top">
             <div class="sk-label">Clinker C3S</div>
             <span class="sk-dept-tag">Production</span>
@@ -535,27 +538,27 @@
             <span class="sk-tgt">Target: &gt; 50%</span>
             <span class="sk-pct">102%</span>
           </div>
-          <div class="sk-status"><span class="sk-status-dot"></span> On Track</div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
         </div>
 
-        <div class="sk-card concern"
-             data-daily="3.0" data-month="3.0" data-ytd="3.5" data-full="3.5"
-             data-kpi-id="free-lime">
+        <!-- Clinker Free Lime — wired live. Was previously tagged data-kpi-id="free-lime",
+             which never matched the real registry key (clinker-free-lime) — silently dead. -->
+        <div class="sk-card" data-formula-key="clinker-free-lime" data-unit-label="%">
           <div class="sk-top">
             <div class="sk-label">Clinker Free Lime</div>
             <span class="sk-dept-tag">Production</span>
           </div>
           <div class="sk-value-row">
-            <span class="sk-value">3.0</span>
+            <span class="sk-value">—</span>
             <span class="sk-unit">%</span>
-            <span class="sk-delta pos">↓ −1 vs Jan</span>
+            <span class="sk-delta"></span>
           </div>
-          <div class="sk-bar"><div class="sk-bar-fill" style="width:99%"></div></div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
           <div class="sk-foot">
-            <span class="sk-tgt">Target: &lt; 3.0%</span>
-            <span class="sk-pct">At limit</span>
+            <span class="sk-tgt">Target: —</span>
+            <span class="sk-pct">—</span>
           </div>
-          <div class="sk-status"><span class="sk-status-dot"></span> Concern — borderline</div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Loading…</div>
         </div>
 
       </div><!-- /packing row -->

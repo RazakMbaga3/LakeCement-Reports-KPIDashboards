@@ -1,9 +1,9 @@
 /*
   scripts/patch-power-production-tonnage.js — one-time patch adding
-  pwr_kiln_prod_mt / pwr_cm1_prod_mt / pwr_cm2_prod_mt onto the June 2026
+  pwr_kiln_prod_mt / pwr_cm1_prod_mt / pwr_cm2_prod_mt onto the Apr–Jun 2026
   power-cons records already seeded by import-power-cons.js, so the
   Specific Power Consumption ratio KPIs (which divide by these) finally
-  compute for June instead of showing "no data".
+  compute instead of showing "no data".
 
   These three facts are power-cons-form-only duplicates of figures that
   also live on the production form (kiln_prod_mt, and the CM1/CM2 grade
@@ -19,10 +19,12 @@
   record first and POSTs the merged object back, rather than posting the
   three new fields alone and wiping the 91-day kWh backfill.
 
-  April and May are NOT covered — no equivalent full-month production
-  master file has been located for those months yet (only single-day
-  samples exist in the repo). Their SPC ratio KPIs remain "no data" until
-  that's sourced and this pattern is repeated.
+  2026-07-27: extended to April and May — a full-month production master
+  file for each is now in the repo (`full Production Report april and
+  may/Master production report APRIL 26'.xlsx` / `MAY 26'.xlsx`), same
+  Clinker/Production2 sheet layout as the June file this script was
+  originally written against (verified: EK column, row 3 = day 1,
+  AC/AF/AI/AL/AR/AU/AX/BD headers all "Production").
 
   Usage: node scripts/patch-power-production-tonnage.js
 */
@@ -34,8 +36,11 @@ const BASE = process.env.IMPORT_BASE_URL || 'http://localhost:5000/api';
 const PM_USER = process.env.IMPORT_PM_USER || 'pm';
 const PM_PASS = process.env.IMPORT_PM_PASS || 'PM@LCL2026';
 
-const SRC_FILE = path.join(__dirname, '..', '..', "Master production report JUNE 26'.xlsx");
-const YEAR = 2026, MONTH = 6, DAYS = 30;
+const MONTHS = [
+  { file: path.join(__dirname, '..', '..', 'full Production Report april and may', "Master production report APRIL 26'.xlsx"), year: 2026, month: 4, days: 30 },
+  { file: path.join(__dirname, '..', '..', 'full Production Report april and may', "Master production report MAY 26'.xlsx"), year: 2026, month: 5, days: 31 },
+  { file: path.join(__dirname, '..', '..', "Master production report JUNE 26'.xlsx"), year: 2026, month: 6, days: 30 },
+];
 
 function cellNumber(cell) {
   if (!cell) return undefined;
@@ -59,22 +64,18 @@ async function api(method, pathname, { token, body } = {}) {
   return { status: res.status, body: json };
 }
 
-async function main() {
-  const loginRes = await api('POST', '/auth/login', { body: { username: PM_USER, password: PM_PASS } });
-  if (loginRes.status !== 200) { console.error('Login failed:', loginRes.status, loginRes.body); process.exit(1); }
-  const token = loginRes.body.token;
-  console.log(`Logged in as ${PM_USER} (role ${loginRes.body.user.role})`);
-
+async function patchMonth(token, { file, year, month, days }) {
+  console.log(`\n--- ${year}-${String(month).padStart(2, '0')} (${file}) ---`);
   const wb = new ExcelJS.Workbook();
-  await wb.xlsx.readFile(SRC_FILE);
+  await wb.xlsx.readFile(file);
   const production2 = wb.getWorksheet('Production2');
   const clinker = wb.getWorksheet('Clinker');
 
   let patched = 0, skipped = 0, failed = 0;
 
-  for (let day = 1; day <= DAYS; day++) {
-    const row = day + 2; // row 3 = June 1
-    const dateStr = `${YEAR}-${String(MONTH).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  for (let day = 1; day <= days; day++) {
+    const row = day + 2; // row 3 = day 1
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
     const kilnProd = cellNumber(clinker.getRow(row).getCell('EK'));
     const cm1Total = sum(
@@ -109,8 +110,21 @@ async function main() {
       process.stdout.write(`  ✅ ${dateStr}\r`);
     }
   }
-  console.log(`\n\nDone. patched=${patched} skipped(no-data)=${skipped} failed=${failed}`);
-  process.exit(failed ? 1 : 0);
+  console.log(`\nDone. patched=${patched} skipped(no-data)=${skipped} failed=${failed}`);
+  return failed;
+}
+
+async function main() {
+  const loginRes = await api('POST', '/auth/login', { body: { username: PM_USER, password: PM_PASS } });
+  if (loginRes.status !== 200) { console.error('Login failed:', loginRes.status, loginRes.body); process.exit(1); }
+  const token = loginRes.body.token;
+  console.log(`Logged in as ${PM_USER} (role ${loginRes.body.user.role})`);
+
+  let totalFailed = 0;
+  for (const m of MONTHS) {
+    totalFailed += await patchMonth(token, m);
+  }
+  process.exit(totalFailed ? 1 : 0);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

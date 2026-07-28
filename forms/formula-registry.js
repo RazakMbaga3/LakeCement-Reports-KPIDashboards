@@ -124,6 +124,13 @@
     cm2_425n_mt:     { source: 'manual', form: 'production', field: 'cm2_425n_mt',     unit: 'MT' },
     cm2_425n_bm_mt:  { source: 'manual', form: 'production', field: 'cm2_425n_bm_mt',  unit: 'MT' },
     cm2_325n_mt:     { source: 'manual', form: 'production', field: 'cm2_325n_mt',     unit: 'MT' },
+
+    // CPP (Captive Power Plant) daily generation report — FRM-LCL-PP-06
+    cpp_gross_gen_kwh:    { source: 'manual', form: 'cpp', field: 'cpp_gross_gen_kwh',    unit: 'kWh' },
+    cpp_aux_kwh:          { source: 'manual', form: 'cpp', field: 'cpp_aux_kwh',          unit: 'kWh' },
+    cpp_coal_cons:        { source: 'manual', form: 'cpp', field: 'cpp_coal_cons',        unit: 'MT' },
+    cpp_coal_gcv:         { source: 'manual', form: 'cpp', field: 'cpp_coal_gcv',         unit: 'kcal/kg' },
+    cpp_heat_rate_plant:  { source: 'manual', form: 'cpp', field: 'cpp_heat_rate_plant',  unit: 'kcal/kWh' },
   };
 
   // pile-quality form: 18 CaO hole samples
@@ -404,6 +411,27 @@
         return any ? sumOf(CK_COAL_CONS_FIELDS, f) : null;
       },
       monthlyAgg: 'sum',
+    },
+
+    'cpp-heat-rate': {
+      label: 'CPP Heat Rate', unit: 'kcal/kWh', dp: 0, version: 1,
+      target: 3800, signage: '<', targetLabel: 'Target < 3,800 kcal/kWh',
+      notes: 'Captive Power Plant heat rate (Plant, 3300 @ MCR basis) as reported daily on FRM-LCL-PP-06 — a lab/DCS-derived figure taken as-is, not re-derived from coal×GCV÷gross_gen (verified against the source workbook: the reported figure differs slightly from that naive formula, similar to Turbine Steam Consumption not equalling Boiler−Bleed — both are independently measured values). Monthly figure is the gross-generation-weighted mean.',
+      inputs: ['cpp_heat_rate_plant', 'cpp_gross_gen_kwh'],
+      daily: function (f) { return pos(f.cpp_heat_rate_plant); },
+      monthlyAgg: { type: 'weighted', weight: function (f) { return pos(f.cpp_gross_gen_kwh) || 0; } },
+    },
+
+    'cpp-auxiliary-power': {
+      label: 'CPP Auxiliary Power', unit: '%', dp: 2, version: 1,
+      target: 10, signage: '<', targetLabel: 'Target < 10.0%',
+      notes: 'Captive Power Plant auxiliary (house-load) power consumption as a % of gross generation — verified against FRM-LCL-PP-06 (aux ÷ gross × 100). Monthly figure is Σaux ÷ Σgross (gross-generation-weighted), not a simple average of daily percentages.',
+      inputs: ['cpp_aux_kwh', 'cpp_gross_gen_kwh'],
+      daily: function (f) {
+        var gross = pos(f.cpp_gross_gen_kwh), aux = pos(f.cpp_aux_kwh);
+        return (gross && aux !== null) ? aux / gross * 100 : null;
+      },
+      monthlyAgg: { type: 'weighted', weight: function (f) { return pos(f.cpp_gross_gen_kwh) || 0; } },
     },
   };
 
