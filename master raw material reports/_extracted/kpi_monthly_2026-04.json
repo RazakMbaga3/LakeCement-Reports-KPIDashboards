@@ -1,0 +1,918 @@
+{
+  "year": 2026,
+  "month": 4,
+  "rows": [
+    {
+      "department": "mechanical",
+      "kpi_key": "fatality",
+      "label": "FATALITY",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "mechanical",
+      "kpi_key": "lti",
+      "label": "LTI",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "mechanical",
+      "kpi_key": "mti",
+      "label": "MTI",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "mechanical",
+      "kpi_key": "hazards-reported",
+      "label": "HAZARDS REPORTED",
+      "unit": "NOS",
+      "target": 4.0,
+      "actual": 4.0
+    },
+    {
+      "department": "mechanical",
+      "kpi_key": "stack-emission",
+      "label": "STACK EMISSION",
+      "unit": "mg/m3",
+      "target": 50.0,
+      "actual": 15.0
+    },
+    {
+      "department": "mechanical",
+      "kpi_key": "nai-kiln",
+      "label": "NAI KILN",
+      "unit": "%",
+      "target": 92.0,
+      "actual": 93.56
+    },
+    {
+      "department": "mechanical",
+      "kpi_key": "nai-cement-mill-1",
+      "label": "NAI CEMENT MILL 1",
+      "unit": "%",
+      "target": 92.0,
+      "actual": 99.2
+    },
+    {
+      "department": "mechanical",
+      "kpi_key": "nai-cement-mill-2",
+      "label": "NAI CEMENT MILL 2",
+      "unit": "%",
+      "target": 92.0,
+      "actual": 97.58
+    },
+    {
+      "department": "mechanical",
+      "kpi_key": "mtbf-kiln",
+      "label": "MTBF KILN",
+      "unit": "HRS",
+      "target": 400.0,
+      "actual": 103.04
+    },
+    {
+      "department": "mechanical",
+      "kpi_key": "mtbf-cement-mill-1",
+      "label": "MTBF CEMENT MILL 1",
+      "unit": "HRS",
+      "target": 225.0,
+      "actual": 85.32
+    },
+    {
+      "department": "mechanical",
+      "kpi_key": "mtbf-cement-mill-2",
+      "label": "MTBF CEMENT MILL 2",
+      "unit": "HRS",
+      "target": 225.0,
+      "actual": 89.49
+    },
+    {
+      "department": "mechanical",
+      "kpi_key": "output-of-raw-mill-1",
+      "label": "OUTPUT OF RAW MILL 1",
+      "unit": "TPH",
+      "target": 145.0,
+      "actual": 132.57
+    },
+    {
+      "department": "mechanical",
+      "kpi_key": "output-of-raw-mill-2",
+      "label": "OUTPUT OF RAW MILL 2",
+      "unit": "TPH",
+      "target": 20.0,
+      "actual": 9.88
+    },
+    {
+      "department": "mechanical",
+      "kpi_key": "maintenance-materials-cost",
+      "label": "MAINTENANCE MATERIALS COST",
+      "unit": "TSH / MT CLINKER",
+      "target": 5400.0,
+      "actual": 5785.0
+    },
+    {
+      "department": "mechanical",
+      "kpi_key": "wear-parts-cost",
+      "label": "WEAR PARTS COST",
+      "unit": "TSH / MT CLINKER",
+      "target": 4320.0,
+      "actual": 722.0
+    },
+    {
+      "department": "mechanical",
+      "kpi_key": "third-party-cost",
+      "label": "THIRD PARTY COST",
+      "unit": "TSH / MT CLINKER",
+      "target": 900.0,
+      "actual": 1350.0
+    },
+    {
+      "department": "production",
+      "kpi_key": "fatality",
+      "label": "FATALITY",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "production",
+      "kpi_key": "lti",
+      "label": "LTI",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "production",
+      "kpi_key": "mti",
+      "label": "MTI",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "production",
+      "kpi_key": "hazards-reported",
+      "label": "HAZARDS REPORTED",
+      "unit": "NOS",
+      "target": 4.0,
+      "actual": 0.0
+    },
+    {
+      "department": "production",
+      "kpi_key": "stack-emission",
+      "label": "STACK EMISSION",
+      "unit": "mg/m3",
+      "target": 50.0,
+      "actual": 50.0
+    },
+    {
+      "department": "production",
+      "kpi_key": "kiln-output",
+      "label": "KILN OUTPUT",
+      "unit": "TPD",
+      "target": 2000.0,
+      "actual": 1572.1286816439422
+    },
+    {
+      "department": "production",
+      "kpi_key": "vrm-output",
+      "label": "VRM OUTPUT",
+      "unit": "TPH",
+      "target": 145.0,
+      "actual": 132.56761688496007
+    },
+    {
+      "department": "production",
+      "kpi_key": "raw-mill-2-output",
+      "label": "Raw Mill 2 Output",
+      "unit": "TPH",
+      "target": 16.0,
+      "actual": 9.882103915922125
+    },
+    {
+      "department": "production",
+      "kpi_key": "cement-mill-1-output",
+      "label": "CEMENT MILL 1 OUTPUT",
+      "unit": "TPH",
+      "target": 65.0,
+      "actual": 60.68833502617392
+    },
+    {
+      "department": "production",
+      "kpi_key": "cement-mill-2-output",
+      "label": "CEMENT MILL 2 OUTPUT",
+      "unit": "",
+      "target": 55.0,
+      "actual": 58.165564763944495
+    },
+    {
+      "department": "production",
+      "kpi_key": "coal-mill-output",
+      "label": "COAL MILL OUTPUT",
+      "unit": "TPH",
+      "target": 17.0,
+      "actual": 15.315321370163765
+    },
+    {
+      "department": "production",
+      "kpi_key": "specific-power-consumption-up-to-clinker",
+      "label": "SPECIFIC POWER CONSUMPTION UP TO CLINKER",
+      "unit": "KwH / T",
+      "target": 60.5,
+      "actual": 81.82063787120953
+    },
+    {
+      "department": "production",
+      "kpi_key": "specific-power-consumption-cement-grinding",
+      "label": "SPECIFIC POWER CONSUMPTION CEMENT GRINDING",
+      "unit": "KwH / T",
+      "target": 35.0,
+      "actual": 43.000106912994205
+    },
+    {
+      "department": "production",
+      "kpi_key": "specific-power-consumption-utilities",
+      "label": "Specific Power Consumption - Utilities",
+      "unit": "KwH / T",
+      "target": 3.5,
+      "actual": 3.129300575191909
+    },
+    {
+      "department": "production",
+      "kpi_key": "specific-power-consumption-total",
+      "label": "SPECIFIC POWER CONSUMPTION - TOTAL",
+      "unit": "KwH / T",
+      "target": 90.0,
+      "actual": 113.63089876556643
+    },
+    {
+      "department": "production",
+      "kpi_key": "specific-thermal-energy-consumption",
+      "label": "SPECIFIC THERMAL ENERGY CONSUMPTION",
+      "unit": "KCAL / KG CLINKER",
+      "target": 780.0,
+      "actual": 817.3580759030635
+    },
+    {
+      "department": "production",
+      "kpi_key": "clinker-c3s",
+      "label": "CLINKER C3S",
+      "unit": "%",
+      "target": 50.0,
+      "actual": 52.9
+    },
+    {
+      "department": "production",
+      "kpi_key": "cement-residue-on-45-micron",
+      "label": "CEMENT RESIDUE ON 45 MICRON",
+      "unit": "%",
+      "target": 10.0,
+      "actual": 9.74
+    },
+    {
+      "department": "production",
+      "kpi_key": "complying-internal-quality-norms",
+      "label": "COMPLYING INTERNAL QUALITY NORMS",
+      "unit": "%",
+      "target": 100.0,
+      "actual": 100.0
+    },
+    {
+      "department": "production",
+      "kpi_key": "grinding-media-consumption",
+      "label": "GRINDING MEDIA CONSUMPTION",
+      "unit": "GMS / MT",
+      "target": 53.0,
+      "actual": null
+    },
+    {
+      "department": "production",
+      "kpi_key": "annual-variation-in-clinker-gypsum-and-coal-stock-book-vs-actual",
+      "label": "Annual Variation in clinker, Gypsum and coal stock (Book Vs Actual)",
+      "unit": "%",
+      "target": 2.0,
+      "actual": 2.0
+    },
+    {
+      "department": "ei",
+      "kpi_key": "fatality",
+      "label": "FATALITY",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "ei",
+      "kpi_key": "lti",
+      "label": "LTI",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "ei",
+      "kpi_key": "mti",
+      "label": "MTI",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "ei",
+      "kpi_key": "hazards-reported",
+      "label": "HAZARDS REPORTED",
+      "unit": "NOS",
+      "target": 4.0,
+      "actual": 5.0
+    },
+    {
+      "department": "ei",
+      "kpi_key": "i-gbh-stack",
+      "label": "i) GBH Stack",
+      "unit": "mg/m3",
+      "target": 50.0,
+      "actual": 90.0
+    },
+    {
+      "department": "ei",
+      "kpi_key": "ii-coal-mill-bh",
+      "label": "ii) Coal mill BH",
+      "unit": "mg/m3",
+      "target": 50.0,
+      "actual": 45.0
+    },
+    {
+      "department": "ei",
+      "kpi_key": "iii-cooler-esp",
+      "label": "iii) Cooler ESP",
+      "unit": "mg/m3",
+      "target": 50.0,
+      "actual": 25.0
+    },
+    {
+      "department": "ei",
+      "kpi_key": "iv-cement-mill",
+      "label": "iv) Cement mill",
+      "unit": "mg/m3",
+      "target": 50.0,
+      "actual": 20.0
+    },
+    {
+      "department": "ei",
+      "kpi_key": "nai-kiln",
+      "label": "NAI KILN",
+      "unit": "%",
+      "target": 90.0,
+      "actual": 99.93
+    },
+    {
+      "department": "ei",
+      "kpi_key": "nai-vrm",
+      "label": "NAI VRM",
+      "unit": "%",
+      "target": 90.0,
+      "actual": 99.5
+    },
+    {
+      "department": "ei",
+      "kpi_key": "nai-cement-mill-1",
+      "label": "NAI CEMENT MILL 1",
+      "unit": "%",
+      "target": 92.0,
+      "actual": 100.0
+    },
+    {
+      "department": "ei",
+      "kpi_key": "nai-cement-mill-2",
+      "label": "NAI CEMENT MILL 2",
+      "unit": "%",
+      "target": 92.0,
+      "actual": 99.29
+    },
+    {
+      "department": "ei",
+      "kpi_key": "mtbf-kiln",
+      "label": "MTBF KILN",
+      "unit": "HRS",
+      "target": 400.0,
+      "actual": 618.0
+    },
+    {
+      "department": "ei",
+      "kpi_key": "mtbf-cement-mill-1",
+      "label": "MTBF CEMENT MILL 1",
+      "unit": "HRS",
+      "target": 225.0,
+      "actual": 256.0
+    },
+    {
+      "department": "ei",
+      "kpi_key": "mtbf-cement-mill-2",
+      "label": "MTBF CEMENT MILL 2",
+      "unit": "HRS",
+      "target": 225.0,
+      "actual": 268.0
+    },
+    {
+      "department": "ei",
+      "kpi_key": "specific-power-consumption-up-to-clinker",
+      "label": "SPECIFIC POWER CONSUMPTION UP TO CLINKER",
+      "unit": "KwH / T Clinker",
+      "target": 60.5,
+      "actual": 79.87
+    },
+    {
+      "department": "ei",
+      "kpi_key": "specific-power-consumption-cement-grinding",
+      "label": "SPECIFIC POWER CONSUMPTION CEMENT GRINDING",
+      "unit": "KwH / T Cement",
+      "target": 35.0,
+      "actual": 43.05
+    },
+    {
+      "department": "ei",
+      "kpi_key": "specific-power-consumption-utilities",
+      "label": "Specific Power Consumption - Utilities",
+      "unit": "KwH / T",
+      "target": 3.5,
+      "actual": 4.16
+    },
+    {
+      "department": "ei",
+      "kpi_key": "specific-power-consumption-total",
+      "label": "SPECIFIC POWER CONSUMPTION - TOTAL",
+      "unit": "KwH / T Cement",
+      "target": 90.0,
+      "actual": 113.8
+    },
+    {
+      "department": "ei",
+      "kpi_key": "cost-per-unit-for-tanesco-power",
+      "label": "Cost per unit for TANESCO Power",
+      "unit": "Tsh/KWH",
+      "target": 195.0,
+      "actual": 192.0
+    },
+    {
+      "department": "ei",
+      "kpi_key": "compliance-bag-weight",
+      "label": "COMPLIANCE BAG WEIGHT",
+      "unit": "%",
+      "target": 100.0,
+      "actual": 100.0
+    },
+    {
+      "department": "powerplant",
+      "kpi_key": "fatality",
+      "label": "FATALITY",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "powerplant",
+      "kpi_key": "lti",
+      "label": "LTI",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "powerplant",
+      "kpi_key": "mti",
+      "label": "MTI",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "powerplant",
+      "kpi_key": "hazards-reported",
+      "label": "HAZARDS REPORTED",
+      "unit": "NOS",
+      "target": 4.0,
+      "actual": 4.0
+    },
+    {
+      "department": "powerplant",
+      "kpi_key": "compliance-to-legal-requirement",
+      "label": "COMPLIANCE TO LEGAL REQUIREMENT",
+      "unit": "%",
+      "target": 100.0,
+      "actual": 100.0
+    },
+    {
+      "department": "powerplant",
+      "kpi_key": "auxiliary-power-consumption",
+      "label": "AUXILLARY POWER CONS",
+      "unit": "%",
+      "target": 10.0,
+      "actual": 11.53
+    },
+    {
+      "department": "powerplant",
+      "kpi_key": "heat-rate",
+      "label": "HEAT RATE",
+      "unit": "KCAL / KWH",
+      "target": 3800.0,
+      "actual": 3938.0
+    },
+    {
+      "department": "powerplant",
+      "kpi_key": "unburnt-coal",
+      "label": "UNBURNT COAL",
+      "unit": "%",
+      "target": 24.0,
+      "actual": 20.0
+    },
+    {
+      "department": "powerplant",
+      "kpi_key": "unplanned-stop-in-a-year-cumulative",
+      "label": "UNPLANNED STOP IN A YEAR (CUMMULATIVE)",
+      "unit": "#",
+      "target": 2.0,
+      "actual": 0.0
+    },
+    {
+      "department": "powerplant",
+      "kpi_key": "emission-from-esp-stack",
+      "label": "EMISSION FROM ESP STACK",
+      "unit": "mg/m3",
+      "target": 100.0,
+      "actual": 3.0
+    },
+    {
+      "department": "powerplant",
+      "kpi_key": "maintenance-cost",
+      "label": "MAINTENANCE COST",
+      "unit": "TSH / MT CLINKER",
+      "target": 1695.0,
+      "actual": 1441.0
+    },
+    {
+      "department": "powerplant",
+      "kpi_key": "total-generation-cost-net",
+      "label": "TOTAL GENERATION COST (Net)",
+      "unit": "TSH / KWH",
+      "target": 200.0,
+      "actual": 243.36
+    },
+    {
+      "department": "mines",
+      "kpi_key": "fatality",
+      "label": "FATALITY",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "mines",
+      "kpi_key": "lti",
+      "label": "LTI",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "mines",
+      "kpi_key": "mti",
+      "label": "MTI",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "mines",
+      "kpi_key": "hazards-reported",
+      "label": "HAZARDS REPORTED",
+      "unit": "NOS",
+      "target": 5.0,
+      "actual": 5.0
+    },
+    {
+      "department": "mines",
+      "kpi_key": "compliance-to-legal-requirements",
+      "label": "COMPLIANCE TO LEGAL REQUIREMENTS",
+      "unit": "%",
+      "target": 1.0,
+      "actual": 0.95
+    },
+    {
+      "department": "mines",
+      "kpi_key": "raising-of-hg-limestone-per-month",
+      "label": "RAISING OF HG LIMESTONE PER MONTH",
+      "unit": "MT",
+      "target": 85000.0,
+      "actual": 55293.8
+    },
+    {
+      "department": "mines",
+      "kpi_key": "high-grade-spg",
+      "label": "High Grade/SPG",
+      "unit": "MT",
+      "target": 40000.0,
+      "actual": 29912.54
+    },
+    {
+      "department": "mines",
+      "kpi_key": "high-mgo-tg",
+      "label": "High MgO/ TG",
+      "unit": "MT",
+      "target": 18000.0,
+      "actual": 0.0
+    },
+    {
+      "department": "mines",
+      "kpi_key": "low-grade",
+      "label": "Low grade",
+      "unit": "MT",
+      "target": 27000.0,
+      "actual": 25381.26
+    },
+    {
+      "department": "mines",
+      "kpi_key": "consumption-of-high-mgo",
+      "label": "CONSUMPTION OF HIGH MgO",
+      "unit": "%",
+      "target": 0.25,
+      "actual": null
+    },
+    {
+      "department": "mines",
+      "kpi_key": "mtbf-of-surface-miner-1",
+      "label": "MTBF OF SURFACE MINER_1",
+      "unit": "HOURS",
+      "target": 400.0,
+      "actual": 181.0
+    },
+    {
+      "department": "mines",
+      "kpi_key": "mtbf-of-surface-miner-2",
+      "label": "MTBF OF SURFACE MINER_2",
+      "unit": "HOURS",
+      "target": 400.0,
+      "actual": 0.0
+    },
+    {
+      "department": "mines",
+      "kpi_key": "compliance-to-internal-quality-norms",
+      "label": "COMPLIANCE TO INTERNAL QUALITY NORMS",
+      "unit": "%",
+      "target": 95.0,
+      "actual": 100.0
+    },
+    {
+      "department": "mines",
+      "kpi_key": "crusher-output",
+      "label": "Crusher Output",
+      "unit": "TPH",
+      "target": 350.0,
+      "actual": 183.0
+    },
+    {
+      "department": "mines",
+      "kpi_key": "specific-diesel-consumption",
+      "label": "SPECIFIC DIESEL CONSUMPTION",
+      "unit": "LTRS/TON",
+      "target": 0.15,
+      "actual": 0.18
+    },
+    {
+      "department": "mines",
+      "kpi_key": "mines-maintenance-cost",
+      "label": "MINES  MAINTENANCE COST",
+      "unit": "TSH/TON OF RM",
+      "target": 175.0,
+      "actual": 211.0
+    },
+    {
+      "department": "mines",
+      "kpi_key": "mines-operational-cost",
+      "label": "MINES OPERATIONAL COST",
+      "unit": "TSH/TON OF RM",
+      "target": 4350.0,
+      "actual": 4619.0
+    },
+    {
+      "department": "packing",
+      "kpi_key": "fatality",
+      "label": "FATALITY",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "packing",
+      "kpi_key": "lti",
+      "label": "LTI",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "packing",
+      "kpi_key": "mti",
+      "label": "MTI",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "packing",
+      "kpi_key": "hazards-reported",
+      "label": "HAZARDS REPORTED",
+      "unit": "NOS",
+      "target": 2.0,
+      "actual": 5.0
+    },
+    {
+      "department": "packing",
+      "kpi_key": "compliance-to-legal-requirements",
+      "label": "COMPLIANCE TO LEGAL REQUIREMENTS",
+      "unit": "%",
+      "target": 1.0,
+      "actual": 1.0
+    },
+    {
+      "department": "packing",
+      "kpi_key": "compliance-bag-weight",
+      "label": "COMPLIANCE BAG WEIGHT",
+      "unit": "%",
+      "target": 100.0,
+      "actual": 0.98
+    },
+    {
+      "department": "packing",
+      "kpi_key": "burst-bag-generation",
+      "label": "BURST BAG GENERATION",
+      "unit": "%",
+      "target": 0.003,
+      "actual": 0.009
+    },
+    {
+      "department": "packing",
+      "kpi_key": "bags-inventory",
+      "label": "BAGS INVENTORY",
+      "unit": "MIL TSH",
+      "target": 500.0,
+      "actual": 1224.0
+    },
+    {
+      "department": "stores",
+      "kpi_key": "fatality",
+      "label": "FATALITY",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "stores",
+      "kpi_key": "lti",
+      "label": "LTI",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "stores",
+      "kpi_key": "mti",
+      "label": "MTI",
+      "unit": "NOS",
+      "target": 0.0,
+      "actual": 0.0
+    },
+    {
+      "department": "stores",
+      "kpi_key": "hazards-reported",
+      "label": "HAZARDS REPORTED",
+      "unit": "NOS",
+      "target": 2.0,
+      "actual": 0.0
+    },
+    {
+      "department": "stores",
+      "kpi_key": "compliance-to-legal-requirements",
+      "label": "COMPLIANCE TO LEGAL REQUIREMENTS",
+      "unit": "%",
+      "target": 100.0,
+      "actual": 100.0
+    },
+    {
+      "department": "stores",
+      "kpi_key": "same-day-grn-posting",
+      "label": "SAME DAY GRN POSTING",
+      "unit": "DAYS",
+      "target": 1.0,
+      "actual": 1.0
+    },
+    {
+      "department": "stores",
+      "kpi_key": "mrq-posting",
+      "label": "MRQ POSTING",
+      "unit": "DAYS",
+      "target": 2.0,
+      "actual": 1.0
+    },
+    {
+      "department": "stores",
+      "kpi_key": "accurate-issue-posting-in-system",
+      "label": "ACCURATE ISSUE & POSTING IN SYSTEM",
+      "unit": "SAME DAY",
+      "target": 100.0,
+      "actual": 95.0
+    },
+    {
+      "department": "stores",
+      "kpi_key": "clearance-of-grn-after-material-invoice-receipt",
+      "label": "CLEARANCE OF GRN AFTER MATERIAL/ INVOICE RECEIPT",
+      "unit": "DAYS",
+      "target": 5.0,
+      "actual": 1.0
+    },
+    {
+      "department": "stores",
+      "kpi_key": "monthly-audit-verification-of-stock-a-class-100-b-class-1000-items-month",
+      "label": "MONTHLY AUDIT VERIFICATION OF STOCK \n- A CLASS - 100 % \n- B CLASS - 1000 ITEMS / MONTH",
+      "unit": "VARIANCE",
+      "target": 0.02,
+      "actual": 0.0071
+    },
+    {
+      "department": "stores",
+      "kpi_key": "material-code-creation",
+      "label": "MATERIAL CODE CREATION",
+      "unit": "DAYS",
+      "target": 1.0,
+      "actual": 1.0
+    },
+    {
+      "department": "stores",
+      "kpi_key": "rejected-local-material-return-to-vendor",
+      "label": "REJECTED LOCAL MATERIAL RETURN TO VENDOR",
+      "unit": "DAYS",
+      "target": 10.0,
+      "actual": 6.0
+    },
+    {
+      "department": "stores",
+      "kpi_key": "monitoring-of-stock-out-in-consumable-items",
+      "label": "MONITORING OF STOCK OUT IN CONSUMABLE ITEMS",
+      "unit": "%",
+      "target": 2.0,
+      "actual": 2.0
+    },
+    {
+      "department": "stores",
+      "kpi_key": "material-preservation-as-per-best-practices",
+      "label": "MATERIAL PRESERVATION As per best practices",
+      "unit": "",
+      "target": 100.0,
+      "actual": 80.0
+    },
+    {
+      "department": "stores",
+      "kpi_key": "monthly-monitoring-of-service-jobwork-rgp-ngrp",
+      "label": "MONTHLY MONITORING OF SERVICE/JOBWORK RGP & NGRP",
+      "unit": "MONTHLY BASIS",
+      "target": 100.0,
+      "actual": 100.0
+    },
+    {
+      "department": "stores",
+      "kpi_key": "monitoring-storage-of-returned-items-r-code",
+      "label": "MONITORING/STORAGE OF RETURNED ITEMS \n(R CODE)",
+      "unit": "MONTHLY BASIS",
+      "target": 100.0,
+      "actual": 80.0
+    },
+    {
+      "department": "stores",
+      "kpi_key": "material-shelf-life-expiry-monitoring",
+      "label": "MATERIAL SHELF LIFE (EXPIRY) MONITORING",
+      "unit": "%",
+      "target": 100.0,
+      "actual": 90.0
+    },
+    {
+      "department": "stores",
+      "kpi_key": "total-inventory-value",
+      "label": "TOTAL INVENTORY VALUE",
+      "unit": "MIL TSH",
+      "target": null,
+      "actual": 11871.43925413
+    },
+    {
+      "department": "stores",
+      "kpi_key": "scrap-sale-value-monthly",
+      "label": "SCRAP SALE VALUE (Monthly)",
+      "unit": "MIL TSH",
+      "target": 10.0,
+      "actual": 57.9095
+    }
+  ]
+}
