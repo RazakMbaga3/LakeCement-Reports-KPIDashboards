@@ -441,7 +441,6 @@
         <div class="rcard-sub">Pyro Processing &amp; Cement Grinding — Stock Movement</div>
       </div>
       <div class="rcard-chips">
-        <span class="rcard-chip">Date: 03-May-2026</span>
         <span class="rcard-chip orange">PRODUCTION HEAD</span>
       </div>
     </div>
@@ -468,7 +467,10 @@
         </thead>
         <tbody>
 
-          <!-- RAW MILL materials -->
+          <!-- RAW MILL materials — static reference data, not yet wired: no form in the app
+               (checked forms/materials-form.html, forms/limestone-form.html, mines-report.html)
+               captures Limestone HG / OB Clay / ID Clay / Iron Ore stock movement. Needs a
+               dedicated data-entry form design before this can go live — out of scope here. -->
           <tr class="srow"><td colspan="15">PYRO PROCESSING — RAW MILL MATERIAL</td></tr>
 
           <tr>
@@ -567,14 +569,14 @@
             <td class="ts">6</td>
             <td class="tp">COAL — KILN</td>
             <td class="ts">CPP / Store</td>
-            <td class="cs"><div class="cv">7,803</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="coal_kiln_open" /></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cf"><div class="cv">0</div></td>
             <td class="cf"><div class="cv">182</div></td>
             <td class="cm"><input class="ci" type="number" value="265" data-field="coal_kiln" /></td>
-            <td class="cf"><div class="cv">587</div></td>
-            <td class="cf"><div class="cv">7,424</div></td>
-            <td class="cf"><div class="cv">7,466</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="coal_kiln">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="coal_kiln">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_kiln_closing">—</div></td>
             <td class="cf"><div class="cv">265.00</div></td>
             <td></td>
             <td class="cm"><input class="ci" type="number" value="10" /></td>
@@ -585,14 +587,14 @@
             <td class="ts"></td>
             <td class="tp">COAL — CPP</td>
             <td class="ts">CPP</td>
-            <td class="cs"><div class="cv">9,959</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="coal_cpp_open" /></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cf"><div class="cv">64</div></td>
             <td class="cf"><div class="cv">219</div></td>
             <td class="cm"><input class="ci" type="number" value="144" data-field="coal_cpp" /></td>
-            <td class="cf"><div class="cv">375</div></td>
-            <td class="cf"><div class="cv">4,244</div></td>
-            <td class="cf"><div class="cv">9,887</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="coal_cpp">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="coal_cpp">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_cpp_closing">—</div></td>
             <td class="cf"><div class="cv">144.00</div></td>
             <td></td>
             <td class="cm"><input class="ci" type="number" value="10" /></td>
@@ -603,15 +605,15 @@
             <td class="ts"></td>
             <td class="tp">COAL — TOTAL</td>
             <td class="ts"></td>
-            <td class="cf"><div class="cv">17,762</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_total_open">—</div></td>
             <td class="cf"><div class="cv">0</div></td>
             <td class="cf"><div class="cv">64</div></td>
             <td class="cf"><div class="cv">401</div></td>
-            <td class="cf"><div class="cv">409</div></td>
-            <td class="cf"><div class="cv">962</div></td>
-            <td class="cf"><div class="cv">11,668</div></td>
-            <td class="cf"><div class="cv">17,353</div></td>
-            <td class="cf"><div class="cv">409.00</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_total">0</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="coal_kiln,coal_cpp">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="coal_kiln,coal_cpp">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_total_closing">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_total">0</div></td>
             <td></td><td></td><td></td>
           </tr>
 
@@ -811,56 +813,59 @@
             <td class="ts">1</td>
             <td class="tp">LS CRUSHER</td>
             <td class="ts">250</td>
-            <td class="cm"><input class="ci" type="number" value="18.98" /></td>
-            <td class="cf"><div class="cv">39.32</div></td>
-            <td class="cf"><div class="cv">471.80</div></td>
-            <td class="cs"><div class="cv">18,391</div></td>
-            <td class="cm"><input class="ci" type="number" value="2727" /></td>
-            <td class="cf"><div class="cv">5,881</div></td>
-            <td class="cf"><div class="cv">76,967</div></td>
-            <td class="cf"><div class="cv">2,583</div></td>
-            <td class="cf"><div class="cv">6,018</div></td>
-            <td class="cf"><div class="cv">81,536</div></td>
-            <td class="cf"><div class="cv">18,535</div></td>
-            <td class="cf"><div class="cv">143.68</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="ls_crusher_run_hrs" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="ls_crusher_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="ls_crusher_run_hrs">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="ls_crusher_open" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="ls_crusher_prod_mt" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="ls_crusher_prod_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="ls_crusher_prod_mt">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="ls_crusher_cons_mt" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="ls_crusher_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="ls_crusher_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="ls_crusher_closing">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="ls_crusher_tph">—</div></td>
           </tr>
 
-          <!-- Raw Mill 1 -->
+          <!-- Raw Mill 1 — Excel sheet '30' row 31 tracks I(open)/J-L(production)/M-O(consumption)/P(closing) all populated;
+               production = limestone-mix throughput ground by the mill, consumption = the same material drawn down from
+               the mill's own feed stock ledger (I/J/M/P form a stock balance, mirroring LS Crusher's pattern one step downstream) -->
           <tr>
             <td class="ts">2</td>
             <td class="tp">RAW MILL — 1</td>
             <td class="ts">120</td>
-            <td class="cm"><input class="ci" type="number" value="20.67" /></td>
-            <td class="cf"><div class="cv">44.26</div></td>
-            <td class="cf"><div class="cv">537.48</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="2235" /></td>
-            <td class="cf"><div class="cv">5,000</div></td>
-            <td class="cf"><div class="cv">63,857</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">108.1</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rm1_run_hrs" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="rm1_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="rm1_run_hrs">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rm1_open" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rm1_prod_mt" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="rm1_prod_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="rm1_prod_mt">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rm1_cons_mt" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="rm1_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="rm1_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="rm1_closing">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="rm1_tph">—</div></td>
           </tr>
 
-          <!-- Raw Mill 2 -->
+          <!-- Raw Mill 2 — Excel row 32 only ever has F/G/H (hours) + J/K/L (production) + Q (TPH); I/M/P are always
+               blank, so opening/consumption/closing are intentionally NOT wired here (Excel doesn't track them either). -->
           <tr>
             <td class="ts">3</td>
             <td class="tp">RAW MILL — 2</td>
             <td class="ts">20</td>
-            <td class="cm"><input class="ci" type="number" value="21.20" /></td>
-            <td class="cf"><div class="cv">35.61</div></td>
-            <td class="cf"><div class="cv">441.90</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rm2_run_hrs" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="rm2_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="rm2_run_hrs">—</div></td>
             <td class="cs"><div class="cv">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="180.42" /></td>
-            <td class="cf"><div class="cv">309</div></td>
-            <td class="cf"><div class="cv">3,951</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rm2_prod_mt" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="rm2_prod_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="rm2_prod_mt">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">8.5</div></td>
+            <td class="cf"><div class="cv" data-kpi="rm2_tph">—</div></td>
           </tr>
 
           <!-- Coal Mill -->
@@ -868,18 +873,18 @@
             <td class="ts">4</td>
             <td class="tp">COAL MILL</td>
             <td class="ts">10</td>
-            <td class="cm"><input class="ci" type="number" value="17.50" /></td>
-            <td class="cf"><div class="cv">37.50</div></td>
-            <td class="cf"><div class="cv">483.87</div></td>
-            <td class="cs"><div class="cv">43</div></td>
-            <td class="cm"><input class="ci" type="number" value="239" /></td>
-            <td class="cf"><div class="cv">529</div></td>
-            <td class="cf"><div class="cv">6,681</div></td>
-            <td class="cm"><input class="ci" type="number" value="241" /></td>
-            <td class="cf"><div class="cv">528</div></td>
-            <td class="cf"><div class="cv">6,656</div></td>
-            <td class="cf"><div class="cv">41</div></td>
-            <td class="cf"><div class="cv">13.6</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="coalmill_run_hrs" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="coalmill_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="coalmill_run_hrs">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="coalmill_open" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="coalmill_prod_mt" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="coalmill_prod_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="coalmill_prod_mt">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="coalmill_cons_mt" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="coalmill_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="coalmill_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="coalmill_closing">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="coalmill_tph">—</div></td>
           </tr>
 
           <!-- Kiln -->
@@ -908,99 +913,99 @@
             <td class="ts" rowspan="5">6</td>
             <td class="tp">32.5 N</td>
             <td class="ts">90</td>
-            <td class="cm"><input class="ci" type="number" value="0.00" /></td>
-            <td class="cf"><div class="cv">0.00</div></td>
-            <td class="cf"><div class="cv">9.00</div></td>
-            <td class="cs"><div class="cv">381</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_325n_run_hrs" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm1_325n_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm1_325n_run_hrs">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_325n_open" /></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_325n_mt" /></td>
             <td class="cf"><div class="cv" data-roll-mtd="cm1_325n_mt">—</div></td>
             <td class="cf"><div class="cv" data-roll-ytd="cm1_325n_mt">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">31</div></td>
-            <td class="cf"><div class="cv">2,426</div></td>
-            <td class="cf"><div class="cv">381</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_325n_cons_mt" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm1_325n_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm1_325n_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm1_325n_closing">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
           </tr>
           <tr class="grow">
             <td class="tp">42.5 R</td>
             <td class="ts">78</td>
-            <td class="cm"><input class="ci" type="number" value="0.00" /></td>
-            <td class="cf"><div class="cv">0.00</div></td>
-            <td class="cf"><div class="cv">206.33</div></td>
-            <td class="cs"><div class="cv">2,901</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_425r_run_hrs" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm1_425r_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm1_425r_run_hrs">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_425r_open" /></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_425r_mt" /></td>
             <td class="cf"><div class="cv" data-roll-mtd="cm1_425r_mt">—</div></td>
             <td class="cf"><div class="cv" data-roll-ytd="cm1_425r_mt">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="545" /></td>
-            <td class="cf"><div class="cv">1,974</div></td>
-            <td class="cf"><div class="cv">37,142</div></td>
-            <td class="cf"><div class="cv">2,606</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_425r_cons_mt" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm1_425r_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm1_425r_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm1_425r_closing">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
           </tr>
           <tr class="grow">
             <td class="tp">42.5 N</td>
             <td class="ts">78</td>
-            <td class="cm"><input class="ci" type="number" value="0.00" /></td>
-            <td class="cf"><div class="cv">0.00</div></td>
-            <td class="cf"><div class="cv">0.00</div></td>
-            <td class="cs"><div class="cv">3</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_425n_run_hrs" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm1_425n_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm1_425n_run_hrs">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_425n_open" /></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_425n_mt" /></td>
             <td class="cf"><div class="cv" data-roll-mtd="cm1_425n_mt">—</div></td>
             <td class="cf"><div class="cv" data-roll-ytd="cm1_425n_mt">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">3</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_425n_cons_mt" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm1_425n_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm1_425n_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm1_425n_closing">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
           </tr>
           <tr class="grow">
             <td class="tp">OPC</td>
             <td class="ts">65</td>
-            <td class="cm"><input class="ci" type="number" value="0.00" /></td>
-            <td class="cf"><div class="cv">0.00</div></td>
-            <td class="cf"><div class="cv">0.00</div></td>
-            <td class="cs"><div class="cv">126</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_opc_run_hrs" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm1_opc_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm1_opc_run_hrs">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_opc_open" /></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_opc_mt" /></td>
             <td class="cf"><div class="cv" data-roll-mtd="cm1_opc_mt">—</div></td>
             <td class="cf"><div class="cv" data-roll-ytd="cm1_opc_mt">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">60</div></td>
-            <td class="cf"><div class="cv">1,907</div></td>
-            <td class="cf"><div class="cv">126</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_opc_cons_mt" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm1_opc_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm1_opc_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm1_opc_closing">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
           </tr>
           <tr class="grow">
             <td class="tp">42.5 N BM</td>
             <td class="ts">—</td>
-            <td class="cm"><input class="ci" type="number" value="0.00" /></td>
-            <td class="cf"><div class="cv">0.00</div></td>
-            <td class="cf"><div class="cv">0.00</div></td>
-            <td class="cs"><div class="cv">1,172</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="32" /></td>
-            <td class="cf"><div class="cv">214</div></td>
-            <td class="cf"><div class="cv">5,636</div></td>
-            <td class="cf"><div class="cv">1,140</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_425n_bm_run_hrs" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm1_425n_bm_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm1_425n_bm_run_hrs">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_425n_bm_open" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_425n_bm_mt" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm1_425n_bm_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm1_425n_bm_mt">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm1_425n_bm_cons_mt" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm1_425n_bm_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm1_425n_bm_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm1_425n_bm_closing">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
           </tr>
           <tr class="trow">
             <td class="ts"></td>
             <td class="tp">TOTAL — CM-1</td>
             <td class="ts">70</td>
-            <td class="cf"><div class="cv">0.00</div></td>
-            <td class="cf"><div class="cv">0.00</div></td>
-            <td class="cf"><div class="cv">215.33</div></td>
-            <td class="cf"><div class="cv">4,583</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm1_total_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm1_325n_run_hrs,cm1_425r_run_hrs,cm1_425n_run_hrs,cm1_opc_run_hrs,cm1_425n_bm_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm1_325n_run_hrs,cm1_425r_run_hrs,cm1_425n_run_hrs,cm1_opc_run_hrs,cm1_425n_bm_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm1_total_open">—</div></td>
             <td class="cf"><div class="cv" data-kpi="cm1_total_prod">0</div></td>
-            <td class="cf"><div class="cv" data-roll-mtd="cm1_325n_mt,cm1_425r_mt,cm1_425n_mt,cm1_opc_mt">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="cm1_325n_mt,cm1_425r_mt,cm1_425n_mt,cm1_opc_mt">—</div></td>
-            <td class="cf"><div class="cv">577</div></td>
-            <td class="cf"><div class="cv">2,278</div></td>
-            <td class="cf"><div class="cv">47,110</div></td>
-            <td class="cf"><div class="cv">4,256</div></td>
-            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm1_325n_mt,cm1_425r_mt,cm1_425n_mt,cm1_opc_mt,cm1_425n_bm_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm1_325n_mt,cm1_425r_mt,cm1_425n_mt,cm1_opc_mt,cm1_425n_bm_mt">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm1_total_cons">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm1_325n_cons_mt,cm1_425r_cons_mt,cm1_425n_cons_mt,cm1_opc_cons_mt,cm1_425n_bm_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm1_325n_cons_mt,cm1_425r_cons_mt,cm1_425n_cons_mt,cm1_opc_cons_mt,cm1_425n_bm_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm1_total_closing">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm1_tph">—</div></td>
           </tr>
 
           <!-- Cement Mill 2 -->
@@ -1010,99 +1015,99 @@
             <td class="ts" rowspan="5">7</td>
             <td class="tp">32.5 N</td>
             <td class="ts">75</td>
-            <td class="cm"><input class="ci" type="number" value="0.00" /></td>
-            <td class="cf"><div class="cv">0.00</div></td>
-            <td class="cf"><div class="cv">33.10</div></td>
-            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_325n_run_hrs" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm2_325n_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm2_325n_run_hrs">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_325n_open" /></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_325n_mt" /></td>
             <td class="cf"><div class="cv" data-roll-mtd="cm2_325n_mt">—</div></td>
             <td class="cf"><div class="cv" data-roll-ytd="cm2_325n_mt">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_325n_cons_mt" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm2_325n_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm2_325n_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm2_325n_closing">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
           </tr>
           <tr class="grow">
             <td class="tp">42.5 R</td>
             <td class="ts">70</td>
-            <td class="cm"><input class="ci" type="number" value="4.33" /></td>
-            <td class="cf"><div class="cv">33.01</div></td>
-            <td class="cf"><div class="cv">449.01</div></td>
-            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_425r_run_hrs" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm2_425r_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm2_425r_run_hrs">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_425r_open" /></td>
             <td class="cm"><input class="ci" type="number" value="250" data-field="cm2_425r_mt" /></td>
             <td class="cf"><div class="cv" data-roll-mtd="cm2_425r_mt">—</div></td>
             <td class="cf"><div class="cv" data-roll-ytd="cm2_425r_mt">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">57.7</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_425r_cons_mt" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm2_425r_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm2_425r_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm2_425r_closing">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm2_425r_tph">—</div></td>
           </tr>
           <tr class="grow">
             <td class="tp">42.5 N</td>
             <td class="ts">70</td>
-            <td class="cm"><input class="ci" type="number" value="0.00" /></td>
-            <td class="cf"><div class="cv">0.00</div></td>
-            <td class="cf"><div class="cv">0.00</div></td>
-            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_425n_run_hrs" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm2_425n_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm2_425n_run_hrs">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_425n_open" /></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_425n_mt" /></td>
             <td class="cf"><div class="cv" data-roll-mtd="cm2_425n_mt">—</div></td>
             <td class="cf"><div class="cv" data-roll-ytd="cm2_425n_mt">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_425n_cons_mt" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm2_425n_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm2_425n_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm2_425n_closing">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
           </tr>
           <tr class="grow">
             <td class="tp">OPC</td>
             <td class="ts">60</td>
-            <td class="cm"><input class="ci" type="number" value="0.00" /></td>
-            <td class="cf"><div class="cv">0.00</div></td>
-            <td class="cf"><div class="cv">32.88</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">1,820</div></td>
-            <td class="cm"><input class="ci" type="number" value="" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_opc_run_hrs" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm2_opc_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm2_opc_run_hrs">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_opc_open" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_opc_mt" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm2_opc_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm2_opc_mt">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_opc_cons_mt" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm2_opc_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm2_opc_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm2_opc_closing">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
           </tr>
           <tr class="grow">
             <td class="tp">42.5 N BM</td>
             <td class="ts">—</td>
-            <td class="cm"><input class="ci" type="number" value="0.00" /></td>
-            <td class="cf"><div class="cv">9.98</div></td>
-            <td class="cf"><div class="cv">64.95</div></td>
-            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_425n_bm_run_hrs" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm2_425n_bm_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm2_425n_bm_run_hrs">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_425n_bm_open" /></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_425n_bm_mt" /></td>
             <td class="cf"><div class="cv" data-roll-mtd="cm2_425n_bm_mt">—</div></td>
             <td class="cf"><div class="cv" data-roll-ytd="cm2_425n_bm_mt">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm2_425n_bm_cons_mt" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm2_425n_bm_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm2_425n_bm_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm2_425n_bm_closing">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
           </tr>
           <tr class="trow">
             <td class="ts"></td>
             <td class="tp">TOTAL — CM-2</td>
             <td class="ts">70</td>
-            <td class="cf"><div class="cv">4.33</div></td>
-            <td class="cf"><div class="cv">42.99</div></td>
-            <td class="cf"><div class="cv">579.94</div></td>
-            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm2_total_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm2_325n_run_hrs,cm2_425r_run_hrs,cm2_425n_run_hrs,cm2_opc_run_hrs,cm2_425n_bm_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm2_325n_run_hrs,cm2_425r_run_hrs,cm2_425n_run_hrs,cm2_opc_run_hrs,cm2_425n_bm_run_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm2_total_open">—</div></td>
             <td class="cf"><div class="cv" data-kpi="cm2_total_prod">0</div></td>
-            <td class="cf"><div class="cv" data-roll-mtd="cm2_325n_mt,cm2_425r_mt,cm2_425n_mt,cm2_425n_bm_mt">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="cm2_325n_mt,cm2_425r_mt,cm2_425n_mt,cm2_425n_bm_mt">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">57.7</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm2_325n_mt,cm2_425r_mt,cm2_425n_mt,cm2_opc_mt,cm2_425n_bm_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm2_325n_mt,cm2_425r_mt,cm2_425n_mt,cm2_opc_mt,cm2_425n_bm_mt">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm2_total_cons">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm2_325n_cons_mt,cm2_425r_cons_mt,cm2_425n_cons_mt,cm2_opc_cons_mt,cm2_425n_bm_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm2_325n_cons_mt,cm2_425r_cons_mt,cm2_425n_cons_mt,cm2_opc_cons_mt,cm2_425n_bm_cons_mt">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm2_total_closing">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm2_tph">—</div></td>
           </tr>
 
         </tbody>
@@ -1529,6 +1534,130 @@ initKpiLive([
   },
   { kpi:'cm2_total_prod', fmt:'n0',
     compute: function(f,n){ return n(f.cm2_325n_mt)+n(f.cm2_425r_mt)+n(f.cm2_425n_mt)+n(f.cm2_425n_bm_mt); }
+  },
+
+  /* ── LS Crusher / Raw Mill / Coal Mill — stock ledgers (mirrors kiln_closing_stock) ── */
+  { kpi:'ls_crusher_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.ls_crusher_open) + n(f.ls_crusher_prod_mt) - n(f.ls_crusher_cons_mt); }
+  },
+  { kpi:'ls_crusher_tph', fmt:'n1',
+    compute: function(f,n){ return n(f.ls_crusher_run_hrs) > 0 ? n(f.ls_crusher_prod_mt) / n(f.ls_crusher_run_hrs) : null; }
+  },
+  { kpi:'rm1_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.rm1_open) + n(f.rm1_prod_mt) - n(f.rm1_cons_mt); }
+  },
+  { kpi:'rm1_tph', fmt:'n1',
+    compute: function(f,n){ return n(f.rm1_run_hrs) > 0 ? n(f.rm1_prod_mt) / n(f.rm1_run_hrs) : null; }
+  },
+  /* Raw Mill 2 — Excel never tracks opening/consumption/closing for this row, only hours + production + TPH */
+  { kpi:'rm2_tph', fmt:'n1',
+    compute: function(f,n){ return n(f.rm2_run_hrs) > 0 ? n(f.rm2_prod_mt) / n(f.rm2_run_hrs) : null; }
+  },
+  { kpi:'coalmill_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.coalmill_open) + n(f.coalmill_prod_mt) - n(f.coalmill_cons_mt); }
+  },
+  { kpi:'coalmill_tph', fmt:'n1',
+    compute: function(f,n){ return n(f.coalmill_run_hrs) > 0 ? n(f.coalmill_prod_mt) / n(f.coalmill_run_hrs) : null; }
+  },
+
+  /* ── CM-1 — per-grade stock ledgers + TOTAL row on-date sums ────── */
+  { kpi:'cm1_325n_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.cm1_325n_open) + n(f.cm1_325n_mt) - n(f.cm1_325n_cons_mt); }
+  },
+  { kpi:'cm1_425r_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.cm1_425r_open) + n(f.cm1_425r_mt) - n(f.cm1_425r_cons_mt); }
+  },
+  { kpi:'cm1_425n_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.cm1_425n_open) + n(f.cm1_425n_mt) - n(f.cm1_425n_cons_mt); }
+  },
+  { kpi:'cm1_opc_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.cm1_opc_open) + n(f.cm1_opc_mt) - n(f.cm1_opc_cons_mt); }
+  },
+  { kpi:'cm1_425n_bm_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.cm1_425n_bm_open) + n(f.cm1_425n_bm_mt) - n(f.cm1_425n_bm_cons_mt); }
+  },
+  { kpi:'cm1_total_run_hrs', fmt:'n2',
+    compute: function(f,n){ return n(f.cm1_325n_run_hrs)+n(f.cm1_425r_run_hrs)+n(f.cm1_425n_run_hrs)+n(f.cm1_opc_run_hrs)+n(f.cm1_425n_bm_run_hrs); }
+  },
+  { kpi:'cm1_total_open', fmt:'n0',
+    compute: function(f,n){ return n(f.cm1_325n_open)+n(f.cm1_425r_open)+n(f.cm1_425n_open)+n(f.cm1_opc_open)+n(f.cm1_425n_bm_open); }
+  },
+  { kpi:'cm1_total_cons', fmt:'n0',
+    compute: function(f,n){ return n(f.cm1_325n_cons_mt)+n(f.cm1_425r_cons_mt)+n(f.cm1_425n_cons_mt)+n(f.cm1_opc_cons_mt)+n(f.cm1_425n_bm_cons_mt); }
+  },
+  { kpi:'cm1_total_closing', fmt:'n0',
+    compute: function(f,n){
+      var open = n(f.cm1_325n_open)+n(f.cm1_425r_open)+n(f.cm1_425n_open)+n(f.cm1_opc_open)+n(f.cm1_425n_bm_open);
+      var prod = n(f.cm1_325n_mt)+n(f.cm1_425r_mt)+n(f.cm1_425n_mt)+n(f.cm1_opc_mt)+n(f.cm1_425n_bm_mt);
+      var cons = n(f.cm1_325n_cons_mt)+n(f.cm1_425r_cons_mt)+n(f.cm1_425n_cons_mt)+n(f.cm1_opc_cons_mt)+n(f.cm1_425n_bm_cons_mt);
+      return open + prod - cons;
+    }
+  },
+  { kpi:'cm1_tph', fmt:'n1',
+    compute: function(f,n){
+      var hrs = n(f.cm1_325n_run_hrs)+n(f.cm1_425r_run_hrs)+n(f.cm1_425n_run_hrs)+n(f.cm1_opc_run_hrs)+n(f.cm1_425n_bm_run_hrs);
+      var prod = n(f.cm1_325n_mt)+n(f.cm1_425r_mt)+n(f.cm1_425n_mt)+n(f.cm1_opc_mt)+n(f.cm1_425n_bm_mt);
+      return hrs > 0 ? prod / hrs : null;
+    }
+  },
+
+  /* ── CM-2 — per-grade stock ledgers + TOTAL row on-date sums ────── */
+  { kpi:'cm2_325n_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.cm2_325n_open) + n(f.cm2_325n_mt) - n(f.cm2_325n_cons_mt); }
+  },
+  { kpi:'cm2_425r_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.cm2_425r_open) + n(f.cm2_425r_mt) - n(f.cm2_425r_cons_mt); }
+  },
+  { kpi:'cm2_425r_tph', fmt:'n1',
+    compute: function(f,n){ return n(f.cm2_425r_run_hrs) > 0 ? n(f.cm2_425r_mt) / n(f.cm2_425r_run_hrs) : null; }
+  },
+  { kpi:'cm2_425n_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.cm2_425n_open) + n(f.cm2_425n_mt) - n(f.cm2_425n_cons_mt); }
+  },
+  { kpi:'cm2_opc_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.cm2_opc_open) + n(f.cm2_opc_mt) - n(f.cm2_opc_cons_mt); }
+  },
+  { kpi:'cm2_425n_bm_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.cm2_425n_bm_open) + n(f.cm2_425n_bm_mt) - n(f.cm2_425n_bm_cons_mt); }
+  },
+  { kpi:'cm2_total_run_hrs', fmt:'n2',
+    compute: function(f,n){ return n(f.cm2_325n_run_hrs)+n(f.cm2_425r_run_hrs)+n(f.cm2_425n_run_hrs)+n(f.cm2_opc_run_hrs)+n(f.cm2_425n_bm_run_hrs); }
+  },
+  { kpi:'cm2_total_open', fmt:'n0',
+    compute: function(f,n){ return n(f.cm2_325n_open)+n(f.cm2_425r_open)+n(f.cm2_425n_open)+n(f.cm2_opc_open)+n(f.cm2_425n_bm_open); }
+  },
+  { kpi:'cm2_total_cons', fmt:'n0',
+    compute: function(f,n){ return n(f.cm2_325n_cons_mt)+n(f.cm2_425r_cons_mt)+n(f.cm2_425n_cons_mt)+n(f.cm2_opc_cons_mt)+n(f.cm2_425n_bm_cons_mt); }
+  },
+  { kpi:'cm2_total_closing', fmt:'n0',
+    compute: function(f,n){
+      var open = n(f.cm2_325n_open)+n(f.cm2_425r_open)+n(f.cm2_425n_open)+n(f.cm2_opc_open)+n(f.cm2_425n_bm_open);
+      var prod = n(f.cm2_325n_mt)+n(f.cm2_425r_mt)+n(f.cm2_425n_mt)+n(f.cm2_opc_mt)+n(f.cm2_425n_bm_mt);
+      var cons = n(f.cm2_325n_cons_mt)+n(f.cm2_425r_cons_mt)+n(f.cm2_425n_cons_mt)+n(f.cm2_opc_cons_mt)+n(f.cm2_425n_bm_cons_mt);
+      return open + prod - cons;
+    }
+  },
+  { kpi:'cm2_tph', fmt:'n1',
+    compute: function(f,n){
+      var hrs = n(f.cm2_325n_run_hrs)+n(f.cm2_425r_run_hrs)+n(f.cm2_425n_run_hrs)+n(f.cm2_opc_run_hrs)+n(f.cm2_425n_bm_run_hrs);
+      var prod = n(f.cm2_325n_mt)+n(f.cm2_425r_mt)+n(f.cm2_425n_mt)+n(f.cm2_opc_mt)+n(f.cm2_425n_bm_mt);
+      return hrs > 0 ? prod / hrs : null;
+    }
+  },
+
+  /* ── Coal — opening ledger (received qty is always 0 across Apr–Jun Excel sample, so
+     closing = open - cons, same simplification the sheet itself uses) ── */
+  { kpi:'coal_kiln_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.coal_kiln_open) - n(f.coal_kiln); }
+  },
+  { kpi:'coal_cpp_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.coal_cpp_open) - n(f.coal_cpp); }
+  },
+  { kpi:'coal_total_open', fmt:'n0',
+    compute: function(f,n){ return n(f.coal_kiln_open) + n(f.coal_cpp_open); }
+  },
+  { kpi:'coal_total_closing', fmt:'n0',
+    compute: function(f,n){ return (n(f.coal_kiln_open) + n(f.coal_cpp_open)) - (n(f.coal_kiln) + n(f.coal_cpp)); }
   },
 
   /* ── Cement Grinding — Material stock ledgers (Opening + Received − Consumed) ── */
