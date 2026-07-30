@@ -1,9 +1,9 @@
 /*
   scripts/import-kpi-monthly.js — backfill of department-level Monthly KPI
-  targets/actuals (kpi_monthly table) from the plant's real "M - 11 LCL
-  Department KPI Report" workbooks (April/May/June 2026), so the dashboard's
-  9 department tabs show real figures for these months instead of only the
-  hand-baked Jan/Feb values already in index.html.
+  targets/actuals/remarks (kpi_monthly table) from the plant's real "M - 11
+  LCL Department KPI Report" workbooks (April/May/June 2026), so the
+  dashboard's 9 department tabs show real figures for these months instead
+  of only the hand-baked Jan/Feb values already in index.html.
 
   Extraction lives in a one-off Python/openpyxl script
   (master raw material reports/_extracted/extract-kpi-monthly.py) that reads
@@ -51,11 +51,12 @@ async function main() {
     for (const r of rows) {
       try {
         await db.query(`
-          INSERT INTO kpi_monthly (department, year, month, kpi_key, target, actual, unit, updated_at)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+          INSERT INTO kpi_monthly (department, year, month, kpi_key, target, actual, unit, remarks, updated_at)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
           ON CONFLICT (department, year, month, kpi_key)
-          DO UPDATE SET target=EXCLUDED.target, actual=EXCLUDED.actual, unit=EXCLUDED.unit, updated_at=NOW()
-        `, [r.department, year, month, r.kpi_key, r.target, r.actual, r.unit || '']);
+          DO UPDATE SET target=EXCLUDED.target, actual=EXCLUDED.actual, unit=EXCLUDED.unit,
+                        remarks=EXCLUDED.remarks, updated_at=NOW()
+        `, [r.department, year, month, r.kpi_key, r.target, r.actual, r.unit || '', r.remarks || null]);
         upserted++;
       } catch (e) {
         failed++;

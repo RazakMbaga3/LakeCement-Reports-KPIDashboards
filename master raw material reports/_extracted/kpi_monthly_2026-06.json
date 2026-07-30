@@ -8,7 +8,8 @@
       "label": "FATALITY",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "mechanical",
@@ -16,7 +17,8 @@
       "label": "LTI",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "mechanical",
@@ -24,7 +26,8 @@
       "label": "MTI",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "mechanical",
@@ -32,7 +35,8 @@
       "label": "HAZARDS REPORTED",
       "unit": "NOS",
       "target": 4.0,
-      "actual": 4.0
+      "actual": 4.0,
+      "remarks": null
     },
     {
       "department": "mechanical",
@@ -40,7 +44,8 @@
       "label": "STACK EMISSION",
       "unit": "mg/m3",
       "target": 50.0,
-      "actual": 50.0
+      "actual": 50.0,
+      "remarks": null
     },
     {
       "department": "mechanical",
@@ -48,7 +53,8 @@
       "label": "NAI KILN",
       "unit": "%",
       "target": 92.0,
-      "actual": 97.8
+      "actual": 97.8,
+      "remarks": null
     },
     {
       "department": "mechanical",
@@ -56,7 +62,8 @@
       "label": "NAI CEMENT MILL 1",
       "unit": "%",
       "target": 92.0,
-      "actual": 98.93
+      "actual": 98.93,
+      "remarks": null
     },
     {
       "department": "mechanical",
@@ -64,7 +71,8 @@
       "label": "NAI CEMENT MILL 2",
       "unit": "%",
       "target": 92.0,
-      "actual": 83.9
+      "actual": 83.9,
+      "remarks": null
     },
     {
       "department": "mechanical",
@@ -72,7 +80,8 @@
       "label": "MTBF KILN",
       "unit": "HRS",
       "target": 400.0,
-      "actual": 94.5
+      "actual": 94.5,
+      "remarks": "Pfister rotor jamming"
     },
     {
       "department": "mechanical",
@@ -80,7 +89,8 @@
       "label": "MTBF CEMENT MILL 1",
       "unit": "HRS",
       "target": 225.0,
-      "actual": 93.9
+      "actual": 93.9,
+      "remarks": "Slide shoe bearing pressure low"
     },
     {
       "department": "mechanical",
@@ -88,7 +98,8 @@
       "label": "MTBF CEMENT MILL 2",
       "unit": "HRS",
       "target": 225.0,
-      "actual": 36.68
+      "actual": 36.68,
+      "remarks": "Silofeed elevator belt broken"
     },
     {
       "department": "mechanical",
@@ -96,7 +107,8 @@
       "label": "OUTPUT OF RAW MILL 1",
       "unit": "TPH",
       "target": 145.0,
-      "actual": 127.72
+      "actual": 127.72,
+      "remarks": "Moisture in lime stone"
     },
     {
       "department": "mechanical",
@@ -104,7 +116,8 @@
       "label": "OUTPUT OF RAW MILL 2",
       "unit": "TPH",
       "target": 20.0,
-      "actual": 9.69
+      "actual": 9.69,
+      "remarks": "Jamming of hopper, Insufficient hot gases"
     },
     {
       "department": "mechanical",
@@ -112,7 +125,8 @@
       "label": "MAINTENANCE MATERIALS COST",
       "unit": "TSH / MT CLINKER",
       "target": 5400.0,
-      "actual": 5042.0
+      "actual": 5042.0,
+      "remarks": "Clinker 40798, Total cost 205722425. Out of which major expenses are Burner Tip set pipe(43067419) ,Flux cored wire(32203617)"
     },
     {
       "department": "mechanical",
@@ -120,7 +134,8 @@
       "label": "WEAR PARTS COST",
       "unit": "TSH / MT CLINKER",
       "target": 4320.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "mechanical",
@@ -128,7 +143,8 @@
       "label": "THIRD PARTY COST",
       "unit": "TSH / MT CLINKER",
       "target": 900.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "production",
@@ -136,7 +152,8 @@
       "label": "FATALITY",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "production",
@@ -144,7 +161,8 @@
       "label": "LTI",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "production",
@@ -152,7 +170,8 @@
       "label": "MTI",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "production",
@@ -160,7 +179,8 @@
       "label": "HAZARDS REPORTED",
       "unit": "NOS",
       "target": 4.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "production",
@@ -168,7 +188,8 @@
       "label": "STACK EMISSION",
       "unit": "mg/m3",
       "target": 50.0,
-      "actual": 90.0
+      "actual": 90.0,
+      "remarks": null
     },
     {
       "department": "production",
@@ -176,7 +197,8 @@
       "label": "KILN OUTPUT",
       "unit": "TPD",
       "target": 1500.0,
-      "actual": 1479.2826819356105
+      "actual": 1479.2826819356105,
+      "remarks": null
     },
     {
       "department": "production",
@@ -184,7 +206,8 @@
       "label": "VRM OUTPUT",
       "unit": "TPH",
       "target": 117.0,
-      "actual": 127.7210231200553
+      "actual": 127.7210231200553,
+      "remarks": null
     },
     {
       "department": "production",
@@ -192,7 +215,8 @@
       "label": "Raw Mill 2 Output",
       "unit": "TPH",
       "target": 10.0,
-      "actual": 9.692412136403991
+      "actual": 9.692412136403991,
+      "remarks": null
     },
     {
       "department": "production",
@@ -200,7 +224,8 @@
       "label": "CEMENT MILL 1 OUTPUT",
       "unit": "TPH",
       "target": 66.0,
-      "actual": 65.93035461640271
+      "actual": 65.93035461640271,
+      "remarks": null
     },
     {
       "department": "production",
@@ -208,7 +233,8 @@
       "label": "CEMENT MILL 2 OUTPUT",
       "unit": "",
       "target": 60.0,
-      "actual": 58.75619602432418
+      "actual": 58.75619602432418,
+      "remarks": null
     },
     {
       "department": "production",
@@ -216,7 +242,8 @@
       "label": "COAL MILL OUTPUT",
       "unit": "TPH",
       "target": 17.0,
-      "actual": 14.943033442843902
+      "actual": 14.943033442843902,
+      "remarks": null
     },
     {
       "department": "production",
@@ -224,7 +251,8 @@
       "label": "SPECIFIC POWER CONSUMPTION UP TO CLINKER",
       "unit": "KwH / T",
       "target": 70.0,
-      "actual": 86.95274050078255
+      "actual": 86.95274050078255,
+      "remarks": null
     },
     {
       "department": "production",
@@ -232,7 +260,8 @@
       "label": "SPECIFIC POWER CONSUMPTION CEMENT GRINDING",
       "unit": "KwH / T",
       "target": 39.0,
-      "actual": 39.81005242059821
+      "actual": 39.81005242059821,
+      "remarks": null
     },
     {
       "department": "production",
@@ -240,7 +269,8 @@
       "label": "Specific Power Consumption - Utilities",
       "unit": "KwH / T",
       "target": 3.0,
-      "actual": 1.5741211840888067
+      "actual": 1.5741211840888067,
+      "remarks": null
     },
     {
       "department": "production",
@@ -248,7 +278,8 @@
       "label": "SPECIFIC POWER CONSUMPTION - TOTAL",
       "unit": "KwH / T",
       "target": 99.0,
-      "actual": 113.89670209696733
+      "actual": 113.89670209696733,
+      "remarks": null
     },
     {
       "department": "production",
@@ -256,7 +287,8 @@
       "label": "SPECIFIC THERMAL ENERGY CONSUMPTION",
       "unit": "KCAL / KG CLINKER",
       "target": 780.0,
-      "actual": 851.9630433202439
+      "actual": 851.9630433202439,
+      "remarks": null
     },
     {
       "department": "production",
@@ -264,7 +296,8 @@
       "label": "CLINKER C3S",
       "unit": "%",
       "target": 50.0,
-      "actual": 55.44
+      "actual": 55.44,
+      "remarks": null
     },
     {
       "department": "production",
@@ -272,7 +305,8 @@
       "label": "CEMENT RESIDUE ON 45 MICRON",
       "unit": "%",
       "target": 10.0,
-      "actual": 8.99
+      "actual": 8.99,
+      "remarks": null
     },
     {
       "department": "production",
@@ -280,7 +314,8 @@
       "label": "COMPLYING INTERNAL QUALITY NORMS",
       "unit": "%",
       "target": 100.0,
-      "actual": 100.0
+      "actual": 100.0,
+      "remarks": null
     },
     {
       "department": "production",
@@ -288,7 +323,8 @@
       "label": "GRINDING MEDIA CONSUMPTION",
       "unit": "GMS / MT",
       "target": 53.0,
-      "actual": null
+      "actual": null,
+      "remarks": null
     },
     {
       "department": "production",
@@ -296,7 +332,8 @@
       "label": "Annual Variation in clinker, Gypsum and coal stock (Book Vs Actual)",
       "unit": "%",
       "target": 2.0,
-      "actual": null
+      "actual": null,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -304,7 +341,8 @@
       "label": "FATALITY",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -312,7 +350,8 @@
       "label": "LTI",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -320,7 +359,8 @@
       "label": "MTI",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -328,7 +368,8 @@
       "label": "HAZARDS REPORTED",
       "unit": "NOS",
       "target": 4.0,
-      "actual": 8.0
+      "actual": 8.0,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -336,7 +377,8 @@
       "label": "i) GBH Stack",
       "unit": "mg/m3",
       "target": 50.0,
-      "actual": 45.0
+      "actual": 45.0,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -344,7 +386,8 @@
       "label": "ii) Coal mill BH",
       "unit": "mg/m3",
       "target": 50.0,
-      "actual": 30.0
+      "actual": 30.0,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -352,7 +395,8 @@
       "label": "iii) Cooler ESP",
       "unit": "mg/m3",
       "target": 50.0,
-      "actual": 40.0
+      "actual": 40.0,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -360,7 +404,8 @@
       "label": "iv) Cement mill",
       "unit": "mg/m3",
       "target": 50.0,
-      "actual": 22.0
+      "actual": 22.0,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -368,7 +413,8 @@
       "label": "NAI KILN",
       "unit": "%",
       "target": 90.0,
-      "actual": 99.9
+      "actual": 99.9,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -376,7 +422,8 @@
       "label": "NAI VRM",
       "unit": "%",
       "target": 90.0,
-      "actual": 98.5
+      "actual": 98.5,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -384,7 +431,8 @@
       "label": "NAI CEMENT MILL 1",
       "unit": "%",
       "target": 92.0,
-      "actual": 99.5
+      "actual": 99.5,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -392,7 +440,8 @@
       "label": "NAI CEMENT MILL 2",
       "unit": "%",
       "target": 92.0,
-      "actual": 100.0
+      "actual": 100.0,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -400,7 +449,8 @@
       "label": "MTBF KILN",
       "unit": "HRS",
       "target": 400.0,
-      "actual": 220.7
+      "actual": 220.7,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -408,7 +458,8 @@
       "label": "MTBF CEMENT MILL 1",
       "unit": "HRS",
       "target": 225.0,
-      "actual": 219.0
+      "actual": 219.0,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -416,7 +467,8 @@
       "label": "MTBF CEMENT MILL 2",
       "unit": "HRS",
       "target": 225.0,
-      "actual": 587.1
+      "actual": 587.1,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -424,7 +476,8 @@
       "label": "SPECIFIC POWER CONSUMPTION UP TO CLINKER",
       "unit": "KwH / T Clinker",
       "target": 60.5,
-      "actual": 91.7
+      "actual": 91.7,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -432,7 +485,8 @@
       "label": "SPECIFIC POWER CONSUMPTION CEMENT GRINDING",
       "unit": "KwH / T Cement",
       "target": 35.0,
-      "actual": 40.0
+      "actual": 40.0,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -440,7 +494,8 @@
       "label": "Specific Power Consumption - Utilities",
       "unit": "KwH / T",
       "target": 3.5,
-      "actual": 2.44
+      "actual": 2.44,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -448,7 +503,8 @@
       "label": "SPECIFIC POWER CONSUMPTION - TOTAL",
       "unit": "KwH / T Cement",
       "target": 90.0,
-      "actual": 117.97
+      "actual": 117.97,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -456,7 +512,8 @@
       "label": "Cost per unit for TANESCO Power",
       "unit": "Tsh/KWH",
       "target": 195.0,
-      "actual": 189.7
+      "actual": 189.7,
+      "remarks": null
     },
     {
       "department": "ei",
@@ -464,7 +521,26 @@
       "label": "COMPLIANCE BAG WEIGHT",
       "unit": "%",
       "target": 100.0,
-      "actual": 100.0
+      "actual": 100.0,
+      "remarks": null
+    },
+    {
+      "department": "ei",
+      "kpi_key": "regular-random-verification-of-bag-weight",
+      "label": "REGULAR RANDOM VERIFICATION OF BAG WEIGHT",
+      "unit": "Gms",
+      "target": null,
+      "actual": null,
+      "remarks": "Target: +/- 50 | Actual: GR 42.5 : (+) 55Gms ,  \nGR 32.5 : (+) 50Gms"
+    },
+    {
+      "department": "ei",
+      "kpi_key": "calibration-of-weighfeeders-weighbridges-rotoscales",
+      "label": "CALIBRATION OF WEIGHFEEDERS, WEIGHBRIDGES, ROTOSCALES",
+      "unit": "",
+      "target": null,
+      "actual": null,
+      "remarks": "Target: AS PER FREQUENCY | Actual: DONE"
     },
     {
       "department": "powerplant",
@@ -472,7 +548,8 @@
       "label": "FATALITY",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "powerplant",
@@ -480,7 +557,8 @@
       "label": "LTI",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "powerplant",
@@ -488,7 +566,8 @@
       "label": "MTI",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "powerplant",
@@ -496,7 +575,8 @@
       "label": "HAZARDS REPORTED",
       "unit": "NOS",
       "target": 4.0,
-      "actual": 2.0
+      "actual": 2.0,
+      "remarks": null
     },
     {
       "department": "powerplant",
@@ -504,7 +584,8 @@
       "label": "COMPLIANCE TO LEGAL REQUIREMENT",
       "unit": "%",
       "target": 100.0,
-      "actual": 100.0
+      "actual": 100.0,
+      "remarks": null
     },
     {
       "department": "powerplant",
@@ -512,7 +593,8 @@
       "label": "AUXILLARY POWER CONS",
       "unit": "%",
       "target": 10.0,
-      "actual": 10.82
+      "actual": 10.82,
+      "remarks": "Optimisation of drives was done so the auxiliairy power will start to decrease gradually below 10% during gradual increase of average threshold power of 7 MWhr and above consumption."
     },
     {
       "department": "powerplant",
@@ -520,7 +602,8 @@
       "label": "HEAT RATE",
       "unit": "KCAL / KWH",
       "target": 3800.0,
-      "actual": 3863.0
+      "actual": 3863.0,
+      "remarks": "Average Load achieved in June2026  was 7.02 MW (MTD) and less load resulted to use the steam directly from boiler for feed water heating to reduce the steam venting"
     },
     {
       "department": "powerplant",
@@ -528,7 +611,8 @@
       "label": "UNBURNT COAL",
       "unit": "%",
       "target": 24.0,
-      "actual": 18.43
+      "actual": 18.43,
+      "remarks": null
     },
     {
       "department": "powerplant",
@@ -536,7 +620,8 @@
       "label": "UNPLANNED STOP IN A YEAR (CUMMULATIVE)",
       "unit": "#",
       "target": 2.0,
-      "actual": 1.0
+      "actual": 1.0,
+      "remarks": null
     },
     {
       "department": "powerplant",
@@ -544,7 +629,8 @@
       "label": "EMISSION FROM ESP STACK",
       "unit": "mg/m3",
       "target": 100.0,
-      "actual": 3.0
+      "actual": 3.0,
+      "remarks": null
     },
     {
       "department": "powerplant",
@@ -552,7 +638,8 @@
       "label": "MAINTENANCE COST",
       "unit": "TSH / MT CLINKER",
       "target": 1695.0,
-      "actual": 417.0
+      "actual": 417.0,
+      "remarks": null
     },
     {
       "department": "powerplant",
@@ -560,7 +647,8 @@
       "label": "TOTAL GENERATION COST (Net)",
       "unit": "TSH / KWH",
       "target": 200.0,
-      "actual": 259.38
+      "actual": 259.38,
+      "remarks": null
     },
     {
       "department": "mines",
@@ -568,7 +656,8 @@
       "label": "FATALITY",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "mines",
@@ -576,7 +665,8 @@
       "label": "LTI",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "mines",
@@ -584,7 +674,8 @@
       "label": "MTI",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "mines",
@@ -592,7 +683,8 @@
       "label": "HAZARDS REPORTED",
       "unit": "NOS",
       "target": 5.0,
-      "actual": 5.0
+      "actual": 5.0,
+      "remarks": "Blind road spot,Cavities,Road Slipery due to rainfall, Road potholes"
     },
     {
       "department": "mines",
@@ -600,7 +692,8 @@
       "label": "COMPLIANCE TO LEGAL REQUIREMENTS",
       "unit": "%",
       "target": 1.0,
-      "actual": 0.95
+      "actual": 0.95,
+      "remarks": null
     },
     {
       "department": "mines",
@@ -608,7 +701,8 @@
       "label": "RAISING OF HG LIMESTONE PER MONTH",
       "unit": "MT",
       "target": 85000.0,
-      "actual": 95573.78
+      "actual": 95573.78,
+      "remarks": null
     },
     {
       "department": "mines",
@@ -616,7 +710,8 @@
       "label": "High Grade/SPG",
       "unit": "MT",
       "target": 40000.0,
-      "actual": 45296.16
+      "actual": 45296.16,
+      "remarks": null
     },
     {
       "department": "mines",
@@ -624,7 +719,8 @@
       "label": "High MgO/ TG",
       "unit": "MT",
       "target": 18000.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "mines",
@@ -632,7 +728,8 @@
       "label": "Low grade",
       "unit": "MT",
       "target": 27000.0,
-      "actual": 32990.26
+      "actual": 32990.26,
+      "remarks": null
     },
     {
       "department": "mines",
@@ -640,7 +737,8 @@
       "label": "CONSUMPTION OF HIGH MgO",
       "unit": "%",
       "target": 0.25,
-      "actual": null
+      "actual": null,
+      "remarks": null
     },
     {
       "department": "mines",
@@ -648,7 +746,8 @@
       "label": "MTBF OF SURFACE MINER_1",
       "unit": "HOURS",
       "target": 400.0,
-      "actual": 255.85
+      "actual": 255.85,
+      "remarks": null
     },
     {
       "department": "mines",
@@ -656,7 +755,8 @@
       "label": "MTBF OF SURFACE MINER_2",
       "unit": "HOURS",
       "target": 400.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "mines",
@@ -664,7 +764,8 @@
       "label": "COMPLIANCE TO INTERNAL QUALITY NORMS",
       "unit": "%",
       "target": 95.0,
-      "actual": 1.0
+      "actual": 1.0,
+      "remarks": null
     },
     {
       "department": "mines",
@@ -672,7 +773,8 @@
       "label": "Crusher Output",
       "unit": "TPH",
       "target": 350.0,
-      "actual": 184.8771138669673
+      "actual": 184.8771138669673,
+      "remarks": "Apron feeder and crusher chute jamming, BC4,BC3&BC5 cut and repair"
     },
     {
       "department": "mines",
@@ -680,7 +782,8 @@
       "label": "SPECIFIC DIESEL CONSUMPTION",
       "unit": "LTRS/TON",
       "target": 0.15,
-      "actual": 0.26545983636934734
+      "actual": 0.26545983636934734,
+      "remarks": null
     },
     {
       "department": "mines",
@@ -688,7 +791,8 @@
       "label": "MINES  MAINTENANCE COST",
       "unit": "TSH/TON OF RM",
       "target": 175.0,
-      "actual": 299.94782230021667
+      "actual": 299.94782230021667,
+      "remarks": null
     },
     {
       "department": "mines",
@@ -696,7 +800,8 @@
       "label": "MINES OPERATIONAL COST",
       "unit": "TSH/TON OF RM",
       "target": 4350.0,
-      "actual": 4910.649926433908
+      "actual": 4910.649926433908,
+      "remarks": null
     },
     {
       "department": "packing",
@@ -704,7 +809,8 @@
       "label": "FATALITY",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "packing",
@@ -712,7 +818,8 @@
       "label": "LTI",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "packing",
@@ -720,7 +827,8 @@
       "label": "MTI",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "packing",
@@ -728,7 +836,8 @@
       "label": "HAZARDS REPORTED",
       "unit": "NOS",
       "target": 2.0,
-      "actual": 5.0
+      "actual": 5.0,
+      "remarks": null
     },
     {
       "department": "packing",
@@ -736,7 +845,8 @@
       "label": "COMPLIANCE TO LEGAL REQUIREMENTS",
       "unit": "%",
       "target": 1.0,
-      "actual": 1.0
+      "actual": 1.0,
+      "remarks": null
     },
     {
       "department": "packing",
@@ -744,7 +854,8 @@
       "label": "COMPLIANCE BAG WEIGHT",
       "unit": "%",
       "target": 100.0,
-      "actual": 0.98
+      "actual": 0.98,
+      "remarks": null
     },
     {
       "department": "packing",
@@ -752,7 +863,8 @@
       "label": "BURST BAG GENERATION",
       "unit": "%",
       "target": 0.003,
-      "actual": 0.004
+      "actual": 0.004,
+      "remarks": "Due to Conveyor is 0.27% and due to Manufacturer is 0.13%. Rubber strips of Packer #2 Inclined had worn out last week, it caused too much bursting and also Polymers were coming out in Conveyors & chutes, causing jamming and bursting. All have been rectified and further precautions been taken to avoid burstage and bring below 0.30%."
     },
     {
       "department": "packing",
@@ -760,7 +872,8 @@
       "label": "BAGS INVENTORY",
       "unit": "MIL TSH",
       "target": 500.0,
-      "actual": 1725.0
+      "actual": 1725.0,
+      "remarks": "50 kg bags is 1,670,761,994.32 Tzs and Big Bags (42.5N) is 54,369,220.67 Tzs. Bags inventory increasing due to GULF WAR going on, keeping excess to avoid shortages."
     },
     {
       "department": "stores",
@@ -768,7 +881,8 @@
       "label": "FATALITY",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "stores",
@@ -776,7 +890,8 @@
       "label": "LTI",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "stores",
@@ -784,7 +899,8 @@
       "label": "MTI",
       "unit": "NOS",
       "target": 0.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "stores",
@@ -792,7 +908,8 @@
       "label": "HAZARDS REPORTED",
       "unit": "NOS",
       "target": 2.0,
-      "actual": 0.0
+      "actual": 0.0,
+      "remarks": null
     },
     {
       "department": "stores",
@@ -800,7 +917,8 @@
       "label": "COMPLIANCE TO LEGAL REQUIREMENTS",
       "unit": "%",
       "target": 100.0,
-      "actual": 100.0
+      "actual": 100.0,
+      "remarks": "Complied with regulatory bodies WIMA,EWURA"
     },
     {
       "department": "stores",
@@ -808,7 +926,8 @@
       "label": "SAME DAY GRN POSTING",
       "unit": "DAYS",
       "target": 1.0,
-      "actual": 1.0
+      "actual": 1.0,
+      "remarks": "Daily posting is done very rare pending incase on receipt of non- conformance materials"
     },
     {
       "department": "stores",
@@ -816,7 +935,8 @@
       "label": "MRQ POSTING",
       "unit": "DAYS",
       "target": 2.0,
-      "actual": 1.0
+      "actual": 1.0,
+      "remarks": "Very rarely delaying in Posting incase of emergency Stores opening and materials issued, Manual requisition incase of approval pending in second level"
     },
     {
       "department": "stores",
@@ -824,7 +944,8 @@
       "label": "ACCURATE ISSUE & POSTING IN SYSTEM",
       "unit": "SAME DAY",
       "target": 100.0,
-      "actual": 95.0
+      "actual": 95.0,
+      "remarks": "Very rarely delaying in Posting incase of emergency Stores opening and materials issued, Manual requisition incase of approval pending in second level"
     },
     {
       "department": "stores",
@@ -832,7 +953,8 @@
       "label": "CLEARANCE OF GRN AFTER MATERIAL/ INVOICE RECEIPT",
       "unit": "DAYS",
       "target": 5.0,
-      "actual": 1.0
+      "actual": 1.0,
+      "remarks": null
     },
     {
       "department": "stores",
@@ -840,7 +962,8 @@
       "label": "MONTHLY AUDIT VERIFICATION OF STOCK \n- A CLASS - 100 % \n- B CLASS - 1000 ITEMS / MONTH",
       "unit": "VARIANCE",
       "target": 0.02,
-      "actual": 0.007142857142857143
+      "actual": 0.007142857142857143,
+      "remarks": "We have done stock taking of 560 items in the month of May, 2026 both classes A , B & C. Class A -1Nos item Varience, Class B -No Varienace & Class C- 3Nos items"
     },
     {
       "department": "stores",
@@ -848,7 +971,8 @@
       "label": "MATERIAL CODE CREATION",
       "unit": "DAYS",
       "target": 1.0,
-      "actual": 1.0
+      "actual": 1.0,
+      "remarks": "There is rarely delay incase an authoriused personels are on leave but no delay if User department has provided full correct details"
     },
     {
       "department": "stores",
@@ -856,7 +980,8 @@
       "label": "REJECTED LOCAL MATERIAL RETURN TO VENDOR",
       "unit": "DAYS",
       "target": 10.0,
-      "actual": 7.0
+      "actual": 7.0,
+      "remarks": "Total three (3) rejections and sending back to vendor depend on Availability of vehicle from Head Office Note: Tube AS- CA53386633 for SEM Loader 655D -2Nos, Nuts for  Hardware M30 x 100 mm long -262Nos  (142MM, 155mm & 160mm)"
     },
     {
       "department": "stores",
@@ -864,7 +989,8 @@
       "label": "MONITORING OF STOCK OUT IN CONSUMABLE ITEMS",
       "unit": "%",
       "target": 2.0,
-      "actual": 2.0
+      "actual": 2.0,
+      "remarks": "We ensure Min/ Max of  consumables"
     },
     {
       "department": "stores",
@@ -872,7 +998,8 @@
       "label": "MATERIAL PRESERVATION As per best practices",
       "unit": "",
       "target": 100.0,
-      "actual": 80.0
+      "actual": 80.0,
+      "remarks": "Dust proof room for bearings, excessive heat is needed. Also concrete floor is needed in the stores yard"
     },
     {
       "department": "stores",
@@ -880,7 +1007,8 @@
       "label": "MONTHLY MONITORING OF SERVICE/JOBWORK RGP & NGRP",
       "unit": "MONTHLY BASIS",
       "target": 100.0,
-      "actual": 100.0
+      "actual": 100.0,
+      "remarks": null
     },
     {
       "department": "stores",
@@ -888,7 +1016,8 @@
       "label": "MONITORING/STORAGE OF RETURNED ITEMS \n(R CODE)",
       "unit": "MONTHLY BASIS",
       "target": 100.0,
-      "actual": 80.0
+      "actual": 80.0,
+      "remarks": "More space is required to keep all refurbished items - on going job"
     },
     {
       "department": "stores",
@@ -896,7 +1025,8 @@
       "label": "MATERIAL SHELF LIFE (EXPIRY) MONITORING",
       "unit": "%",
       "target": 100.0,
-      "actual": 90.0
+      "actual": 90.0,
+      "remarks": "FIFO principle is being applied"
     },
     {
       "department": "stores",
@@ -904,7 +1034,8 @@
       "label": "TOTAL INVENTORY VALUE",
       "unit": "MIL TSH",
       "target": null,
-      "actual": 14449.96638175
+      "actual": 14449.96638175,
+      "remarks": "This excludes Raw materials, semi finished goods, finished goods (Cement) and quarry material"
     },
     {
       "department": "stores",
@@ -912,7 +1043,8 @@
       "label": "SCRAP SALE VALUE (Monthly)",
       "unit": "MIL TSH",
       "target": 10.0,
-      "actual": 143.678216
+      "actual": 143.678216,
+      "remarks": "Scrap grinding media 53,238,000/=Tsh, Scrap liner plates 8,186,000/=Tsh, Scrap wooven bags 610,000/=Tsh, Scrap metal 76,434,216/=Tsh, Used grease 400,000/=Tsh, Scrap conveyor belt 4,800,000/=Tsh & Empty steel barrel 10,000/=Tsh."
     }
   ]
 }

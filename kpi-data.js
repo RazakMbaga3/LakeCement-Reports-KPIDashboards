@@ -421,7 +421,16 @@ function markHeroCardUnavailable(card) {
    API; falls back to the existing per-row localStorage read if that dept's
    fetch fails (offline / server unreachable). ────────────────────────── */
 async function loadManualValues(mo, yr) {
-  const rows = Array.from(document.querySelectorAll('.kpi-table .data-row'));
+  // Mines Workshop's .data-row markup is a per-equipment TARGET/ACTUAL
+  // matrix (up to 23 <td>s: label/unit/sign, then TARGET/ACTUAL pairs per
+  // machine) — it doesn't share the standard 19-col single-KPI layout every
+  // other dept uses, has no kpi_monthly rows behind it (not backfilled,
+  // see extract-kpi-monthly.py), and its column 4/5/18 mean something
+  // completely different there. Running this pipeline on it blanked real
+  // hardcoded ACTUAL figures to "—" and mangled unrelated TARGET cells, so
+  // it's excluded outright rather than guessing from cell count.
+  const rows = Array.from(document.querySelectorAll('.kpi-table .data-row'))
+    .filter(row => row.closest('.dept-section')?.id !== 'dept-minesworkshop');
 
   // Collect distinct depts present on the page, fetch each dept's KPI rows once.
   const depts = [...new Set(rows.map(row => {
@@ -468,6 +477,22 @@ async function loadManualValues(mo, yr) {
       markRowNoData(row);
     }
 
+    // REMARKS column (col 5) — server value for the selected month only;
+    // no localStorage fallback exists for remarks (never was editable before
+    // this wiring), so offline just leaves whatever text is already in the
+    // cell rather than blanking real hardcoded remarks. Guarded to the
+    // standard 19-col layout like updateRowStatus/markRowNoData — Mines
+    // Workshop's per-equipment matrix reuses .data-row with a different
+    // column meaning at index 5 (another equipment's TARGET, not remarks).
+    if (cells.length >= 19) {
+      const remarkCell = cells[5];
+      if (remarkCell && map) {
+        const remarkText = serverRow && serverRow.remarks ? serverRow.remarks : '';
+        remarkCell.textContent = remarkText;
+        remarkCell.classList.toggle('remark-cell', true);
+      }
+    }
+
     // Monthly columns (cols 6–17) — edits to any of these still sync to
     // the server (see makeEditable's commit() below, keyed by that cell's
     // own month), but this load only prefetches the selected month (one
@@ -510,6 +535,16 @@ async function openMonthlyModal() {
     return;
   }
 
+  // Mines Workshop's per-equipment TARGET/ACTUAL matrix doesn't fit this
+  // single-KPI-per-row modal (see loadManualValues) and has no kpi_monthly
+  // rows behind it — reachable only for admin/management (kpiAccess.js
+  // grants them 'all' depts), so guard here too rather than presenting a
+  // modal that would silently misread equipment columns as KPI value/unit.
+  if (dept === 'minesworkshop') {
+    alert('Mines Workshop KPIs are not editable via this form yet.');
+    return;
+  }
+
   const section = document.getElementById('dept-' + dept);
   if (!section) return;
 
@@ -545,17 +580,24 @@ async function openMonthlyModal() {
     const slug    = kpiSlug(label);
     const isAuto  = autoKeys.has(slug);
 
-    // Current value: server first, then localStorage manual
+    // Current value: server first, then localStorage manual. Remarks only
+    // read from col 5 on the standard 19-col layout — Mines Workshop's
+    // per-equipment matrix reuses .data-row with a different column 5
+    // (another equipment's TARGET), same guard as loadManualValues.
     let currentVal = cells[4].textContent.trim();
+    let currentRemark = (cells.length >= 19 && cells[5]) ? cells[5].textContent.trim() : '';
     if (serverMap && serverMap.has(slug)) {
-      const serverVal = serverMap.get(slug).actual;
-      if (serverVal != null) currentVal = String(serverVal);
+      const serverRow = serverMap.get(slug);
+      if (serverRow.actual != null) currentVal = String(serverRow.actual);
+      if (serverRow.remarks != null) currentRemark = serverRow.remarks;
     } else {
       const stored = localStorage.getItem(manualKey(dept, slug, yr, mo));
       if (stored !== null) currentVal = stored;
     }
+    if (currentRemark === '—') currentRemark = '';
 
     const badge = isAuto ? '<span class="modal-auto-badge">⚡ auto — override via the table cell</span>' : '';
+    const escapedRemark = currentRemark.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 
     tableRows += `
       <tr>
@@ -565,6 +607,8 @@ async function openMonthlyModal() {
             data-is-auto="${isAuto}" data-target="${target}" data-unit="${unit}"
             value="${currentVal}" placeholder="—" ${isAuto ? 'disabled' : ''} />${badge}</td>
         <td class="modal-unit">${unit}</td>
+        <td><input class="modal-input modal-remark-input" type="text"
+            data-remark-for="${slug}" value="${escapedRemark}" placeholder="—" ${isAuto ? 'disabled' : ''} /></td>
       </tr>`;
   });
 
@@ -584,7 +628,7 @@ async function openMonthlyModal() {
         </div>
         <table class="kpi-modal-table">
           <thead>
-            <tr><th>KPI</th><th>Value</th><th>Unit</th></tr>
+            <tr><th>KPI</th><th>Value</th><th>Unit</th><th>Remarks</th></tr>
           </thead>
           <tbody>${tableRows}</tbody>
         </table>
@@ -609,9 +653,16 @@ function closeMonthlyModal() {
 }
 
 async function saveAllModalValues() {
-  const inputs = document.querySelectorAll('.modal-input');
+  const inputs = document.querySelectorAll('.modal-input[data-slug]');
   let dept = null, yr = null, mo = null;
   const kpis = []; // batched for a single PUT to the backend
+
+  // Remarks live in separate inputs (data-remark-for=slug) since a KPI row's
+  // value and remark are independently editable — index by slug up front.
+  const remarksBySlug = {};
+  document.querySelectorAll('.modal-remark-input[data-remark-for]').forEach(input => {
+    remarksBySlug[input.dataset.remarkFor] = input.value.trim();
+  });
 
   inputs.forEach(input => {
     const val    = input.value.trim();
@@ -625,16 +676,24 @@ async function saveAllModalValues() {
 
     dept = rowDept; yr = rowYr; mo = rowMo; // same for every row in this modal
 
-    if (val === '' || val === '—') return;
     if (isAuto) return; // formula-layer rows change only via the audited override flow
     if (typeof canFillKPIDept === 'function' && !canFillKPIDept(rowDept)) return;
+
+    const remark = remarksBySlug[slug] || null;
+
+    if (val === '' || val === '—') {
+      // No value entered, but a remark may still have been added/edited —
+      // don't drop it silently just because the value field is empty.
+      if (remark) kpis.push({ kpi_key: slug, target: isNaN(target) ? null : target, remarks: remark });
+      return;
+    }
 
     // Local write stays as the offline fallback cache, unchanged.
     localStorage.setItem(manualKey(rowDept, slug, rowYr, rowMo), val);
 
     const actual = parseFloat(val.replace(/,/g, ''));
     if (!isNaN(actual)) {
-      kpis.push({ kpi_key: slug, target: isNaN(target) ? null : target, actual, unit });
+      kpis.push({ kpi_key: slug, target: isNaN(target) ? null : target, actual, unit, remarks: remark });
     }
   });
 

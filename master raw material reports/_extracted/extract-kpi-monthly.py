@@ -9,9 +9,17 @@ Packing Plant, Stores). 'Mines Workshop' (per-equipment matrix) and 'OT'
 (overtime cost table) have a different shape and are not part of
 kpi_monthly's (department, kpi_key) model — skipped.
 
-Row 0 = KPI label, 1 = unit, 2 = signage, 3 = target, 4 = current-month actual.
-Section header rows (e.g. "HEALTH & SAFETY") have a label but no unit/signage/
-target/actual and are skipped. Fully blank rows are skipped.
+Row 0 = KPI label, 1 = unit, 2 = signage, 3 = target, 4 = current-month actual,
+5 = remarks. Section header rows (e.g. "HEALTH & SAFETY") have a label but no
+unit/signage/target/actual and are skipped. Fully blank rows are skipped.
+
+A few KPIs (e.g. E&I's "Calibration of Weighfeeders..." / "Regular Random
+Verification of Bag Weight") are tracked as text/status, not numbers — target
+and actual are things like "AS PER FREQUENCY" / "DONE" or a tolerance spec
+plus a measured-weight note. Both target and actual come back None from
+clean_num() for these, but the row is real and must not be silently dropped:
+the text is preserved in `text_status` and folded into `remarks` so the
+dashboard still shows something instead of a blank/never-populated row.
 """
 import json
 import re
@@ -71,6 +79,31 @@ def clean_unit(v):
     return str(v).strip()[:20]  # kpi_monthly.unit is VARCHAR(20)
 
 
+def clean_remark(v):
+    if v is None:
+        return None
+    s = str(v).strip()
+    if s in ('', '-', '–', '—'):
+        return None
+    return s
+
+
+def is_blank(v):
+    """None or a whitespace-only string (Excel sometimes stores '' instead
+    of a truly empty cell, e.g. Stores sheet's section-header rows)."""
+    return v is None or (isinstance(v, str) and v.strip() == '')
+
+
+def clean_text_status(v):
+    """Non-numeric target/actual text (e.g. 'DONE', 'AS PER FREQUENCY') —
+    kept verbatim, just whitespace-trimmed, distinct from clean_remark's
+    dash-filtering since '-' here could be part of a real spec string."""
+    if v is None:
+        return None
+    s = str(v).strip()
+    return s or None
+
+
 def extract_month(path):
     wb = openpyxl.load_workbook(path, data_only=True)
     out = []
@@ -86,12 +119,14 @@ def extract_month(path):
             label = str(label).strip()
             if not label:
                 continue
-            unit_raw, signage_raw, target_raw, actual_raw = (
-                row[1].value, row[2].value, row[3].value, row[4].value
+            unit_raw, signage_raw, target_raw, actual_raw, remarks_raw = (
+                row[1].value, row[2].value, row[3].value, row[4].value, row[5].value
             )
             # Section header rows carry only a label (all of unit/signage/
-            # target/actual are None) — skip. Also skip obvious title rows.
-            if unit_raw is None and signage_raw is None and target_raw is None and actual_raw is None:
+            # target/actual blank — Excel sometimes stores '' rather than a
+            # true empty cell, e.g. Stores' "OPERATIONAL"/"FINANCIAL" rows
+            # have unit='') — skip. Also skip obvious title rows.
+            if is_blank(unit_raw) and is_blank(signage_raw) and is_blank(target_raw) and is_blank(actual_raw):
                 continue
             if label.upper() in ('LAKE CEMENT LIMITED', 'MONTHLY KEY PERFORMANCE INDICATORS (KPI)'):
                 continue
@@ -107,8 +142,22 @@ def extract_month(path):
 
             target = clean_num(target_raw)
             actual = clean_num(actual_raw)
+            remarks = clean_remark(remarks_raw)
+
             if target is None and actual is None:
-                continue  # nothing usable on this row
+                # Not necessarily "nothing usable" — target/actual may be
+                # tracked as text/status (e.g. 'DONE', 'AS PER FREQUENCY')
+                # rather than a number. Fold that text into remarks instead
+                # of dropping the row, so the KPI still shows up.
+                target_text = clean_text_status(target_raw)
+                actual_text = clean_text_status(actual_raw)
+                if target_text is None and actual_text is None:
+                    continue  # genuinely nothing on this row
+                status_bits = []
+                if target_text: status_bits.append(f'Target: {target_text}')
+                if actual_text: status_bits.append(f'Actual: {actual_text}')
+                status_note = ' | '.join(status_bits)
+                remarks = f'{status_note} — {remarks}' if remarks else status_note
 
             out.append({
                 'department': dept,
@@ -117,6 +166,7 @@ def extract_month(path):
                 'unit': clean_unit(unit_raw),
                 'target': target,
                 'actual': actual,
+                'remarks': remarks,
             })
     return out
 

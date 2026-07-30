@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS kpi_monthly (
   target       NUMERIC(12,3),
   actual       NUMERIC(12,3),
   unit         VARCHAR(20),                     -- 'MT', 'kWh', '%', etc.
+  remarks      TEXT,
   updated_by   INTEGER REFERENCES users(id),
   updated_at   TIMESTAMP DEFAULT NOW(),
   UNIQUE (department, year, month, kpi_key)

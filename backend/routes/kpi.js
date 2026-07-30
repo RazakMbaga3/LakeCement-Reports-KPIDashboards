@@ -34,7 +34,7 @@ router.get('/summary/:year/:month',
     try {
       const { year, month } = req.validated.params;
       const result = await db.query(
-        `SELECT department, kpi_key, target, actual, unit
+        `SELECT department, kpi_key, target, actual, unit, remarks
          FROM kpi_monthly
          WHERE year = $1 AND month = $2
          ORDER BY department, kpi_key`,
@@ -89,6 +89,7 @@ const kpiRowsBody = z.array(z.object({
   target:  zNumeric.optional(),
   actual:  zNumeric.optional(),
   unit:    z.string().max(20).optional().default(''),
+  remarks: z.string().optional(),
 })).min(1, 'KPI data must be a non-empty array').max(500);
 
 router.put('/:dept/:year/:month',
@@ -99,15 +100,21 @@ router.put('/:dept/:year/:month',
       const { dept, year, month } = req.validated.params;
       const kpis = req.validated.body;
 
-      // Upsert each KPI row
+      // Upsert each KPI row. A remarks-only save (no target/actual in the
+      // request, e.g. editing just the remark for an already-populated row)
+      // must not clobber the existing target/actual — COALESCE onto the
+      // current row rather than blindly overwriting with EXCLUDED.
       for (const kpi of kpis) {
         await db.query(`
-          INSERT INTO kpi_monthly (department, year, month, kpi_key, target, actual, unit, updated_by, updated_at)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+          INSERT INTO kpi_monthly (department, year, month, kpi_key, target, actual, unit, remarks, updated_by, updated_at)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
           ON CONFLICT (department, year, month, kpi_key)
-          DO UPDATE SET target=EXCLUDED.target, actual=EXCLUDED.actual, unit=EXCLUDED.unit,
-                        updated_by=$8, updated_at=NOW()
-        `, [dept, year, month, kpi.kpi_key, kpi.target ?? null, kpi.actual ?? null, kpi.unit ?? '', req.user.id]);
+          DO UPDATE SET target=COALESCE(EXCLUDED.target, kpi_monthly.target),
+                        actual=COALESCE(EXCLUDED.actual, kpi_monthly.actual),
+                        unit=CASE WHEN EXCLUDED.unit = '' THEN kpi_monthly.unit ELSE EXCLUDED.unit END,
+                        remarks=COALESCE(EXCLUDED.remarks, kpi_monthly.remarks),
+                        updated_by=$9, updated_at=NOW()
+        `, [dept, year, month, kpi.kpi_key, kpi.target ?? null, kpi.actual ?? null, kpi.unit ?? '', kpi.remarks ?? null, req.user.id]);
       }
 
       await db.query(
