@@ -570,9 +570,9 @@
             <td class="tp">COAL — KILN</td>
             <td class="ts">CPP / Store</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="coal_kiln_open" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">182</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="coal_kiln_recv" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="coal_kiln_recv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="coal_kiln_recv">—</div></td>
             <td class="cm"><input class="ci" type="number" value="265" data-field="coal_kiln" /></td>
             <td class="cf"><div class="cv" data-roll-mtd="coal_kiln">—</div></td>
             <td class="cf"><div class="cv" data-roll-ytd="coal_kiln">—</div></td>
@@ -588,9 +588,9 @@
             <td class="tp">COAL — CPP</td>
             <td class="ts">CPP</td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="coal_cpp_open" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">64</div></td>
-            <td class="cf"><div class="cv">219</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="coal_cpp_recv" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="coal_cpp_recv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="coal_cpp_recv">—</div></td>
             <td class="cm"><input class="ci" type="number" value="144" data-field="coal_cpp" /></td>
             <td class="cf"><div class="cv" data-roll-mtd="coal_cpp">—</div></td>
             <td class="cf"><div class="cv" data-roll-ytd="coal_cpp">—</div></td>
@@ -606,9 +606,9 @@
             <td class="tp">COAL — TOTAL</td>
             <td class="ts"></td>
             <td class="cf"><div class="cv" data-kpi="coal_total_open">—</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">64</div></td>
-            <td class="cf"><div class="cv">401</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_total_recv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="coal_kiln_recv,coal_cpp_recv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="coal_kiln_recv,coal_cpp_recv">—</div></td>
             <td class="cf"><div class="cv" data-kpi="coal_total">0</div></td>
             <td class="cf"><div class="cv" data-roll-mtd="coal_kiln,coal_cpp">—</div></td>
             <td class="cf"><div class="cv" data-roll-ytd="coal_kiln,coal_cpp">—</div></td>
@@ -657,12 +657,12 @@
             <td class="tp">CLINKER — DESPATCH</td>
             <td class="ts">—</td>
             <td></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
+            <td class="ts">—</td>
+            <td class="ts">—</td>
+            <td class="ts">—</td>
+            <td class="cs"><div class="cv" data-kpi="dispatch_clinker_display">—</div></td>
+            <td class="ts">—</td>
+            <td class="ts">—</td>
             <td></td><td></td><td></td><td></td><td></td>
           </tr>
 
@@ -1530,7 +1530,7 @@ initKpiLive([
 
   /* ── CM-1 / CM-2 — production-by-grade totals ─────────────────── */
   { kpi:'cm1_total_prod', fmt:'n0',
-    compute: function(f,n){ return n(f.cm1_325n_mt)+n(f.cm1_425r_mt)+n(f.cm1_425n_mt)+n(f.cm1_opc_mt); }
+    compute: function(f,n){ return n(f.cm1_325n_mt)+n(f.cm1_425r_mt)+n(f.cm1_425n_mt)+n(f.cm1_opc_mt)+n(f.cm1_425n_bm_mt); }
   },
   { kpi:'cm2_total_prod', fmt:'n0',
     compute: function(f,n){ return n(f.cm2_325n_mt)+n(f.cm2_425r_mt)+n(f.cm2_425n_mt)+n(f.cm2_425n_bm_mt); }
@@ -1645,19 +1645,25 @@ initKpiLive([
     }
   },
 
-  /* ── Coal — opening ledger (received qty is always 0 across Apr–Jun Excel sample, so
-     closing = open - cons, same simplification the sheet itself uses) ── */
+  /* ── Coal — opening ledger (closing = open + received - consumed, matching
+     Excel's own Coal Kiln/CPP closing cells — confirmed against the master
+     workbook's April-1 sheet, the one date with a nonzero received qty) ── */
   { kpi:'coal_kiln_closing', fmt:'n0',
-    compute: function(f,n){ return n(f.coal_kiln_open) - n(f.coal_kiln); }
+    compute: function(f,n){ return n(f.coal_kiln_open) + n(f.coal_kiln_recv) - n(f.coal_kiln); }
   },
   { kpi:'coal_cpp_closing', fmt:'n0',
-    compute: function(f,n){ return n(f.coal_cpp_open) - n(f.coal_cpp); }
+    compute: function(f,n){ return n(f.coal_cpp_open) + n(f.coal_cpp_recv) - n(f.coal_cpp); }
   },
   { kpi:'coal_total_open', fmt:'n0',
     compute: function(f,n){ return n(f.coal_kiln_open) + n(f.coal_cpp_open); }
   },
+  { kpi:'coal_total_recv', fmt:'n0',
+    compute: function(f,n){ return n(f.coal_kiln_recv) + n(f.coal_cpp_recv); }
+  },
   { kpi:'coal_total_closing', fmt:'n0',
-    compute: function(f,n){ return (n(f.coal_kiln_open) + n(f.coal_cpp_open)) - (n(f.coal_kiln) + n(f.coal_cpp)); }
+    compute: function(f,n){
+      return (n(f.coal_kiln_open) + n(f.coal_cpp_open)) + (n(f.coal_kiln_recv) + n(f.coal_cpp_recv)) - (n(f.coal_kiln) + n(f.coal_cpp));
+    }
   },
 
   /* ── Cement Grinding — Material stock ledgers (Opening + Received − Consumed) ── */
@@ -1680,7 +1686,7 @@ initKpiLive([
   },
   { kpi:'cement_today', fmt:'n0',
     compute: function(f,n){
-      var cm1 = n(f.cm1_325n_mt)+n(f.cm1_425r_mt)+n(f.cm1_425n_mt)+n(f.cm1_opc_mt);
+      var cm1 = n(f.cm1_325n_mt)+n(f.cm1_425r_mt)+n(f.cm1_425n_mt)+n(f.cm1_opc_mt)+n(f.cm1_425n_bm_mt);
       var cm2 = n(f.cm2_325n_mt)+n(f.cm2_425r_mt)+n(f.cm2_425n_mt)+n(f.cm2_425n_bm_mt);
       return (cm1+cm2) > 0 ? cm1+cm2 : null;
     }
@@ -1728,6 +1734,9 @@ initReportLoader({
         }
         return t > 0 ? t : null;
       }
+    },
+    { kpi: 'dispatch_clinker_display', fmt: 'n0',
+      compute: function(d, n) { return n(d.dispatch_clinker) || null; }
     },
 
     /* ── Quality — direct field reads ────────────────────────────── */
