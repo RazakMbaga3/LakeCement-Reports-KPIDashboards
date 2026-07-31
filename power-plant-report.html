@@ -487,16 +487,16 @@
           <td class="tp">Heat Rate TG 2880</td>
           <td class="tu">kcal / kWh</td>
           <td class="cs"><div class="cv" data-kpi="cpp_heat_rate_tg_ondate">—</div></td>
-          <td class="cf"><div class="cv" data-roll-mtd="cpp_heat_rate_tg">—</div></td>
-          <td class="cf"><div class="cv" data-roll-ytd="cpp_heat_rate_tg">—</div></td>
+          <td class="cf"><div class="cv" data-kpi="cpp_heat_rate_tg_mtd">—</div></td>
+          <td class="cf"><div class="cv" data-kpi="cpp_heat_rate_tg_ytd">—</div></td>
         </tr>
         <tr>
           <td class="ts">17</td>
           <td class="tp">Heat Rate Plant 3300 @ MCR</td>
           <td class="tu">kcal / kWh</td>
           <td class="cs"><div class="cv" data-kpi="cpp_heat_rate_plant_ondate">—</div></td>
-          <td class="cf"><div class="cv" data-roll-mtd="cpp_heat_rate_plant">—</div></td>
-          <td class="cf"><div class="cv" data-roll-ytd="cpp_heat_rate_plant">—</div></td>
+          <td class="cf"><div class="cv" data-kpi="cpp_heat_rate_plant_mtd">—</div></td>
+          <td class="cf"><div class="cv" data-kpi="cpp_heat_rate_plant_ytd">—</div></td>
         </tr>
 
         <tr class="srow"><td colspan="6">DG SET</td></tr>
@@ -878,9 +878,11 @@ initReportLoader({
 <script>
 /* ══════════════════════════════════════════════════════════════
    MTD / YTD ratio rollups — report-rollup.js only sums raw fields;
-   Net Gen / Aux% / Avg Gen / PLF / SSC / SFC are RATIOS, so they must
-   be computed from summed components over the range, not averaged
-   day-by-day (summing daily percentages would be meaningless).
+   Net Gen / Aux% / Avg Gen / PLF / SSC / SFC / Heat Rate (TG & Plant)
+   are RATIOS, so they must be computed from summed (or generation-
+   weighted) components over the range, not averaged day-by-day
+   (summing daily percentages, or daily kcal/kWh readings, would be
+   meaningless — see the 84,318 kcal/kWh bug this replaced).
    ══════════════════════════════════════════════════════════════ */
 (function () {
   function num(v) { if (v === '' || v == null) return 0; var n = +(String(v).replace(/,/g, '')); return isNaN(n) ? 0 : n; }
@@ -910,6 +912,10 @@ initReportLoader({
     return localRange(formId, from, to);
   }
   function sum(rows, field) { return rows.reduce(function (t, d) { return t + num(d[field]); }, 0); }
+  /* generation-weighted sum of a per-day rate field, e.g. Heat Rate (kcal/kWh) × gross gen (kWh) */
+  function weightedSum(rows, valField, weightField) {
+    return rows.reduce(function (t, d) { return t + num(d[valField]) * num(d[weightField]); }, 0);
+  }
   function paint(id, val, fmt) {
     var el = document.querySelector('[data-kpi="' + id + '"]');
     if (!el || val === null || val === undefined || isNaN(val)) return;
@@ -918,14 +924,22 @@ initReportLoader({
   function computeRatios(rows) {
     var gross = sum(rows, 'cpp_gross_gen_kwh'), aux = sum(rows, 'cpp_aux_kwh'),
         hrs = sum(rows, 'cpp_run_hrs'), turbine = sum(rows, 'cpp_turbine_steam_mt'),
-        coal = sum(rows, 'cpp_coal_cons');
+        coal = sum(rows, 'cpp_coal_cons'),
+        hrTgW = weightedSum(rows, 'cpp_heat_rate_tg', 'cpp_gross_gen_kwh'),
+        hrPlantW = weightedSum(rows, 'cpp_heat_rate_plant', 'cpp_gross_gen_kwh');
     return {
       net:  gross > 0 ? gross - aux : null,
       aux:  gross > 0 ? aux / gross * 100 : null,
       avg:  hrs > 0 ? gross / 1000 / hrs : null,
       plf:  hrs > 0 ? (gross / 1000 / hrs) / 10 * 100 : null,
       ssc:  gross > 0 && turbine > 0 ? turbine * 1000 / gross : null,
-      sfc:  gross > 0 && coal > 0 ? coal * 1000 / gross : null
+      sfc:  gross > 0 && coal > 0 ? coal * 1000 / gross : null,
+      /* Heat Rate MTD/YTD = generation-weighted mean, per formula-registry.js's
+         documented monthlyAgg rule for cpp_heat_rate_plant — NOT a sum of daily
+         readings (report-rollup.js's default) and NOT a plain day-count average,
+         since days with more generation should dominate the period figure. */
+      hrTg:    gross > 0 && hrTgW > 0 ? hrTgW / gross : null,
+      hrPlant: gross > 0 && hrPlantW > 0 ? hrPlantW / gross : null
     };
   }
   async function run() {
@@ -941,6 +955,8 @@ initReportLoader({
     paint('cpp_plf_mtd', mtd.plf, 'pct'); paint('cpp_plf_ytd', ytd.plf, 'pct');
     paint('cpp_ssc_mtd', mtd.ssc); paint('cpp_ssc_ytd', ytd.ssc);
     paint('cpp_sfc_mtd', mtd.sfc); paint('cpp_sfc_ytd', ytd.sfc);
+    paint('cpp_heat_rate_tg_mtd', mtd.hrTg); paint('cpp_heat_rate_tg_ytd', ytd.hrTg);
+    paint('cpp_heat_rate_plant_mtd', mtd.hrPlant); paint('cpp_heat_rate_plant_ytd', ytd.hrPlant);
   }
   var dateEl = document.querySelector('input[type="date"]');
   if (dateEl) dateEl.addEventListener('change', function () { setTimeout(run, 120); });
