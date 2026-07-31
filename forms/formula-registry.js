@@ -125,6 +125,16 @@
     cm2_425n_bm_mt:  { source: 'manual', form: 'production', field: 'cm2_425n_bm_mt',  unit: 'MT' },
     cm2_325n_mt:     { source: 'manual', form: 'production', field: 'cm2_325n_mt',     unit: 'MT' },
 
+    // CM-1 stock-ledger "Consumption" column (Plant Operations, Production Report) —
+    // cement leaving CM-1's per-grade stock, i.e. what operations calls dispatch for
+    // that mill. See despatch-day below: this IS the dispatch figure now, matching
+    // the Production Report's own TOTAL — CM-1 row exactly.
+    cm1_325n_cons_mt:    { source: 'manual', form: 'production', field: 'cm1_325n_cons_mt',    unit: 'MT' },
+    cm1_425r_cons_mt:    { source: 'manual', form: 'production', field: 'cm1_425r_cons_mt',    unit: 'MT' },
+    cm1_425n_cons_mt:    { source: 'manual', form: 'production', field: 'cm1_425n_cons_mt',    unit: 'MT' },
+    cm1_opc_cons_mt:     { source: 'manual', form: 'production', field: 'cm1_opc_cons_mt',     unit: 'MT' },
+    cm1_425n_bm_cons_mt: { source: 'manual', form: 'production', field: 'cm1_425n_bm_cons_mt', unit: 'MT' },
+
     // CPP (Captive Power Plant) daily generation report — FRM-LCL-PP-06
     cpp_gross_gen_kwh:    { source: 'manual', form: 'cpp', field: 'cpp_gross_gen_kwh',    unit: 'kWh' },
     cpp_aux_kwh:          { source: 'manual', form: 'cpp', field: 'cpp_aux_kwh',          unit: 'kWh' },
@@ -175,12 +185,17 @@
   var KWH_GRINDING  = ['pwr_cm1_kwh', 'pwr_cm2_kwh'];
   var CM_GRADES     = ['cm1_425r_mt', 'cm1_425n_mt', 'cm1_325n_mt', 'cm1_opc_mt',
                        'cm2_425r_mt', 'cm2_425n_mt', 'cm2_425n_bm_mt', 'cm2_325n_mt'];
+  // no longer feeds despatch-day (see below) — kept because the Dispatch form
+  // still collects its own channel×grade report independently of the KPI.
   var DISPATCH      = ['dispatch_reg_425r', 'dispatch_reg_425nbm', 'dispatch_reg_425n', 'dispatch_reg_325n', 'dispatch_reg_opc425n',
                        'dispatch_blk_425r', 'dispatch_blk_425nbm', 'dispatch_blk_425n', 'dispatch_blk_325n', 'dispatch_blk_opc425n',
                        'dispatch_bag_425r', 'dispatch_bag_425nbm', 'dispatch_bag_425n',
                        'dispatch_clinker'];
   var DISPATCH_LEGACY = ['dispatch_legacy_425r', 'dispatch_legacy_425nbm', 'dispatch_legacy_425n', 'dispatch_legacy_325n',
                          'dispatch_legacy_opc425n', 'dispatch_legacy_bulker', 'dispatch_legacy_bigbag', 'dispatch_clinker'];
+  // CM-1 stock-ledger consumption = cement dispatched out of CM-1's grades that
+  // day (matches the Production Report's TOTAL — CM-1 On Date Consumption cell).
+  var CM1_DISPATCH = ['cm1_325n_cons_mt', 'cm1_425r_cons_mt', 'cm1_425n_cons_mt', 'cm1_opc_cons_mt', 'cm1_425n_bm_cons_mt'];
   var CAO_HOLES     = Object.keys(FACTS).filter(function (k) { return k.indexOf('cao_h') === 0; });
 
   function sumOf(keys, f) { return keys.reduce(function (s, k) { return s + z0(f[k]); }, 0); }
@@ -208,13 +223,12 @@
     },
 
     'despatch-day': {
-      label: 'Despatch / Day', unit: 'MT', dp: 0, version: 3,
+      label: 'Despatch / Day', unit: 'MT', dp: 0, version: 4,
       target: null, signage: null, targetLabel: null,
-      notes: 'Total cement + clinker dispatched for the day, summed across every loading channel (Regular Bags, Bulker, Big Bags — three independently loaded streams, matching the source Dispatch Report) and grade (42.5R, 42.5N BM, 42.5N, 32.5N, OPC 42.5N; Big Bags only packed for 42.5R/42.5N B-M/42.5N) plus clinker. v2: previously Bulker/Big Bags were single un-graded totals, so a grade’s dispatch across all channels could not be reconstructed — now every channel×grade cell is its own fact. v3: falls back to the pre-channel-split flat fields when the new channel×grade fields are all empty — a real submission (2026-07-22, 376.5 MT) made before the channel-split rebuild was going uncounted, silently reading as no-dispatch. A zero total (both new and legacy) is treated as no data, not a zero-dispatch day.',
-      inputs: DISPATCH.concat(DISPATCH_LEGACY),
+      notes: 'Cement dispatched for the day = CM-1\'s stock-ledger "Consumption" column, summed across its five grades (32.5N, 42.5R, 42.5N, OPC, 42.5N BM) — this is exactly the Production Report\'s Plant Operations table, TOTAL — CM-1 row, On Date Consumption cell (stock ledger: opening + production − consumption(dispatch) = closing, so that column is cement leaving stock, i.e. dispatch). v4 (2026-07-31): previously sourced from the separate Dispatch form\'s channel×grade breakdown (Regular Bags/Bulker/Big Bags), which drifted from what Operations actually reconciles against on the Production Report and was known to read 0 on days the Dispatch form went unfilled even though CM-1\'s ledger had real consumption entered. Re-pointed to the Production Report figure per Operations\' direction so the two numbers can never disagree — the Dispatch form\'s channel×grade data still feeds its own report, just not this KPI.',
+      inputs: CM1_DISPATCH,
       daily: function (f) {
-        var t = sumOf(DISPATCH, f);
-        if (t <= 0) t = sumOf(DISPATCH_LEGACY, f);
+        var t = sumOf(CM1_DISPATCH, f);
         return t > 0 ? t : null;
       },
       monthlyAgg: 'avg',
