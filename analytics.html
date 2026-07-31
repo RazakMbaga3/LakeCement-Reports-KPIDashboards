@@ -528,51 +528,21 @@
         <span class="an-section-badge" id="badge-stoppage-materials">0 days</span>
       </div>
       <div class="an-grid" style="margin-bottom:20px">
-        <div class="an-card" id="card-stop-total">
-          <div class="an-card-hdr">
-            <div>
-              <div class="an-card-title">
-                <span class="an-card-dot" style="background:#e53935"></span>
-                Total Stoppage
-              </div>
-              <div class="an-card-sub">All sections &middot; All categories &middot; Lower is better</div>
-            </div>
-            <div class="an-card-stats">
-              <div class="an-stat"><span class="an-stat-val" id="stat-stop-total-cur">—</span><span class="an-stat-lbl">Latest min</span></div>
-              <div class="an-stat"><span class="an-stat-val" id="stat-stop-total-avg">—</span><span class="an-stat-lbl">Avg min/day</span></div>
-              <div class="an-stat"><span class="an-stat-trend" id="stat-stop-total-trend">—</span><span class="an-stat-lbl">Trend</span></div>
-            </div>
+        <!-- Stoppage trend cards used to live here (total + kiln minutes,
+             day-count average only — no MTBF, no Pareto, no RCFA, no
+             equipment breakdown). That's now a full dedicated report;
+             this card links through instead of duplicating a thinner
+             version of the same numbers. -->
+        <a href="reliability.html" class="an-card" style="text-decoration:none;grid-column:span 2;display:flex;flex-direction:row;align-items:center;gap:16px;padding:18px 20px;cursor:pointer">
+          <div style="width:38px;height:38px;border-radius:10px;background:#FFF7ED;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i data-lucide="bar-chart-3" style="width:19px;height:19px;color:var(--orange);stroke-width:2.2"></i>
           </div>
-          <div class="an-chart-wrap"><canvas id="chart-stop-total"></canvas></div>
-          <div class="an-card-empty" id="empty-stop-total">
-            <div class="emp-icon">⏸️</div>
-            <div class="emp-msg">No stoppage data</div>
-            <div class="emp-sub">Submit the Stoppage Report to see trends</div>
+          <div style="flex:1">
+            <div class="an-card-title" style="margin-bottom:2px">Equipment Reliability &amp; Downtime Report</div>
+            <div class="an-card-sub">Availability (NAI), MTBF, paired hours/frequency Pareto, per-equipment breakdown and RCFA flags — with a day/week/month/YTD range picker</div>
           </div>
-        </div>
-
-        <div class="an-card" id="card-stop-kiln">
-          <div class="an-card-hdr">
-            <div>
-              <div class="an-card-title">
-                <span class="an-card-dot" style="background:#e53935"></span>
-                Kiln Stoppage
-              </div>
-              <div class="an-card-sub">Kiln section only &middot; Directly halts clinker production</div>
-            </div>
-            <div class="an-card-stats">
-              <div class="an-stat"><span class="an-stat-val" id="stat-stop-kiln-cur">—</span><span class="an-stat-lbl">Latest min</span></div>
-              <div class="an-stat"><span class="an-stat-val" id="stat-stop-kiln-avg">—</span><span class="an-stat-lbl">Avg min/day</span></div>
-              <div class="an-stat"><span class="an-stat-trend" id="stat-stop-kiln-trend">—</span><span class="an-stat-lbl">Trend</span></div>
-            </div>
-          </div>
-          <div class="an-chart-wrap"><canvas id="chart-stop-kiln"></canvas></div>
-          <div class="an-card-empty" id="empty-stop-kiln">
-            <div class="emp-icon">⏸️</div>
-            <div class="emp-msg">No stoppage data</div>
-            <div class="emp-sub">Submit the Stoppage Report to see trends</div>
-          </div>
-        </div>
+          <i data-lucide="arrow-right" style="width:16px;height:16px;color:var(--text-muted);flex-shrink:0"></i>
+        </a>
 
         <div class="an-card" id="card-mat-clinker">
           <div class="an-card-hdr">

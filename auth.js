@@ -1072,6 +1072,16 @@ function applyInsightsPermissions() {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
+   APPLY PERMISSIONS — RELIABILITY PAGE (reliability.html)
+   Read-only equipment reliability / downtime report — same as
+   analytics.html, no role-based content filtering. Stoppage data entry
+   stays gated by _FORM_TYPE_ACCESS (pm role) on forms/stoppage-form.html;
+   this page only ever reads the aggregated numbers. ═══════════════════ */
+function applyReliabilityPermissions() {
+  renderUserHeader();
+}
+
+/* ══════════════════════════════════════════════════════════════════════
    AUDIT HOOK — intercept localStorage writes for key MIS actions
 ══════════════════════════════════════════════════════════════════════ */
 function _hookLocalStorageAudit() {

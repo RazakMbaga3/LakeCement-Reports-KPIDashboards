@@ -119,10 +119,18 @@
     return res.json();
   }
 
+  /* GET /api/insights/stoppages?from=&to= — downtime Pareto (hours + freq),
+     per-equipment MTTR/MTBF/availability and RCFA flags (reliability.html) */
+  async function getStoppageInsights(from, to) {
+    const res = await fetch(BASE + '/insights/stoppages?' + new URLSearchParams({ from, to }), { headers: _headers() });
+    if (!res.ok) throw _httpError('getStoppageInsights', from + '..' + to, res);
+    return res.json();
+  }
+
   global.NyatiAPI = {
     submitForm, getForm, getFormRange,
     evalFormulas, getDailySeries, setOverride, clearOverride, getOverrides,
-    getBaseline, getCompleteness,
+    getBaseline, getCompleteness, getStoppageInsights,
   };
 
 }(window));

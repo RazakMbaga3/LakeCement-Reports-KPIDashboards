@@ -467,97 +467,147 @@
         </thead>
         <tbody>
 
-          <!-- RAW MILL materials — static reference data, not yet wired: no form in the app
-               (checked forms/materials-form.html, forms/limestone-form.html, mines-report.html)
-               captures Limestone HG / OB Clay / ID Clay / Iron Ore stock movement. Needs a
-               dedicated data-entry form design before this can go live — out of scope here. -->
+          <!-- RAW MILL materials — was entirely static (didn't move with the selected
+               date); wired 2026-07-31 from the Master Production Report day-sheets'
+               "PYRO PROCESSING" block (label-driven row lookup, not fixed row numbers —
+               June inserts 2 rows here, populated with real Bauxite/Mill Dust Iron Ore
+               data only from 2026-06-21 onward, so those two rows stay 0/blank before
+               that date, same as any other newly-added field). Row labels renamed from
+               "LIMESTONE HG/OB CLAY/ID CLAY" to match Excel's own "LIMESTONE/CLAY/
+               INDUSTRIAL CLAY" text exactly. -->
           <tr class="srow"><td colspan="15">PYRO PROCESSING — RAW MILL MATERIAL</td></tr>
 
           <tr>
             <td class="ts">1</td>
-            <td class="tp">LIMESTONE HG</td>
+            <td class="tp">LIMESTONE</td>
             <td class="ts">Mines / HG</td>
-            <td class="cs"><div class="cv">18,391</div></td>
-            <td class="cm"><input class="ci" type="number" value="2727" /></td>
-            <td class="cf"><div class="cv">5,881</div></td>
-            <td class="cf"><div class="cv">76,967</div></td>
-            <td class="cm"><input class="ci" type="number" value="2540" /></td>
-            <td class="cf"><div class="cv">5,510</div></td>
-            <td class="cf"><div class="cv">72,397</div></td>
-            <td class="cf"><div class="cv">18,535</div></td>
-            <td class="cf"><div class="cv">2,540.00</div></td>
-            <td class="cf"><div class="cv">94.74</div></td>
+            <td class="cs"><div class="cv" data-kpi="rmm_limestone_open">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rmm_limestone_open" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="rmm_limestone_recv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="rmm_limestone_recv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rmm_limestone_recv" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="rmm_limestone_cons">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="rmm_limestone_cons">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rmm_limestone_cons" /></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_limestone_closing">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_limestone_cons_display">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_limestone_pct">—</div></td>
             <td class="cm"><input class="ci" type="number" value="10" /></td>
             <td class="cf"><div class="cv">10.00%</div></td>
           </tr>
 
           <tr>
             <td class="ts">2</td>
-            <td class="tp">OB CLAY</td>
+            <td class="tp">CLAY</td>
             <td class="ts">Mines</td>
-            <td class="cs"><div class="cv">1,909</div></td>
-            <td class="cm"><input class="ci" type="number" value="349" /></td>
-            <td class="cf"><div class="cv">931</div></td>
-            <td class="cf"><div class="cv">2,824</div></td>
-            <td class="cm"><input class="ci" type="number" value="74" /></td>
-            <td class="cf"><div class="cv">235</div></td>
-            <td class="cf"><div class="cv">764</div></td>
-            <td class="cf"><div class="cv">2,184</div></td>
-            <td class="cf"><div class="cv">74.00</div></td>
-            <td class="cf"><div class="cv">2.76</div></td>
+            <td class="cs"><div class="cv" data-kpi="rmm_clay_open">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rmm_clay_open" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="rmm_clay_recv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="rmm_clay_recv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rmm_clay_recv" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="rmm_clay_cons">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="rmm_clay_cons">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rmm_clay_cons" /></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_clay_closing">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_clay_cons_display">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_clay_pct">—</div></td>
             <td class="cm"><input class="ci" type="number" value="10" /></td>
             <td class="cf"><div class="cv">10.00%</div></td>
           </tr>
 
           <tr>
             <td class="ts">3</td>
-            <td class="tp">ID CLAY</td>
-            <td class="ts">Mines</td>
-            <td class="cs"><div class="cv">3,971</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">38</div></td>
-            <td class="cf"><div class="cv">107</div></td>
-            <td class="cm"><input class="ci" type="number" value="54" /></td>
-            <td class="cf"><div class="cv">119</div></td>
-            <td class="cf"><div class="cv">1,556</div></td>
-            <td class="cf"><div class="cv">3,917</div></td>
-            <td class="cf"><div class="cv">54.00</div></td>
-            <td class="cf"><div class="cv">2.01</div></td>
+            <td class="tp">IRON ORE</td>
+            <td class="ts">Store</td>
+            <td class="cs"><div class="cv" data-kpi="rmm_ironore_open">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rmm_ironore_open" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="rmm_ironore_recv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="rmm_ironore_recv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rmm_ironore_recv" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="rmm_ironore_cons">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="rmm_ironore_cons">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rmm_ironore_cons" /></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_ironore_closing">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_ironore_cons_display">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_ironore_pct">—</div></td>
             <td class="cm"><input class="ci" type="number" value="7" /></td>
             <td class="cf"><div class="cv">7.00%</div></td>
           </tr>
 
           <tr>
             <td class="ts">4</td>
-            <td class="tp">IRON ORE</td>
-            <td class="ts">Store</td>
-            <td class="cs"><div class="cv">175</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">138</div></td>
-            <td class="cm"><input class="ci" type="number" value="13" /></td>
-            <td class="cf"><div class="cv">29</div></td>
-            <td class="cf"><div class="cv">576</div></td>
-            <td class="cf"><div class="cv">162</div></td>
-            <td class="cf"><div class="cv">13.00</div></td>
-            <td class="cf"><div class="cv">0.48</div></td>
+            <td class="tp">INDUSTRIAL CLAY</td>
+            <td class="ts">Mines</td>
+            <td class="cs"><div class="cv" data-kpi="rmm_industrialclay_open">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rmm_industrialclay_open" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="rmm_industrialclay_recv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="rmm_industrialclay_recv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rmm_industrialclay_recv" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="rmm_industrialclay_cons">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="rmm_industrialclay_cons">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rmm_industrialclay_cons" /></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_industrialclay_closing">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_industrialclay_cons_display">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_industrialclay_pct">—</div></td>
             <td class="cm"><input class="ci" type="number" value="10" /></td>
             <td class="cf"><div class="cv">10.00%</div></td>
+          </tr>
+
+          <!-- Bauxite / Mill Dust Iron Ore — Excel itself only starts tracking these
+               2026-06-21 onward (confirmed: June day-sheets 1-20 have no such rows at
+               all, day-sheets 21-30 do). Fields exist from day one of this app change;
+               they simply read 0/— for any date before 2026-06-21, same as Excel. -->
+          <tr>
+            <td class="ts">5</td>
+            <td class="tp">BAUXITE</td>
+            <td class="ts">Mines</td>
+            <td class="cs"><div class="cv" data-kpi="rmm_bauxite_open">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rmm_bauxite_open" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="rmm_bauxite_recv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="rmm_bauxite_recv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rmm_bauxite_recv" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="rmm_bauxite_cons">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="rmm_bauxite_cons">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rmm_bauxite_cons" /></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_bauxite_closing">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_bauxite_cons_display">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_bauxite_pct">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="7" /></td>
+            <td class="cf"><div class="cv">7.00%</div></td>
+          </tr>
+
+          <tr>
+            <td class="ts">6</td>
+            <td class="tp">MILL DUST IRON ORE</td>
+            <td class="ts">Store</td>
+            <td class="cs"><div class="cv" data-kpi="rmm_milldustironore_open">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rmm_milldustironore_open" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="rmm_milldustironore_recv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="rmm_milldustironore_recv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rmm_milldustironore_recv" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="rmm_milldustironore_cons">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="rmm_milldustironore_cons">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="rmm_milldustironore_cons" /></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_milldustironore_closing">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_milldustironore_cons_display">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_milldustironore_pct">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
+            <td class="cf"><div class="cv">0.00%</div></td>
           </tr>
 
           <tr class="trow">
             <td class="ts"></td>
             <td class="tp">TOTAL MATL — RAW MILL</td>
             <td class="ts"></td>
-            <td class="cf"><div class="cv">24,446</div></td>
-            <td class="cf"><div class="cv">3,076</div></td>
-            <td class="cf"><div class="cv">6,850</div></td>
-            <td class="cf"><div class="cv">80,036</div></td>
-            <td class="cf"><div class="cv">2,681</div></td>
-            <td class="cf"><div class="cv">5,893</div></td>
-            <td class="cf"><div class="cv">75,293</div></td>
-            <td class="cf"><div class="cv">24,841</div></td>
-            <td class="cf"><div class="cv">2,681.00</div></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_total_open">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_total_recv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="rmm_limestone_recv,rmm_clay_recv,rmm_ironore_recv,rmm_industrialclay_recv,rmm_bauxite_recv,rmm_milldustironore_recv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="rmm_limestone_recv,rmm_clay_recv,rmm_ironore_recv,rmm_industrialclay_recv,rmm_bauxite_recv,rmm_milldustironore_recv">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_total_cons">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="rmm_limestone_cons,rmm_clay_cons,rmm_ironore_cons,rmm_industrialclay_cons,rmm_bauxite_cons,rmm_milldustironore_cons">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="rmm_limestone_cons,rmm_clay_cons,rmm_ironore_cons,rmm_industrialclay_cons,rmm_bauxite_cons,rmm_milldustironore_cons">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_total_closing">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_total_cons">—</div></td>
             <td class="cf"><div class="cv">100.00</div></td>
             <td></td><td></td>
           </tr>
@@ -682,39 +732,54 @@
             <td class="cf"><div class="cv" data-roll-ytd="cm_gypsum_cons">—</div></td>
             <td class="cf"><div class="cv" data-kpi="cm_gypsum_closing">—</div></td>
             <td class="cf"><div class="cv" data-kpi="cm_gypsum_cons_display">—</div></td>
-            <td class="cf"><div class="cv">5.00</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm_gypsum_pct">—</div></td>
             <td></td><td></td>
           </tr>
 
+          <!-- LIMESTONE (cement-grinding stage) — consumption-only draw against the SAME
+               physical stock as the raw-mill LIMESTONE row above (Excel: this row's own
+               closing/opening are always blank; the draw is only visible via the raw-mill
+               row's closing formula, which subtracts this row's consumption — see
+               rmm_limestone_closing). Was fully static; wired 2026-07-31. -->
           <tr>
             <td class="ts">9</td>
             <td class="tp">LIMESTONE</td>
             <td class="ts">Store</td>
-            <td class="cs"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td></td><td></td><td></td>
+            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm_limestone_recv" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm_limestone_recv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm_limestone_recv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm_limestone_cons" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm_limestone_cons">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm_limestone_cons">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm_limestone_cons_display">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm_limestone_pct">—</div></td>
+            <td></td><td></td>
           </tr>
 
+          <!-- STAREX — Grinding Aid's other component, distinct from the "GRINDING AID
+               (MAPIE)" row below. Excel tracks Starex and Mapie as two separate line
+               items (own opening/received/consumption each); this row was fully static
+               and is now wired to its own correct Excel-sourced values. NOTE: the
+               "GRINDING AID (MAPIE)" row below was NOT touched — its already-backfilled
+               cm_grind_aid_* values were derived (in a prior pass) as Starex+Mapie
+               COMBINED, which no longer matches this row existing separately. Flagged in
+               the accompanying report as a follow-up, not silently corrected here per the
+               "don't modify already-correct historical values" constraint. -->
           <tr>
             <td class="ts">10</td>
             <td class="tp">STAREX</td>
             <td class="ts">Store</td>
-            <td class="cs"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm_starex_open" /></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm_starex_recv" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm_starex_recv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm_starex_recv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="cm_starex_cons" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm_starex_cons">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm_starex_cons">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm_starex_closing">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm_starex_cons_display">—</div></td>
             <td></td><td></td><td></td>
           </tr>
 
@@ -750,19 +815,24 @@
             <td></td><td></td><td></td>
           </tr>
 
+          <!-- TOTAL MATL — CEMENT MILL: matches Excel's own E27 formula exactly
+               (Clinker-Own + Clinker-Purchased + Limestone + Gypsum + Starex + Mapie).
+               Fly Ash is NOT part of Excel's total (confirmed: not present anywhere in
+               the Cement sheet across all 3 months) — deliberately excluded here too. -->
           <tr class="trow">
             <td class="ts"></td>
             <td class="tp">TOTAL MATL — CEMENT MILL</td>
             <td class="ts"></td>
-            <td class="cf"><div class="cv">37,130</div></td>
-            <td class="cf"><div class="cv">1,625</div></td>
-            <td class="cf"><div class="cv">3,386</div></td>
-            <td class="cf"><div class="cv">59,097</div></td>
-            <td class="cf"><div class="cv">250</div></td>
-            <td class="cf"><div class="cv">2,498</div></td>
-            <td class="cf"><div class="cv">49,265</div></td>
-            <td class="cf"><div class="cv">38,548</div></td>
-            <td></td><td></td><td></td><td></td>
+            <td class="cf"><div class="cv" data-kpi="cm_total_open">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm_total_recv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="kiln_prod_mt,cm_clinker_purch_recv,cm_limestone_recv,cm_gypsum_recv,cm_starex_recv,cm_grind_aid_recv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="kiln_prod_mt,cm_clinker_purch_recv,cm_limestone_recv,cm_gypsum_recv,cm_starex_recv,cm_grind_aid_recv">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm_total_cons">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="cm_clinker_own_cons,cm_clinker_purch_cons,cm_limestone_cons,cm_gypsum_cons,cm_starex_cons,cm_grind_aid_cons">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="cm_clinker_own_cons,cm_clinker_purch_cons,cm_limestone_cons,cm_gypsum_cons,cm_starex_cons,cm_grind_aid_cons">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm_total_closing">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cm_total_cons">—</div></td>
+            <td></td><td></td><td></td>
           </tr>
 
         </tbody>
@@ -1149,61 +1219,76 @@
             </tr>
           </thead>
           <tbody>
+            <!-- "Per Ton of Material" — wired 2026-07-31, matches Excel's own row50
+                 formula scope exactly: only Crusher/Raw Mill-1/Raw Mill-2/Kiln/Coal Mill
+                 get this ratio in Excel (Cem Mill/Losses/P.Plant/Others are left blank
+                 there too — not a gap here, just faithfully mirroring Excel). -->
             <tr>
               <td class="ts">1</td>
               <td class="tp">Per TON of Material</td>
-              <td class="cf"><div class="cv">0.9</div></td>
-              <td class="cf"><div class="cv">24.6</div></td>
-              <td class="cf"><div class="cv">0.0</div></td>
-              <td class="cf"><div class="cv">33.3</div></td>
+              <td class="cf"><div class="cv" data-kpi="spc_crusher_pt_matl">—</div></td>
+              <td class="cf"><div class="cv" data-kpi="spc_rm1_pt_matl">—</div></td>
+              <td class="cf"><div class="cv" data-kpi="spc_rm2_pt_matl">—</div></td>
+              <td class="cf"><div class="cv" data-kpi="spc_kiln_pt_matl">—</div></td>
+              <td class="cf"><div class="cv" data-kpi="spc_coalmill_pt_matl">—</div></td>
               <td class="cf"><div class="cv">—</div></td>
               <td class="cf"><div class="cv">—</div></td>
               <td class="cf"><div class="cv">—</div></td>
-              <td class="cf"><div class="cv">67.2</div></td>
               <td class="cf"><div class="cv">—</div></td>
               <td class="cf"><div class="cv">—</div></td>
             </tr>
+            <!-- "Per Ton of Clinker" / "Unit per Ton Eq.Cement" rows — LEFT STATIC.
+                 Excel's own formulas here chain through several more cross-sheet
+                 references (e.g. Per-Ton-of-Clinker for Crusher = E50*(rmm_limestone_cons
+                 /kiln_prod_mt), which doesn't reduce to a clean already-captured-field
+                 ratio the way row 1 does) — reproducing them exactly needs more formula
+                 archaeology than this pass covers. Flagged as a follow-up, not invented. -->
             <tr>
               <td class="ts">2</td>
               <td class="tp">Per TON of Clinker</td>
-              <td class="cf"><div class="cv">1.5</div></td>
-              <td class="cf"><div class="cv">38.1</div></td>
-              <td class="cf"><div class="cv">0.0</div></td>
-              <td class="cf"><div class="cv">33.3</div></td>
-              <td class="cf"><div class="cv">10.0</div></td>
               <td class="cf"><div class="cv">—</div></td>
               <td class="cf"><div class="cv">—</div></td>
-              <td class="cf"><div class="cv">82.9</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cf"><div class="cv">—</div></td>
               <td class="cf"><div class="cv">—</div></td>
               <td class="cf"><div class="cv">—</div></td>
             </tr>
             <tr>
               <td class="ts">3</td>
               <td class="tp">Unit / Ton Eq. Cement</td>
-              <td class="cf"><div class="cv">1.1</div></td>
-              <td class="cf"><div class="cv">29.8</div></td>
-              <td class="cf"><div class="cv">0.0</div></td>
-              <td class="cf"><div class="cv">26.0</div></td>
-              <td class="cf"><div class="cv">7.8</div></td>
-              <td class="cf"><div class="cv">59.6</div></td>
-              <td class="cf"><div class="cv">5.4</div></td>
-              <td class="cf"><div class="cv">8.6</div></td>
-              <td class="cf"><div class="cv">18.4</div></td>
-              <td class="cf"><div class="cv">156.7</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cf"><div class="cv">—</div></td>
+              <td class="cf"><div class="cv">—</div></td>
             </tr>
+            <!-- TOTAL UNIT CONSUMED (kWh) — was fully static; wired 2026-07-31 from the
+                 Master Production Report's 'Daily unit' sheet (9 department columns,
+                 confirmed real electrical-meter data cross-referenced against the IMS
+                 power workbooks, not a placeholder). Raw Mill-2 stays 0 because Excel's
+                 own source column for it is 0 on every sampled day this quarter. -->
             <tr class="trow">
               <td class="ts"></td>
               <td class="tp">TOTAL UNIT CONSUMED (kWh)</td>
-              <td class="cs"><div class="cv">2,530</div></td>
-              <td class="cs"><div class="cv">59,446</div></td>
-              <td class="cs"><div class="cv">0</div></td>
-              <td class="cs"><div class="cv">54,125</div></td>
-              <td class="cs"><div class="cv">16,021</div></td>
-              <td class="cs"><div class="cv">14,902</div></td>
-              <td class="cs"><div class="cv">1,353</div></td>
-              <td class="cs"><div class="cv">4,976</div></td>
-              <td class="cs"><div class="cv">4,608</div></td>
-              <td class="cf"><div class="cv">157,961</div></td>
+              <td class="cs"><input class="ci" type="number" value="0" data-field="spc_crusher_kwh" /></td>
+              <td class="cs"><input class="ci" type="number" value="0" data-field="spc_rm1_kwh" /></td>
+              <td class="cs"><input class="ci" type="number" value="0" data-field="spc_rm2_kwh" /></td>
+              <td class="cs"><input class="ci" type="number" value="0" data-field="spc_kiln_kwh" /></td>
+              <td class="cs"><input class="ci" type="number" value="0" data-field="spc_coalmill_kwh" /></td>
+              <td class="cs"><input class="ci" type="number" value="0" data-field="spc_cemmill_kwh" /></td>
+              <td class="cs"><input class="ci" type="number" value="0" data-field="spc_losses_kwh" /></td>
+              <td class="cs"><input class="ci" type="number" value="0" data-field="spc_pplant_kwh" /></td>
+              <td class="cs"><input class="ci" type="number" value="0" data-field="spc_others_kwh" /></td>
+              <td class="cf"><div class="cv" data-kpi="spc_total_kwh">—</div></td>
             </tr>
           </tbody>
         </table>
@@ -1214,7 +1299,7 @@
           <div class="heat-title"><i data-lucide="zap" class="title-icon"></i> Specific Heat Consumption (Kiln)</div>
           <div class="heat-row">
             <span class="heat-key">Coal Consumption, %</span>
-            <span class="heat-val cf">14.83</span>
+            <span class="heat-val cf" data-kpi="spc_coal_consumption_pct">—</span>
           </div>
           <div class="heat-row">
             <span class="heat-key">Per ton of Clinker</span>
@@ -1226,11 +1311,11 @@
           </div>
           <div class="heat-row" style="margin-top:6px;padding-top:8px;border-top:2px solid var(--border)">
             <span class="heat-key">Coal NCV (kcal/kg)</span>
-            <span class="heat-val cm">5,385</span>
+            <span class="heat-val cm"><input class="ci" type="number" value="0" data-field="coal_ncv" style="width:70px" /></span>
           </div>
           <div class="heat-row">
             <span class="heat-key">Heat Cons. (kcal/kg clinker)</span>
-            <span class="heat-val cf">799</span>
+            <span class="heat-val cf" data-kpi="spc_heat_consumption">—</span>
           </div>
         </div>
       </div>
@@ -1257,30 +1342,39 @@
           </tr>
         </thead>
         <tbody>
+          <!-- Was fully static; wired 2026-07-31 from the Master Production Report
+               day-sheets' "INTERNAL USE CEMENT" block (label-driven — anchor on the
+               header text, then match each sub-row by its own grade label in column E,
+               since row numbers shift across April/May vs June). On-date values are
+               almost always 0 in the source data (genuinely low-activity line item, not
+               a wiring gap) — MTD/YTD rollups pick up the rare nonzero days automatically
+               via report-rollup.js, same as every other rollup on this page. June's Excel
+               also introduces a 5th grade (42.5N BM) with no corresponding row in this
+               table; not added here since the table has no such row to begin with. -->
           <tr class="srow"><td colspan="5">Internal Use — Cement</td></tr>
           <tr>
             <td class="ts">1</td><td class="tp">Internal Use Cement 42.5</td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="iuc_425r" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="iuc_425r">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="iuc_425r">—</div></td>
           </tr>
           <tr>
             <td class="ts"></td><td class="tp" style="padding-left:32px;color:var(--text-muted)">42.5 N</td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="iuc_425n" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="iuc_425n">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="iuc_425n">—</div></td>
           </tr>
           <tr>
             <td class="ts"></td><td class="tp" style="padding-left:32px;color:var(--text-muted)">32.5</td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="iuc_325n" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="iuc_325n">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="iuc_325n">—</div></td>
           </tr>
           <tr>
             <td class="ts"></td><td class="tp" style="padding-left:32px;color:var(--text-muted)">OPC</td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">0</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" data-field="iuc_opc" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="iuc_opc">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="iuc_opc">—</div></td>
           </tr>
         </tbody>
       </table>
@@ -1679,6 +1773,177 @@ initKpiLive([
     compute: function(f,n){ return n(f.cm_grind_aid_open) + n(f.cm_grind_aid_recv) - n(f.cm_grind_aid_cons); }
   },
   { kpi:'cm_grind_aid_cons_display', field:'cm_grind_aid_cons', fmt:'n2' },
+
+  /* ── Raw Mill Material — stock ledgers (Opening + Received − Consumed),
+     matching Excel's own per-row closing formulas exactly. LIMESTONE is the
+     one cross-linked row: Excel's L9 = E9+F9-I9-I21, i.e. it also subtracts
+     the Cement Grinding section's own "LIMESTONE" consumption row (same
+     physical stockpile, drawn down from two different process stages) —
+     confirmed against the 2026-04-01 and 2026-06-30 masters. ── */
+  { kpi:'rmm_limestone_open',   field:'rmm_limestone_open',   fmt:'n0' },
+  { kpi:'rmm_limestone_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.rmm_limestone_open) + n(f.rmm_limestone_recv) - n(f.rmm_limestone_cons) - n(f.cm_limestone_cons); }
+  },
+  { kpi:'rmm_limestone_cons_display', field:'rmm_limestone_cons', fmt:'n2' },
+  { kpi:'rmm_clay_open',   field:'rmm_clay_open',   fmt:'n0' },
+  { kpi:'rmm_clay_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.rmm_clay_open) + n(f.rmm_clay_recv) - n(f.rmm_clay_cons); }
+  },
+  { kpi:'rmm_clay_cons_display', field:'rmm_clay_cons', fmt:'n2' },
+  { kpi:'rmm_ironore_open',   field:'rmm_ironore_open',   fmt:'n0' },
+  { kpi:'rmm_ironore_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.rmm_ironore_open) + n(f.rmm_ironore_recv) - n(f.rmm_ironore_cons); }
+  },
+  { kpi:'rmm_ironore_cons_display', field:'rmm_ironore_cons', fmt:'n2' },
+  { kpi:'rmm_industrialclay_open',   field:'rmm_industrialclay_open',   fmt:'n0' },
+  { kpi:'rmm_industrialclay_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.rmm_industrialclay_open) + n(f.rmm_industrialclay_recv) - n(f.rmm_industrialclay_cons); }
+  },
+  { kpi:'rmm_industrialclay_cons_display', field:'rmm_industrialclay_cons', fmt:'n2' },
+  /* Bauxite / Mill Dust Iron Ore — only tracked by Excel from 2026-06-21 onward */
+  { kpi:'rmm_bauxite_open',   field:'rmm_bauxite_open',   fmt:'n0' },
+  { kpi:'rmm_bauxite_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.rmm_bauxite_open) + n(f.rmm_bauxite_recv) - n(f.rmm_bauxite_cons); }
+  },
+  { kpi:'rmm_bauxite_cons_display', field:'rmm_bauxite_cons', fmt:'n2' },
+  { kpi:'rmm_milldustironore_open',   field:'rmm_milldustironore_open',   fmt:'n0' },
+  { kpi:'rmm_milldustironore_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.rmm_milldustironore_open) + n(f.rmm_milldustironore_recv) - n(f.rmm_milldustironore_cons); }
+  },
+  { kpi:'rmm_milldustironore_cons_display', field:'rmm_milldustironore_cons', fmt:'n2' },
+
+  /* TOTAL MATL - RAW MILL — matches Excel's April/May convention (simple
+     aggregate: Total Open + Total Recv − Total OWN Consumption, same as the
+     Coal/CM-1/CM-2 TOTAL rows elsewhere on this page), NOT June's own
+     TOTAL-row formula (which sums the individual rows' closings, so
+     double-counts the LIMESTONE cross-link via rmm_limestone_closing). Excel
+     itself is inconsistent about this between April/May and June — this
+     picks the convention used by 2 of the 3 months; for June dates this
+     total will read ~cm_limestone_cons higher than Excel's own June total
+     cell, which is a known, documented divergence, not an app defect. */
+  { kpi:'rmm_total_open', fmt:'n0',
+    compute: function(f,n){ return n(f.rmm_limestone_open)+n(f.rmm_clay_open)+n(f.rmm_ironore_open)+n(f.rmm_industrialclay_open)+n(f.rmm_bauxite_open)+n(f.rmm_milldustironore_open); }
+  },
+  { kpi:'rmm_total_recv', fmt:'n0',
+    compute: function(f,n){ return n(f.rmm_limestone_recv)+n(f.rmm_clay_recv)+n(f.rmm_ironore_recv)+n(f.rmm_industrialclay_recv)+n(f.rmm_bauxite_recv)+n(f.rmm_milldustironore_recv); }
+  },
+  { kpi:'rmm_total_cons', fmt:'n0',
+    compute: function(f,n){ return n(f.rmm_limestone_cons)+n(f.rmm_clay_cons)+n(f.rmm_ironore_cons)+n(f.rmm_industrialclay_cons)+n(f.rmm_bauxite_cons)+n(f.rmm_milldustironore_cons); }
+  },
+  { kpi:'rmm_total_closing', fmt:'n0',
+    compute: function(f,n){
+      var open = n(f.rmm_limestone_open)+n(f.rmm_clay_open)+n(f.rmm_ironore_open)+n(f.rmm_industrialclay_open)+n(f.rmm_bauxite_open)+n(f.rmm_milldustironore_open);
+      var recv = n(f.rmm_limestone_recv)+n(f.rmm_clay_recv)+n(f.rmm_ironore_recv)+n(f.rmm_industrialclay_recv)+n(f.rmm_bauxite_recv)+n(f.rmm_milldustironore_recv);
+      var cons = n(f.rmm_limestone_cons)+n(f.rmm_clay_cons)+n(f.rmm_ironore_cons)+n(f.rmm_industrialclay_cons)+n(f.rmm_bauxite_cons)+n(f.rmm_milldustironore_cons);
+      return open + recv - cons;
+    }
+  },
+  /* % Matl Cons — matches Excel's N9=(I9/I13)*100 pattern: this material's
+     on-date consumption as a % of the raw-mill TOTAL on-date consumption. */
+  { kpi:'rmm_limestone_pct', fmt:'n2',
+    compute: function(f,n){ var t=n(f.rmm_limestone_cons)+n(f.rmm_clay_cons)+n(f.rmm_ironore_cons)+n(f.rmm_industrialclay_cons)+n(f.rmm_bauxite_cons)+n(f.rmm_milldustironore_cons); return t>0 ? n(f.rmm_limestone_cons)/t*100 : null; }
+  },
+  { kpi:'rmm_clay_pct', fmt:'n2',
+    compute: function(f,n){ var t=n(f.rmm_limestone_cons)+n(f.rmm_clay_cons)+n(f.rmm_ironore_cons)+n(f.rmm_industrialclay_cons)+n(f.rmm_bauxite_cons)+n(f.rmm_milldustironore_cons); return t>0 ? n(f.rmm_clay_cons)/t*100 : null; }
+  },
+  { kpi:'rmm_ironore_pct', fmt:'n2',
+    compute: function(f,n){ var t=n(f.rmm_limestone_cons)+n(f.rmm_clay_cons)+n(f.rmm_ironore_cons)+n(f.rmm_industrialclay_cons)+n(f.rmm_bauxite_cons)+n(f.rmm_milldustironore_cons); return t>0 ? n(f.rmm_ironore_cons)/t*100 : null; }
+  },
+  { kpi:'rmm_industrialclay_pct', fmt:'n2',
+    compute: function(f,n){ var t=n(f.rmm_limestone_cons)+n(f.rmm_clay_cons)+n(f.rmm_ironore_cons)+n(f.rmm_industrialclay_cons)+n(f.rmm_bauxite_cons)+n(f.rmm_milldustironore_cons); return t>0 ? n(f.rmm_industrialclay_cons)/t*100 : null; }
+  },
+  { kpi:'rmm_bauxite_pct', fmt:'n2',
+    compute: function(f,n){ var t=n(f.rmm_limestone_cons)+n(f.rmm_clay_cons)+n(f.rmm_ironore_cons)+n(f.rmm_industrialclay_cons)+n(f.rmm_bauxite_cons)+n(f.rmm_milldustironore_cons); return t>0 ? n(f.rmm_bauxite_cons)/t*100 : null; }
+  },
+  { kpi:'rmm_milldustironore_pct', fmt:'n2',
+    compute: function(f,n){ var t=n(f.rmm_limestone_cons)+n(f.rmm_clay_cons)+n(f.rmm_ironore_cons)+n(f.rmm_industrialclay_cons)+n(f.rmm_bauxite_cons)+n(f.rmm_milldustironore_cons); return t>0 ? n(f.rmm_milldustironore_cons)/t*100 : null; }
+  },
+
+  /* ── Cement Grinding — LIMESTONE (consumption-only, no own opening/closing
+     in Excel either) + STAREX (own ledger, separate from Grinding Aid/Mapie) ── */
+  { kpi:'cm_limestone_cons_display', field:'cm_limestone_cons', fmt:'n2' },
+  { kpi:'cm_limestone_pct', fmt:'n2',
+    compute: function(f,n){
+      var cmTotalProd = n(f.cm1_325n_mt)+n(f.cm1_425r_mt)+n(f.cm1_425n_mt)+n(f.cm1_opc_mt)+n(f.cm1_425n_bm_mt)
+                       + n(f.cm2_325n_mt)+n(f.cm2_425r_mt)+n(f.cm2_425n_mt)+n(f.cm2_425n_bm_mt);
+      return cmTotalProd > 0 ? n(f.cm_limestone_cons)/cmTotalProd*100 : null;
+    }
+  },
+  { kpi:'cm_gypsum_pct', fmt:'n2',
+    compute: function(f,n){
+      var cmTotalProd = n(f.cm1_325n_mt)+n(f.cm1_425r_mt)+n(f.cm1_425n_mt)+n(f.cm1_opc_mt)+n(f.cm1_425n_bm_mt)
+                       + n(f.cm2_325n_mt)+n(f.cm2_425r_mt)+n(f.cm2_425n_mt)+n(f.cm2_425n_bm_mt);
+      return cmTotalProd > 0 ? n(f.cm_gypsum_cons)/cmTotalProd*100 : null;
+    }
+  },
+  { kpi:'cm_starex_closing', fmt:'n0',
+    compute: function(f,n){ return n(f.cm_starex_open) + n(f.cm_starex_recv) - n(f.cm_starex_cons); }
+  },
+  { kpi:'cm_starex_cons_display', field:'cm_starex_cons', fmt:'n2' },
+
+  /* TOTAL MATL - CEMENT MILL — matches Excel's E27/F27/I27/L27 exactly:
+     Clinker-Own + Clinker-Purchased + Limestone(cons only) + Gypsum + Starex
+     + Grinding Aid(Mapie). Fly Ash is NOT part of this total (confirmed:
+     absent from the Cement sheet in all 3 months' workbooks). */
+  { kpi:'cm_total_open', fmt:'n0',
+    compute: function(f,n){ return n(f.kiln_clinker_open)+n(f.cm_clinker_purch_open)+n(f.cm_gypsum_open)+n(f.cm_starex_open)+n(f.cm_grind_aid_open); }
+  },
+  { kpi:'cm_total_recv', fmt:'n0',
+    compute: function(f,n){ return n(f.kiln_prod_mt)+n(f.cm_clinker_purch_recv)+n(f.cm_limestone_recv)+n(f.cm_gypsum_recv)+n(f.cm_starex_recv)+n(f.cm_grind_aid_recv); }
+  },
+  { kpi:'cm_total_cons', fmt:'n0',
+    compute: function(f,n){ return n(f.cm_clinker_own_cons)+n(f.cm_clinker_purch_cons)+n(f.cm_limestone_cons)+n(f.cm_gypsum_cons)+n(f.cm_starex_cons)+n(f.cm_grind_aid_cons); }
+  },
+  { kpi:'cm_total_closing', fmt:'n0',
+    compute: function(f,n){
+      var clinkerOwn   = n(f.kiln_clinker_open) + n(f.kiln_prod_mt) - n(f.cm_clinker_own_cons);
+      var clinkerPurch = n(f.cm_clinker_purch_open) + n(f.cm_clinker_purch_recv) - n(f.cm_clinker_purch_cons);
+      var gypsum       = n(f.cm_gypsum_open) + n(f.cm_gypsum_recv) - n(f.cm_gypsum_cons);
+      var starex       = n(f.cm_starex_open) + n(f.cm_starex_recv) - n(f.cm_starex_cons);
+      var grindAid     = n(f.cm_grind_aid_open) + n(f.cm_grind_aid_recv) - n(f.cm_grind_aid_cons);
+      return clinkerOwn + clinkerPurch + gypsum + starex + grindAid;
+    }
+  },
+
+  /* ── Specific Power & Heat — TOTAL UNIT CONSUMED (kWh) is now a captured
+     field (spc_*_kwh, 'Daily unit' sheet); "Per Ton of Material" and the
+     Heat panel's Coal Consumption %/Heat Consumption are derived from it
+     plus already-captured production tonnages, matching Excel's own row50/
+     Q50/Q52 formulas. "Per Ton of Clinker" / "Unit per Ton Eq.Cement" stay
+     static — see the HTML comment above that table for why. ── */
+  { kpi:'spc_total_kwh', fmt:'n0',
+    compute: function(f,n){ return n(f.spc_crusher_kwh)+n(f.spc_rm1_kwh)+n(f.spc_rm2_kwh)+n(f.spc_kiln_kwh)+n(f.spc_coalmill_kwh)+n(f.spc_cemmill_kwh)+n(f.spc_losses_kwh)+n(f.spc_pplant_kwh)+n(f.spc_others_kwh); }
+  },
+  { kpi:'spc_crusher_pt_matl', fmt:'n1',
+    compute: function(f,n){ return n(f.ls_crusher_prod_mt) > 0 ? n(f.spc_crusher_kwh)/n(f.ls_crusher_prod_mt) : null; }
+  },
+  { kpi:'spc_rm1_pt_matl', fmt:'n1',
+    compute: function(f,n){ return n(f.rm1_prod_mt) > 0 ? n(f.spc_rm1_kwh)/n(f.rm1_prod_mt) : null; }
+  },
+  { kpi:'spc_rm2_pt_matl', fmt:'n1',
+    compute: function(f,n){ return n(f.rm2_prod_mt) > 0 ? n(f.spc_rm2_kwh)/n(f.rm2_prod_mt) : null; }
+  },
+  { kpi:'spc_kiln_pt_matl', fmt:'n1',
+    compute: function(f,n){ return n(f.kiln_prod_mt) > 0 ? n(f.spc_kiln_kwh)/n(f.kiln_prod_mt) : null; }
+  },
+  { kpi:'spc_coalmill_pt_matl', fmt:'n1',
+    compute: function(f,n){ return n(f.coalmill_prod_mt) > 0 ? n(f.spc_coalmill_kwh)/n(f.coalmill_prod_mt) : null; }
+  },
+  /* Coal Consumption % = Coal Mill's on-date consumption ÷ Kiln's on-date
+     clinker production × 100 — matches Excel's Q50=(M33/J34)*100 exactly
+     (M33/J34 are the Plant Operations Coal Mill/Kiln on-date columns, i.e.
+     coalmill_cons_mt / kiln_prod_mt in this app's field names). */
+  { kpi:'spc_coal_consumption_pct', fmt:'n2',
+    compute: function(f,n){ return n(f.kiln_prod_mt) > 0 ? n(f.coalmill_cons_mt)/n(f.kiln_prod_mt)*100 : null; }
+  },
+  /* Heat Consumption (kcal/kg clinker) = Coal NCV × Coal Consumption% / 100,
+     matches Excel's Q52=Q51*Q50/100 exactly. */
+  { kpi:'spc_heat_consumption', fmt:'n0',
+    compute: function(f,n){
+      var pct = n(f.kiln_prod_mt) > 0 ? n(f.coalmill_cons_mt)/n(f.kiln_prod_mt)*100 : null;
+      return (pct !== null && n(f.coal_ncv) > 0) ? n(f.coal_ncv) * pct / 100 : null;
+    }
+  },
 
   /* ── KPI strip — clinker/cement now captured same-page (Plant Operations) ── */
   { kpi:'clinker_today', fmt:'n0',

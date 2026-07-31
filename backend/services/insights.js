@@ -139,6 +139,42 @@ const STOP_CAUSES = {
 };
 const STOP_RE = /^stop_(.+)_(mech|ei|prod|planned|power|other)$/;
 
+/* ── RCFA trigger thresholds (Handbook §8.3.1) ──────────────────
+   The stoppage matrix only persists day-granularity totals per
+   equipment×cause (no per-incident start/end timestamp, no repair-cost
+   field anywhere in the schema), so the Handbook's triggers are adapted
+   to what's actually recorded:
+
+     RCFA_RECUR_COUNT (=3)           — the Handbook's own number: the same
+       equipment+cause combination logging nonzero hours on 3+ distinct
+       days within the selected period is "chronic", not one-off bad luck,
+       regardless of how few hours any single occurrence cost. This is
+       exactly the failure mode the frequency Pareto below is for.
+
+     RCFA_MAIN_ASSET_AVAIL_PCT (=90) — "a main asset down beyond an agreed
+       hour threshold": rather than a fixed hour count (which can't scale
+       sensibly across a 1-day vs. a 1-year selection), main-asset severity
+       is judged against the Handbook's own NAI target (§4.7.1, ≥90%). A
+       main asset (kiln/raw mill/either cement mill) whose period
+       availability falls short of the plant's own target is inherently
+       RCFA-worthy for that period, and the trigger stays meaningful at any
+       range length by construction.
+
+     RCFA_SEVERE_DAY_HOURS (=12)     — a single calendar day where a main
+       asset logged ≥12h down (half the day) is a catastrophic single
+       incident worth flagging immediately — it shouldn't have to wait for
+       3 recurrences, or for a long period's average to slip below 90%,
+       before someone sees it.
+
+   The Handbook's fourth trigger ("repair cost above an agreed level") has
+   no implementation here: no cost field exists anywhere in the stoppage
+   form or schema to evaluate it against.
+*/
+const RCFA_RECUR_COUNT           = 3;
+const RCFA_MAIN_ASSET_AVAIL_PCT  = 90;
+const RCFA_SEVERE_DAY_HOURS      = 12;
+const RCFA_MAIN_ASSETS = ['kiln', 'rm', 'cm1', 'cm2']; // Handbook: Kiln / Raw Mill / Finish (cement) Mill
+
 async function stoppageInsights(from, to) {
   const rows = await db.query(
     `SELECT record_date, data FROM daily_reports
@@ -146,22 +182,57 @@ async function stoppageInsights(from, to) {
     [from, to]
   );
 
-  const byCause = {}, byEquip = {};
-  let totalHours = 0;
+  const byCause = {}, byEquip = {}, byEquipCause = {}, byEquipDate = {};
+  let totalHours = 0, totalEvents = 0;
 
   for (const r of rows.rows) {
+    const date = String(r.record_date).slice(0, 10);
     for (const [k, v] of Object.entries(r.data || {})) {
       const m = k.match(STOP_RE);
-      const h = num(v);
-      if (!m || h === null || h <= 0) continue;
+      const mins = num(v);
+      if (!m || mins === null || mins <= 0) continue;
       const [, equip, cause] = m;
+
+      // The stop_<equip>_<cause> fields are logged in MINUTES (see
+      // forms/stoppage-form.html's own "Minutes / On Date" labels, and
+      // insights.html's "Stoppage Minutes" series over the same fields) —
+      // e.g. a full calendar day of planned downtime is stored as 1440.
+      // Convert to hours once, here, so every downstream figure (totals,
+      // Pareto, MTTR/MTBF/availability) is actually in the hours its field
+      // names and the Handbook's own formulas assume.
+      const h = mins / 60;
+
       totalHours += h;
+      totalEvents++;
+
       byCause[cause] = byCause[cause] || { hours: 0, events: 0 };
       byCause[cause].hours += h;
       byCause[cause].events++;
+
       byEquip[equip] = byEquip[equip] || { hours: 0, events: 0 };
       byEquip[equip].hours += h;
       byEquip[equip].events++;
+
+      // Finest resolution the schema offers: one equipment+cause pair on
+      // one calendar date — the unit the RCFA "recurred ≥3×" trigger below
+      // counts against.
+      const ecKey = equip + '|' + cause;
+      byEquipCause[ecKey] = byEquipCause[ecKey] ||
+        { equip, cause, hours: 0, events: 0, dates: new Set() };
+      byEquipCause[ecKey].hours += h;
+      byEquipCause[ecKey].events++;
+      byEquipCause[ecKey].dates.add(date);
+
+      // Same equipment, all UNPLANNED causes combined, on one calendar
+      // date — feeds the "single severe day" RCFA trigger (a bad day can
+      // mix causes). 'planned' is deliberately excluded: RCFA is Root
+      // Cause FAILURE Analysis — a scheduled 24h shutdown for planned
+      // maintenance is not a failure, and counting it here would flag
+      // routine, deliberate downtime as if it were a catastrophic incident.
+      if (cause !== 'planned') {
+        const edKey = equip + '|' + date;
+        byEquipDate[edKey] = (byEquipDate[edKey] || 0) + h;
+      }
     }
   }
 
@@ -169,7 +240,8 @@ async function stoppageInsights(from, to) {
     (new Date(to + 'T00:00:00') - new Date(from + 'T00:00:00')) / 86400000) + 1);
   const calendarH = spanDays * 24;
 
-  // Pareto: causes by hours, with cumulative share
+  // Pareto A — causes ranked by hours lost, with cumulative % (Handbook
+  // §8.2 severity view: "which causes cost us the most downtime", ties to NAI).
   let cum = 0;
   const pareto = Object.entries(byCause)
     .map(([cause, s]) => ({ cause, label: STOP_CAUSES[cause] || cause, hours: parseFloat(s.hours.toFixed(2)), events: s.events }))
@@ -178,6 +250,20 @@ async function stoppageInsights(from, to) {
       const pct = totalHours > 0 ? (c.hours / totalHours) * 100 : 0;
       cum += pct;
       return { ...c, pct: parseFloat(pct.toFixed(1)), cumPct: parseFloat(cum.toFixed(1)) };
+    });
+
+  // Pareto B — the SAME cause buckets, ranked by event frequency instead
+  // (Handbook §8.2 chronicity view: "which causes keep recurring", ties to
+  // MTBF). Always shown paired with Pareto A — a cause can be low-hours but
+  // high-frequency (a nagging fault) and hide behind the hours ranking above.
+  let cumF = 0;
+  const paretoByFreq = Object.entries(byCause)
+    .map(([cause, s]) => ({ cause, label: STOP_CAUSES[cause] || cause, hours: parseFloat(s.hours.toFixed(2)), events: s.events }))
+    .sort((a, b) => b.events - a.events || b.hours - a.hours)
+    .map(c => {
+      const pct = totalEvents > 0 ? (c.events / totalEvents) * 100 : 0;
+      cumF += pct;
+      return { ...c, pct: parseFloat(pct.toFixed(1)), cumPct: parseFloat(cumF.toFixed(1)) };
     });
 
   const equipment = Object.entries(byEquip)
@@ -191,7 +277,74 @@ async function stoppageInsights(from, to) {
     }))
     .sort((a, b) => b.hours - a.hours);
 
-  return { from, to, days: spanDays, totalHours: parseFloat(totalHours.toFixed(2)), pareto, equipment };
+  // Plant-wide headline figures (§4.7.1/4.7.2). Every section here shares
+  // the same calendarH, so averaging the per-equipment availabilityPct
+  // values is equivalent to 100 * (1 - totalHours / (calendarH * n)) — one
+  // fleet-wide NAI rather than inventing a second formula.
+  const overallAvailabilityPct = equipment.length
+    ? parseFloat((equipment.reduce((s, e) => s + e.availabilityPct, 0) / equipment.length).toFixed(2))
+    : null;
+  const totalOperatingHours = equipment.reduce((s, e) => s + (calendarH - e.hours), 0);
+  const overallMtbfHours = totalEvents > 0
+    ? parseFloat((totalOperatingHours / totalEvents).toFixed(1))
+    : null;
+
+  // ── RCFA-worthy flags (Handbook §8.3.1) — see constants above for the
+  // reasoning behind each threshold.
+  const rcfaFlags = [];
+
+  // 1) recurring equipment+cause combo — chronic fault. 'planned' is
+  // excluded here too — recurring SCHEDULED maintenance isn't a chronic
+  // fault, it's the maintenance plan working as intended.
+  Object.values(byEquipCause)
+    .filter(ec => ec.cause !== 'planned' && ec.dates.size >= RCFA_RECUR_COUNT)
+    .sort((a, b) => b.dates.size - a.dates.size)
+    .forEach(ec => {
+      const equipLabel = STOP_EQUIPMENT[ec.equip] || ec.equip;
+      const causeLabel = STOP_CAUSES[ec.cause] || ec.cause;
+      rcfaFlags.push({
+        type: 'recurring',
+        equip: ec.equip, equipLabel, cause: ec.cause, causeLabel,
+        occurrences: ec.dates.size, hours: parseFloat(ec.hours.toFixed(2)),
+        message: `${equipLabel} — ${causeLabel} recurred on ${ec.dates.size} separate days ` +
+          `(${ec.hours.toFixed(1)}h total) this period — chronic fault, RCFA recommended.`,
+      });
+    });
+
+  // 2) main asset (kiln/raw mill/either cement mill) below the NAI target
+  //    for the whole selected period
+  equipment
+    .filter(e => RCFA_MAIN_ASSETS.includes(e.key) && e.availabilityPct < RCFA_MAIN_ASSET_AVAIL_PCT)
+    .forEach(e => {
+      rcfaFlags.push({
+        type: 'main-asset-down',
+        equip: e.key, equipLabel: e.label,
+        hours: e.hours, availabilityPct: e.availabilityPct,
+        message: `${e.label} availability ${e.availabilityPct}% this period — below the ` +
+          `${RCFA_MAIN_ASSET_AVAIL_PCT}% NAI target (${e.hours.toFixed(1)}h down) — RCFA recommended.`,
+      });
+    });
+
+  // 3) main asset — single calendar day of severe downtime
+  Object.entries(byEquipDate).forEach(([key, hrs]) => {
+    const sep = key.lastIndexOf('|');
+    const equip = key.slice(0, sep), date = key.slice(sep + 1);
+    if (!RCFA_MAIN_ASSETS.includes(equip) || hrs < RCFA_SEVERE_DAY_HOURS) return;
+    const equipLabel = STOP_EQUIPMENT[equip] || equip;
+    rcfaFlags.push({
+      type: 'severe-incident',
+      equip, equipLabel, date, hours: parseFloat(hrs.toFixed(2)),
+      message: `${equipLabel} down ${hrs.toFixed(1)}h on ${date} — single-day severe incident ` +
+        `(≥${RCFA_SEVERE_DAY_HOURS}h) — RCFA recommended.`,
+    });
+  });
+
+  return {
+    from, to, days: spanDays,
+    totalHours: parseFloat(totalHours.toFixed(2)), totalEvents,
+    overallAvailabilityPct, overallMtbfHours,
+    pareto, paretoByFreq, equipment, rcfaFlags,
+  };
 }
 
 /* ── D. Institutional memory search ────────────────────────────

@@ -47,6 +47,12 @@ const _CARDS = [
     url:'insights.html',
     d:'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2' },
 
+  { id:'reliability', cat:'kpi', badge:'VIEW',
+    title:'Equipment Reliability',
+    sub:'Availability (NAI), MTBF, paired downtime Pareto & RCFA flags',
+    url:'reliability.html',
+    d:'M12 9v4m0 4h.01M4.93 19h14.14a1 1 0 00.86-1.5L12.86 4.5a1 1 0 00-1.72 0L4.07 17.5a1 1 0 00.86 1.5z' },
+
   /* ── Reports (view-only) ───────────────────────────── */
   { id:'rpt-daily', cat:'reports', badge:'VIEW',
     title:'Daily Production Report',
@@ -175,8 +181,16 @@ function _visibleIds(user) {
 
   const ids = new Set();
 
-  /* KPI + Trends */
-  if (hasKPI) { ids.add('kpi'); ids.add('trends'); }
+  /* KPI + Trends + the other view-only KPI/analytics hub pages. (Fixing a
+     pre-existing gap here: 'completeness', 'balance' and 'insights' were
+     defined in _CARDS with cat:'kpi' but never added to `ids` by this
+     function, so they never actually appeared on the portal for any role —
+     matching that behavior for the new 'reliability' card would just make
+     it equally unreachable, so all four are wired up together here.) */
+  if (hasKPI) {
+    ids.add('kpi'); ids.add('trends'); ids.add('completeness');
+    ids.add('balance'); ids.add('insights'); ids.add('reliability');
+  }
 
   /* View-only reports (excluded if this role can also submit) — covers
      the 3 original hub pages plus Power Cons./Dispatch & SO, which are

@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – Equipment Reliability &amp; Downtime Report</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="auth.js?v=9"></script>
+  <script src="forms/date-picker.js"></script>
+  <style>
+    /* ══ Filter bar (day/week/month/YTD presets + custom range) ══ */
+    .rl-bar {
+      background: white; border-bottom: 1px solid var(--border);
+      position: sticky; top: var(--header-h, 68px); z-index: 80; box-shadow: var(--shadow-sm);
+    }
+    .rl-bar-inner { display: flex; align-items: center; gap: 14px; padding: 10px 28px; flex-wrap: wrap; }
+    .rl-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); }
+    .rl-pills { display: flex; gap: 4px; background: var(--off-white); border: 1px solid var(--border); border-radius: 8px; padding: 3px; }
+    .rl-pill { padding: 5px 14px; border-radius: 5px; border: none; background: transparent; font-family: var(--font); font-size: 11px; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+    .rl-pill:hover  { color: var(--navy); background: rgba(23,49,88,.06); }
+    .rl-pill.active { background: var(--navy); color: white; }
+    .rl-input {
+      padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--off-white); font-family: var(--font); font-size: 11px; font-weight: 600;
+      color: var(--navy); cursor: pointer;
+    }
+    .rl-apply { background: var(--orange); color: white; border: none; }
+    .rl-range-label { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-left: auto; text-align: right; }
+    .rl-range-label strong { color: var(--navy); }
+
+    .rl-main { max-width: 1400px; margin: 0 auto; padding: 20px 28px 60px; }
+
+    .rl-section-hdr { display: flex; align-items: center; gap: 8px; margin: 26px 0 12px; }
+    .rl-section-hdr:first-of-type { margin-top: 4px; }
+    .rl-section-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--navy); display: flex; align-items: center; gap: 7px; }
+    .rl-section-sub { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+    .rl-section-line { flex: 1; height: 1px; background: var(--border); }
+    .rl-doc-link { font-size: 10.5px; color: var(--orange); font-weight: 700; text-decoration: none; }
+    .rl-doc-link:hover { text-decoration: underline; }
+
+    /* ══ Headline KPI strip ══ */
+    .rl-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    @media (max-width: 1000px) { .rl-kpi-row { grid-template-columns: repeat(2, 1fr); } }
+    .rl-stat-tile {
+      background: white; border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px 16px; box-shadow: var(--shadow-sm);
+    }
+    .rl-stat-top { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
+    .rl-stat-icon { color: var(--orange); flex-shrink: 0; }
+    .rl-stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); }
+    .rl-stat-val { font-size: 26px; font-weight: 800; color: var(--navy); line-height: 1; font-variant-numeric: proportional-nums; }
+    .rl-stat-target { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+    .rl-stat-delta { font-size: 11px; font-weight: 700; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+    .rl-delta-good { color: var(--green); }
+    .rl-delta-bad  { color: var(--red); }
+    .rl-delta-flat { color: var(--text-muted); }
+
+    /* ══ Paired Pareto ══ */
+    .rl-pareto-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+    @media (max-width: 1050px) { .rl-pareto-grid { grid-template-columns: 1fr; } }
+    .rl-pareto-card {
+      background: white; border: 1px solid var(--border); border-radius: 10px;
+      box-shadow: var(--shadow-sm); overflow: hidden;
+    }
+    .rl-pareto-hdr { padding: 12px 16px 8px; border-bottom: 1px solid var(--border); }
+    .rl-pareto-title { font-size: 12px; font-weight: 800; color: var(--navy); }
+    .rl-pareto-sub { font-size: 10.5px; color: var(--text-muted); margin-top: 2px; }
+    .rl-pareto-chart-wrap { padding: 12px 14px 4px; height: 260px; }
+    .rl-pareto-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 4px; }
+    .rl-pareto-table th {
+      text-align: left; padding: 6px 14px; font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .5px; color: var(--text-muted); border-top: 1px solid var(--border); background: var(--off-white);
+    }
+    .rl-pareto-table th:last-child, .rl-pareto-table td:last-child { text-align: right; }
+    .rl-pareto-table td { padding: 6px 14px; border-top: 1px solid #F1F5F9; color: var(--text-main); }
+    .rl-pareto-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+    .rl-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 11.5px; }
+
+    /* ══ Equipment table ══ */
+    .rl-equip-card {
+      background: white; border: 1px solid var(--border); border-radius: 10px;
+      box-shadow: var(--shadow-sm); overflow: hidden;
+    }
+    .rl-equip-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .rl-equip-table thead th {
+      background: var(--off-white); text-align: left; padding: 9px 16px; font-size: 9.5px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); border-bottom: 1px solid var(--border);
+    }
+    .rl-equip-table thead th:not(:first-child) { text-align: right; }
+    .rl-equip-table tbody td { padding: 9px 16px; border-bottom: 1px solid #F1F5F9; color: var(--text-main); }
+    .rl-equip-table tbody td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+    .rl-equip-table tbody tr:hover td { background: #FAFBFC; }
+    .rl-equip-name { font-weight: 700; color: var(--navy); }
+    .rl-status-wrap { display: inline-flex; align-items: center; gap: 6px; }
+    .rl-status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .rl-status-good     { background: #0ca30c; }
+    .rl-status-warning  { background: #d97706; }
+    .rl-status-critical { background: #d03b3b; }
+    .rl-status-label { font-size: 10px; font-weight: 700; color: var(--text-muted); }
+
+    /* ══ Action-required (RCFA) callout ══ */
+    .rl-rcfa-list { display: flex; flex-direction: column; gap: 8px; }
+    .rl-rcfa-item {
+      background: white; border: 1px solid var(--border); border-left-width: 4px; border-radius: 8px;
+      padding: 10px 14px; display: flex; align-items: flex-start; gap: 10px; box-shadow: var(--shadow-sm);
+    }
+    .rl-rcfa-item.sev-critical { border-left-color: #d03b3b; }
+    .rl-rcfa-item.sev-warning  { border-left-color: #d97706; }
+    .rl-rcfa-icon { flex-shrink: 0; margin-top: 1px; }
+    .rl-rcfa-item.sev-critical .rl-rcfa-icon { color: #d03b3b; }
+    .rl-rcfa-item.sev-warning  .rl-rcfa-icon { color: #d97706; }
+    .rl-rcfa-body { flex: 1; }
+    .rl-rcfa-tag {
+      display: inline-block; font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+      padding: 2px 7px; border-radius: 8px; margin-bottom: 4px;
+    }
+    .rl-rcfa-item.sev-critical .rl-rcfa-tag { background: #FDEDED; color: #B71C1C; }
+    .rl-rcfa-item.sev-warning  .rl-rcfa-tag { background: #FEF3C7; color: #92400E; }
+    .rl-rcfa-msg { font-size: 12px; color: var(--text-main); line-height: 1.5; }
+    .rl-rcfa-more {
+      background: white; border: 1px solid var(--border); border-radius: 10px;
+      box-shadow: var(--shadow-sm); overflow: hidden; margin-top: 4px;
+    }
+    .rl-rcfa-more-hdr {
+      padding: 9px 14px; font-size: 10.5px; font-weight: 700; color: var(--text-muted);
+      background: var(--off-white); border-bottom: 1px solid var(--border);
+    }
+    .rl-rcfa-more-scroll { max-height: 260px; overflow-y: auto; }
+    .rl-rcfa-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+    .rl-rcfa-table td { padding: 7px 14px; border-top: 1px solid #F1F5F9; color: var(--text-main); vertical-align: top; }
+    .rl-rcfa-table td:first-child { white-space: nowrap; }
+    .rl-rcfa-table tr:first-child td { border-top: none; }
+    .rl-no-flags {
+      background: white; border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-sm);
+      padding: 26px 20px; text-align: center; color: var(--text-muted); font-size: 12px; font-weight: 600;
+    }
+    .rl-no-flags span { font-size: 20px; display: block; margin-bottom: 6px; }
+
+    @media print {
+      @page { size: A4 landscape; margin: 10mm 8mm; }
+      .rl-bar, .dash-footer { display: none; }
+      .rl-pareto-grid { grid-template-columns: repeat(2, 1fr); }
+      .rl-pareto-card, .rl-equip-card, .rl-rcfa-item { break-inside: avoid; box-shadow: none !important; border: 1px solid #ccc; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="top-header" id="app-header"></header>
+<script>renderTopHeader();</script>
+
+<div class="rl-bar">
+  <div class="rl-bar-inner">
+    <span class="rl-lbl">Period</span>
+    <div class="rl-pills">
+      <button class="rl-pill" data-preset="day">Day</button>
+      <button class="rl-pill" data-preset="week">Week</button>
+      <button class="rl-pill active" data-preset="month">Month</button>
+      <button class="rl-pill" data-preset="ytd">YTD</button>
+    </div>
+    <span class="rl-lbl">or</span>
+    <input type="date" id="rl-from" class="rl-input" />
+    <span class="rl-lbl">to</span>
+    <input type="date" id="rl-to" class="rl-input" />
+    <button class="rl-pill rl-apply" id="rl-apply">Apply</button>
+    <span class="rl-range-label" id="rl-range-label">—</span>
+  </div>
+</div>
+
+<main class="rl-main">
+
+  <!-- ══ Headline KPI strip ══ -->
+  <div class="rl-section-hdr">
+    <span class="rl-section-title"><i data-lucide="gauge" style="width:14px;height:14px;stroke-width:2.2"></i> Headline Reliability KPIs</span>
+    <span class="rl-section-sub">— vs. the previous equivalent period</span>
+    <div class="rl-section-line"></div>
+  </div>
+  <div class="rl-kpi-row" id="rl-kpi-row">
+    <div class="rl-stat-tile">
+      <div class="rl-stat-top"><i data-lucide="shield-check" class="rl-stat-icon" style="width:15px;height:15px"></i><span class="rl-stat-label">Overall Availability (NAI)</span></div>
+      <div class="rl-stat-val" id="kpi-avail">—</div>
+      <div class="rl-stat-target">Target: ≥ 90% &middot; (Operating + Idle) / Calendar &times; 100</div>
+      <div class="rl-stat-delta" id="kpi-avail-delta">—</div>
+    </div>
+    <div class="rl-stat-tile">
+      <div class="rl-stat-top"><i data-lucide="repeat-2" class="rl-stat-icon" style="width:15px;height:15px"></i><span class="rl-stat-label">MTBF (fleet-wide)</span></div>
+      <div class="rl-stat-val" id="kpi-mtbf">—</div>
+      <div class="rl-stat-target">Mean Time Between Failures &middot; hours</div>
+      <div class="rl-stat-delta" id="kpi-mtbf-delta">—</div>
+    </div>
+    <div class="rl-stat-tile">
+      <div class="rl-stat-top"><i data-lucide="octagon-pause" class="rl-stat-icon" style="width:15px;height:15px"></i><span class="rl-stat-label">Total Downtime</span></div>
+      <div class="rl-stat-val" id="kpi-hours">—</div>
+      <div class="rl-stat-target">Hours &middot; all sections, all causes</div>
+      <div class="rl-stat-delta" id="kpi-hours-delta">—</div>
+    </div>
+    <div class="rl-stat-tile">
+      <div class="rl-stat-top"><i data-lucide="list-restart" class="rl-stat-icon" style="width:15px;height:15px"></i><span class="rl-stat-label">Total Stop Events</span></div>
+      <div class="rl-stat-val" id="kpi-events">—</div>
+      <div class="rl-stat-target">Logged equipment&times;cause occurrences</div>
+      <div class="rl-stat-delta" id="kpi-events-delta">—</div>
+    </div>
+  </div>
+
+  <!-- ══ Paired Pareto ══ -->
+  <div class="rl-section-hdr">
+    <span class="rl-section-title"><i data-lucide="bar-chart-3" style="width:14px;height:14px;stroke-width:2.2"></i> Downtime Pareto — Paired</span>
+    <span class="rl-section-sub">— severity (hours lost) and chronicity (event frequency), side by side (Handbook §8.2)</span>
+    <div class="rl-section-line"></div>
+  </div>
+  <div class="rl-pareto-grid">
+    <div class="rl-pareto-card">
+      <div class="rl-pareto-hdr">
+        <div class="rl-pareto-title">By Hours Lost</div>
+        <div class="rl-pareto-sub">Which causes cost the most downtime — bars are share of total hours, line is cumulative %</div>
+      </div>
+      <div class="rl-pareto-chart-wrap"><canvas id="chart-pareto-hours"></canvas></div>
+      <div id="table-pareto-hours"></div>
+    </div>
+    <div class="rl-pareto-card">
+      <div class="rl-pareto-hdr">
+        <div class="rl-pareto-title">By Event Frequency</div>
+        <div class="rl-pareto-sub">Which causes keep recurring — a low-hours/high-frequency fault hides behind the hours ranking alone</div>
+      </div>
+      <div class="rl-pareto-chart-wrap"><canvas id="chart-pareto-freq"></canvas></div>
+      <div id="table-pareto-freq"></div>
+    </div>
+  </div>
+
+  <!-- ══ Equipment table ══ -->
+  <div class="rl-section-hdr">
+    <span class="rl-section-title"><i data-lucide="settings-2" style="width:14px;height:14px;stroke-width:2.2"></i> Equipment Reliability</span>
+    <span class="rl-section-sub">— hours, events, MTTR, MTBF and availability per section</span>
+    <div class="rl-section-line"></div>
+  </div>
+  <div class="rl-equip-card">
+    <div style="overflow-x:auto">
+      <table class="rl-equip-table">
+        <thead>
+          <tr>
+            <th>Equipment</th><th>Hours Down</th><th>Events</th><th>MTTR (h)</th><th>MTBF (h)</th><th>Availability</th>
+          </tr>
+        </thead>
+        <tbody id="rl-equip-tbody"></tbody>
+      </table>
+    </div>
+    <div class="rl-empty" id="rl-equip-empty" style="display:none">No stoppage data logged in this period.</div>
+  </div>
+
+  <!-- ══ Action Required (RCFA) ══ -->
+  <div class="rl-section-hdr">
+    <span class="rl-section-title"><i data-lucide="alert-octagon" style="width:14px;height:14px;stroke-width:2.2;color:#d03b3b"></i> Action Required</span>
+    <span class="rl-section-sub">— RCFA trigger criteria met this period (Handbook §8.3.1)</span>
+    <div class="rl-section-line"></div>
+  </div>
+  <div id="rl-rcfa-wrap"></div>
+
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span id="footer-date"></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  lucide.createIcons();
+  requireAuth();
+  applyReliabilityPermissions();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="forms/api-client.js"></script>
+<script src="forms/client-errors.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* Cause colors — the SAME 6 hex codes already used site-wide for these
+     categories (forms/stoppage-form.html's DEPT_CONFIG, analytics.js) so a
+     manager doesn't learn a second color mapping for "Mechanical" on this
+     page. Validated with the dataviz skill's checker (light mode): passes
+     lightness band + CVD/normal-vision separation on the 5 real hues; the
+     6th ("Other") is an intentionally desaturated neutral (a receding
+     "miscellaneous" bucket is expected to read as gray, not compete as a
+     hue) so it's exempted from the chroma-floor check by design. Three
+     slots (prod/power/other) sit under the 3:1 contrast floor against a
+     white surface — mitigated here by making direct labels + the adjoining
+     data table mandatory (never color-only encoding), per the skill's
+     relief rule. */
+  var CAUSE_COLOR = { mech:'#EF4444', ei:'#3B82F6', prod:'#10B981', planned:'#8B5CF6', power:'#F59E0B', other:'#94A3B8' };
+  var CUM_LINE_COLOR = '#173158'; // brand navy — matches this app's prior Pareto cumulative-% line color
+
+  /* MTBF targets by equipment TYPE (Handbook §4.7.2): kilns >=500h, ball
+     mills (raw mill + both cement mills, all tube/ball-type grinding
+     mills) >=225h, "other" equipment (coal mill, crusher, packing — no
+     explicit Handbook figure) floored at >=125h, the Handbook's own
+     lower bound for "other mills". */
+  var MTBF_TARGET = { kiln:500, rm:225, cm1:225, cm2:225, cm_coal:125, crusher:125, packing:125 };
+
+  /* Availability banding for the equipment table's status dot — the
+     Handbook only states a single target (>=90%), so the warning/critical
+     split below the target is this page's own judgment call: >=90% good
+     (meets NAI target), 80-90% warning (short of target but not acute),
+     <80% critical (material availability loss, likely RCFA-worthy on its
+     own — see the main-asset-down RCFA trigger for kiln/rm/cm1/cm2). */
+  function availStatus(pct) { return pct >= 90 ? 'good' : (pct >= 80 ? 'warning' : 'critical'); }
+  function mtbfStatus(hrs, key) {
+    var t = MTBF_TARGET[key] || 125;
+    return hrs >= t ? 'good' : (hrs >= t * 0.5 ? 'warning' : 'critical');
+  }
+  var STATUS_LABEL = { good: 'On Track', warning: 'Watch', critical: 'Below Target' };
+
+  /* ── Date helpers ─────────────────────────────────────────────── */
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  function isoOf(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function todayIso() { return isoOf(new Date()); }
+  function addDaysIso(iso, n) {
+    var d = new Date(iso + 'T00:00:00');
+    d.setDate(d.getDate() + n);
+    return isoOf(d);
+  }
+  function daysBetween(from, to) {
+    return Math.round((new Date(to + 'T00:00:00') - new Date(from + 'T00:00:00')) / 86400000) + 1;
+  }
+  /* Lake Cement's business year runs April→March (see app.js) — YTD here
+     means fiscal-year-to-date, consistent with every other report page. */
+  function fiscalYearStartIso() {
+    var t = new Date();
+    var fyStartYear = (t.getMonth() + 1) >= 4 ? t.getFullYear() : t.getFullYear() - 1;
+    return fyStartYear + '-04-01';
+  }
+  function presetRange(preset) {
+    var to = todayIso();
+    if (preset === 'day')   return { from: to, to: to };
+    if (preset === 'week')  return { from: addDaysIso(to, -6), to: to };
+    if (preset === 'ytd')   return { from: fiscalYearStartIso(), to: to };
+    // month-to-date
+    var t = new Date();
+    return { from: t.getFullYear() + '-' + pad2(t.getMonth() + 1) + '-01', to: to };
+  }
+  /* "Previous equivalent period" = the same-length window immediately
+     preceding the current range. A single rule that works for day, week,
+     month-to-date, fiscal-YTD and any custom range alike, without
+     special-casing calendar/fiscal boundaries. */
+  function previousRange(from, to) {
+    var n = daysBetween(from, to);
+    var prevTo = addDaysIso(from, -1);
+    var prevFrom = addDaysIso(prevTo, -(n - 1));
+    return { from: prevFrom, to: prevTo };
+  }
+  function fmtDateShort(iso) {
+    return new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  var fromEl = document.getElementById('rl-from'), toEl = document.getElementById('rl-to');
+  var _charts = {};
+  function destroyChart(id) { if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; } }
+
+  /* ── Rendering ────────────────────────────────────────────────── */
+  function fmtHrs(h) { return (h === null || h === undefined) ? '—' : h.toFixed(1); }
+  function fmtPct(p)  { return (p === null || p === undefined) ? '—' : p.toFixed(1) + '%'; }
+
+  function deltaHtml(cur, prev, higherIsBetter, unit, decimals) {
+    if (cur === null || cur === undefined || prev === null || prev === undefined) {
+      return '<span class="rl-delta-flat">No prior-period data</span>';
+    }
+    var diff = cur - prev;
+    var dec = decimals == null ? 1 : decimals;
+    if (Math.abs(diff) < Math.pow(10, -dec) / 2) {
+      return '<span class="rl-delta-flat">▬ flat vs. prior period</span>';
+    }
+    var up = diff > 0;
+    var good = higherIsBetter ? up : !up;
+    var cls = good ? 'rl-delta-good' : 'rl-delta-bad';
+    var arrow = up ? '▲' : '▼';
+    return '<span class="' + cls + '">' + arrow + ' ' + Math.abs(diff).toFixed(dec) + (unit || '') + ' vs. prior period</span>';
+  }
+
+  function renderKpiRow(cur, prev) {
+    document.getElementById('kpi-avail').textContent = cur.overallAvailabilityPct != null ? cur.overallAvailabilityPct.toFixed(1) + '%' : '—';
+    document.getElementById('kpi-avail-delta').innerHTML = deltaHtml(cur.overallAvailabilityPct, prev.overallAvailabilityPct, true, ' pts', 1);
+
+    document.getElementById('kpi-mtbf').textContent = cur.overallMtbfHours != null ? cur.overallMtbfHours.toFixed(1) + 'h' : '—';
+    document.getElementById('kpi-mtbf-delta').innerHTML = deltaHtml(cur.overallMtbfHours, prev.overallMtbfHours, true, 'h', 1);
+
+    document.getElementById('kpi-hours').textContent = cur.totalHours != null ? cur.totalHours.toFixed(1) + 'h' : '—';
+    document.getElementById('kpi-hours-delta').innerHTML = deltaHtml(cur.totalHours, prev.totalHours, false, 'h', 1);
+
+    document.getElementById('kpi-events').textContent = cur.totalEvents != null ? String(cur.totalEvents) : '—';
+    document.getElementById('kpi-events-delta').innerHTML = deltaHtml(cur.totalEvents, prev.totalEvents, false, '', 0);
+  }
+
+  /* Single-axis Pareto (0-100%): bars = each cause's share of the total
+     (pct), line = running cumulative % (cumPct). Overlaying these two on
+     ONE percentage axis is not the dual-axis anti-pattern — cumPct at
+     rank N is, by construction, the running sum of pct for ranks 1..N, so
+     the two series are mathematically tied to the same scale, not an
+     arbitrary second axis. Exact hours/events stay in the adjoining table
+     (and the bar tooltip) rather than a second y-scale. */
+  function renderParetoChart(canvasId, rows, valueKey) {
+    var ctx = document.getElementById(canvasId);
+    destroyChart(canvasId);
+    if (!rows.length) return;
+
+    var labels = rows.map(function (r) { return r.label; });
+    var shareData = rows.map(function (r) { return r.pct; });
+    var cumData = rows.map(function (r) { return r.cumPct; });
+    var colors = rows.map(function (r) { return CAUSE_COLOR[r.cause] || '#94A3B8'; });
+
+    _charts[canvasId] = new Chart(ctx, {
+      data: {
+        labels: labels,
+        datasets: [
+          { type: 'bar', label: 'Share of total', data: shareData, backgroundColor: colors, borderRadius: 3, order: 2 },
+          { type: 'line', label: 'Cumulative %', data: cumData, borderColor: CUM_LINE_COLOR, backgroundColor: CUM_LINE_COLOR,
+            borderWidth: 2, pointRadius: 3, pointBackgroundColor: CUM_LINE_COLOR, tension: 0.15, order: 1 },
+          { type: 'line', label: '80% line', data: labels.map(function () { return 80; }),
+            borderColor: 'rgba(100,116,139,0.45)', borderWidth: 1.25, borderDash: [5, 4], pointRadius: 0, order: 0 },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { position: 'top', labels: { font: { size: 9.5, weight: '600' }, boxWidth: 10, filter: function (item) { return item.text !== '80% line'; } } },
+          tooltip: {
+            callbacks: {
+              label: function (c) {
+                var r = rows[c.dataIndex];
+                if (c.dataset.label === 'Share of total') return ' ' + r.label + ': ' + r[valueKey] + (valueKey === 'hours' ? 'h' : ' events') + ' (' + r.pct.toFixed(1) + '% share)';
+                if (c.dataset.label === 'Cumulative %') return ' Cumulative: ' + r.cumPct.toFixed(1) + '%';
+                return null;
+              },
+            },
+          },
+        },
+        scales: {
+          x: { ticks: { font: { size: 9 }, maxRotation: 20, minRotation: 0 }, grid: { display: false } },
+          y: { min: 0, max: 100, title: { display: true, text: '% of total', font: { size: 9 } }, ticks: { font: { size: 9 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+        },
+      },
+    });
+  }
+
+  function renderParetoTable(wrapId, rows, valueKey, valueLabel) {
+    var el = document.getElementById(wrapId);
+    if (!rows.length) { el.innerHTML = '<div class="rl-empty">No stoppage data logged in this period.</div>'; return; }
+    var body = rows.map(function (r) {
+      var dot = '<span class="rl-pareto-dot" style="background:' + (CAUSE_COLOR[r.cause] || '#94A3B8') + '"></span>';
+      return '<tr><td>' + dot + r.label + '</td><td>' + r[valueKey] + '</td><td>' + r.pct.toFixed(1) + '%</td><td>' + r.cumPct.toFixed(1) + '%</td></tr>';
+    }).join('');
+    el.innerHTML = '<table class="rl-pareto-table"><thead><tr><th>Cause</th><th>' + valueLabel + '</th><th>Share</th><th>Cumulative</th></tr></thead><tbody>' + body + '</tbody></table>';
+  }
+
+  function renderEquipmentTable(equipment) {
+    var tbody = document.getElementById('rl-equip-tbody');
+    var empty = document.getElementById('rl-equip-empty');
+    if (!equipment.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    tbody.innerHTML = equipment.map(function (e) {
+      var aStat = availStatus(e.availabilityPct);
+      var mStat = mtbfStatus(e.mtbfHours, e.key);
+      return '<tr>' +
+        '<td class="rl-equip-name">' + e.label + '</td>' +
+        '<td>' + e.hours.toFixed(1) + '</td>' +
+        '<td>' + e.events + '</td>' +
+        '<td>' + e.mttrHours.toFixed(1) + '</td>' +
+        '<td><span class="rl-status-wrap"><span class="rl-status-dot rl-status-' + mStat + '"></span>' + e.mtbfHours.toFixed(1) + '</span></td>' +
+        '<td><span class="rl-status-wrap"><span class="rl-status-dot rl-status-' + aStat + '"></span>' + e.availabilityPct.toFixed(1) + '% <span class="rl-status-label">' + STATUS_LABEL[aStat] + '</span></span></td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  var RCFA_ICON = { recurring: 'repeat', 'main-asset-down': 'shield-alert', 'severe-incident': 'zap-off' };
+  var RCFA_SEVERITY = { recurring: 'warning', 'main-asset-down': 'critical', 'severe-incident': 'critical' };
+  var RCFA_TAG = { recurring: 'Recurring fault', 'main-asset-down': 'Main asset below NAI target', 'severe-incident': 'Severe single-day incident' };
+  /* A period with many flags (a bad month, a full fiscal year) can easily
+     produce dozens of qualifying combinations — a wall of identical-looking
+     cards is exactly what the Handbook warns against ("top offenders get
+     comments; the rest are just table rows"). Cap the callout-card
+     treatment to the top N (by severity, then magnitude) and push
+     everything past that into a compact, scrollable table instead — the
+     page stays a bounded, readable size regardless of how much the
+     underlying period contains. */
+  var RCFA_CARD_LIMIT = 6;
+
+  function rcfaMagnitude(f) {
+    if (f.type === 'recurring') return f.occurrences;
+    return f.hours; // main-asset-down, severe-incident
+  }
+
+  function renderRcfa(flags) {
+    var wrap = document.getElementById('rl-rcfa-wrap');
+    if (!flags.length) {
+      wrap.innerHTML = '<div class="rl-no-flags"><span>✅</span>No RCFA trigger criteria met in this period.</div>';
+      return;
+    }
+    var sevOrder = { critical: 0, warning: 1 };
+    var sorted = flags.slice().sort(function (a, b) {
+      var sevDiff = sevOrder[RCFA_SEVERITY[a.type]] - sevOrder[RCFA_SEVERITY[b.type]];
+      return sevDiff !== 0 ? sevDiff : rcfaMagnitude(b) - rcfaMagnitude(a);
+    });
+    var top = sorted.slice(0, RCFA_CARD_LIMIT);
+    var rest = sorted.slice(RCFA_CARD_LIMIT);
+
+    var html = '<div class="rl-rcfa-list">' + top.map(function (f) {
+      var sev = RCFA_SEVERITY[f.type] || 'warning';
+      return '<div class="rl-rcfa-item sev-' + sev + '">' +
+        '<i data-lucide="' + (RCFA_ICON[f.type] || 'alert-triangle') + '" class="rl-rcfa-icon" style="width:18px;height:18px"></i>' +
+        '<div class="rl-rcfa-body"><span class="rl-rcfa-tag">' + (RCFA_TAG[f.type] || f.type) + '</span><div class="rl-rcfa-msg">' + f.message + '</div></div>' +
+      '</div>';
+    }).join('') + '</div>';
+
+    if (rest.length) {
+      html += '<div class="rl-rcfa-more">' +
+        '<div class="rl-rcfa-more-hdr">+' + rest.length + ' more flagged this period — same RCFA criteria, lower severity/magnitude than the ' + top.length + ' above</div>' +
+        '<div class="rl-rcfa-more-scroll"><table class="rl-rcfa-table"><tbody>' +
+        rest.map(function (f) {
+          return '<tr><td>' + (RCFA_TAG[f.type] || f.type) + '</td><td>' + f.message + '</td></tr>';
+        }).join('') +
+        '</tbody></table></div></div>';
+    }
+
+    wrap.innerHTML = html;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  /* ── Load ─────────────────────────────────────────────────────── */
+  var _loadSeq = 0;
+  async function load() {
+    var from = fromEl.value, to = toEl.value;
+    if (!from || !to || from > to) return;
+    var mySeq = ++_loadSeq;
+
+    document.getElementById('rl-range-label').innerHTML =
+      fmtDateShort(from) + ' – ' + fmtDateShort(to) + ' <strong>(' + daysBetween(from, to) + ' days)</strong>';
+
+    var prev = previousRange(from, to);
+
+    var cur, prevData;
+    try {
+      var results = await Promise.all([
+        NyatiAPI.getStoppageInsights(from, to),
+        NyatiAPI.getStoppageInsights(prev.from, prev.to),
+      ]);
+      cur = results[0]; prevData = results[1];
+    } catch (e) {
+      if (mySeq !== _loadSeq) return;
+      document.getElementById('rl-rcfa-wrap').innerHTML =
+        '<div class="rl-no-flags">Could not load reliability data from the server. Check your connection and try again.</div>';
+      return;
+    }
+    if (mySeq !== _loadSeq) return; // a newer request superseded this one
+
+    renderKpiRow(cur, prevData);
+    renderParetoChart('chart-pareto-hours', cur.pareto, 'hours');
+    renderParetoTable('table-pareto-hours', cur.pareto, 'hours', 'Hours');
+    renderParetoChart('chart-pareto-freq', cur.paretoByFreq, 'events');
+    renderParetoTable('table-pareto-freq', cur.paretoByFreq, 'events', 'Events');
+    renderEquipmentTable(cur.equipment);
+    renderRcfa(cur.rcfaFlags);
+  }
+
+  /* ── Preset pills ─────────────────────────────────────────────── */
+  document.querySelectorAll('.rl-pill[data-preset]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.rl-pill[data-preset]').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      var r = presetRange(btn.dataset.preset);
+      fromEl.value = r.from; toEl.value = r.to;
+      load();
+    });
+  });
+  document.getElementById('rl-apply').addEventListener('click', function () {
+    document.querySelectorAll('.rl-pill[data-preset]').forEach(function (b) { b.classList.remove('active'); });
+    load();
+  });
+
+  /* ── Bootstrap: default to Month (month-to-date) ─────────────── */
+  var initRange = presetRange('month');
+  fromEl.value = initRange.from; toEl.value = initRange.to;
+  load();
+
+  var _dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+  var fEl = document.getElementById('footer-date');
+  if (fEl) fEl.textContent = _dateStr;
+}());
+</script>
+</body>
+</html>

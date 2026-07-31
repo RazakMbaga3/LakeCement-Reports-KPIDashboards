@@ -76,8 +76,10 @@
     { id: 'spc-grind',    key: 'specific-power-consumption-cement-grinding',    color: '#0d9488', fillColor: 'rgba(13,148,136,0.08)' },
     { id: 'pwr-loss',     key: 'power-distribution-loss-pct',                   color: '#e53935', fillColor: 'rgba(229,57,53,0.08)' },
     { id: 'clinker-src',  key: 'purchased-clinker-share',                       color: '#7c3aed', fillColor: 'rgba(124,58,237,0.08)' },
-    { id: 'stop-total',   key: 'total-stoppage-minutes',                        color: '#e53935', fillColor: 'rgba(229,57,53,0.08)' },
-    { id: 'stop-kiln',    key: 'kiln-stoppage-minutes',                         color: '#e53935', fillColor: 'rgba(229,57,53,0.08)' },
+    /* Stoppage minute trend cards (total + kiln) used to live here — now
+       superseded by reliability.html (availability/MTBF/paired Pareto/
+       RCFA, from the same stop_<equip>_<cause> data). See the link-through
+       card in the "Stoppages & Materials" section of analytics.html. */
     { id: 'mat-clinker',  key: 'clinker-consumption-day',                       color: '#173158', fillColor: 'rgba(23,49,88,0.08)' },
     { id: 'mat-coal',     key: 'coal-kiln-consumption-day',                     color: '#173158', fillColor: 'rgba(23,49,88,0.08)' },
   ];
