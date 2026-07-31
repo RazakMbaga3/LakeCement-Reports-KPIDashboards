@@ -34,6 +34,14 @@ async function _kpiPut(dept, yr, mo, kpis) {
   if (!res.ok) throw new Error('kpi PUT failed: ' + res.status);
   return res.json();
 }
+/* GET a whole fiscal year (April fyStartYear → March fyStartYear+1) for one
+   dept in a single call — powers the 12-column month tracker without one
+   request per month. Mirrors backend/routes/kpi.js's /fiscal/:dept/:year. */
+async function _kpiGetFiscalYear(dept, fyStartYear) {
+  const res = await fetch(`${_kpiApiBase()}/kpi/fiscal/${dept}/${fyStartYear}`, { headers: _kpiHeaders() });
+  if (!res.ok) throw new Error('kpi fiscal GET failed: ' + res.status);
+  return res.json(); // array of {year, month, kpi_key, target, actual, unit, remarks}
+}
 
 /* ─── Helpers ────────────────────────────────────────────── */
 function padMo(mo) { return String(mo).padStart(2, '0'); }
@@ -41,6 +49,16 @@ function daysInMonth(yr, mo) { return new Date(+yr, +mo, 0).getDate(); }
 
 function kpiSlug(text) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+/* Display formatting for KPI numbers — kpi_monthly.target/actual are
+   NUMERIC(12,3), so raw values print with 3 decimals (e.g. "103.040");
+   one decimal is plenty of precision for this dashboard's KPIs. */
+function fmtNum(v) {
+  if (v == null || v === '') return '—';
+  const n = Number(v);
+  if (Number.isNaN(n)) return String(v);
+  return n.toLocaleString('en-US', { maximumFractionDigits: 1 });
 }
 
 /* (Client-side month aggregation removed — the formula engine on the
@@ -55,8 +73,11 @@ function getColIndex(cell) {
   return Array.from(cell.parentElement.children).indexOf(cell);
 }
 
-/* Month column index in the 19-col table: Jan=6, Feb=7 … Dec=17 (0-based) */
-function moToColIdx(mo) { return mo + 5; }
+/* Month column index in the 19-col table. Columns are physically ordered
+   April..March (fiscal year, see index.html) — col 6 = April … col 17 =
+   March, so a calendar month maps through its fiscal position first
+   (calMonthToFiscalPos, defined in app.js which loads before this file). */
+function moToColIdx(mo) { return 6 + calMonthToFiscalPos(mo); }
 
 /* ─── Storage keys ───────────────────────────────────────────
    (manual values only — overrides of computed KPIs live server-side
@@ -153,8 +174,16 @@ function makeEditable(cell, dept, slug, yr, mo, isAutoCell) {
     const val = cell.textContent.trim();
     if (val === '') return;
 
+    // `yr` (from year-select) is the FISCAL year's start year — resolve
+    // the REAL calendar month/year this cell represents before touching
+    // any API or storage key. Clicking a tracker column (colIdx 6-17)
+    // means its physical fiscal position IS the position; clicking the
+    // ACTUAL column (colIdx 4) means "the currently selected month", so
+    // derive its fiscal position from `mo` instead.
     const colIdx = getColIndex(cell);
-    const cellMo = colIdx >= 6 ? colIdx - 5 : mo;  // derive month from column
+    const fiscalPos = (colIdx >= 6 && colIdx <= 17) ? (colIdx - 6) : calMonthToFiscalPos(mo);
+    const cellMo = fiscalPosToCalMonth(fiscalPos);
+    const cellYr = fiscalPosToCalYear(fiscalPos, yr);
 
     if (isAutoCell) {
       // Auto-calculated value → server-side audited override, reason mandatory
@@ -167,7 +196,7 @@ function makeEditable(cell, dept, slug, yr, mo, isAutoCell) {
         alert('Override cancelled — a numeric value and a reason (min 5 characters) are required.');
       } else {
         try {
-          await NyatiAPI.setOverride(slug, yr, cellMo, num, reason);
+          await NyatiAPI.setOverride(slug, cellYr, cellMo, num, reason);
         } catch (e) {
           alert(e && e.status === 403
             ? 'You do not have permission to override KPI values (admin/MD only).'
@@ -180,7 +209,7 @@ function makeEditable(cell, dept, slug, yr, mo, isAutoCell) {
       return;
     }
 
-    localStorage.setItem(manualKey(dept, slug, yr, cellMo), val);
+    localStorage.setItem(manualKey(dept, slug, cellYr, cellMo), val);
 
     // If this is the ACTUAL column, update row status
     if (colIdx === 4) updateRowStatus(cell.parentElement);
@@ -194,7 +223,7 @@ function makeEditable(cell, dept, slug, yr, mo, isAutoCell) {
     const actual   = parseFloat(val.replace(/,/g, ''));
     if (!isNaN(actual)) {
       try {
-        await _kpiPut(dept, yr, cellMo, [{ kpi_key: slug, target: isNaN(target) ? null : target, actual, unit }]);
+        await _kpiPut(dept, cellYr, cellMo, [{ kpi_key: slug, target: isNaN(target) ? null : target, actual, unit }]);
       } catch (e) { /* local value already saved above; not blocking the user */ }
     }
   }
@@ -248,9 +277,13 @@ window._nyAutoKeys = window._nyAutoKeys || new Set();
    loadManualValues restores; no client-side math. */
 async function loadAutoCalcValues(mo, yr) {
   if (!window.NyatiAPI || !NyatiAPI.evalFormulas) return;
+  // `yr` is the fiscal year's start year — the formula engine (daily_reports
+  // aggregation) wants a real calendar year, resolved via `mo`'s fiscal
+  // position (see app.js's calMonthToFiscalPos/fiscalPosToCalYear).
+  const calYear = fiscalPosToCalYear(calMonthToFiscalPos(mo), yr);
   let results;
   try {
-    results = await NyatiAPI.evalFormulas(yr, mo);
+    results = await NyatiAPI.evalFormulas(calYear, mo);
   } catch (e) {
     return; // offline / server unreachable — manual cached values still load
   }
@@ -268,14 +301,14 @@ async function loadAutoCalcValues(mo, yr) {
 
     // Registry target overrides the hardcoded table cell
     if (r.target != null && cells[3]) {
-      cells[3].textContent = Number(r.target).toLocaleString('en-US');
+      cells[3].textContent = fmtNum(r.target);
     }
     if (r.signage && cells[2] && r.signage !== cells[2].textContent.trim()) {
       cells[2].textContent = r.signage;
     }
 
     if (r.value == null) return;
-    const displayVal = Number(r.value).toLocaleString('en-US');
+    const displayVal = fmtNum(r.value);
 
     [cells[4], cells[moToColIdx(mo)]].forEach(cell => {
       if (!cell) return;
@@ -324,9 +357,12 @@ async function loadHeroCards(mo, yr, view) {
     return;
   }
 
+  // `yr` is the fiscal year's start year — resolve the real calendar year
+  // `mo` falls in (see loadAutoCalcValues for the same pattern).
+  const calYear = fiscalPosToCalYear(calMonthToFiscalPos(mo), yr);
   let results;
   try {
-    results = await NyatiAPI.evalFormulas(yr, mo);
+    results = await NyatiAPI.evalFormulas(calYear, mo);
   } catch (e) {
     cards.forEach(markHeroCardUnavailable); // offline / server unreachable
     return;
@@ -352,16 +388,16 @@ async function loadHeroCards(mo, yr, view) {
       if (statusEl) {
         statusEl.innerHTML = '';
         if (dotSpan) statusEl.appendChild(dotSpan);
-        statusEl.append(' No data submitted for ' + MONTHS[mo] + ' ' + yr);
+        statusEl.append(' No data submitted for ' + MONTHS[mo] + ' ' + calYear);
       }
       card.classList.remove('on-track', 'watch', 'concern');
       return;
     }
 
-    const displayVal = Number(r.value).toLocaleString('en-US', { maximumFractionDigits: 2 });
+    const displayVal = fmtNum(r.value);
     if (valueEl) valueEl.textContent = displayVal;
 
-    const note = isMonthView ? '' : ' (shown: ' + MONTHS[mo] + ' ' + yr + ' — daily/full-year not computed)';
+    const note = isMonthView ? '' : ' (shown: ' + MONTHS[mo] + ' ' + calYear + ' — daily/full-year not computed)';
 
     if (r.target == null) {
       // No fixed target by design (target:null in the registry) — show the
@@ -417,9 +453,15 @@ function markHeroCardUnavailable(card) {
 }
 
 /* ─── Load manually saved values ──────────────────────────
-   Batches one GET per dept-section (not per row) against the backend KPI
-   API; falls back to the existing per-row localStorage read if that dept's
-   fetch fails (offline / server unreachable). ────────────────────────── */
+   Batches two GETs per dept-section (not per row, not per month): the
+   selected month's values (for the ACTUAL + REMARKS columns) and the
+   whole fiscal year in one call (for the 12-column month tracker).
+   Previously the tracker columns were localStorage-only — real data
+   imported straight into Postgres (e.g. the Excel backfill) never touched
+   a browser's localStorage, so those columns silently stayed blank or
+   showed stale leftover test values under the wrong month. The server is
+   now the source of truth for all 13 cells; localStorage is only a
+   fallback if a fetch fails outright (offline). ────────────────────── */
 async function loadManualValues(mo, yr) {
   // Mines Workshop's .data-row markup is a per-equipment TARGET/ACTUAL
   // matrix (up to 23 <td>s: label/unit/sign, then TARGET/ACTUAL pairs per
@@ -432,19 +474,32 @@ async function loadManualValues(mo, yr) {
   const rows = Array.from(document.querySelectorAll('.kpi-table .data-row'))
     .filter(row => row.closest('.dept-section')?.id !== 'dept-minesworkshop');
 
+  // `yr` (year-select) is the FISCAL year's start year — resolve the real
+  // calendar year `mo` falls in for the single-month fetch/fallback keys.
+  const calYear = fiscalPosToCalYear(calMonthToFiscalPos(mo), yr);
+
   // Collect distinct depts present on the page, fetch each dept's KPI rows once.
   const depts = [...new Set(rows.map(row => {
     const section = row.closest('.dept-section');
     return section ? section.id.replace('dept-', '') : 'unknown';
   }))];
 
-  const deptMaps = {};
+  const deptMaps = {};      // selected month only — ACTUAL + REMARKS columns
+  const deptYearMaps = {};  // whole fiscal year, keyed "slug|fiscalPos" — tracker columns
   await Promise.all(depts.map(async dept => {
     try {
-      const kpis = await _kpiGet(dept, yr, mo);
+      const kpis = await _kpiGet(dept, calYear, mo);
       deptMaps[dept] = new Map(kpis.map(k => [k.kpi_key, k]));
     } catch (e) {
       deptMaps[dept] = null; // signals "use localStorage fallback for this dept"
+    }
+    try {
+      const fyRows = await _kpiGetFiscalYear(dept, yr);
+      const m = new Map();
+      fyRows.forEach(r => m.set(`${r.kpi_key}|${calMonthToFiscalPos(r.month)}`, r));
+      deptYearMaps[dept] = m;
+    } catch (e) {
+      deptYearMaps[dept] = null; // signals "use localStorage fallback for the tracker cols"
     }
   }));
 
@@ -455,6 +510,7 @@ async function loadManualValues(mo, yr) {
     const dept    = section ? section.id.replace('dept-', '') : 'unknown';
     const slug    = kpiSlug(labelCell.textContent.trim());
     const map     = deptMaps[dept];
+    const yearMap = deptYearMaps[dept];
 
     const cells = row.querySelectorAll('td');
     const actualCell = cells[4];
@@ -467,8 +523,8 @@ async function loadManualValues(mo, yr) {
     // original hardcoded HTML happened to contain.
     const serverRow = map ? map.get(slug) : undefined;
     const actVal = map
-      ? (serverRow && serverRow.actual != null ? String(serverRow.actual) : null)
-      : localStorage.getItem(manualKey(dept, slug, yr, mo));
+      ? (serverRow && serverRow.actual != null ? fmtNum(serverRow.actual) : null)
+      : localStorage.getItem(manualKey(dept, slug, calYear, mo));
 
     if (actVal !== null) {
       if (actualCell) actualCell.textContent = actVal;
@@ -493,20 +549,25 @@ async function loadManualValues(mo, yr) {
       }
     }
 
-    // Monthly columns (cols 6–17) — edits to any of these still sync to
-    // the server (see makeEditable's commit() below, keyed by that cell's
-    // own month), but this load only prefetches the selected month (one
-    // GET per dept instead of twelve); the other 11 still read their
-    // last-known value from the localStorage cache until re-edited or the
-    // month is selected directly. A column with nothing in localStorage
-    // either (i.e. never entered) is shown as "—", not left blank/stale.
-    for (let m = 1; m <= 12; m++) {
-      const colIdx = moToColIdx(m);
+    // Monthly tracker columns (cols 6–17, physically ordered April..March —
+    // see index.html) — server-sourced from the single whole-fiscal-year
+    // fetch above; falls back to localStorage per-cell only if that fetch
+    // failed outright (offline). A column with no real row either way is
+    // shown as "—", not left blank/stale.
+    for (let fp = 0; fp <= 11; fp++) {
+      const colIdx = 6 + fp;
       const cell   = cells[colIdx];
       if (!cell) continue;
       if (cell.classList.contains('auto-cell') || cell.classList.contains('edited-cell')) continue;
-      const saved = localStorage.getItem(manualKey(dept, slug, yr, m));
-      cell.textContent = saved !== null ? saved : '—';
+      if (yearMap) {
+        const r = yearMap.get(`${slug}|${fp}`);
+        cell.textContent = (r && r.actual != null) ? fmtNum(r.actual) : '—';
+      } else {
+        const cMo = fiscalPosToCalMonth(fp);
+        const cYr = fiscalPosToCalYear(fp, yr);
+        const saved = localStorage.getItem(manualKey(dept, slug, cYr, cMo));
+        cell.textContent = saved !== null ? saved : '—';
+      }
     }
   });
 }
@@ -522,7 +583,10 @@ async function loadKpiData(mo, yr) {
 ══════════════════════════════════════════════════════════ */
 async function openMonthlyModal() {
   const mo   = +document.getElementById('month-select').value;
-  const yr   =  document.getElementById('year-select').value;
+  // year-select holds the fiscal year's start year — resolve the real
+  // calendar year `mo` belongs to before hitting kpi_monthly with it.
+  const fyYr = document.getElementById('year-select').value;
+  const yr   = fiscalPosToCalYear(calMonthToFiscalPos(mo), fyYr);
   const dept =  typeof currentDept !== 'undefined' ? currentDept : 'summary';
 
   // Defense in depth: the Fill button is hidden when the role can't edit
@@ -737,8 +801,11 @@ async function refreshCompletenessBadge(dept, mo, yr) {
     return;
   }
 
-  const from = `${yr}-${padMo(mo)}-01`;
-  const to   = `${yr}-${padMo(mo)}-${String(daysInMonth(yr, mo)).padStart(2, '0')}`;
+  // `yr` here is the fiscal year's start year — daily_reports completeness
+  // is keyed by real calendar dates, so resolve first.
+  const calYear = fiscalPosToCalYear(calMonthToFiscalPos(mo), yr);
+  const from = `${calYear}-${padMo(mo)}-01`;
+  const to   = `${calYear}-${padMo(mo)}-${String(daysInMonth(calYear, mo)).padStart(2, '0')}`;
 
   let payload;
   try {

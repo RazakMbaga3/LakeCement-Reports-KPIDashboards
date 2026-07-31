@@ -46,6 +46,19 @@ const MONTHS = [
   'July','August','September','October','November','December'
 ];
 
+/* ─── Fiscal year (April → March) ────────────────────────────
+   Lake Cement's business year runs April→March, not January→December.
+   The KPI tables' 12 month columns are physically ordered April..March
+   to match (see index.html) — "fiscal position" is the 0-based index
+   into that column order: 0=April … 8=December, 9=January … 11=March.
+   A fiscal year is named after its start year: "FY2026" = Apr 2026 →
+   Mar 2027, so year-select's value is that start year, and Jan/Feb/Mar
+   columns must be fetched from the *next* calendar year. Shared here
+   (app.js loads before kpi-data.js) since both need this mapping. */
+function calMonthToFiscalPos(mo) { return mo >= 4 ? mo - 4 : mo + 8; }
+function fiscalPosToCalMonth(pos) { return pos < 9 ? pos + 4 : pos - 8; }
+function fiscalPosToCalYear(pos, fyStartYear) { return pos < 9 ? +fyStartYear : +fyStartYear + 1; }
+
 let currentDept = 'ei';
 
 /* ─── switch department ─────────────────────────────────────── */
@@ -102,6 +115,10 @@ function applyFilters() {
   const mo   = +document.getElementById('month-select').value;
   const yr   =  document.getElementById('year-select').value;
   const view =  document.getElementById('view-select').value;
+  // "year-select" holds the FISCAL year's start year (e.g. 2026 = FY Apr
+  // 2026 → Mar 2027). curFiscalPos is where the selected month falls in
+  // that April..March sequence — see calMonthToFiscalPos() above.
+  const curFiscalPos = calMonthToFiscalPos(mo);
 
   document.querySelectorAll('.kpi-table').forEach(tbl => {
     // Skip tables that don't use month columns (e.g. Mines Workshop equipment table)
@@ -119,21 +136,25 @@ function applyFilters() {
     }
 
     // ── Show / hide month header cells (indices 6–17) ──
+    // These columns are physically ordered April..March (fiscal order, see
+    // index.html) so column index i maps directly to fiscal position i-6 —
+    // no separate wraparound handling needed, "show fiscalPos <= current"
+    // naturally spans Apr→Dec then Jan→Mar in one pass.
     headerCells.forEach((th, i) => {
       th.style.background = '';
       th.style.color = '';
 
       if (i < 6 || i > 17) return;
-      const mIdx = i - 5; // i=6 → mIdx=1 (Jan) … i=17 → mIdx=12 (Dec)
+      const fiscalPos = i - 6; // 0=April … 11=March
 
       if (view === 'month' || view === 'daily') {
         th.style.display = 'none';
       } else if (view === 'ytd') {
-        th.style.display = (mIdx <= mo) ? '' : 'none';
+        th.style.display = (fiscalPos <= curFiscalPos) ? '' : 'none';
       } else {
         // full year — show all, highlight selected
         th.style.display = '';
-        if (mIdx === mo) { th.style.background = '#E8750A'; th.style.color = '#fff'; }
+        if (fiscalPos === curFiscalPos) { th.style.background = '#E8750A'; th.style.color = '#fff'; }
       }
     });
 
@@ -143,16 +164,16 @@ function applyFilters() {
       const cells = row.querySelectorAll('td');
       cells.forEach((td, i) => {
         if (i < 6 || i > 17) { td.style.opacity = '1'; return; }
-        const mIdx = i - 5;
+        const fiscalPos = i - 6;
         if (view === 'month' || view === 'daily') {
           td.style.display = 'none';
           td.style.opacity  = '1';
         } else if (view === 'ytd') {
-          td.style.display = (mIdx <= mo) ? '' : 'none';
+          td.style.display = (fiscalPos <= curFiscalPos) ? '' : 'none';
           td.style.opacity  = '1';
         } else {
           td.style.display = '';
-          td.style.opacity  = (mIdx <= mo) ? '1' : '0.2';
+          td.style.opacity  = (fiscalPos <= curFiscalPos) ? '1' : '0.2';
         }
       });
     });
@@ -256,19 +277,23 @@ function applyPeriodCards(view) {
   // Full Year aren't computed by evalMonth, so re-fetch on any view change.
   if (typeof loadHeroCards === 'function') loadHeroCards(mo, yr, view);
 
-  // Update period badge and context bar label
+  // Update period badge and context bar label. "yr" is the fiscal year's
+  // start year (FY2026 = Apr 2026 → Mar 2027) — YTD/Full-Year text must
+  // say so explicitly since neither span matches the calendar year alone.
   const badge = document.getElementById('smry-period-badge');
   const ctxPeriod = document.getElementById('ctx-period');
   const today = new Date();
+  const fyStart = +yr;
   let periodText;
   if (view === 'daily') {
     periodText = 'Today — ' + today.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
   } else if (view === 'month') {
-    periodText = MONTHS[mo] + ' ' + yr;
+    periodText = MONTHS[mo] + ' ' + fiscalPosToCalYear(calMonthToFiscalPos(mo), fyStart);
   } else if (view === 'ytd') {
-    periodText = 'YTD — Jan–' + MONTHS[mo].slice(0, 3) + ' ' + yr;
+    const endYr = fiscalPosToCalYear(calMonthToFiscalPos(mo), fyStart);
+    periodText = 'YTD — Apr ' + fyStart + ' – ' + MONTHS[mo].slice(0, 3) + ' ' + endYr;
   } else {
-    periodText = 'Full Year ' + yr;
+    periodText = 'FY' + fyStart + ' (Apr ' + fyStart + ' – Mar ' + (fyStart + 1) + ')';
   }
   if (badge) badge.textContent = periodText;
   if (ctxPeriod) ctxPeriod.textContent = periodText;
@@ -295,12 +320,14 @@ function setDates() {
    Previously these were hardcoded <option selected> values (Feb 2026)
    baked into the HTML, so the dashboard opened on a fixed stale period
    no matter when it was actually viewed. Default to the real current
-   month/year instead — if that year isn't in the dropdown yet (a new
-   year rolling over), fall back to the latest year offered. */
+   month/fiscal-year instead — if that fiscal year isn't in the dropdown
+   yet (a new one rolling over), fall back to the latest year offered.
+   year-select holds the FISCAL year's start year (April..March) — for
+   Jan/Feb/Mar that's last calendar year, not this one. */
 function setDefaultPeriod() {
   const now = new Date();
   const mo  = now.getMonth() + 1;
-  const yr  = now.getFullYear();
+  const fyStart = mo >= 4 ? now.getFullYear() : now.getFullYear() - 1;
 
   const moSel = document.getElementById('month-select');
   const yrSel = document.getElementById('year-select');
@@ -308,7 +335,7 @@ function setDefaultPeriod() {
 
   if (yrSel) {
     const years = Array.from(yrSel.options).map(o => +o.value);
-    yrSel.value = years.includes(yr) ? String(yr) : String(Math.max(...years));
+    yrSel.value = years.includes(fyStart) ? String(fyStart) : String(Math.max(...years));
   }
 }
 
