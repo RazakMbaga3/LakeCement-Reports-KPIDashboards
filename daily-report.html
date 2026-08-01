@@ -474,7 +474,11 @@
                data only from 2026-06-21 onward, so those two rows stay 0/blank before
                that date, same as any other newly-added field). Row labels renamed from
                "LIMESTONE HG/OB CLAY/ID CLAY" to match Excel's own "LIMESTONE/CLAY/
-               INDUSTRIAL CLAY" text exactly. -->
+               INDUSTRIAL CLAY" text exactly. The "MTD Moisture" column (last column,
+               every row below) stays static — Excel sources it from a separate 'Raw
+               mill moisture content' sheet indexed by material, not by date, with no
+               capture form anywhere in the app; "On Date" moisture (previous column) IS
+               a live input, unchanged from before this pass. -->
           <tr class="srow"><td colspan="15">PYRO PROCESSING — RAW MILL MATERIAL</td></tr>
 
           <tr>
@@ -608,7 +612,14 @@
             <td class="cf"><div class="cv" data-roll-ytd="rmm_limestone_cons,rmm_clay_cons,rmm_ironore_cons,rmm_industrialclay_cons,rmm_bauxite_cons,rmm_milldustironore_cons">—</div></td>
             <td class="cf"><div class="cv" data-kpi="rmm_total_closing">—</div></td>
             <td class="cf"><div class="cv" data-kpi="rmm_total_cons">—</div></td>
-            <td class="cf"><div class="cv">100.00</div></td>
+            <td class="cf"><div class="cv" data-kpi="rmm_total_pct">—</div></td>
+            <!-- MTD Moisture — Excel sources this column from a wholly separate 'Raw
+                 mill moisture content' sheet (per-material, multi-day table, not indexed
+                 by the day-sheet's own date the way every other figure on this page is).
+                 No form in the app captures it and building one is a bigger lift than
+                 this pass's scope; left static rather than guessed. On-date moisture
+                 (previous column) IS captured live — it was already a plain, unwired
+                 input; that's unchanged here. -->
             <td></td><td></td>
           </tr>
 
@@ -627,9 +638,12 @@
             <td class="cf"><div class="cv" data-roll-mtd="coal_kiln">—</div></td>
             <td class="cf"><div class="cv" data-roll-ytd="coal_kiln">—</div></td>
             <td class="cf"><div class="cv" data-kpi="coal_kiln_closing">—</div></td>
-            <td class="cf"><div class="cv">265.00</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_kiln_cons_display">—</div></td>
             <td></td>
             <td class="cm"><input class="ci" type="number" value="10" /></td>
+            <!-- Coal moisture % — same "Raw mill moisture content" sheet gap as the
+                 raw-mill materials' MTD Moisture column below; left static, see comment
+                 there for why. -->
             <td class="cf"><div class="cv">10%</div></td>
           </tr>
 
@@ -645,7 +659,7 @@
             <td class="cf"><div class="cv" data-roll-mtd="coal_cpp">—</div></td>
             <td class="cf"><div class="cv" data-roll-ytd="coal_cpp">—</div></td>
             <td class="cf"><div class="cv" data-kpi="coal_cpp_closing">—</div></td>
-            <td class="cf"><div class="cv">144.00</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_cpp_cons_display">—</div></td>
             <td></td>
             <td class="cm"><input class="ci" type="number" value="10" /></td>
             <td class="cf"><div class="cv">10%</div></td>
@@ -1745,9 +1759,11 @@ initKpiLive([
   { kpi:'coal_kiln_closing', fmt:'n0',
     compute: function(f,n){ return n(f.coal_kiln_open) + n(f.coal_kiln_recv) - n(f.coal_kiln); }
   },
+  { kpi:'coal_kiln_cons_display', field:'coal_kiln', fmt:'n2' },
   { kpi:'coal_cpp_closing', fmt:'n0',
     compute: function(f,n){ return n(f.coal_cpp_open) + n(f.coal_cpp_recv) - n(f.coal_cpp); }
   },
+  { kpi:'coal_cpp_cons_display', field:'coal_cpp', fmt:'n2' },
   { kpi:'coal_total_open', fmt:'n0',
     compute: function(f,n){ return n(f.coal_kiln_open) + n(f.coal_cpp_open); }
   },
@@ -1857,6 +1873,11 @@ initKpiLive([
   },
   { kpi:'rmm_milldustironore_pct', fmt:'n2',
     compute: function(f,n){ var t=n(f.rmm_limestone_cons)+n(f.rmm_clay_cons)+n(f.rmm_ironore_cons)+n(f.rmm_industrialclay_cons)+n(f.rmm_bauxite_cons)+n(f.rmm_milldustironore_cons); return t>0 ? n(f.rmm_milldustironore_cons)/t*100 : null; }
+  },
+  /* TOTAL row's own %: matches Excel's N13/N15=SUM(N9:N14) — the 6 materials'
+     %-of-total-consumption figures always sum to 100 by construction. */
+  { kpi:'rmm_total_pct', fmt:'n2',
+    compute: function(f,n){ var t=n(f.rmm_limestone_cons)+n(f.rmm_clay_cons)+n(f.rmm_ironore_cons)+n(f.rmm_industrialclay_cons)+n(f.rmm_bauxite_cons)+n(f.rmm_milldustironore_cons); return t>0 ? 100 : null; }
   },
 
   /* ── Cement Grinding — LIMESTONE (consumption-only, no own opening/closing
