@@ -1,12 +1,23 @@
 /*
   services/odooSync.js — scheduled pull from Odoo into lcl_mis (skeleton).
 
-  No real pulls are wired up yet — the exact model/fields for the first
-  confirmed target ("Production Entry Raw Meal", moisture-adjusted raw
-  material consumption for limestone/clay/iron ore/sand) haven't been
-  confirmed with the Odoo team. Use `npm run odoo:test -- <model>` to
-  discover a model's fields once ODOO_URL/ODOO_DB/ODOO_USERNAME/ODOO_API_KEY
-  are set in .env — see docs/TECHNICAL_SPEC.md §11.
+  No real pulls are wired up yet — the exact model/fields for either
+  confirmed target haven't been confirmed with the Odoo team. Use
+  `npm run odoo:test -- <model>` to discover a model's fields once
+  ODOO_URL/ODOO_DB/ODOO_USERNAME/ODOO_API_KEY are set in .env — see
+  docs/TECHNICAL_SPEC.md §11.
+
+  Confirmed targets so far:
+    1. "Production Entry Raw Meal" — moisture-adjusted (wet→dry) raw
+       material consumption for limestone/clay/iron ore/sand.
+    2. Dispatch daily summary — REGULAR/BULKER/BIG BAG totals per cement
+       grade (the same shape forms/formula-registry.js's dispatch_reg_,
+       dispatch_blk_, dispatch_bag_, and dispatch_clinker facts already
+       use), one row per day. Explicitly scoped to the daily aggregate ONLY —
+       not individual sale orders, invoices, or truck-level dispatch
+       records. If Odoo can't hand back an already-aggregated daily view,
+       the pull still only stores the aggregated total per grade/channel/
+       day, never the underlying order lines.
 
   Once a dataset is confirmed:
     1. add a dedicated typed table for it (mirror weighbridge_tickets —
@@ -28,6 +39,10 @@ const odoo   = require('./odooClient');
    returns a small summary object (added/updated counts, date range, …). */
 const PULLS = [
   // { name: 'raw-meal-consumption', run: pullRawMealConsumption },
+  // { name: 'dispatch-daily-summary', run: pullDispatchDailySummary },
+  //   Aggregate only — see "Dispatch daily summary" above. Do not extend
+  //   this to pull per-order/per-invoice rows even if it's easier than
+  //   asking Odoo for a pre-aggregated view.
 ];
 
 async function runOdooSync() {

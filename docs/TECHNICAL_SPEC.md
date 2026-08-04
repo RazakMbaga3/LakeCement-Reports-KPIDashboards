@@ -159,7 +159,10 @@ This is a **separate, purpose-built auth system** — it does not use Odoo's use
 
 This same file is loaded by both the Node backend (`backend/services/formulaEngine.js`, evaluated against Postgres — this is what dashboards actually render) and the browser (offline/demo fallback), so the math is guaranteed identical in both places.
 
-**Why this matters to the Odoo team:** when a department's data is confirmed to already live correctly in Odoo, the plan is to pull it read-only into this system's Postgres (tagging those facts `source: 'odoo'`) rather than re-entering it manually or rebuilding the calculation in Odoo. The first concrete target identified for this is **"Production Entry Raw Meal"** — the Odoo workflow that computes moisture-adjusted (wet→dry) raw material consumption for limestone/clay/iron ore/sand. That calculation already exists and is correct in Odoo; this system should consume its output, not duplicate it.
+**Why this matters to the Odoo team:** when a department's data is confirmed to already live correctly in Odoo, the plan is to pull it read-only into this system's Postgres (tagging those facts `source: 'odoo'`) rather than re-entering it manually or rebuilding the calculation in Odoo. Two concrete targets are confirmed so far:
+
+1. **"Production Entry Raw Meal"** — the Odoo workflow that computes moisture-adjusted (wet→dry) raw material consumption for limestone/clay/iron ore/sand. That calculation already exists and is correct in Odoo; this system should consume its output, not duplicate it.
+2. **Dispatch — daily summary only.** Dispatch will also be sourced from Odoo, but this system needs the **daily aggregate** per channel (Regular Bags, Bulker, Big Bags) and grade — the same shape `forms/formula-registry.js`'s `dispatch_reg_`, `dispatch_blk_`, `dispatch_bag_`, and `dispatch_clinker` facts already use — **not** individual sale orders, invoices, or per-truck dispatch records. The KPI engine only ever needs one total per grade/channel/day; pulling order-level detail would be unnecessary data exposure for no benefit.
 
 ---
 
@@ -173,7 +176,7 @@ This same file is loaded by both the Node backend (`backend/services/formulaEngi
 | Shared infrastructure | This app's `lcl_mis` Postgres database runs on the **same physical PostgreSQL server instance** that hosts Odoo's own databases, under a separate, dedicated, non-superuser role (`lcl_admin`). No schemas or tables are shared. |
 | Data that *has* moved from Odoo into this system | Weighbridge tickets only, via manual `.xlsx` export from Odoo → import through the browser at `mines-report.html` → `POST /api/quarry/tickets/import`. This is the natural first candidate to automate into a scheduled pull. |
 | Departments/modules expected to eventually feed in from Odoo | Mining, production, mechanical & electrical, HR, sales, logistics (non-exhaustive — to be scoped per department). Mining is known to not be a standard Odoo app (custom module or may stay manual — needs confirming with the Odoo team). |
-| Confirmed first integration target | "Production Entry Raw Meal" module (see §8) — moisture-adjusted raw material consumption. |
+| Confirmed integration targets | (1) "Production Entry Raw Meal" — moisture-adjusted raw material consumption. (2) Dispatch — **daily summary only** (per grade/channel totals), explicitly not order/invoice-level detail. See §8. |
 | Blocking dependency | The user of this system does not hold Odoo admin/API access themselves; someone else administers Odoo. Connector work needs that person looped in to scope exact models/fields and issue API credentials. |
 
 ---
@@ -195,15 +198,15 @@ The transport layer is built; the data layer is intentionally not, pending §12'
 **Built (this repo, today):**
 - `backend/services/odooClient.js` — a dependency-free Odoo External API client using Node's built-in `fetch` against Odoo's `/jsonrpc` endpoint: `version()` (unauthenticated ping), `authenticate()` (caches the uid for the process lifetime), `executeKw()` (generic RPC), plus `searchRead()` / `fieldsGet()` convenience wrappers.
 - `backend/scripts/odoo-test-connection.js` (`npm run odoo:test -- [model] [--sample]`) — verifies credentials and, once they work, lists any model's fields (or a few sample records) so we can confirm exact field names ourselves instead of relying on the Odoo team to enumerate them.
-- `backend/services/odooSync.js` + `backend/scripts/odoo-sync-once.js` (`npm run odoo:sync`) — a scheduled-pull skeleton mirroring the existing `watchdog.js`/`backup.js` jobs, with an empty `PULLS` list ready to take real pull functions.
+- `backend/services/odooSync.js` + `backend/scripts/odoo-sync-once.js` (`npm run odoo:sync`) — a scheduled-pull skeleton mirroring the existing `watchdog.js`/`backup.js` jobs, with an empty `PULLS` list (commented placeholders for both confirmed targets, including the dispatch aggregate-only note) ready to take real pull functions.
 - Cron wiring in `server.js`, gated on `ODOO_URL` being set (default 05:00 daily via `ODOO_SYNC_CRON`, `off` disables it outright) — inert today since no config or pulls exist yet.
 - `GET /api/monitor/odoo/test` (admin/md/it) — a version+login connectivity check surfaced through the same admin dashboard as the other health checks, so verifying the link doesn't require server access.
 - `GET /api/health`'s `checks.odoo` now reports `'not_configured'` vs. `{ok: true, ...}` based on whether `ODOO_URL` is set (config presence only — it deliberately does not make a live Odoo call on every health poll, so a flaky Odoo link can't turn the whole plant dashboard "degraded").
 - New `.env` keys: `ODOO_URL`, `ODOO_DB`, `ODOO_USERNAME`, `ODOO_API_KEY`, `ODOO_SYNC_CRON` (see `backend/.env.example`).
 
 **Not built — blocked on §12:**
-1. Any actual pull function (needs a confirmed Odoo model/fields — "Production Entry Raw Meal" is first in line).
-2. The dedicated Postgres table for that dataset — will mirror `weighbridge_tickets`'s pattern (a natural Odoo record ID as the unique/conflict key, `imported_at`/`updated_at` timestamps) once the shape of the data is known.
+1. Any actual pull function for either target (needs a confirmed Odoo model/fields — "Production Entry Raw Meal" and dispatch daily summary are both in line).
+2. A dedicated Postgres table per dataset — will mirror `weighbridge_tickets`'s pattern (a natural Odoo record ID as the unique/conflict key, `imported_at`/`updated_at` timestamps) once the shape of the data is known. For dispatch, the destination columns are already effectively known on our side (they match the existing `dispatch_reg_*`/`dispatch_blk_*`/`dispatch_bag_*`/`dispatch_clinker` facts) — what's still open is which Odoo model/view exposes the daily aggregate, and whether Odoo can pre-aggregate it or this system has to.
 3. Flipping the corresponding `forms/formula-registry.js` FACTS entries from `source: 'manual'` to `source: 'odoo'` — no formula/dashboard changes required when this happens.
 
 This keeps Odoo as a read-only upstream source and the two databases fully decoupled — no shared schema, no direct DB access into Odoo.
@@ -214,6 +217,7 @@ This keeps Odoo as a read-only upstream source and the two databases fully decou
 
 1. Who is the Odoo administrator/API owner who can issue a service-account or API-key credential for a read-only integration?
 2. For "Production Entry Raw Meal": what is the exact Odoo model/module name, and which fields hold the moisture-adjusted (dry-basis) consumption figures per material (limestone/clay/iron ore/sand)?
-3. Is mining tracked in a standard Odoo module, a custom module, or not in Odoo at all? (Needed to decide whether weighbridge-ticket import can become a live pull, or must stay manual.)
-4. For the other departments in scope (mechanical & electrical, HR, sales, logistics) — which are on standard Odoo apps (e.g. `hr`, `sale`, `stock`) vs. custom modules, so field-level mapping can be scoped per department rather than assumed.
-5. Now that production hosting is planned as cloud infrastructure under the Odoo team's ownership (§10): which cloud platform/account should this deploy to, and who sets up and administers that environment?
+3. For dispatch: what Odoo model/module tracks sales/dispatch, and can it expose (or can a view be built to expose) an **already-aggregated daily total per grade and channel** (Regular Bags/Bulker/Big Bags × 42.5R/42.5N B-M/42.5N/32.5N/OPC 42.5N, plus clinker) — rather than this system having to pull and sum individual order lines itself?
+4. Is mining tracked in a standard Odoo module, a custom module, or not in Odoo at all? (Needed to decide whether weighbridge-ticket import can become a live pull, or must stay manual.)
+5. For the other departments in scope (mechanical & electrical, HR, sales, logistics) — which are on standard Odoo apps (e.g. `hr`, `sale`, `stock`) vs. custom modules, so field-level mapping can be scoped per department rather than assumed.
+6. Now that production hosting is planned as cloud infrastructure under the Odoo team's ownership (§10): which cloud platform/account should this deploy to, and who sets up and administers that environment?
