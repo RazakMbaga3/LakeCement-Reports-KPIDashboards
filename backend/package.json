@@ -16,6 +16,7 @@
     "accept:phase6": "node scripts/accept-phase6.js",
     "accept:phase7": "node scripts/accept-phase7.js",
     "accept:phase8": "node scripts/accept-phase8.js",
+    "accept:quarry": "node scripts/accept-quarry.js",
     "docs:kpi": "node scripts/generate-kpi-reference.js",
     "odoo:test": "node scripts/odoo-test-connection.js",
     "odoo:sync": "node scripts/odoo-sync-once.js",

@@ -127,10 +127,33 @@
     return res.json();
   }
 
+  /* ── Quarry weighbridge tickets (backend/routes/quarry.js) ─────────
+     Separate from the daily-form endpoints above — many rows per day,
+     deduped by ticket_no server-side, not a one-blob-per-day shape. */
+
+  /* POST /api/quarry/tickets/import — bulk upsert parsed Excel rows */
+  async function quarryImportTickets(rows) {
+    const res = await fetch(BASE + '/quarry/tickets/import', {
+      method: 'POST', headers: _headers(),
+      body: JSON.stringify({ rows }),
+    });
+    if (!res.ok) throw _httpError('quarryImportTickets', rows.length + ' rows', res);
+    return res.json();
+  }
+
+  /* GET /api/quarry/tickets?from=&to= — omit both to fetch the whole log */
+  async function quarryGetTickets(from, to) {
+    const qs = (from && to) ? ('?' + new URLSearchParams({ from, to })) : '';
+    const res = await fetch(BASE + '/quarry/tickets' + qs, { headers: _headers() });
+    if (!res.ok) throw _httpError('quarryGetTickets', from + '..' + to, res);
+    return res.json();
+  }
+
   global.NyatiAPI = {
     submitForm, getForm, getFormRange,
     evalFormulas, getDailySeries, setOverride, clearOverride, getOverrides,
     getBaseline, getCompleteness, getStoppageInsights,
+    quarryImportTickets, quarryGetTickets,
   };
 
 }(window));

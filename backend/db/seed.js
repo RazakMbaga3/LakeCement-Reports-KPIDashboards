@@ -32,7 +32,8 @@ const USERS = [
   { username: 'pm',         password: 'PM@LCL2026',     name: 'Projects & Maintenance HOD', role: 'pm',         dept: 'P & M' },
   { username: 'it',         password: 'IT@LCL2026',     name: 'IT Manager',                 role: 'it',         dept: 'IT' },
   { username: 'logistics',  password: 'Log@LCL2026',    name: 'Logistics & Workshops HOD',  role: 'logistics',  dept: 'LOGISTICS' },
-  { username: 'mining',     password: 'Min@LCL2026',    name: 'Mining Manager',             role: 'mining',     dept: 'MINING' },
+  { username: 'mining',     password: 'Min@LCL2026',    name: 'Quarry Manager',             role: 'mining',     dept: 'QUARRY' },
+  // username/role stay 'mining' — internal key, unrelated to the visible "Quarry" rename.
   { username: 'production', password: 'Prod@LCL2026',   name: 'Production & QC Manager',   role: 'production', dept: 'PRODUCTION & QC' },
 ];
 

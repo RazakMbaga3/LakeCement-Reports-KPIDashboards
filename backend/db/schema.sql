@@ -79,6 +79,26 @@ CREATE TABLE IF NOT EXISTS stoppages (
   submitted_at    TIMESTAMP DEFAULT NOW()
 );
 
+-- ── WEIGHBRIDGE TICKETS (Quarry) ────────────────────────────
+-- Odoo weighbridge ticket log ("Uploaded_Data" export). Many rows per
+-- day, deduped by ticket_no — same shape as `stoppages`, so it gets its
+-- own table rather than the generic one-blob-per-day `daily_reports`.
+CREATE TABLE IF NOT EXISTS weighbridge_tickets (
+  id             SERIAL PRIMARY KEY,
+  ticket_no      VARCHAR(50)  UNIQUE NOT NULL,
+  vendor         VARCHAR(150),
+  vehicle        VARCHAR(50),
+  transfer_type  VARCHAR(30),            -- raw Odoo value: 'Production' | 'Internal'
+  movement_type  VARCHAR(120) NOT NULL,  -- e.g. 'South Mine to Pile (through Crusher)'
+  product        VARCHAR(50)  NOT NULL,  -- 'HG','LG1','OB/CLAY','LIMESTONE SPG', etc.
+  ticket_date    DATE         NOT NULL,
+  net_qty        NUMERIC(10,3) NOT NULL,
+  gross_datetime VARCHAR(40),            -- raw exported timestamp, informational only
+  imported_by    INTEGER REFERENCES users(id),
+  imported_at    TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at     TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
 -- ── KPI MONTHLY ─────────────────────────────────────────────
 -- Stores manually entered or auto-calculated monthly KPI targets and actuals
 CREATE TABLE IF NOT EXISTS kpi_monthly (
@@ -154,6 +174,8 @@ CREATE INDEX IF NOT EXISTS idx_daily_reports_form     ON daily_reports(form_type
 -- can't be used directly in an index expression — EXTRACT year/month is.
 CREATE INDEX IF NOT EXISTS idx_daily_reports_month    ON daily_reports((EXTRACT(YEAR FROM record_date)), (EXTRACT(MONTH FROM record_date)));
 CREATE INDEX IF NOT EXISTS idx_stoppages_date         ON stoppages(record_date);
+CREATE INDEX IF NOT EXISTS idx_weighbridge_date       ON weighbridge_tickets(ticket_date);
+CREATE INDEX IF NOT EXISTS idx_weighbridge_movement   ON weighbridge_tickets(movement_type);
 CREATE INDEX IF NOT EXISTS idx_kpi_monthly_dept_year  ON kpi_monthly(department, year, month);
 CREATE INDEX IF NOT EXISTS idx_audit_log_user         ON audit_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_log_date         ON audit_log(created_at);
