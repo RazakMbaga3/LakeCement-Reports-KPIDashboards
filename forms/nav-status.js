@@ -95,7 +95,12 @@
     return m ? pageNameFromHref(m[1]) : null;
   }
 
-  /* ── Inject nav dots ─────────────────────────────────────────── */
+  /* ── Inject nav dots ─────────────────────────────────────────────
+     NOTE: .nav-btn (the old horizontal dept-nav bar) was retired in the
+     sidebar migration (see sidebar.js) — this now silently finds nothing
+     and no-ops. Today's-fill-status dots need porting onto .sb-item rows
+     if this feature is still wanted; not done here (out of scope for the
+     nav migration itself). */
   function injectDots() {
     document.querySelectorAll('.nav-btn:not(.secondary)').forEach(function(btn) {
       btn.querySelector('.nav-dot')?.remove();

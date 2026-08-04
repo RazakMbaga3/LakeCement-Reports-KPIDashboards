@@ -7,70 +7,25 @@
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
-  <script src="auth.js?v=9"></script>
+  <script src="auth.js?v=10"></script>
+  <script src="sidebar.js?v=1"></script>
 </head>
 <body>
+
+  <div class="app-shell">
+    <aside class="sidebar" id="app-sidebar"></aside>
+    <script>renderSidebar();</script>
+
+    <div class="main">
 
   <!-- ═══════════════════════════════════════ TOP HEADER ═══════════════════════════════════════ -->
   <header class="top-header" id="app-header"></header>
   <script>renderTopHeader();</script>
 
-  <!-- ═══════════════════════════════════════ NAV BAR ═══════════════════════════════════════ -->
-  <nav class="dept-nav">
-    <div class="nav-inner">
-      <button class="nav-btn active" data-dept="summary" onclick="switchDept('summary')" style="background:var(--navy-light);border-color:rgba(255,255,255,.3);font-weight:700;">
-        <i data-lucide="layout-dashboard" class="nav-icon"></i> Plant Summary
-      </button>
-      <div class="nav-divider"></div>
-      <button class="nav-btn" data-dept="ei" onclick="switchDept('ei')">
-        <i data-lucide="zap" class="nav-icon"></i> E &amp; I
-      </button>
-      <button class="nav-btn" data-dept="production" onclick="switchDept('production')">
-        <i data-lucide="factory" class="nav-icon"></i> Production
-      </button>
-      <button class="nav-btn" data-dept="mines" onclick="switchDept('mines')">
-        <i data-lucide="layers" class="nav-icon"></i> Mines
-      </button>
-      <button class="nav-btn" data-dept="mechanical" onclick="switchDept('mechanical')">
-        <i data-lucide="wrench" class="nav-icon"></i> Mechanical
-      </button>
-      <button class="nav-btn" data-dept="powerplant" onclick="switchDept('powerplant')">
-        <i data-lucide="cog" class="nav-icon"></i> Power Plant
-      </button>
-      <button class="nav-btn" data-dept="packing" onclick="switchDept('packing')">
-        <i data-lucide="package" class="nav-icon"></i> Packing Plant
-      </button>
-      <button class="nav-btn" data-dept="stores" onclick="switchDept('stores')">
-        <i data-lucide="warehouse" class="nav-icon"></i> Stores
-      </button>
-      <button class="nav-btn" data-dept="minesworkshop" onclick="switchDept('minesworkshop')">
-        <i data-lucide="truck" class="nav-icon"></i> Mines Workshop
-      </button>
-      <div class="nav-divider"></div>
-      <button class="nav-btn secondary" onclick="window.print()">
-        <i data-lucide="printer" class="nav-icon"></i> Print / PDF
-      </button>
-    </div>
-  </nav>
-
   <!-- ═══════════════════════════════════════ FILTER BAR ═══════════════════════════════════════ -->
   <section class="filter-bar">
     <div class="filter-inner">
       <div class="filter-group">
-        <div class="filter-card">
-          <label>Department</label>
-          <select id="dept-select" onchange="syncDeptSelect()">
-            <option value="summary">— Executive Summary —</option>
-            <option value="ei">Electrical &amp; Instrumentation</option>
-            <option value="production">Production</option>
-            <option value="mines">Mines</option>
-            <option value="mechanical">Mechanical</option>
-            <option value="powerplant">Power Plant</option>
-            <option value="packing">Packing Plant</option>
-            <option value="stores">Stores</option>
-            <option value="minesworkshop">Mines Workshop</option>
-          </select>
-        </div>
         <div class="filter-card">
           <label>Month</label>
           <select id="month-select" onchange="applyFilters()">
@@ -113,6 +68,10 @@
         <button class="fill-monthly-btn" onclick="openMonthlyModal()">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           Fill Monthly Data
+        </button>
+        <button class="print-btn" onclick="window.print()" title="Print / PDF">
+          <i data-lucide="printer" style="width:13px;height:13px;"></i>
+          Print / PDF
         </button>
       </div>
     </div>
@@ -584,7 +543,7 @@
           <div class="sc-chip-status" id="sc-lbl-production">—</div>
         </div>
         <div class="sc-chip" data-dept="mines"        onclick="switchDept('mines')">
-          <div class="sc-chip-name">Mines</div>
+          <div class="sc-chip-name">Quarry</div>
           <div class="sc-chip-pct" id="sc-pct-mines">—</div>
           <div class="sc-chip-bar" id="sc-bar-mines"></div>
           <div class="sc-chip-status" id="sc-lbl-mines">—</div>
@@ -1130,13 +1089,13 @@
             <tr class="section-row"><td colspan="19">FINANCIAL</td></tr>
 
             <tr class="data-row not-achieved-row">
-              <td>Mines Maintenance Cost</td><td>TSH/TON OF RM</td><td class="sign">&lt;</td><td class="target">175</td>
+              <td>Quarry Maintenance Cost</td><td>TSH/TON OF RM</td><td class="sign">&lt;</td><td class="target">175</td>
               <td class="actual red">194</td><td></td>
               <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>198</td><td>194</td><td></td>
               <td class="status not-tag">Not Achieved</td>
             </tr>
             <tr class="data-row not-achieved-row">
-              <td>Mines Operational Cost</td><td>TSH/TON OF RM</td><td class="sign">&lt;</td><td class="target">4,350</td>
+              <td>Quarry Operational Cost</td><td>TSH/TON OF RM</td><td class="sign">&lt;</td><td class="target">4,350</td>
               <td class="actual red">4,388</td><td></td>
               <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>4,497</td><td>4,388</td><td></td>
               <td class="status not-tag">Not Achieved</td>
@@ -1987,6 +1946,9 @@
   </footer>
   <div class="brand-accent-bar"></div>
 
+    </div><!-- /.main -->
+  </div><!-- /.app-shell -->
+
   <script src="forms/api-client.js"></script>
   <script src="forms/offline-queue.js"></script>
   <script src="forms/client-errors.js"></script>
@@ -2005,7 +1967,7 @@
     var FORMS = [
       { id: 'production',   label: 'Production',   url: 'daily-report.html' },
       { id: 'power-plant',  label: 'CPP',           url: 'power-plant-report.html' },
-      { id: 'mines',        label: 'Mines',         url: 'mines-report.html' },
+      { id: 'mines',        label: 'Quarry',        url: 'mines-report.html' },
       { id: 'dispatch',     label: 'Dispatch',      url: 'forms/dispatch-form.html' },
       { id: 'stoppage',     label: 'Stoppages',     url: 'forms/stoppage-form.html' },
       { id: 'quality',      label: 'Quality',       url: 'forms/quality-form.html' },

@@ -521,33 +521,6 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
       background:#F1F5F9; color:#475569; border:1px solid #E2E8F0;
     }
 
-    /* ── Daily nav zone labels ── */
-    .nav-btn.fill-tab {
-      background:rgba(244,149,69,.13);
-      border-left:3px solid #F49545;
-    }
-    .nav-btn.fill-tab:hover {
-      background:rgba(244,149,69,.22);
-    }
-    .nav-btn.fill-tab.active {
-      background:var(--orange) !important;
-      border-left-color:#fff !important;
-    }
-    .nav-btn.view-tab {
-      background:rgba(148,163,184,.08);
-      border-left:3px solid rgba(148,163,184,.35);
-      opacity:.78;
-    }
-    .nav-btn.view-tab:hover {
-      background:rgba(148,163,184,.16);
-      opacity:1;
-    }
-    .nav-btn.view-tab.active {
-      background:var(--navy-light) !important;
-      border-left-color:rgba(148,163,184,.6) !important;
-      opacity:1;
-    }
-
     /* ── Audit pagination bar ── */
     .audit-pagination {
       display:flex; align-items:center; justify-content:center; gap:12px;
@@ -765,22 +738,14 @@ function applyKPIPermissions() {
   const p = _getPerms();
   const depts = p.kpi?.depts || [];
 
+  /* The sidebar (sidebar.js) already only ever renders departments this
+     role can view, so nothing to hide there. The Executive Summary's
+     .sc-chip cross-department scorecard is a second, independent way to
+     reach a department view, still needs the same filtering. */
   if (depts !== 'all' && Array.isArray(depts)) {
-    document.querySelectorAll('[data-dept]').forEach(btn => {
-      const dept = btn.dataset.dept;
-      if (!depts.includes(dept)) btn.style.display = 'none';
+    document.querySelectorAll('.sc-chip[data-dept]').forEach(chip => {
+      if (!depts.includes(chip.dataset.dept)) chip.style.display = 'none';
     });
-
-    /* The "Department" dropdown (#dept-select) is a second, independent
-       way to reach a department view and was not being filtered — a role
-       could bypass the hidden nav buttons above just by using the select.
-       Strip out any option this role isn't allowed to view. */
-    const deptSelect = document.getElementById('dept-select');
-    if (deptSelect) {
-      Array.from(deptSelect.options).forEach(opt => {
-        if (!depts.includes(opt.value)) opt.remove();
-      });
-    }
   }
 
   refreshFillButtonVisibility();
@@ -836,85 +801,20 @@ const _DAILY_ACCESS = {
 const _DAILY_NAV_ITEMS = [
   { page:'daily-report.html',       label:'Production',   icon:'factory',   hRoot:'daily-report.html',       hForm:'../daily-report.html' },
   { page:'power-plant-report.html', label:'Power Plant',  icon:'zap',       hRoot:'power-plant-report.html', hForm:'../power-plant-report.html' },
-  { page:'mines-report.html',       label:'Mines',        icon:'pickaxe',   hRoot:'mines-report.html',       hForm:'../mines-report.html' },
+  { page:'mines-report.html',       label:'Quarry',       icon:'pickaxe',   hRoot:'mines-report.html',       hForm:'../mines-report.html' },
   { page:'stoppage-form.html',      label:'Stoppages',    icon:'alert-triangle', hRoot:'forms/stoppage-form.html', hForm:'stoppage-form.html' },
   { page:'power-form.html',         label:'Power Cons.',  icon:'activity',  hRoot:'forms/power-form.html',    hForm:'power-form.html' },
   { page:'dispatch-form.html',      label:'Dispatch & SO', icon:'truck',    hRoot:'forms/dispatch-form.html', hForm:'dispatch-form.html' },
   { page:'materials-form.html',     label:'Raw Materials', icon:'package',  hRoot:'forms/materials-form.html', hForm:'materials-form.html' },
+  /* These 3 were real, submittable formTypes (see _FORM_TYPE_ACCESS /
+     _STANDALONE_FORM_TYPE below) but were never in this catalogue, so
+     buildDailyNav()'s bar — and now the sidebar's Daily Reports group —
+     never linked to them. Added so the nav actually covers every
+     screen a role can reach. */
+  { page:'quality-form.html',       label:'Quality / Lab', icon:'flask-conical', hRoot:'forms/quality-form.html', hForm:'quality-form.html' },
+  { page:'limestone-form.html',     label:'Limestone %',   icon:'mountain',      hRoot:'forms/limestone-form.html', hForm:'limestone-form.html' },
+  { page:'pile-quality-form.html',  label:'Pile Quality',  icon:'layers-3',      hRoot:'forms/pile-quality-form.html', hForm:'pile-quality-form.html' },
 ];
-
-function buildDailyNav() {
-  const navInner = document.querySelector('.dept-nav .nav-inner');
-  if (!navInner) return;
-  const user = getCurrentUser();
-  if (!user) return;
-
-  const access      = _DAILY_ACCESS[user.role] || { edit:[], nav:[] };
-  const inForms     = window.location.pathname.includes('/forms/');
-  const currentPage = window.location.pathname.split('/').pop() || 'daily-report.html';
-
-  const visible = access.nav === 'all'
-    ? _DAILY_NAV_ITEMS
-    : _DAILY_NAV_ITEMS.filter(it => access.nav.includes(it.page));
-
-  /* A nav item belongs in the FILL zone if the role can edit it — hub pages
-     via access.edit (page-filename keyed), standalone forms/*.html pages via
-     their formType in _FORM_TYPE_ACCESS (same rule applyDailyPermissions uses
-     to decide edit vs view-only on the page itself). */
-  const formTypes  = _FORM_TYPE_ACCESS[user.role] || [];
-  const canFill    = it => access.edit.includes(it.page) ||
-                          formTypes.includes(_STANDALONE_FORM_TYPE[it.page]);
-  const fillItems = visible.filter(it => canFill(it));
-  const viewItems = visible.filter(it => !canFill(it));
-
-  function btn(item, isFill) {
-    const href   = inForms ? item.hForm : item.hRoot;
-    const active = item.page === currentPage;
-    const zone   = isFill ? 'fill-tab' : 'view-tab';
-    const aStyle = active
-      ? (isFill
-          ? 'background:var(--orange);color:white;border-color:var(--orange);font-weight:700;'
-          : 'background:var(--navy-light);border-color:rgba(255,255,255,.3);font-weight:700;')
-      : '';
-    const click = active ? '' : `onclick="location.href='${href}'"`;
-    return `<button class="nav-btn ${zone}${active?' active':''}" ${click} style="${aStyle}">` +
-           `<i data-lucide="${item.icon}" class="nav-icon"></i> ${item.label}</button>`;
-  }
-
-  let html = '';
-
-  if (fillItems.length) {
-    fillItems.forEach(it => { html += btn(it, true); });
-    html += '<div class="nav-divider"></div>';
-  }
-
-  if (viewItems.length) {
-    viewItems.forEach(it => { html += btn(it, false); });
-    html += '<div class="nav-divider"></div>';
-  }
-
-  html += `<button class="nav-btn secondary" onclick="window.print()"><i data-lucide="printer" class="nav-icon"></i> Print / PDF</button>`;
-
-  navInner.innerHTML = html;
-  if (window.lucide && typeof window.lucide.createIcons === 'function') {
-    window.lucide.createIcons();
-  }
-}
-
-/* Auto-build the daily nav, but only on actual daily-report pages.
-   index.html reuses the same .dept-nav/.nav-inner markup for its 9
-   KPI department buttons — buildDailyNav() must never touch that. */
-function _isDailyReportPage() {
-  const path = window.location.pathname;
-  const page = path.split('/').pop() || '';
-  const rootDailyPages = ['daily-report.html', 'power-plant-report.html', 'mines-report.html'];
-  return path.includes('/forms/') || rootDailyPages.includes(page);
-}
-document.addEventListener('DOMContentLoaded', function () {
-  if (_isDailyReportPage() && document.querySelector('.dept-nav .nav-inner') && getCurrentUser()) {
-    buildDailyNav();
-  }
-});
 
 /* ══════════════════════════════════════════════════════════════════════
    FORM-TYPE ACCESS — which roles may SUBMIT which formType (daily_reports
@@ -967,9 +867,6 @@ function applyDailyPermissions() {
   const canEditPage = standaloneFormType
     ? (_FORM_TYPE_ACCESS[role] || []).includes(standaloneFormType)
     : access.edit.includes(currentPage);
-
-  /* ── 1. Build role-aware split nav (FILL | VIEW ONLY) ──────────── */
-  buildDailyNav();
 
   /* ── 1b. Show inline-edit buttons only to the owning department ──── */
   const _IE_BTN_ROLES = {

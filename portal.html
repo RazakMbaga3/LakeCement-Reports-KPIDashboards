@@ -7,7 +7,9 @@
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
-  <script src="auth.js?v=9"></script>
+  <script src="auth.js?v=10"></script>
+  <script src="sidebar.js?v=1"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
     /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        PORTAL HOME — page styles
@@ -222,6 +224,12 @@
 </head>
 <body>
 
+<div class="app-shell">
+  <aside class="sidebar" id="app-sidebar"></aside>
+  <script>renderSidebar();</script>
+
+  <div class="main">
+
 <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• HEADER â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <header class="top-header" id="app-header"></header>
 <script>renderTopHeader();</script>
@@ -244,6 +252,9 @@
 <footer class="portal-footer">
   Lake Cement Ltd &nbsp;·&nbsp; Operations MIS &nbsp;·&nbsp; <span id="portal-year"></span>
 </footer>
+
+  </div>
+</div>
 
 <script src="portal.js?v=2"></script>
 </body>

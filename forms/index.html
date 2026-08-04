@@ -7,7 +7,8 @@
   <link rel="icon" type="image/png" href="../favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
-  <script src="../auth.js?v=9"></script>
+  <script src="../auth.js?v=10"></script>
+  <script src="../sidebar.js?v=1"></script>
   <link rel="stylesheet" href="forms.css" />
   <style>
     /* ── Status board ───────────────────────────────────────────────── */
@@ -128,27 +129,15 @@
 </head>
 <body>
 
+<div class="app-shell">
+  <aside class="sidebar" id="app-sidebar"></aside>
+  <script>renderSidebar();</script>
+
+  <div class="main">
+
 <!-- ══════════════════ HEADER ══════════════════ -->
 <header class="top-header" id="app-header"></header>
 <script>renderTopHeader();</script>
-
-<!-- ══════════════════ NAV ══════════════════ -->
-<nav class="dept-nav">
-  <div class="nav-inner">
-    <span class="nav-label">DAILY REPORTS</span>
-    <button class="nav-btn" onclick="location.href='../daily-report.html'"><i data-lucide="factory" class="nav-icon"></i> Production</button>
-    <button class="nav-btn" onclick="location.href='../power-plant-report.html'"><i data-lucide="zap" class="nav-icon"></i> Power Plant (CPP)</button>
-    <button class="nav-btn" onclick="location.href='../mines-report.html'"><i data-lucide="pickaxe" class="nav-icon"></i> Mines</button>
-    <button class="nav-btn" onclick="location.href='dispatch-form.html'"><i data-lucide="truck" class="nav-icon"></i> Dispatch</button>
-    <button class="nav-btn" onclick="location.href='stoppage-form.html'"><i data-lucide="alert-triangle" class="nav-icon"></i> Stoppages</button>
-    <button class="nav-btn" onclick="location.href='quality-form.html'"><i data-lucide="flask-conical" class="nav-icon"></i> Quality</button>
-    <button class="nav-btn" onclick="location.href='materials-form.html'"><i data-lucide="package" class="nav-icon"></i> Materials</button>
-    <button class="nav-btn" onclick="location.href='power-form.html'"><i data-lucide="activity" class="nav-icon"></i> Power Cons.</button>
-    <button class="nav-btn" onclick="location.href='pile-quality-form.html'"><i data-lucide="layers" class="nav-icon"></i> Pile Quality</button>
-    <div class="nav-divider"></div>
-    <button class="nav-btn active"><i data-lucide="layout-grid" class="nav-icon"></i> Status Board</button>
-  </div>
-</nav>
 
 <!-- ══════════════════ MAIN ══════════════════ -->
 <main style="flex:1;padding-bottom:48px">
@@ -212,10 +201,10 @@
     <a href="../mines-report.html" class="fc-sm">
       <div class="fc-sm-top">
         <div class="fc-sm-icon"><i data-lucide="pickaxe"></i></div>
-        <div class="fc-sm-name">Mines</div>
+        <div class="fc-sm-name">Quarry</div>
       </div>
       <div class="fc-sm-desc">Material movement matrix — blasting, hauling, overburden removal, contractor records.</div>
-      <div class="fc-sm-owner">Mines Engineer / Supervisor</div>
+      <div class="fc-sm-owner">Quarry Engineer / Supervisor</div>
     </a>
 
     <a href="dispatch-form.html" class="fc-sm">
@@ -269,7 +258,7 @@
         <div class="fc-sm-name">Pile Quality</div>
       </div>
       <div class="fc-sm-desc">Hourly CaO / MgO readings, trip reconciliation, grade summary (HG/LG) and MTD limestone qty.</div>
-      <div class="fc-sm-owner">QC / Mines Chemist</div>
+      <div class="fc-sm-owner">QC / Quarry Chemist</div>
     </a>
 
   </div>
@@ -281,6 +270,9 @@
   <span>Daily Operations Status &mdash; <span id="footer-date"></span></span>
 </footer>
 <div class="brand-accent-bar"></div>
+
+  </div><!-- /.main -->
+</div><!-- /.app-shell -->
 
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>
@@ -305,13 +297,13 @@ _setText('sb-date-badge', _todayShort);
 const FORMS = [
   { id:'production',  name:'Production',       icon:'factory',        href:'../daily-report.html',       owner:'Production Head' },
   { id:'power-plant', name:'Power Plant (CPP)', icon:'zap',            href:'../power-plant-report.html', owner:'CPP Officer' },
-  { id:'mines',       name:'Mines',             icon:'pickaxe',        href:'../mines-report.html',       owner:'Mines Engineer' },
+  { id:'mines',       name:'Quarry',            icon:'pickaxe',        href:'../mines-report.html',       owner:'Quarry Engineer' },
   { id:'dispatch',    name:'Dispatch',          icon:'truck',          href:'dispatch-form.html',         owner:'Sales &amp; Packing Head' },
   { id:'stoppage',    name:'Stoppages',         icon:'alert-triangle', href:'stoppage-form.html',         owner:'P&amp;M Head' },
   { id:'quality',     name:'Quality / Lab',     icon:'flask-conical',  href:'quality-form.html',          owner:'QC Manager' },
   { id:'materials',   name:'Raw Materials',     icon:'package',        href:'materials-form.html',        owner:'Purchase &amp; Stores' },
   { id:'power-cons',  name:'Power Consumption', icon:'activity',       href:'power-form.html',            owner:'P&amp;M Head' },
-  { id:'pile-quality',name:'Pile Quality',      icon:'layers',         href:'pile-quality-form.html',     owner:'QC / Mines Chemist' },
+  { id:'pile-quality',name:'Pile Quality',      icon:'layers',         href:'pile-quality-form.html',     owner:'QC / Quarry Chemist' },
 ];
 
 const NS = 'nyati';

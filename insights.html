@@ -7,7 +7,8 @@
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
-  <script src="auth.js?v=9"></script>
+  <script src="auth.js?v=10"></script>
+  <script src="sidebar.js?v=1"></script>
   <script src="forms/date-picker.js"></script>
   <style>
     .in-bar {
@@ -44,6 +45,12 @@
   </style>
 </head>
 <body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="app-sidebar"></aside>
+  <script>renderSidebar();</script>
+
+  <div class="main">
 
 <header class="top-header" id="app-header"></header>
 <script>renderTopHeader();</script>
@@ -136,6 +143,9 @@
   <span id="footer-date"></span>
 </footer>
 <div class="brand-accent-bar"></div>
+
+  </div><!-- /.main -->
+</div><!-- /.app-shell -->
 
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <script>

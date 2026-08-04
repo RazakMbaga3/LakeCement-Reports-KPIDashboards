@@ -7,7 +7,8 @@
   <link rel="icon" type="image/png" href="../favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
-  <script src="../auth.js?v=9"></script>
+  <script src="../auth.js?v=10"></script>
+  <script src="../sidebar.js?v=1"></script>
   <script src="date-picker.js"></script>
   <link rel="stylesheet" href="forms.css" />
   <style>
@@ -56,12 +57,15 @@
 </head>
 <body>
 
+<div class="app-shell">
+  <aside class="sidebar" id="app-sidebar"></aside>
+  <script>renderSidebar();</script>
+
+  <div class="main">
+
 <!-- ══════════════════ HEADER ══════════════════ -->
 <header class="top-header" id="app-header"></header>
 <script>renderTopHeader();</script>
-
-<!-- ══════════════════ NAV ══════════════════ -->
-<nav class="dept-nav"><div class="nav-inner"></div></nav>
 
 <!-- ══════════════════ TOOLBAR ══════════════════ -->
 <div class="toolbar">
@@ -77,7 +81,7 @@
   <div class="tb-sep"></div>
   <div class="tb-group">
     <span class="tb-lbl">Prepared By</span>
-    <input type="text" class="tb-ctl" data-field="prepared_by" placeholder="QC / Mines Chemist…" style="min-width:160px;width:auto" />
+    <input type="text" class="tb-ctl" data-field="prepared_by" placeholder="QC / Quarry Chemist…" style="min-width:160px;width:auto" />
   </div>
   <div class="tb-sep"></div>
   <span class="rpt-pill">DRAFT</span>
@@ -713,7 +717,7 @@
         <input type="text" placeholder="Name &amp; signature" />
       </div>
       <div class="sign-slot">
-        <label>Mines / Production Manager</label>
+        <label>Quarry / Production Manager</label>
         <input type="text" placeholder="Name &amp; signature" />
       </div>
     </div>
@@ -738,8 +742,10 @@
     const now = new Date();
     const opts = { weekday:'short', day:'2-digit', month:'short', year:'numeric' };
     const s = now.toLocaleDateString('en-GB', opts);
-    document.getElementById('live-date').textContent = s;
-    document.getElementById('footer-date').textContent = s;
+    ['live-date','footer-date'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = s;
+    });
   })();
 
   // CaO out-of-spec auto-highlighting
@@ -812,6 +818,9 @@ initKpiLive([
     target:45.0, sign:'>=', targetLabel:'Spec: ≥ 45.00%' }
 ]);
 </script>
+  </div><!-- /.main -->
+</div><!-- /.app-shell -->
+
 </body>
 </html>
 

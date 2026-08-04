@@ -76,13 +76,10 @@ function switchDept(dept) {
   document.querySelectorAll('.dept-section').forEach(s => s.classList.add('hidden'));
   document.getElementById('dept-' + dept).classList.remove('hidden');
 
-  // update nav buttons
-  document.querySelectorAll('.nav-btn[data-dept]').forEach(b => {
+  // update sidebar nav rows
+  document.querySelectorAll('.sb-item[data-dept]').forEach(b => {
     b.classList.toggle('active', b.dataset.dept === dept);
   });
-
-  // sync dropdown
-  document.getElementById('dept-select').value = dept;
 
   // update context bar
   const m = DEPT_META[dept];
@@ -103,11 +100,6 @@ function switchDept(dept) {
     const yr =  document.getElementById('year-select').value;
     refreshCompletenessBadge(dept, mo, yr);
   }
-}
-
-/* ─── sync dept dropdown → nav ─────────────────────────────── */
-function syncDeptSelect() {
-  switchDept(document.getElementById('dept-select').value);
 }
 
 /* ─── apply month / year filters ───────────────────────────── */
@@ -343,6 +335,11 @@ function setDefaultPeriod() {
 document.addEventListener('DOMContentLoaded', () => {
   setDates();
   setDefaultPeriod();
-  switchDept('summary');
+  // Land on the department requested by a sidebar link from another page
+  // (e.g. index.html?dept=ei), falling back to Executive Summary — same
+  // rule sidebar.js uses to compute its own initial active row.
+  const requested = new URLSearchParams(location.search).get('dept');
+  const canView = typeof canViewKPIDept === 'function' ? canViewKPIDept : () => false;
+  switchDept(requested && canView(requested) ? requested : 'summary');
   applyFilters();
 });

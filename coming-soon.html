@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement — Coming Soon</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="auth.js?v=10"></script>
+  <script src="sidebar.js?v=1"></script>
+  <style>
+    body { display:flex; flex-direction:column; min-height:100vh; background:var(--off-white); }
+    .cs-wrap {
+      flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; padding:60px 24px;
+    }
+    .cs-icon {
+      width:64px; height:64px; border-radius:16px; background:var(--off-white);
+      border:1.5px solid var(--border); display:flex; align-items:center; justify-content:center;
+      color:var(--navy); margin-bottom:20px;
+    }
+    .cs-icon svg { width:30px; height:30px; }
+    .cs-title { font-size:20px; font-weight:800; color:var(--navy); margin-bottom:8px; }
+    .cs-sub { font-size:13px; color:var(--text-muted); max-width:420px; line-height:1.6; }
+    .cs-badge {
+      margin-top:18px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.8px;
+      background:var(--section-bg); color:var(--text-muted); border:1px solid var(--border);
+      border-radius:20px; padding:5px 14px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="app-sidebar"></aside>
+  <script>renderSidebar();</script>
+
+  <div class="main">
+
+<header class="top-header" id="app-header"></header>
+<script>renderTopHeader();</script>
+
+<div class="cs-wrap">
+  <div class="cs-icon" id="cs-icon"></div>
+  <div class="cs-title" id="cs-title">Coming Soon</div>
+  <div class="cs-sub" id="cs-sub">This module is being built and will appear here once it's ready.</div>
+  <div class="cs-badge">In Development</div>
+</div>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+  </div><!-- /.main -->
+</div><!-- /.app-shell -->
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  lucide.createIcons();
+  requireAuth();
+  renderUserHeader();
+
+  const MODULES = {
+    sales:     { title: 'Sales', sub: 'Sales orders, invoicing and revenue reporting — sourced from Odoo once that integration is live.',
+                 icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>' },
+    purchases: { title: 'Purchases', sub: 'Purchase orders, supplier tracking and procurement reporting — sourced from Odoo once that integration is live.',
+                 icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 11H6L5 9z"/>' },
+  };
+
+  const key = new URLSearchParams(location.search).get('m');
+  const m = MODULES[key];
+  if (m) {
+    document.getElementById('cs-title').textContent = m.title + ' — Coming Soon';
+    document.getElementById('cs-sub').textContent = m.sub;
+    document.getElementById('cs-icon').innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">' + m.icon + '</svg>';
+  }
+</script>
+</body>
+</html>

@@ -7,7 +7,8 @@
   <link rel="icon" type="image/png" href="../favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
-  <script src="../auth.js?v=9"></script>
+  <script src="../auth.js?v=10"></script>
+  <script src="../sidebar.js?v=1"></script>
   <script src="date-picker.js"></script>
   <link rel="stylesheet" href="forms.css" />
   <style>
@@ -28,12 +29,15 @@
 </head>
 <body>
 
+<div class="app-shell">
+  <aside class="sidebar" id="app-sidebar"></aside>
+  <script>renderSidebar();</script>
+
+  <div class="main">
+
 <!-- ══════════════════ HEADER ══════════════════ -->
 <header class="top-header" id="app-header"></header>
 <script>renderTopHeader();</script>
-
-<!-- ══════════════════ NAV ══════════════════ -->
-<nav class="dept-nav"><div class="nav-inner"></div></nav>
 
 <!-- ══════════════════ TOOLBAR ══════════════════ -->
 <div class="toolbar">
@@ -401,6 +405,9 @@ recalc();
 <script src="collapsible.js"></script>
 <script src="excel-import.js"></script>
 <script src="excel-export.js"></script>
+
+  </div><!-- /.main -->
+</div><!-- /.app-shell -->
 
 </body>
 </html>
