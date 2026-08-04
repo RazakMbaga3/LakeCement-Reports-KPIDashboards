@@ -163,6 +163,23 @@ app.use('/api/client-errors', rateLimit({
     });
     logger.info(`watchdog scheduled (${spec})`);
   }
+
+  // Odoo pull (Phase 4, scaffolding only — see services/odooSync.js). Inert
+  // until ODOO_URL is set AND at least one pull is added to that file's
+  // PULLS list; today it will just log "no pulls configured" every run.
+  if (process.env.ODOO_URL && process.env.ODOO_SYNC_CRON !== 'off') {
+    const { runOdooSync } = require('./services/odooSync');
+    const spec = process.env.ODOO_SYNC_CRON || '0 5 * * *'; // 05:00, ahead of the 06:00 digest
+    cron.schedule(spec, async () => {
+      try {
+        const r = await runOdooSync();
+        logger.info({ ran: r.ran }, 'odoo sync run');
+      } catch (err) {
+        logger.error({ err }, 'odoo sync failed');
+      }
+    });
+    logger.info(`odoo sync scheduled (${spec})`);
+  }
 }
 
 // ── HEALTH CHECK ─────────────────────────────────────────────

@@ -6,9 +6,11 @@
                         backup stale)
           'down'      — the database is unreachable; the app cannot work
 
-  Odoo sync age joins these checks when Phase 4 lands; until then it
-  reports 'not_configured'. Backup freshness activates once BACKUP_DIR is
-  set (Phase 7).
+  Odoo check is config-presence only (see checkOdoo below) — reports
+  'not_configured' until ODOO_URL is set; real connectivity is checked
+  separately by GET /api/monitor/odoo/test so a flaky Odoo link can't turn
+  every health poll 'degraded'. Backup freshness activates once BACKUP_DIR
+  is set (Phase 7).
 */
 
 const fsp  = require('fs/promises');
@@ -37,6 +39,13 @@ async function checkDisk() {
   } catch (err) {
     return { ok: true, note: 'disk check unavailable: ' + err.message };
   }
+}
+
+function checkOdoo() {
+  // Config presence only — a live RPC call here would make every health
+  // poll depend on Odoo's own network/uptime. Use GET /api/monitor/odoo/test
+  // (or `npm run odoo:test`) to verify real connectivity.
+  return process.env.ODOO_URL ? { ok: true, note: 'configured, no pulls wired up yet' } : 'not_configured';
 }
 
 async function checkBackup() {
@@ -71,7 +80,7 @@ async function deepHealth() {
     version: '1.0.0',
     uptime_s: Math.round(process.uptime()),
     timestamp: new Date().toISOString(),
-    checks: { db: dbCheck, disk, backup, odoo: 'not_configured' },
+    checks: { db: dbCheck, disk, backup, odoo: checkOdoo() },
   };
 }
 

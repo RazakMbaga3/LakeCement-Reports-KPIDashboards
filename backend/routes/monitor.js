@@ -6,6 +6,8 @@
   GET  /api/monitor/alerts         → recent fired alerts (admin/md/it)
   POST /api/monitor/watchdog/run   → run the watchdog now; body {date?} to
                                      check a specific day (admin/md/it)
+  GET  /api/monitor/odoo/test      → Odoo connectivity check — version +
+                                     login, no data pulled (admin/md/it)
   POST /api/client-errors          → browser error reports (rate-limited in
                                      server.js; token optional — login page
                                      errors matter too)
@@ -20,6 +22,7 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 const { validate, z, zDate } = require('../middleware/validate');
 const { deepHealth }  = require('../services/health');
 const { runWatchdog } = require('../services/watchdog');
+const odoo    = require('../services/odooClient');
 const metrics = require('../services/metrics');
 
 const MONITOR_ROLES = ['admin', 'md', 'it'];
@@ -68,6 +71,19 @@ monitorRouter.post('/watchdog/run',
     try { res.json(await runWatchdog({ date: req.validated.body.date })); }
     catch (err) { next(err); }
   });
+
+/* Connectivity check only — version + login, never any plant data. Lets
+   ops confirm ODOO_URL/ODOO_DB/ODOO_USERNAME/ODOO_API_KEY work from the
+   Monitor page instead of SSHing into the server to run npm run odoo:test. */
+monitorRouter.get('/odoo/test', requireAuth, requireRole(...MONITOR_ROLES), async (req, res) => {
+  try {
+    const version = await odoo.version();
+    const uid = await odoo.authenticate();
+    res.json({ connected: true, version, uid });
+  } catch (err) {
+    res.status(503).json({ connected: false, error: err.message });
+  }
+});
 
 /* ── /api/client-errors ──────────────────────────────────────── */
 const clientErrorsRouter = express.Router();
