@@ -180,8 +180,9 @@ This same file is loaded by both the Node backend (`backend/services/formulaEngi
 
 ## 10. Deployment & environments
 
-- **Production (intended):** Windows server on the plant LAN. Node API runs as a native Windows service (`node-windows`, service name `LakeCementMIS`, port 5000, internal only). Nginx serves the static frontend and reverse-proxies `/api/*` to the Node service (`deploy/nginx.conf`). Config via `backend/.env` (never committed; template in `backend/.env.example`).
-- **Alternate/preview hosting:** Render.com, defined in `render.yaml` — managed Postgres + a Node web service, used for a publicly reachable preview build (`lake-cement-reports-kpi-dashboards.vercel.app` as the allowed CORS origin in that config).
+- **Production (current direction):** Cloud, under the **Odoo team's ownership** — per the Managing Director's latest direction, superseding the plant-LAN Windows-server plan this repo was originally built around. Target cloud platform, account, and setup ownership are still to be confirmed with the Odoo team (see §12); `render.yaml` already gives one working cloud-deployment path (managed Postgres + a Node web service) that can serve as a starting point.
+- **Originally planned (what the repo's Windows-specific tooling still assumes):** a server on the plant LAN, with the Node API running as a native Windows service (`node-windows`, service name `LakeCementMIS`, port 5000, internal only) behind Nginx (`deploy/nginx.conf`) serving the static frontend and reverse-proxying `/api/*`. `docs/RUNBOOK.md`'s service-install/backup steps describe this path. It hasn't been removed from the repo, but it is no longer the target — don't treat it as the plan without checking first.
+- **Existing hosted preview:** Render.com, defined in `render.yaml` — managed Postgres + a Node web service, currently used for a publicly reachable preview build (`lake-cement-reports-kpi-dashboards.vercel.app` as the allowed CORS origin in that config).
 - **Local development:** `run.bat` (one-click) or manual `cd backend && npm install && npm run migrate && npm run seed && npm run dev`, then open the HTML files directly in a browser (they call `http://localhost:5000/api`).
 - **Scheduled jobs** run in-process inside the same Node service via `node-cron`: morning KPI digest email (06:00), operational watchdog/alerting (every 15 min), nightly `pg_dump` backup (02:30).
 
@@ -215,3 +216,4 @@ This keeps Odoo as a read-only upstream source and the two databases fully decou
 2. For "Production Entry Raw Meal": what is the exact Odoo model/module name, and which fields hold the moisture-adjusted (dry-basis) consumption figures per material (limestone/clay/iron ore/sand)?
 3. Is mining tracked in a standard Odoo module, a custom module, or not in Odoo at all? (Needed to decide whether weighbridge-ticket import can become a live pull, or must stay manual.)
 4. For the other departments in scope (mechanical & electrical, HR, sales, logistics) — which are on standard Odoo apps (e.g. `hr`, `sale`, `stock`) vs. custom modules, so field-level mapping can be scoped per department rather than assumed.
+5. Now that production hosting is planned as cloud infrastructure under the Odoo team's ownership (§10): which cloud platform/account should this deploy to, and who sets up and administers that environment?
