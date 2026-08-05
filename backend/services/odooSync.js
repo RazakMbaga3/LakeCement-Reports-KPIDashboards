@@ -1,48 +1,69 @@
 /*
-  services/odooSync.js — scheduled pull from Odoo into lcl_mis (skeleton).
+  services/odooSync.js — scheduled pull from Odoo into lcl_mis.
 
-  No real pulls are wired up yet — the exact model/fields for either
-  confirmed target haven't been confirmed with the Odoo team. Use
-  `npm run odoo:test -- <model>` to discover a model's fields once
-  ODOO_URL/ODOO_DB/ODOO_USERNAME/ODOO_API_KEY are set in .env — see
-  docs/TECHNICAL_SPEC.md §11.
+  Two DIFFERENT Odoo connection types are in play here, deliberately not
+  unified into one client:
+    - odooClient.js: the generic Odoo External API (XML/JSON-RPC,
+      ODOO_URL/ODOO_DB/ODOO_USERNAME/ODOO_API_KEY, a real Odoo user login).
+      Not used by anything wired up yet.
+    - odooDispatchClient.js: a bespoke REST-ish controller the Odoo team
+      built specifically for this app (ODOO_DISPATCH_URL/
+      ODOO_DISPATCH_API_KEY, a single opaque key, form-encoded POST, no
+      Odoo user session at all). This is what dispatch-daily-summary uses.
+  A pull only needs to authenticate via whichever client it actually calls
+  — there is no longer a blanket "log into generic Odoo first" step, since
+  that would wrongly gate a dispatch-only pull behind XML-RPC credentials
+  nobody has issued.
 
-  Confirmed targets so far:
-    1. "Production Entry Raw Meal" — moisture-adjusted (wet→dry) raw
-       material consumption for limestone/clay/iron ore/sand.
-    2. Dispatch daily summary — REGULAR/BULKER/BIG BAG totals per cement
-       grade (the same shape forms/formula-registry.js's dispatch_reg_,
-       dispatch_blk_, dispatch_bag_, and dispatch_clinker facts already
-       use), one row per day. Explicitly scoped to the daily aggregate ONLY —
-       not individual sale orders, invoices, or truck-level dispatch
-       records. If Odoo can't hand back an already-aggregated daily view,
-       the pull still only stores the aggregated total per grade/channel/
-       day, never the underlying order lines.
+  Confirmed/wired targets:
+    1. Dispatch daily summary (services/odooDispatchSync.js) — already-
+       aggregated per (date, product_grade, dispatch_channel) totals,
+       mapped onto forms/dispatch-form.html's dispatch_reg_/dispatch_blk_/
+       dispatch_bag_ fields and upserted into daily_reports
+       (form_type='dispatch'). Feeds the standalone Dispatch report, NOT
+       the dashboard's "Despatch / Day" KPI (that's sourced from the
+       Production Report's CM-1 stock ledger since 2026-07-31 — see
+       forms/formula-registry.js). Each run re-pulls a short trailing
+       window (see DISPATCH_LOOKBACK_DAYS below) so a missed day self-
+       heals on the next run — upserts are idempotent.
+    2. "Production Entry Raw Meal" — moisture-adjusted (wet→dry) raw
+       material consumption for limestone/clay/iron ore/sand. Not yet
+       confirmed with the Odoo team; no pull written.
 
-  Once a dataset is confirmed:
-    1. add a dedicated typed table for it (mirror weighbridge_tickets —
-       schema.sql + a db/migrations/*.sql — keyed on Odoo's own record id,
-       NOT the JSONB daily_reports blob),
-    2. write a pull-and-upsert function and add it to PULLS below (see
-       routes/quarry.js's import handler for the upsert shape to follow),
-    3. flip that fact's `source` in forms/formula-registry.js from
-       'manual' to 'odoo', pointing it at the new table.
-
-  Scheduled in server.js on ODOO_SYNC_CRON whenever ODOO_URL is set (default
-  05:00 daily, off if ODOO_SYNC_CRON=off). Manual run: `npm run odoo:sync`.
+  Scheduled in server.js on ODOO_SYNC_CRON (default 05:00 daily, off if
+  ODOO_SYNC_CRON=off). Manual run: `npm run odoo:sync`, or for a specific
+  date range: `node scripts/odoo-dispatch-pull.js 2026-08-01 2026-08-05`.
 */
 
 const logger = require('./logger');
-const odoo   = require('./odooClient');
+const { pullDispatchDailySummary } = require('./odooDispatchSync');
+
+// How many trailing days each scheduled run re-pulls — wide enough that a
+// skipped/failed run (server down, Odoo unreachable) self-heals within a
+// few days without needing a manual backfill, cheap enough (a handful of
+// upserts) to run daily without concern.
+const DISPATCH_LOOKBACK_DAYS = 5;
+
+function isoDate(d) { return d.toISOString().slice(0, 10); }
+
+function dispatchLookbackRange() {
+  const to = new Date();
+  const from = new Date(to);
+  from.setDate(from.getDate() - (DISPATCH_LOOKBACK_DAYS - 1));
+  return { from: isoDate(from), to: isoDate(to) };
+}
 
 /* One entry per confirmed dataset: { name, run }. run() pulls + upserts and
    returns a small summary object (added/updated counts, date range, …). */
 const PULLS = [
+  {
+    name: 'dispatch-daily-summary',
+    run: () => {
+      const { from, to } = dispatchLookbackRange();
+      return pullDispatchDailySummary(from, to);
+    },
+  },
   // { name: 'raw-meal-consumption', run: pullRawMealConsumption },
-  // { name: 'dispatch-daily-summary', run: pullDispatchDailySummary },
-  //   Aggregate only — see "Dispatch daily summary" above. Do not extend
-  //   this to pull per-order/per-invoice rows even if it's easier than
-  //   asking Odoo for a pre-aggregated view.
 ];
 
 async function runOdooSync() {
@@ -50,8 +71,6 @@ async function runOdooSync() {
     logger.info('odoo sync: no pulls configured yet — skipping');
     return { ran: [], skipped: 'no pulls configured' };
   }
-
-  await odoo.authenticate(); // fail fast with one clear error if creds are bad
 
   const ran = [];
   for (const pull of PULLS) {

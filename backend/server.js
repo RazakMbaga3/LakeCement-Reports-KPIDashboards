@@ -166,10 +166,13 @@ app.use('/api/client-errors', rateLimit({
     logger.info(`watchdog scheduled (${spec})`);
   }
 
-  // Odoo pull (Phase 4, scaffolding only — see services/odooSync.js). Inert
-  // until ODOO_URL is set AND at least one pull is added to that file's
-  // PULLS list; today it will just log "no pulls configured" every run.
-  if (process.env.ODOO_URL && process.env.ODOO_SYNC_CRON !== 'off') {
+  // Odoo pull (Phase 4 — see services/odooSync.js). Two independent Odoo
+  // connections can each unlock this: ODOO_URL (generic XML-RPC connector,
+  // no pulls use it yet) or ODOO_DISPATCH_URL (the dispatch-report
+  // connector, wired up and pulling since 2026-08-05). Either one present
+  // is enough to schedule the job — odooSync.js's own PULLS list decides
+  // what actually runs.
+  if ((process.env.ODOO_URL || process.env.ODOO_DISPATCH_URL) && process.env.ODOO_SYNC_CRON !== 'off') {
     const { runOdooSync } = require('./services/odooSync');
     const spec = process.env.ODOO_SYNC_CRON || '0 5 * * *'; // 05:00, ahead of the 06:00 digest
     cron.schedule(spec, async () => {

@@ -20,6 +20,7 @@
     "docs:kpi": "node scripts/generate-kpi-reference.js",
     "odoo:test": "node scripts/odoo-test-connection.js",
     "odoo:sync": "node scripts/odoo-sync-once.js",
+    "odoo:dispatch-pull": "node scripts/odoo-dispatch-pull.js",
     "watchdog": "node scripts/watchdog-once.js",
     "backup": "node scripts/backup-once.js",
     "restore:drill": "node scripts/restore-drill.js",
