@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – Sales Dashboard</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="auth.js?v=10"></script>
+  <script src="sidebar.js?v=2"></script>
+  <script src="forms/sales-grades.js"></script>
+  <style>
+    .in-bar {
+      background: white; border-bottom: 1px solid var(--border);
+      position: sticky; top: var(--header-h, 68px); z-index: 80; box-shadow: var(--shadow-sm);
+    }
+    .in-bar-inner { display: flex; align-items: center; gap: 14px; padding: 10px 28px; flex-wrap: wrap; }
+    .in-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); }
+    .in-input {
+      padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--off-white); font-family: var(--font); font-size: 11px; font-weight: 600;
+      color: var(--navy); cursor: pointer;
+    }
+    .in-main { max-width: 1300px; margin: 0 auto; padding: 20px 28px 60px; }
+    .in-section-hdr { display: flex; align-items: center; gap: 8px; margin: 24px 0 12px; }
+    .in-section-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--navy); }
+    .in-section-sub { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+    .in-card { background: white; border: 1.5px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 16px; }
+    .in-card-title { font-size: 11px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+    .in-card-sub { font-size: 10.5px; color: var(--text-muted); margin-bottom: 10px; }
+    .in-chart-wrap { height: 260px; }
+    .in-empty { text-align: center; padding: 30px 20px; color: var(--text-muted); font-size: 11.5px; }
+
+    .sk-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    @media (max-width: 900px) { .sk-row { grid-template-columns: repeat(2, 1fr); } }
+    .sk-row-3 { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 700px) { .sk-row, .sk-row-3 { grid-template-columns: 1fr; } }
+
+    /* Grade-mix tiles — accent color per product line */
+    .grade-tile { border-left: 4px solid var(--border); padding-left: 10px; }
+    .grade-tile .sk-value { font-size: 22px; }
+    .grade-share-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin: 10px 0 4px; background: var(--section-bg); }
+
+    .cta-flash {
+      background: var(--orange); color: white; border: none; border-radius: 8px;
+      padding: 8px 16px; font-family: var(--font); font-size: 12px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; gap: 6px;
+    }
+    .cta-flash:hover { background: #D97F30; }
+
+    .target-source-chip {
+      font-size: 9px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 10px; background: var(--section-bg); color: var(--text-muted);
+    }
+    .target-source-chip.odoo { background: var(--green-bg); color: var(--green); }
+
+    .perf-table .div-row td { background: #F1F5FB; font-weight: 700; color: var(--navy); font-size: 11px; }
+    .perf-table .zone-row td:first-child { padding-left: 28px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="app-sidebar"></aside>
+  <script>renderSidebar();</script>
+
+  <div class="main">
+
+<header class="top-header" id="app-header"></header>
+<script>renderTopHeader();</script>
+
+<div class="in-bar">
+  <div class="in-bar-inner">
+    <span class="in-lbl">Period</span>
+    <select id="sd-month" class="in-input"></select>
+    <select id="sd-year" class="in-input"></select>
+    <span class="in-lbl" id="sd-source" style="margin-left:8px"></span>
+    <a href="forms/sales-projection-form.html" class="cta-flash" id="sd-flash-cta" style="margin-left:auto;text-decoration:none;display:none">
+      <i data-lucide="plus-circle" style="width:13px;height:13px"></i> Enter Today's Projection
+    </a>
+  </div>
+</div>
+
+<main class="in-main">
+
+  <div class="in-empty" id="sd-alert" style="display:none;background:#FFF3E0;border:1px solid #FDE68A;border-radius:10px;color:var(--orange);font-weight:600;padding:10px 16px;text-align:left;margin-bottom:16px"></div>
+
+  <!-- ── HERO ─────────────────────────────────────────────── -->
+  <div class="sk-row" id="sd-hero"></div>
+
+  <!-- ── GRADE MIX ────────────────────────────────────────── -->
+  <div class="in-section-hdr">
+    <span class="in-section-title">MTD Sales — Grade Mix</span>
+    <span class="in-section-sub">— all four product lines, actuals from Odoo</span>
+  </div>
+  <div class="in-card">
+    <div class="sk-row" id="sd-grades"></div>
+    <div class="grade-share-bar" id="sd-grade-bar"></div>
+  </div>
+
+  <!-- ── DAILY TREND ──────────────────────────────────────── -->
+  <div class="in-section-hdr">
+    <span class="in-section-title">Daily Sales Trend</span>
+    <span class="in-section-sub">— actual vs projected, this month</span>
+  </div>
+  <div class="in-card">
+    <div class="in-chart-wrap"><canvas id="chart-trend"></canvas></div>
+    <div class="in-empty" id="sd-trend-empty" style="display:none">No projections entered yet this month.</div>
+  </div>
+
+  <!-- ── COLLECTIONS ──────────────────────────────────────── -->
+  <div class="in-section-hdr">
+    <span class="in-section-title">Collection &amp; Outstanding</span>
+    <span class="in-section-sub">— from Odoo, month to date</span>
+  </div>
+  <div class="in-card">
+    <div class="sk-row sk-row-3" id="sd-collections"></div>
+  </div>
+
+  <!-- ── RECEIVABLES & PAYABLES ───────────────────────────── -->
+  <div class="in-section-hdr">
+    <span class="in-section-title">Receivables &amp; Payables</span>
+    <span class="in-section-sub">— pending Odoo mapping, see status on each tile</span>
+  </div>
+  <div class="in-card">
+    <div class="sk-row" id="sd-financials"></div>
+  </div>
+
+  <!-- ── TARGET VS ACHIEVEMENT ────────────────────────────── -->
+  <div class="in-section-hdr">
+    <span class="in-section-title">Target vs Achievement</span>
+    <span class="in-section-sub" id="sd-target-sub"></span>
+  </div>
+  <div class="in-card" id="sd-target-card"></div>
+
+  <!-- ── DIVISION / ZONE / OFFICER PERFORMANCE ────────────── -->
+  <div class="in-section-hdr">
+    <span class="in-section-title">Divisional Manager / Sales Officer / Zone Performance</span>
+    <span class="in-section-sub">— projected MT is manual entry; actual MT awaits Odoo officer attribution (Phase B)</span>
+  </div>
+  <div class="in-card">
+    <div class="tbl-scroll">
+      <table class="rt perf-table" style="min-width:760px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr">Division / Zone</th>
+            <th class="tl grp-hdr">Sales Officer / Manager</th>
+            <th class="grp-hdr">Projected MT</th>
+            <th class="grp-hdr">Target MT</th>
+            <th class="grp-hdr">Achievement %</th>
+          </tr>
+        </thead>
+        <tbody id="sd-performance"></tbody>
+      </table>
+    </div>
+    <div class="in-empty" id="sd-perf-empty" style="display:none">No sales territories configured yet.</div>
+  </div>
+
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span id="footer-date"></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+  </div><!-- /.main -->
+</div><!-- /.app-shell -->
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  lucide.createIcons();
+  requireAuth();
+  applySalesPermissions();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="forms/api-client.js"></script>
+<script src="forms/client-errors.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var ORANGE = '#F49545', NAVY = '#173158', GREEN = '#239557', RED = '#C62828', GRAY = '#9CA3AF';
+
+  function fmt(v) { return (v == null) ? '—' : v.toLocaleString(undefined, { maximumFractionDigits: 1 }); }
+  function pct(v) { return (v == null) ? '—' : v.toFixed(1) + '%'; }
+  function tzs(v) {
+    if (v == null) return '—';
+    if (Math.abs(v) >= 1e9) return 'TZS ' + (v / 1e9).toFixed(2) + 'B';
+    if (Math.abs(v) >= 1e6) return 'TZS ' + (v / 1e6).toFixed(1) + 'M';
+    return 'TZS ' + v.toLocaleString();
+  }
+  function achClass(pctVal) {
+    if (pctVal == null) return '';
+    return pctVal >= 100 ? 'on-track' : pctVal >= 80 ? 'watch' : 'concern';
+  }
+  /* Territory fields (division/zone/sales_officer/divisional_manager) are
+     admin-entered data, not user input from this page — but they're
+     rendered via innerHTML, so escape them anyway. No HTML-escape helper
+     exists elsewhere in this codebase; this one is scoped to this file. */
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+  }
+
+  /* ── Period selectors ─────────────────────────────────────────── */
+  var MONTHS = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+  var now = new Date();
+  var monthSel = document.getElementById('sd-month');
+  var yearSel  = document.getElementById('sd-year');
+  for (var m = 1; m <= 12; m++) {
+    var o = document.createElement('option'); o.value = m; o.textContent = MONTHS[m];
+    if (m === now.getMonth() + 1) o.selected = true;
+    monthSel.appendChild(o);
+  }
+  for (var y = now.getFullYear() - 1; y <= now.getFullYear() + 1; y++) {
+    var oy = document.createElement('option'); oy.value = y; oy.textContent = y;
+    if (y === now.getFullYear()) oy.selected = true;
+    yearSel.appendChild(oy);
+  }
+  monthSel.addEventListener('change', load);
+  yearSel.addEventListener('change', load);
+
+  if (typeof canEditSales === 'function' && canEditSales()) {
+    document.getElementById('sd-flash-cta').style.display = 'flex';
+  }
+
+  var trendChart = null;
+
+  function sk(opts) {
+    /* opts: {label, deptTag, value, unit, delta, target, pctVal, status,
+       cls: 'on-track'|'watch'|'concern'|'', pending: bool, pendingMsg} */
+    var cls = opts.pending ? 'sk-pending' : (opts.cls || '');
+    var bar = (opts.pctVal != null && !opts.pending)
+      ? '<div class="sk-bar"><div class="sk-bar-fill" style="width:' + Math.min(opts.pctVal, 100) + '%"></div></div>'
+      : '';
+    var foot = (opts.target != null || opts.pctVal != null)
+      ? '<div class="sk-foot"><span class="sk-tgt">' + (opts.target || '') + '</span><span class="sk-pct">' + (opts.pctVal != null ? opts.pctVal.toFixed(1) + '%' : '') + '</span></div>'
+      : '';
+    var status = opts.pending
+      ? '<div class="sk-status"><span class="sk-status-dot"></span> ' + (opts.pendingMsg || 'Not connected') + '</div>'
+      : (opts.status ? '<div class="sk-status"><span class="sk-status-dot"></span> ' + opts.status + '</div>' : '');
+    return '<div class="sk-card ' + cls + '">' +
+      '<div class="sk-top"><div class="sk-label">' + opts.label + '</div>' +
+        (opts.deptTag ? '<span class="sk-dept-tag">' + opts.deptTag + '</span>' : '') + '</div>' +
+      '<div class="sk-value-row"><span class="sk-value">' + (opts.pending ? '—' : opts.value) + '</span>' +
+        (opts.unit && !opts.pending ? '<span class="sk-unit">' + opts.unit + '</span>' : '') + '</div>' +
+      bar + foot + status +
+    '</div>';
+  }
+
+  function renderHero(d) {
+    var mtd = d.mtd, today = d.today;
+    var html = '';
+    html += sk({
+      label: 'MTD Sales', deptTag: 'Sales',
+      value: fmt(mtd.actual_mt), unit: 'MT',
+      pending: mtd.actual_mt == null, pendingMsg: 'Odoo ' + (d.sources.sales_volume === 'not_configured' ? 'not configured' : 'unreachable'),
+      target: mtd.target_mt ? fmt(mtd.target_mt) + ' MT target' : null,
+      pctVal: mtd.vs_target_pct, cls: achClass(mtd.vs_target_pct),
+      status: mtd.actual_mt != null ? mtd.days_elapsed + ' working days elapsed' : null,
+    });
+    html += sk({
+      label: 'Sales On Date', deptTag: 'Today',
+      value: fmt(today.actual_mt), unit: 'MT',
+      pending: today.actual_mt == null, pendingMsg: 'Odoo ' + (d.sources.sales_volume === 'not_configured' ? 'not configured' : 'unreachable'),
+      status: 'Projected today: ' + fmt(today.projected_mt) + ' MT',
+    });
+    html += sk({
+      label: 'Projected EOM', deptTag: 'Forecast',
+      value: fmt(mtd.projected_eom_mt), unit: 'MT',
+      pending: mtd.projected_eom_mt == null, pendingMsg: 'Needs Odoo MTD actual to compute',
+      target: mtd.target_mt ? fmt(mtd.target_mt) + ' MT target' : null,
+      status: mtd.daily_run_rate != null ? fmt(mtd.daily_run_rate) + ' MT/day run rate' : null,
+    });
+    html += sk({
+      label: 'Achievement vs Target', deptTag: 'MTD',
+      value: pct(mtd.vs_target_pct), unit: '',
+      pending: mtd.vs_target_pct == null,
+      pendingMsg: mtd.target_mt ? 'Awaiting Odoo actual' : 'No target set for this month',
+      cls: achClass(mtd.vs_target_pct),
+      status: mtd.mom_delta_pct != null ? (mtd.mom_delta_pct >= 0 ? '▲ ' : '▼ ') + Math.abs(mtd.mom_delta_pct).toFixed(1) + '% vs ' + d.period.prev_label : null,
+    });
+    document.getElementById('sd-hero').innerHTML = html;
+  }
+
+  function renderGrades(grades) {
+    var known = grades.filter(function (g) { return g.key !== 'unmatched'; });
+    var html = known.map(function (g) {
+      return '<div class="sk-card grade-tile ' + (g.mtd_actual_mt == null ? 'sk-pending' : '') + '" style="border-left-color:' + g.color + '">' +
+        '<div class="sk-top"><div class="sk-label">' + g.label + '</div><span class="sk-dept-tag">' + g.grade + '</span></div>' +
+        '<div class="sk-value-row"><span class="sk-value">' + (g.mtd_actual_mt == null ? '—' : fmt(g.mtd_actual_mt)) + '</span><span class="sk-unit">MT</span></div>' +
+        '<div class="sk-status"><span class="sk-status-dot"></span> ' + (g.share_pct == null ? 'Awaiting Odoo' : g.share_pct.toFixed(1) + '% of mix') + '</div>' +
+      '</div>';
+    }).join('');
+    document.getElementById('sd-grades').innerHTML = html;
+
+    var total = known.reduce(function (s, g) { return s + (g.mtd_actual_mt || 0); }, 0);
+    var barHtml = total > 0
+      ? known.map(function (g) {
+          var w = (g.mtd_actual_mt || 0) / total * 100;
+          return w > 0 ? '<div style="width:' + w + '%;background:' + g.color + '" title="' + g.label + ': ' + w.toFixed(1) + '%"></div>' : '';
+        }).join('')
+      : '';
+    document.getElementById('sd-grade-bar').innerHTML = barHtml;
+  }
+
+  function renderTrend(trend) {
+    var canvas = document.getElementById('chart-trend');
+    var empty = document.getElementById('sd-trend-empty');
+    var hasData = trend.some(function (t) { return t.projected > 0 || t.actual != null; });
+    if (!hasData) { empty.style.display = 'block'; canvas.style.display = 'none'; return; }
+    empty.style.display = 'none'; canvas.style.display = 'block';
+    if (trendChart) trendChart.destroy();
+    trendChart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: trend.map(function (t) { return t.date.slice(5); }),
+        datasets: [
+          { label: 'Projected', data: trend.map(function (t) { return t.projected; }), borderColor: '#cbd5e1', borderDash: [4, 3], borderWidth: 1.5, fill: false, tension: .3 },
+          { label: 'Actual', data: trend.map(function (t) { return t.actual; }), borderColor: ORANGE, backgroundColor: ORANGE + '22', borderWidth: 2.5, fill: true, tension: .3, spanGaps: true },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 9 } } },
+          y: { ticks: { font: { size: 9 } }, title: { display: true, text: 'MT', font: { size: 9 } } },
+        },
+      },
+    });
+  }
+
+  function renderCollections(c) {
+    var html;
+    if (!c.ok) {
+      html = ['MTD Collected', 'Outstanding', 'Collection Rate'].map(function (label) {
+        return sk({ label: label, pending: true, pendingMsg: c.message });
+      }).join('');
+    } else {
+      html = sk({ label: 'MTD Collected', value: tzs(c.total_collected_tzs), status: (c.invoice_count || 0) + ' invoices' })
+        + sk({ label: 'Outstanding', value: tzs(c.outstanding_tzs), cls: (c.collection_rate_pct || 0) >= 90 ? 'on-track' : 'watch' })
+        + sk({ label: 'Collection Rate', value: pct(c.collection_rate_pct), pctVal: c.collection_rate_pct, cls: achClass(c.collection_rate_pct) });
+    }
+    document.getElementById('sd-collections').innerHTML = html;
+  }
+
+  function renderFinancials(f) {
+    var labels = { received_uncollectable: 'Received Uncollectable', payable: 'Payable', advance: 'Advance', agewise_outstanding: 'Agewise Outstanding' };
+    var html = Object.keys(labels).map(function (key) {
+      var r = f[key];
+      return sk({ label: labels[key], pending: true, pendingMsg: r.message });
+    }).join('');
+    document.getElementById('sd-financials').innerHTML = html;
+  }
+
+  function renderTarget(targets, mtd) {
+    var sub = document.getElementById('sd-target-sub');
+    var chipCls = targets.source === 'odoo' ? 'odoo' : '';
+    var chipLabel = targets.source === 'odoo' ? 'TARGET SOURCE: ODOO' : 'TARGET SOURCE: MANUAL (INTERIM)';
+    sub.innerHTML = '— <span class="target-source-chip ' + chipCls + '">' + chipLabel + '</span>';
+
+    var card = document.getElementById('sd-target-card');
+    if (!mtd.target_mt) {
+      card.innerHTML = '<div class="in-empty">No target set for this month yet.</div>';
+      return;
+    }
+    var pctVal = mtd.vs_target_pct;
+    var color = pctVal == null ? GRAY : pctVal >= 100 ? GREEN : pctVal >= 80 ? ORANGE : RED;
+    card.innerHTML =
+      '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px">' +
+        '<span>' + (mtd.actual_mt == null ? 'Actual pending Odoo' : fmt(mtd.actual_mt) + ' MT actual') + '</span>' +
+        '<span style="font-weight:700;color:' + color + '">' + (pctVal != null ? pctVal.toFixed(1) + '%' : '—') + ' of ' + fmt(mtd.target_mt) + ' MT</span>' +
+      '</div>' +
+      '<div class="sk-bar" style="height:8px"><div class="sk-bar-fill" style="width:' + Math.min(pctVal || 0, 100) + '%;background:' + color + '"></div></div>';
+  }
+
+  function renderPerformance(perf) {
+    var tbody = document.getElementById('sd-performance');
+    var empty = document.getElementById('sd-perf-empty');
+    if (!perf.divisions.length) { empty.style.display = 'block'; tbody.innerHTML = ''; return; }
+    empty.style.display = 'none';
+    var html = '';
+    perf.divisions.forEach(function (div) {
+      html += '<tr class="div-row"><td>' + esc(div.division) + '</td><td>' + esc(div.divisional_manager || '—') + '</td>' +
+        '<td>' + fmt(div.projected_mt) + '</td><td>' + (div.target_mt ? fmt(div.target_mt) : '—') + '</td>' +
+        '<td>' + (div.achievement_pct != null ? div.achievement_pct.toFixed(1) + '%' : '—') + '</td></tr>';
+      div.zones.forEach(function (z) {
+        html += '<tr class="zone-row"><td>' + esc(z.zone) + '</td><td>' + esc(z.sales_officer) + '</td>' +
+          '<td>' + fmt(z.projected_mt) + '</td><td>' + (z.target_mt ? fmt(z.target_mt) : '—') + '</td>' +
+          '<td>' + (z.achievement_pct != null ? z.achievement_pct.toFixed(1) + '%' : '—') + '</td></tr>';
+      });
+    });
+    tbody.innerHTML = html;
+  }
+
+  function renderAlert(today) {
+    var el = document.getElementById('sd-alert');
+    if (today.missing_reporters && today.missing_reporters.length) {
+      el.style.display = 'block';
+      el.textContent = today.missing_reporters.length + ' officer(s) yet to submit today’s projection: ' + today.missing_reporters.join(', ');
+    } else {
+      el.style.display = 'none';
+    }
+  }
+
+  async function load() {
+    var year = yearSel.value;
+    var month = monthSel.value;
+    document.getElementById('sd-source').textContent = 'Loading…';
+    try {
+      var d = await NyatiAPI.getSalesDashboard(year, month);
+      document.getElementById('sd-source').textContent = d.sources.sales_volume === 'not_configured'
+        ? 'Odoo not connected — showing manual projections only' : '';
+      renderAlert(d.today);
+      renderHero(d);
+      renderGrades(d.grades);
+      renderTrend(d.daily_trend);
+      renderCollections(d.collections);
+      renderFinancials(d.financials);
+      renderTarget(d.targets, d.mtd);
+      renderPerformance(d.performance);
+      if (window.lucide) window.lucide.createIcons();
+    } catch (e) {
+      document.getElementById('sd-source').textContent = '';
+      document.getElementById('sd-hero').innerHTML = '<div class="in-empty" style="grid-column:1/-1">Failed to load the Sales dashboard. Make sure the backend is running.</div>';
+    }
+  }
+
+  var _dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+  var fEl = document.getElementById('footer-date');
+  if (fEl) fEl.textContent = _dateStr;
+
+  load();
+}());
+</script>
+
+</body>
+</html>

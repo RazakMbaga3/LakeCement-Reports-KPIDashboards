@@ -41,11 +41,13 @@ const _SB_KPI_LINKS = [
   { label:'Equipment Reliability',    icon:'alert-triangle', page:'reliability.html' },
 ];
 
-/* Coming-soon placeholders — no permission model exists yet for these,
-   shown to every authenticated role until that phase defines one. */
+/* Sales is real (see PERMISSIONS[role].commercial.sales in auth.js);
+   Purchases has no permission model yet, so for now it rides on the same
+   canViewSales() gate as the rest of this group — split it out once
+   Purchases gets its own check. */
 const _SB_COMMERCIAL_ITEMS = [
-  { label:'Sales',     icon:'trending-up',   page:'coming-soon.html?m=sales' },
-  { label:'Purchases', icon:'shopping-cart', page:'coming-soon.html?m=purchases' },
+  { label:'Sales',     icon:'trending-up',   page:'sales.html' },
+  { label:'Purchases', icon:'shopping-cart', page:'coming-soon.html?m=purchases', stub:true },
 ];
 
 function _sbBase() {
@@ -191,15 +193,25 @@ function renderSidebar() {
     });
   }
 
-  /* ── Sales & Purchases — coming soon ─────────────────────────── */
-  html += _sbGroupLabelHTML('commercial');
-  _SB_COMMERCIAL_ITEMS.forEach(it => {
-    html += _sbItemHTML({
-      icon: it.icon, label: it.label, stub: true,
-      badgeHTML: '<span class="sb-stub-tag">SOON</span>',
-      onclick: `location.href='${base}${it.page}'`,
+  /* ── Sales & Purchases ────────────────────────────────────────── */
+  if (canViewSales()) {
+    html += _sbGroupLabelHTML('commercial');
+    _SB_COMMERCIAL_ITEMS.forEach(it => {
+      if (it.stub) {
+        html += _sbItemHTML({
+          icon: it.icon, label: it.label, stub: true,
+          badgeHTML: '<span class="sb-stub-tag">SOON</span>',
+          onclick: `location.href='${base}${it.page}'`,
+        });
+      } else {
+        html += _sbItemHTML({
+          icon: it.icon, label: it.label,
+          active: currentPage === it.page,
+          href: base + it.page,
+        });
+      }
     });
-  });
+  }
 
   html += `</nav>
     <div class="sidebar-bottom">

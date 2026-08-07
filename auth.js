@@ -43,6 +43,7 @@ const PERMISSIONS = {
     compliance: { certs:'view',    mlpl:'view',     legal:'view',       insurance:'view' },
     store:      { rawmat:'view',   spares:'view',   amc:'view' },
     kpi:        { depts:'all', editDepts:[], daily:false },
+    commercial: { sales:'view' },
     canViewAudit:  true,
     canManageUsers:false,
     canExport:     true,
@@ -55,6 +56,7 @@ const PERMISSIONS = {
     compliance: { certs:'view',    mlpl:'view',     legal:'view',       insurance:'view' },
     store:      { rawmat:'view',   spares:'view',   amc:'view' },
     kpi:        { depts:'all', editDepts:[], daily:false },
+    commercial: { sales:null },
     canViewAudit:  true,
     canManageUsers:true,
     canExport:     true,
@@ -67,6 +69,7 @@ const PERMISSIONS = {
     compliance: { certs:'view',    mlpl:'view',     legal:'view',       insurance:'view' },
     store:      { rawmat:'view',   spares:'view',   amc:'view' },
     kpi:        { depts:'all', editDepts:[], daily:false },
+    commercial: { sales:null },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     true,
@@ -79,6 +82,7 @@ const PERMISSIONS = {
     compliance: { certs:'edit',    mlpl:null,       legal:'edit',       insurance:'edit' },
     store:      null,
     kpi:        { depts:['summary'], editDepts:[], daily:true },
+    commercial: { sales:null },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     true,
@@ -91,6 +95,7 @@ const PERMISSIONS = {
     compliance: { certs:'view',    mlpl:'view',     legal:'view',       insurance:'edit' },
     store:      { rawmat:'view',   spares:'view',   amc:'view' },
     kpi:        { depts:'all', editDepts:[], daily:false },
+    commercial: { sales:null },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     true,
@@ -103,6 +108,7 @@ const PERMISSIONS = {
     compliance: null,
     store:      { rawmat:'edit',   spares:'edit',   amc:'edit' },
     kpi:        { depts:['summary','stores'], editDepts:['stores'], daily:true },
+    commercial: { sales:null },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     true,
@@ -115,6 +121,7 @@ const PERMISSIONS = {
     compliance: { certs:'own',     mlpl:null,        legal:null,         insurance:'own' },
     store:      { rawmat:null,     spares:'own',    amc:'own' },
     kpi:        { depts:['summary','powerplant'], editDepts:['powerplant'], daily:true },
+    commercial: { sales:null },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     false,
@@ -127,6 +134,7 @@ const PERMISSIONS = {
     compliance: { certs:'own',     mlpl:null,        legal:null,         insurance:'own' },
     store:      { rawmat:null,     spares:'own',    amc:'own' },
     kpi:        { depts:['summary','ei','mechanical'], editDepts:['mechanical'], daily:true },
+    commercial: { sales:null },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     false,
@@ -139,6 +147,7 @@ const PERMISSIONS = {
     compliance: null,
     store:      null,
     kpi:        { depts:['summary'], editDepts:[], daily:false },
+    commercial: { sales:null },
     canViewAudit:  true,
     canManageUsers:false,
     canExport:     false,
@@ -151,6 +160,7 @@ const PERMISSIONS = {
     compliance: { certs:'own',     mlpl:null,        legal:'own',        insurance:'own' },
     store:      null,
     kpi:        { depts:['summary','packing','minesworkshop'], editDepts:[], daily:true },
+    commercial: { sales:null },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     false,
@@ -163,6 +173,7 @@ const PERMISSIONS = {
     compliance: { certs:'own',     mlpl:'edit',     legal:'own',        insurance:'own' },
     store:      { rawmat:'edit',   spares:'own',    amc:null },
     kpi:        { depts:['summary','mines'], editDepts:['mines'], daily:true },
+    commercial: { sales:null },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     false,
@@ -175,9 +186,23 @@ const PERMISSIONS = {
     compliance: null,
     store:      { rawmat:'view',   spares:'own',    amc:null },
     kpi:        { depts:['summary','production','packing'], editDepts:['production'], daily:true },
+    commercial: { sales:null },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     false,
+  },
+
+  sales: {
+    mis_tabs: [],
+    hr:         null,
+    assets:     null,
+    compliance: null,
+    store:      null,
+    kpi:        { depts:['summary'], editDepts:[], daily:true },
+    commercial: { sales:'edit' },
+    canViewAudit:  false,
+    canManageUsers:false,
+    canExport:     true,
   },
 };
 
@@ -347,6 +372,12 @@ function canViewAudit()    { return _getPerms().canViewAudit    === true; }
 function canExport()       { return _getPerms().canExport       === true; }
 function canManageUsers()  { return _getPerms().canManageUsers  === true; }
 function canSubmitDaily()  { return _getPerms().kpi?.daily      === true; }
+
+/* Sales & Purchases sidebar group — 'view'|'edit'|null, parallel to the
+   MIS tab/section model. Not part of `kpi.depts` since Sales isn't
+   formula-registry/kpi_monthly-shaped data — it's its own page. */
+function canViewSales() { const s = _getPerms().commercial?.sales; return s === 'view' || s === 'edit'; }
+function canEditSales() { return _getPerms().commercial?.sales === 'edit'; }
 
 /* Per-department KPI view/edit checks — the KPI dashboard has ONE dept
    selected at a time (currentDept in app.js), and a role's rights can
@@ -793,6 +824,8 @@ const _DAILY_ACCESS = {
                 nav:  ['daily-report.html','mines-report.html'] },
   production: { edit: ['daily-report.html'],
                 nav:  'all' },
+  sales:      { edit: [],
+                nav:  ['sales-projection-form.html'] },
 };
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -814,6 +847,7 @@ const _DAILY_NAV_ITEMS = [
   { page:'quality-form.html',       label:'Quality / Lab', icon:'flask-conical', hRoot:'forms/quality-form.html', hForm:'quality-form.html' },
   { page:'limestone-form.html',     label:'Limestone %',   icon:'mountain',      hRoot:'forms/limestone-form.html', hForm:'limestone-form.html' },
   { page:'pile-quality-form.html',  label:'Pile Quality',  icon:'layers-3',      hRoot:'forms/pile-quality-form.html', hForm:'pile-quality-form.html' },
+  { page:'sales-projection-form.html', label:'Sales Projection', icon:'trending-up', hRoot:'forms/sales-projection-form.html', hForm:'sales-projection-form.html' },
 ];
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -831,6 +865,7 @@ const _FORM_TYPE_ACCESS = {
   cpp:        ['power-plant','cpp'],
   mining:     ['mines'],
   stores:     ['materials'],   /* Raw Materials report is owned by Purchase & Stores */
+  sales:      ['sales-projection'],
   hr: [], it: [], md: [], admin: [], management: [], finance: [],
 };
 
@@ -845,6 +880,7 @@ const _STANDALONE_FORM_TYPE = {
   'pile-quality-form.html': 'pile-quality',
   'power-form.html':        'power-cons',
   'stoppage-form.html':     'stoppage',
+  'sales-projection-form.html': 'sales-projection',
 };
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -976,6 +1012,16 @@ function applyInsightsPermissions() {
    this page only ever reads the aggregated numbers. ═══════════════════ */
 function applyReliabilityPermissions() {
   renderUserHeader();
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   APPLY PERMISSIONS — SALES DASHBOARD (sales.html)
+══════════════════════════════════════════════════════════════════════ */
+function applySalesPermissions() {
+  renderUserHeader();
+  document.querySelectorAll('[data-sales-edit-only]').forEach(el => {
+    el.style.display = canEditSales() ? '' : 'none';
+  });
 }
 
 /* ══════════════════════════════════════════════════════════════════════

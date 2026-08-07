@@ -35,6 +35,7 @@ const USERS = [
   { username: 'mining',     password: 'Min@LCL2026',    name: 'Quarry Manager',             role: 'mining',     dept: 'QUARRY' },
   // username/role stay 'mining' — internal key, unrelated to the visible "Quarry" rename.
   { username: 'production', password: 'Prod@LCL2026',   name: 'Production & QC Manager',   role: 'production', dept: 'PRODUCTION & QC' },
+  { username: 'sales',      password: 'Sales@LCL2026',  name: 'Sales & Marketing Manager',  role: 'sales',      dept: 'SALES & MARKETING' },
 ];
 
 async function seed() {

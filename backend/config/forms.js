@@ -7,7 +7,7 @@
 const VALID_FORMS = [
   'production', 'mines', 'power-plant', 'dispatch', 'quality',
   'power-cons', 'limestone', 'materials',
-  'pile-quality', 'cpp', 'stoppage'
+  'pile-quality', 'cpp', 'stoppage', 'sales-projection'
 ];
 
 module.exports = { VALID_FORMS };

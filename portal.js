@@ -7,10 +7,11 @@
 
 /* ── Category metadata ────────────────────────────────────────── */
 const _CATS = {
-  kpi:     { label: 'KPI & Analytics',   accent: '#173158' },
-  reports: { label: 'Daily Reports',     accent: '#239557' },
-  forms:   { label: 'Daily Reports',     accent: '#F49545' },
-  mis:     { label: 'Management Info.',  accent: '#173158' },
+  kpi:        { label: 'KPI & Analytics',   accent: '#173158' },
+  reports:    { label: 'Daily Reports',     accent: '#239557' },
+  forms:      { label: 'Daily Reports',     accent: '#F49545' },
+  mis:        { label: 'Management Info.',  accent: '#173158' },
+  commercial: { label: 'Sales & Purchases', accent: '#6D5DD3' },
 };
 
 /* ── Master card catalogue ────────────────────────────────────── */
@@ -164,6 +165,19 @@ const _CARDS = [
     sub:'Management Information System',
     url:'mis.html',
     d:'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z' },
+
+  /* ── Sales & Purchases ─────────────────────────────── */
+  { id:'sales', cat:'commercial', badge:'VIEW',
+    title:'Sales Dashboard',
+    sub:'MTD sales, grade mix, collections & territory performance',
+    url:'sales.html',
+    d:'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' },
+
+  { id:'frm-sales-projection', cat:'forms', badge:'SUBMIT', formType:'sales-projection',
+    title:'Sales Projection',
+    sub:'Fill today\'s projected sales total per officer',
+    url:'forms/sales-projection-form.html',
+    d:'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' },
 ];
 
 /* ── Visibility — derived from permissions, no role hardcoding ── */
@@ -218,6 +232,9 @@ function _visibleIds(user) {
   /* MIS */
   if (hasMIS) ids.add('mis');
 
+  /* Sales & Purchases */
+  if (canViewSales()) ids.add('sales');
+
   return ids;
 }
 
@@ -236,7 +253,7 @@ function _renderCards(user) {
   cards.forEach(c => { (grouped[c.cat] = grouped[c.cat] || []).push(c); });
 
   let html = '';
-  ['kpi', 'reports', 'forms', 'mis'].forEach(cat => {
+  ['kpi', 'reports', 'forms', 'mis', 'commercial'].forEach(cat => {
     if (!grouped[cat]) return;
     const m = _CATS[cat];
     html += `

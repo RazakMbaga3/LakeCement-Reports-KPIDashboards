@@ -167,6 +167,54 @@ CREATE TABLE IF NOT EXISTS alerts (
 );
 CREATE INDEX IF NOT EXISTS idx_alerts_kind_date ON alerts(kind, created_at);
 
+-- ── SALES TERRITORIES ───────────────────────────────────────
+-- One clean Division -> Zone -> Sales Officer hierarchy (replacing the
+-- standalone sales app's three separate, inconsistent versions of this).
+-- officer_code is a stable slug used as a daily_reports JSONB key prefix,
+-- so it must never change even if the display name is corrected.
+CREATE TABLE IF NOT EXISTS sales_territories (
+  id                 SERIAL PRIMARY KEY,
+  officer_code       VARCHAR(30)  UNIQUE NOT NULL,
+  sales_officer      VARCHAR(120) NOT NULL,
+  zone               VARCHAR(80)  NOT NULL,
+  division           VARCHAR(80)  NOT NULL,
+  divisional_manager VARCHAR(120),
+  -- Odoo seam: NULL until `npm run odoo:test -- res.partner --sample`
+  -- confirms the real x_studio_zone/x_studio_division tag values. Nothing
+  -- depends on these yet — filled in once Phase B exploration happens.
+  odoo_zone_tag      VARCHAR(120),
+  odoo_division_tag  VARCHAR(120),
+  odoo_user_id       INTEGER,
+  active             BOOLEAN NOT NULL DEFAULT true,
+  sort_order         SMALLINT NOT NULL DEFAULT 100,
+  created_at         TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at         TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE (zone, division)
+);
+
+-- ── SALES TARGETS ───────────────────────────────────────────
+-- One table for both interim manual targets and (later) Odoo-sourced ones.
+-- `source` is what the dashboard labels the Target tile with, so a manual
+-- interim figure can never be mistaken for an ERP figure. A company-wide
+-- target uses the sentinel officer_code '_company' rather than NULL,
+-- since Postgres treats NULLs as distinct under UNIQUE.
+-- officer_code is deliberately NOT a foreign key to sales_territories — a
+-- DB FK can't express "this column is either '_company' or a valid FK",
+-- so that check lives at the application layer instead (see
+-- backend/routes/sales.js's POST /targets). An FK here would make the
+-- '_company' sentinel impossible to insert (see migration 007's header).
+CREATE TABLE IF NOT EXISTS sales_targets (
+  id            SERIAL PRIMARY KEY,
+  target_month  DATE          NOT NULL,
+  officer_code  VARCHAR(30),
+  grade_key     VARCHAR(20),                              -- NULL = all-grades total
+  target_mt     NUMERIC(12,3) NOT NULL,
+  source        VARCHAR(20)   NOT NULL DEFAULT 'manual',   -- 'manual' | 'odoo'
+  set_by        INTEGER REFERENCES users(id),
+  updated_at    TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE (target_month, officer_code, grade_key)
+);
+
 -- ── INDEXES (speeds up common queries) ──────────────────────
 CREATE INDEX IF NOT EXISTS idx_daily_reports_date     ON daily_reports(record_date);
 CREATE INDEX IF NOT EXISTS idx_daily_reports_form     ON daily_reports(form_type);
@@ -179,6 +227,8 @@ CREATE INDEX IF NOT EXISTS idx_weighbridge_movement   ON weighbridge_tickets(mov
 CREATE INDEX IF NOT EXISTS idx_kpi_monthly_dept_year  ON kpi_monthly(department, year, month);
 CREATE INDEX IF NOT EXISTS idx_audit_log_user         ON audit_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_log_date         ON audit_log(created_at);
+CREATE INDEX IF NOT EXISTS idx_sales_territories_division ON sales_territories(division);
+CREATE INDEX IF NOT EXISTS idx_sales_targets_month         ON sales_targets(target_month);
 
 -- ============================================================
 -- DONE. Tables created.

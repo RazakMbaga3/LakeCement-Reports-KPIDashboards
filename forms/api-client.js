@@ -149,11 +149,43 @@
     return res.json();
   }
 
+  /* ── Sales dashboard (backend/routes/sales.js) ──────────────────── */
+
+  /* GET /api/sales/territories — division/zone/officer roster, used by
+     both sales.html and forms/sales-projection-form.html */
+  async function getSalesTerritories() {
+    const res = await fetch(BASE + '/sales/territories', { headers: _headers() });
+    if (!res.ok) throw _httpError('getSalesTerritories', '', res);
+    return res.json();
+  }
+
+  /* GET /api/sales/dashboard?year=&month= */
+  async function getSalesDashboard(year, month) {
+    const params = new URLSearchParams();
+    if (year)  params.set('year', year);
+    if (month) params.set('month', month);
+    const qs = params.toString();
+    const res = await fetch(BASE + '/sales/dashboard' + (qs ? '?' + qs : ''), { headers: _headers() });
+    if (!res.ok) throw _httpError('getSalesDashboard', year + '-' + month, res);
+    return res.json();
+  }
+
+  /* POST /api/sales/targets — set an interim manual target */
+  async function setSalesTarget(targetMonth, officerCode, targetMt) {
+    const res = await fetch(BASE + '/sales/targets', {
+      method: 'POST', headers: _headers(),
+      body: JSON.stringify({ targetMonth, officerCode, targetMt }),
+    });
+    if (!res.ok) throw _httpError('setSalesTarget', officerCode, res);
+    return res.json();
+  }
+
   global.NyatiAPI = {
     submitForm, getForm, getFormRange,
     evalFormulas, getDailySeries, setOverride, clearOverride, getOverrides,
     getBaseline, getCompleteness, getStoppageInsights,
     quarryImportTickets, quarryGetTickets,
+    getSalesTerritories, getSalesDashboard, setSalesTarget,
   };
 
 }(window));

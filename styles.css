@@ -977,6 +977,36 @@ img { max-width: 100%; }
 .sk-card[data-formula-key] .sk-status { color: var(--text-muted); }
 .sk-card[data-formula-key] .sk-status-dot { background: var(--text-muted); }
 
+/* Pending cards — an Odoo-sourced metric with no data source wired up yet
+   (see sales.html's Received Uncollectable/Payable/Advance/Agewise
+   Outstanding). Deliberately NOT .sk-illustrative: those show a plausible
+   fake number for context; for financial figures that would be actively
+   misleading, so a pending card never renders a number — .sk-value stays
+   '—' and the honest reason goes in .sk-status. */
+.sk-card.sk-pending {
+  border-style: dashed;
+  opacity: .72;
+}
+.sk-card.sk-pending::before {
+  background: repeating-linear-gradient(
+    45deg, var(--text-muted), var(--text-muted) 6px, transparent 6px, transparent 12px
+  );
+}
+.sk-card.sk-pending::after {
+  content: 'NOT CONNECTED';
+  position: absolute; bottom: 8px; right: 8px;
+  font-size: 7.5px; font-weight: 700; letter-spacing: .5px;
+  color: #fff; background: var(--text-muted);
+  border-radius: 3px; padding: 2px 5px; line-height: 1;
+}
+.sk-card.sk-pending .sk-status { color: var(--text-muted); }
+.sk-card.sk-pending .sk-status-dot { background: var(--text-muted); }
+
+/* Reserve room for the corner badge (::after, ~85px wide) so longer status
+   text wraps before running into it instead of visually overlapping. */
+.sk-card.sk-illustrative .sk-status,
+.sk-card.sk-pending .sk-status { padding-right: 78px; }
+
 /* ── Period Comparison Strip ───────────────────────────── */
 .period-strip {
   display: flex; align-items: center; gap: 8px;

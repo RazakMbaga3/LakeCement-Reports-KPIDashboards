@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – Sales Projection</title>
+  <link rel="icon" type="image/png" href="../favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css" />
+  <script src="../auth.js?v=10"></script>
+  <script src="../sidebar.js?v=2"></script>
+  <script src="date-picker.js"></script>
+  <link rel="stylesheet" href="forms.css" />
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="app-sidebar"></aside>
+  <script>renderSidebar();</script>
+
+  <div class="main">
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header class="top-header" id="app-header"></header>
+<script>renderTopHeader();</script>
+
+<!-- ══════════════════ TOOLBAR ══════════════════ -->
+<div class="toolbar">
+  <div class="tb-group">
+    <span class="tb-lbl">Date</span>
+    <input type="date" class="tb-ctl" data-field="date" />
+  </div>
+  <div class="tb-sep"></div>
+  <div class="tb-group">
+    <span class="tb-lbl">Prepared By</span>
+    <input type="text" class="tb-ctl" data-field="prepared_by" placeholder="Sales &amp; Marketing Manager…" style="min-width:180px;width:auto" />
+  </div>
+  <div class="tb-sep"></div>
+  <span class="rpt-pill">DRAFT</span>
+  <div class="btn-grp">
+    <button class="btn btn-out"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
+    <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+    <button class="btn btn-sub"><i data-lucide="check-circle" class="btn-icon"></i> Submit Report</button>
+  </div>
+</div>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<main class="fm-main">
+
+  <!-- ══ KPI STRIP ════════════════════════════════════════ -->
+  <div class="kpi-strip">
+    <div class="kt kt-m">
+      <span class="kt-badge">Manual</span>
+      <div class="kt-lbl">Total Projected — Today</div>
+      <div class="kt-val" id="kpi-total">—</div>
+      <div class="kt-unit">MT — sum of all officer rows below</div>
+    </div>
+    <div class="kt kt-m">
+      <span class="kt-badge">Manual</span>
+      <div class="kt-lbl">Officers Reported</div>
+      <div class="kt-val" id="kpi-reported">—</div>
+      <div class="kt-unit">Have entered a projection today</div>
+    </div>
+    <div class="kt kt-m">
+      <span class="kt-badge">Manual</span>
+      <div class="kt-lbl">Officers Pending</div>
+      <div class="kt-val" id="kpi-pending">—</div>
+      <div class="kt-unit">Still to submit today</div>
+    </div>
+  </div>
+
+  <!-- ══ OFFICER PROJECTIONS ══════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr">
+      <div>
+        <div class="rcard-title"><i data-lucide="trending-up" class="title-icon"></i> Sales Officer Projections</div>
+        <div class="rcard-sub">One projected total per officer per day — actuals and grade mix are sourced from Odoo, not entered here.</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip orange">SALES &amp; MARKETING</span>
+      </div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:760px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" style="min-width:140px">Division</th>
+            <th class="tl grp-hdr" style="min-width:140px">Zone</th>
+            <th class="tl grp-hdr" style="min-width:180px">Sales Officer</th>
+            <th class="grp-hdr" style="min-width:160px">Projected Total (MT)</th>
+            <th class="tl grp-hdr" style="min-width:200px">Remark</th>
+          </tr>
+        </thead>
+        <tbody id="officers-tbody">
+          <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">Loading officer roster…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ SIGN-OFF ══════════════════════════════════════════ -->
+  <div class="rcard">
+    <div class="rcard-hdr"><div class="rcard-title"><i data-lucide="pen-line" class="title-icon"></i> Report Sign-off</div></div>
+    <div class="signoff">
+      <div class="so-cell">
+        <div class="so-role">Prepared By</div>
+        <input class="so-in" data-field="so_prepared_by" placeholder="Full name…" />
+        <input class="so-time" data-field="so_prepared_time" placeholder="Time signed" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">Sales &amp; Marketing Manager</div>
+        <input class="so-in" data-field="so_sales_mgr" placeholder="Full name…" />
+        <input class="so-time" data-field="so_sales_mgr_time" placeholder="Time reviewed" />
+      </div>
+    </div>
+    <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span style="font-size:11px;color:var(--text-muted)">
+        Status: <strong style="color:var(--orange)">DRAFT</strong>
+      </span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-out"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+        <button class="btn btn-sub"><i data-lucide="lock" class="btn-icon"></i> Submit &amp; Lock</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span>Sales Projection &mdash; <span id="footer-date"></span></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="api-client.js"></script>
+<script src="offline-queue.js"></script>
+<script src="client-errors.js"></script>
+<script src="form-persist.js"></script>
+
+<script>
+lucide.createIcons();
+requireAuth();
+applyDailyPermissions();
+(function () {
+  var opts = { weekday:'short', year:'numeric', month:'short', day:'numeric' };
+  var str  = new Date().toLocaleDateString('en-GB', opts);
+  ['live-date','footer-date'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = str;
+  });
+})();
+
+/* Territory roster must be fetched and its rows built into the DOM
+   BEFORE initFormPersist() runs — form-persist.js's restore (positional
+   + data-field) fires as soon as its own async read resolves, and if the
+   officer-row inputs don't exist yet at that moment, both restore paths
+   silently find nothing. Awaiting here, not just ordering script tags,
+   is what actually guarantees this. */
+/* Territory fields are admin-entered data, not this page's user input —
+   but they're rendered via innerHTML, so escape them anyway. officer_code
+   additionally lands inside a double-quoted data-field="..." attribute,
+   where an unescaped quote would break out of it. */
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+  });
+}
+
+(async function () {
+  var tbody = document.getElementById('officers-tbody');
+  var territories = [];
+  var fetchFailed = false;
+  try {
+    territories = await NyatiAPI.getSalesTerritories();
+  } catch (e) {
+    fetchFailed = true;
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--red)">Could not load the officer roster — check your connection and reload.</td></tr>';
+  }
+
+  if (territories.length) {
+    tbody.innerHTML = '';
+    territories.forEach(function (t) {
+      var tr = document.createElement('tr');
+      tr.className = 'data-row';
+      tr.innerHTML =
+        '<td class="tp">' + esc(t.division) + '</td>' +
+        '<td class="tp">' + esc(t.zone) + '</td>' +
+        '<td class="tp">' + esc(t.sales_officer) + '</td>' +
+        '<td class="cm"><input class="ci" type="number" min="0" step="0.1" ' +
+          'data-field="sp_' + esc(t.officer_code) + '_proj_total" placeholder="0.0" /></td>' +
+        '<td class="cm"><input class="ci" type="text" ' +
+          'data-field="sp_' + esc(t.officer_code) + '_remark" placeholder="optional" /></td>';
+      tbody.appendChild(tr);
+    });
+  } else if (!fetchFailed) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">No sales territories configured yet. Contact your administrator.</td></tr>';
+  }
+
+  function recalc() {
+    var total = 0, reported = 0;
+    territories.forEach(function (t) {
+      var el = document.querySelector('[data-field="sp_' + t.officer_code + '_proj_total"]');
+      var v = el ? parseFloat(el.value) : NaN;
+      if (!isNaN(v) && v > 0) { total += v; reported++; }
+    });
+    var totalEl = document.getElementById('kpi-total');
+    if (totalEl) totalEl.textContent = total > 0 ? total.toFixed(1) : '—';
+    var repEl = document.getElementById('kpi-reported');
+    if (repEl) repEl.textContent = territories.length ? reported : '—';
+    var pendEl = document.getElementById('kpi-pending');
+    if (pendEl) pendEl.textContent = territories.length ? (territories.length - reported) : '—';
+  }
+
+  document.addEventListener('input', recalc);
+  document.addEventListener('nyati:restored', recalc);
+  recalc();
+
+  initFormPersist('sales-projection');
+})();
+</script>
+
+<script src="nav-status.js"></script>
+
+  </div><!-- /.main -->
+</div><!-- /.app-shell -->
+
+</body>
+</html>

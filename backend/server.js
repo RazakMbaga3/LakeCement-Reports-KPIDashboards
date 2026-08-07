@@ -32,6 +32,7 @@ const formulaRoutes = require('./routes/formula');
 const misRoutes     = require('./routes/mis');
 const insightsRoutes = require('./routes/insights');
 const quarryRoutes  = require('./routes/quarry');
+const salesRoutes   = require('./routes/sales');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -102,6 +103,7 @@ app.use('/api/formula', formulaRoutes);
 app.use('/api/mis',      misRoutes);
 app.use('/api/insights', insightsRoutes);
 app.use('/api/quarry',   quarryRoutes);
+app.use('/api/sales',    salesRoutes);
 app.use('/api/monitor',  monitorRouter);
 app.get('/api/metrics', metricsAuth, metricsHandler);
 

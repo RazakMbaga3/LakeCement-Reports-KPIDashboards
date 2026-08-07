@@ -14,6 +14,7 @@ const ROLE_FORM_ACCESS = {
   cpp:        ['power-plant', 'cpp'],
   mining:     ['mines'],
   stores:     ['materials'],   /* Raw Materials report is owned by Purchase & Stores */
+  sales:      ['sales-projection'],
   hr: [], it: [], md: [], admin: [], management: [], finance: [],
 };
 

@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
   <script src="../auth.js?v=10"></script>
-  <script src="../sidebar.js?v=1"></script>
+  <script src="../sidebar.js?v=2"></script>
   <link rel="stylesheet" href="forms.css" />
   <style>
     /* ── Status board ───────────────────────────────────────────────── */
@@ -261,6 +261,15 @@
       <div class="fc-sm-owner">QC / Quarry Chemist</div>
     </a>
 
+    <a href="sales-projection-form.html" class="fc-sm">
+      <div class="fc-sm-top">
+        <div class="fc-sm-icon"><i data-lucide="trending-up"></i></div>
+        <div class="fc-sm-name">Sales Projection</div>
+      </div>
+      <div class="fc-sm-desc">Today's projected sales total per sales officer — actuals & grade mix come from Odoo.</div>
+      <div class="fc-sm-owner">Sales &amp; Marketing Manager</div>
+    </a>
+
   </div>
 
 </main>
@@ -304,6 +313,7 @@ const FORMS = [
   { id:'materials',   name:'Raw Materials',     icon:'package',        href:'materials-form.html',        owner:'Purchase &amp; Stores' },
   { id:'power-cons',  name:'Power Consumption', icon:'activity',       href:'power-form.html',            owner:'P&amp;M Head' },
   { id:'pile-quality',name:'Pile Quality',      icon:'layers',         href:'pile-quality-form.html',     owner:'QC / Quarry Chemist' },
+  { id:'sales-projection', name:'Sales Projection', icon:'trending-up', href:'sales-projection-form.html', owner:'Sales &amp; Marketing Manager' },
 ];
 
 const NS = 'nyati';

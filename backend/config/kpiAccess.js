@@ -21,7 +21,7 @@ const ROLE_KPI_EDIT_DEPTS = {
   pm:         ['mechanical'],
   mining:     ['mines'],
   production: ['production'],
-  md: [], hr: [], finance: [], it: [], logistics: [],
+  md: [], hr: [], finance: [], it: [], logistics: [], sales: [],
 };
 
 module.exports = { ROLE_KPI_EDIT_DEPTS };
