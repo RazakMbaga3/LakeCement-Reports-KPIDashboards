@@ -1,0 +1,27 @@
+name: Deploy to DigitalOcean
+
+# Auto-deploys on every push to main. See docs/DEPLOYMENT_DIGITALOCEAN.md §3
+# for the one-time secret setup (DO_HOST, DO_USER, DO_SSH_KEY, optional
+# DO_PORT) this workflow needs before it can run successfully.
+#
+# Prefer a manual gate instead of deploy-on-every-push? Change `push:` below
+# to just `workflow_dispatch: {}` — same deploy script, triggered by hand
+# from the Actions tab instead of automatically.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH and run deploy.sh on the droplet
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USER }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          port: ${{ secrets.DO_PORT || 22 }}
+          script: bash /var/www/lake-cement-dashboard/deploy/deploy.sh

@@ -259,3 +259,66 @@ read-only Odoo credentials + dataset selection from the user.)
 - SMTP account for Phase 5/6 alerts (can stub until provided).
 - Odoo read-only API credentials + which datasets to pull (Phase 4).
 - Go-live server hostname/IP for ALLOWED_ORIGIN and deployment (Phase 7).
+
+---
+
+# OPEN ITEMS GOING INTO GO-LIVE (audit 2026-08-18)
+
+Triggered by a pre-deployment review — surfaced a real architecture
+conflict (see `TECHNICAL_SPEC.md` §10/§12) plus concrete app-side gaps.
+Closed items were fixed in this pass; the rest are genuinely blocked on
+someone outside this repo. Kept in one place so nothing here is silently
+forgotten before go-live.
+
+**Closed this pass:**
+- [x] Odoo HTTP clients (`odooClient.js`, `odooDispatchClient.js`) had no
+      request timeout — a stalled connection could hang a request or the
+      daily sync cron indefinitely. Both now abort at 15s. Verified against
+      a connection that accepts but never responds (the realistic
+      stalled-link failure mode, not just connection-refused).
+- [x] Purchases dashboard had no acceptance script —
+      `backend/scripts/accept-purchases.js` added, 11/11 passing, modeled
+      on `accept-sales.js`'s "must degrade honestly without Odoo" proof.
+- [x] Purchases' lack of server-side RBAC was checked against the
+      established pattern, not assumed to be a gap: `routes/sales.js`
+      itself only role-gates writes, not reads (visibility is
+      client-side, same as `routes/insights.js`). Purchases has no writes
+      yet, so it already matches convention — no code change needed.
+- [x] `purchases.html`'s rendering of the permanently-stubbed category
+      grid was checked — it already shows the honest `not_mapped` message
+      cleanly rather than a blank/broken section.
+- [x] `render.yaml` (dead Render/Vercel preview split, confirmed abandoned
+      2026-08-18) removed from the repo.
+- [x] `RUNBOOK.md` / `GO_LIVE_CHECKLIST.md` now carry a banner flagging
+      them as the superseded on-prem plan, pointing to `TECHNICAL_SPEC.md`
+      §10 for current direction.
+- [x] `TECHNICAL_SPEC.md` §12 refreshed — all 6 original open questions
+      confirmed still unanswered as of 2026-08-18, plus 2 new ones
+      (Purchases field names; how a cloud-hosted app reaches on-prem Odoo
+      once a platform is chosen).
+
+**Still open — blocked outside this repo:**
+- [x] **Odoo team**: hosting platform confirmed 2026-08-19 — DigitalOcean
+      droplet, administered by the Odoo team (India), contact GitHub
+      `teckzilla007` (`TECHNICAL_SPEC.md` §12 item 6). Deploy guide added:
+      `docs/DEPLOYMENT_DIGITALOCEAN.md`, plus `.github/workflows/deploy.yml`
+      for auto-deploy-on-push. Still open: no Odoo API credentials issued
+      yet (item 1), so the Odoo integration itself stays unblocked-but-idle.
+- [ ] **Odoo team**: Purchases category-grid field names ("PO For" /
+      "Purchase Type" / "PR No") unconfirmed — `fetchCategoryGrid()`
+      stays a stub until answered (§12 item 7).
+- [ ] **Whoever picks the hosting platform**: how the app reaches Odoo
+      over the network once it's not on the same LAN (§12 item 8) — VPN,
+      firewalled endpoint, or shared network. Not resolved by code.
+- [ ] Uncommitted working tree as of this audit (`backend/server.js`,
+      `forms/api-client.js`, `sidebar.js` modified; Purchases
+      routes/services/html new) — ready to commit pending the user's
+      go-ahead.
+
+**Pre-existing, lower urgency (carried from earlier audits, not re-verified
+in this pass):**
+- [ ] Quality KPI formula validated against only 1 day of source data
+      (vs. the multi-month validation other KPIs got).
+- [ ] "Specific Power Consumption – Up to Clinker" remains a documented
+      simplification (direct kWh/clinker-MT, not the full Excel-parity
+      build) — see `KPI_REFERENCE.md`.

@@ -12,10 +12,10 @@ workbooks live in `reportsscreensdevelopment MIS/` as reference material).
 ## Architecture in one paragraph
 
 Static HTML/JS frontend (this repo's root, served by Nginx in production) →
-`/api` reverse-proxied to a Node/Express backend (`backend/`, Windows
-service `LakeCementMIS`, port 5000) → PostgreSQL (`lcl_mis`). All KPI math
-lives in [`forms/formula-registry.js`](forms/formula-registry.js) and is
-evaluated server-side by one engine; browsers queue writes offline and sync
+`/api` reverse-proxied to a Node/Express backend (`backend/`, port 5000) →
+PostgreSQL (`lcl_mis`). All KPI math lives in
+[`forms/formula-registry.js`](forms/formula-registry.js) and is evaluated
+server-side by one engine; browsers queue writes offline and sync
 automatically when the connection returns. The backend schedules its own
 jobs: morning digest (06:00), watchdog alerts (every 15 min), nightly
 backup (02:30). Odoo is a **read-only data source** to be wired per-fact
@@ -37,16 +37,22 @@ npm run dev                # http://localhost:5000
 # then open login.html in a browser
 ```
 
-Production/plant-server operation (service install, backups, restore,
-user admin, alert meanings, update procedure) is in
-[docs/RUNBOOK.md](docs/RUNBOOK.md). First deployment: follow
-[docs/GO_LIVE_CHECKLIST.md](docs/GO_LIVE_CHECKLIST.md).
+**Production hosting:** a DigitalOcean droplet administered by the Odoo
+team — see [docs/DEPLOYMENT_DIGITALOCEAN.md](docs/DEPLOYMENT_DIGITALOCEAN.md)
+for server setup and how code updates reach the live server.
+[docs/RUNBOOK.md](docs/RUNBOOK.md) and
+[docs/GO_LIVE_CHECKLIST.md](docs/GO_LIVE_CHECKLIST.md) describe an earlier
+on-prem Windows-server plan that DEPLOYMENT_DIGITALOCEAN.md has superseded
+for hosting purposes; kept for reference (their non-hosting sections —
+backups, user admin, alert meanings — still apply).
 
 ## Documentation
 
 | Document | What it is |
 |---|---|
-| [docs/RUNBOOK.md](docs/RUNBOOK.md) | Operations manual: start/stop, logs, backup & restore, users, secrets, alerts, updates |
+| [docs/DEPLOYMENT_DIGITALOCEAN.md](docs/DEPLOYMENT_DIGITALOCEAN.md) | **Current production deployment guide** — DigitalOcean droplet setup, access model, auto-deploy-on-push |
+| [docs/TECHNICAL_SPEC.md](docs/TECHNICAL_SPEC.md) | Architecture, data model, formula layer, Odoo integration, open questions |
+| [docs/RUNBOOK.md](docs/RUNBOOK.md) | Operations manual: logs, backup & restore, users, secrets, alerts (hosting sections superseded — see above) |
 | [docs/KPI_REFERENCE.md](docs/KPI_REFERENCE.md) | **Generated** definition of every KPI and fact — regenerate with `npm run docs:kpi` (in `backend/`) after editing the formula registry |
 | [docs/GO_LIVE_CHECKLIST.md](docs/GO_LIVE_CHECKLIST.md) | One-time cutover plan: hardening, parallel run vs Excel, sign-off, rollback |
 | [docs/PROGRESS.md](docs/PROGRESS.md) | Build-phase tracker (Phases 0–8) with acceptance status and audit findings |
@@ -76,7 +82,8 @@ user admin, alert meanings, update procedure) is in
 │   ├── routes/ services/        API + digest/watchdog/backup/MIS renderers
 │   ├── config/formAccess.js     which role may submit which form
 │   └── scripts/                 accept-phase*, smoke, backup, restore, docs
-├── deploy/nginx.conf            production frontend + /api proxy template
+├── deploy/                      nginx configs, pm2 config, remote deploy script
+├── .github/workflows/deploy.yml auto-deploy on push to main (DigitalOcean)
 └── docs/                        see table above
 ```
 
@@ -107,7 +114,7 @@ client-side in `auth.js` — keep in sync):
 | `npm run backup` / `npm run restore:drill` | manual pg_dump / safe restore rehearsal |
 | `npm run watchdog` | run the alert checks once |
 | `npm run docs:kpi` | regenerate docs/KPI_REFERENCE.md from the registry |
-| `npm run service:install` / `service:uninstall` | Windows service (admin shell) |
+| `npm run service:install` / `service:uninstall` | Windows service (admin shell, on-prem only) |
 
 ## Rules of the road
 
@@ -115,5 +122,7 @@ client-side in `auth.js` — keep in sync):
   formula's `version`, update its `notes`, run `npm run docs:kpi`, and
   commit the registry and the regenerated reference together.
 - Never commit `backend/.env` (template: `backend/.env.example`).
-- Deploying an update = RUNBOOK §8 (`git pull` → `npm run migrate` →
-  `npm test` → restart service).
+- Deploying an update to production = push to `main` — the GitHub Actions
+  workflow (`.github/workflows/deploy.yml`) deploys automatically to the
+  DigitalOcean droplet. See
+  [docs/DEPLOYMENT_DIGITALOCEAN.md](docs/DEPLOYMENT_DIGITALOCEAN.md) §3.
