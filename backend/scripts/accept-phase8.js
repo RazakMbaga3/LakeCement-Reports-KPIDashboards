@@ -163,10 +163,15 @@ async function main() {
       mh.text.includes('Best ever') && mh.text.includes('1999-06'), `status ${mh.status}`);
 
     // ── C. Stoppage intelligence ────────────────────────────────
+    // Stoppage fields are persisted in MINUTES (see services/insights.js
+    // stoppageInsights(): `const h = mins / 60`, matching the real
+    // stoppage-form.html — each field is a per-day minute ledger, up to
+    // 1440). Values below are hours × 60 so the expected totals further
+    // down (in hours) come out to round numbers.
     console.log('Part C — stoppage intelligence:');
     await submit(pm, 'stoppage', '1999-07-01',
-      { stop_kiln_mech: 5, stop_kiln_ei: 2, stop_crusher_other: 1 });
-    await submit(pm, 'stoppage', '1999-07-02', { stop_kiln_mech: 3 });
+      { stop_kiln_mech: 5 * 60, stop_kiln_ei: 2 * 60, stop_crusher_other: 1 * 60 });
+    await submit(pm, 'stoppage', '1999-07-02', { stop_kiln_mech: 3 * 60 });
 
     const st = await api('GET', '/insights/stoppages?from=1999-07-01&to=1999-07-31', { token: prod });
     const s = st.body;

@@ -60,11 +60,14 @@ jobs:
         working-directory: backend
         run: npm run db:init
 
-      - name: Seed users (+ sales territories)
+      - name: Seed users
         working-directory: backend
-        run: |
-          npm run seed
-          npm run seed:sales
+        run: npm run seed
+        # Not npm run seed:sales here: db/seed-sales.js's TERRITORIES is a
+        # permanent placeholder (real roster never provided yet) and the
+        # script deliberately exit(1)s rather than seed fake data — it's a
+        # manual, one-time step for when real data exists, not a CI step.
+        # accept:sales is verified to pass correctly with zero territories.
 
       - name: Lint + formula unit tests + smoke boot
         working-directory: backend

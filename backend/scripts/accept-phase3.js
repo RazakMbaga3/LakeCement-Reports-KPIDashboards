@@ -23,6 +23,7 @@ const path      = require('path');
 const fs        = require('fs');
 const bcrypt    = require('bcryptjs');
 const db        = require('../db');
+const { FORMULAS } = require('../../forms/formula-registry.js');
 
 const PORT  = process.env.ACCEPT_PORT || 5904;
 const BASE  = `http://localhost:${PORT}/api`;
@@ -111,7 +112,12 @@ const PILE = [
   {},                          // no samples → null day
 ];
 
-/* Independently hand-coded expectations (the registry math, re-derived) */
+/* Independently hand-coded expectations (the registry math, re-derived).
+   Intentionally a SUBSET of the registry — only the formulas this script
+   seeds real fixture data for. The "every formula present" count check
+   below compares against the live FORMULAS registry, not this object, so
+   adding a new formula here isn't required just to keep that check green;
+   add an entry here only when you also want its VALUE hand-verified. */
 const EXPECTED = {
   'kiln-output':        (2000 + 2100 + 1900) / 3,                                     // 2000
   'clinker-free-lime':  (2.5 + 2.8 + 3.1) / 3,                                        // 2.8
@@ -222,10 +228,19 @@ async function main() {
     // ── A. Monthly evaluation matches hand-coded arithmetic ────────
     console.log('Part A — formula engine vs independent hand math:');
     const evalRes = await api('GET', `/formula/eval/${YEAR}/${MONTH}`, { token: tok.production });
-    check('eval endpoint returns 200 + all formulas',
+    // Compared against the REAL registry's formula count, not
+    // Object.keys(EXPECTED).length — EXPECTED only covers the formulas
+    // this script seeds hand-verifiable fixture data for (13); the
+    // registry has grown to include stoppage/materials-consumption sumOf()
+    // formulas and the (currently unwired, provisional — see
+    // forms/formula-registry.js) CPP ones that this script doesn't seed
+    // data for. Deriving from FORMULAS directly means this check can't go
+    // stale the way a hand-copied count already did once (found 2026-08-19:
+    // asserted 13 while the endpoint correctly returned 20).
+    check('eval endpoint returns 200 + every formula in the registry',
       evalRes.status === 200 && Array.isArray(evalRes.body) &&
-      evalRes.body.length === Object.keys(EXPECTED).length,
-      `status ${evalRes.status}, got ${evalRes.body && evalRes.body.length} formulas`);
+      evalRes.body.length === Object.keys(FORMULAS).length,
+      `status ${evalRes.status}, got ${evalRes.body && evalRes.body.length} formulas, registry has ${Object.keys(FORMULAS).length}`);
 
     const byKey = new Map((evalRes.body || []).map(r => [r.key, r]));
     for (const [key, expected] of Object.entries(EXPECTED)) {
