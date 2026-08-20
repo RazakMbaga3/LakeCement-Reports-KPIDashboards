@@ -4,7 +4,9 @@
   Proves backup & disaster recovery against the LIVE database and tools:
     1. pg_dump backup produces a valid dump file
     2. retention pruning removes dumps older than BACKUP_KEEP_DAYS
-    3. a fresh backup makes /api/health report backup ok
+    3. a fresh backup makes /api/health report its age/presence, AND
+       correctly flags same_disk_as_app + degrades health when BACKUP_DIR
+       and the app share a disk (not real DR coverage)
     4. an empty backup dir degrades health (watchdog would then email —
        pipeline already proven in phase 6)
     5. THE DRILL: the dump restores into a scratch database, table set and
@@ -95,12 +97,21 @@ async function main() {
       !fs.existsSync(oldDump) && b2.pruned.includes('lcl_mis-1999-01-01-0300.dump'),
       JSON.stringify(b2.pruned));
 
-    // ── 3. Fresh backup → health ok ─────────────────────────────
+    // ── 3. Fresh backup → health reports it, with age ───────────
+    // TMP lives under the OS temp dir, on the same disk as this test
+    // process in virtually every real environment — so `ok` is correctly
+    // false here (see health.js's same-disk check, added because a backup
+    // on the DB's own disk isn't real DR coverage). Assert on presence/age
+    // (what a fresh backup actually proves) and separately on the
+    // same-disk flag firing, rather than overall `ok`.
     server = startServer(PORT, { BACKUP_DIR: TMP });
     const h1 = await waitForHealth(PORT);
-    check('fresh backup → /api/health reports backup ok + age',
-      h1 && h1.status === 'ok' && h1.checks.backup.ok === true &&
-      typeof h1.checks.backup.age_hours === 'number',
+    check('fresh backup → /api/health reports age + presence',
+      h1 && typeof h1.checks.backup.age_hours === 'number' && h1.checks.backup.age_hours < 1,
+      h1 ? JSON.stringify(h1.checks.backup) : 'no health');
+    check('backup on the same disk as the app is correctly flagged, not silently ok',
+      h1 && h1.checks.backup.same_disk_as_app === true && h1.checks.backup.ok === false &&
+      h1.status === 'degraded',
       h1 ? JSON.stringify(h1.checks.backup) : 'no health');
     server.kill();
 

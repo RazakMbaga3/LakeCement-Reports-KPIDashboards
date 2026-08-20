@@ -1,21 +1,12 @@
 /*
   config/formAccess.js — which roles may SUBMIT which daily-report form types.
 
-  Single source of truth, mirrored client-side as _FORM_TYPE_ACCESS in
-  auth.js — keep both in sync. Derived from the existing _IE_BTN_ROLES
-  (inline sub-panel rights) and _DAILY_ACCESS (hub-page edit rights) already
-  in auth.js; the 10 standalone forms/*.html pages had no server-side (or
-  correct client-side) mapping at all before this.
+  Re-exports forms/access-registry.js's FORM_ACCESS (the single source of
+  truth, shared with kpiAccess.js and commercialAccess.js) under its
+  original name so every existing `require('../config/formAccess')` call
+  site is unaffected. See backend/test/access-consistency.test.js for how
+  this stays in sync with auth.js's own copy.
 */
-const ROLE_FORM_ACCESS = {
-  production: ['production', 'quality', 'limestone', 'pile-quality'],
-  pm:         ['stoppage', 'power-cons'],   /* P&M owns Stoppage & Power Cons. reports (Kiln/Cement Mill folded into Production Report) */
-  logistics:  ['dispatch'],
-  cpp:        ['power-plant', 'cpp'],
-  mining:     ['mines'],
-  stores:     ['materials'],   /* Raw Materials report is owned by Purchase & Stores */
-  sales:      ['sales-projection'],
-  hr: [], it: [], md: [], admin: [], management: [], finance: [],
-};
+const { FORM_ACCESS } = require('../../forms/access-registry.js');
 
-module.exports = { ROLE_FORM_ACCESS };
+module.exports = { ROLE_FORM_ACCESS: FORM_ACCESS };

@@ -8,6 +8,10 @@
   GET  /api/mis/monthly/:year/:month/html  → printable HTML
   GET  /api/mis/monthly/:year/:month/xlsx  → Excel workbook download
   GET  /api/mis/completeness?from=&to=     → entry-completeness payload (JSON)
+  GET  /api/mis/employees              → HR roster (mis.html "HR" tab)
+  GET  /api/mis/it-assets              → IT asset register (mis.html "Assets" tab)
+  GET  /api/mis/vehicles               → vehicle fleet register (mis.html "Assets" tab)
+  GET  /api/mis/compliance-certs       → licenses/certificates (mis.html "Compliance" tab)
   POST /api/mis/digest/send           → send the digest now (admin/md;
                                         body {date?} for a specific day)
 */
@@ -19,6 +23,16 @@ const report = require('../services/misReport');
 const render = require('../services/misRender');
 const excel  = require('../services/misExcel');
 const digest = require('../services/digest');
+
+/* Static reference data (HR/IT/vehicle/compliance registers) — previously
+   embedded as literal JS in mis.html, readable by anyone who requested the
+   page regardless of login. Now served only to authenticated users; kept
+   as plain JSON files (not a DB table) since this is hand-maintained
+   reference data with no write path yet, not daily operational data. */
+const EMPLOYEES      = require('../data/mis/employees.json');
+const IT_ASSETS       = require('../data/mis/it-assets.json');
+const VEHICLES        = require('../data/mis/vehicles.json');
+const COMPLIANCE_CERTS = require('../data/mis/compliance-certs.json');
 
 const router = express.Router();
 
@@ -85,6 +99,12 @@ router.get('/monthly/:year/:month/xlsx', requireAuth, validate(yearMonthParams, 
     res.send(buf);
   } catch (err) { next(err); }
 });
+
+// ── Reference data (HR / IT / vehicles / compliance) ────────────
+router.get('/employees', requireAuth, (req, res) => { res.json(EMPLOYEES); });
+router.get('/it-assets', requireAuth, (req, res) => { res.json(IT_ASSETS); });
+router.get('/vehicles', requireAuth, (req, res) => { res.json(VEHICLES); });
+router.get('/compliance-certs', requireAuth, (req, res) => { res.json(COMPLIANCE_CERTS); });
 
 // ── Digest ───────────────────────────────────────────────────
 router.post('/digest/send',

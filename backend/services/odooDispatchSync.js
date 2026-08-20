@@ -103,20 +103,22 @@ function buildDayMaps(rows) {
 /* Merge-safe upsert: a day's other manually-entered dispatch-form fields
    (SO forecast, vehicle tracking, bag counts) are never overwritten —
    only the Odoo-sourced quantity fields get set. submitted_by/updated_by
-   stay NULL (no human submitted this row; the schema allows it). */
-async function upsertDay(date, odooFields) {
-  const existing = await db.query(
-    `SELECT data FROM daily_reports WHERE form_type='dispatch' AND record_date=$1 AND shift='day'`,
-    [date]
-  );
-  const merged = { ...(existing.rows[0]?.data || {}), ...odooFields };
+   stay NULL (no human submitted this row; the schema allows it).
 
+   The merge happens inside the SQL statement itself (jsonb `||`, right
+   operand wins on key conflict) rather than a separate SELECT-then-write
+   round trip — a read-modify-write here would race routes/reports.js's
+   own atomic upsert on the exact same (form_type, record_date, shift) row
+   if an operator edits the Dispatch form for a day while this sync (which
+   deliberately re-pulls a 5-day trailing window every run) is mid-flight
+   for that same day, silently discarding whichever write lost the race. */
+async function upsertDay(date, odooFields) {
   await db.query(`
     INSERT INTO daily_reports (form_type, record_date, shift, data, submitted_at)
     VALUES ('dispatch', $1, 'day', $2, NOW())
     ON CONFLICT (form_type, record_date, shift)
-    DO UPDATE SET data = $2, updated_at = NOW()
-  `, [date, JSON.stringify(merged)]);
+    DO UPDATE SET data = daily_reports.data || EXCLUDED.data, updated_at = NOW()
+  `, [date, JSON.stringify(odooFields)]);
 }
 
 /* Pulls [from, to] (inclusive, 'YYYY-MM-DD') and upserts every day found.

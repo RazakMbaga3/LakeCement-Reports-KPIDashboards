@@ -1,5 +1,13 @@
 # GO-LIVE CHECKLIST — Lake Cement MIS (Nyati Dashboard)
 
+> **⚠ Superseded plan.** Written for the on-prem plant-server cutover.
+> Production hosting is now planned as cloud infrastructure under the
+> Odoo team's ownership (see `TECHNICAL_SPEC.md` §10) — platform still
+> unconfirmed as of 2026-08-18. §1–3 (server install, security hardening)
+> will need re-authoring once that's settled; §4–8 (verification,
+> parallel run, cutover, rollback, first-week checks) are largely
+> host-agnostic and should still apply.
+
 One-time cutover plan for putting the MIS into production on the plant
 server and retiring the Excel-based daily reporting. Work through it top
 to bottom and tick as you go; the technical steps reference

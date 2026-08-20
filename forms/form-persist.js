@@ -304,8 +304,8 @@
             <span style="color:#94A3B8;font-size:10px">${time}</span>
             <span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px;${badgeStyle}">${status.toUpperCase()}</span>
           </div>`;
-        row.onclick = () => {
-          const loadedMeta = _read(formId, date);
+        row.onclick = async () => {
+          const loadedMeta = await _read(formId, date);
           if (loadedMeta) {
             _toast(`Loaded ${loadedMeta.status} — ${loadedMeta.date}`, 'ok');
             // Lock if submitted

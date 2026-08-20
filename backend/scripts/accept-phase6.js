@@ -133,9 +133,13 @@ async function main() {
     const prodTok    = await loginToken(USERS.production);
 
     // ── 1. Deep health ──────────────────────────────────────────
+    // status is 'degraded' here, not 'ok' — this test server has no
+    // BACKUP_DIR, and backup === 'not_configured' now correctly degrades
+    // health (added 2026-08-19; a plant that never configured backups
+    // used to show perpetually green health with zero DR coverage).
     const h = await api('GET', '/health');
-    check('deep health: ok + db latency + disk free + backup state',
-      h.status === 200 && h.body.status === 'ok' &&
+    check('deep health: degraded (no backup configured) + db latency + disk free',
+      h.status === 200 && h.body.status === 'degraded' &&
       h.body.checks.db.ok === true && typeof h.body.checks.db.latency_ms === 'number' &&
       typeof h.body.checks.disk.free_gb === 'number' &&
       h.body.checks.backup === 'not_configured', JSON.stringify(h.body && h.body.status));

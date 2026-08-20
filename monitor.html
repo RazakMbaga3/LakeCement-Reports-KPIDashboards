@@ -5,12 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>System Monitor — Lake Cement MIS</title>
 <link rel="icon" type="image/png" href="favicon.png">
+<link rel="stylesheet" href="styles.css" />
+<script src="auth.js?v=10"></script>
+<script src="forms/api-client.js"></script>
+<script src="sidebar.js?v=2"></script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Inter',system-ui,sans-serif; background:#F4F6FA; color:#173158; min-height:100vh; }
-  .top { background:#173158; color:white; padding:14px 22px; display:flex; align-items:center; gap:14px; }
-  .top h1 { font-size:15px; font-weight:800; letter-spacing:.4px; }
-  .top a { color:#F49545; font-size:12px; font-weight:700; text-decoration:none; margin-left:auto; }
+  body { font-family:'Inter',system-ui,sans-serif; color:#173158; }
   .wrap { max-width:1100px; margin:22px auto; padding:0 18px; }
   .chips { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; align-items:center; }
   .chip { background:white; border:1.5px solid #DDE3EC; border-radius:10px; padding:12px 18px; min-width:150px; }
@@ -31,11 +32,13 @@
 </head>
 <body>
 
-<div class="top">
-  <img src="NYATI-LOGO.png" alt="Nyati" style="height:30px">
-  <h1>SYSTEM MONITOR</h1>
-  <a href="index.html">← Back to Dashboard</a>
-</div>
+<div class="app-shell">
+  <aside class="sidebar" id="app-sidebar"></aside>
+  <script>renderSidebar();</script>
+
+  <div class="main">
+    <header class="top-header" id="app-header"></header>
+    <script>renderTopHeader();</script>
 
 <div class="wrap">
   <div class="chips" id="chips">
@@ -53,7 +56,9 @@
   <div class="card"><h2>KPI overrides</h2><div id="t-overrides"><div class="empty">Loading…</div></div></div>
 </div>
 
-<script src="auth.js"></script>
+  </div>
+</div><!-- /.app-shell -->
+
 <script src="forms/client-errors.js"></script>
 <script>
   requireAuth();
@@ -63,7 +68,9 @@
   })();
 
   const API = (typeof _API_BASE !== 'undefined') ? _API_BASE : 'http://localhost:5000/api';
-  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+  // esc() delegates to the shared escHtml() (forms/api-client.js) — this
+  // page's own version previously missed escaping "'", unlike the others.
+  const esc = s => escHtml(s);
   const when = t => t ? new Date(t).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
 
   function table(el, headers, rows) {

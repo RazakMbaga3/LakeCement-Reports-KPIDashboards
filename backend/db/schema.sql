@@ -207,7 +207,7 @@ CREATE TABLE IF NOT EXISTS sales_targets (
   id            SERIAL PRIMARY KEY,
   target_month  DATE          NOT NULL,
   officer_code  VARCHAR(30),
-  grade_key     VARCHAR(20),                              -- NULL = all-grades total
+  grade_key     VARCHAR(20)   NOT NULL DEFAULT '_all',     -- '_all' = all-grades total (sentinel, not NULL — see migration 008)
   target_mt     NUMERIC(12,3) NOT NULL,
   source        VARCHAR(20)   NOT NULL DEFAULT 'manual',   -- 'manual' | 'odoo'
   set_by        INTEGER REFERENCES users(id),

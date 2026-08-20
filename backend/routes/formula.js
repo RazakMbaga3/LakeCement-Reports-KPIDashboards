@@ -72,27 +72,33 @@ router.post('/override',
       const results  = await engine.evalMonth(year, month);
       const computed = results.find(r => r.key === kpi_key)?.computed ?? null;
 
-      // Supersede any active override for this KPI/period (never delete)
-      await db.query(
-        `UPDATE kpi_overrides SET cleared_at = NOW(), cleared_by = $4
-         WHERE kpi_key = $1 AND year = $2 AND month = $3 AND cleared_at IS NULL`,
-        [kpi_key, year, month, req.user.id]
-      );
-      const inserted = await db.query(
-        `INSERT INTO kpi_overrides
-           (kpi_key, year, month, value_override, value_computed, reason, created_by, created_by_name)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-         RETURNING *`,
-        [kpi_key, year, month, value, computed, reason, req.user.id, req.user.name]
-      );
+      // Supersede-then-insert-then-audit as one transaction — a crash
+      // between steps must never leave the KPI/period with zero active
+      // overrides when the client was told the override succeeded.
+      const override = await db.withTransaction(async (client) => {
+        await client.query(
+          `UPDATE kpi_overrides SET cleared_at = NOW(), cleared_by = $4
+           WHERE kpi_key = $1 AND year = $2 AND month = $3 AND cleared_at IS NULL`,
+          [kpi_key, year, month, req.user.id]
+        );
+        const inserted = await client.query(
+          `INSERT INTO kpi_overrides
+             (kpi_key, year, month, value_override, value_computed, reason, created_by, created_by_name)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+           RETURNING *`,
+          [kpi_key, year, month, value, computed, reason, req.user.id, req.user.name]
+        );
 
-      await db.query(
-        'INSERT INTO audit_log (user_id, username, action, form_type, details, ip_address) VALUES ($1,$2,$3,$4,$5,$6)',
-        [req.user.id, req.user.username, 'KPI_OVERRIDE_SET', `${kpi_key} ${year}-${month}`,
-         `computed ${computed ?? '—'} → override ${value} — ${reason}`, req.ip]
-      );
+        await client.query(
+          'INSERT INTO audit_log (user_id, username, action, form_type, details, ip_address) VALUES ($1,$2,$3,$4,$5,$6)',
+          [req.user.id, req.user.username, 'KPI_OVERRIDE_SET', `${kpi_key} ${year}-${month}`,
+           `computed ${computed ?? '—'} → override ${value} — ${reason}`, req.ip]
+        );
 
-      res.json({ success: true, override: inserted.rows[0] });
+        return inserted.rows[0];
+      });
+
+      res.json({ success: true, override });
     } catch (err) { next(err); }
   });
 
@@ -103,20 +109,25 @@ router.delete('/override/:id',
   async (req, res, next) => {
     try {
       const { id } = req.validated.params;
-      const result = await db.query(
-        `UPDATE kpi_overrides SET cleared_at = NOW(), cleared_by = $2
-         WHERE id = $1 AND cleared_at IS NULL
-         RETURNING kpi_key, year, month, value_override`,
-        [id, req.user.id]
-      );
-      if (!result.rows[0]) return res.status(404).json({ error: 'No active override with that id.' });
+      const ov = await db.withTransaction(async (client) => {
+        const result = await client.query(
+          `UPDATE kpi_overrides SET cleared_at = NOW(), cleared_by = $2
+           WHERE id = $1 AND cleared_at IS NULL
+           RETURNING kpi_key, year, month, value_override`,
+          [id, req.user.id]
+        );
+        if (!result.rows[0]) return null;
 
-      const ov = result.rows[0];
-      await db.query(
-        'INSERT INTO audit_log (user_id, username, action, form_type, details, ip_address) VALUES ($1,$2,$3,$4,$5,$6)',
-        [req.user.id, req.user.username, 'KPI_OVERRIDE_CLEARED', `${ov.kpi_key} ${ov.year}-${ov.month}`,
-         `override ${ov.value_override} cleared — formula value back in effect`, req.ip]
-      );
+        const row = result.rows[0];
+        await client.query(
+          'INSERT INTO audit_log (user_id, username, action, form_type, details, ip_address) VALUES ($1,$2,$3,$4,$5,$6)',
+          [req.user.id, req.user.username, 'KPI_OVERRIDE_CLEARED', `${row.kpi_key} ${row.year}-${row.month}`,
+           `override ${row.value_override} cleared — formula value back in effect`, req.ip]
+        );
+        return row;
+      });
+      if (!ov) return res.status(404).json({ error: 'No active override with that id.' });
+
       res.json({ success: true });
     } catch (err) { next(err); }
   });

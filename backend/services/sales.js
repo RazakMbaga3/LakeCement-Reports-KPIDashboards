@@ -299,7 +299,7 @@ async function _getTargets(firstOfMonth) {
   const monthStr = firstOfMonth.toISOString().slice(0, 10);
   const result = await db.query(
     `SELECT officer_code, target_mt, source FROM sales_targets
-     WHERE target_month = $1 AND grade_key IS NULL`,
+     WHERE target_month = $1 AND grade_key = '_all'`,
     [monthStr]
   );
   const rows = result.rows;

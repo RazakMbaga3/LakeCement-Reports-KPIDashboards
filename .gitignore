@@ -20,3 +20,12 @@ node_modules/
 # Excel lock/temp files (the .xlsx report templates themselves stay tracked)
 ~$*.xls*
 *.tmp
+
+# deploy/ is checked out onto the production droplet and gets read by
+# external collaborators (see docs/DEPLOYMENT_DIGITALOCEAN.md) — it should
+# only ever hold deployment scripts/configs, never real report data. A real
+# filled production report was committed here by accident (2026-08-06,
+# untracked 2026-08-19); this rule stops it from silently recurring. Root-
+# level .xlsx files are unaffected — those are deliberate historical
+# backfill source material, not this problem.
+deploy/*.xls*

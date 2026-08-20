@@ -12,6 +12,20 @@
 
   const BASE = (typeof _API_BASE !== 'undefined') ? _API_BASE : 'http://localhost:5000/api';
 
+  /* Shared HTML-escaper — was independently reimplemented (with
+     inconsistent character coverage) in sales.html, purchases.html,
+     memory.html, monitor.html and mines-report.html; one page's
+     4-character version (missing `'`) is exactly the kind of gap that
+     let a real stored-XSS hole through the Quarry ticket inspector. One
+     copy here, loaded by every page that already includes this file. */
+  if (typeof global.escHtml !== 'function') {
+    global.escHtml = function escHtml(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    };
+  }
+
   function _headers() {
     const token = (typeof getAuthToken === 'function') ? getAuthToken() : null;
     const h = { 'Content-Type': 'application/json' };
@@ -180,12 +194,52 @@
     return res.json();
   }
 
+  /* ── Purchase dashboard (backend/routes/purchases.js) ───────────── */
+
+  /* GET /api/purchases/dashboard?year=&month= */
+  async function getPurchasesDashboard(year, month) {
+    const params = new URLSearchParams();
+    if (year)  params.set('year', year);
+    if (month) params.set('month', month);
+    const qs = params.toString();
+    const res = await fetch(BASE + '/purchases/dashboard' + (qs ? '?' + qs : ''), { headers: _headers() });
+    if (!res.ok) throw _httpError('getPurchasesDashboard', year + '-' + month, res);
+    return res.json();
+  }
+
+  /* ── MIS reference data (backend/routes/mis.js) ─────────────────── */
+
+  /* GET /api/mis/employees|it-assets|vehicles|compliance-certs — static
+     HR/IT/vehicle/compliance registers shown on mis.html's tabs. */
+  async function getMisEmployees() {
+    const res = await fetch(BASE + '/mis/employees', { headers: _headers() });
+    if (!res.ok) throw _httpError('getMisEmployees', '', res);
+    return res.json();
+  }
+  async function getMisItAssets() {
+    const res = await fetch(BASE + '/mis/it-assets', { headers: _headers() });
+    if (!res.ok) throw _httpError('getMisItAssets', '', res);
+    return res.json();
+  }
+  async function getMisVehicles() {
+    const res = await fetch(BASE + '/mis/vehicles', { headers: _headers() });
+    if (!res.ok) throw _httpError('getMisVehicles', '', res);
+    return res.json();
+  }
+  async function getMisComplianceCerts() {
+    const res = await fetch(BASE + '/mis/compliance-certs', { headers: _headers() });
+    if (!res.ok) throw _httpError('getMisComplianceCerts', '', res);
+    return res.json();
+  }
+
   global.NyatiAPI = {
     submitForm, getForm, getFormRange,
     evalFormulas, getDailySeries, setOverride, clearOverride, getOverrides,
     getBaseline, getCompleteness, getStoppageInsights,
     quarryImportTickets, quarryGetTickets,
     getSalesTerritories, getSalesDashboard, setSalesTarget,
+    getPurchasesDashboard,
+    getMisEmployees, getMisItAssets, getMisVehicles, getMisComplianceCerts,
   };
 
 }(window));

@@ -1,27 +1,15 @@
 /*
-  config/kpiAccess.js — which roles may WRITE monthly KPI values (kpi_monthly)
-  for which departments.
+  config/kpiAccess.js — which roles may WRITE monthly KPI values
+  (kpi_monthly) for which departments.
 
-  Mirrors PERMISSIONS[role].kpi.editDepts in the frontend's auth.js — keep
-  both in sync. 'all' = any department. Dept keys match the dashboard's
-  data-dept values: summary, ei, production, mines, mechanical, powerplant,
-  packing, stores, minesworkshop.
-
-  admin/management keep the 'all' rights the old requireRole('admin',
-  'management') guard gave them; department HODs get exactly the depts the
-  client-side "Fill Monthly Data" button already offers them — previously
-  those HODs would have been 403'd by the server the moment the button was
-  wired to the real endpoint.
+  Re-exports forms/access-registry.js's KPI_EDIT_DEPTS (the single source
+  of truth, shared with formAccess.js and commercialAccess.js) under its
+  original name so every existing `require('../config/kpiAccess')` call
+  site is unaffected. See backend/test/access-consistency.test.js for how
+  this stays in sync with auth.js's own copy — this is the exact map
+  whose admin/management entries drifted from auth.js until the
+  2026-08-19 audit caught it.
 */
-const ROLE_KPI_EDIT_DEPTS = {
-  admin:      'all',
-  management: 'all',
-  stores:     ['stores'],
-  cpp:        ['powerplant'],
-  pm:         ['mechanical'],
-  mining:     ['mines'],
-  production: ['production'],
-  md: [], hr: [], finance: [], it: [], logistics: [], sales: [],
-};
+const { KPI_EDIT_DEPTS } = require('../../forms/access-registry.js');
 
-module.exports = { ROLE_KPI_EDIT_DEPTS };
+module.exports = { ROLE_KPI_EDIT_DEPTS: KPI_EDIT_DEPTS };

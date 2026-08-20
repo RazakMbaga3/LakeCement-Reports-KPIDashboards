@@ -16,6 +16,7 @@
 */
 
 const db = require('../db');
+const logger = require('./logger');
 const { FACTS, FORMULAS } = require('../../forms/formula-registry.js');
 
 function num(v) {
@@ -50,9 +51,20 @@ async function buildEntries(from, to) {
   return [...entries.values()].sort((a, b) => (a.date < b.date ? -1 : 1));
 }
 
-function dailyValue(formula, facts) {
+function dailyValue(formula, facts, key) {
   let v;
-  try { v = formula.daily(facts); } catch { v = null; }
+  try {
+    v = formula.daily(facts);
+  } catch (err) {
+    // A thrown formula renders identically to "no data submitted" if this
+    // is swallowed silently — that hid two real bugs in this file's
+    // history (see forms/formula-registry.js's own notes on the
+    // kiln_coal_cons / pwr_cm1_kwh incidents) until a manual audit found
+    // them. Logging here means a broken formula shows up in the logs the
+    // moment it breaks instead of indefinitely.
+    logger.warn({ formula: key, err: err.message }, 'formula.daily() threw — rendering as null');
+    v = null;
+  }
   return (v === null || v === undefined || Number.isNaN(v)) ? null : v;
 }
 
@@ -82,6 +94,8 @@ function formulaMeta(key) {
     key, label: f.label, unit: f.unit, dp: f.dp, version: f.version,
     target: f.target, signage: f.signage, targetLabel: f.targetLabel,
     inputs: f.inputs,
+    provisional: !!f.provisional,
+    provisionalNote: f.provisionalNote || null,
   };
 }
 
@@ -112,7 +126,7 @@ async function evalMonth(year, month) {
 
   return Object.keys(FORMULAS).map(key => {
     const formula = FORMULAS[key];
-    const rows = entries.map(e => ({ value: dailyValue(formula, e.facts), facts: e.facts }));
+    const rows = entries.map(e => ({ value: dailyValue(formula, e.facts, key), facts: e.facts }));
     const computed = round(aggregate(formula, rows), formula.dp);
 
     const ov = overrides.get(key);
@@ -144,7 +158,7 @@ async function evalDaily(from, to) {
     const byDate = new Map();
     for (const e of entries) {
       if (byDate.has(e.date) && e.shift !== 'day') continue;
-      byDate.set(e.date, round(dailyValue(formula, e.facts), formula.dp));
+      byDate.set(e.date, round(dailyValue(formula, e.facts, key), formula.dp));
     }
     out[key] = {
       ...formulaMeta(key),

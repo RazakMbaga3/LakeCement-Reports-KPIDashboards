@@ -63,14 +63,16 @@
     // (confirmed on Render: a 2026-07-22 submission with 376.5 MT was
     // going uncounted because 'despatch-day' only read the new facts).
     // Kept only as a fallback in despatch-day's daily() below — never
-    // used as a primary source for new data.
-    dispatch_legacy_425r:    { source: 'manual', form: 'dispatch', field: 'dispatch_425r',    unit: 'MT' },
-    dispatch_legacy_425nbm:  { source: 'manual', form: 'dispatch', field: 'dispatch_425nbm',  unit: 'MT' },
-    dispatch_legacy_425n:    { source: 'manual', form: 'dispatch', field: 'dispatch_425n',    unit: 'MT' },
-    dispatch_legacy_325n:    { source: 'manual', form: 'dispatch', field: 'dispatch_325n',    unit: 'MT' },
-    dispatch_legacy_opc425n: { source: 'manual', form: 'dispatch', field: 'dispatch_opc425n', unit: 'MT' },
-    dispatch_legacy_bulker:  { source: 'manual', form: 'dispatch', field: 'dispatch_bulker',  unit: 'MT' },
-    dispatch_legacy_bigbag:  { source: 'manual', form: 'dispatch', field: 'dispatch_bigbag',  unit: 'MT' },
+    // used as a primary source for new data. legacy:true tells
+    // backend/test/fact-fields.test.js not to expect these on any
+    // current form — they intentionally only exist in old rows.
+    dispatch_legacy_425r:    { source: 'manual', form: 'dispatch', field: 'dispatch_425r',    unit: 'MT', legacy: true },
+    dispatch_legacy_425nbm:  { source: 'manual', form: 'dispatch', field: 'dispatch_425nbm',  unit: 'MT', legacy: true },
+    dispatch_legacy_425n:    { source: 'manual', form: 'dispatch', field: 'dispatch_425n',    unit: 'MT', legacy: true },
+    dispatch_legacy_325n:    { source: 'manual', form: 'dispatch', field: 'dispatch_325n',    unit: 'MT', legacy: true },
+    dispatch_legacy_opc425n: { source: 'manual', form: 'dispatch', field: 'dispatch_opc425n', unit: 'MT', legacy: true },
+    dispatch_legacy_bulker:  { source: 'manual', form: 'dispatch', field: 'dispatch_bulker',  unit: 'MT', legacy: true },
+    dispatch_legacy_bigbag:  { source: 'manual', form: 'dispatch', field: 'dispatch_bigbag',  unit: 'MT', legacy: true },
 
     // kiln fields — captured on the Production Report (Plant Operations).
     // kiln_coal_cons/kiln_coal_ncv previously pointed at form fields that
@@ -136,11 +138,20 @@
     cm1_425n_bm_cons_mt: { source: 'manual', form: 'production', field: 'cm1_425n_bm_cons_mt', unit: 'MT' },
 
     // CPP (Captive Power Plant) daily generation report — FRM-LCL-PP-06
-    cpp_gross_gen_kwh:    { source: 'manual', form: 'cpp', field: 'cpp_gross_gen_kwh',    unit: 'kWh' },
-    cpp_aux_kwh:          { source: 'manual', form: 'cpp', field: 'cpp_aux_kwh',          unit: 'kWh' },
-    cpp_coal_cons:        { source: 'manual', form: 'cpp', field: 'cpp_coal_cons',        unit: 'MT' },
-    cpp_coal_gcv:         { source: 'manual', form: 'cpp', field: 'cpp_coal_gcv',         unit: 'kcal/kg' },
-    cpp_heat_rate_plant:  { source: 'manual', form: 'cpp', field: 'cpp_heat_rate_plant',  unit: 'kcal/kWh' },
+    // unwired: true — found 2026-08-19 by backend/test/fact-fields.test.js
+    // (a new automated cross-check): form_type 'cpp' has no real <input
+    // data-field> anywhere in the app. power-plant-report.html shows
+    // cpp_gross_gen_kwh/cpp_aux_kwh only as read-only data-kpi rollup
+    // cells (no entry point behind them); the other three have no trace
+    // at all. cpp-heat-rate and cpp-auxiliary-power (the two formulas
+    // that read these) have always computed null as a result — see their
+    // provisional flags below. Fixing this needs a real CPP data-entry
+    // decision (which page, whose responsibility), not a code change.
+    cpp_gross_gen_kwh:    { source: 'manual', form: 'cpp', field: 'cpp_gross_gen_kwh',    unit: 'kWh', unwired: true },
+    cpp_aux_kwh:          { source: 'manual', form: 'cpp', field: 'cpp_aux_kwh',          unit: 'kWh', unwired: true },
+    cpp_coal_cons:        { source: 'manual', form: 'cpp', field: 'cpp_coal_cons',        unit: 'MT', unwired: true },
+    cpp_coal_gcv:         { source: 'manual', form: 'cpp', field: 'cpp_coal_gcv',         unit: 'kcal/kg', unwired: true },
+    cpp_heat_rate_plant:  { source: 'manual', form: 'cpp', field: 'cpp_heat_rate_plant',  unit: 'kcal/kWh', unwired: true },
   };
 
   // pile-quality form: 18 CaO hole samples
@@ -261,6 +272,8 @@
     'specific-power-consumption-total': {
       label: 'Specific Power Consumption – Total', unit: 'kWh/MT eq. cement', dp: 2, version: 4,
       target: null, signage: '<', targetLabel: null,
+      provisional: true,
+      provisionalNote: 'Understates true power — Compressed Air/Utilities kWh is no longer captured (removed 2026-07-24) and isn’t allocated into this figure. See the formula notes below before trusting the trend.',
       notes: 'Mirrors the source Excel’s 3-layer build (M54): upstream-of-clinker kWh (crusher, raw mills, coal mill, kiln) is expressed per ton of clinker, then scaled to a per-ton-cement basis by the clinker factor (total clinker consumed, own + purchased, ÷ total cement produced by both mills); downstream kWh (cement mills, packing, lighting) is divided by cement produced directly and added. v4: Compressed Air/Utilities is no longer a tracked fact (removed from the power-cons form), so it no longer contributes here — this KPI now understates true total power by whatever utilities used to draw.',
       inputs: KWH_CLINKER.concat(KWH_DOWNSTREAM, ['pwr_kiln_prod_mt', 'cm_clinker_own_cons', 'cm_clinker_purch_cons'], CM_GRADES),
       // Matches source Excel's 3-layer build (row 54, M54): upstream-of-clinker
@@ -284,6 +297,8 @@
     'specific-power-consumption-up-to-clinker': {
       label: 'Specific Power Consumption – Up to Clinker', unit: 'kWh/MT clinker', dp: 2, version: 3,
       target: null, signage: '<', targetLabel: null,
+      provisional: true,
+      provisionalNote: 'Understates true power — Compressed Air/Utilities kWh is no longer captured (removed 2026-07-24) and isn’t allocated into this figure. Also a known simplification vs. the source Excel (crusher/raw-mill/coal-mill throughput isn’t captured by any form). See the formula notes below.',
       notes: 'v3: back to upstream department kWh only (crusher, raw mills, coal mill, kiln) ÷ clinker produced, with no utilities share. v2 had added 60% of Utilities kWh — the plant\'s own real allocation rule, confirmed against the "CUMULATIVE DAILY" sheet of the IMS power workbooks (Apr–Jun 2026 master power reports) — but Compressed Air/Utilities was subsequently removed as a tracked fact (2026-07-24, deleted from the power-cons form), so there is no longer a utilities figure to allocate. This KPI now understates true up-to-clinker power by its 60% share of whatever utilities used to draw. KNOWN SIMPLIFICATION vs the source Excel regardless: the plant\'s report ideally builds this per department (crusher, raw mill, coal mill each ÷ their own throughput, × a material ratio) — crusher/raw-mill/coal-mill output tonnages aren\'t captured by any form.',
       inputs: KWH_CLINKER.concat(['pwr_kiln_prod_mt']),
       daily: function (f) {
@@ -296,6 +311,8 @@
     'specific-power-consumption-cement-grinding': {
       label: 'Specific Power Consumption – Cement Grinding', unit: 'kWh/MT', dp: 2, version: 4,
       target: null, signage: '<', targetLabel: null,
+      provisional: true,
+      provisionalNote: 'Understates true power — Compressed Air/Utilities kWh is no longer captured (removed 2026-07-24) and isn’t allocated into this figure. See the formula notes below before trusting the trend.',
       notes: 'v4: CM-1 + CM-2 grinding kWh plus both packing plants (kept from v3 — matches the source Excel\'s combined CEMENT bucket, CM1+CM2+PP1+PP2), ÷ combined mill production. The 40% Utilities share added in v3 is removed: Compressed Air/Utilities was deleted as a tracked fact (2026-07-24), so there is no longer a utilities figure to allocate — this KPI now understates true cement-grinding power by its 40% share of whatever utilities used to draw.',
       inputs: KWH_GRINDING.concat(['pwr_packing_kwh', 'pwr_packing2_kwh', 'pwr_cm1_prod_mt', 'pwr_cm2_prod_mt']),
       daily: function (f) {
@@ -310,6 +327,8 @@
     'power-distribution-loss-pct': {
       label: 'Power Distribution Loss %', unit: '%', dp: 2, version: 2,
       target: 2.0, signage: '<', targetLabel: 'Keep < 2%',
+      provisional: true,
+      provisionalNote: 'Overstates true loss — Compressed Air/Utilities kWh is no longer captured (removed 2026-07-24), so that real consumption reads as "loss" instead. Do not judge against the < 2% target without reading the formula notes below.',
       notes: 'Gap between total power supplied (TANESCO import + CPP generation) and the sum of all metered department sections, as a % of the metered total — the plant\'s internal distribution/measurement loss. Formula verified identical to the source IMS workbook\'s "Total losses" / "% of Loss" rows (CUMULATIVE DAILY sheet, Apr–Jun 2026 master power reports) on a spot-checked day, back when Utilities was still a tracked section. v2: Compressed Air/Utilities was removed as a tracked fact (2026-07-24), so its real kWh draw is no longer subtracted out on the "consumed" side — this KPI now overstates true distribution loss by whatever utilities draws, since that untracked consumption reads as "loss" instead. Interpret accordingly (or re-add a utilities fact) before trusting this against the < 2% target. This calculation originated as a live, unsaved preview on the power-cons entry form (kpi-live.js: pwr_total_loss / pwr_loss_pct); this registry entry is the first place it became a tracked, historical, dashboard-visible KPI rather than a number that only ever appeared while someone had the form open.',
       inputs: KWH_ALL.concat(['pwr_tanesco_kwh', 'pwr_cpp_kwh']),
       daily: function (f) {
@@ -355,6 +374,8 @@
     'total-power-kwh': {
       label: 'Total Power Consumption', unit: 'kWh', dp: 0, version: 3,
       target: null, signage: null, targetLabel: null,
+      provisional: true,
+      provisionalNote: 'Understates true total — Compressed Air/Utilities is no longer a tracked section (removed 2026-07-24). See the formula notes below.',
       notes: 'Sum of all metered plant sections including colony. v3: Compressed Air/Utilities is no longer a tracked section (removed as a fact, 2026-07-24) — this total now understates true plant power by whatever utilities draws. Daily totals of 500 kWh or below are treated as meters-not-read (no data) rather than a real total. Monthly value is the straight sum of reported days.',
       inputs: KWH_ALL,
       daily: function (f) { var t = sumOf(KWH_ALL, f); return t > 500 ? t : null; },
@@ -430,6 +451,8 @@
     'cpp-heat-rate': {
       label: 'CPP Heat Rate', unit: 'kcal/kWh', dp: 0, version: 1,
       target: 3800, signage: '<', targetLabel: 'Target < 3,800 kcal/kWh',
+      provisional: true,
+      provisionalNote: 'Always null — its input facts (cpp_heat_rate_plant, cpp_gross_gen_kwh) have no real data-entry field anywhere in the app yet (found 2026-08-19). Needs a CPP data-entry decision before this KPI can ever show a real number.',
       notes: 'Captive Power Plant heat rate (Plant, 3300 @ MCR basis) as reported daily on FRM-LCL-PP-06 — a lab/DCS-derived figure taken as-is, not re-derived from coal×GCV÷gross_gen (verified against the source workbook: the reported figure differs slightly from that naive formula, similar to Turbine Steam Consumption not equalling Boiler−Bleed — both are independently measured values). Monthly figure is the gross-generation-weighted mean.',
       inputs: ['cpp_heat_rate_plant', 'cpp_gross_gen_kwh'],
       daily: function (f) { return pos(f.cpp_heat_rate_plant); },
@@ -439,6 +462,8 @@
     'cpp-auxiliary-power': {
       label: 'CPP Auxiliary Power', unit: '%', dp: 2, version: 1,
       target: 10, signage: '<', targetLabel: 'Target < 10.0%',
+      provisional: true,
+      provisionalNote: 'Always null — its input facts (cpp_aux_kwh, cpp_gross_gen_kwh) have no real data-entry field anywhere in the app yet (found 2026-08-19). Needs a CPP data-entry decision before this KPI can ever show a real number.',
       notes: 'Captive Power Plant auxiliary (house-load) power consumption as a % of gross generation — verified against FRM-LCL-PP-06 (aux ÷ gross × 100). Monthly figure is Σaux ÷ Σgross (gross-generation-weighted), not a simple average of daily percentages.',
       inputs: ['cpp_aux_kwh', 'cpp_gross_gen_kwh'],
       daily: function (f) {

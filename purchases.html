@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – Purchase Dashboard</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="auth.js?v=10"></script>
+  <script src="sidebar.js?v=2"></script>
+  <style>
+    .in-bar {
+      background: white; border-bottom: 1px solid var(--border);
+      position: sticky; top: var(--header-h, 68px); z-index: 80; box-shadow: var(--shadow-sm);
+    }
+    .in-bar-inner { display: flex; align-items: center; gap: 14px; padding: 10px 28px; flex-wrap: wrap; }
+    .in-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); }
+    .in-input {
+      padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--off-white); font-family: var(--font); font-size: 11px; font-weight: 600;
+      color: var(--navy); cursor: pointer;
+    }
+    .in-main { max-width: 1300px; margin: 0 auto; padding: 20px 28px 60px; }
+    .in-section-hdr { display: flex; align-items: center; gap: 8px; margin: 24px 0 12px; }
+    .in-section-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--navy); }
+    .in-section-sub { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+    .in-card { background: white; border: 1.5px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 16px; }
+    .in-chart-wrap { height: 260px; }
+    .in-empty { text-align: center; padding: 30px 20px; color: var(--text-muted); font-size: 11.5px; }
+
+    .sk-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    @media (max-width: 900px) { .sk-row { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 700px) { .sk-row { grid-template-columns: 1fr; } }
+
+    /* Category grid — Service/Local/Import/Raw Material x Open PR/Open PO */
+    .cat-grid { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+    .cat-grid th, .cat-grid td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--border); }
+    .cat-grid th { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); }
+    .cat-grid td:first-child, .cat-grid th:first-child { text-align: left; font-weight: 700; color: var(--navy); }
+    .cat-grid .cat-pending { color: var(--text-muted); font-style: italic; }
+
+    .tbl-scroll { overflow-x: auto; }
+    .po-state { font-size: 9.5px; font-weight: 800; letter-spacing: .3px; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; background: var(--section-bg); color: var(--text-muted); }
+    .po-state.confirmed { background: var(--green-bg); color: var(--green); }
+    .po-state.draft { background: #FFF3E0; color: var(--orange); }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="app-sidebar"></aside>
+  <script>renderSidebar();</script>
+
+  <div class="main">
+
+<header class="top-header" id="app-header"></header>
+<script>renderTopHeader();</script>
+
+<div class="in-bar">
+  <div class="in-bar-inner">
+    <span class="in-lbl">Period</span>
+    <select id="pd-month" class="in-input"></select>
+    <select id="pd-year" class="in-input"></select>
+    <span class="in-lbl" id="pd-source" style="margin-left:8px"></span>
+  </div>
+</div>
+
+<main class="in-main">
+
+  <!-- ── PO VALUE TREND ───────────────────────────────────── -->
+  <div class="in-section-hdr">
+    <span class="in-section-title">PO Value — Monthly Trend</span>
+    <span class="in-section-sub">— confirmed purchase orders, from Odoo</span>
+  </div>
+  <div class="in-card">
+    <div class="sk-row" id="pd-hero" style="margin-bottom:16px"></div>
+    <div class="in-chart-wrap"><canvas id="chart-po-trend"></canvas></div>
+    <div class="in-empty" id="pd-trend-empty" style="display:none"></div>
+  </div>
+
+  <!-- ── CATEGORY BREAKDOWN ───────────────────────────────── -->
+  <div class="in-section-hdr">
+    <span class="in-section-title">Open PR / Open PO — by Category</span>
+    <span class="in-section-sub">Service &middot; Local &middot; Import &middot; Raw Material</span>
+  </div>
+  <div class="in-card">
+    <div class="tbl-scroll">
+      <table class="cat-grid">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Service</th>
+            <th>Local</th>
+            <th>Import</th>
+            <th>Raw Material</th>
+          </tr>
+        </thead>
+        <tbody id="pd-cat-grid"></tbody>
+      </table>
+    </div>
+    <div class="in-empty" id="pd-cat-empty" style="display:none"></div>
+  </div>
+
+  <!-- ── PO LIST ──────────────────────────────────────────── -->
+  <div class="in-section-hdr">
+    <span class="in-section-title">PO List</span>
+    <span class="in-section-sub" id="pd-list-sub">— selected month, from Odoo</span>
+  </div>
+  <div class="in-card">
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:640px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr">PO Number</th>
+            <th class="tl grp-hdr">Vendor</th>
+            <th class="grp-hdr">Date</th>
+            <th class="grp-hdr">Amount (TZS)</th>
+            <th class="grp-hdr">Status</th>
+          </tr>
+        </thead>
+        <tbody id="pd-po-list"></tbody>
+      </table>
+    </div>
+    <div class="in-empty" id="pd-list-empty" style="display:none">No purchase orders found for this period.</div>
+  </div>
+
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span id="footer-date"></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+  </div><!-- /.main -->
+</div><!-- /.app-shell -->
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  lucide.createIcons();
+  requireAuth();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="forms/api-client.js"></script>
+<script src="forms/client-errors.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var ORANGE = '#F49545', NAVY = '#173158', GREEN = '#239557', GRAY = '#9CA3AF';
+  var CATEGORIES = ['service', 'local', 'import', 'raw_material'];
+
+  function fmt(v) { return (v == null) ? '—' : v.toLocaleString(undefined, { maximumFractionDigits: 1 }); }
+  function tzs(v) {
+    if (v == null) return '—';
+    if (Math.abs(v) >= 1e9) return 'TZS ' + (v / 1e9).toFixed(2) + 'B';
+    if (Math.abs(v) >= 1e6) return 'TZS ' + (v / 1e6).toFixed(1) + 'M';
+    return 'TZS ' + v.toLocaleString();
+  }
+  // esc() delegates to the shared escHtml() (forms/api-client.js) rather
+  // than reimplementing the same escaping logic a third time in this file.
+  function esc(s) { return escHtml(s); }
+
+  /* ── Period selectors ─────────────────────────────────────────── */
+  var MONTHS = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+  var now = new Date();
+  var monthSel = document.getElementById('pd-month');
+  var yearSel  = document.getElementById('pd-year');
+  for (var m = 1; m <= 12; m++) {
+    var o = document.createElement('option'); o.value = m; o.textContent = MONTHS[m];
+    if (m === now.getMonth() + 1) o.selected = true;
+    monthSel.appendChild(o);
+  }
+  for (var y = now.getFullYear() - 1; y <= now.getFullYear() + 1; y++) {
+    var oy = document.createElement('option'); oy.value = y; oy.textContent = y;
+    if (y === now.getFullYear()) oy.selected = true;
+    yearSel.appendChild(oy);
+  }
+  monthSel.addEventListener('change', load);
+  yearSel.addEventListener('change', load);
+
+  var trendChart = null;
+
+  function sk(opts) {
+    var cls = opts.pending ? 'sk-pending' : (opts.cls || '');
+    var status = opts.pending
+      ? '<div class="sk-status"><span class="sk-status-dot"></span> ' + (opts.pendingMsg || 'Not connected') + '</div>'
+      : (opts.status ? '<div class="sk-status"><span class="sk-status-dot"></span> ' + opts.status + '</div>' : '');
+    return '<div class="sk-card ' + cls + '">' +
+      '<div class="sk-top"><div class="sk-label">' + opts.label + '</div></div>' +
+      '<div class="sk-value-row"><span class="sk-value">' + (opts.pending ? '—' : opts.value) + '</span>' +
+        (opts.unit && !opts.pending ? '<span class="sk-unit">' + opts.unit + '</span>' : '') + '</div>' +
+      status +
+    '</div>';
+  }
+
+  function renderHero(d) {
+    var trend = d.po_value_trend;
+    var html = '';
+    if (!trend.ok) {
+      html += sk({ label: 'This Month’s PO Value', pending: true, pendingMsg: trend.message });
+      html += sk({ label: 'POs This Month', pending: true, pendingMsg: trend.message });
+    } else {
+      var thisMonth = trend.months[d.period.month - 1] || { value_tzs: 0, count: 0 };
+      var ytdTotal = trend.months.slice(0, d.period.month).reduce(function (s, mo) { return s + mo.value_tzs; }, 0);
+      html += sk({ label: d.period.label + ' PO Value', value: tzs(thisMonth.value_tzs), status: thisMonth.count + ' confirmed PO(s)' });
+      html += sk({ label: 'Year to Date', value: tzs(ytdTotal), status: 'Jan–' + MONTHS[d.period.month].slice(0, 3) + ' ' + d.period.year });
+    }
+    if (d.po_list.ok) {
+      html += sk({ label: 'PO List (all states)', value: fmt(d.po_list.count), unit: 'POs', status: tzs(d.po_list.total_value_tzs) + ' total' });
+    } else {
+      html += sk({ label: 'PO List (all states)', pending: true, pendingMsg: d.po_list.message });
+    }
+    document.getElementById('pd-hero').innerHTML = html;
+  }
+
+  function renderTrend(trendRes, year) {
+    var canvas = document.getElementById('chart-po-trend');
+    var empty = document.getElementById('pd-trend-empty');
+    if (!trendRes.ok) {
+      empty.textContent = trendRes.message;
+      empty.style.display = 'block'; canvas.style.display = 'none';
+      return;
+    }
+    var months = trendRes.months;
+    var hasData = months.some(function (mo) { return mo.value_tzs > 0; });
+    if (!hasData) {
+      empty.textContent = 'No confirmed purchase orders found for ' + year + '.';
+      empty.style.display = 'block'; canvas.style.display = 'none';
+      return;
+    }
+    empty.style.display = 'none'; canvas.style.display = 'block';
+    if (trendChart) trendChart.destroy();
+    trendChart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: months.map(function (mo) { return mo.label; }),
+        datasets: [{ label: 'PO Value', data: months.map(function (mo) { return mo.value_tzs; }), backgroundColor: ORANGE, borderRadius: 4 }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 9 } } },
+          y: { ticks: { font: { size: 9 }, callback: function (v) { return tzs(v); } } },
+        },
+      },
+    });
+  }
+
+  function renderCategoryGrid(grid) {
+    var tbody = document.getElementById('pd-cat-grid');
+    var empty = document.getElementById('pd-cat-empty');
+    if (!grid.ok) {
+      empty.textContent = grid.message;
+      empty.style.display = 'block';
+      tbody.innerHTML = '';
+      return;
+    }
+    empty.style.display = 'none';
+    var html = '';
+    ['open_pr', 'open_po'].forEach(function (row) {
+      html += '<tr><td>' + (row === 'open_pr' ? 'Open PR' : 'Open PO') + '</td>';
+      CATEGORIES.forEach(function (cat) {
+        var cell = grid[cat] && grid[cat][row];
+        html += '<td>' + (cell ? fmt(cell.count) + '<br><span style="font-size:10px;color:var(--text-muted)">' + tzs(cell.value_tzs) + '</span>' : '—') + '</td>';
+      });
+      html += '</tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  function renderPoList(poList) {
+    var tbody = document.getElementById('pd-po-list');
+    var empty = document.getElementById('pd-list-empty');
+    if (!poList.ok) {
+      empty.textContent = poList.message;
+      empty.style.display = 'block';
+      tbody.innerHTML = '';
+      return;
+    }
+    if (!poList.orders.length) {
+      empty.textContent = 'No purchase orders found for this period.';
+      empty.style.display = 'block';
+      tbody.innerHTML = '';
+      return;
+    }
+    empty.style.display = 'none';
+    var html = poList.orders.map(function (po) {
+      var stateCls = (po.state === 'purchase' || po.state === 'done') ? 'confirmed' : 'draft';
+      return '<tr><td class="tl">' + esc(po.name) + '</td><td class="tl">' + esc(po.vendor || '—') + '</td>' +
+        '<td>' + esc((po.date_order || '').slice(0, 10)) + '</td>' +
+        '<td>' + fmt(po.amount_total) + '</td>' +
+        '<td><span class="po-state ' + stateCls + '">' + esc(po.state) + '</span></td></tr>';
+    }).join('');
+    tbody.innerHTML = html;
+  }
+
+  async function load() {
+    var year = yearSel.value;
+    var month = monthSel.value;
+    document.getElementById('pd-source').textContent = 'Loading…';
+    try {
+      var d = await NyatiAPI.getPurchasesDashboard(year, month);
+      document.getElementById('pd-source').textContent = (!d.po_value_trend.ok)
+        ? 'Odoo ' + (d.po_value_trend.status === 'not_configured' ? 'not connected' : 'unreachable') : '';
+      document.getElementById('pd-list-sub').textContent = '— ' + d.period.label + ', from Odoo';
+      renderHero(d);
+      renderTrend(d.po_value_trend, d.period.year);
+      renderCategoryGrid(d.category_grid);
+      renderPoList(d.po_list);
+      if (window.lucide) window.lucide.createIcons();
+    } catch (e) {
+      document.getElementById('pd-source').textContent = '';
+      document.getElementById('pd-hero').innerHTML = '<div class="in-empty" style="grid-column:1/-1">Failed to load the Purchase dashboard. Make sure the backend is running.</div>';
+    }
+  }
+
+  var _dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+  var fEl = document.getElementById('footer-date');
+  if (fEl) fEl.textContent = _dateStr;
+
+  load();
+}());
+</script>
+
+</body>
+</html>

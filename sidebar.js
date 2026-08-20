@@ -1,10 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════════
    Lake Cement Ltd — Global Left Sidebar  |  sidebar.js
    Single persistent navigation shell for every page. Role-aware —
-   derives visibility from the same auth.js permission data portal.js
-   already uses (getMyPerms/getAllowedKPIDepts/getMyDailyAccess/
-   getMyFormAccess/_DAILY_NAV_ITEMS/_DAILY_ACCESS/_FORM_TYPE_ACCESS/
-   _STANDALONE_FORM_TYPE) — no hardcoded roles here either.
+   derives visibility from auth.js's permission accessors (getMyPerms/
+   getAllowedKPIDepts/getMyDailyAccess/getMyFormAccess/getDailyNavItems/
+   getDailyAccessFor/getFormTypeAccessFor/getStandaloneFormType) rather
+   than reaching into its internal data constants directly — no
+   hardcoded roles here either.
    Call renderSidebar() inline right after <aside id="app-sidebar">,
    same timing convention as renderTopHeader().
 ═══════════════════════════════════════════════════════════════════ */
@@ -15,6 +16,7 @@ const _SB_GROUPS = {
   daily:      { label: 'Daily Reports',     cls: 'group-daily' },
   mis:        { label: 'Management Info.',  cls: 'group-mis'   },
   commercial: { label: 'Sales &amp; Purchases', cls: 'group-comm'  },
+  ops:        { label: 'Reports &amp; Tools',   cls: 'group-ops'   },
 };
 
 /* Same 9 departments/order as the KPI dashboard used to show in its
@@ -42,12 +44,26 @@ const _SB_KPI_LINKS = [
 ];
 
 /* Sales is real (see PERMISSIONS[role].commercial.sales in auth.js);
-   Purchases has no permission model yet, so for now it rides on the same
+   Purchases has no permission model yet either, so it rides on the same
    canViewSales() gate as the rest of this group — split it out once
-   Purchases gets its own check. */
+   Purchases gets its own check. Page itself is real (purchases.html,
+   2026-08-10) — the category breakdown grid on it is honestly stubbed
+   pending Odoo field-name confirmation, same as Sales' Receivables tiles. */
 const _SB_COMMERCIAL_ITEMS = [
   { label:'Sales',     icon:'trending-up',   page:'sales.html' },
-  { label:'Purchases', icon:'shopping-cart', page:'coming-soon.html?m=purchases', stub:true },
+  { label:'Purchases', icon:'shopping-cart', page:'purchases.html' },
+];
+
+/* Open to every authenticated role (each page calls requireAuth() only)
+   except System Monitor, which is admin/md/it-only — reuses
+   perms.canViewAudit rather than a new flag since that's already exactly
+   the same ['admin','md','it'] set monitor.html's own client-side guard
+   checks. Previously these 3 pages existed and worked but were reachable
+   only by typing the URL — not linked from any nav. */
+const _SB_OPS_ITEMS = [
+  { label:'Plant Memory Search',    icon:'search',   page:'memory.html' },
+  { label:'MIS Reports &amp; Exports', icon:'file-down', page:'reports-export.html' },
+  { label:'System Monitor',         icon:'activity', page:'monitor.html', auditOnly: true },
 ];
 
 function _sbBase() {
@@ -63,16 +79,16 @@ function _sbCurrentPage() {
 function _sbBuildDailyGroup() {
   const user = getCurrentUser();
   if (!user) return [];
-  const access    = _DAILY_ACCESS[user.role]      || { edit: [], nav: [] };
-  const formTypes = _FORM_TYPE_ACCESS[user.role]  || [];
-  const items     = _DAILY_NAV_ITEMS || [];
+  const access    = getDailyAccessFor(user.role);
+  const formTypes = getFormTypeAccessFor(user.role);
+  const items     = getDailyNavItems() || [];
 
   const visible = access.nav === 'all'
     ? items
     : items.filter(it => access.nav.includes(it.page));
 
   const canFill = it => access.edit.includes(it.page) ||
-                        formTypes.includes(_STANDALONE_FORM_TYPE[it.page]);
+                        formTypes.includes(getStandaloneFormType(it.page));
 
   return visible.map(it => ({ ...it, fill: canFill(it) }));
 }
@@ -210,6 +226,19 @@ function renderSidebar() {
           href: base + it.page,
         });
       }
+    });
+  }
+
+  /* ── Reports & Tools (memory search, MIS export, ops monitor) ──── */
+  const opsItems = _SB_OPS_ITEMS.filter(it => !it.auditOnly || perms.canViewAudit);
+  if (opsItems.length) {
+    html += _sbGroupLabelHTML('ops');
+    opsItems.forEach(it => {
+      html += _sbItemHTML({
+        icon: it.icon, label: it.label,
+        active: currentPage === it.page,
+        href: base + it.page,
+      });
     });
   }
 

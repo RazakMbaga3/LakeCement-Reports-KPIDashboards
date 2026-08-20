@@ -33,6 +33,7 @@ const misRoutes     = require('./routes/mis');
 const insightsRoutes = require('./routes/insights');
 const quarryRoutes  = require('./routes/quarry');
 const salesRoutes   = require('./routes/sales');
+const purchasesRoutes = require('./routes/purchases');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -47,6 +48,9 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.includes('change-me')) {
 }
 if ((process.env.ALLOWED_ORIGIN || '*').trim() === '*') {
   logger.warn('CORS is open to all origins (ALLOWED_ORIGIN=*) — restrict in production');
+}
+if (!process.env.BACKUP_DIR) {
+  logger.warn('BACKUP_DIR is not set — nightly backups are OFF and /api/health will report degraded; there is no disaster-recovery path until this is configured');
 }
 
 // ── MIDDLEWARE ───────────────────────────────────────────────
@@ -104,6 +108,7 @@ app.use('/api/mis',      misRoutes);
 app.use('/api/insights', insightsRoutes);
 app.use('/api/quarry',   quarryRoutes);
 app.use('/api/sales',    salesRoutes);
+app.use('/api/purchases', purchasesRoutes);
 app.use('/api/monitor',  monitorRouter);
 app.get('/api/metrics', metricsAuth, metricsHandler);
 
@@ -152,6 +157,33 @@ app.use('/api/client-errors', rateLimit({
       }
     });
     logger.info(`nightly backup scheduled (${spec}) → ${process.env.BACKUP_DIR}`);
+  }
+
+  // Restore drill (proves the newest backup actually restores) — was a
+  // 100%-manual "run this monthly" step (docs/RUNBOOK.md §4) with nothing
+  // enforcing it; a plant could skip it for a year with no signal. Default
+  // 1st of the month at 03:30, after the nightly backup. Failure fires a
+  // real alert (not just a log line) — a broken/unrestorable backup is
+  // exactly the kind of thing that must not go unnoticed.
+  if (process.env.BACKUP_DIR && process.env.RESTORE_DRILL_CRON !== 'off') {
+    const { runRestoreDrill } = require('./services/restoreDrill');
+    const { fireAlert } = require('./services/watchdog');
+    const spec = process.env.RESTORE_DRILL_CRON || '30 3 1 * *';
+    cron.schedule(spec, async () => {
+      try {
+        const r = await runRestoreDrill();
+        if (r.ok) {
+          logger.info({ result: r }, 'monthly restore drill passed');
+        } else {
+          logger.error({ result: r }, 'monthly restore drill FAILED');
+          await fireAlert('restore-drill-failed', 'Monthly restore drill failed: ' + (r.error || JSON.stringify(r)));
+        }
+      } catch (err) {
+        logger.error({ err }, 'monthly restore drill run crashed');
+        await fireAlert('restore-drill-failed', 'Monthly restore drill crashed: ' + err.message).catch(() => {});
+      }
+    });
+    logger.info(`monthly restore drill scheduled (${spec})`);
   }
 
   if (process.env.WATCHDOG_CRON !== 'off') {

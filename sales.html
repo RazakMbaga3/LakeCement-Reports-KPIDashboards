@@ -199,11 +199,9 @@
      admin-entered data, not user input from this page — but they're
      rendered via innerHTML, so escape them anyway. No HTML-escape helper
      exists elsewhere in this codebase; this one is scoped to this file. */
-  function esc(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
-      return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
-    });
-  }
+  // esc() delegates to the shared escHtml() (forms/api-client.js) rather
+  // than reimplementing the same escaping logic a third time in this file.
+  function esc(s) { return escHtml(s); }
 
   /* ── Period selectors ─────────────────────────────────────────── */
   var MONTHS = ['','January','February','March','April','May','June','July','August','September','October','November','December'];

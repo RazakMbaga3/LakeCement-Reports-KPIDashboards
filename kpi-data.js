@@ -12,6 +12,29 @@
 ─────────────────────────────────────────────────────────────── */
 
 /* ─── Backend KPI API helpers ────────────────────────────── */
+
+/* A save that only reaches localStorage (server unreachable/rejected) must
+   never look identical to a real save — other users' dashboards read from
+   the server and would silently diverge from what this user believes they
+   entered. Same toast style as forms/form-persist.js's _toast(). */
+function _kpiToast(msg, type) {
+  type = type || 'warn';
+  document.getElementById('_kpt')?.remove();
+  const colors = { ok: '#239557', warn: '#D97706', err: '#DC2626' };
+  const icons  = { ok: '✓',       warn: '⚠',       err: '✕'      };
+  const el = document.createElement('div');
+  el.id = '_kpt';
+  el.textContent = (icons[type] || icons.warn) + '  ' + msg;
+  Object.assign(el.style, {
+    position: 'fixed', bottom: '24px', right: '24px', zIndex: '9999',
+    background: colors[type] || colors.warn, color: 'white',
+    padding: '10px 16px', borderRadius: '8px', fontFamily: 'Inter,sans-serif',
+    fontSize: '13px', fontWeight: '600', boxShadow: '0 4px 18px rgba(0,0,0,.2)',
+  });
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 5000);
+}
+
 function _kpiApiBase() { return (typeof _API_BASE !== 'undefined') ? _API_BASE : 'http://localhost:5000/api'; }
 function _kpiHeaders() {
   const h = { 'Content-Type': 'application/json' };
@@ -224,7 +247,12 @@ function makeEditable(cell, dept, slug, yr, mo, isAutoCell) {
     if (!isNaN(actual)) {
       try {
         await _kpiPut(dept, cellYr, cellMo, [{ kpi_key: slug, target: isNaN(target) ? null : target, actual, unit }]);
-      } catch (e) { /* local value already saved above; not blocking the user */ }
+      } catch (e) {
+        // Local value already saved above (not blocking the user), but the
+        // server never got it — other dashboards reading from the server
+        // would silently diverge from what this user just entered.
+        _kpiToast('Saved on this device only — server did not receive the update. Retry once you’re back online.', 'warn');
+      }
     }
   }
 
@@ -315,10 +343,13 @@ async function loadAutoCalcValues(mo, yr) {
       cell.textContent = displayVal;
       cell.classList.toggle('auto-cell',   !r.overridden);
       cell.classList.toggle('edited-cell', !!r.overridden);
+      cell.classList.toggle('provisional-cell', !!r.provisional && !r.overridden);
       if (r.overridden && r.override) {
         cell.title = 'Manual override by ' + (r.override.by || 'unknown') +
           ' on ' + String(r.override.at).slice(0, 10) + ': ' + r.override.reason +
           '  (formula value: ' + (r.computed == null ? '—' : r.computed) + ')';
+      } else if (r.provisional) {
+        cell.title = '⚠ Provisional: ' + (r.provisionalNote || 'this KPI is a known-incomplete calculation.');
       } else {
         cell.removeAttribute('title');
       }
@@ -423,11 +454,13 @@ async function loadHeroCards(mo, yr, view) {
 
     card.classList.remove('on-track', 'watch', 'concern');
     card.classList.add(achieved ? 'on-track' : 'concern');
+    card.title = r.provisional ? ('⚠ Provisional: ' + (r.provisionalNote || 'known-incomplete calculation.')) : '';
     if (statusEl) {
       statusEl.innerHTML = '';
       if (dotSpan) statusEl.appendChild(dotSpan);
       statusEl.append(' ' + (achieved ? 'On Track' : 'Concern') +
-        (r.overridden ? ' (manually overridden)' : ''));
+        (r.overridden ? ' (manually overridden)' : '') +
+        (r.provisional ? ' ⚠ provisional' : ''));
     }
     if (r.overridden && r.override) {
       card.title = 'Manual override by ' + (r.override.by || 'unknown') +
@@ -766,7 +799,12 @@ async function saveAllModalValues() {
   if (kpis.length && dept) {
     try {
       await _kpiPut(dept, yr, mo, kpis);
-    } catch (e) { /* local values already saved above; not blocking the user */ }
+    } catch (e) {
+      // Local values already saved above (not blocking the user), but the
+      // server never got them — other dashboards reading from the server
+      // would silently diverge from what this user just entered.
+      _kpiToast('Saved on this device only — server did not receive the update. Retry once you’re back online.', 'warn');
+    }
   }
 
   // Reload cells

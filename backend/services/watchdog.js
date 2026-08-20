@@ -120,4 +120,30 @@ async function runWatchdog(opts = {}) {
   return { date, health: { status: health.status, checks: health.checks }, fired, skipped, email };
 }
 
-module.exports = { runWatchdog };
+/* Fire a single alert immediately, outside the normal 15-min watchdog
+   sweep — for a failure a background job (the Odoo sync) discovers in
+   the moment rather than on the next periodic check. Same dedupe-once-
+   per-kind-per-day and email-then-record semantics as runWatchdog()'s own
+   candidates, so these show up identically on monitor.html. Previously
+   Odoo sync failures only reached backend/logs/ (logger.warn/error) —
+   unlike every other monitored condition, nothing ever emailed or
+   recorded them, so a broken integration could go unnoticed indefinitely
+   outside of someone actively reading logs. */
+async function fireAlert(kind, detail) {
+  if (await alreadyFired(kind).catch(() => false)) return { fired: false, skipped: true };
+
+  const email = await sendMail({
+    subject: `⚠ Nyati MIS alert: ${kind}`,
+    html: alertEmailHtml([{ kind, detail }]),
+    to: process.env.ALERT_TO || process.env.DIGEST_TO,
+  }).catch(err => ({ sent: false, reason: err.message }));
+
+  await db.query(
+    'INSERT INTO alerts (kind, detail, emailed) VALUES ($1, $2, $3)',
+    [kind, detail, !!email.sent]
+  ).catch(() => { /* alert already emailed — recording is best-effort */ });
+
+  return { fired: true, email };
+}
+
+module.exports = { runWatchdog, fireAlert };

@@ -6,16 +6,17 @@
                                               (form + dashboard both need it)
   POST /api/sales/targets                  → set an interim manual target
 
-  Read access is open to any authenticated role, same philosophy as
-  routes/insights.js — visibility is controlled client-side by the
-  sidebar's canViewSales() gate; server-side role restriction is reserved
-  for writes.
+  Read access (dashboard/territories) is role-gated server-side to
+  COMMERCIAL_VIEW_ROLES (config/commercialAccess.js), mirroring the
+  sidebar's canViewSales() client-side gate — previously this was open to
+  any authenticated role with no server-side check at all.
 */
 const express = require('express');
 const db = require('../db');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { validate, z } = require('../middleware/validate');
 const sales = require('../services/sales');
+const { COMMERCIAL_VIEW_ROLES } = require('../config/commercialAccess');
 
 const router = express.Router();
 
@@ -23,7 +24,7 @@ const zYear  = z.coerce.number().int().min(2020).max(2100);
 const zMonth = z.coerce.number().int().min(1).max(12);
 
 router.get('/dashboard',
-  requireAuth,
+  requireAuth, requireRole(...COMMERCIAL_VIEW_ROLES),
   validate(z.object({ year: zYear.optional(), month: zMonth.optional() }), 'query'),
   async (req, res, next) => {
     try {
@@ -33,7 +34,7 @@ router.get('/dashboard',
   });
 
 router.get('/territories',
-  requireAuth,
+  requireAuth, requireRole(...COMMERCIAL_VIEW_ROLES),
   async (req, res, next) => {
     try { res.json(await sales.getTerritories()); }
     catch (err) { next(err); }
@@ -66,8 +67,12 @@ router.post('/targets',
       }
 
       await db.query(
+        /* grade_key is always the '_all' sentinel here, never NULL — Postgres
+           treats every NULL as distinct under UNIQUE, which would silently
+           defeat this ON CONFLICT and insert a duplicate row on every
+           correction instead of updating (see migration 008's header). */
         `INSERT INTO sales_targets (target_month, officer_code, grade_key, target_mt, source, set_by)
-         VALUES ($1, $2, NULL, $3, 'manual', $4)
+         VALUES ($1, $2, '_all', $3, 'manual', $4)
          ON CONFLICT (target_month, officer_code, grade_key) DO UPDATE SET
            target_mt = EXCLUDED.target_mt, source = 'manual', set_by = EXCLUDED.set_by, updated_at = NOW()`,
         [monthDate, officerCode, targetMt, req.user.id]

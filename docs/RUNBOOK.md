@@ -1,5 +1,13 @@
 # RUNBOOK — Lake Cement MIS (Nyati Dashboard)
 
+> **⚠ Superseded plan.** This describes the on-prem plant-LAN Windows-server
+> deployment this repo was originally built around. Per the Managing
+> Director's later direction (see `TECHNICAL_SPEC.md` §10), production
+> hosting is now planned as cloud infrastructure under the Odoo team's
+> ownership — platform/account still to be confirmed with them. The steps
+> below no longer describe the actual go-live path; kept for reference
+> until a cloud-hosting runbook replaces it.
+
 Operations manual for the plant server. Assumes the layout:
 repo at `C:\apps\LakeCementDashboard`, backend service `LakeCementMIS`,
 Nginx serving the frontend, PostgreSQL local. Everything configurable

@@ -1,12 +1,13 @@
-name: Deploy to DigitalOcean
+name: Test & Deploy to DigitalOcean
 
-# Auto-deploys on every push to main. See docs/DEPLOYMENT_DIGITALOCEAN.md §3
-# for the one-time secret setup (DO_HOST, DO_USER, DO_SSH_KEY, optional
-# DO_PORT) this workflow needs before it can run successfully.
+# Runs the backend's full test + acceptance suite against a throwaway
+# Postgres on every push to main, and only deploys if it's green — there
+# used to be no gate at all between a push and production. See
+# docs/DEPLOYMENT_DIGITALOCEAN.md §3 for the one-time secret setup
+# (DO_HOST, DO_USER, DO_SSH_KEY, optional DO_PORT) the deploy job needs.
 #
-# Prefer a manual gate instead of deploy-on-every-push? Change `push:` below
-# to just `workflow_dispatch: {}` — same deploy script, triggered by hand
-# from the Actions tab instead of automatically.
+# Prefer a manual deploy trigger instead of deploy-on-every-green-push?
+# Change `push:` below to just `workflow_dispatch: {}`.
 
 on:
   push:
@@ -14,7 +15,77 @@ on:
   workflow_dispatch: {}
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: lcl_ci
+          POSTGRES_PASSWORD: lcl_ci_pw
+          POSTGRES_DB: lcl_mis_ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: lcl_mis_ci
+      DB_USER: lcl_ci
+      DB_PASSWORD: lcl_ci_pw
+      DB_SSL: 'false'
+      JWT_SECRET: ci-only-secret-never-used-outside-this-job
+      ALLOWED_ORIGIN: http://localhost
+      WATCHDOG_CRON: 'off'
+      BACKUP_CRON: 'off'
+      ODOO_SYNC_CRON: 'off'
+      DIGEST_TRANSPORT: json # exercises the real mail pipeline without a live SMTP server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Initialize database schema + migrations
+        working-directory: backend
+        run: npm run db:init
+
+      - name: Seed users (+ sales territories)
+        working-directory: backend
+        run: |
+          npm run seed
+          npm run seed:sales
+
+      - name: Lint + formula unit tests + smoke boot
+        working-directory: backend
+        run: npm test
+
+      - name: Acceptance suites (real API against the CI database)
+        working-directory: backend
+        run: |
+          npm run accept:phase1
+          npm run accept:phase2
+          npm run accept:phase3
+          npm run accept:phase5
+          npm run accept:phase6
+          npm run accept:phase7
+          npm run accept:phase8
+          npm run accept:quarry
+          npm run accept:sales
+          npm run accept:purchases
+
   deploy:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: SSH and run deploy.sh on the droplet

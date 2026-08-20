@@ -328,7 +328,7 @@
   <div class="toolbar">
     <div style="display:flex;flex-direction:column;gap:2px">
       <span class="tb-lbl">Report Date</span>
-      <input type="date" class="tb-ctl" id="rpt-date" />
+      <input type="date" class="tb-ctl" id="rpt-date" data-field="date" />
     </div>
     <div class="data-chip" id="data-chip">
       <div class="dc-dot"></div>
@@ -725,6 +725,8 @@
 
   /* ── tiny utils ────────────────────────────────────────────── */
   function $(id) { return document.getElementById(id); }
+  // escHtml() comes from forms/api-client.js (loaded in <head>) — shared
+  // across every page instead of a fresh per-page reimplementation.
   /* lsGet is kept only to read pre-upgrade browser data during the one-time
      legacy migration below — everything else is server-persisted now. */
   function lsGet(k, def) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch (e) { return def; } }
@@ -1277,7 +1279,7 @@
     }
     var html = Object.keys(byVendor).sort(function (a, b) { return byVendor[b] - byVendor[a]; })
       .map(function (v) {
-        var name = v.replace(/^\[[^\]]*\]\s*/, '');
+        var name = escHtml(v.replace(/^\[[^\]]*\]\s*/, ''));
         return '<div class="contr-card active"><div class="cc-name">' + name + '</div>' +
           '<div class="cc-val">' + fmt(byVendor[v], false) + '</div>' +
           '<div class="cc-unit">MT weighed this month (ticket dates)</div></div>';
@@ -1398,9 +1400,9 @@
     var tot = 0;
     var rows = list.map(function (t) {
       tot += +t.r[7] || 0;
-      return '<tr><td>' + t.r[0] + (t.spill ? '<span class="spill-tag">prev-month spillover</span>' : '') + '</td>' +
-        '<td>' + (t.r[2] || '–') + '</td><td>' + (t.r[8] || t.r[6]) + '</td>' +
-        '<td>' + (t.r[1] || '').replace(/^\[[^\]]*\]\s*/, '') + '</td>' +
+      return '<tr><td>' + escHtml(t.r[0]) + (t.spill ? '<span class="spill-tag">prev-month spillover</span>' : '') + '</td>' +
+        '<td>' + escHtml(t.r[2] || '–') + '</td><td>' + escHtml(t.r[8] || t.r[6]) + '</td>' +
+        '<td>' + escHtml((t.r[1] || '').replace(/^\[[^\]]*\]\s*/, '')) + '</td>' +
         '<td class="r">' + fmt(+t.r[7], false) + '</td></tr>';
     }).join('');
     $('insp-title').textContent = 'Ticket Audit — ' + dateISO;

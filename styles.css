@@ -335,6 +335,7 @@ img { max-width: 100%; }
 .group-daily .sb-group-dot { background: var(--orange); }
 .group-mis   .sb-group-dot { background: var(--green); }
 .group-comm  .sb-group-dot { background: var(--sb-accent-commercial); }
+.group-ops   .sb-group-dot { background: #94A3B8; }
 
 /* ── Nav rows ──────────────────────────────────────────────────── */
 .sb-item {
@@ -1049,6 +1050,13 @@ body.period-full .sk-delta { opacity: 0; }
 }
 .auto-cell  { border-left: 3px solid var(--green) !important; }
 .edited-cell { border-left: 3px solid var(--orange) !important; }
+/* Formula is registry-flagged as a known-incomplete calculation (see
+   formula-registry.js `provisional`/`provisionalNote`) — distinct from
+   edited-cell (manual override) so the two aren't confused: this value
+   was never touched by a person, it's just structurally short of real. */
+.provisional-cell {
+  background: repeating-linear-gradient(135deg, #FFF7ED, #FFF7ED 6px, #FFEEDA 6px, #FFEEDA 12px) !important;
+}
 
 /* ── Fill Monthly Data button ──────────────────────────── */
 .fill-monthly-btn {

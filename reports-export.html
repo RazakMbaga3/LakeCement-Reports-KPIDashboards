@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MIS Reports & Exports — Lake Cement</title>
 <link rel="icon" type="image/png" href="favicon.png">
+<link rel="stylesheet" href="styles.css" />
+<script src="auth.js?v=10"></script>
+<script src="sidebar.js?v=2"></script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Inter',system-ui,sans-serif; background:#F4F6FA; color:#173158; min-height:100vh; }
-  .top { background:#173158; color:white; padding:14px 22px; display:flex; align-items:center; gap:14px; }
-  .top h1 { font-size:15px; font-weight:800; letter-spacing:.4px; }
-  .top a { color:#F49545; font-size:12px; font-weight:700; text-decoration:none; margin-left:auto; }
+  body { font-family:'Inter',system-ui,sans-serif; color:#173158; }
   .wrap { max-width:820px; margin:26px auto; padding:0 18px; display:grid; gap:18px; grid-template-columns:1fr 1fr; }
   @media (max-width:700px) { .wrap { grid-template-columns:1fr; } }
   .card { background:white; border:1.5px solid #DDE3EC; border-radius:12px; padding:20px; }
@@ -29,11 +29,13 @@
 </head>
 <body>
 
-<div class="top">
-  <img src="NYATI-LOGO.png" alt="Nyati" style="height:30px">
-  <h1>MIS REPORTS &amp; EXPORTS</h1>
-  <a href="index.html">← Back to Dashboard</a>
-</div>
+<div class="app-shell">
+  <aside class="sidebar" id="app-sidebar"></aside>
+  <script>renderSidebar();</script>
+
+  <div class="main">
+    <header class="top-header" id="app-header"></header>
+    <script>renderTopHeader();</script>
 
 <div class="wrap">
 
@@ -74,7 +76,9 @@
 
 </div>
 
-<script src="auth.js"></script>
+  </div>
+</div><!-- /.app-shell -->
+
 <script src="forms/date-picker.js"></script>
 <script>
   requireAuth();

@@ -57,6 +57,21 @@ function checkOdoo() {
   };
 }
 
+/* Heuristic, not a guarantee: compares device IDs (fs.stat().dev) of
+   BACKUP_DIR and the app's own working directory. True only tells you
+   they're the SAME filesystem/disk (a real problem — one disk failure
+   loses both the database and its backups); false doesn't prove they're
+   on genuinely independent physical disks (e.g. a remote DB_HOST makes
+   this comparison uninformative — harmless in that case, just not useful). */
+async function _sameDiskAsApp(dir) {
+  try {
+    const [dirStat, appStat] = await Promise.all([fsp.stat(dir), fsp.stat(process.cwd())]);
+    return dirStat.dev === appStat.dev;
+  } catch {
+    return false;
+  }
+}
+
 async function checkBackup() {
   const dir = process.env.BACKUP_DIR;
   if (!dir) return 'not_configured';
@@ -70,7 +85,13 @@ async function checkBackup() {
     }
     if (!newest) return { ok: false, error: 'no backup files in ' + dir };
     const ageH = (Date.now() - newest) / 3600000;
-    return { ok: ageH <= BACKUP_MAX_AGE_H, age_hours: Math.round(ageH * 10) / 10, max_hours: BACKUP_MAX_AGE_H };
+    const sameDisk = await _sameDiskAsApp(dir);
+    return {
+      ok: ageH <= BACKUP_MAX_AGE_H && !sameDisk,
+      age_hours: Math.round(ageH * 10) / 10, max_hours: BACKUP_MAX_AGE_H,
+      same_disk_as_app: sameDisk,
+      ...(sameDisk ? { warning: 'BACKUP_DIR appears to be on the same disk as the app — point it at a second disk or network share (see docs/RUNBOOK.md §4)' } : {}),
+    };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -80,7 +101,10 @@ async function deepHealth() {
   const [dbCheck, disk, backup] = await Promise.all([checkDb(), checkDisk(), checkBackup()]);
 
   let status = 'ok';
-  if (!disk.ok || (backup !== 'not_configured' && !backup.ok)) status = 'degraded';
+  // 'not_configured' degrades too now (a plant with zero backups shouldn't
+  // show perpetually green health) — backup.ok is undefined on that string,
+  // so !backup.ok is already true for it; no separate branch needed.
+  if (!disk.ok || !backup.ok) status = 'degraded';
   if (!dbCheck.ok) status = 'down';
 
   return {

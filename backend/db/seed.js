@@ -38,7 +38,32 @@ const USERS = [
   { username: 'sales',      password: 'Sales@LCL2026',  name: 'Sales & Marketing Manager',  role: 'sales',      dept: 'SALES & MARKETING' },
 ];
 
+/* Re-seeding resets EVERY listed user back to the default,
+   committed-in-git password and forces a change again — fine on a fresh
+   database, disruptive (and a little alarming) on a live one where real
+   staff have already been using their own chosen passwords for weeks.
+   Guard: if any of these accounts has already completed its first-login
+   change (must_change_password = false), refuse unless --force is passed. */
+async function checkLiveAccounts() {
+  const { rows } = await db.query(
+    `SELECT username FROM users WHERE username = ANY($1) AND must_change_password = false`,
+    [USERS.map(u => u.username)]
+  );
+  return rows.map(r => r.username);
+}
+
 async function seed() {
+  const force = process.argv.includes('--force');
+  if (!force) {
+    const live = await checkLiveAccounts();
+    if (live.length) {
+      console.error(`❌ Refusing to re-seed: ${live.length} account(s) have already completed their first-login password change: ${live.join(', ')}.`);
+      console.error('   Re-seeding would reset them all back to the default password committed in git and force a change again.');
+      console.error('   If you really mean to do this, re-run with: npm run seed -- --force');
+      process.exit(1);
+    }
+  }
+
   console.log('🌱 Seeding users...\n');
 
   for (const u of USERS) {

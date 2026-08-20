@@ -19,6 +19,7 @@
     "accept:phase8": "node scripts/accept-phase8.js",
     "accept:quarry": "node scripts/accept-quarry.js",
     "accept:sales": "node scripts/accept-sales.js",
+    "accept:purchases": "node scripts/accept-purchases.js",
     "docs:kpi": "node scripts/generate-kpi-reference.js",
     "odoo:test": "node scripts/odoo-test-connection.js",
     "odoo:sync": "node scripts/odoo-sync-once.js",
@@ -29,7 +30,10 @@
     "service:install": "node scripts/service-install.js",
     "service:uninstall": "node scripts/service-uninstall.js",
     "smoke": "node scripts/smoke.js",
-    "test": "npm run lint && npm run smoke"
+    "test:formulas": "node --test test/formulas.test.js",
+    "test:facts": "node --test test/fact-fields.test.js",
+    "test:access": "node --test test/access-consistency.test.js",
+    "test": "npm run lint && npm run test:formulas && npm run test:facts && npm run test:access && npm run smoke"
   },
   "keywords": [],
   "author": "",

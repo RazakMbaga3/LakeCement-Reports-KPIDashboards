@@ -38,6 +38,10 @@ function config() {
   return { url: ODOO_DISPATCH_URL, apiKey: ODOO_DISPATCH_API_KEY };
 }
 
+// See odooClient.js's ODOO_TIMEOUT_MS for why: no timeout here means a
+// stalled connection to the Odoo team's endpoint hangs the caller forever.
+const DISPATCH_TIMEOUT_MS = 15000;
+
 /* Fetch already-aggregated dispatch rows for [from, to] inclusive.
    from/to: 'YYYY-MM-DD' strings — callers own date-range logic, this
    client just enforces the transport contract. */
@@ -45,7 +49,15 @@ async function fetchDispatchReport(from, to) {
   const { url, apiKey } = config();
   const body = new URLSearchParams({ api_key: apiKey, from_date: from, to_date: to });
 
-  const res = await fetch(url, { method: 'POST', body });
+  let res;
+  try {
+    res = await fetch(url, { method: 'POST', body, signal: AbortSignal.timeout(DISPATCH_TIMEOUT_MS) });
+  } catch (err) {
+    if (err.name === 'TimeoutError' || err.name === 'AbortError') {
+      throw new Error(`Odoo dispatch report request timed out after ${DISPATCH_TIMEOUT_MS}ms`, { cause: err });
+    }
+    throw err;
+  }
   if (!res.ok) throw new Error(`Odoo dispatch report HTTP ${res.status}`);
 
   const json = await res.json();

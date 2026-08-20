@@ -37,4 +37,26 @@ pool.connect((err, client, release) => {
   console.log('✅ Connected to PostgreSQL database');
 });
 
+/* Run fn(client) inside BEGIN/COMMIT, ROLLBACK on any throw — for the
+   handful of routes that write more than one table for a single logical
+   action (e.g. the daily_reports upsert + its audit_log row) and need
+   both to land or neither to, rather than the audit trail silently
+   missing an entry a client already saw as "saved". fn must use the
+   client it's given (not the pool) for every query in the transaction. */
+async function withTransaction(fn) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await fn(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => { /* connection may already be dead */ });
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+pool.withTransaction = withTransaction;
+
 module.exports = pool;

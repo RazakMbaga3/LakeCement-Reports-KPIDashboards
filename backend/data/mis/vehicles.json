@@ -1,0 +1,1298 @@
+[
+  {
+    "c": "Passenger",
+    "r": "T 912 EFX",
+    "mk": "Toyota",
+    "md": "Hilux Revo",
+    "t": "Pick Up",
+    "l": "Factory",
+    "a": "Mining"
+  },
+  {
+    "c": "Passenger",
+    "r": "T 608EGX",
+    "mk": "Toyota",
+    "md": "Hilux Surf",
+    "t": "Pick Up",
+    "l": "Factory",
+    "a": "Jatinder"
+  },
+  {
+    "c": "Passenger",
+    "r": "T 368 DUQ",
+    "mk": "Toyota",
+    "md": "LC Prado",
+    "t": "Station Wagon",
+    "l": "Factory",
+    "a": "Mallik"
+  },
+  {
+    "c": "Passenger",
+    "r": "T 791 DNK",
+    "mk": "Toyota",
+    "md": "IST",
+    "t": "Saloon",
+    "l": "HO",
+    "a": "Purchase"
+  },
+  {
+    "c": "Passenger",
+    "r": "T 457 EHU",
+    "mk": "Toyota",
+    "md": "Rav 4",
+    "t": "Station Wagon",
+    "l": "Factory",
+    "a": "Sophia"
+  },
+  {
+    "c": "Passenger",
+    "r": "MC 823 CHB",
+    "mk": "Bajaj",
+    "md": "Boxer",
+    "t": "Motor Cycle",
+    "l": "HO",
+    "a": "Sixto"
+  },
+  {
+    "c": "Passenger",
+    "r": "MC 519 DME",
+    "mk": "Skymark",
+    "md": "B-SK",
+    "t": "Motor Cycle",
+    "l": "HO",
+    "a": "Fabian"
+  },
+  {
+    "c": "Passenger",
+    "r": "MC 464 DWN",
+    "mk": "TVS",
+    "md": "XLHD",
+    "t": "Motor Cycle",
+    "l": "HO",
+    "a": "Admin - Food"
+  },
+  {
+    "c": "Passenger",
+    "r": "MC 400 EUB",
+    "mk": "Honda",
+    "md": "SDH125-D",
+    "t": "Motor cycle",
+    "l": "HO",
+    "a": "Evath -Sales & Mktg"
+  },
+  {
+    "c": "Passenger",
+    "r": "T 806 DQM",
+    "mk": "Toyota",
+    "md": "Camry",
+    "t": "Saloon",
+    "l": "HO",
+    "a": "Sajiv"
+  },
+  {
+    "c": "Passenger",
+    "r": "T 103 EES",
+    "mk": "Nissan",
+    "md": "Note",
+    "t": "Saloon",
+    "l": "HO",
+    "a": "Ankush"
+  },
+  {
+    "c": "Passenger",
+    "r": "T 768 DDC",
+    "mk": "Land Rover",
+    "md": "Rangerover",
+    "t": "Station Wagon",
+    "l": "HO",
+    "a": "Pavan Gandhi"
+  },
+  {
+    "c": "Passenger",
+    "r": "T 446 DSX",
+    "mk": "Land Rover",
+    "md": "Discovery 4",
+    "t": "Station Wagon",
+    "l": "HO",
+    "a": "Sankalp Jaithalia"
+  },
+  {
+    "c": "Passenger",
+    "r": "T 907 EAT",
+    "mk": "Land Rover",
+    "md": "Vouge",
+    "t": "Station Wagon",
+    "l": "HO",
+    "a": "KVP"
+  },
+  {
+    "c": "Passenger",
+    "r": "T 945 ENT",
+    "mk": "Toyota",
+    "md": "Succeed",
+    "t": "Station Wagon",
+    "l": "HO",
+    "a": "Accounts"
+  },
+  {
+    "c": "Passenger",
+    "r": "T 418 DYL",
+    "mk": "Toyota",
+    "md": "Harrier",
+    "t": "Station Wagon",
+    "l": "HO",
+    "a": "Pathak"
+  },
+  {
+    "c": "Passenger",
+    "r": "T 716 DYT",
+    "mk": "Nissan",
+    "md": "X-Trail",
+    "t": "Station Wagon",
+    "l": "HO",
+    "a": "Nirav"
+  },
+  {
+    "c": "Passenger",
+    "r": "T 178 EJL",
+    "mk": "Toyota",
+    "md": "Harrier",
+    "t": "Station Wagon",
+    "l": "HO",
+    "a": "Chirag Patel"
+  },
+  {
+    "c": "Passenger",
+    "r": "T 703 ELJ",
+    "mk": "Nissan",
+    "md": "X-Trail",
+    "t": "Station Wagon",
+    "l": "HO",
+    "a": "Ajit"
+  },
+  {
+    "c": "Passenger",
+    "r": "MC 866 ACD",
+    "mk": "Bajaj",
+    "md": "Boxer",
+    "t": "Motor Cycle",
+    "l": "LOG",
+    "a": "Logistics"
+  },
+  {
+    "c": "Passenger",
+    "r": "MC 431 CGP",
+    "mk": "Bajaj",
+    "md": "Boxer",
+    "t": "Motor Cycle",
+    "l": "LOG",
+    "a": "Logistics"
+  },
+  {
+    "c": "Passenger",
+    "r": "T 175 BCM",
+    "mk": "Tata",
+    "md": "Mobile 20731",
+    "t": "Pick Up",
+    "l": "LOG",
+    "a": "Logistics"
+  },
+  {
+    "c": "Passenger",
+    "r": "T 957 CYZ",
+    "mk": "Toyota",
+    "md": "Prado",
+    "t": "Station Wagon",
+    "l": "LOG",
+    "a": "Logistics"
+  },
+  {
+    "c": "Passenger",
+    "r": "T 459 EQJ",
+    "mk": "Toyota",
+    "md": "VANGUARD",
+    "t": "Station Wagon",
+    "l": "HO",
+    "a": "Sales"
+  },
+  {
+    "c": "Passenger",
+    "r": "T 215 EQV",
+    "mk": "Land Rover",
+    "md": "Rangerover 3.0",
+    "t": "Station Wagon",
+    "l": "HO",
+    "a": "VKP"
+  },
+  {
+    "c": "Passenger",
+    "r": "T 672 DHG",
+    "mk": "Toyota",
+    "md": "Hilux Surf",
+    "t": "Station Wagon",
+    "l": "Factory",
+    "a": "For Sale"
+  },
+  {
+    "c": "Plant",
+    "r": "T 909 DZE",
+    "mk": "ACE",
+    "md": "PHANTON 4X4",
+    "t": "Loader",
+    "l": "Factory",
+    "a": "Project"
+  },
+  {
+    "c": "Plant",
+    "r": "T 963 DTP",
+    "mk": "Caterpillar",
+    "md": "SEM655D",
+    "t": "Wheel Loader",
+    "l": "Factory",
+    "a": "Mining"
+  },
+  {
+    "c": "Plant",
+    "r": "T 186 DUH",
+    "mk": "Escorts",
+    "md": "Hydra-14",
+    "t": "Crane",
+    "l": "Factory",
+    "a": "Maintenance"
+  },
+  {
+    "c": "Plant",
+    "r": "T 955 EAN",
+    "mk": "Escorts",
+    "md": "Hydra",
+    "t": "Crane",
+    "l": "Factory",
+    "a": "Project"
+  },
+  {
+    "c": "Plant",
+    "r": "T 289 ECC",
+    "mk": "Escorts",
+    "md": "Hydra-12",
+    "t": "Crane",
+    "l": "Factory",
+    "a": "Project"
+  },
+  {
+    "c": "Plant",
+    "r": "T 850 DTF",
+    "mk": "FAW",
+    "md": "J5P 6X4 340 HP/CA3256",
+    "t": "Tipper",
+    "l": "Factory",
+    "a": "Mining"
+  },
+  {
+    "c": "Plant",
+    "r": "T 852 DTF",
+    "mk": "FAW",
+    "md": "J5P 6X4 340 HP/CA3256",
+    "t": "Tipper",
+    "l": "Factory",
+    "a": "Mining"
+  },
+  {
+    "c": "Plant",
+    "r": "T 487 EFG",
+    "mk": "Godrej",
+    "md": "GX 300D- NEO",
+    "t": "Forklift",
+    "l": "Factory",
+    "a": "Stores"
+  },
+  {
+    "c": "Plant",
+    "r": "T 373 CNJ",
+    "mk": "Greaves",
+    "md": "BOMAG-BW211D3",
+    "t": "Road Roller",
+    "l": "Factory",
+    "a": "Mining"
+  },
+  {
+    "c": "Plant",
+    "r": "T 876 CLU",
+    "mk": "JCB",
+    "md": "Backhoe Loader 3DX",
+    "t": "Loader",
+    "l": "Factory",
+    "a": "Mining"
+  },
+  {
+    "c": "Plant",
+    "r": "T 647 CNE",
+    "mk": "Mahindra",
+    "md": "6000D1",
+    "t": "Tractor",
+    "l": "Factory",
+    "a": "Mining"
+  },
+  {
+    "c": "Plant",
+    "r": "T 365 CNJ",
+    "mk": "Mahindra",
+    "md": "6000",
+    "t": "Tractor",
+    "l": "Factory",
+    "a": "Mining"
+  },
+  {
+    "c": "Plant",
+    "r": "T 822 CQA",
+    "mk": "Noble",
+    "md": "Unknown",
+    "t": "Tipping Trailer",
+    "l": "Factory",
+    "a": "Mining (Used with tractor)"
+  },
+  {
+    "c": "Plant",
+    "r": "T 726 CNU",
+    "mk": "Noble",
+    "md": "Unknown",
+    "t": "Tipping Trailer",
+    "l": "Factory",
+    "a": "Mining (Used with tractor)"
+  },
+  {
+    "c": "Plant",
+    "r": "T 207 CBV",
+    "mk": "Zoomlion",
+    "md": "QY70V532",
+    "t": "Crane",
+    "l": "Factory",
+    "a": "Maintenance"
+  },
+  {
+    "c": "Mining",
+    "r": "T 936 EEZ",
+    "mk": "XCMG",
+    "md": "XE500DK",
+    "t": "Excavator",
+    "l": "Factory",
+    "a": "Mining"
+  },
+  {
+    "c": "Mining",
+    "r": "T425 EHQ",
+    "mk": "HOWO",
+    "md": "HOWO 8X 4",
+    "t": "Tipper",
+    "l": "Factory",
+    "a": "Mining"
+  },
+  {
+    "c": "Mining",
+    "r": "T 671 EJN",
+    "mk": "L & T",
+    "md": "KSM 304",
+    "t": "Surface Miner",
+    "l": "Factory",
+    "a": "Mining"
+  },
+  {
+    "c": "Mining",
+    "r": "T 270 EJP",
+    "mk": "HOWO",
+    "md": "HOWO 8X 4",
+    "t": "Tipper",
+    "l": "Factory",
+    "a": "Mining"
+  },
+  {
+    "c": "Mining",
+    "r": "T 275 EJP",
+    "mk": "HOWO",
+    "md": "HOWO 8X 4",
+    "t": "Tipper",
+    "l": "Factory",
+    "a": "Mining-Accident"
+  },
+  {
+    "c": "Mining",
+    "r": "T 130 CCA",
+    "mk": "Caterpillar",
+    "md": "Forklift-DP30 NTD",
+    "t": "Forklift",
+    "l": "Factory",
+    "a": "2014-07-01 00:00:00"
+  },
+  {
+    "c": "Mining",
+    "r": "T 727 EDH",
+    "mk": "Zoomlion",
+    "md": "180 T",
+    "t": "Crane",
+    "l": "Factory",
+    "a": "2023-08-01 00:00:00"
+  },
+  {
+    "c": "Logistics",
+    "r": "T 370 DFH",
+    "mk": "Emir Turkey",
+    "md": "Unknown",
+    "t": "Bulker",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 393 DHM",
+    "mk": "Emir Turkey",
+    "md": "AE9G22",
+    "t": "Bulker",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 567 DHM",
+    "mk": "Emir Turkey",
+    "md": "AE9G22",
+    "t": "Bulker",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 273 DZX",
+    "mk": "FAW",
+    "md": "CA4181P2K15T1YA80",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 274 DZX",
+    "mk": "FAW",
+    "md": "CA4181P2K15T1YA80",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 275 DZX",
+    "mk": "FAW",
+    "md": "CA4181P2K15T1YA80",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 276 DZX",
+    "mk": "FAW",
+    "md": "CA4181P2K15T1YA80",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 893 EAB",
+    "mk": "FAW",
+    "md": "CA4181P2K15T1YA80",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 983 DGZ",
+    "mk": "HOWO",
+    "md": "HOWO",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 679 DRG",
+    "mk": "HOWO",
+    "md": "E7G",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 680 DRG",
+    "mk": "HOWO",
+    "md": "E7G",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 682 DRG",
+    "mk": "HOWO",
+    "md": "E7G",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 910 DSZ",
+    "mk": "HUAWIN",
+    "md": "WL9407GFLC",
+    "t": "Bulker",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 918 DSZ",
+    "mk": "HUAWIN",
+    "md": "WL9407GFLC",
+    "t": "Bulker",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 919 DSZ",
+    "mk": "HUAWIN",
+    "md": "WL9407GFLC",
+    "t": "Bulker",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 920 DSZ",
+    "mk": "HUAWIN",
+    "md": "WL9407GFLC",
+    "t": "Bulker",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 922 DSZ",
+    "mk": "HUAWIN",
+    "md": "WL9407GFLC",
+    "t": "Bulker",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 943 DDR",
+    "mk": "NURSAN",
+    "md": "Unknown",
+    "t": "Bulker",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 296 DBZ",
+    "mk": "Scania",
+    "md": "R420",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 297 DBZ",
+    "mk": "Scania",
+    "md": "R421",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 298 DBZ",
+    "mk": "Scania",
+    "md": "R422",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 299 DBZ",
+    "mk": "Scania",
+    "md": "R423",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 300 DBZ",
+    "mk": "Scania",
+    "md": "R424",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 301 DBZ",
+    "mk": "Scania",
+    "md": "R425",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 302 DBZ",
+    "mk": "Scania",
+    "md": "R426",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 303 DBZ",
+    "mk": "Scania",
+    "md": "R427",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 305 DBZ",
+    "mk": "Scania",
+    "md": "R429",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 306 DBZ",
+    "mk": "Scania",
+    "md": "R430",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 307 DBZ",
+    "mk": "Scania",
+    "md": "R431",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 308 DBZ",
+    "mk": "Scania",
+    "md": "R432",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 309 DBZ",
+    "mk": "Scania",
+    "md": "R433",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 310 DBZ",
+    "mk": "Scania",
+    "md": "R434",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 729 DCF",
+    "mk": "Scania",
+    "md": "R420",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 736 DCF",
+    "mk": "Scania",
+    "md": "R420",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 738 DCF",
+    "mk": "Scania",
+    "md": "R420",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 739 DCF",
+    "mk": "Scania",
+    "md": "R420",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 740 DCF",
+    "mk": "Scania",
+    "md": "R420",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 741 DCF",
+    "mk": "Scania",
+    "md": "R420",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 742 DCF",
+    "mk": "Scania",
+    "md": "R420",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 743 DCF",
+    "mk": "Scania",
+    "md": "R420",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 746 DCF",
+    "mk": "Scania",
+    "md": "R420",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 747 DCF",
+    "mk": "Scania",
+    "md": "R420",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 748 DCF",
+    "mk": "Scania",
+    "md": "R420",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 749 DCF",
+    "mk": "Scania",
+    "md": "R420",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 752 DCF",
+    "mk": "Scania",
+    "md": "R420",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 946 BXS",
+    "mk": "Scania",
+    "md": "R420",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 923 CNV",
+    "mk": "Scania",
+    "md": "R420",
+    "t": "Tractor",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 895 DYH",
+    "mk": "Sino Truck",
+    "md": "Hubei Huawin L1C39GRT",
+    "t": "Bulker",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 915 DYH",
+    "mk": "Sino Truck",
+    "md": "Hubei Huawin L1C39GRT",
+    "t": "Bulker",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 916 DYH",
+    "mk": "Sino Truck",
+    "md": "Hubei Huawin L1C39GRT",
+    "t": "Bulker",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 918 DYH",
+    "mk": "Sino Truck",
+    "md": "Hubei Huawin L1C39GRT",
+    "t": "Bulker",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 921 DYH",
+    "mk": "Sino Truck",
+    "md": "Hubei Huawin L1C39GRT",
+    "t": "Bulker",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 645 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 781 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 782 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 784 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 785 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 786 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 788 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 789 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 790 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 791 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 792 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 793 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 796 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 797 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 799 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 801 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 803 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 804 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 805 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 806 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 808 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 810 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 811 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 815 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 817 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 819 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 821 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 824 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 927 DCT",
+    "mk": "Sinotruck",
+    "md": "Unknown",
+    "t": "Trailer",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 528 CHX",
+    "mk": "Trailer",
+    "md": "Unknown",
+    "t": "Bulker",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T 986 CHP",
+    "mk": "Trailer",
+    "md": "Unknown",
+    "t": "Bulker",
+    "l": "Logistics",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T720DFQ",
+    "mk": "LOCAL",
+    "md": "LOCAL",
+    "t": "TRAILER",
+    "l": "SCRAPPED",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T713DFQ",
+    "mk": "LOCAL",
+    "md": "LOCAL",
+    "t": "TRAILER",
+    "l": "SOLD",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T715DFQ",
+    "mk": "LOCAL",
+    "md": "LOCAL",
+    "t": "TRAILER",
+    "l": "SOLD",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T717DFQ",
+    "mk": "LOCAL",
+    "md": "LOCAL",
+    "t": "TRAILER",
+    "l": "SOLD",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T719DFQ",
+    "mk": "LOCAL",
+    "md": "LOCAL",
+    "t": "TRAILER",
+    "l": "SOLD",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T980DGZ",
+    "mk": "HOWO",
+    "md": "HOWO",
+    "t": "HOWO TRUCK",
+    "l": "FIRE",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T304AUP",
+    "mk": "SCANIA",
+    "md": "113",
+    "t": "SC 113",
+    "l": "SCRAPED",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T531CHX",
+    "mk": "UNKNOWN",
+    "md": "UNKNOWN",
+    "t": "BULKER",
+    "l": "SCRAPED",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T681DRG",
+    "mk": "HOWO",
+    "md": "HOWO 380",
+    "t": "HOWO TRUCK",
+    "l": "ACCIDENT",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T671DDA",
+    "mk": "LOCAL",
+    "md": "LOCAL",
+    "t": "TRAILER",
+    "l": "SOLD",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T637APP",
+    "mk": "SCANIA",
+    "md": "113",
+    "t": "SCANIA 113",
+    "l": "SOLD",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T642AKW",
+    "mk": "SCANIA",
+    "md": "113",
+    "t": "SCANIA 113",
+    "l": "SOLD",
+    "a": ""
+  },
+  {
+    "c": "Logistics",
+    "r": "T304DBZ",
+    "mk": "SCANIA",
+    "md": "R420",
+    "t": "SCANIA R420",
+    "l": "SCRAPPED",
+    "a": ""
+  }
+]

@@ -55,7 +55,7 @@ const PERMISSIONS = {
     assets:     { it:'edit',       vehicles:'view', spares:'view',      capex:'view', land:'view' },
     compliance: { certs:'view',    mlpl:'view',     legal:'view',       insurance:'view' },
     store:      { rawmat:'view',   spares:'view',   amc:'view' },
-    kpi:        { depts:'all', editDepts:[], daily:false },
+    kpi:        { depts:'all', editDepts:'all', daily:false },
     commercial: { sales:null },
     canViewAudit:  true,
     canManageUsers:true,
@@ -68,7 +68,7 @@ const PERMISSIONS = {
     assets:     { it:'view',       vehicles:'view', spares:'view',      capex:'view', land:'view' },
     compliance: { certs:'view',    mlpl:'view',     legal:'view',       insurance:'view' },
     store:      { rawmat:'view',   spares:'view',   amc:'view' },
-    kpi:        { depts:'all', editDepts:[], daily:false },
+    kpi:        { depts:'all', editDepts:'all', daily:false },
     commercial: { sales:null },
     canViewAudit:  false,
     canManageUsers:false,
@@ -882,6 +882,21 @@ const _STANDALONE_FORM_TYPE = {
   'stoppage-form.html':     'stoppage',
   'sales-projection-form.html': 'sales-projection',
 };
+
+/* ══════════════════════════════════════════════════════════════════════
+   NAV/SIDEBAR ACCESSORS — narrow, documented entry points onto the four
+   data constants above (_DAILY_ACCESS, _DAILY_NAV_ITEMS,
+   _FORM_TYPE_ACCESS, _STANDALONE_FORM_TYPE), so consumers like sidebar.js
+   read through a named function instead of reaching into auth.js's
+   internal shape directly — the internals can then change their
+   representation later without every consumer needing to change too.
+   Purely additive: the constants themselves are unchanged and still
+   exist, so nothing that already references them directly breaks.
+══════════════════════════════════════════════════════════════════════ */
+function getDailyAccessFor(role) { return _DAILY_ACCESS[role] || { edit: [], nav: [] }; }
+function getDailyNavItems() { return _DAILY_NAV_ITEMS; }
+function getFormTypeAccessFor(role) { return _FORM_TYPE_ACCESS[role] || []; }
+function getStandaloneFormType(page) { return _STANDALONE_FORM_TYPE[page]; }
 
 /* ══════════════════════════════════════════════════════════════════════
    APPLY PERMISSIONS — DAILY REPORT PAGE & ALL SUB-FORMS

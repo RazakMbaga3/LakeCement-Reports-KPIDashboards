@@ -26,12 +26,27 @@ function config() {
 
 let cachedUid = null; // an Odoo login is valid for the life of this process
 
+// Odoo may be unreachable (wrong network path, VPN hiccup, server down) —
+// without a timeout, a single stalled connection hangs the request (or the
+// daily sync cron) forever with no self-recovery. Callers already treat any
+// thrown error as "Odoo unreachable", so a timeout just needs to throw.
+const ODOO_TIMEOUT_MS = 15000;
+
 async function rpc(url, service, method, args) {
-  const res = await fetch(url + '/jsonrpc', {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ jsonrpc: '2.0', method: 'call', params: { service, method, args }, id: Date.now() }),
-  });
+  let res;
+  try {
+    res = await fetch(url + '/jsonrpc', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ jsonrpc: '2.0', method: 'call', params: { service, method, args }, id: Date.now() }),
+      signal:  AbortSignal.timeout(ODOO_TIMEOUT_MS),
+    });
+  } catch (err) {
+    if (err.name === 'TimeoutError' || err.name === 'AbortError') {
+      throw new Error(`Odoo request timed out after ${ODOO_TIMEOUT_MS}ms calling ${service}.${method}`, { cause: err });
+    }
+    throw err;
+  }
   if (!res.ok) throw new Error(`Odoo HTTP ${res.status} calling ${service}.${method}`);
 
   const body = await res.json();

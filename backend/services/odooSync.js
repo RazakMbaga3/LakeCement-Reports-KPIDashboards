@@ -36,6 +36,7 @@
 */
 
 const logger = require('./logger');
+const { fireAlert } = require('./watchdog');
 const { pullDispatchDailySummary } = require('./odooDispatchSync');
 
 // How many trailing days each scheduled run re-pulls — wide enough that a
@@ -75,10 +76,21 @@ async function runOdooSync() {
   const ran = [];
   for (const pull of PULLS) {
     try {
-      ran.push({ name: pull.name, ...(await pull.run()) });
+      const result = await pull.run();
+      ran.push({ name: pull.name, ...result });
+      if (result && result.rowsUnmapped) {
+        await fireAlert(
+          'odoo-sync-unmapped:' + pull.name,
+          `${result.rowsUnmapped} row(s) from '${pull.name}' had no field mapping and were not written anywhere — check the server logs for samples, then review the mapping in services/odooDispatchSync.js.`
+        ).catch(() => { /* alerting must never break the sync itself */ });
+      }
     } catch (err) {
       logger.error({ err, pull: pull.name }, 'odoo sync pull failed');
       ran.push({ name: pull.name, error: err.message });
+      await fireAlert(
+        'odoo-sync-failed:' + pull.name,
+        `Odoo sync pull '${pull.name}' failed: ${err.message}`
+      ).catch(() => { /* alerting must never break the sync itself */ });
     }
   }
   return { ran };
