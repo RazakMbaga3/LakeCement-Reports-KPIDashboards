@@ -124,20 +124,60 @@ async function fetchCollections(from, to) {
   });
 }
 
-/* ── Unmapped metrics — no Odoo model identified yet (Phase B). ──────
-   Each is a 3-line stub today; wiring one up is a self-contained change
-   to that one function once npm run odoo:test finds the real model. */
+/* Aged Receivable — bucketed from account.move, matching the exact
+   structure of Odoo's own "Aged Receivable" report seen live 2026-08-24
+   (Reporting > Sale and Dispatch): 0-30 / 31-60 / 61-90 / 91-120 / Older,
+   by days overdue on the due date. Only outstanding (amount_residual > 0)
+   posted customer invoices count — same fields fetchCollections already
+   uses, just bucketed instead of summed flat. */
+async function fetchAgewiseOutstanding() {
+  if (!_configured()) return _notConfigured();
+  return _cached('agewiseOutstanding', async () => {
+    try {
+      const invoices = await odoo.searchRead('account.move',
+        [['move_type', '=', 'out_invoice'], ['state', '=', 'posted'], ['amount_residual', '>', 0]],
+        ['id', 'invoice_date_due', 'invoice_date', 'amount_residual']);
+
+      const buckets = { d0_30: 0, d31_60: 0, d61_90: 0, d91_120: 0, older: 0 };
+      const today = Date.now();
+      for (const inv of invoices) {
+        const dueDate = inv.invoice_date_due || inv.invoice_date;
+        const daysOverdue = dueDate ? Math.floor((today - new Date(dueDate).getTime()) / 86400000) : 0;
+        const amt = inv.amount_residual || 0;
+        if (daysOverdue <= 30) buckets.d0_30 += amt;
+        else if (daysOverdue <= 60) buckets.d31_60 += amt;
+        else if (daysOverdue <= 90) buckets.d61_90 += amt;
+        else if (daysOverdue <= 120) buckets.d91_120 += amt;
+        else buckets.older += amt;
+      }
+      Object.keys(buckets).forEach(k => { buckets[k] = Math.round(buckets[k]); });
+      const total_tzs = Object.values(buckets).reduce((s, v) => s + v, 0);
+
+      return {
+        ok: true,
+        value: { ...buckets, total_tzs, invoice_count: invoices.length },
+        as_of: new Date().toISOString(),
+        source: 'odoo:account.move',
+      };
+    } catch (err) { return _unreachable(err); }
+  });
+}
+
+/* ── Still unmapped — real leads found 2026-08-24, but not enough to
+   safely wire up yet (see project-sales-dashboard-phase2 memory). ─── */
 async function fetchReceivedUncollectable() {
   return _notMapped('No Odoo model identified yet for Received Uncollectable.');
 }
 async function fetchPayable() {
-  return _notMapped('No Odoo model identified yet for Payable.');
+  return _notMapped('Odoo has an "Aged Payable" report (Reporting > Sale and Dispatch) that could ' +
+    'bucket account.move vendor bills the same way fetchAgewiseOutstanding does for receivables — ' +
+    'but vendor payables arguably belong on the Purchase dashboard, not Sales. Needs a placement ' +
+    'decision before wiring this up.');
 }
 async function fetchAdvance() {
-  return _notMapped('No Odoo model identified yet for Advance.');
-}
-async function fetchAgewiseOutstanding() {
-  return _notMapped('No Odoo model identified yet for Agewise Outstanding.');
+  return _notMapped('Likely sourced from account.payment ("Customer Receipts", confirmed live ' +
+    '2026-08-24) filtered to unreconciled inbound customer payments — but the exact reconciliation ' +
+    'field/state values need confirming against the live database before this can be trusted.');
 }
 async function fetchOdooTargets(_month) {
   return _notMapped('No Odoo model identified yet for Sales Targets — using manual interim targets.');

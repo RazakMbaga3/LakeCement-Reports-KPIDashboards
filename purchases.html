@@ -264,7 +264,11 @@
       html += '<tr><td>' + (row === 'open_pr' ? 'Open PR' : 'Open PO') + '</td>';
       CATEGORIES.forEach(function (cat) {
         var cell = grid[cat] && grid[cat][row];
-        html += '<td>' + (cell ? fmt(cell.count) + '<br><span style="font-size:10px;color:var(--text-muted)">' + tzs(cell.value_tzs) + '</span>' : '—') + '</td>';
+        if (cell && cell.ok) {
+          html += '<td>' + fmt(cell.count) + '<br><span style="font-size:10px;color:var(--text-muted)">' + tzs(cell.value_tzs) + '</span></td>';
+        } else {
+          html += '<td class="cat-pending" title="' + esc(cell ? cell.message : '') + '">Pending</td>';
+        }
       });
       html += '</tr>';
     });

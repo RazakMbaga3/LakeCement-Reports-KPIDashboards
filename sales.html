@@ -350,6 +350,9 @@
     var labels = { received_uncollectable: 'Received Uncollectable', payable: 'Payable', advance: 'Advance', agewise_outstanding: 'Agewise Outstanding' };
     var html = Object.keys(labels).map(function (key) {
       var r = f[key];
+      if (r.ok) {
+        return sk({ label: labels[key], value: tzs(r.total_tzs), status: (r.invoice_count || 0) + ' invoices' });
+      }
       return sk({ label: labels[key], pending: true, pendingMsg: r.message });
     }).join('');
     document.getElementById('sd-financials').innerHTML = html;

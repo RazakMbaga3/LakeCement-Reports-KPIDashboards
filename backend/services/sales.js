@@ -133,7 +133,8 @@ async function getDashboard(year, month) {
 
   const grades = _buildGradeMix(mtdSales);
 
-  const performance = _buildPerformance(territories, projRange, targetsRes.byOfficer);
+  const actualByOfficer = mtdSales.ok ? _actualByOfficerFromOrders(mtdSales.value, territories) : {};
+  const performance = _buildPerformance(territories, projRange, targetsRes.byOfficer, actualByOfficer);
 
   const dailyTrend = [];
   for (let d = new Date(firstOfMonth); d <= mtdEnd; d = new Date(d.getTime() + 86400000)) {
@@ -219,15 +220,31 @@ function _todayActualFromOrders(mtdValue, todayStr) {
   return Math.round(total * 10) / 10;
 }
 
-/* Best-effort product-name -> grade matching. Unconfirmed against the real
-   Odoo catalogue (see Sales Dashboard plan, open question on grade
-   labels) — revisit once Phase B exploration shows real product names. */
+/* Product-name -> grade matching, checked against the real Odoo catalogue
+   2026-08-24 (Products list: 5 Finished Goods — FG001 CEMENT 42.5 R,
+   FG002 CEMENT 32.5, FG003 CEMENT 42.5 N, FG004 CEMENT OPC 42.5 N,
+   FG005 CEMENT B-M 42.5 N). Confirmed by opening FG001/FG002: their
+   Sales Description ("CEM II A – L 42.5 R" / "CEM II B – L 32.5 N")
+   matches SUPER 42 / MAX 32 exactly.
+
+   The generic "contains 42.5" rule this used to fall back to was a real
+   bug against this catalogue: FG003 and FG005 both contain "42.5" too,
+   so their volumes were silently folding into the SUPER 42 bucket
+   alongside FG001, overcounting it. Pinning SUPER 42 to the one
+   confirmed code (FG001) instead — FG003/FG005 now correctly fall
+   through to the "Unmatched product" bucket until Sales/marketing
+   confirms which one is DURAMAX 42 (a marketing name that appears in
+   neither product's actual Odoo name, so no string match will ever
+   find it — needs the product code, not a name guess). "DURAMAX" and
+   "OPC"/"PREMIUM" checks are kept since they're literal, unambiguous
+   substrings of the real names where they apply (only FG004 contains
+   "OPC" — no false-positive risk like the 42.5 case). */
 function _matchGrade(productName) {
   const n = (productName || '').toUpperCase();
   if (n.includes('DURAMAX')) return 'duramax42';
   if (n.includes('OPC') || n.includes('PREMIUM')) return 'premiumopc';
   if (n.includes('32.5')) return 'max32';
-  if (n.includes('42.5')) return 'super42';
+  if (n.includes('[FG001]')) return 'super42';
   return null;
 }
 
@@ -261,11 +278,44 @@ function _buildGradeMix(mtdSales) {
   return graded;
 }
 
-/* Division -> Zone/Officer rollup. Actuals per officer need Odoo
-   sale.order.user_id attributed via sales_territories.odoo_user_id, which
-   isn't backfilled yet (Phase B) — so actual_mt stays null here until then;
-   projected_mt (manual) and target_mt (sales_targets) are real today. */
-function _buildPerformance(territories, projRange, targetByOfficer) {
+/* Per-officer actual MT via sale.order.user_id (Odoo's own "Salesperson"
+   field, confirmed standard 2026-08-24 — distinct from the list view's
+   "Created User", which is just the order-entry clerk) matched against
+   sales_territories.odoo_user_id. The query side is real; the roster's
+   odoo_user_id column isn't backfilled yet, so this returns {} (every
+   officer falls back to projected_mt in _buildPerformance below) until
+   that manual mapping happens — same "ready but inert" pattern as the
+   Purchase dashboard's category grid. */
+function _actualByOfficerFromOrders(mtdValue, territories) {
+  const orderToUid = new Map();
+  for (const o of mtdValue.orders) {
+    orderToUid.set(o.id, Array.isArray(o.user_id) ? o.user_id[0] : o.user_id);
+  }
+  const mtByUid = new Map();
+  for (const line of mtdValue.lines) {
+    const orderId = Array.isArray(line.order_id) ? line.order_id[0] : line.order_id;
+    const uid = orderToUid.get(orderId);
+    if (!uid) continue;
+    const uom = line.product_uom;
+    const uomName = (Array.isArray(uom) ? uom[1] : uom) || '';
+    const qty = line.product_uom_qty || 0;
+    const mt = /MT|TON|TONNE/i.test(uomName) ? qty : qty / 20;
+    mtByUid.set(uid, (mtByUid.get(uid) || 0) + mt);
+  }
+  const byOfficer = {};
+  for (const t of territories) {
+    if (t.odoo_user_id && mtByUid.has(t.odoo_user_id)) {
+      byOfficer[t.officer_code] = Math.round(mtByUid.get(t.odoo_user_id) * 10) / 10;
+    }
+  }
+  return byOfficer;
+}
+
+/* Division -> Zone/Officer rollup. actual_mt now uses the real Odoo
+   attribution above when available, falling back to the manual
+   projection for achievement_pct only when no actual exists yet —
+   projected_mt (manual) and target_mt (sales_targets) are always real. */
+function _buildPerformance(territories, projRange, targetByOfficer, actualByOfficer) {
   const byDivision = new Map();
   for (const t of territories) {
     if (!byDivision.has(t.division)) {
@@ -273,19 +323,24 @@ function _buildPerformance(territories, projRange, targetByOfficer) {
     }
     const projected = Math.round((projRange.byOfficer[t.officer_code] || 0) * 10) / 10;
     const target = targetByOfficer[t.officer_code] || null;
+    const actual = actualByOfficer[t.officer_code] != null ? actualByOfficer[t.officer_code] : null;
+    const achievementBasis = actual != null ? actual : projected;
     byDivision.get(t.division).zones.push({
       zone: t.zone, sales_officer: t.sales_officer, officer_code: t.officer_code,
-      actual_mt: null, projected_mt: projected, target_mt: target,
-      achievement_pct: (target && projected) ? Math.round((projected / target) * 1000) / 10 : null,
+      actual_mt: actual, projected_mt: projected, target_mt: target,
+      achievement_pct: (target && achievementBasis) ? Math.round((achievementBasis / target) * 1000) / 10 : null,
       days_reported: projRange.reportedOfficers.has(t.officer_code) ? 1 : 0,
     });
   }
   const divisions = Array.from(byDivision.values()).map(d => {
     const projected_mt = Math.round(d.zones.reduce((s, z) => s + z.projected_mt, 0) * 10) / 10;
     const target_mt = d.zones.reduce((s, z) => s + (z.target_mt || 0), 0) || null;
+    const hasActual = d.zones.some(z => z.actual_mt != null);
+    const actual_mt = hasActual ? Math.round(d.zones.reduce((s, z) => s + (z.actual_mt || 0), 0) * 10) / 10 : null;
+    const achievementBasis = actual_mt != null ? actual_mt : projected_mt;
     return {
-      ...d, actual_mt: null, projected_mt, target_mt,
-      achievement_pct: (target_mt && projected_mt) ? Math.round((projected_mt / target_mt) * 1000) / 10 : null,
+      ...d, actual_mt, projected_mt, target_mt,
+      achievement_pct: (target_mt && achievementBasis) ? Math.round((achievementBasis / target_mt) * 1000) / 10 : null,
     };
   }).sort((a, b) => b.projected_mt - a.projected_mt);
   return { divisions };
