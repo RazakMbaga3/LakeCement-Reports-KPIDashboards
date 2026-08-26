@@ -731,9 +731,8 @@ img { max-width: 100%; }
   .header-right    { padding-left: 12px; gap: 6px; min-width: 310px; }
 }
 
-/* ── COMPACT: < 960px — hide dept & date ────────────────────── */
+/* ── COMPACT: < 960px — hide date ────────────────────── */
 @media (max-width: 959px) {
-  .auth-user-dept  { display: none; }
   .header-meta     { display: none; }
   .header-right    { min-width: 200px; }
   .vs-tab          { padding: 7px 10px; font-size: 11px; }

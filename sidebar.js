@@ -14,6 +14,7 @@
 const _SB_GROUPS = {
   kpi:        { label: 'KPI &amp; Analytics',   cls: 'group-kpi'  },
   daily:      { label: 'Daily Reports',     cls: 'group-daily' },
+  approvals:  { label: 'Approvals',         cls: 'group-daily' },
   mis:        { label: 'Management Info.',  cls: 'group-mis'   },
   commercial: { label: 'Sales &amp; Purchases', cls: 'group-comm'  },
   ops:        { label: 'Reports &amp; Tools',   cls: 'group-ops'   },
@@ -43,15 +44,13 @@ const _SB_KPI_LINKS = [
   { label:'Equipment Reliability',    icon:'alert-triangle', page:'reliability.html' },
 ];
 
-/* Sales is real (see PERMISSIONS[role].commercial.sales in auth.js);
-   Purchases has no permission model yet either, so it rides on the same
-   canViewSales() gate as the rest of this group — split it out once
-   Purchases gets its own check. Page itself is real (purchases.html,
-   2026-08-10) — the category breakdown grid on it is honestly stubbed
-   pending Odoo field-name confirmation, same as Sales' Receivables tiles. */
+/* Sales and Purchases each have their own permission check now
+   (PERMISSIONS[role].commercial.{sales,purchase} in auth.js) — Purchases
+   used to ride on Sales' canViewSales() gate for lack of a check of its
+   own; each item below is filtered independently in the render loop. */
 const _SB_COMMERCIAL_ITEMS = [
-  { label:'Sales',     icon:'trending-up',   page:'sales.html' },
-  { label:'Purchases', icon:'shopping-cart', page:'purchases.html' },
+  { label:'Sales',     icon:'trending-up',   page:'sales.html',     visible: canViewSales },
+  { label:'Purchases', icon:'shopping-cart', page:'purchases.html', visible: canViewPurchases },
 ];
 
 /* Open to every authenticated role (each page calls requireAuth() only)
@@ -200,6 +199,21 @@ function renderSidebar() {
     });
   }
 
+  /* ── Approvals — visible to an HOD with something to approve, or
+     admin/md who can approve any department's reports. A department
+     with no submittable form (getMyFormAccess().length === 0, e.g.
+     hr/it/finance/purchase today) correctly gets no link — nothing to
+     approve yet — and this self-extends the day such a form is added. */
+  const canSeeApprovals = user.role === 'admin' || user.role === 'md' ||
+    (user.level === 'hod' && getMyFormAccess().length > 0);
+  if (canSeeApprovals) {
+    html += _sbGroupLabelHTML('approvals');
+    html += _sbItemHTML({
+      icon: 'check-square', label: 'Pending Approvals',
+      active: currentPage === 'approvals.html', href: base + 'approvals.html',
+    });
+  }
+
   /* ── MIS ──────────────────────────────────────────────────────── */
   if (hasMIS) {
     html += _sbGroupLabelHTML('mis');
@@ -210,9 +224,10 @@ function renderSidebar() {
   }
 
   /* ── Sales & Purchases ────────────────────────────────────────── */
-  if (canViewSales()) {
+  const commercialItems = _SB_COMMERCIAL_ITEMS.filter(it => it.visible());
+  if (commercialItems.length) {
     html += _sbGroupLabelHTML('commercial');
-    _SB_COMMERCIAL_ITEMS.forEach(it => {
+    commercialItems.forEach(it => {
       if (it.stub) {
         html += _sbItemHTML({
           icon: it.icon, label: it.label, stub: true,

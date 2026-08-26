@@ -19,7 +19,11 @@ CREATE TABLE IF NOT EXISTS users (
   failed_attempts      INTEGER NOT NULL DEFAULT 0,     -- consecutive bad logins
   locked_until         TIMESTAMP,                      -- lockout expiry (NULL = not locked)
   must_change_password BOOLEAN NOT NULL DEFAULT false, -- gate all routes until password set
-  token_version        INTEGER NOT NULL DEFAULT 0      -- bump to revoke all outstanding JWTs
+  token_version        INTEGER NOT NULL DEFAULT 0,     -- bump to revoke all outstanding JWTs
+  -- 'officer' | 'senior' | 'hod' — orthogonal to `role` (role = department).
+  -- Only the report-approval gate reads this; view/edit access is unchanged
+  -- across tiers within a department. See migrations/009_user_levels.sql.
+  level        VARCHAR(10)  NOT NULL DEFAULT 'hod' CHECK (level IN ('officer','senior','hod'))
 );
 
 -- ── SCHEMA MIGRATIONS ───────────────────────────────────────
@@ -60,6 +64,15 @@ CREATE TABLE IF NOT EXISTS daily_reports (
   submitted_at  TIMESTAMP    DEFAULT NOW(),
   updated_by    INTEGER      REFERENCES users(id),
   updated_at    TIMESTAMP,
+  -- Real backend-enforced approval workflow (migrations/010_report_approvals.sql).
+  -- Officer/Senior submissions land as 'pending_approval'; only their
+  -- department's HOD (level='hod') may approve/reject via /api/reports/:formType/:date/{approve,reject}.
+  status            VARCHAR(20) NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','pending_approval','approved','rejected')),
+  approved_by       INTEGER     REFERENCES users(id),
+  approved_at       TIMESTAMP,
+  rejected_by       INTEGER     REFERENCES users(id),
+  rejected_at       TIMESTAMP,
+  rejection_reason  TEXT,
   UNIQUE (form_type, record_date, shift)        -- one entry per form per date per shift
 );
 
@@ -221,6 +234,7 @@ CREATE INDEX IF NOT EXISTS idx_daily_reports_form     ON daily_reports(form_type
 -- DATE_TRUNC('month', date) is not IMMUTABLE in this Postgres build, so it
 -- can't be used directly in an index expression — EXTRACT year/month is.
 CREATE INDEX IF NOT EXISTS idx_daily_reports_month    ON daily_reports((EXTRACT(YEAR FROM record_date)), (EXTRACT(MONTH FROM record_date)));
+CREATE INDEX IF NOT EXISTS idx_daily_reports_status   ON daily_reports(status);
 CREATE INDEX IF NOT EXISTS idx_stoppages_date         ON stoppages(record_date);
 CREATE INDEX IF NOT EXISTS idx_weighbridge_date       ON weighbridge_tickets(ticket_date);
 CREATE INDEX IF NOT EXISTS idx_weighbridge_movement   ON weighbridge_tickets(movement_type);

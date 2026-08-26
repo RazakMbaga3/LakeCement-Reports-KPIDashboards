@@ -34,6 +34,7 @@ function signToken(user) {
       name:     user.full_name,
       role:     user.role,
       dept:     user.department,
+      level:    user.level,          // 'officer' | 'senior' | 'hod' — see requireApprover
       ver:      user.token_version, // must match users.token_version (revocation)
     },
     process.env.JWT_SECRET,
@@ -107,6 +108,7 @@ router.post('/login', validate(loginSchema), async (req, res, next) => {
         name:     user.full_name,
         role:     user.role,
         dept:     user.department,
+        level:    user.level,
       },
     });
   } catch (err) { next(err); }
@@ -161,7 +163,7 @@ router.post('/change-password', requireAuth, validate(changePasswordSchema), asy
 router.get('/me', requireAuth, async (req, res, next) => {
   try {
     const result = await db.query(
-      `SELECT id, username, full_name, role, department, last_login, must_change_password
+      `SELECT id, username, full_name, role, department, level, last_login, must_change_password
        FROM users WHERE id = $1`,
       [req.user.id]
     );

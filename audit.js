@@ -247,6 +247,7 @@ function renderAccessMatrix() {
     hr: 'HR & Admin', finance: 'Finance', stores: 'Stores',
     cpp: 'Power Plant', pm: 'Projects & Maint', it: 'IT',
     logistics: 'Logistics', mining: 'Mining', production: 'Production & QC',
+    ei: 'E & I', packing: 'Packing', sales: 'Sales & Marketing',
   };
 
   /* Column groups: [ group label, permKey, [ [colLabel, sectionKey], … ] ] */

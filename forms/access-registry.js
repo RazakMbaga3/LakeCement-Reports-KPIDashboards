@@ -18,10 +18,11 @@
    let admin/management lose their KPI-edit rights until caught in the
    2026-08-19 audit).
 
-   Three independent maps, one per axis of "what can this role do":
+   Four independent maps, one per axis of "what can this role do":
      FORM_ACCESS           — which daily-report form_types a role may SUBMIT
      KPI_EDIT_DEPTS         — which KPI dashboard departments a role may EDIT
-     COMMERCIAL_VIEW_ROLES  — which roles may see Sales/Purchases dashboards
+     COMMERCIAL_VIEW_ROLES  — which roles may see the Sales dashboard
+     PURCHASE_VIEW_ROLES    — which roles may see the Purchases dashboard
    ══════════════════════════════════════════════════════════════════ */
 (function (global) {
   'use strict';
@@ -34,7 +35,7 @@
     mining:     ['mines'],
     stores:     ['materials'],                // Raw Materials report is owned by Purchase & Stores
     sales:      ['sales-projection'],
-    hr: [], it: [], md: [], admin: [], management: [], finance: [],
+    hr: [], it: [], md: [], admin: [], management: [], finance: [], ei: [], packing: [], purchase: [],
   };
 
   var KPI_EDIT_DEPTS = {
@@ -45,12 +46,19 @@
     pm:         ['mechanical'],
     mining:     ['mines'],
     production: ['production'],
-    md: [], hr: [], finance: [], it: [], logistics: [], sales: [],
+    ei:         ['ei'],
+    packing:    ['packing'],
+    md: [], hr: [], finance: [], it: [], logistics: [], sales: [], purchase: [],
   };
 
   var COMMERCIAL_VIEW_ROLES = ['md', 'sales'];
 
-  var api = { FORM_ACCESS: FORM_ACCESS, KPI_EDIT_DEPTS: KPI_EDIT_DEPTS, COMMERCIAL_VIEW_ROLES: COMMERCIAL_VIEW_ROLES };
+  // Purchases dashboard used to ride on COMMERCIAL_VIEW_ROLES (Sales' gate)
+  // for lack of its own check — now split out. `sales` keeps its existing
+  // incidental view access rather than silently losing it in this change.
+  var PURCHASE_VIEW_ROLES = ['md', 'sales', 'purchase'];
+
+  var api = { FORM_ACCESS: FORM_ACCESS, KPI_EDIT_DEPTS: KPI_EDIT_DEPTS, COMMERCIAL_VIEW_ROLES: COMMERCIAL_VIEW_ROLES, PURCHASE_VIEW_ROLES: PURCHASE_VIEW_ROLES };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.NyatiAccess = api;

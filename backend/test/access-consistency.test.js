@@ -24,7 +24,7 @@ const assert = require('node:assert/strict');
 const fs     = require('fs');
 const path   = require('path');
 
-const { FORM_ACCESS, KPI_EDIT_DEPTS, COMMERCIAL_VIEW_ROLES } =
+const { FORM_ACCESS, KPI_EDIT_DEPTS, COMMERCIAL_VIEW_ROLES, PURCHASE_VIEW_ROLES } =
   require(path.join('..', '..', 'forms', 'access-registry.js'));
 
 const AUTH_JS_PATH = path.join(__dirname, '..', '..', 'auth.js');
@@ -104,6 +104,19 @@ test("auth.js's PERMISSIONS[role].commercial.sales matches forms/access-registry
     const registryCanView = COMMERCIAL_VIEW_ROLES.includes(role);
     if (authCanView !== registryCanView) {
       mismatches.push(`${role}: auth.js commercial.sales=${JSON.stringify(permissions[role].commercial && permissions[role].commercial.sales)} (canView=${authCanView}), registry canView=${registryCanView}`);
+    }
+  }
+  assert.equal(mismatches.length, 0, mismatches.join('\n  '));
+});
+
+test("auth.js's PERMISSIONS[role].commercial.purchase matches forms/access-registry.js's PURCHASE_VIEW_ROLES, for every role", () => {
+  const permissions = extractObjectLiteral(authSrc, 'const PERMISSIONS');
+  const mismatches = [];
+  for (const role of Object.keys(permissions)) {
+    const authCanView = !!(permissions[role].commercial && permissions[role].commercial.purchase);
+    const registryCanView = PURCHASE_VIEW_ROLES.includes(role);
+    if (authCanView !== registryCanView) {
+      mismatches.push(`${role}: auth.js commercial.purchase=${JSON.stringify(permissions[role].commercial && permissions[role].commercial.purchase)} (canView=${authCanView}), registry canView=${registryCanView}`);
     }
   }
   assert.equal(mismatches.length, 0, mismatches.join('\n  '));

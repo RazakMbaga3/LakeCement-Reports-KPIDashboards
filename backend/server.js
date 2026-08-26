@@ -34,6 +34,7 @@ const insightsRoutes = require('./routes/insights');
 const quarryRoutes  = require('./routes/quarry');
 const salesRoutes   = require('./routes/sales');
 const purchasesRoutes = require('./routes/purchases');
+const approvalsRoutes = require('./routes/approvals');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -109,6 +110,7 @@ app.use('/api/insights', insightsRoutes);
 app.use('/api/quarry',   quarryRoutes);
 app.use('/api/sales',    salesRoutes);
 app.use('/api/purchases', purchasesRoutes);
+app.use('/api/approvals', approvalsRoutes);
 app.use('/api/monitor',  monitorRouter);
 app.get('/api/metrics', metricsAuth, metricsHandler);
 

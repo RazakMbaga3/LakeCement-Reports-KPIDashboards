@@ -38,7 +38,7 @@ async function requireAuth(req, res, next) {
 
   try {
     const result = await db.query(
-      'SELECT active, token_version, must_change_password FROM users WHERE id = $1',
+      'SELECT active, token_version, must_change_password, level FROM users WHERE id = $1',
       [decoded.id]
     );
     const u = result.rows[0];
@@ -65,7 +65,10 @@ async function requireAuth(req, res, next) {
       }));
     }
 
-    req.user = decoded;
+    // `level` comes from this fresh row, not the JWT claim — a promotion/
+    // demotion (officer -> hod, say) must take effect immediately, the same
+    // way active/token_version already do, not wait for token re-issue.
+    req.user = { ...decoded, level: u.level };
     next();
   } catch (err) {
     next(err);

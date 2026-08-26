@@ -43,7 +43,7 @@ const PERMISSIONS = {
     compliance: { certs:'view',    mlpl:'view',     legal:'view',       insurance:'view' },
     store:      { rawmat:'view',   spares:'view',   amc:'view' },
     kpi:        { depts:'all', editDepts:[], daily:false },
-    commercial: { sales:'view' },
+    commercial: { sales:'view', purchase:'view' },
     canViewAudit:  true,
     canManageUsers:false,
     canExport:     true,
@@ -56,7 +56,7 @@ const PERMISSIONS = {
     compliance: { certs:'view',    mlpl:'view',     legal:'view',       insurance:'view' },
     store:      { rawmat:'view',   spares:'view',   amc:'view' },
     kpi:        { depts:'all', editDepts:'all', daily:false },
-    commercial: { sales:null },
+    commercial: { sales:null, purchase:null },
     canViewAudit:  true,
     canManageUsers:true,
     canExport:     true,
@@ -69,7 +69,7 @@ const PERMISSIONS = {
     compliance: { certs:'view',    mlpl:'view',     legal:'view',       insurance:'view' },
     store:      { rawmat:'view',   spares:'view',   amc:'view' },
     kpi:        { depts:'all', editDepts:'all', daily:false },
-    commercial: { sales:null },
+    commercial: { sales:null, purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     true,
@@ -82,7 +82,7 @@ const PERMISSIONS = {
     compliance: { certs:'edit',    mlpl:null,       legal:'edit',       insurance:'edit' },
     store:      null,
     kpi:        { depts:['summary'], editDepts:[], daily:true },
-    commercial: { sales:null },
+    commercial: { sales:null, purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     true,
@@ -95,7 +95,7 @@ const PERMISSIONS = {
     compliance: { certs:'view',    mlpl:'view',     legal:'view',       insurance:'edit' },
     store:      { rawmat:'view',   spares:'view',   amc:'view' },
     kpi:        { depts:'all', editDepts:[], daily:false },
-    commercial: { sales:null },
+    commercial: { sales:null, purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     true,
@@ -108,7 +108,7 @@ const PERMISSIONS = {
     compliance: null,
     store:      { rawmat:'edit',   spares:'edit',   amc:'edit' },
     kpi:        { depts:['summary','stores'], editDepts:['stores'], daily:true },
-    commercial: { sales:null },
+    commercial: { sales:null, purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     true,
@@ -121,7 +121,7 @@ const PERMISSIONS = {
     compliance: { certs:'own',     mlpl:null,        legal:null,         insurance:'own' },
     store:      { rawmat:null,     spares:'own',    amc:'own' },
     kpi:        { depts:['summary','powerplant'], editDepts:['powerplant'], daily:true },
-    commercial: { sales:null },
+    commercial: { sales:null, purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     false,
@@ -134,7 +134,7 @@ const PERMISSIONS = {
     compliance: { certs:'own',     mlpl:null,        legal:null,         insurance:'own' },
     store:      { rawmat:null,     spares:'own',    amc:'own' },
     kpi:        { depts:['summary','ei','mechanical'], editDepts:['mechanical'], daily:true },
-    commercial: { sales:null },
+    commercial: { sales:null, purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     false,
@@ -147,7 +147,7 @@ const PERMISSIONS = {
     compliance: null,
     store:      null,
     kpi:        { depts:['summary'], editDepts:[], daily:false },
-    commercial: { sales:null },
+    commercial: { sales:null, purchase:null },
     canViewAudit:  true,
     canManageUsers:false,
     canExport:     false,
@@ -160,7 +160,7 @@ const PERMISSIONS = {
     compliance: { certs:'own',     mlpl:null,        legal:'own',        insurance:'own' },
     store:      null,
     kpi:        { depts:['summary','packing','minesworkshop'], editDepts:[], daily:true },
-    commercial: { sales:null },
+    commercial: { sales:null, purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     false,
@@ -173,7 +173,7 @@ const PERMISSIONS = {
     compliance: { certs:'own',     mlpl:'edit',     legal:'own',        insurance:'own' },
     store:      { rawmat:'edit',   spares:'own',    amc:null },
     kpi:        { depts:['summary','mines'], editDepts:['mines'], daily:true },
-    commercial: { sales:null },
+    commercial: { sales:null, purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     false,
@@ -186,7 +186,7 @@ const PERMISSIONS = {
     compliance: null,
     store:      { rawmat:'view',   spares:'own',    amc:null },
     kpi:        { depts:['summary','production','packing'], editDepts:['production'], daily:true },
-    commercial: { sales:null },
+    commercial: { sales:null, purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     false,
@@ -199,10 +199,49 @@ const PERMISSIONS = {
     compliance: null,
     store:      null,
     kpi:        { depts:['summary'], editDepts:[], daily:true },
-    commercial: { sales:'edit' },
+    commercial: { sales:'edit', purchase:'view' },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     true,
+  },
+
+  purchase: {
+    mis_tabs: [],
+    hr:         null,
+    assets:     null,
+    compliance: null,
+    store:      null,
+    kpi:        { depts:['summary'], editDepts:[], daily:false },
+    commercial: { sales:null, purchase:'view' },
+    canViewAudit:  false,
+    canManageUsers:false,
+    canExport:     true,
+  },
+
+  ei: {
+    mis_tabs: [],
+    hr:         null,
+    assets:     null,
+    compliance: null,
+    store:      null,
+    kpi:        { depts:['summary','ei'], editDepts:['ei'], daily:false },
+    commercial: { sales:null, purchase:null },
+    canViewAudit:  false,
+    canManageUsers:false,
+    canExport:     false,
+  },
+
+  packing: {
+    mis_tabs: [],
+    hr:         null,
+    assets:     null,
+    compliance: null,
+    store:      null,
+    kpi:        { depts:['summary','packing'], editDepts:['packing'], daily:false },
+    commercial: { sales:null, purchase:null },
+    canViewAudit:  false,
+    canManageUsers:false,
+    canExport:     false,
   },
 };
 
@@ -243,6 +282,7 @@ async function login(username, password) {
     name:      u.name,
     role:      u.role,
     dept:      u.dept,
+    level:     u.level,
     loginTime: Date.now(),
   }));
   _writeAudit('LOGIN', '—', '—', '—', '—', u.name + ' logged in from ' + (window.location.pathname.split('/').pop() || 'browser'));
@@ -379,6 +419,19 @@ function canSubmitDaily()  { return _getPerms().kpi?.daily      === true; }
 function canViewSales() { const s = _getPerms().commercial?.sales; return s === 'view' || s === 'edit'; }
 function canEditSales() { return _getPerms().commercial?.sales === 'edit'; }
 
+/* Purchases dashboard — split out from canViewSales()/canEditSales() now
+   that Purchase has its own role/department (previously rode on the same
+   commercial.sales gate for lack of a check of its own). */
+function canViewPurchases() { const p = _getPerms().commercial?.purchase; return p === 'view' || p === 'edit'; }
+function canEditPurchases() { return _getPerms().commercial?.purchase === 'edit'; }
+
+/* Tier accessors — 'officer' | 'senior' | 'hod'. Only the HOD of a
+   department may approve/reject that department's reports (see
+   backend/middleware/approval.js); Officer/Senior have identical
+   view/edit rights to their HOD otherwise. */
+function getMyLevel() { const u = getCurrentUser(); return u ? (u.level || 'hod') : null; }
+function isHOD()      { return getMyLevel() === 'hod'; }
+
 /* Per-department KPI view/edit checks — the KPI dashboard has ONE dept
    selected at a time (currentDept in app.js), and a role's rights can
    differ per department, so these must be checked against a specific dept
@@ -493,11 +546,6 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
       color: #fff;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       max-width: 130px;
-    }
-    .auth-user-dept {
-      font-size: 9px; font-weight: 600;
-      color: rgba(255,255,255,.5);
-      text-transform: uppercase; letter-spacing: .5px;
     }
     .auth-logout-btn {
       display: inline-flex; align-items: center; gap: 5px;
@@ -676,7 +724,6 @@ function renderUserHeader() {
       <div class="auth-user-avatar">${user.name.charAt(0).toUpperCase()}</div>
       <div class="auth-user-details">
         <div class="auth-user-name">${user.name}</div>
-        <div class="auth-user-dept">${user.dept}</div>
       </div>
       <button class="auth-logout-btn" onclick="logout()">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -826,6 +873,12 @@ const _DAILY_ACCESS = {
                 nav:  'all' },
   sales:      { edit: [],
                 nav:  ['sales-projection-form.html'] },
+  purchase:   { edit: [],
+                nav:  [] },   // no submittable form yet — see FORM_ACCESS.purchase
+  ei:         { edit: [],
+                nav:  ['daily-report.html'] },
+  packing:    { edit: [],
+                nav:  ['daily-report.html'] },
 };
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -866,7 +919,7 @@ const _FORM_TYPE_ACCESS = {
   mining:     ['mines'],
   stores:     ['materials'],   /* Raw Materials report is owned by Purchase & Stores */
   sales:      ['sales-projection'],
-  hr: [], it: [], md: [], admin: [], management: [], finance: [],
+  hr: [], it: [], md: [], admin: [], management: [], finance: [], ei: [], packing: [], purchase: [],
 };
 
 /* Standalone forms/*.html pages don't carry their formId in the URL, and
@@ -1026,6 +1079,16 @@ function applyInsightsPermissions() {
    stays gated by _FORM_TYPE_ACCESS (pm role) on forms/stoppage-form.html;
    this page only ever reads the aggregated numbers. ═══════════════════ */
 function applyReliabilityPermissions() {
+  renderUserHeader();
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   APPLY PERMISSIONS — APPROVALS PAGE (approvals.html)
+   No content filtering here — GET /api/approvals already scopes the list
+   server-side (admin/md see everything, an HOD sees only their own
+   department, everyone else gets []), so an Officer/Senior who navigates
+   here directly just sees an empty state, not a redirect. ═══════════════ */
+function applyApprovalsPermissions() {
   renderUserHeader();
 }
 

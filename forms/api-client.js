@@ -207,6 +207,38 @@
     return res.json();
   }
 
+  /* ── Approvals (backend/routes/reports.js + routes/approvals.js) ──
+     Officer/Senior submissions land as 'pending_approval'; only their
+     department's HOD (or admin/md) may approve/reject. See approvals.html. */
+
+  /* GET /api/approvals — pending reports scoped to the caller's department
+     (admin/md see everything, HOD sees their own department, others []) */
+  async function getApprovals() {
+    const res = await fetch(BASE + '/approvals', { headers: _headers() });
+    if (!res.ok) throw _httpError('getApprovals', '', res);
+    return res.json();
+  }
+
+  /* POST /api/reports/:formType/:date/approve */
+  async function approveReport(formType, date, shift) {
+    const res = await fetch(BASE + '/reports/' + encodeURIComponent(formType) + '/' + encodeURIComponent(date) + '/approve', {
+      method: 'POST', headers: _headers(),
+      body: JSON.stringify({ shift: shift || 'day' }),
+    });
+    if (!res.ok) throw _httpError('approveReport', formType, res);
+    return res.json();
+  }
+
+  /* POST /api/reports/:formType/:date/reject — reason is mandatory */
+  async function rejectReport(formType, date, shift, reason) {
+    const res = await fetch(BASE + '/reports/' + encodeURIComponent(formType) + '/' + encodeURIComponent(date) + '/reject', {
+      method: 'POST', headers: _headers(),
+      body: JSON.stringify({ shift: shift || 'day', reason }),
+    });
+    if (!res.ok) throw _httpError('rejectReport', formType, res);
+    return res.json();
+  }
+
   /* ── MIS reference data (backend/routes/mis.js) ─────────────────── */
 
   /* GET /api/mis/employees|it-assets|vehicles|compliance-certs — static
@@ -239,6 +271,7 @@
     quarryImportTickets, quarryGetTickets,
     getSalesTerritories, getSalesDashboard, setSalesTarget,
     getPurchasesDashboard,
+    getApprovals, approveReport, rejectReport,
     getMisEmployees, getMisItAssets, getMisVehicles, getMisComplianceCerts,
   };
 

@@ -1557,6 +1557,7 @@
   ════════════════════════════════════════════════ -->
   <div class="rcard" style="margin-top:14px">
     <div class="rcard-hdr"><div class="rcard-title"><i data-lucide="pen-line" class="title-icon"></i> Report Sign-off &amp; Approval</div></div>
+    <div style="padding:2px 18px 8px;font-size:10.5px;color:var(--text-muted)">For the printed record only — does not replace the <a href="approvals.html" style="color:var(--orange)">Approvals</a> workflow.</div>
     <div class="signoff">
       <div class="so-cell">
         <div class="so-role">Production Head</div>
@@ -1617,6 +1618,20 @@
   <script src="forms/offline-queue.js"></script>
   <script src="forms/client-errors.js"></script>
 <script src="forms/date-picker.js"></script>
+<script>
+  /* Cosmetic-only rounding of manual-entry fields once a report is locked
+     (SUBMITTED): whole numbers to match Excel's own display convention,
+     1 decimal only for running-hours fields where a whole hour would lose
+     meaningful granularity. The exact stored value is preserved (see
+     form-persist.js's _lockForm/_unlockForm) — this never affects what
+     gets resubmitted if the report is later unlocked and re-edited. */
+  window.NYATI_LOCKED_DISPLAY_FMT = function (field, value) {
+    var dp = /_run_hrs$/.test(field) ? 1 : 0;
+    var scale = Math.pow(10, dp);
+    var r = Math.round(value * scale) / scale;
+    return Number.isInteger(r) ? String(r) : r.toFixed(dp);
+  };
+</script>
 <script src="forms/form-persist.js"></script>
 <script>initFormPersist('production');</script>
 <script src="forms/nav-status.js"></script>
@@ -1691,7 +1706,7 @@ initKpiLive([
   { kpi:'cm1_425n_bm_closing', fmt:'n0',
     compute: function(f,n){ return n(f.cm1_425n_bm_open) + n(f.cm1_425n_bm_mt) - n(f.cm1_425n_bm_cons_mt); }
   },
-  { kpi:'cm1_total_run_hrs', fmt:'n2',
+  { kpi:'cm1_total_run_hrs', fmt:'n1',
     compute: function(f,n){ return n(f.cm1_325n_run_hrs)+n(f.cm1_425r_run_hrs)+n(f.cm1_425n_run_hrs)+n(f.cm1_opc_run_hrs)+n(f.cm1_425n_bm_run_hrs); }
   },
   { kpi:'cm1_total_open', fmt:'n0',
@@ -1735,7 +1750,7 @@ initKpiLive([
   { kpi:'cm2_425n_bm_closing', fmt:'n0',
     compute: function(f,n){ return n(f.cm2_425n_bm_open) + n(f.cm2_425n_bm_mt) - n(f.cm2_425n_bm_cons_mt); }
   },
-  { kpi:'cm2_total_run_hrs', fmt:'n2',
+  { kpi:'cm2_total_run_hrs', fmt:'n1',
     compute: function(f,n){ return n(f.cm2_325n_run_hrs)+n(f.cm2_425r_run_hrs)+n(f.cm2_425n_run_hrs)+n(f.cm2_opc_run_hrs)+n(f.cm2_425n_bm_run_hrs); }
   },
   { kpi:'cm2_total_open', fmt:'n0',
@@ -1766,11 +1781,11 @@ initKpiLive([
   { kpi:'coal_kiln_closing', fmt:'n0',
     compute: function(f,n){ return n(f.coal_kiln_open) + n(f.coal_kiln_recv) - n(f.coal_kiln); }
   },
-  { kpi:'coal_kiln_cons_display', field:'coal_kiln', fmt:'n2' },
+  { kpi:'coal_kiln_cons_display', field:'coal_kiln', fmt:'n0' },
   { kpi:'coal_cpp_closing', fmt:'n0',
     compute: function(f,n){ return n(f.coal_cpp_open) + n(f.coal_cpp_recv) - n(f.coal_cpp); }
   },
-  { kpi:'coal_cpp_cons_display', field:'coal_cpp', fmt:'n2' },
+  { kpi:'coal_cpp_cons_display', field:'coal_cpp', fmt:'n0' },
   { kpi:'coal_total_open', fmt:'n0',
     compute: function(f,n){ return n(f.coal_kiln_open) + n(f.coal_cpp_open); }
   },
@@ -1787,15 +1802,15 @@ initKpiLive([
   { kpi:'cm_gypsum_closing', fmt:'n0',
     compute: function(f,n){ return n(f.cm_gypsum_open) + n(f.cm_gypsum_recv) - n(f.cm_gypsum_cons); }
   },
-  { kpi:'cm_gypsum_cons_display', field:'cm_gypsum_cons', fmt:'n2' },
+  { kpi:'cm_gypsum_cons_display', field:'cm_gypsum_cons', fmt:'n0' },
   { kpi:'cm_flyash_closing', fmt:'n0',
     compute: function(f,n){ return n(f.cm_flyash_open) + n(f.cm_flyash_recv) - n(f.cm_flyash_cons); }
   },
-  { kpi:'cm_flyash_cons_display', field:'cm_flyash_cons', fmt:'n2' },
+  { kpi:'cm_flyash_cons_display', field:'cm_flyash_cons', fmt:'n0' },
   { kpi:'cm_grind_aid_closing', fmt:'n0',
     compute: function(f,n){ return n(f.cm_grind_aid_open) + n(f.cm_grind_aid_recv) - n(f.cm_grind_aid_cons); }
   },
-  { kpi:'cm_grind_aid_cons_display', field:'cm_grind_aid_cons', fmt:'n2' },
+  { kpi:'cm_grind_aid_cons_display', field:'cm_grind_aid_cons', fmt:'n0' },
 
   /* ── Raw Mill Material — stock ledgers (Opening + Received − Consumed),
      matching Excel's own per-row closing formulas exactly. LIMESTONE is the
@@ -1807,33 +1822,33 @@ initKpiLive([
   { kpi:'rmm_limestone_closing', fmt:'n0',
     compute: function(f,n){ return n(f.rmm_limestone_open) + n(f.rmm_limestone_recv) - n(f.rmm_limestone_cons) - n(f.cm_limestone_cons); }
   },
-  { kpi:'rmm_limestone_cons_display', field:'rmm_limestone_cons', fmt:'n2' },
+  { kpi:'rmm_limestone_cons_display', field:'rmm_limestone_cons', fmt:'n0' },
   { kpi:'rmm_clay_open',   field:'rmm_clay_open',   fmt:'n0' },
   { kpi:'rmm_clay_closing', fmt:'n0',
     compute: function(f,n){ return n(f.rmm_clay_open) + n(f.rmm_clay_recv) - n(f.rmm_clay_cons); }
   },
-  { kpi:'rmm_clay_cons_display', field:'rmm_clay_cons', fmt:'n2' },
+  { kpi:'rmm_clay_cons_display', field:'rmm_clay_cons', fmt:'n0' },
   { kpi:'rmm_ironore_open',   field:'rmm_ironore_open',   fmt:'n0' },
   { kpi:'rmm_ironore_closing', fmt:'n0',
     compute: function(f,n){ return n(f.rmm_ironore_open) + n(f.rmm_ironore_recv) - n(f.rmm_ironore_cons); }
   },
-  { kpi:'rmm_ironore_cons_display', field:'rmm_ironore_cons', fmt:'n2' },
+  { kpi:'rmm_ironore_cons_display', field:'rmm_ironore_cons', fmt:'n0' },
   { kpi:'rmm_industrialclay_open',   field:'rmm_industrialclay_open',   fmt:'n0' },
   { kpi:'rmm_industrialclay_closing', fmt:'n0',
     compute: function(f,n){ return n(f.rmm_industrialclay_open) + n(f.rmm_industrialclay_recv) - n(f.rmm_industrialclay_cons); }
   },
-  { kpi:'rmm_industrialclay_cons_display', field:'rmm_industrialclay_cons', fmt:'n2' },
+  { kpi:'rmm_industrialclay_cons_display', field:'rmm_industrialclay_cons', fmt:'n0' },
   /* Bauxite / Mill Dust Iron Ore — only tracked by Excel from 2026-06-21 onward */
   { kpi:'rmm_bauxite_open',   field:'rmm_bauxite_open',   fmt:'n0' },
   { kpi:'rmm_bauxite_closing', fmt:'n0',
     compute: function(f,n){ return n(f.rmm_bauxite_open) + n(f.rmm_bauxite_recv) - n(f.rmm_bauxite_cons); }
   },
-  { kpi:'rmm_bauxite_cons_display', field:'rmm_bauxite_cons', fmt:'n2' },
+  { kpi:'rmm_bauxite_cons_display', field:'rmm_bauxite_cons', fmt:'n0' },
   { kpi:'rmm_milldustironore_open',   field:'rmm_milldustironore_open',   fmt:'n0' },
   { kpi:'rmm_milldustironore_closing', fmt:'n0',
     compute: function(f,n){ return n(f.rmm_milldustironore_open) + n(f.rmm_milldustironore_recv) - n(f.rmm_milldustironore_cons); }
   },
-  { kpi:'rmm_milldustironore_cons_display', field:'rmm_milldustironore_cons', fmt:'n2' },
+  { kpi:'rmm_milldustironore_cons_display', field:'rmm_milldustironore_cons', fmt:'n0' },
 
   /* TOTAL MATL - RAW MILL — matches Excel's April/May convention (simple
      aggregate: Total Open + Total Recv − Total OWN Consumption, same as the
@@ -1863,41 +1878,41 @@ initKpiLive([
   },
   /* % Matl Cons — matches Excel's N9=(I9/I13)*100 pattern: this material's
      on-date consumption as a % of the raw-mill TOTAL on-date consumption. */
-  { kpi:'rmm_limestone_pct', fmt:'n2',
+  { kpi:'rmm_limestone_pct', fmt:'n1',
     compute: function(f,n){ var t=n(f.rmm_limestone_cons)+n(f.rmm_clay_cons)+n(f.rmm_ironore_cons)+n(f.rmm_industrialclay_cons)+n(f.rmm_bauxite_cons)+n(f.rmm_milldustironore_cons); return t>0 ? n(f.rmm_limestone_cons)/t*100 : null; }
   },
-  { kpi:'rmm_clay_pct', fmt:'n2',
+  { kpi:'rmm_clay_pct', fmt:'n1',
     compute: function(f,n){ var t=n(f.rmm_limestone_cons)+n(f.rmm_clay_cons)+n(f.rmm_ironore_cons)+n(f.rmm_industrialclay_cons)+n(f.rmm_bauxite_cons)+n(f.rmm_milldustironore_cons); return t>0 ? n(f.rmm_clay_cons)/t*100 : null; }
   },
-  { kpi:'rmm_ironore_pct', fmt:'n2',
+  { kpi:'rmm_ironore_pct', fmt:'n1',
     compute: function(f,n){ var t=n(f.rmm_limestone_cons)+n(f.rmm_clay_cons)+n(f.rmm_ironore_cons)+n(f.rmm_industrialclay_cons)+n(f.rmm_bauxite_cons)+n(f.rmm_milldustironore_cons); return t>0 ? n(f.rmm_ironore_cons)/t*100 : null; }
   },
-  { kpi:'rmm_industrialclay_pct', fmt:'n2',
+  { kpi:'rmm_industrialclay_pct', fmt:'n1',
     compute: function(f,n){ var t=n(f.rmm_limestone_cons)+n(f.rmm_clay_cons)+n(f.rmm_ironore_cons)+n(f.rmm_industrialclay_cons)+n(f.rmm_bauxite_cons)+n(f.rmm_milldustironore_cons); return t>0 ? n(f.rmm_industrialclay_cons)/t*100 : null; }
   },
-  { kpi:'rmm_bauxite_pct', fmt:'n2',
+  { kpi:'rmm_bauxite_pct', fmt:'n1',
     compute: function(f,n){ var t=n(f.rmm_limestone_cons)+n(f.rmm_clay_cons)+n(f.rmm_ironore_cons)+n(f.rmm_industrialclay_cons)+n(f.rmm_bauxite_cons)+n(f.rmm_milldustironore_cons); return t>0 ? n(f.rmm_bauxite_cons)/t*100 : null; }
   },
-  { kpi:'rmm_milldustironore_pct', fmt:'n2',
+  { kpi:'rmm_milldustironore_pct', fmt:'n1',
     compute: function(f,n){ var t=n(f.rmm_limestone_cons)+n(f.rmm_clay_cons)+n(f.rmm_ironore_cons)+n(f.rmm_industrialclay_cons)+n(f.rmm_bauxite_cons)+n(f.rmm_milldustironore_cons); return t>0 ? n(f.rmm_milldustironore_cons)/t*100 : null; }
   },
   /* TOTAL row's own %: matches Excel's N13/N15=SUM(N9:N14) — the 6 materials'
      %-of-total-consumption figures always sum to 100 by construction. */
-  { kpi:'rmm_total_pct', fmt:'n2',
+  { kpi:'rmm_total_pct', fmt:'n1',
     compute: function(f,n){ var t=n(f.rmm_limestone_cons)+n(f.rmm_clay_cons)+n(f.rmm_ironore_cons)+n(f.rmm_industrialclay_cons)+n(f.rmm_bauxite_cons)+n(f.rmm_milldustironore_cons); return t>0 ? 100 : null; }
   },
 
   /* ── Cement Grinding — LIMESTONE (consumption-only, no own opening/closing
      in Excel either) + STAREX (own ledger, separate from Grinding Aid/Mapie) ── */
-  { kpi:'cm_limestone_cons_display', field:'cm_limestone_cons', fmt:'n2' },
-  { kpi:'cm_limestone_pct', fmt:'n2',
+  { kpi:'cm_limestone_cons_display', field:'cm_limestone_cons', fmt:'n0' },
+  { kpi:'cm_limestone_pct', fmt:'n1',
     compute: function(f,n){
       var cmTotalProd = n(f.cm1_325n_mt)+n(f.cm1_425r_mt)+n(f.cm1_425n_mt)+n(f.cm1_opc_mt)+n(f.cm1_425n_bm_mt)
                        + n(f.cm2_325n_mt)+n(f.cm2_425r_mt)+n(f.cm2_425n_mt)+n(f.cm2_425n_bm_mt);
       return cmTotalProd > 0 ? n(f.cm_limestone_cons)/cmTotalProd*100 : null;
     }
   },
-  { kpi:'cm_gypsum_pct', fmt:'n2',
+  { kpi:'cm_gypsum_pct', fmt:'n1',
     compute: function(f,n){
       var cmTotalProd = n(f.cm1_325n_mt)+n(f.cm1_425r_mt)+n(f.cm1_425n_mt)+n(f.cm1_opc_mt)+n(f.cm1_425n_bm_mt)
                        + n(f.cm2_325n_mt)+n(f.cm2_425r_mt)+n(f.cm2_425n_mt)+n(f.cm2_425n_bm_mt);
@@ -1907,7 +1922,7 @@ initKpiLive([
   { kpi:'cm_starex_closing', fmt:'n0',
     compute: function(f,n){ return n(f.cm_starex_open) + n(f.cm_starex_recv) - n(f.cm_starex_cons); }
   },
-  { kpi:'cm_starex_cons_display', field:'cm_starex_cons', fmt:'n2' },
+  { kpi:'cm_starex_cons_display', field:'cm_starex_cons', fmt:'n0' },
 
   /* TOTAL MATL - CEMENT MILL — matches Excel's E27/F27/I27/L27 exactly:
      Clinker-Own + Clinker-Purchased + Limestone(cons only) + Gypsum + Starex
@@ -1961,7 +1976,7 @@ initKpiLive([
      clinker production × 100 — matches Excel's Q50=(M33/J34)*100 exactly
      (M33/J34 are the Plant Operations Coal Mill/Kiln on-date columns, i.e.
      coalmill_cons_mt / kiln_prod_mt in this app's field names). */
-  { kpi:'spc_coal_consumption_pct', fmt:'n2',
+  { kpi:'spc_coal_consumption_pct', fmt:'n1',
     compute: function(f,n){ return n(f.kiln_prod_mt) > 0 ? n(f.coalmill_cons_mt)/n(f.kiln_prod_mt)*100 : null; }
   },
   /* Heat Consumption (kcal/kg clinker) = Coal NCV × Coal Consumption% / 100,

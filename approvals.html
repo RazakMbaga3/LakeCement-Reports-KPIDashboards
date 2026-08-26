@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – Pending Approvals</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="auth.js?v=10"></script>
+  <script src="sidebar.js?v=2"></script>
+  <style>
+    .apv-main { max-width: 1200px; margin: 0 auto; padding: 20px 28px 60px; }
+    .apv-intro { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+
+    .apv-table-wrap { overflow-x: auto; background: white; border: 1.5px solid var(--border); border-radius: 12px; }
+    table.apv-table { border-collapse: collapse; font-size: 12px; width: 100%; }
+    table.apv-table th, table.apv-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #F0F4F8; white-space: nowrap; }
+    table.apv-table th { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); background: var(--off-white); }
+    table.apv-table tr:last-child td { border-bottom: none; }
+    .apv-form-label { font-weight: 700; color: var(--navy); }
+    .apv-remarks { white-space: normal; max-width: 260px; color: var(--text-muted); font-size: 11px; }
+
+    .apv-actions { display: flex; gap: 8px; }
+    .apv-btn { font-family: var(--font); font-size: 11px; font-weight: 700; padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer; }
+    .apv-btn-approve { background: #239557; color: white; }
+    .apv-btn-approve:hover { background: #1c7a46; }
+    .apv-btn-reject { background: white; color: #DC2626; border: 1.5px solid #FCA5A5; }
+    .apv-btn-reject:hover { background: #FEF2F2; }
+    .apv-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .apv-empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .apv-error { text-align: center; padding: 20px; color: #DC2626; font-size: 12px; }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="app-sidebar"></aside>
+  <script>renderSidebar();</script>
+
+  <div class="main">
+
+<header class="top-header" id="app-header"></header>
+<script>renderTopHeader();</script>
+
+<main class="apv-main">
+  <p class="apv-intro">Reports submitted by Officer/Senior staff wait here for their department Head's sign-off before they count as final. Approving or rejecting is logged in the audit trail.</p>
+
+  <div class="apv-table-wrap">
+    <table class="apv-table" id="apv-table">
+      <thead>
+        <tr><th>Report</th><th>Date</th><th>Shift</th><th>Submitted By</th><th>Submitted At</th><th>Notes</th><th>Action</th></tr>
+      </thead>
+      <tbody><tr><td colspan="7" class="apv-empty">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span id="footer-date"></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+  </div><!-- /.main -->
+</div><!-- /.app-shell -->
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+  lucide.createIcons();
+  requireAuth();
+  applyApprovalsPermissions();
+</script>
+<script src="forms/api-client.js"></script>
+<script src="forms/client-errors.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* form_type is a bare slug ('power-plant', 'sales-projection', ...) —
+     no shared formType->label map exists yet (auth.js's nav catalogue is
+     keyed by page filename, not formType), so title-case the slug rather
+     than duplicate that mapping here. */
+  function labelFor(formType) {
+    return String(formType || '').split('-').map(function (w) {
+      return w.charAt(0).toUpperCase() + w.slice(1);
+    }).join(' ');
+  }
+
+  function fmtDateTime(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' +
+      d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  async function load() {
+    var tbody = document.querySelector('#apv-table tbody');
+    var rows;
+    try {
+      rows = await NyatiAPI.getApprovals();
+    } catch (e) {
+      tbody.innerHTML = '<tr><td colspan="7" class="apv-error">Could not load pending approvals — is the server reachable?</td></tr>';
+      return;
+    }
+
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="apv-empty">Nothing pending — every submitted report has been approved or rejected.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = rows.map(function (r) {
+      var remarks = (r.data && (r.data.remarks || r.data.notes)) || '';
+      return '<tr data-form-type="' + escHtml(r.form_type) + '" data-date="' + escHtml(r.record_date) + '" data-shift="' + escHtml(r.shift) + '">' +
+        '<td class="apv-form-label">' + escHtml(labelFor(r.form_type)) + '</td>' +
+        '<td>' + escHtml(r.record_date) + '</td>' +
+        '<td>' + escHtml(r.shift) + '</td>' +
+        '<td>' + escHtml(r.submitted_by_name || '—') + '</td>' +
+        '<td>' + fmtDateTime(r.submitted_at) + '</td>' +
+        '<td class="apv-remarks">' + escHtml(remarks) + '</td>' +
+        '<td class="apv-actions">' +
+          '<button class="apv-btn apv-btn-approve" data-action="approve">Approve</button>' +
+          '<button class="apv-btn apv-btn-reject" data-action="reject">Reject</button>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  document.querySelector('#apv-table').addEventListener('click', async function (ev) {
+    var btn = ev.target.closest('button[data-action]');
+    if (!btn) return;
+    var row = btn.closest('tr');
+    var formType = row.dataset.formType, date = row.dataset.date, shift = row.dataset.shift;
+    var action = btn.dataset.action;
+
+    if (action === 'reject') {
+      var reason = window.prompt('Reason for rejecting this report:');
+      if (reason === null) return; // cancelled
+      reason = reason.trim();
+      if (!reason) { alert('A reason is required to reject a report.'); return; }
+      row.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+      try {
+        await NyatiAPI.rejectReport(formType, date, shift, reason);
+        load();
+      } catch (e) {
+        alert('Could not reject this report: ' + (e.message || e));
+        row.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
+      }
+      return;
+    }
+
+    row.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+    try {
+      await NyatiAPI.approveReport(formType, date, shift);
+      load();
+    } catch (e) {
+      alert('Could not approve this report: ' + (e.message || e));
+      row.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
+    }
+  });
+
+  load();
+
+  var _dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+  var fEl = document.getElementById('footer-date');
+  if (fEl) fEl.textContent = _dateStr;
+}());
+</script>
+</body>
+</html>

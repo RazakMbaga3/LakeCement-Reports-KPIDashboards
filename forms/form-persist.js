@@ -348,6 +348,23 @@
       inp.style.opacity  = '.65';
       inp.style.cursor   = 'not-allowed';
       inp.style.pointerEvents = 'none';
+
+      // Cosmetic-only display rounding, opt-in per page via
+      // window.NYATI_LOCKED_DISPLAY_FMT(field, value) -> string|null. The
+      // exact value is stashed in data-raw-value and restored verbatim by
+      // _unlockForm(), so a later edit-and-resubmit still sends the real
+      // number — this never touches what actually gets saved.
+      if (typeof global.NYATI_LOCKED_DISPLAY_FMT === 'function' && inp.dataset.field) {
+        const field = inp.dataset.field;
+        const raw = inp.value;
+        if (raw !== '' && !isNaN(+raw)) {
+          const display = global.NYATI_LOCKED_DISPLAY_FMT(field, +raw);
+          if (display !== null && display !== undefined && display !== raw) {
+            inp.dataset.rawValue = raw;
+            inp.value = display;
+          }
+        }
+      }
     });
     document.querySelectorAll('.btn-save, .btn-sub').forEach(b => {
       b.disabled = true;
@@ -382,6 +399,10 @@
   function _unlockForm() {
     document.querySelectorAll('.ci, .tb-ctl').forEach(inp => {
       inp.removeAttribute('readonly');
+      if (inp.dataset.rawValue !== undefined) {
+        inp.value = inp.dataset.rawValue;
+        delete inp.dataset.rawValue;
+      }
       inp.style.opacity = '';
       inp.style.cursor  = '';
       inp.style.pointerEvents = '';

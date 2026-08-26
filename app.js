@@ -9,35 +9,35 @@ const DEPT_META = {
   },
   ei: {
     label: 'E &amp; I — Electrical &amp; Instrumentation',
-    resp:  'Responsibility: Mr. Ramesh Patel &amp; Team',
+    resp:  'Responsibility: Electrical &amp; Instrumentation HOD',
   },
   production: {
     label: 'Production Department',
-    resp:  'Responsibility: Mr. Godhania &amp; Team',
+    resp:  'Responsibility: Production &amp; QC Manager',
   },
   mines: {
     label: 'Mines Department',
-    resp:  'Responsibility: Mr. Mukesh Agrawal &amp; Team',
+    resp:  'Responsibility: Quarry Manager',
   },
   mechanical: {
     label: 'Mechanical Department',
-    resp:  'Responsibility: Mr. Jai Prakash &amp; Team',
+    resp:  'Responsibility: Projects &amp; Maintenance HOD',
   },
   powerplant: {
     label: 'Power Plant Department',
-    resp:  'Responsibility: Mr. Anbarasan &amp; Team',
+    resp:  'Responsibility: Power Plant HOD',
   },
   packing: {
     label: 'Packing Plant Department',
-    resp:  'Responsibility: Mr. Jatinder &amp; Team',
+    resp:  'Responsibility: Packing Plant HOD',
   },
   stores: {
     label: 'Stores Department',
-    resp:  'Responsibility: Mr. Kishore &amp; Team',
+    resp:  'Responsibility: Purchase &amp; Stores Manager',
   },
   minesworkshop: {
     label: 'Mines Workshop',
-    resp:  'Responsibility: Mr. Yogesh &amp; Team',
+    resp:  'Responsibility: Mines Workshop Team',
   },
 };
 

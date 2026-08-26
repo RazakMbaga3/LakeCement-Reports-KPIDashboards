@@ -738,6 +738,7 @@
   ════════════════════════════════════════════════ -->
   <div class="rcard">
     <div class="rcard-hdr"><div class="rcard-title"><i data-lucide="pen-line" class="title-icon"></i> Report Sign-off &amp; Approval</div></div>
+    <div style="padding:2px 18px 8px;font-size:10.5px;color:var(--text-muted)">For the printed record only — does not replace the <a href="approvals.html" style="color:var(--orange)">Approvals</a> workflow.</div>
     <div class="signoff">
       <div class="so-cell">
         <div class="so-role">CPP Shift Operator</div>
@@ -811,7 +812,7 @@ initReportLoader({
     /* ── raw on-date passthroughs (populate the "On Date" column cells) ── */
     { kpi:'cpp_gross_gen_kwh_ondate', fmt:'n0', compute: function(d,n){ return n(d.cpp_gross_gen_kwh) || null; } },
     { kpi:'cpp_aux_kwh_ondate', fmt:'n0', compute: function(d,n){ return n(d.cpp_aux_kwh) || null; } },
-    { kpi:'cpp_run_hrs_ondate', fmt:'n2', compute: function(d,n){ return n(d.cpp_run_hrs) || null; } },
+    { kpi:'cpp_run_hrs_ondate', fmt:'n1', compute: function(d,n){ return n(d.cpp_run_hrs) || null; } },
     { kpi:'cpp_feed_water_mt_ondate', fmt:'n0', compute: function(d,n){ return n(d.cpp_feed_water_mt) || null; } },
     { kpi:'cpp_boiler_steam_mt_ondate', fmt:'n0', compute: function(d,n){ return n(d.cpp_boiler_steam_mt) || null; } },
     { kpi:'cpp_bleed_steam_mt_ondate', fmt:'n0', compute: function(d,n){ return n(d.cpp_bleed_steam_mt) || null; } },
@@ -826,7 +827,7 @@ initReportLoader({
     { kpi:'cpp_dm_water_gen_m3_ondate', fmt:'n0', compute: function(d,n){ return n(d.cpp_dm_water_gen_m3) || null; } },
     { kpi:'cpp_dm_water_cons_m3_ondate', fmt:'n0', compute: function(d,n){ return n(d.cpp_dm_water_cons_m3) || null; } },
     { kpi:'cpp_ct_makeup_m3_ondate', fmt:'n0', compute: function(d,n){ return n(d.cpp_ct_makeup_m3) || null; } },
-    { kpi:'cpp_flyash_combustible_pct_ondate', fmt:'n2', compute: function(d,n){ return n(d.cpp_flyash_combustible_pct) || null; } },
+    { kpi:'cpp_flyash_combustible_pct_ondate', fmt:'n1', compute: function(d,n){ return n(d.cpp_flyash_combustible_pct) || null; } },
     { kpi:'cpp_flyash_gcv_ondate', fmt:'n0', compute: function(d,n){ return n(d.cpp_flyash_gcv) || null; } },
     { kpi:'cpp_flyash_to_cm_mt_ondate', fmt:'n1', compute: function(d,n){ return n(d.cpp_flyash_to_cm_mt) || null; } },
     { kpi:'cpp_flyash_to_coalyard_nos_ondate', fmt:'n0', compute: function(d,n){ return n(d.cpp_flyash_to_coalyard_nos) || null; } },
@@ -844,34 +845,34 @@ initReportLoader({
         return (g>0) ? g-a : null;
       }
     },
-    { kpi:'cpp_aux_pct', fmt:'pct2',
+    { kpi:'cpp_aux_pct', fmt:'pct1',
       compute: function(d,n){
         var g=n(d.cpp_gross_gen_kwh), a=n(d.cpp_aux_kwh);
         return (g>0) ? a/g*100 : null;
       }
     },
-    { kpi:'cpp_avg_gen', fmt:'n2',
+    { kpi:'cpp_avg_gen', fmt:'n1',
       compute: function(d,n){
         /* Average Power Generation (MWhr) = Gross(kWh) ÷ 1000 ÷ Running Hours */
         var g=n(d.cpp_gross_gen_kwh), h=n(d.cpp_run_hrs);
         return (h>0) ? g/1000/h : null;
       }
     },
-    { kpi:'cpp_plf', fmt:'pct2',
+    { kpi:'cpp_plf', fmt:'pct1',
       compute: function(d,n){
         /* PLF = Average Power Generation (MW) ÷ 10 MW installed × 100 */
         var g=n(d.cpp_gross_gen_kwh), h=n(d.cpp_run_hrs);
         return (h>0) ? (g/1000/h)/10*100 : null;
       }
     },
-    { kpi:'cpp_ssc', fmt:'n2',
+    { kpi:'cpp_ssc', fmt:'n1',
       compute: function(d,n){
         /* Specific Steam Consumption = Turbine Steam(kg) ÷ Gross Gen(kWh) */
         var turbine=n(d.cpp_turbine_steam_mt), g=n(d.cpp_gross_gen_kwh);
         return (g>0 && turbine>0) ? turbine*1000/g : null;
       }
     },
-    { kpi:'cpp_sfc', fmt:'n2',
+    { kpi:'cpp_sfc', fmt:'n1',
       compute: function(d,n){
         var g=n(d.cpp_gross_gen_kwh), coal=n(d.cpp_coal_cons);
         return (g>0 && coal>0) ? coal*1000/g : null;
