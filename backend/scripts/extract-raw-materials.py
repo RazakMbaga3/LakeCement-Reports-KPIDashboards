@@ -95,6 +95,22 @@ def extract_day(ws):
                 if f is not None: out[prefix + '_recv'] = r2(f)
                 if i is not None: out[prefix + '_cons'] = r2(i)
 
+        # COAL (item 6) sits just below "TOTAL MATL - RAW MILL", still part
+        # of the PYRO PROCESSING numbered list but outside the open/recv/cons
+        # range above — same D-column sub-label pattern as STAREX/MAPEI below.
+        # Consumption (coal_kiln/coal_cpp) already comes from the Clinker
+        # sheet (extract-production.py, cross-checked identical); only
+        # opening/received live nowhere else, hence _open/_recv only here.
+        coal_end = find_row(ws, 'CEMENT GRINDING', r1=total_rm_row) or (total_rm_row + 6)
+        for r in range(total_rm_row + 1, coal_end):
+            d_label = norm(ws.cell(row=r, column=COL['D']).value)
+            if d_label not in ('KILN', 'CPP'):
+                continue
+            prefix = 'coal_kiln' if d_label == 'KILN' else 'coal_cpp'
+            o, f = num(ws, r, 'E'), num(ws, r, 'F')
+            if o is not None: out[prefix + '_open'] = r2(o)
+            if f is not None: out[prefix + '_recv'] = r2(f)
+
     # ── CEMENT GRINDING: Limestone (consumption-only) + Starex ──
     cg_row = find_row(ws, 'CEMENT GRINDING')
     total_cm_row = find_row(ws, 'TOTAL MATL - CEMENT MILL', r1=cg_row or 1) if cg_row else None

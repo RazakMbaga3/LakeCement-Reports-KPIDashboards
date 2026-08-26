@@ -9,47 +9,46 @@
   also live on the production form (kiln_prod_mt, and the CM1/CM2 grade
   tonnages summed) — the power-cons form was built to hold its own copies
   so its live in-form preview (kpi-live.js) can show an approximate SPC
-  number without a cross-form fetch. Real data entry would fill both;
-  this script back-fills the power-cons side to match, from the same
-  source cells import-production.js already used and verified for the
-  production-form side (Clinker!EK, Production2 AC/AF/AI/AL/AR/AU/AX/BD).
+  number without a cross-form fetch. Real data entry would fill both.
+
+  2026-08-21: rewritten to source these three facts from
+  scripts/_production_2026-<MM>.json (extract-production.py's output)
+  instead of re-reading Clinker!EK / Production2 AC/AF/AI/AL/AR/AU/AX/BD
+  via ExcelJS. Root-caused a real gap this way: 2026-04-19's Clinker!EK
+  cell holds a formula with NO cached `result` in the workbook (confirmed
+  by inspecting the raw cell — neighboring rows 20/22 both carry a
+  `result`, row 21/day-19 does not), the same "ExcelJS silently drops
+  cached formula results on some cells" issue extract-production.py's own
+  header warns about — which is exactly why that script uses openpyxl
+  instead. Reusing its already-extracted, already-verified JSON avoids
+  this whole bug class rather than patching one date.
 
   IMPORTANT: POST /api/reports/power-cons REPLACES the whole `data` JSONB
   blob (no merge in the route) — so this script GETs each day's existing
   record first and POSTs the merged object back, rather than posting the
   three new fields alone and wiping the 91-day kWh backfill.
 
-  2026-07-27: extended to April and May — a full-month production master
-  file for each is now in the repo (`full Production Report april and
-  may/Master production report APRIL 26'.xlsx` / `MAY 26'.xlsx`), same
-  Clinker/Production2 sheet layout as the June file this script was
-  originally written against (verified: EK column, row 3 = day 1,
-  AC/AF/AI/AL/AR/AU/AX/BD headers all "Production").
-
   Usage: node scripts/patch-power-production-tonnage.js
 */
 require('dotenv').config();
+const fs = require('fs');
 const path = require('path');
-const ExcelJS = require('exceljs');
 
 const BASE = process.env.IMPORT_BASE_URL || 'http://localhost:5000/api';
 const PM_USER = process.env.IMPORT_PM_USER || 'pm';
 const PM_PASS = process.env.IMPORT_PM_PASS || 'PM@LCL2026';
 
 const MONTHS = [
-  { file: path.join(__dirname, '..', '..', 'full Production Report april and may', "Master production report APRIL 26'.xlsx"), year: 2026, month: 4, days: 30 },
-  { file: path.join(__dirname, '..', '..', 'full Production Report april and may', "Master production report MAY 26'.xlsx"), year: 2026, month: 5, days: 31 },
-  { file: path.join(__dirname, '..', '..', "Master production report JUNE 26'.xlsx"), year: 2026, month: 6, days: 30 },
+  { jsonFile: path.join(__dirname, '_production_2026-04.json'), year: 2026, month: 4, days: 30 },
+  { jsonFile: path.join(__dirname, '_production_2026-05.json'), year: 2026, month: 5, days: 31 },
+  { jsonFile: path.join(__dirname, '_production_2026-06.json'), year: 2026, month: 6, days: 30 },
 ];
 
-function cellNumber(cell) {
-  if (!cell) return undefined;
-  let v = cell.value;
-  if (v && typeof v === 'object') v = 'result' in v ? v.result : undefined;
-  return typeof v === 'number' ? v : undefined;
-}
-function sum(...cells) {
-  const vals = cells.map(cellNumber).filter((n) => n !== undefined);
+const CM1_FIELDS = ['cm1_425r_mt', 'cm1_325n_mt', 'cm1_425n_mt', 'cm1_opc_mt'];
+const CM2_FIELDS = ['cm2_425r_mt', 'cm2_325n_mt', 'cm2_425n_mt', 'cm2_425n_bm_mt'];
+
+function sumFields(record, fields) {
+  const vals = fields.map((f) => record[f]).filter((n) => typeof n === 'number');
   return vals.length ? vals.reduce((a, b) => a + b, 0) : undefined;
 }
 function round2(n) { return Math.round(n * 100) / 100; }
@@ -64,26 +63,19 @@ async function api(method, pathname, { token, body } = {}) {
   return { status: res.status, body: json };
 }
 
-async function patchMonth(token, { file, year, month, days }) {
-  console.log(`\n--- ${year}-${String(month).padStart(2, '0')} (${file}) ---`);
-  const wb = new ExcelJS.Workbook();
-  await wb.xlsx.readFile(file);
-  const production2 = wb.getWorksheet('Production2');
-  const clinker = wb.getWorksheet('Clinker');
+async function patchMonth(token, { jsonFile, year, month, days }) {
+  console.log(`\n--- ${year}-${String(month).padStart(2, '0')} (${jsonFile}) ---`);
+  const byDate = JSON.parse(fs.readFileSync(jsonFile, 'utf8'));
 
   let patched = 0, skipped = 0, failed = 0;
 
   for (let day = 1; day <= days; day++) {
-    const row = day + 2; // row 3 = day 1
     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const record = byDate[dateStr];
 
-    const kilnProd = cellNumber(clinker.getRow(row).getCell('EK'));
-    const cm1Total = sum(
-      production2.getRow(row).getCell('AC'), production2.getRow(row).getCell('AF'),
-      production2.getRow(row).getCell('AI'), production2.getRow(row).getCell('AL'));
-    const cm2Total = sum(
-      production2.getRow(row).getCell('AR'), production2.getRow(row).getCell('AU'),
-      production2.getRow(row).getCell('AX'), production2.getRow(row).getCell('BD'));
+    const kilnProd = record && typeof record.kiln_prod_mt === 'number' ? record.kiln_prod_mt : undefined;
+    const cm1Total = record ? sumFields(record, CM1_FIELDS) : undefined;
+    const cm2Total = record ? sumFields(record, CM2_FIELDS) : undefined;
 
     if (kilnProd === undefined && cm1Total === undefined && cm2Total === undefined) {
       skipped++; continue;

@@ -115,6 +115,70 @@ def r2(n):
     return round(n * 100) / 100
 
 
+# ── PLANT OPERATIONS section (daily numbered sheets '1'..'31') ─────────────
+# Production2/Clinker/Cement never carry LS Crusher / Raw Mill-1/2 / Coal
+# Mill running hours, opening stock or consumption at all — that data only
+# exists in each day's own sheet, in a second table below PYRO PROCESSING /
+# CEMENT GRINDING headed "PLANT OPERATIONS". Anchored by that label (its
+# absolute row shifts month to month as the sections above it change size)
+# then fixed relative offsets to each department row — verified identical
+# across April/May/June. CM1 grades also carry running hours/open/cons here
+# (production itself still comes from Production2, unchanged); CM2 grades
+# only carry running hours — the source doesn't track CM2's open/consumption
+# per grade at all (confirmed blank on every sampled day).
+PLANT_OPS_ROW_OFFSETS = {
+    'LS CRUSHER': ('ls_crusher', 3),
+    'RAW MILL -1': ('rm1', 4),
+    'RAW MILL -2': ('rm2', 5),
+    'COAL MILL': ('coalmill', 6),
+}
+CM1_GRADE_ROW_OFFSETS = range(8, 13)   # po_row+8 .. po_row+12
+CM2_GRADE_ROW_OFFSETS = range(14, 19)  # po_row+14 .. po_row+18
+GRADE_SUFFIX = {'32.5 N': '325n', '42.5 R': '425r', '42.5 N': '425n', 'OPC': 'opc', '42.5 N BM': '425n_bm'}
+
+
+def extract_plant_ops(ws):
+    po_row = None
+    for r in range(1, 60):
+        if norm(ws.cell(row=r, column=2).value) == 'PLANT OPERATIONS':
+            po_row = r
+            break
+    if po_row is None:
+        return {}
+
+    out = {}
+
+    for label, (prefix, offset) in PLANT_OPS_ROW_OFFSETS.items():
+        row = po_row + offset
+        if norm(ws.cell(row=row, column=3).value) != label:
+            continue  # template drift for this day/month — skip, don't mis-extract
+        run_hrs, open_v, prod, cons = num(ws, row, 6), num(ws, row, 9), num(ws, row, 10), num(ws, row, 13)
+        if run_hrs is not None: out[f'{prefix}_run_hrs'] = r2(run_hrs)
+        if open_v is not None: out[f'{prefix}_open'] = r2(open_v)
+        if prod is not None: out[f'{prefix}_prod_mt'] = r2(prod)
+        if cons is not None: out[f'{prefix}_cons_mt'] = r2(cons)
+
+    for offset in CM1_GRADE_ROW_OFFSETS:
+        row = po_row + offset
+        suffix = GRADE_SUFFIX.get(norm(ws.cell(row=row, column=4).value))
+        if not suffix:
+            continue
+        run_hrs, open_v, cons = num(ws, row, 6), num(ws, row, 9), num(ws, row, 13)
+        if run_hrs is not None: out[f'cm1_{suffix}_run_hrs'] = r2(run_hrs)
+        if open_v is not None: out[f'cm1_{suffix}_open'] = r2(open_v)
+        if cons is not None: out[f'cm1_{suffix}_cons_mt'] = r2(cons)
+
+    for offset in CM2_GRADE_ROW_OFFSETS:
+        row = po_row + offset
+        suffix = GRADE_SUFFIX.get(norm(ws.cell(row=row, column=4).value))
+        if not suffix:
+            continue
+        run_hrs = num(ws, row, 6)
+        if run_hrs is not None: out[f'cm2_{suffix}_run_hrs'] = r2(run_hrs)
+
+    return out
+
+
 def main():
     for m in MONTHS:
         if not os.path.exists(m['file']):
@@ -161,6 +225,9 @@ def main():
                 data['cm_grind_aid_recv'] = r2((starex_recv or 0) + (mapei_recv or 0))
             if starex_cons is not None or mapei_cons is not None:
                 data['cm_grind_aid_cons'] = r2((starex_cons or 0) + (mapei_cons or 0))
+
+            if str(day) in wb.sheetnames:
+                data.update(extract_plant_ops(wb[str(day)]))
 
             if any(abs(v) > 0.001 for v in data.values() if isinstance(v, (int, float))):
                 date_str = f"{m['year']}-{m['month']:02d}-{day:02d}"
