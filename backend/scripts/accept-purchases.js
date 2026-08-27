@@ -21,10 +21,13 @@
        check at all; this is the regression test for that gap
     3. po_value_trend / po_list report ok:false status:not_configured
        (never a fabricated number) when ODOO_URL is unset
-    4. category_grid reports ok:false status:not_mapped UNCONDITIONALLY —
-       it's a permanent stub regardless of Odoo config (see
-       purchasesOdoo.js's fetchCategoryGrid doc comment) — and is honest
-       and specific about why, not a generic error
+    4. category_grid behaves like the other Odoo metrics — not_configured
+       when ODOO_URL is unset, never a fabricated number. (It used to be a
+       permanent unconditional not_mapped stub; since the live-Odoo field
+       mapping landed it is a real implementation whose genuinely-unknown
+       cells carry their own per-cell not_mapped, so the old "permanent
+       stub" assertion no longer describes it — see purchasesOdoo.js's
+       fetchCategoryGrid doc comment.)
     5. sources.{po_value_trend,po_list} propagate the real status string,
        and sources has no category_grid key (matches services/purchases.js)
 
@@ -133,9 +136,11 @@ async function main() {
     check('po_value_trend reports not_configured, not a fabricated number', d.po_value_trend && d.po_value_trend.ok === false && d.po_value_trend.status === 'not_configured', JSON.stringify(d.po_value_trend));
     check('po_list reports not_configured, not a fabricated number', d.po_list && d.po_list.ok === false && d.po_list.status === 'not_configured', JSON.stringify(d.po_list));
 
-    // category_grid is a PERMANENT stub — not_mapped regardless of Odoo config
-    check('category_grid reports not_mapped unconditionally (permanent stub, not an Odoo-config issue)', d.category_grid && d.category_grid.ok === false && d.category_grid.status === 'not_mapped', JSON.stringify(d.category_grid));
-    check('category_grid.message explains the real blocker (PO For / Purchase Type field names)', d.category_grid && /PO For|Purchase Type/.test(d.category_grid.message || ''), JSON.stringify(d.category_grid));
+    // category_grid is a real implementation now, so with ODOO_URL unset it
+    // reports not_configured like the other Odoo metrics. Its per-cell
+    // not_mapped entries only appear once Odoo IS reachable, so they can't
+    // be asserted here.
+    check('category_grid reports not_configured, not a fabricated number', d.category_grid && d.category_grid.ok === false && d.category_grid.status === 'not_configured', JSON.stringify(d.category_grid));
 
     check('sources.po_value_trend propagates the real status', d.sources && d.sources.po_value_trend === 'not_configured', JSON.stringify(d.sources));
     check('sources.po_list propagates the real status', d.sources && d.sources.po_list === 'not_configured', JSON.stringify(d.sources));
