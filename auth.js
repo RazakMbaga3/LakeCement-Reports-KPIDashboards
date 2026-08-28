@@ -10,12 +10,15 @@
 const _SESSION_KEY = 'lcl_mis_session';
 const _TOKEN_KEY   = 'lcl_mis_token';
 
-/* API base — the one line to change when deploying off localhost (e.g. to
-   the LAN server's address, or '/api' once a reverse proxy fronts both).
-   Points at the Render backend in production, localhost in local dev. */
+/* API base — the one line to change when deploying off localhost.
+   Production (any host that isn't localhost) uses a relative '/api' path,
+   since Nginx reverse-proxies /api/* to the backend on the same origin
+   (see deploy/nginx.digitalocean.conf) — works for an IP, a domain, or a
+   domain change later with zero code changes. Local dev talks to the
+   backend directly since there's no Nginx in front of it. */
 const _API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
   ? 'http://localhost:5000/api'
-  : 'https://lakecement-mis-api.onrender.com/api';
+  : '/api';
 
 /* Roles: md | admin | management | hr | finance | stores | cpp |
           pm | it | logistics | mining | production
