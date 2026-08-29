@@ -164,11 +164,16 @@
     var d = new Date(iso + 'T00:00:00');
     return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   }
-  function todayIso() { return new Date().toISOString().slice(0, 10); }
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  /* Format from local parts, never toISOString(): east-of-UTC zones (EAT is
+     UTC+3) push local midnight back into the previous UTC day, which made
+     addDays(iso, 1) return its own input and hung the date loop in load(). */
+  function isoOf(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function todayIso() { return isoOf(new Date()); }
   function addDays(iso, n) {
     var d = new Date(iso + 'T00:00:00');
     d.setDate(d.getDate() + n);
-    return d.toISOString().slice(0, 10);
+    return isoOf(d);
   }
   function z0(v) { var x = parseFloat(v); return isNaN(x) ? 0 : x; }
 
