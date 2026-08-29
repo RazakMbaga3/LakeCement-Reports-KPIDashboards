@@ -140,10 +140,12 @@ database — no strong preference from the app side.
 
 ### 2.5 Clone, configure, initialize
 
+As the `deploy` user, clone into their own home directory — no `sudo`
+needed since they own it:
+
 ```bash
-sudo mkdir -p /var/www/lake-cement-dashboard
-sudo chown deploy:deploy /var/www/lake-cement-dashboard
-cd /var/www/lake-cement-dashboard
+mkdir -p ~/lake-cement-dashboard
+cd ~/lake-cement-dashboard
 git clone git@github.com:RazakMbaga3/LakeCement-Reports-KPIDashboards.git .
 
 cd backend
@@ -155,7 +157,7 @@ The ones that must change from the template:
 - `DB_*` — from §2.4
 - `JWT_SECRET` — generate a real one:
   `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
-- `ALLOWED_ORIGIN` — the real public URL, e.g. `https://mis.lakecement.co.tz`
+- `ALLOWED_ORIGIN` — the real public URL, e.g. `https://atlas.lakecement.co.tz`
   (never leave this as `*` in production)
 - `TRUST_PROXY=1` — required, since Nginx sits in front
 - `BACKUP_DIR` — see §4
@@ -175,7 +177,7 @@ npm test                 # lint + smoke — must be green before going further
 
 Use `deploy/ecosystem.config.js` (already in the repo):
 ```bash
-cd /var/www/lake-cement-dashboard
+cd ~/lake-cement-dashboard
 pm2 start deploy/ecosystem.config.js
 pm2 save
 pm2 startup   # prints a sudo command — run exactly what it prints, once,
@@ -186,6 +188,15 @@ Sanity check: `curl http://127.0.0.1:5000/api/health` → `"status":"ok"`.
 
 ### 2.7 Nginx + HTTPS
 
+The app lives under the `deploy` user's home directory (§2.5), not
+`/var/www` — Nginx runs as `www-data`, which needs traverse permission on
+the home directory itself or every request 403s even though the files
+inside are readable:
+```bash
+chmod o+x /home/deploy
+```
+
+Then:
 ```bash
 sudo cp deploy/nginx.digitalocean.conf /etc/nginx/sites-available/lake-cement
 sudo ln -s /etc/nginx/sites-available/lake-cement /etc/nginx/sites-enabled/
@@ -194,7 +205,7 @@ sudo nginx -t && sudo systemctl reload nginx
 
 # HTTPS (only once a domain name points at this droplet's IP — certbot
 # can't issue a cert for a bare IP address)
-sudo certbot --nginx -d mis.lakecement.co.tz
+sudo certbot --nginx -d atlas.lakecement.co.tz
 ```
 
 ### 2.8 Verify before calling it done
@@ -254,7 +265,7 @@ git push                  # triggers a fresh auto-deploy of the good state
 ```
 Or, directly on the droplet as `deploy`, for something urgent:
 ```bash
-cd /var/www/lake-cement-dashboard
+cd ~/lake-cement-dashboard
 git reset --hard <last-good-commit>
 cd backend && npm ci --omit=dev && npm run migrate
 pm2 reload ecosystem.config.js

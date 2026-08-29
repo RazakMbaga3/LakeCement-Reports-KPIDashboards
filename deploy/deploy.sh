@@ -4,7 +4,7 @@
 # See docs/DEPLOYMENT_DIGITALOCEAN.md §3.
 set -euo pipefail
 
-APP_DIR="/var/www/lake-cement-dashboard"
+APP_DIR="/home/deploy/lake-cement-dashboard"
 cd "$APP_DIR"
 
 git fetch origin main

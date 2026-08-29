@@ -98,4 +98,4 @@ jobs:
           username: ${{ secrets.DO_USER }}
           key: ${{ secrets.DO_SSH_KEY }}
           port: ${{ secrets.DO_PORT || 22 }}
-          script: bash /var/www/lake-cement-dashboard/deploy/deploy.sh
+          script: bash /home/deploy/lake-cement-dashboard/deploy/deploy.sh
