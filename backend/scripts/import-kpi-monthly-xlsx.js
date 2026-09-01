@@ -278,7 +278,10 @@ async function apiSeed(base, token, rows, { verifyOnly } = {}) {
     const stored = new Map((await got.json()).map(r => [r.kpi_key, r]));
     for (const r of batch) {
       const s = stored.get(r.kpi_key);
-      if (!s) { console.error(`  ! missing after write: ${dept} ${year}-${month} ${r.kpi_key}`); missing++; continue; }
+      if (!s) {
+        console.error(`  ! ${verifyOnly ? 'missing' : 'missing after write'}: ${dept} ${year}-${month} ${r.kpi_key}`);
+        missing++; continue;
+      }
       if (round3(s.actual) !== round3(r.actual)) {
         console.error(`  ! mismatch: ${dept} ${year}-${month} ${r.kpi_key} — remote ${s.actual} vs workbook ${round3(r.actual)}`);
         mismatched++;
