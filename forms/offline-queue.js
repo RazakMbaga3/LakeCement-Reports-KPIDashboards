@@ -48,6 +48,10 @@
 
     /* One queue slot per form+date+shift — a newer save replaces the
        older queued one (the user re-saved the same report). */
+    function _intentOf(item) {
+      return (item && item.data && item.data._status) === 'draft' ? 'draft' : 'submitted';
+    }
+
     function enqueue(formType, date, shift, data) {
       var q = _load(QKEY).filter(function (it) {
         return !(it.formType === formType && it.date === date && it.shift === shift);
@@ -78,7 +82,13 @@
           _toConflict(item, 'A newer version was saved on the server while this entry was queued.', serverAt);
           return 'conflict';
         }
-        return a.submitForm(item.formType, item.date, item.shift, item.data)
+        /* Replay each item with the intent it was created with. Without
+           this a queued DRAFT comes back online as a full submission —
+           entering an HOD's approval queue, or self-certifying as approved,
+           for a form its author never finished. form-persist.js stamps
+           `_status` into the payload, so items queued before this change
+           replay correctly too. */
+        return a.submitForm(item.formType, item.date, item.shift, item.data, { status: _intentOf(item) })
           .then(function () { return 'sent'; })
           .catch(function (e) {
             // Permanent rejections (validation, no permission) will never
@@ -122,7 +132,7 @@
       if (!item) return { ok: false, error: 'No such conflict.' };
       if (action === 'mine') {
         try {
-          await api().submitForm(item.formType, item.date, item.shift, item.data);
+          await api().submitForm(item.formType, item.date, item.shift, item.data, { status: _intentOf(item) });
         } catch (e) {
           return { ok: false, error: 'Could not send — server unreachable or rejected it.' };
         }

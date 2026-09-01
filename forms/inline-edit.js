@@ -10,7 +10,11 @@
 
   function _getDate() {
     const d = document.querySelector('.toolbar input[type="date"], input[type="date"]');
-    return d ? d.value : new Date().toISOString().slice(0, 10);
+    if (d && d.value) return d.value;
+    /* Local calendar date, never toISOString(): EAT is UTC+3, so between
+       local midnight and 03:00 the UTC date is still yesterday. */
+    const n = new Date(), p2 = v => (v < 10 ? '0' : '') + v;
+    return n.getFullYear() + '-' + p2(n.getMonth() + 1) + '-' + p2(n.getDate());
   }
 
   function _toast(msg, type) {
@@ -105,15 +109,29 @@
       document.dispatchEvent(new CustomEvent('nyati:inline-saved', { detail: { formId: formId } }));
       if (typeof global.refreshReportLoader === 'function') global.refreshReportLoader();
 
+      /* Send only the fields this panel changed and let the server merge them
+         into the stored record. It used to send `merged` — the changed
+         fields layered over whatever THIS browser had in localStorage — into
+         an endpoint that then replaced the whole row. On a machine with no
+         cached copy (a fresh browser, a different device, cleared storage)
+         `merged` was just the handful of edited fields, so saving one
+         section wiped every other department's.
+
+         Filling in a section IS that department's submission of it — this
+         file exists so a department can report without opening a separate
+         form page — so it goes in as 'submitted', which re-applies the
+         approval rules: an Officer's amendment needs fresh sign-off, an
+         HOD's self-certifies. */
+      var wire = Object.assign({}, data, { _status: 'submitted' });
       var synced = true, queued = false;
       if (global.NyatiAPI) {
         try {
-          await global.NyatiAPI.submitForm(formId, date, 'day', Object.assign({}, merged, { _status: 'draft' }));
+          await global.NyatiAPI.submitForm(formId, date, 'day', wire, { status: 'submitted' });
         } catch (e) {
           synced = false;
           // Retryable outage (offline, 401, 5xx) → hand to the offline queue
           if (global.NyatiQueue && (!e.status || e.status === 401 || e.status >= 500)) {
-            global.NyatiQueue.enqueue(formId, date, 'day', Object.assign({}, merged, { _status: 'draft' }));
+            global.NyatiQueue.enqueue(formId, date, 'day', wire);
             queued = true;
           }
         }

@@ -1265,3 +1265,132 @@ body.period-full .sk-delta { opacity: 0; }
   .col-kpi { min-width: 120px; }
   body { background: white; }
 }
+
+/* ── "You are looking past the end of the data" banner ─────────────────
+   Shown by forms/latest-period.js when a page defaulted off today because
+   nothing has been entered since an earlier date. Deliberately an
+   informational amber, not an error red — the page is working; the data
+   simply stops earlier than today. */
+.stale-note {
+  margin: 0 0 14px;
+  padding: 9px 14px;
+  border-left: 3px solid var(--orange, #F49545);
+  background: rgba(244, 149, 69, 0.09);
+  border-radius: 0 6px 6px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted, #64748B);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   NAVIGATION LOADER  (loader.js)
+   ─────────────────────────────────────────────────────────────────
+   Two pieces, both injected into <body> by loader.js:
+     .lcl-bar   top progress bar, brand accent gradient — the instant
+                acknowledgement that a click registered;
+     .lcl-load  full cover on the off-white body ground (not a modal —
+                it should read as the page composing itself, so no
+                border, no shadow, no scrim).
+   Layering sits above every existing z-index: header 100, sidebar 150,
+   modal overlay 2000, this 9000/9001.
+   ══════════════════════════════════════════════════════════════════ */
+
+.lcl-bar {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 3px; z-index: 9001;
+  pointer-events: none;
+  opacity: 0; transition: opacity .2s ease;
+}
+.lcl-bar.on { opacity: 1; }
+.lcl-bar-fill {
+  display: block; height: 100%; width: 100%;
+  transform: scaleX(0); transform-origin: 0 50%;
+  background: linear-gradient(
+    to right,
+    var(--navy) 0%, var(--navy) 45%,
+    var(--orange) 78%, var(--orange-lite) 100%
+  );
+  transition: transform .28s cubic-bezier(.25,.8,.35,1);
+}
+
+.lcl-load {
+  position: fixed; inset: 0; z-index: 9000;
+  background: var(--off-white);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; visibility: hidden;
+  transition: opacity .22s ease, visibility 0s linear .22s;
+}
+.lcl-load.on {
+  opacity: 1; visibility: visible;
+  transition: opacity .18s ease, visibility 0s;
+}
+.lcl-load-inner {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 13px; text-align: center; padding: 24px;
+  transform: translateY(7px); opacity: .001;
+  transition: transform .3s ease, opacity .3s ease;
+}
+.lcl-load.on .lcl-load-inner { transform: none; opacity: 1; }
+
+/* ── The mark: department icon inside a rotating brand-accent arc ── */
+.lcl-mark { position: relative; width: 48px; height: 48px; }
+.lcl-ring {
+  width: 48px; height: 48px; display: block;
+  animation: lcl-spin 1.15s linear infinite;
+}
+.lcl-ring circle { fill: none; stroke-width: 3; }
+.lcl-ring-track { stroke: var(--border); }
+.lcl-ring-arc {
+  stroke: var(--lcl-accent, var(--navy));
+  stroke-linecap: round;
+  stroke-dasharray: 34 100;
+}
+@keyframes lcl-spin { to { transform: rotate(360deg); } }
+
+/* Cloned from the clicked sidebar row, so it inherits lucide stroke geometry */
+.lcl-mark-icon {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--lcl-accent, var(--navy));
+}
+.lcl-mark-icon svg { width: 19px; height: 19px; stroke-width: 2; }
+
+.lcl-title {
+  font-size: 14.5px; font-weight: 700;
+  color: var(--navy); letter-spacing: -.1px;
+}
+.lcl-caption {
+  font-size: 12px; color: var(--text-muted);
+  min-height: 1.3em; max-width: 280px;
+  transition: opacity .17s ease;
+}
+.lcl-caption.fade { opacity: 0; }
+
+/* Escape hatch, revealed only after 4s — never the first thing offered */
+.lcl-skip {
+  margin-top: 2px; padding: 4px 8px;
+  background: none; border: none; font: inherit;
+  font-size: 11.5px; color: var(--text-muted);
+  text-decoration: underline; text-underline-offset: 3px;
+  cursor: pointer;
+}
+.lcl-skip:hover { color: var(--navy); }
+
+/* Residual wait: a page that painted fast but is still filling its live
+   formula cards. Only the cards actually awaiting /api/formula/eval pulse
+   (.sk-card[data-formula-key]); illustrative and NOT CONNECTED cards are
+   never loading, so they must stay still. */
+@keyframes lcl-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .42; } }
+html.lcl-loading .sk-card[data-formula-key] .sk-value {
+  animation: lcl-pulse 1.15s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lcl-ring { animation-duration: 2.4s; }
+  html.lcl-loading .sk-card[data-formula-key] .sk-value { animation: none; }
+  .lcl-load, .lcl-load-inner, .lcl-bar, .lcl-bar-fill, .lcl-caption {
+    transition-duration: .01ms !important;
+  }
+}
+
+@media print { .lcl-bar, .lcl-load { display: none !important; } }

@@ -1,0 +1,15 @@
+{
+  "name": "lcl-e2e",
+  "private": true,
+  "version": "1.0.0",
+  "description": "End-to-end harness for the Lake Cement MIS dashboard. Boots the real backend (:5000) and the static preview server (:3000), drives the pages in a real browser, and asserts every figure it sees came from Postgres.",
+  "scripts": {
+    "test": "playwright test",
+    "test:kpi": "playwright test tests/kpi-dashboard.spec.js tests/kpi-write.spec.js",
+    "test:roles": "playwright test tests/roles.spec.js",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

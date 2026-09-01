@@ -18,15 +18,21 @@
 
   const NS = 'nyati';
 
-  /* Page → default form ID (used for admin/management/view-only roles) */
+  /* Page → the form type it reports on. Must cover every row the sidebar's
+     Daily Reports group renders (auth.js's _DAILY_NAV_ITEMS) — the four
+     quality/lab forms were missing, so those rows would carry no dot. */
   const PAGE_DEFAULT_FORM = {
-    'daily-report.html':       'production',
-    'power-plant-report.html': 'cpp',
-    'mines-report.html':       'mines',
-    'stoppage-form.html':      'stoppage',
-    'power-form.html':         'power-cons',
-    'dispatch-form.html':      'dispatch',
-    'materials-form.html':     'materials',
+    'daily-report.html':          'production',
+    'power-plant-report.html':    'cpp',
+    'mines-report.html':          'mines',
+    'stoppage-form.html':         'stoppage',
+    'power-form.html':            'power-cons',
+    'dispatch-form.html':         'dispatch',
+    'materials-form.html':        'materials',
+    'quality-form.html':          'quality',
+    'limestone-form.html':        'limestone',
+    'pile-quality-form.html':     'pile-quality',
+    'sales-projection-form.html': 'sales-projection',
   };
 
   /* Role → { pageName: formId } — which form ID to check for fill status.
@@ -39,32 +45,51 @@
     mining:     { 'mines-report.html': 'mines', 'daily-report.html': 'mines' },
   };
 
+  /* These dots report on TODAY specifically ("which reports are done today"),
+     so they must not follow the form's own date picker — browsing to last
+     month used to repaint every dot against that month's data. Local
+     calendar date, never toISOString(): EAT is UTC+3. */
   function today() {
-    const d = document.querySelector('input[type="date"]');
-    return d ? d.value : new Date().toISOString().slice(0, 10);
+    const d = new Date(), p2 = n => (n < 10 ? '0' : '') + n;
+    return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
   }
 
+  /* auth.js owns the session and stores it under 'lcl_mis_session'. This read
+     'nyati_user', a key nothing has ever written, so the role was always null
+     and ROLE_SECTION_MAP below never applied. */
   function getCurrentRole() {
-    try {
-      const u = JSON.parse(sessionStorage.getItem('nyati_user') || '{}');
-      return u.role || null;
-    } catch (e) { return null; }
+    if (typeof getCurrentUser === 'function') {
+      const u = getCurrentUser();
+      return u ? u.role : null;
+    }
+    return null;
   }
 
-  function formStatus(formId) {
-    const key = NS + '-' + formId + '-' + today();
-    const raw = localStorage.getItem(key);
-    if (!raw) return 'empty';
+  /* Which form types the SERVER has a reported entry for today. Filled by
+     refresh() below; null until the first answer arrives (or if it never
+     does, offline). */
+  let _serverToday = null;
+
+  /* A draft typed on THIS device and not yet sent anywhere — the one thing
+     the server cannot know. */
+  function localDraft(formId) {
+    const raw = localStorage.getItem(NS + '-' + formId + '-' + today());
+    if (!raw) return false;
     try {
       const parsed = JSON.parse(raw);
-      const status = parsed._m && parsed._m.status;
-      /* Also check if data object has any non-empty values */
       const data = parsed.data || {};
-      const hasData = Object.values(data).some(function(v){ return v !== '' && v !== null && v !== undefined; });
-      if (status === 'submitted') return 'submitted';
-      if (status === 'draft' || hasData) return 'draft';
-      return 'empty';
-    } catch (e) { return 'empty'; }
+      return Object.values(data).some(v => v !== '' && v !== null && v !== undefined);
+    } catch (e) { return false; }
+  }
+
+  /* Whether a report is done today is a fact about the plant, not about this
+     browser. Reading only localStorage — which is what this did — meant an
+     operator saw grey dots for reports a colleague had already submitted,
+     and green ones for entries that had never left their own laptop. */
+  function formStatus(formId) {
+    if (_serverToday && _serverToday.has(formId)) return 'submitted';
+    if (localDraft(formId)) return 'draft';
+    return 'empty';
   }
 
   function resolveFormId(pageName) {
@@ -75,47 +100,40 @@
     return PAGE_DEFAULT_FORM[pageName] || null;
   }
 
-  function pageNameFromHref(href) {
-    if (!href) return null;
-    const parts = href.split('/');
-    const file = parts[parts.length - 1].split('?')[0];
-    return file || null;
-  }
-
-  function pageNameFromBtn(btn) {
-    if (btn.classList.contains('active')) {
-      const path = location.pathname;
-      for (const pg of Object.keys(PAGE_DEFAULT_FORM)) {
-        if (path.includes(pg)) return pg;
-      }
-      return null;
-    }
-    const oc = btn.getAttribute('onclick') || '';
-    const m  = oc.match(/location\.href\s*=\s*['"]([^'"]+)['"]/);
-    return m ? pageNameFromHref(m[1]) : null;
-  }
-
   /* ── Inject nav dots ─────────────────────────────────────────────
-     NOTE: .nav-btn (the old horizontal dept-nav bar) was retired in the
-     sidebar migration (see sidebar.js) — this now silently finds nothing
-     and no-ops. Today's-fill-status dots need porting onto .sb-item rows
-     if this feature is still wanted; not done here (out of scope for the
-     nav migration itself). */
+     Hangs today's fill-status dot on the sidebar's Daily Reports rows.
+
+     This targeted .nav-btn — the horizontal dept-nav bar retired in the
+     sidebar migration — so from that point on it silently found nothing and
+     the whole feature was dead. sidebar.js now tags each Daily Reports row
+     with data-page, which is what these attach to. */
   function injectDots() {
-    document.querySelectorAll('.nav-btn:not(.secondary)').forEach(function(btn) {
-      btn.querySelector('.nav-dot')?.remove();
-      const pg = pageNameFromBtn(btn);
-      if (!pg) return;
-      const formId = resolveFormId(pg);
+    document.querySelectorAll('.sb-item[data-page]').forEach(function (row) {
+      row.querySelector('.nav-dot')?.remove();
+      const formId = resolveFormId(row.dataset.page);
       if (!formId) return;
       const st  = formStatus(formId);
       const dot = document.createElement('span');
       dot.className = 'nav-dot nav-dot-' + st;
-      dot.title     = st === 'submitted' ? 'Submitted today'   :
-                      st === 'draft'     ? 'Draft saved today' :
-                                          'Not yet filled';
-      btn.appendChild(dot);
+      dot.title     = st === 'submitted' ? 'Entered today'      :
+                      st === 'draft'     ? 'Draft on this device — not submitted' :
+                                           'Not yet entered today';
+      row.appendChild(dot);
     });
+  }
+
+  /* Ask the server which reports are actually in for today, then repaint.
+     Falls back to whatever localStorage knows if it cannot answer. */
+  async function refresh() {
+    if (window.NyatiAPI && NyatiAPI.getCompleteness) {
+      try {
+        const d = today();
+        const payload = await NyatiAPI.getCompleteness(d, d);
+        const day = (payload.days || []).find(x => x.date === d);
+        _serverToday = new Set((day ? day.forms : []).filter(f => f.present).map(f => f.formType));
+      } catch (e) { /* offline — local drafts are all we can show */ }
+    }
+    injectDots();
   }
 
   /* ── Shift badge ─────────────────────────────────────────────── */
@@ -181,7 +199,8 @@
   /* ── Init ────────────────────────────────────────────────────── */
   function init() {
     ensureCSS();
-    injectDots();
+    injectDots();   // paint immediately from local state…
+    refresh();      // …then correct it from the server
     injectShift();
   }
 
@@ -191,15 +210,17 @@
     init();
   }
 
-  /* Re-run dots on save/submit/date change/storage event */
+  /* A submit changes what the SERVER holds, so re-ask it; a draft save only
+     changes this device, so a local repaint is enough. The date picker no
+     longer triggers anything — these dots are about today, whatever day the
+     form is showing. */
+  document.addEventListener('nyati:submitted',    refresh);
+  document.addEventListener('nyati:inline-saved', refresh);
   document.addEventListener('nyati:saved',        injectDots);
-  document.addEventListener('nyati:submitted',     injectDots);
-  document.addEventListener('nyati:inline-saved',  injectDots);
   window.addEventListener('storage',              injectDots);
-  document.addEventListener('change', function(e) {
-    if (e.target && e.target.type === 'date') setTimeout(injectDots, 50);
-  });
 
   setInterval(function () { injectShift(); }, 60000);
+  /* Someone else's submission should show up without a reload. */
+  setInterval(refresh, 120000);
 
 }());

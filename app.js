@@ -59,6 +59,60 @@ function calMonthToFiscalPos(mo) { return mo >= 4 ? mo - 4 : mo + 8; }
 function fiscalPosToCalMonth(pos) { return pos < 9 ? pos + 4 : pos - 8; }
 function fiscalPosToCalYear(pos, fyStartYear) { return pos < 9 ? +fyStartYear : +fyStartYear + 1; }
 
+/* ─── The 12 tracker columns ──────────────────────────────────
+   Columns 6-17 of every KPI table. What each one MEANS depends on the view,
+   and every consumer must agree — the header label, the cell the monthly
+   values are written into, the cell an inline edit saves back to, and the
+   range fetched from the server. This is that single answer; nothing should
+   re-derive it.
+
+     fiscal view  (Month / YTD / Full Year)
+       the classic Apr→Mar tracker: column 6 is April of the selected fiscal
+       year, column 17 is the following March.
+
+     rolling view (Last 12 Months)
+       the twelve months ENDING at the selected month, crossing the April
+       boundary freely. The Apr→Mar layout cannot show a run of history that
+       straddles a fiscal year — Jan–Jun 2026 sits in the last three columns
+       of FY2025-26 and the first three of FY2026-27, so half of it is
+       off-screen whichever year you pick. Rolling puts it in six adjacent
+       columns.  */
+const TRACKER_COL_MIN   = 6;
+const TRACKER_COL_COUNT = 12;
+const TRACKER_COL_MAX   = TRACKER_COL_MIN + TRACKER_COL_COUNT - 1;
+
+function isRollingView(view) {
+  return (view || document.getElementById('view-select')?.value) === 'rolling';
+}
+
+/* → 12 × {year, month}, left to right. */
+function trackerColumns(mo, fyStart, view) {
+  mo      = mo      != null ? +mo      : +document.getElementById('month-select').value;
+  fyStart = fyStart != null ? +fyStart : +document.getElementById('year-select').value;
+
+  if (isRollingView(view)) {
+    const endYear = fiscalPosToCalYear(calMonthToFiscalPos(mo), fyStart);
+    const out = [];
+    for (let back = TRACKER_COL_COUNT - 1; back >= 0; back--) {
+      const d = new Date(endYear, mo - 1 - back, 1);
+      out.push({ year: d.getFullYear(), month: d.getMonth() + 1 });
+    }
+    return out;
+  }
+
+  return Array.from({ length: TRACKER_COL_COUNT }, (_, pos) => ({
+    year:  fiscalPosToCalYear(pos, fyStart),
+    month: fiscalPosToCalMonth(pos),
+  }));
+}
+
+/* Reverse: which column holds this calendar month, or -1 if it is off-window. */
+function trackerColIndexFor(year, month, mo, fyStart, view) {
+  const cols = trackerColumns(mo, fyStart, view);
+  const i = cols.findIndex(c => c.year === +year && c.month === +month);
+  return i < 0 ? -1 : TRACKER_COL_MIN + i;
+}
+
 let currentDept = 'ei';
 
 /* ─── switch department ─────────────────────────────────────── */
@@ -86,6 +140,11 @@ function switchDept(dept) {
   document.getElementById('ctx-dept-name').innerHTML = m.label;
   document.getElementById('ctx-resp').innerHTML = m.resp;
 
+  // Counting synchronously is right for a user-initiated switch: the tables
+  // already hold this period's data. On the very first call (the
+  // DOMContentLoaded bootstrap, which switches before applyFilters() so the
+  // requested section is visible while the fetch runs) the counts are
+  // meaningless — applyFilters() re-derives them as soon as the data lands.
   updateSummary();
   if (dept === 'summary') {
     updateSummaryDashboard();
@@ -118,6 +177,7 @@ function applyFilters() {
 
     // Update table class so min-width CSS rule can apply
     tbl.classList.toggle('view-month', view === 'month' || view === 'daily');
+    tbl.classList.toggle('view-rolling', view === 'rolling');
 
     const headerCells = Array.from(tbl.querySelectorAll('.thead-row th'));
 
@@ -126,6 +186,20 @@ function applyFilters() {
     if (actualHdr) {
       actualHdr.innerHTML = view === 'daily' ? 'TODAY<br>ACTUAL' : MONTHS[mo] + '<br>ACTUAL';
     }
+
+    /* ── Label the 12 tracker columns for whichever window is in force ──
+       These were static April…March text, which is a lie in the rolling view
+       and ambiguous in the fiscal one (a "Jan" column in FY2026-27 is Jan
+       2027). Always name the month, and add the year wherever the window
+       crosses into a new one so no column is ambiguous. */
+    const cols = trackerColumns(mo, yr, view);
+    headerCells.forEach((th, i) => {
+      if (i < TRACKER_COL_MIN || i > TRACKER_COL_MAX) return;
+      const c = cols[i - TRACKER_COL_MIN];
+      const prev = cols[i - TRACKER_COL_MIN - 1];
+      const showYear = !prev || prev.year !== c.year;
+      th.innerHTML = MONTHS[c.month].slice(0, 3) + (showYear ? `<br><small>${c.year}</small>` : '');
+    });
 
     // ── Show / hide month header cells (indices 6–17) ──
     // These columns are physically ordered April..March (fiscal order, see
@@ -136,13 +210,17 @@ function applyFilters() {
       th.style.background = '';
       th.style.color = '';
 
-      if (i < 6 || i > 17) return;
-      const fiscalPos = i - 6; // 0=April … 11=March
+      if (i < TRACKER_COL_MIN || i > TRACKER_COL_MAX) return;
+      const fiscalPos = i - TRACKER_COL_MIN; // 0=April … 11=March (fiscal views)
 
       if (view === 'month' || view === 'daily') {
         th.style.display = 'none';
       } else if (view === 'ytd') {
         th.style.display = (fiscalPos <= curFiscalPos) ? '' : 'none';
+      } else if (view === 'rolling') {
+        // Every column is a real past month — show them all, mark the latest.
+        th.style.display = '';
+        if (fiscalPos === TRACKER_COL_COUNT - 1) { th.style.background = '#E8750A'; th.style.color = '#fff'; }
       } else {
         // full year — show all, highlight selected
         th.style.display = '';
@@ -156,13 +234,16 @@ function applyFilters() {
       const cells = row.querySelectorAll('td');
       cells.forEach((td, i) => {
         if (i < 6 || i > 17) { td.style.opacity = '1'; return; }
-        const fiscalPos = i - 6;
+        const fiscalPos = i - TRACKER_COL_MIN;
         if (view === 'month' || view === 'daily') {
           td.style.display = 'none';
           td.style.opacity  = '1';
         } else if (view === 'ytd') {
           td.style.display = (fiscalPos <= curFiscalPos) ? '' : 'none';
           td.style.opacity  = '1';
+        } else if (view === 'rolling') {
+          td.style.display = '';
+          td.style.opacity  = '1';   // every rolling column is a real past month
         } else {
           td.style.display = '';
           td.style.opacity  = (fiscalPos <= curFiscalPos) ? '1' : '0.2';
@@ -184,11 +265,24 @@ function applyFilters() {
     });
   });
 
-  updateSummary();
-  if (currentDept === 'summary') updateSummaryDashboard();
   applyPeriodCards(view);
-  if (typeof loadKpiData === 'function') loadKpiData(mo, yr);
+
+  /* The achievement counts and the Executive Summary's per-department chips
+     are derived by COUNTING the .achieved-tag / .not-tag cells the tables are
+     currently showing — so they are only meaningful once loadKpiData() has
+     finished writing this period's real values into those cells. Calling them
+     before the fetch resolved was how the dashboard opened on a percentage
+     computed from authoring-time HTML instead of from data. Await it. */
+  const done = (typeof loadKpiData === 'function')
+    ? Promise.resolve(loadKpiData(mo, yr))
+    : Promise.resolve();
+  done.then(() => {
+    updateSummary();
+    updateSummaryDashboard();
+  });
+
   if (typeof refreshCompletenessBadge === 'function') refreshCompletenessBadge(currentDept, mo, yr);
+  return done;
 }
 
 /* ─── compute achieved / not-achieved counts ────────────────── */
@@ -234,8 +328,18 @@ function updateSummaryDashboard() {
 }
 
 /* ─── period analysis ───────────────────────────────────────── */
+/* Local calendar date as YYYY-MM-DD. Never toISOString(): east-of-UTC zones
+   (EAT is UTC+3) push local midnight back into the previous UTC day, so every
+   call between 00:00 and 03:00 local would silently ask for yesterday. Same
+   helper insights.html/reliability.html already use. */
+function isoLocalDate(d) {
+  const p2 = n => (n < 10 ? '0' : '') + n;
+  d = d || new Date();
+  return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
+}
+
 function getDailyValue(formId, fieldName) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = isoLocalDate();
   const raw = localStorage.getItem('nyati-' + formId + '-' + today);
   if (!raw) return null;
   try { return JSON.parse(raw).data?.[fieldName] ?? null; }
@@ -247,7 +351,7 @@ function applyPeriodCards(view) {
   const yr =  document.getElementById('year-select').value;
 
   // Update body class for CSS hooks
-  ['daily','month','ytd','full'].forEach(p =>
+  ['daily','month','ytd','full','rolling'].forEach(p =>
     document.body.classList.toggle('period-' + p, p === view)
   );
 
@@ -284,6 +388,11 @@ function applyPeriodCards(view) {
   } else if (view === 'ytd') {
     const endYr = fiscalPosToCalYear(calMonthToFiscalPos(mo), fyStart);
     periodText = 'YTD — Apr ' + fyStart + ' – ' + MONTHS[mo].slice(0, 3) + ' ' + endYr;
+  } else if (view === 'rolling') {
+    const cols = trackerColumns(mo, fyStart, 'rolling');
+    const a = cols[0], b = cols[cols.length - 1];
+    periodText = 'Last 12 months — ' + MONTHS[a.month].slice(0, 3) + ' ' + a.year +
+                 ' – ' + MONTHS[b.month].slice(0, 3) + ' ' + b.year;
   } else {
     periodText = 'FY' + fyStart + ' (Apr ' + fyStart + ' – Mar ' + (fyStart + 1) + ')';
   }
@@ -316,6 +425,22 @@ function setDates() {
    yet (a new one rolling over), fall back to the latest year offered.
    year-select holds the FISCAL year's start year (April..March) — for
    Jan/Feb/Mar that's last calendar year, not this one. */
+/* Fiscal years to offer: the current one, the three before it (kpi_monthly
+   history only goes back to FY2026 today, but the tracker is designed to
+   accumulate) and the next one, so April's rollover needs no code change. */
+function buildFiscalYearOptions() {
+  const sel = document.getElementById('year-select');
+  if (!sel || sel.options.length) return; // respect a server-rendered list
+  const now = new Date();
+  const cur = (now.getMonth() + 1) >= 4 ? now.getFullYear() : now.getFullYear() - 1;
+  for (let y = cur - 3; y <= cur + 1; y++) {
+    const o = document.createElement('option');
+    o.value = String(y);
+    o.textContent = `FY ${y}–${String(y + 1).slice(2)} (Apr'${String(y).slice(2)}–Mar'${String(y + 1).slice(2)})`;
+    sel.appendChild(o);
+  }
+}
+
 function setDefaultPeriod() {
   const now = new Date();
   const mo  = now.getMonth() + 1;
@@ -334,12 +459,18 @@ function setDefaultPeriod() {
 /* ─── INIT ──────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   setDates();
+  buildFiscalYearOptions();
   setDefaultPeriod();
   // Land on the department requested by a sidebar link from another page
   // (e.g. index.html?dept=ei), falling back to Executive Summary — same
   // rule sidebar.js uses to compute its own initial active row.
   const requested = new URLSearchParams(location.search).get('dept');
   const canView = typeof canViewKPIDept === 'function' ? canViewKPIDept : () => false;
-  switchDept(requested && canView(requested) ? requested : 'summary');
+  const landing = requested && canView(requested) ? requested : 'summary';
+
+  // switchDept() before applyFilters() so the right section is visible while
+  // the data loads; applyFilters() then fills every table and re-derives the
+  // summary counts once the fetch settles.
+  switchDept(landing);
   applyFilters();
 });

@@ -113,9 +113,20 @@ function buildDayMaps(rows) {
    deliberately re-pulls a 5-day trailing window every run) is mid-flight
    for that same day, silently discarding whichever write lost the race. */
 async function upsertDay(date, odooFields) {
+  /* status 'approved' explicitly: daily_reports.status DEFAULTS to 'draft'
+     (migration 010), and everything that reads the table for analysis now
+     ignores drafts (REPORTED_STATUSES in config/forms.js). A figure pulled
+     from the ERP is authoritative reported data, not somebody's unfinished
+     entry, and there is no human in the loop to sign it off — so leaving it
+     to the default would have made every synced day invisible to the KPI
+     engine, the MIS pack and Entry Completeness.
+
+     ON CONFLICT leaves status alone: if an operator has since submitted or
+     had that day rejected, the sync's fresher figures merge in without
+     overriding the human decision about the record. */
   await db.query(`
-    INSERT INTO daily_reports (form_type, record_date, shift, data, submitted_at)
-    VALUES ('dispatch', $1, 'day', $2, NOW())
+    INSERT INTO daily_reports (form_type, record_date, shift, data, submitted_at, status)
+    VALUES ('dispatch', $1, 'day', $2, NOW(), 'approved')
     ON CONFLICT (form_type, record_date, shift)
     DO UPDATE SET data = daily_reports.data || EXCLUDED.data, updated_at = NOW()
   `, [date, JSON.stringify(odooFields)]);

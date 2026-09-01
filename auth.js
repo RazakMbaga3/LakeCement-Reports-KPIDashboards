@@ -449,6 +449,17 @@ function canFillKPIDept(dept) {
   if (!editDepts) return false;
   return editDepts === 'all' || (Array.isArray(editDepts) && editDepts.includes(dept));
 }
+/* True if this role may replace a formula-computed KPI with a manual figure.
+   Distinct from canFillKPIDept(): an override supersedes a value the engine
+   derived from submitted daily reports, is permanently audited with a
+   mandatory reason, and is restricted to admin/md server-side
+   (POST /api/formula/override, backend/routes/formula.js). Mirrored here so
+   the inline editor doesn't invite an edit the server will refuse. */
+function canOverrideKPI() {
+  const u = getCurrentUser();
+  return !!u && (u.role === 'admin' || u.role === 'md');
+}
+
 /* True if this role can edit ANY department at all — used only to decide
    whether the Fill button's visibility should ever be re-evaluated. */
 function canFillKPI() {
@@ -839,11 +850,20 @@ function applyKPIPermissions() {
    department changes (see switchDept() in app.js), otherwise a role could
    open the editor for a department by switching to it while the button's
    stale visibility state from page-load still says "visible". */
+/* Two departments have edit rights on paper but nothing this modal can fill:
+   Executive Summary has no KPI rows at all, and Mines Workshop's
+   per-equipment TARGET/ACTUAL matrix has no kpi_monthly rows behind it —
+   openMonthlyModal() refuses both with an alert. Showing the button there
+   (which it did for admin/management, whose editDepts is 'all') offers an
+   action that can only fail. */
+const _NON_FILLABLE_KPI_DEPTS = ['summary', 'minesworkshop'];
+
 function refreshFillButtonVisibility() {
   const fillBtn = document.querySelector('.fill-monthly-btn');
   if (!fillBtn) return;
   const dept = (typeof currentDept !== 'undefined') ? currentDept : 'summary';
-  fillBtn.style.display = canFillKPIDept(dept) ? '' : 'none';
+  const fillable = canFillKPIDept(dept) && !_NON_FILLABLE_KPI_DEPTS.includes(dept);
+  fillBtn.style.display = fillable ? '' : 'none';
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -918,7 +938,7 @@ const _FORM_TYPE_ACCESS = {
   production: ['production','quality','limestone','pile-quality'],
   pm:         ['stoppage','power-cons'],   /* P&M owns Stoppage & Power Cons. reports (Kiln/Cement Mill folded into Production Report) */
   logistics:  ['dispatch'],
-  cpp:        ['power-plant','cpp'],
+  cpp:        ['cpp'],   // 'power-plant' retired 2026-08-31 — see backend/config/forms.js
   mining:     ['mines'],
   stores:     ['materials'],   /* Raw Materials report is owned by Purchase & Stores */
   sales:      ['sales-projection'],

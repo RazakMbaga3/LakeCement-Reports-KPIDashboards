@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="styles.css" />
   <script src="auth.js?v=10"></script>
   <script src="sidebar.js?v=2"></script>
+  <script src="loader.js?v=1"></script>
   <script src="forms/date-picker.js"></script>
   <style>
     .bl-bar {
@@ -66,6 +67,10 @@
 </div>
 
 <main class="bl-main">
+  <!-- Filled by LatestPeriod.showNote() when the page had to fall back off
+       today because nothing has been entered since an earlier date. -->
+  <div class="stale-note" id="bl-stale" style="display:none"></div>
+
   <div class="bl-gap-note">
     <strong>Scope note:</strong> these three balances (clinker stock, power, coal/heat) are built entirely from facts already captured on the Production Report and Power Consumption form. A true raw-meal-to-clinker material balance (limestone/clay/iron/sand → raw meal → clinker, with kiln loss-on-ignition) is <strong>not included</strong> — those raw-material-consumption fields exist visually on the Production Report but aren't wired to live data yet, so there's nothing real to reconcile against. This page will not silently fake that balance.
   </div>
@@ -140,7 +145,7 @@
   </div><!-- /.main -->
 </div><!-- /.app-shell -->
 
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://unpkg.com/lucide@1.38.0/dist/umd/lucide.min.js"></script>
 <script>
   lucide.createIcons();
   requireAuth();
@@ -148,6 +153,7 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="forms/api-client.js"></script>
+<script src="forms/latest-period.js"></script>
 <script src="forms/client-errors.js"></script>
 <script>
 (function () {
@@ -163,6 +169,10 @@
   function sumOf(keys, f) { return keys.reduce(function (s, k) { return s + z0(f[k]); }, 0); }
 
   var _charts = {};
+  /* Same pattern insights.html and reliability.html use. Without it, a date
+     with no clinker or power fields simply skipped the render below and left
+     the PREVIOUS date's chart on screen, captioned with the new date. */
+  function destroyChart(id) { if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; } }
 
   /* Generic waterfall: steps = [{label, value, type:'total'|'increase'|'decrease'}].
      'total' draws a full bar from 0; 'increase'/'decrease' float from the
@@ -186,7 +196,7 @@
 
     var ctx = document.getElementById(canvasId);
     if (!ctx) return;
-    if (_charts[canvasId]) _charts[canvasId].destroy();
+    destroyChart(canvasId);
 
     _charts[canvasId] = new Chart(ctx, {
       type: 'bar',
@@ -254,7 +264,9 @@
 
     /* ── Clinker — own production ─────────────────────────────── */
     var ownOpen = n(prod.kiln_clinker_open), ownProd = n(prod.kiln_prod_mt), ownCons = n(prod.cm_clinker_own_cons);
-    if (ownOpen !== null || ownProd !== null || ownCons !== null) {
+    if (ownOpen === null && ownProd === null && ownCons === null) {
+      destroyChart('chart-clinker-own');
+    } else {
       var ownClose = z0(ownOpen) + z0(ownProd) - z0(ownCons);
       renderWaterfall('chart-clinker-own', [
         { label: 'Opening', value: z0(ownOpen), type: 'total' },
@@ -266,7 +278,9 @@
 
     /* ── Clinker — purchased ──────────────────────────────────── */
     var puOpen = n(prod.cm_clinker_purch_open), puRecv = n(prod.cm_clinker_purch_recv), puCons = n(prod.cm_clinker_purch_cons);
-    if (puOpen !== null || puRecv !== null || puCons !== null) {
+    if (puOpen === null && puRecv === null && puCons === null) {
+      destroyChart('chart-clinker-purch');
+    } else {
       var puClose = z0(puOpen) + z0(puRecv) - z0(puCons);
       renderWaterfall('chart-clinker-purch', [
         { label: 'Opening', value: z0(puOpen), type: 'total' },
@@ -279,7 +293,9 @@
     /* ── Power balance ────────────────────────────────────────── */
     var supplied = z0(power.pwr_tanesco_kwh) + z0(power.pwr_cpp_kwh);
     var consumed = sumOf(KWH_ALL, power);
-    if (supplied || consumed) {
+    if (!supplied && !consumed) {
+      destroyChart('chart-power');
+    } else {
       var loss = supplied - consumed;
       renderWaterfall('chart-power', [
         { label: 'Supplied', value: supplied, type: 'total' },
@@ -298,19 +314,37 @@
        (kiln coal × NCV ÷ clinker) — NCV isn't captured per-day on this
        form, so this reads coal tonnage vs. clinker only if the registry's
        server-computed KPI is available; otherwise shows kiln coal alone. */
+    /* Reset first: this used to update only inside `if (clinkerOut)`, so a
+       date with no clinker output kept the PREVIOUS date's kcal/kg figure on
+       screen as if it belonged to the newly selected day. */
+    document.getElementById('fig-ste').textContent = '—';
     if (window.NyatiAPI && NyatiAPI.getDailySeries && clinkerOut) {
       try {
         var series = await NyatiAPI.getDailySeries(date, date);
         var ste = series['specific-thermal-energy-consumption'];
         var val = ste && ste.series && ste.series.length ? ste.series[0].value : null;
         document.getElementById('fig-ste').textContent = val !== null && val !== undefined ? fmt(val, 0) : '—';
-      } catch (e) { document.getElementById('fig-ste').textContent = '—'; }
+      } catch (e) { /* leave the reset em-dash */ }
     }
   }
 
-  dateEl.addEventListener('change', load);
-  dateEl.value = new Date().toISOString().slice(0, 10);
-  load();
+  /* Any manual change means the user chose that date deliberately — the
+     fallback note no longer applies to what is on screen. */
+  dateEl.addEventListener('change', function () {
+    LatestPeriod.showNote('bl-stale', null);
+    load();
+  });
+
+  /* Default to today; if nothing has been entered since an earlier date, open
+     on that date instead and say so, rather than showing an empty page that
+     reads as broken. Reads the two forms THIS page displays, so it isn't
+     dragged forward by a form it never shows. */
+  (async function bootstrap() {
+    var d = await LatestPeriod.defaultDate(['production', 'power-cons']);
+    dateEl.value = d.date;
+    LatestPeriod.showNote('bl-stale', d);
+    load();
+  }());
 
   var _dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
   var fEl = document.getElementById('footer-date');

@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="styles.css" />
   <script src="auth.js?v=10"></script>
   <script src="sidebar.js?v=2"></script>
+  <script src="loader.js?v=1"></script>
   <style>
     /* ── Period picker bar ──────────────────────────────────────── */
     .an-period-bar {
@@ -378,6 +379,9 @@
 
   <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• MAIN â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
   <main class="an-main" id="an-main">
+    <!-- Filled by LatestPeriod.showNote() when the trailing window had to
+         slide back off today because nothing has been entered since. -->
+    <div class="stale-note" id="an-stale" style="display:none"></div>
 
     <!-- Empty state shown when nothing in localStorage -->
     <div class="an-empty-state" id="an-empty">
@@ -893,7 +897,7 @@
   </div><!-- /.main -->
 </div><!-- /.app-shell -->
 
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://unpkg.com/lucide@1.38.0/dist/umd/lucide.min.js"></script>
   <script>
     lucide.createIcons();
     requireAuth();
@@ -901,6 +905,7 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script src="forms/api-client.js"></script>
+  <script src="forms/latest-period.js"></script>
   <script src="forms/offline-queue.js"></script>
   <script src="forms/client-errors.js"></script>
   <script src="forms/formula-registry.js"></script>

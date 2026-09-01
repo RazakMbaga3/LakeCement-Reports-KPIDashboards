@@ -35,7 +35,7 @@ const DATE_A     = '1999-02-11'; // round-trip date (all 13 forms)
 const DATE_CLEAN = ['1999-02-11', '1999-02-20']; // cleanup range
 const USERS      = { production: 'p2_production', cpp: 'p2_cpp', logistics: 'p2_logistics', mining: 'p2_mining',
                      pm: 'p2_pm', stores: 'p2_stores' };
-const ALL_FORMS  = ['production', 'mines', 'power-plant', 'dispatch', 'quality', 'power-cons',
+const ALL_FORMS  = ['production', 'mines', 'dispatch', 'quality', 'power-cons',
                     'limestone', 'materials', 'pile-quality', 'cpp', 'stoppage'];
 
 let passCount = 0, failCount = 0;

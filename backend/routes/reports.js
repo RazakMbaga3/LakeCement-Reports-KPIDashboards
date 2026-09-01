@@ -4,6 +4,9 @@
   All daily forms use the same endpoints; "form_type" differentiates them.
 
   POST /api/reports/:formType                  → submit/update a daily form
+                                                 (body.status 'draft'|'submitted';
+                                                  body.replace to overwrite rather
+                                                  than merge the stored fields)
   POST /api/reports/:formType/:date/approve    → HOD approves a pending report
   POST /api/reports/:formType/:date/reject     → HOD rejects a pending report
   GET  /api/reports/:formType/:date            → get one day's data
@@ -41,6 +44,16 @@ const submitBody = z.object({
   shift: zShift.default('day'),
   data:  z.record(z.string(), z.unknown())
            .refine(o => Object.keys(o).length > 0, 'must not be empty'),
+  /* What the caller INTENDS this write to be. A draft is work in progress:
+     it must not enter an approval queue, must not be self-certified as
+     approved, and must not be read as a finished report by the KPI engine
+     or the MIS pack. Defaults to 'submitted' so an older client that
+     doesn't send it keeps its current behaviour. */
+  status:  z.enum(['draft', 'submitted']).default('submitted'),
+  /* Replace the stored JSONB wholesale instead of merging into it. Only
+     for callers that own the entire row (importers, the Odoo sync). See
+     the merge note on the handler below. */
+  replace: z.boolean().default(false),
 });
 
 /* Every fact in forms/formula-registry.js declares exactly which form
@@ -69,25 +82,52 @@ function findFactTypeError(formType, data) {
 }
 
 // ── POST /api/reports/:formType ──────────────────────────────
-// Submit or update a daily form
-// The browser sends: { date: "2026-06-08", shift: "day", data: { field1: val, ... } }
+// Submit or update a daily form.
+// The browser sends: { date, shift, data: { field: value, … }, status?, replace? }
 router.post('/:formType',
   requireAuth, requireFormAccess,
   validate(formTypeParams, 'params'), validate(submitBody, 'body'),
   async (req, res, next) => {
     try {
-      const { formType }          = req.validated.params;
-      const { date, shift, data } = req.validated.body;
+      const { formType } = req.validated.params;
+      const { date, shift, data, replace } = req.validated.body;
+      const intent = req.validated.body.status;   // 'draft' | 'submitted'
 
       const factError = findFactTypeError(formType, data);
       if (factError) return res.status(400).json({ error: factError });
 
+      /* A DRAFT is not a submission. Both used to come through here with no
+         way to tell them apart, so the status was derived from the caller's
+         level alone: an HOD pressing "Save Draft" stored a half-filled form
+         as `approved` (feeding the KPIs and the MIS pack as a finished
+         report), and an Officer's draft landed in their HOD's approval queue
+         looking like completed work. `status:'draft'` now says which it is;
+         the approval rules below apply only to a real submission. */
+      const isDraft = intent === 'draft';
       // HOD/admin/md submissions are self-certifying (approved on save);
       // Officer/Senior submissions always need their HOD's sign-off.
       const selfApproves = req.user.role === 'admin' || req.user.role === 'md' || req.user.level === 'hod';
-      const status      = selfApproves ? 'approved' : 'pending_approval';
-      const approvedBy  = selfApproves ? req.user.id : null;
-      const approvedAt  = selfApproves ? new Date() : null;
+      const status     = isDraft ? 'draft' : (selfApproves ? 'approved' : 'pending_approval');
+      const approvedBy = (!isDraft && selfApproves) ? req.user.id : null;
+      const approvedAt = (!isDraft && selfApproves) ? new Date() : null;
+
+      /* MERGE by default; full replace only when the caller says so.
+         `data = EXCLUDED.data` used to overwrite the whole JSONB blob, so
+         any client that posted a partial payload silently destroyed every
+         field it didn't know about. That is not hypothetical:
+         power-plant-report.html is a read-only report page — 22 CPP metrics
+         rendered from stored data, but only `date` and `prepared_by` bound
+         to inputs — wired to a Submit button, so one click would have
+         replaced that day's entire CPP record with two fields and broken
+         cpp-heat-rate / cpp-auxiliary-power for that day.
+
+         Merging is safe for forms because a form always posts every field it
+         owns, blank ones included (form-persist.js's _collect reads every
+         input's value, so an emptied field arrives as ""), and a value can
+         still be cleared that way. `replace: true` stays available for
+         callers that genuinely own the whole row — an importer or a sync
+         job rebuilding a day from an external source. */
+      const merge = replace !== true;
 
       // Upsert + its audit_log row in one transaction — a report the
       // client sees as "saved" must never have a silently-missing entry
@@ -99,7 +139,7 @@ router.post('/:formType',
           VALUES ($1, $2, $3, $4, $5, NOW(), $6, $7, $8)
           ON CONFLICT (form_type, record_date, shift)
           DO UPDATE SET
-            data        = EXCLUDED.data,
+            data        = CASE WHEN $9 THEN daily_reports.data || EXCLUDED.data ELSE EXCLUDED.data END,
             updated_by  = $5,
             updated_at  = NOW(),
             status      = EXCLUDED.status,
@@ -109,16 +149,17 @@ router.post('/:formType',
             rejected_at = NULL,
             rejection_reason = NULL
           RETURNING *
-        `, [formType, date, shift, JSON.stringify(data), req.user.id, status, approvedBy, approvedAt]);
+        `, [formType, date, shift, JSON.stringify(data), req.user.id, status, approvedBy, approvedAt, merge]);
 
         await client.query(
-          'INSERT INTO audit_log (user_id, username, action, form_type, record_date, ip_address) VALUES ($1,$2,$3,$4,$5,$6)',
-          [req.user.id, req.user.username, 'FORM_SUBMIT', formType, date, req.ip]
+          'INSERT INTO audit_log (user_id, username, action, form_type, record_date, details, ip_address) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+          [req.user.id, req.user.username, isDraft ? 'FORM_DRAFT' : 'FORM_SUBMIT', formType, date,
+           `${Object.keys(data).length} field(s), ${merge ? 'merged' : 'replaced'} → status ${status}`, req.ip]
         );
 
         return result.rows[0];
       });
-      formSubmissions.inc({ form_type: formType });
+      if (!isDraft) formSubmissions.inc({ form_type: formType });
 
       res.json({ success: true, record });
     } catch (err) { next(err); }

@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="styles.css" />
   <script src="auth.js?v=10"></script>
   <script src="sidebar.js?v=2"></script>
+  <script src="loader.js?v=1"></script>
   <script src="forms/date-picker.js"></script>
   <style>
     .cp-bar {
@@ -94,6 +95,10 @@
 </div>
 
 <main class="cp-main">
+  <!-- Filled by LatestPeriod.showNote() when the page had to fall back off
+       today because nothing has been entered since an earlier date. -->
+  <div class="stale-note" id="cp-stale" style="display:none"></div>
+
   <div class="cp-legend">
     <span class="cp-legend-item"><span class="cp-legend-dot" style="background:#239557"></span> Entered</span>
     <span class="cp-legend-item"><span class="cp-legend-dot" style="background:#e5395533;border:1px solid #e5395580"></span> Missed entry</span>
@@ -118,13 +123,14 @@
   </div><!-- /.main -->
 </div><!-- /.app-shell -->
 
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://unpkg.com/lucide@1.38.0/dist/umd/lucide.min.js"></script>
 <script>
   lucide.createIcons();
   requireAuth();
   applyCompletenessPermissions();
 </script>
 <script src="forms/api-client.js"></script>
+<script src="forms/latest-period.js"></script>
 <script src="forms/client-errors.js"></script>
 <script>
 (function () {
@@ -218,8 +224,24 @@
     load();
   });
 
+  /* Unlike the other analytics pages, a run of empty days here IS the
+     finding — this page exists to show missed entries, so the range stays
+     anchored on today. The banner only explains WHY everything after a
+     certain date is red, so a real backlog is not mistaken for a fault. */
+  async function annotateStaleness() {
+    var last = await LatestPeriod.latestDate(null);
+    var today = LatestPeriod.todayIso();
+    LatestPeriod.showNote('cp-stale', (last && last < today) ? {
+      fellBack: true,
+      note: 'No report of any kind has been entered since ' +
+            new Date(last + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) +
+            ' - every day after that is genuinely missing, not a display fault.',
+    } : null);
+  }
+
   setPillsRange(3);
   load();
+  annotateStaleness();
 
   var _dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
   var fEl = document.getElementById('footer-date');
