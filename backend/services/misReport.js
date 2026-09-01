@@ -8,8 +8,11 @@
 const db       = require('../db');
 const engine   = require('./formulaEngine');
 const insights = require('./insights');
+const { REPORTED_STATUSES } = require('../config/forms');
 
 /* Display names + section order for the report */
+/* Retired 'power-plant' (2026-08-31): no page submitted it and it never held
+   a row, so it showed as a form that was missed every single day. */
 const FORM_LABELS = {
   'production':   'Production Summary',
   'quality':      'Quality Control',
@@ -18,7 +21,6 @@ const FORM_LABELS = {
   'mines':        'Mines / Quarry',
   'materials':    'Raw Materials',
   'power-cons':   'Power Consumption',
-  'power-plant':  'Power Plant (CPP)',
   'cpp':          'CPP Operation',
   'dispatch':     'Dispatch',
   'stoppage':     'Stoppages',
@@ -42,11 +44,11 @@ function cleanData(data) {
 /* ── Daily report payload ──────────────────────────────────── */
 async function gatherDaily(date) {
   const rows = await db.query(
-    `SELECT r.form_type, r.shift, r.data, r.submitted_at, r.updated_at, u.full_name AS submitted_by_name
+    `SELECT r.form_type, r.shift, r.data, r.status, r.submitted_at, r.updated_at, u.full_name AS submitted_by_name
      FROM daily_reports r LEFT JOIN users u ON r.submitted_by = u.id
-     WHERE r.record_date = $1
+     WHERE r.record_date = $1 AND r.status = ANY($2)
      ORDER BY r.form_type, r.shift`,
-    [date]
+    [date, REPORTED_STATUSES]
   );
 
   const forms = [];
@@ -59,7 +61,9 @@ async function gatherDaily(date) {
         formType,
         label: FORM_LABELS[formType] || formType,
         shift: r.shift,
-        status: (r.data && r.data._status) || 'submitted',
+        /* The real column (migration 010), not the legacy data._status blob
+           form-persist.js used to write before an approval workflow existed. */
+        status: r.status || 'submitted',
         submittedBy: r.submitted_by_name,
         submittedAt: r.updated_at || r.submitted_at,
         fields: Object.entries(data).map(([k, v]) => ({ key: k, label: prettifyField(k), value: v })),
@@ -87,8 +91,8 @@ async function gatherCompleteness(from, to) {
   const rows = await db.query(
     `SELECT record_date, form_type, data
      FROM daily_reports
-     WHERE record_date BETWEEN $1 AND $2`,
-    [from, to]
+     WHERE record_date BETWEEN $1 AND $2 AND status = ANY($3)`,
+    [from, to, REPORTED_STATUSES]
   );
 
   // present[date][formType] = true if any row for that date+form has
@@ -136,9 +140,9 @@ async function gatherMonthly(year, month) {
   const rows = await db.query(
     `SELECT form_type, record_date, shift, data
      FROM daily_reports
-     WHERE record_date BETWEEN $1 AND $2
+     WHERE record_date BETWEEN $1 AND $2 AND status = ANY($3)
      ORDER BY form_type, record_date, shift`,
-    [from, to]
+    [from, to, REPORTED_STATUSES]
   );
 
   const forms = [];

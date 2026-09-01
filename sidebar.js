@@ -106,7 +106,10 @@ function _sbItemHTML(opts) {
   const hrefAttr  = (!opts.stub && opts.href) ? ` href="${opts.href}"` : '';
   const clickAttr = opts.onclick ? ` onclick="${opts.onclick}"` : '';
   const deptAttr  = opts.dept ? ` data-dept="${opts.dept}"` : '';
-  return `<${tag} class="${cls.join(' ')}"${hrefAttr}${clickAttr}${deptAttr}>` +
+  /* Daily Reports rows carry the form page they lead to, so forms/nav-status.js
+     can hang today's fill-status dot on the right row. */
+  const pageAttr  = opts.page ? ` data-page="${opts.page}"` : '';
+  return `<${tag} class="${cls.join(' ')}"${hrefAttr}${clickAttr}${deptAttr}${pageAttr}>` +
          `<span class="sb-item-icon"><i data-lucide="${opts.icon}"></i></span>` +
          `<span class="sb-item-label">${opts.label}</span>` +
          `${opts.badgeHTML || ''}` +
@@ -194,6 +197,7 @@ function renderSidebar() {
       const badge = `<span class="${it.fill ? 'sb-badge-fill' : 'sb-badge-view'}">${it.fill ? 'FILL' : 'VIEW'}</span>`;
       html += _sbItemHTML({
         icon: it.icon, label: it.label, href, badgeHTML: badge,
+        page: it.page,
         active: it.page === currentPage,
       });
     });

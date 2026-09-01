@@ -1266,6 +1266,22 @@ body.period-full .sk-delta { opacity: 0; }
   body { background: white; }
 }
 
+/* ── "You are looking past the end of the data" banner ─────────────────
+   Shown by forms/latest-period.js when a page defaulted off today because
+   nothing has been entered since an earlier date. Deliberately an
+   informational amber, not an error red — the page is working; the data
+   simply stops earlier than today. */
+.stale-note {
+  margin: 0 0 14px;
+  padding: 9px 14px;
+  border-left: 3px solid var(--orange, #F49545);
+  background: rgba(244, 149, 69, 0.09);
+  border-radius: 0 6px 6px 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted, #64748B);
+}
+
 /* ══════════════════════════════════════════════════════════════════
    NAVIGATION LOADER  (loader.js)
    ─────────────────────────────────────────────────────────────────

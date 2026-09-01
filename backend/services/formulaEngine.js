@@ -17,6 +17,7 @@
 
 const db = require('../db');
 const logger = require('./logger');
+const { REPORTED_STATUSES } = require('../config/forms');
 const { FACTS, FORMULAS } = require('../../forms/formula-registry.js');
 
 function num(v) {
@@ -31,11 +32,13 @@ function round(v, dp) {
 /* One entry per (date, shift) with all declared facts resolved */
 async function buildEntries(from, to) {
   const forms = [...new Set(Object.values(FACTS).map(f => f.form))];
+  /* Drafts and rejected reports are not data — see REPORTED_STATUSES. */
   const result = await db.query(
     `SELECT form_type, record_date, shift, data
      FROM daily_reports
-     WHERE form_type = ANY($1) AND record_date BETWEEN $2 AND $3`,
-    [forms, from, to]
+     WHERE form_type = ANY($1) AND record_date BETWEEN $2 AND $3
+       AND status = ANY($4)`,
+    [forms, from, to, REPORTED_STATUSES]
   );
 
   const entries = new Map(); // "date|shift" → { date, shift, facts }

@@ -13,6 +13,7 @@
 */
 
 const db     = require('../db');
+const { REPORTED_STATUSES } = require('../config/forms');
 const engine = require('./formulaEngine');
 
 function num(v) {
@@ -32,8 +33,9 @@ async function fieldBaseline(formType, { days = 30, before } = {}) {
 
   const rows = await db.query(
     `SELECT data FROM daily_reports
-     WHERE form_type = $1 AND record_date >= $2 AND record_date < $3`,
-    [formType, start, end]
+     WHERE form_type = $1 AND record_date >= $2 AND record_date < $3
+       AND status = ANY($4)`,
+    [formType, start, end, REPORTED_STATUSES]
   );
 
   const acc = {};
@@ -73,7 +75,7 @@ async function benchmark(year, month) {
   const monthsRes = await db.query(
     `SELECT DISTINCT EXTRACT(YEAR FROM record_date)::int AS y,
                      EXTRACT(MONTH FROM record_date)::int AS m
-     FROM daily_reports ORDER BY y, m`);
+     FROM daily_reports WHERE status = ANY($1) ORDER BY y, m`, [REPORTED_STATUSES]);
   const months = monthsRes.rows;
 
   const cache = new Map(); // 'y-m' → evalMonth result array
@@ -178,8 +180,9 @@ const RCFA_MAIN_ASSETS = ['kiln', 'rm', 'cm1', 'cm2']; // Handbook: Kiln / Raw M
 async function stoppageInsights(from, to) {
   const rows = await db.query(
     `SELECT record_date, data FROM daily_reports
-     WHERE form_type = 'stoppage' AND record_date BETWEEN $1 AND $2`,
-    [from, to]
+     WHERE form_type = 'stoppage' AND record_date BETWEEN $1 AND $2
+       AND status = ANY($3)`,
+    [from, to, REPORTED_STATUSES]
   );
 
   const byCause = {}, byEquip = {}, byEquipCause = {}, byEquipDate = {};
@@ -266,21 +269,36 @@ async function stoppageInsights(from, to) {
       return { ...c, pct: parseFloat(pct.toFixed(1)), cumPct: parseFloat(cumF.toFixed(1)) };
     });
 
+  /* Equipment that logged NO downtime at all in the period is absent from
+     byEquip — so it used to be left out of the fleet availability average
+     entirely. Excluding a machine that ran 100% of the period drags the
+     fleet figure DOWN, which is exactly backwards: a perfect month for the
+     kiln made plant availability look worse, not better. Seed every known
+     section at zero so the average is over the whole fleet. */
+  for (const key of Object.keys(STOP_EQUIPMENT)) {
+    if (!byEquip[key]) byEquip[key] = { hours: 0, events: 0 };
+  }
+
   const equipment = Object.entries(byEquip)
     .map(([key, s]) => ({
       key, label: STOP_EQUIPMENT[key] || key,
       hours: parseFloat(s.hours.toFixed(2)),
       events: s.events,
-      mttrHours: parseFloat((s.hours / s.events).toFixed(2)),                 // mean time to repair
-      mtbfHours: parseFloat(((calendarH - s.hours) / s.events).toFixed(1)),   // mean time between failures
+      // MTTR/MTBF divide by the event count, so they are undefined — not
+      // zero, not infinite — for equipment that never failed. null renders as
+      // "—" rather than a fabricated figure; availability is still 100%.
+      mttrHours: s.events ? parseFloat((s.hours / s.events).toFixed(2)) : null,
+      mtbfHours: s.events ? parseFloat(((calendarH - s.hours) / s.events).toFixed(1)) : null,
       availabilityPct: parseFloat((100 * (1 - s.hours / calendarH)).toFixed(2)),
     }))
     .sort((a, b) => b.hours - a.hours);
 
-  // Plant-wide headline figures (§4.7.1/4.7.2). Every section here shares
-  // the same calendarH, so averaging the per-equipment availabilityPct
-  // values is equivalent to 100 * (1 - totalHours / (calendarH * n)) — one
-  // fleet-wide NAI rather than inventing a second formula.
+  // Plant-wide headline figures (§4.7.1/4.7.2). Every section here shares the
+  // same calendarH, so averaging the per-equipment availabilityPct values is
+  // equivalent to 100 * (1 - totalHours / (calendarH * n)) — one fleet-wide
+  // NAI rather than inventing a second formula. n is now always the full
+  // fleet (see the seeding above), so a section with a clean period raises
+  // the fleet figure instead of vanishing from it.
   const overallAvailabilityPct = equipment.length
     ? parseFloat((equipment.reduce((s, e) => s + e.availabilityPct, 0) / equipment.length).toFixed(2))
     : null;

@@ -70,15 +70,27 @@ app.use(cors({
   exposedHeaders: ['X-Renewed-Token'], // sliding-session renewal (middleware/auth.js)
 }));
 
-// Rate-limit the auth endpoints — blunts password brute-forcing from one IP;
-// per-account lockout in routes/auth.js covers distributed attempts.
-app.use('/api/auth', rateLimit({
+/* Rate-limit CREDENTIAL SUBMISSION — blunts password brute-forcing from one
+   IP; the per-account lockout in routes/auth.js covers distributed attempts.
+
+   Scoped to the two endpoints that take a password, NOT to all of /api/auth.
+   The whole mount used to be limited at 30 requests / 5 minutes / IP, but
+   auth.js's _verifySessionOrRedirect() calls GET /api/auth/me on EVERY page
+   load, and the limiter keys on IP — so the entire plant sitting behind one
+   office NAT shared a 30-request budget. Thirty page views between them (a
+   couple of minutes of ordinary dashboard use) exhausted it, after which
+   nobody could log in until the window rolled. /me and /logout are
+   authenticated session calls, not credential guesses; they don't belong
+   behind a brute-force limiter. */
+const credentialRateLimit = rateLimit({
   windowMs: 5 * 60 * 1000,
   limit: parseInt(process.env.AUTH_RATE_LIMIT || '30', 10),
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   message: { error: 'Too many attempts from this device. Wait a few minutes and try again.' },
-}));
+});
+app.use('/api/auth/login', credentialRateLimit);
+app.use('/api/auth/change-password', credentialRateLimit);
 
 // Parse incoming JSON request bodies
 // Without this, req.body would be undefined

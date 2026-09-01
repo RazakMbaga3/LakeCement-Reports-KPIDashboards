@@ -18,7 +18,7 @@ Last audit: 2026-07-05.
       on every request; logout/password-change bumps it (all devices). Sliding
       session via X-Renewed-Token header when < 2h of token life remains.
 - [x] helmet
-- [x] Rate limiting on /api/auth/* (AUTH_RATE_LIMIT/5min) + account lockout
+- [x] Rate limiting on /api/auth/login + /change-password (AUTH_RATE_LIMIT/5min) + account lockout
       (LOCKOUT_MAX_ATTEMPTS → locked LOCKOUT_MINUTES)
 - [x] CORS via ALLOWED_ORIGIN (comma-separated list; boot warning when `*`)
       — must be set to the real origin at deployment (Phase 7)

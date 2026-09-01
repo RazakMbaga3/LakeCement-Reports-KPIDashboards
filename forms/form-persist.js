@@ -108,9 +108,53 @@
     });
   }
 
-  /* ── Today, as YYYY-MM-DD ─────────────────────────────────────── */
+  /* ── Today, as YYYY-MM-DD ───────────────────────────────────────
+     Local calendar date, never toISOString(): EAT is UTC+3, so between
+     local midnight and 03:00 the UTC date is still yesterday and every
+     form would open on — and save to — the wrong day. */
   function _todayStr() {
-    return new Date().toISOString().slice(0, 10);
+    const d = new Date();
+    const p2 = n => (n < 10 ? '0' : '') + n;
+    return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
+  }
+
+  /* ── Report status ───────────────────────────────────────────────
+     daily_reports.status (migration 010) has four values; this layer used
+     to know only two, and read them from a `_status` key it wrote into the
+     data blob itself. So a report awaiting an HOD's signature looked
+     identical to an approved one, and a REJECTED report still showed
+     "Submitted & Locked" — no reason, no way to correct and resend, the
+     author never learning it had been turned back. */
+  const STATUS_META = {
+    draft: {
+      pill: 'DRAFT', locked: false,
+      chip: 'Saved', banner: null,
+    },
+    pending_approval: {
+      pill: 'AWAITING SIGN-OFF', locked: true,
+      chip: '✓ Submitted',
+      banner: { bg: '#D97706', text: 'Submitted — waiting for your HOD to sign off. It is not counted as approved yet.' },
+    },
+    approved: {
+      pill: 'APPROVED', locked: true,
+      chip: '✓ Approved',
+      banner: { bg: '#239557', text: '✓  Report submitted and approved.' },
+    },
+    rejected: {
+      pill: 'REJECTED', locked: false,
+      chip: '✕ Rejected',
+      banner: { bg: '#DC2626', text: 'Rejected by your HOD — correct the figures and submit again.' },
+    },
+  };
+  /* 'submitted' is what this layer wrote before the approval workflow
+     existed, and all it means is "this device sent it". A server record
+     always carries the real column now, so this mapping only applies to the
+     offline localStorage fallback — where claiming 'approved' would tell
+     someone their report is signed off when nothing has confirmed it.
+     'pending_approval' is the honest reading: sent, outcome unknown here. */
+  function _normaliseStatus(status) {
+    if (status === 'submitted') return 'pending_approval';
+    return STATUS_META[status] ? status : 'draft';
   }
 
   /* ── localStorage key ───────────────────────────────────────────── */
@@ -163,17 +207,21 @@
   }
 
   /* ── Read snapshot — server first (source of truth), localStorage
-     fallback (offline / server unreachable). Server records don't carry
-     a draft/submitted distinction of their own (daily_reports has no
-     status column), so that status rides along inside the JSONB `data`
-     blob as `_status`, written by _syncToServer below. ─────────────── */
+     fallback (offline / server unreachable).
+
+     The status comes from the record's own `status` column. It used to be
+     read from a `_status` key this file wrote into the data blob, which
+     predates the approval workflow — so the server could say
+     'pending_approval' or 'rejected' and the form would still render the
+     author's own optimistic "submitted". ──────────────────────────────── */
   async function _read(formId, date) {
     if (global.NyatiAPI) {
       try {
         const record = await global.NyatiAPI.getForm(formId, date);
         if (record && record.data) {
-          const status = record.data._status || 'submitted';
-          const payload = { _m: { formId, date, savedAt: record.updated_at || record.submitted_at, status }, inputs: [], data: record.data };
+          const status = _normaliseStatus(record.status || record.data._status);
+          const payload = { _m: { formId, date, savedAt: record.updated_at || record.submitted_at, status,
+                                  rejectionReason: record.rejection_reason || null }, inputs: [], data: record.data };
           _restore(document.body, payload);
           // Mirror into localStorage as an offline cache for _showHistory().
           localStorage.setItem(_key(formId, date), JSON.stringify(payload));
@@ -200,10 +248,17 @@
      handed to NyatiQueue, which auto-syncs when the server returns. ──── */
   async function _syncToServer(formId, date, named, status) {
     if (!global.NyatiAPI) return { ok: false, queued: false };
+    /* `_status` is kept in the blob for the offline queue and for older
+       records, but the server now decides the real status from the intent
+       declared alongside the payload — a draft must never enter an HOD's
+       approval queue or be self-certified as approved. */
     const payload = Object.assign({}, named, { _status: status });
+    const intent  = status === 'submitted' ? 'submitted' : 'draft';
     try {
-      await global.NyatiAPI.submitForm(formId, date, 'day', payload);
-      return { ok: true };
+      const res = await global.NyatiAPI.submitForm(formId, date, 'day', payload, { status: intent });
+      /* The server's answer is authoritative: an Officer's submission comes
+         back 'pending_approval', not 'approved'. */
+      return { ok: true, status: (res && res.record && res.record.status) || null };
     } catch (e) {
       const retryable = !e.status || e.status === 401 || e.status >= 500;
       if (retryable && global.NyatiQueue) {
@@ -372,26 +427,10 @@
       b.style.cursor  = 'not-allowed';
     });
 
-    // Submitted banner
-    if (!document.getElementById('_nyb')) {
-      const banner = document.createElement('div');
-      banner.id = '_nyb';
-      banner.innerHTML =
-        '<span>✓ &nbsp;Report Submitted &amp; Locked — JSON file downloaded to your computer</span>' +
-        '<button onclick="document.getElementById(\'_nyb\').remove()" title="Dismiss" style="' +
-          'position:absolute;right:12px;top:50%;transform:translateY(-50%);' +
-          'background:rgba(255,255,255,.25);border:none;color:white;width:22px;height:22px;' +
-          'border-radius:50%;cursor:pointer;font-size:14px;line-height:1;display:flex;' +
-          'align-items:center;justify-content:center;font-family:inherit' +
-        '">×</button>';
-      Object.assign(banner.style, {
-        position: 'fixed', top: '0', left: '0', right: '0', zIndex: '9997',
-        background: '#239557', color: 'white', padding: '9px 48px 9px 16px',
-        textAlign: 'center', fontFamily: 'Inter,sans-serif',
-        fontSize: '12px', fontWeight: '700', letterSpacing: '.3px'
-      });
-      document.body.prepend(banner);
-    }
+    /* The banner is _showStatusBanner()'s job — it used to be hardcoded
+       green "Report Submitted & Locked" here, which is the wrong message
+       for a report that is merely awaiting sign-off, and flatly wrong for
+       one that was rejected. */
   }
 
   /* ── Unlock form — reverses _lockForm(), used when the date is
@@ -419,9 +458,63 @@
   function _updateStatusPill(status) {
     const pill = document.querySelector('.rpt-pill');
     if (!pill) return;
-    const submitted = status === 'submitted';
-    pill.textContent = submitted ? 'SUBMITTED' : 'DRAFT';
-    pill.classList.toggle('is-submitted', submitted);
+    const st   = _normaliseStatus(status);
+    const meta = STATUS_META[st];
+    pill.textContent = meta.pill;
+    /* .is-submitted is the page's existing green style; keep it for the two
+       states that mean "this has been sent", and mark the other two so a
+       page can style them without knowing this file's vocabulary. */
+    pill.classList.toggle('is-submitted', st === 'approved' || st === 'pending_approval');
+    pill.classList.toggle('is-pending',  st === 'pending_approval');
+    pill.classList.toggle('is-rejected', st === 'rejected');
+  }
+
+  /* ── Status banner ───────────────────────────────────────────────
+     One banner driven by STATUS_META, replacing the hardcoded green
+     "Report Submitted & Locked" strip _lockForm() used to paint whatever
+     the server had actually decided. */
+  function _showStatusBanner(status, reason) {
+    document.getElementById('_nyb')?.remove();
+    const meta = STATUS_META[_normaliseStatus(status)];
+    if (!meta || !meta.banner) return;
+
+    const banner = document.createElement('div');
+    banner.id = '_nyb';
+    const msg = document.createElement('span');
+    /* textContent, not innerHTML: `reason` is free text typed by an HOD. */
+    msg.textContent = meta.banner.text + (reason ? '  Reason: ' + reason : '');
+    banner.appendChild(msg);
+
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.title = 'Dismiss';
+    close.textContent = '×';
+    close.style.cssText = 'position:absolute;right:12px;top:50%;transform:translateY(-50%);' +
+      'background:rgba(255,255,255,.25);border:none;color:white;width:22px;height:22px;' +
+      'border-radius:50%;cursor:pointer;font-size:14px;line-height:1;display:flex;' +
+      'align-items:center;justify-content:center;font-family:inherit';
+    close.addEventListener('click', () => banner.remove());
+    banner.appendChild(close);
+
+    Object.assign(banner.style, {
+      position: 'fixed', top: '0', left: '0', right: '0', zIndex: '9997',
+      background: meta.banner.bg, color: 'white', padding: '9px 48px 9px 16px',
+      textAlign: 'center', fontFamily: 'Inter,sans-serif',
+      fontSize: '12px', fontWeight: '700', letterSpacing: '.3px',
+    });
+    document.body.prepend(banner);
+  }
+
+  /* Apply every visible consequence of a status in one call, so no caller
+     can set the pill and forget the lock (or vice versa). */
+  function _applyStatus(status, reason) {
+    const st = _normaliseStatus(status);
+    _updateStatusPill(st);
+    /* Lock/unlock FIRST: _unlockForm() clears the banner element, so
+       painting the banner before it would wipe the rejection notice — the
+       one state where the form is both unlocked and needs a message. */
+    if (STATUS_META[st].locked) _lockForm(); else _unlockForm();
+    _showStatusBanner(st, reason);
   }
 
   /* ── Anomaly check at submit time ─────────────────────────────────
@@ -476,7 +569,7 @@
         const { date, payload } = _write(formId, 'draft');
         _toast(`Draft saved — ${date}`, 'ok');
         _updateSavedChip('draft');
-        _updateStatusPill('draft');
+        _applyStatus('draft');
         document.dispatchEvent(new CustomEvent('nyati:saved', { detail: { formId, date } }));
 
         const sync = await _syncToServer(formId, date, payload.data, 'draft');
@@ -531,14 +624,22 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(a.href);
 
-        _lockForm();
+        _applyStatus('pending_approval');   // provisional until the server answers
         _updateSavedChip('submitted');
-        _updateStatusPill('submitted');
         document.dispatchEvent(new CustomEvent('nyati:submitted', { detail: { formId, date } }));
 
         const sync = await _syncToServer(formId, date, payload.data, 'submitted');
         if (sync.ok) {
-          _toast(`Report submitted — nyati-${formId}-${date}.json downloaded`, 'ok');
+          /* Officers and Seniors land in 'pending_approval'; an HOD's own
+             entry self-certifies as 'approved'. Show whichever it actually
+             is rather than a blanket "Submitted", so nobody assumes their
+             report is signed off when it is still sitting in a queue. */
+          const st = _normaliseStatus(sync.status || 'approved');
+          _applyStatus(st);
+          _updateSavedChip('submitted');
+          _toast(st === 'pending_approval'
+            ? `Submitted for ${date} — awaiting your HOD's sign-off`
+            : `Report submitted — nyati-${formId}-${date}.json downloaded`, 'ok');
         } else if (sync.queued) {
           _toast(`Submitted locally — server offline, queued for auto-sync`, 'warn');
         } else {
@@ -555,12 +656,11 @@
         _unlockForm();
         const meta = await _read(formId, dateInput.value);
         if (meta) {
-          _toast(`Loaded ${meta.status} — ${meta.date}`, 'ok');
-          _updateStatusPill(meta.status);
-          if (meta.status === 'submitted') _lockForm();
+          _toast(`Loaded ${STATUS_META[_normaliseStatus(meta.status)].pill.toLowerCase()} — ${meta.date}`, 'ok');
+          _applyStatus(meta.status, meta.rejectionReason);
         } else {
           _clearForm(body);
-          _updateStatusPill('draft');
+          _applyStatus('draft');
         }
       });
     }
@@ -569,6 +669,9 @@
        not hit the server; only explicit Save Draft / Submit clicks do, to
        avoid unattended-tab write load and audit-log noise). */
     setInterval(() => {
+      // .btn-sub is disabled by _lockForm(), so this also skips a submitted
+      // or awaiting-sign-off report — an autosave there would overwrite the
+      // snapshot the approver is looking at.
       if (!document.querySelector('.btn-sub[disabled]')) {
         _write(formId, 'draft');
         _updateSavedChip('draft');
@@ -581,8 +684,7 @@
        static "DRAFT" text baked into the HTML). */
     if (dateInput && dateInput.value) {
       _read(formId, dateInput.value).then(meta => {
-        _updateStatusPill(meta ? meta.status : 'draft');
-        if (meta && meta.status === 'submitted') _lockForm();
+        _applyStatus(meta ? meta.status : 'draft', meta && meta.rejectionReason);
       });
     }
   };

@@ -19,6 +19,7 @@
 */
 
 const db = require('../db');
+const { REPORTED_STATUSES } = require('../config/forms');
 const { deepHealth } = require('./health');
 const { sendMail } = require('./mailer');
 
@@ -38,8 +39,12 @@ async function missedEntries(date) {
     .split(',').map(s => s.trim()).filter(Boolean);
   if (!watch.length || !pastCutoff()) return [];
 
+  /* A saved DRAFT is not a submission — counting it as one would silence
+     the very alert that exists to catch an entry nobody finished. Same
+     REPORTED_STATUSES rule the KPI engine and the MIS pack use. */
   const rows = await db.query(
-    'SELECT DISTINCT form_type FROM daily_reports WHERE record_date = $1', [date]);
+    'SELECT DISTINCT form_type FROM daily_reports WHERE record_date = $1 AND status = ANY($2)',
+    [date, REPORTED_STATUSES]);
   const submitted = new Set(rows.rows.map(r => r.form_type));
 
   return watch.filter(f => !submitted.has(f)).map(f => ({

@@ -29,3 +29,10 @@ node_modules/
 # level .xlsx files are unaffected — those are deliberate historical
 # backfill source material, not this problem.
 deploy/*.xls*
+
+# Playwright end-to-end harness (e2e/) — browsers, run artifacts and reports
+e2e/node_modules/
+e2e/test-results/
+e2e/playwright-report/
+e2e/blob-report/
+e2e/.cache/

@@ -24,14 +24,23 @@
     return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   }
 
-  /* ── Date range builder ────────────────────────────────────────── */
-  function buildRange(days) {
+  /* ── Date range builder ──────────────────────────────────────────
+     `endIso` lets the trailing window end somewhere other than today. With
+     the current backfill stopping mid-July, a 30-day window anchored on
+     today produced 15 empty charts that read as a broken page rather than as
+     "nothing has been entered for six weeks" — see forms/latest-period.js.
+     Dates are built from LOCAL parts, never toISOString(): EAT is UTC+3, so
+     between local midnight and 03:00 the UTC date is still yesterday. */
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  function isoOf(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+
+  function buildRange(days, endIso) {
     var dates = [];
-    var end   = new Date();
+    var end   = endIso ? new Date(endIso + 'T00:00:00') : new Date();
     for (var i = days - 1; i >= 0; i--) {
       var d = new Date(end);
       d.setDate(d.getDate() - i);
-      dates.push(d.toISOString().slice(0, 10));
+      dates.push(isoOf(d));
     }
     return dates;
   }
@@ -509,11 +518,14 @@
      so a later re-render (storage event, demo data) reflects the same
      period the user picked, not whatever was current on first load. */
   var _currentRange = { type: 'days', days: 30 };
+  /* Set once at bootstrap from GET /api/mis/data-range when the newest entry
+     predates today; null means "anchor on today" as before. */
+  var _rangeEnd = null;
 
   function currentDates() {
     return _currentRange.type === 'month'
       ? buildRangeForMonth(_currentRange.yearMonth)
-      : buildRange(_currentRange.days);
+      : buildRange(_currentRange.days, _rangeEnd);
   }
 
   async function render() {
@@ -728,7 +740,7 @@
       var monthInput = document.getElementById('an-month-input');
       if (monthInput) monthInput.value = '';
       _currentRange = { type: 'days', days: parseInt(btn.dataset.days, 10) };
-      render();
+      render();   // keeps whatever _rangeEnd the bootstrap resolved
     });
   });
 
@@ -739,6 +751,8 @@
       if (!_monthInput.value) return;
       document.querySelectorAll('.an-pill').forEach(function(b) { b.classList.remove('active'); });
       _currentRange = { type: 'month', yearMonth: _monthInput.value };
+      // A pinned month is the user's explicit choice — drop the fallback note.
+      if (window.LatestPeriod) LatestPeriod.showNote('an-stale', null);
       render();
     });
   }
@@ -757,11 +771,24 @@
     if (e.key && e.key.startsWith('nyati-')) render();
   });
 
-  /* ── Bootstrap ────────────────────────────────────────────────── */
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() { render(); });
-  } else {
+  /* ── Bootstrap ──────────────────────────────────────────────────
+     Render immediately so the page is never blank, then — if nothing has
+     been entered since an earlier date — slide the trailing window back to
+     end there and say so, rather than showing 15 empty charts. */
+  async function bootstrap() {
     render();
+    if (!window.LatestPeriod) return;
+    var r = await LatestPeriod.defaultRange(_currentRange.days || 30, null);
+    if (!r.fellBack) return;
+    _rangeEnd = r.to;
+    LatestPeriod.showNote('an-stale', r);
+    render();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrap);
+  } else {
+    bootstrap();
   }
 
 }());

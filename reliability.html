@@ -178,6 +178,10 @@
 </div>
 
 <main class="rl-main">
+  <!-- Filled by LatestPeriod.showNote() when the page had to fall back off
+       today because nothing has been entered since an earlier date. -->
+  <div class="stale-note" id="rl-stale" style="display:none"></div>
+
 
   <!-- ══ Headline KPI strip ══ -->
   <div class="rl-section-hdr">
@@ -284,6 +288,7 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="forms/api-client.js"></script>
+<script src="forms/latest-period.js"></script>
 <script src="forms/client-errors.js"></script>
 <script>
 (function () {
@@ -319,6 +324,8 @@
      own — see the main-asset-down RCFA trigger for kiln/rm/cm1/cm2). */
   function availStatus(pct) { return pct >= 90 ? 'good' : (pct >= 80 ? 'warning' : 'critical'); }
   function mtbfStatus(hrs, key) {
+    // No failures at all in the period: MTBF is undefined, not bad.
+    if (hrs === null || hrs === undefined) return 'good';
     var t = MTBF_TARGET[key] || 125;
     return hrs >= t ? 'good' : (hrs >= t * 0.5 ? 'warning' : 'critical');
   }
@@ -478,8 +485,8 @@
         '<td class="rl-equip-name">' + e.label + '</td>' +
         '<td>' + e.hours.toFixed(1) + '</td>' +
         '<td>' + e.events + '</td>' +
-        '<td>' + e.mttrHours.toFixed(1) + '</td>' +
-        '<td><span class="rl-status-wrap"><span class="rl-status-dot rl-status-' + mStat + '"></span>' + e.mtbfHours.toFixed(1) + '</span></td>' +
+        '<td>' + fmtHrs(e.mttrHours) + '</td>' +
+        '<td><span class="rl-status-wrap"><span class="rl-status-dot rl-status-' + mStat + '"></span>' + fmtHrs(e.mtbfHours) + '</span></td>' +
         '<td><span class="rl-status-wrap"><span class="rl-status-dot rl-status-' + aStat + '"></span>' + e.availabilityPct.toFixed(1) + '% <span class="rl-status-label">' + STATUS_LABEL[aStat] + '</span></span></td>' +
       '</tr>';
     }).join('');
@@ -576,24 +583,36 @@
   }
 
   /* ── Preset pills ─────────────────────────────────────────────── */
+  /* Presets are anchored on today. When nothing has been logged since an
+     earlier date, keep the preset's LENGTH and slide the window back to end
+     on that date — a Month/YTD view that opens with an empty Pareto, empty
+     equipment table and no RCFA flags reads as a broken page, not as "the
+     stoppage log stops in June". See forms/latest-period.js. */
+  async function applyPreset(preset) {
+    var r = presetRange(preset);
+    var slid = await LatestPeriod.defaultRange(daysBetween(r.from, r.to), ['stoppage']);
+    fromEl.value = slid.from; toEl.value = slid.to;
+    LatestPeriod.showNote('rl-stale', slid);
+    load();
+  }
+
   document.querySelectorAll('.rl-pill[data-preset]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       document.querySelectorAll('.rl-pill[data-preset]').forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
-      var r = presetRange(btn.dataset.preset);
-      fromEl.value = r.from; toEl.value = r.to;
-      load();
+      applyPreset(btn.dataset.preset);
     });
   });
   document.getElementById('rl-apply').addEventListener('click', function () {
     document.querySelectorAll('.rl-pill[data-preset]').forEach(function (b) { b.classList.remove('active'); });
+    LatestPeriod.showNote('rl-stale', null); // explicit dates: the user's choice stands
     load();
   });
 
   /* ── Bootstrap: default to Month (month-to-date) ─────────────── */
   var initRange = presetRange('month');
   fromEl.value = initRange.from; toEl.value = initRange.to;
-  load();
+  applyPreset('month');
 
   var _dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
   var fEl = document.getElementById('footer-date');

@@ -60,6 +60,16 @@ async function _kpiPut(dept, yr, mo, kpis) {
 /* GET a whole fiscal year (April fyStartYear → March fyStartYear+1) for one
    dept in a single call — powers the 12-column month tracker without one
    request per month. Mirrors backend/routes/kpi.js's /fiscal/:dept/:year. */
+/* GET an arbitrary run of months for one dept — backs the "Last 12 Months"
+   view, whose window crosses the April boundary and so cannot be answered by
+   /fiscal. Mirrors backend/routes/kpi.js's /range/:dept. */
+async function _kpiGetRange(dept, from, to) {
+  const qs = new URLSearchParams({ from, to });
+  const res = await fetch(`${_kpiApiBase()}/kpi/range/${dept}?${qs}`, { headers: _kpiHeaders() });
+  if (!res.ok) throw new Error('kpi range GET failed: ' + res.status);
+  return res.json(); // [{year, month, kpi_key, target, actual, unit, remarks}]
+}
+
 async function _kpiGetFiscalYear(dept, fyStartYear) {
   const res = await fetch(`${_kpiApiBase()}/kpi/fiscal/${dept}/${fyStartYear}`, { headers: _kpiHeaders() });
   if (!res.ok) throw new Error('kpi fiscal GET failed: ' + res.status);
@@ -72,6 +82,42 @@ function daysInMonth(yr, mo) { return new Date(+yr, +mo, 0).getDate(); }
 
 function kpiSlug(text) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+/* A KPI row binds to TWO independent key spaces, and they are not always the
+   same string:
+
+     kpiKeyOf(row)     → kpi_monthly.kpi_key — the manually entered/backfilled
+                         history behind the ACTUAL, REMARKS and 12 tracker
+                         columns (GET/PUT /api/kpi/:dept/:year/:month)
+     formulaKeyOf(row) → forms/formula-registry.js — the server-computed value
+                         and the audited override (GET /api/formula/eval)
+
+   Both defaulted to kpiSlug(label), which made every binding hostage to the
+   wording of the label:
+
+     · the 2026-08-01 "Quarry" rename changed two Mines labels and silently
+       orphaned six months of real cost data still sitting in kpi_monthly under
+       mines-{maintenance,operational}-cost — those rows have read "No data"
+       ever since, with nothing anywhere reporting the mismatch;
+     · Power Plant's "Heat Rate" and "Auxiliary Power Consumption" rows never
+       picked up the values the formula engine computes for them every day,
+       because the registry calls those cpp-heat-rate / cpp-auxiliary-power.
+
+   A row can now pin either key explicitly — data-kpi-key / data-formula-key on
+   the <tr> — and the label is free to change. data-formula-key is the same
+   attribute the Executive Summary's .sk-card hero cards already use.
+   backend/test/kpi-keys.test.js asserts the resolution against both the stored
+   keys and the registry, so a future rename fails a test, not a dashboard. */
+function _rowLabelSlug(row) {
+  const labelCell = row && row.querySelector ? row.querySelector('td') : null;
+  return kpiSlug(labelCell ? labelCell.textContent.trim() : '');
+}
+function kpiKeyOf(row) {
+  return (row && row.dataset && row.dataset.kpiKey) || _rowLabelSlug(row);
+}
+function formulaKeyOf(row) {
+  return (row && row.dataset && row.dataset.formulaKey) || _rowLabelSlug(row);
 }
 
 /* Display formatting for KPI numbers — kpi_monthly.target/actual are
@@ -89,18 +135,19 @@ function fmtNum(v) {
 
 /* ─── Cell column helpers ────────────────────────────────── */
 const EDITABLE_COL_MIN = 4;   // 0-based: col 4 = ACTUAL
-const EDITABLE_COL_MAX = 17;  // col 17 = Dec (0-based index in a 19-col table)
+const EDITABLE_COL_MAX = 17;  // last tracker column (TRACKER_COL_MAX, app.js)
 const SKIP_COLS = new Set([1, 2, 3, 18]); // unit, sign, target, status
 
 function getColIndex(cell) {
   return Array.from(cell.parentElement.children).indexOf(cell);
 }
 
-/* Month column index in the 19-col table. Columns are physically ordered
-   April..March (fiscal year, see index.html) — col 6 = April … col 17 =
-   March, so a calendar month maps through its fiscal position first
-   (calMonthToFiscalPos, defined in app.js which loads before this file). */
-function moToColIdx(mo) { return 6 + calMonthToFiscalPos(mo); }
+/* Which tracker column holds a given calendar month, or -1 when the month is
+   outside the visible window. app.js owns the mapping (trackerColIndexFor)
+   because it depends on the view — Apr→Mar for the fiscal views, a rolling
+   12-month window for "Last 12 Months" — and the header labels, the fill and
+   the inline editor must all agree on it. */
+function moToColIdx(mo, calYear) { return trackerColIndexFor(calYear, mo); }
 
 /* ─── Storage keys ───────────────────────────────────────────
    (manual values only — overrides of computed KPIs live server-side
@@ -138,14 +185,26 @@ function updateRowStatus(row) {
     return;
   }
 
-  let achieved = false;
-  if (sign === '<')  achieved = actual < target;
-  if (sign === '>')  achieved = actual > target;
-  if (sign === '<=') achieved = actual <= target;
-  if (sign === '>=') achieved = actual >= target;
-  if (sign === '=')  achieved = actual === target;
+  /* signageAchieved() returns null when the row carries no comparison at all
+     (several Quarry tonnage rows and Power Plant's Maintenance Cost have a
+     target but a blank Signage cell). The five separate `if`s this replaced
+     left `achieved` at its `false` initialiser in that case, so those rows
+     rendered a confident "Not Achieved" against a comparison nobody had
+     defined — and that verdict then fed the achievement % and the Executive
+     Summary's department chips. Same helper the hero cards use. */
+  const achieved = signageAchieved(sign, actual, target);
 
   const statusCell = cells[18];
+  if (achieved === null) {
+    statusCell.textContent = '—';
+    statusCell.className   = 'status';
+    statusCell.title       = 'No signage set for this KPI — no achieved/not-achieved judgment can be made.';
+    cells[4].className     = 'actual';
+    row.className = row.className.replace(/\b(achieved|not-achieved|no-data)-row\b/g, '');
+    if (typeof updateSummary === 'function') updateSummary();
+    return;
+  }
+  statusCell.removeAttribute('title');
   statusCell.textContent  = achieved ? 'Achieved' : 'Not Achieved';
   statusCell.className    = 'status ' + (achieved ? 'achieved-tag' : 'not-tag');
   cells[4].className      = 'actual ' + (achieved ? 'green' : 'red');
@@ -176,8 +235,10 @@ function markRowNoData(row) {
 }
 
 /* ─── Inline editing ─────────────────────────────────────── */
-function makeEditable(cell, dept, slug, yr, mo, isAutoCell) {
+function makeEditable(cell, dept, keys, yr, mo, isAutoCell) {
+  const slug = keys.storeKey;
   if (cell.dataset.editing) return;
+  const before = cell.textContent;   // restored if the save is refused
   cell.dataset.editing = '1';
   cell.contentEditable = 'true';
   cell.classList.add('cell-editing');
@@ -195,18 +256,22 @@ function makeEditable(cell, dept, slug, yr, mo, isAutoCell) {
     cell.classList.remove('cell-editing');
 
     const val = cell.textContent.trim();
-    if (val === '') return;
 
-    // `yr` (from year-select) is the FISCAL year's start year — resolve
-    // the REAL calendar month/year this cell represents before touching
-    // any API or storage key. Clicking a tracker column (colIdx 6-17)
-    // means its physical fiscal position IS the position; clicking the
-    // ACTUAL column (colIdx 4) means "the currently selected month", so
-    // derive its fiscal position from `mo` instead.
+    /* Resolve the REAL calendar month/year this cell stands for before
+       touching any API or storage key. A tracker column means whatever the
+       active window says it means — Apr→Mar in the fiscal views, an
+       arbitrary month in "Last 12 Months" — so ask app.js rather than
+       assuming fiscal order. The ACTUAL column (4) is always the month
+       currently selected in the filter bar. */
     const colIdx = getColIndex(cell);
-    const fiscalPos = (colIdx >= 6 && colIdx <= 17) ? (colIdx - 6) : calMonthToFiscalPos(mo);
-    const cellMo = fiscalPosToCalMonth(fiscalPos);
-    const cellYr = fiscalPosToCalYear(fiscalPos, yr);
+    let cellMo, cellYr;
+    if (colIdx >= TRACKER_COL_MIN && colIdx <= TRACKER_COL_MAX) {
+      const c = trackerColumns(mo, yr)[colIdx - TRACKER_COL_MIN];
+      cellMo = c.month; cellYr = c.year;
+    } else {
+      cellMo = mo;
+      cellYr = fiscalPosToCalYear(calMonthToFiscalPos(mo), yr);
+    }
 
     if (isAutoCell) {
       // Auto-calculated value → server-side audited override, reason mandatory
@@ -219,7 +284,7 @@ function makeEditable(cell, dept, slug, yr, mo, isAutoCell) {
         alert('Override cancelled — a numeric value and a reason (min 5 characters) are required.');
       } else {
         try {
-          await NyatiAPI.setOverride(slug, cellYr, cellMo, num, reason);
+          await NyatiAPI.setOverride(keys.formulaKey, cellYr, cellMo, num, reason);
         } catch (e) {
           alert(e && e.status === 403
             ? 'You do not have permission to override KPI values (admin/MD only).'
@@ -232,27 +297,66 @@ function makeEditable(cell, dept, slug, yr, mo, isAutoCell) {
       return;
     }
 
-    localStorage.setItem(manualKey(dept, slug, cellYr, cellMo), val);
+    /* Column 5 is REMARKS — free text, not a number, and it belongs in
+       kpi_monthly.remarks. Every non-auto cell used to fall through to the
+       numeric path below, which meant a typed remark was written into the
+       KPI's manual-ACTUAL localStorage cache (so it could later render as
+       that KPI's value while offline) and then dropped entirely, because
+       parseFloat('Kiln liner replaced') is NaN and the PUT was skipped. */
+    if (colIdx === 5) {
+      cell.classList.add('remark-cell');
+      try {
+        // An emptied remark must actually clear the stored one — see the
+        // `clear` contract in backend/routes/kpi.js.
+        await _kpiPut(dept, cellYr, cellMo, val === ''
+          ? [{ kpi_key: slug, clear: ['remarks'] }]
+          : [{ kpi_key: slug, remarks: val }]);
+      } catch (e) {
+        _kpiToast('Remark not saved — the server did not receive it. Retry once you’re back online.', 'err');
+        cell.textContent = before;   // never leave an unsaved remark looking saved
+      }
+      return;
+    }
 
-    // If this is the ACTUAL column, update row status
-    if (colIdx === 4) updateRowStatus(cell.parentElement);
-
-    // Sync to the backend KPI store — read target/unit from this row so
-    // the upsert doesn't null them out (local write above already
-    // guarantees the value isn't lost if this fails).
     const rowCells = cell.parentElement.querySelectorAll('td');
     const unit     = rowCells[1]?.textContent.trim() || '';
     const target   = parseFloat(rowCells[3]?.textContent.replace(/,/g, ''));
-    const actual   = parseFloat(val.replace(/,/g, ''));
-    if (!isNaN(actual)) {
+
+    /* Emptying a value cell is a deliberate "this figure was wrong, remove
+       it" — the upsert COALESCEs by default, so it needs an explicit clear
+       or the bad number stays in kpi_monthly forever. */
+    if (val === '') {
+      localStorage.removeItem(manualKey(dept, slug, cellYr, cellMo));
       try {
-        await _kpiPut(dept, cellYr, cellMo, [{ kpi_key: slug, target: isNaN(target) ? null : target, actual, unit }]);
+        await _kpiPut(dept, cellYr, cellMo, [{ kpi_key: slug, clear: ['actual'] }]);
       } catch (e) {
-        // Local value already saved above (not blocking the user), but the
-        // server never got it — other dashboards reading from the server
-        // would silently diverge from what this user just entered.
-        _kpiToast('Saved on this device only — server did not receive the update. Retry once you’re back online.', 'warn');
+        _kpiToast('Cleared on this device only — the server still holds the old value.', 'warn');
       }
+      if (colIdx === 4) markRowNoData(cell.parentElement);
+      else cell.textContent = '—';
+      return;
+    }
+
+    const actual = parseFloat(val.replace(/,/g, ''));
+    if (isNaN(actual)) {
+      _kpiToast('“' + val + '” is not a number — nothing was saved.', 'err');
+      loadKpiData(+document.getElementById('month-select').value,
+                  document.getElementById('year-select').value);
+      return;
+    }
+
+    // Local write is the offline fallback cache only; the server is the
+    // source of truth every other dashboard reads.
+    localStorage.setItem(manualKey(dept, slug, cellYr, cellMo), val);
+    if (colIdx === 4) updateRowStatus(cell.parentElement);
+
+    try {
+      await _kpiPut(dept, cellYr, cellMo, [{ kpi_key: slug, target: isNaN(target) ? null : target, actual, unit }]);
+    } catch (e) {
+      // Local value already saved above (not blocking the user), but the
+      // server never got it — other dashboards reading from the server
+      // would silently diverge from what this user just entered.
+      _kpiToast('Saved on this device only — server did not receive the update. Retry once you’re back online.', 'warn');
     }
   }
 
@@ -284,11 +388,25 @@ function attachInlineEditing() {
       // Derive dept from the section element's id
       const section = tbl.closest('.dept-section');
       const dept    = section ? section.id.replace('dept-', '') : 'unknown';
-      const slug    = kpiSlug(row.querySelector('td')?.textContent ?? '');
       const yr      = document.getElementById('year-select').value;
       const mo      = +document.getElementById('month-select').value;
+      const isAuto  = cell.classList.contains('auto-cell');
 
-      makeEditable(cell, dept, slug, yr, mo, cell.classList.contains('auto-cell'));
+      /* Don't open an editor for an edit the server will refuse. Two
+         different permissions apply: a formula cell needs override rights
+         (admin/md), a manual cell needs edit rights on this department.
+         Without this a view-only role could type into any cell, and only
+         find out it hadn't saved from the error toast afterwards. */
+      const allowed = isAuto
+        ? (typeof canOverrideKPI !== 'function' || canOverrideKPI())
+        : (typeof canFillKPIDept !== 'function' || canFillKPIDept(dept));
+      if (!allowed) return;
+
+      // An override targets the FORMULA key; a manual save targets the
+      // kpi_monthly key. For most rows these are the same string, but not for
+      // the ones that pin one of them explicitly — see kpiKeyOf/formulaKeyOf.
+      makeEditable(cell, dept, { storeKey: kpiKeyOf(row), formulaKey: formulaKeyOf(row) },
+                   yr, mo, isAuto);
     });
   });
 }
@@ -322,7 +440,7 @@ async function loadAutoCalcValues(mo, yr) {
   document.querySelectorAll('.kpi-table .data-row').forEach(row => {
     const labelCell = row.querySelector('td');
     if (!labelCell) return;
-    const r = byKey.get(kpiSlug(labelCell.textContent));
+    const r = byKey.get(formulaKeyOf(row));
     if (!r) return;
 
     const cells = row.querySelectorAll('td');
@@ -338,7 +456,8 @@ async function loadAutoCalcValues(mo, yr) {
     if (r.value == null) return;
     const displayVal = fmtNum(r.value);
 
-    [cells[4], cells[moToColIdx(mo)]].forEach(cell => {
+    const trackerCell = cells[moToColIdx(mo, calYear)];
+    [cells[4], trackerCell].forEach(cell => {
       if (!cell) return;
       cell.textContent = displayVal;
       cell.classList.toggle('auto-cell',   !r.overridden);
@@ -381,10 +500,10 @@ function signageAchieved(signage, actual, target) {
 
 async function loadHeroCards(mo, yr, view) {
   const cards = Array.from(document.querySelectorAll('.sk-card[data-formula-key]'));
-  if (!cards.length) return;
 
   if (!window.NyatiAPI || !NyatiAPI.evalFormulas) {
     cards.forEach(markHeroCardUnavailable);
+    renderConcerns(null, mo, yr);
     return;
   }
 
@@ -396,8 +515,11 @@ async function loadHeroCards(mo, yr, view) {
     results = await NyatiAPI.evalFormulas(calYear, mo);
   } catch (e) {
     cards.forEach(markHeroCardUnavailable); // offline / server unreachable
+    renderConcerns(null, mo, calYear);
     return;
   }
+
+  renderConcerns(results, mo, calYear);
 
   const byKey = new Map(results.map(r => [r.key, r]));
   const isMonthView = (view === 'month' || view === undefined);
@@ -472,6 +594,79 @@ async function loadHeroCards(mo, yr, view) {
   });
 }
 
+/* ─── Executive Summary "Concerns" strip ──────────────────────
+   Previously six spans of static text baked into index.html — they named
+   specific figures ("MTBF Kiln only 45% of target (180/400 hrs)") that were
+   true, at best, of one month in early 2026 and never changed again. An
+   executive reading the Summary has no way to tell a frozen chip from a live
+   one, so they are now derived from the same eval results the hero cards use.
+
+   A "concern" is any KPI with a real value, a real target and a signage that
+   says the value misses it. Ranked by how far short it falls (relative to
+   target, so a % KPI and an MT KPI can be compared), capped so a bad month
+   produces a readable strip rather than 20 chips — the same bounded-callout
+   rule reliability.html's RCFA list follows. */
+const CONCERN_CHIP_LIMIT = 6;
+
+function renderConcerns(results, mo, calYear) {
+  const wrap = document.getElementById('smry-alerts');
+  if (!wrap) return;
+
+  // Rebuild everything after the label, never the label itself.
+  const label = wrap.querySelector('.smry-alert-label');
+  wrap.innerHTML = '';
+  if (label) wrap.appendChild(label);
+
+  const chip = (text, tone) => {
+    const el = document.createElement('span');
+    el.className = 'smry-alert-chip' + (tone ? ' ' + tone : '');
+    if (tone) {
+      const dot = document.createElement('span');
+      dot.className = 'alert-dot ' + tone;
+      el.appendChild(dot);
+    }
+    el.append(' ' + text);
+    wrap.appendChild(el);
+    return el;
+  };
+
+  if (!results) {
+    chip('Concerns unavailable — server unreachable');
+    return;
+  }
+
+  const missed = results
+    .filter(r => r.value != null && r.target != null &&
+                 signageAchieved(r.signage, r.value, r.target) === false)
+    .map(r => {
+      // Relative shortfall, so KPIs in different units rank comparably.
+      const gap = r.target !== 0 ? Math.abs((r.value - r.target) / r.target) * 100 : 0;
+      return { ...r, gap };
+    })
+    .sort((a, b) => b.gap - a.gap);
+
+  if (!missed.length) {
+    chip('No KPI missed its target in ' + MONTHS[mo] + ' ' + calYear, 'green');
+    return;
+  }
+
+  missed.slice(0, CONCERN_CHIP_LIMIT).forEach(r => {
+    const over = r.signage === '<' || r.signage === '<=';
+    const text = r.label + ' ' + fmtNum(r.value) + (r.unit ? ' ' + r.unit : '') +
+      ' vs target ' + r.signage + ' ' + fmtNum(r.target) +
+      ' (' + (over ? '+' : '−') + r.gap.toFixed(1) + '%)' +
+      (r.provisional ? ' ⚠ provisional' : '');
+    // >25% off target reads red, anything else amber — the same two tones the
+    // strip already used, now earned rather than authored.
+    const el = chip(text, r.gap >= 25 ? 'red' : 'orange');
+    if (r.provisional) el.title = '⚠ Provisional: ' + (r.provisionalNote || 'known-incomplete calculation.');
+  });
+
+  if (missed.length > CONCERN_CHIP_LIMIT) {
+    chip('+' + (missed.length - CONCERN_CHIP_LIMIT) + ' more below target');
+  }
+}
+
 function markHeroCardUnavailable(card) {
   const valueEl = card.querySelector('.sk-value');
   const statusEl = card.querySelector('.sk-status');
@@ -517,8 +712,14 @@ async function loadManualValues(mo, yr) {
     return section ? section.id.replace('dept-', '') : 'unknown';
   }))];
 
+  /* The 12 tracker columns, as {year, month} — app.js decides whether that is
+     the Apr→Mar fiscal year or a rolling 12-month window, and everything here
+     follows it rather than assuming fiscal order. */
+  const cols = trackerColumns(mo, yr);
+  const period = c => `${c.year}-${String(c.month).padStart(2, '0')}`;
+
   const deptMaps = {};      // selected month only — ACTUAL + REMARKS columns
-  const deptYearMaps = {};  // whole fiscal year, keyed "slug|fiscalPos" — tracker columns
+  const deptYearMaps = {};  // tracker columns, keyed "slug|YYYY-MM"
   await Promise.all(depts.map(async dept => {
     try {
       const kpis = await _kpiGet(dept, calYear, mo);
@@ -527,9 +728,11 @@ async function loadManualValues(mo, yr) {
       deptMaps[dept] = null; // signals "use localStorage fallback for this dept"
     }
     try {
-      const fyRows = await _kpiGetFiscalYear(dept, yr);
+      /* One request covering exactly the visible window. A rolling window
+         spans two fiscal years, which /fiscal cannot answer in one call. */
+      const trackerRows = await _kpiGetRange(dept, period(cols[0]), period(cols[cols.length - 1]));
       const m = new Map();
-      fyRows.forEach(r => m.set(`${r.kpi_key}|${calMonthToFiscalPos(r.month)}`, r));
+      trackerRows.forEach(r => m.set(`${r.kpi_key}|${r.year}-${String(r.month).padStart(2, '0')}`, r));
       deptYearMaps[dept] = m;
     } catch (e) {
       deptYearMaps[dept] = null; // signals "use localStorage fallback for the tracker cols"
@@ -541,7 +744,7 @@ async function loadManualValues(mo, yr) {
     if (!labelCell) return;
     const section = row.closest('.dept-section');
     const dept    = section ? section.id.replace('dept-', '') : 'unknown';
-    const slug    = kpiSlug(labelCell.textContent.trim());
+    const slug    = kpiKeyOf(row);
     const map     = deptMaps[dept];
     const yearMap = deptYearMaps[dept];
 
@@ -587,18 +790,17 @@ async function loadManualValues(mo, yr) {
     // fetch above; falls back to localStorage per-cell only if that fetch
     // failed outright (offline). A column with no real row either way is
     // shown as "—", not left blank/stale.
-    for (let fp = 0; fp <= 11; fp++) {
-      const colIdx = 6 + fp;
+    for (let fp = 0; fp < cols.length; fp++) {
+      const colIdx = TRACKER_COL_MIN + fp;
       const cell   = cells[colIdx];
       if (!cell) continue;
       if (cell.classList.contains('auto-cell') || cell.classList.contains('edited-cell')) continue;
+      const c = cols[fp];
       if (yearMap) {
-        const r = yearMap.get(`${slug}|${fp}`);
+        const r = yearMap.get(`${slug}|${period(c)}`);
         cell.textContent = (r && r.actual != null) ? fmtNum(r.actual) : '—';
       } else {
-        const cMo = fiscalPosToCalMonth(fp);
-        const cYr = fiscalPosToCalYear(fp, yr);
-        const saved = localStorage.getItem(manualKey(dept, slug, cYr, cMo));
+        const saved = localStorage.getItem(manualKey(dept, slug, c.year, c.month));
         cell.textContent = saved !== null ? saved : '—';
       }
     }
@@ -674,8 +876,8 @@ async function openMonthlyModal() {
     const label   = cells[0].textContent.trim();
     const unit    = cells[1].textContent.trim();
     const target  = cells[3].textContent.trim();
-    const slug    = kpiSlug(label);
-    const isAuto  = autoKeys.has(slug);
+    const slug    = kpiKeyOf(row);
+    const isAuto  = autoKeys.has(formulaKeyOf(row));
 
     // Current value: server first, then localStorage manual. Remarks only
     // read from col 5 on the standard 19-col layout — Mines Workshop's
@@ -694,18 +896,26 @@ async function openMonthlyModal() {
     if (currentRemark === '—') currentRemark = '';
 
     const badge = isAuto ? '<span class="modal-auto-badge">⚡ auto — override via the table cell</span>' : '';
-    const escapedRemark = currentRemark.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+
+    /* Everything below is interpolated into markup, and currentVal can come
+       straight out of localStorage (user-writable) — escape all of it, not
+       just the remark. */
+    const esc = v => String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
     tableRows += `
       <tr>
-        <td class="modal-kpi-label">${label}</td>
+        <td class="modal-kpi-label">${esc(label)}</td>
         <td><input class="modal-input" type="text"
-            data-slug="${slug}" data-mo="${mo}" data-yr="${yr}" data-dept="${dept}"
-            data-is-auto="${isAuto}" data-target="${target}" data-unit="${unit}"
-            value="${currentVal}" placeholder="—" ${isAuto ? 'disabled' : ''} />${badge}</td>
-        <td class="modal-unit">${unit}</td>
+            data-slug="${esc(slug)}" data-mo="${mo}" data-yr="${yr}" data-dept="${esc(dept)}"
+            data-is-auto="${isAuto}" data-target="${esc(target)}" data-unit="${esc(unit)}"
+            data-original="${esc(currentVal)}"
+            value="${esc(currentVal)}" placeholder="—" ${isAuto ? 'disabled' : ''} />${badge}</td>
+        <td class="modal-unit">${esc(unit)}</td>
         <td><input class="modal-input modal-remark-input" type="text"
-            data-remark-for="${slug}" value="${escapedRemark}" placeholder="—" ${isAuto ? 'disabled' : ''} /></td>
+            data-remark-for="${esc(slug)}" data-original="${esc(currentRemark)}"
+            value="${esc(currentRemark)}" placeholder="—" /></td>
       </tr>`;
   });
 
@@ -770,28 +980,54 @@ async function saveAllModalValues() {
     const isAuto = input.dataset.isAuto === 'true';
     const target = parseFloat(input.dataset.target.replace(/,/g, ''));
     const unit   = input.dataset.unit || '';
+    const wasBlank = ['', '—'].includes((input.dataset.original || '').trim());
 
     dept = rowDept; yr = rowYr; mo = rowMo; // same for every row in this modal
 
-    if (isAuto) return; // formula-layer rows change only via the audited override flow
     if (typeof canFillKPIDept === 'function' && !canFillKPIDept(rowDept)) return;
 
-    const remark = remarksBySlug[slug] || null;
+    const remark = remarksBySlug[slug];
+    const clear  = [];
+
+    /* A formula-driven row's VALUE changes only through the audited override
+       flow — but its REMARK is ordinary annotation, and an auto row (an
+       overridden KPI especially) is exactly the one someone needs to explain.
+       It used to be uneditable purely because the same `isAuto` flag disabled
+       both inputs. */
+    if (isAuto) {
+      if (remark !== undefined && remark !== input.dataset.original) {
+        if (remark === '') kpis.push({ kpi_key: slug, clear: ['remarks'] });
+        else               kpis.push({ kpi_key: slug, remarks: remark });
+      }
+      return;
+    }
+
+    if (remark === '') clear.push('remarks');
 
     if (val === '' || val === '—') {
-      // No value entered, but a remark may still have been added/edited —
-      // don't drop it silently just because the value field is empty.
-      if (remark) kpis.push({ kpi_key: slug, target: isNaN(target) ? null : target, remarks: remark });
+      /* Emptying a populated field is a deliberate correction — the upsert
+         COALESCEs by default, so without an explicit clear the wrong figure
+         would survive. Leaving an already-blank field blank is a no-op. */
+      if (!wasBlank) clear.push('actual');
+      localStorage.removeItem(manualKey(rowDept, slug, rowYr, rowMo));
+      if (clear.length)               kpis.push({ kpi_key: slug, clear });
+      else if (remark)                kpis.push({ kpi_key: slug, target: isNaN(target) ? null : target, remarks: remark });
+      return;
+    }
+
+    const actual = parseFloat(val.replace(/,/g, ''));
+    if (isNaN(actual)) {
+      _kpiToast('“' + val + '” is not a number — that KPI was not saved.', 'err');
       return;
     }
 
     // Local write stays as the offline fallback cache, unchanged.
     localStorage.setItem(manualKey(rowDept, slug, rowYr, rowMo), val);
 
-    const actual = parseFloat(val.replace(/,/g, ''));
-    if (!isNaN(actual)) {
-      kpis.push({ kpi_key: slug, target: isNaN(target) ? null : target, actual, unit, remarks: remark });
-    }
+    const row = { kpi_key: slug, target: isNaN(target) ? null : target, actual, unit };
+    if (remark)             row.remarks = remark;
+    if (clear.length)       row.clear = clear;
+    kpis.push(row);
   });
 
   closeMonthlyModal();

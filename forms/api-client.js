@@ -43,11 +43,19 @@
   }
 
   /* POST /api/reports/:formType — submit/update a daily form */
-  async function submitForm(formType, date, shift, data) {
+  /* `opts.status` — 'draft' or 'submitted' (default). The server derives the
+     approval state from it: a draft never enters an HOD's queue and is never
+     self-certified as approved.
+     `opts.replace` — overwrite the stored fields instead of merging into
+     them. Only for callers that own the whole record (importers, syncs). */
+  async function submitForm(formType, date, shift, data, opts) {
+    const body = { date, shift: shift || 'day', data };
+    if (opts && opts.status)  body.status  = opts.status;
+    if (opts && opts.replace) body.replace = true;
     const res = await fetch(BASE + '/reports/' + encodeURIComponent(formType), {
       method:  'POST',
       headers: _headers(),
-      body:    JSON.stringify({ date, shift: shift || 'day', data }),
+      body:    JSON.stringify(body),
     });
     if (!res.ok) throw _httpError('submitForm', formType, res);
     return res.json();
@@ -130,6 +138,15 @@
   async function getCompleteness(from, to) {
     const res = await fetch(BASE + '/mis/completeness?' + new URLSearchParams({ from, to }), { headers: _headers() });
     if (!res.ok) throw _httpError('getCompleteness', from + '..' + to, res);
+    return res.json();
+  }
+
+  /* GET /api/mis/data-range — which dates actually hold data, per form type,
+     plus the newest kpi_monthly period. Backs forms/latest-period.js, which
+     stops the analytics pages from opening on an empty "today". */
+  async function getDataRange() {
+    const res = await fetch(BASE + '/mis/data-range', { headers: _headers() });
+    if (!res.ok) throw _httpError('getDataRange', '', res);
     return res.json();
   }
 
@@ -267,7 +284,7 @@
   global.NyatiAPI = {
     submitForm, getForm, getFormRange,
     evalFormulas, getDailySeries, setOverride, clearOverride, getOverrides,
-    getBaseline, getCompleteness, getStoppageInsights,
+    getBaseline, getCompleteness, getDataRange, getStoppageInsights,
     quarryImportTickets, quarryGetTickets,
     getSalesTerritories, getSalesDashboard, setSalesTarget,
     getPurchasesDashboard,
