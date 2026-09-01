@@ -212,10 +212,93 @@ function dedupe(rows) {
   return [...byKey.values()];
 }
 
+
+/* ── Remote seeding over the API ───────────────────────────────────
+   The droplet is managed by someone else, so `npm run seed:kpi` cannot
+   always be run where the production database lives. It does not need to be:
+   PUT /api/kpi/:dept/:year/:month performs the same upsert, and admin or
+   management may write any department (config/kpiAccess.js). So the same
+   figures can be seeded from anywhere with an admin login over HTTPS.
+
+   One request per (department, month) — 42 of them for six months across
+   seven departments, each well inside the route's 500-row cap. Each is
+   transactional server-side and leaves a KPI_UPDATE audit row naming the
+   keys, attributed to whoever ran it. */
+async function apiLogin(base, username, password) {
+  const res = await fetch(base.replace(/\/$/, '') + '/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(`login failed (${res.status}): ${body.error || 'no message'}`);
+  if (body.mustChangePassword) {
+    throw new Error('this account must change its password before it can be used');
+  }
+  return body.token;
+}
+
+async function apiSeed(base, token, rows, { verifyOnly } = {}) {
+  const root = base.replace(/\/$/, '') + '/api/kpi';
+  const auth = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token };
+
+  /* group by dept + period — one call each */
+  const groups = new Map();
+  for (const r of rows) {
+    const k = `${r.department}|${r.year}|${r.month}`;
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(r);
+  }
+
+  const round3 = n => (n === null || n === undefined ? null : Math.round(Number(n) * 1000) / 1000);
+  let sent = 0, failed = 0, missing = 0, mismatched = 0;
+
+  for (const [k, batch] of [...groups.entries()].sort()) {
+    const [dept, year, month] = k.split('|');
+    const url = `${root}/${dept}/${year}/${month}`;
+
+    if (!verifyOnly) {
+      const payload = batch.map(r => ({
+        kpi_key: r.kpi_key, target: r.target, actual: r.actual,
+        unit: r.unit || '', ...(r.remarks ? { remarks: r.remarks } : {}),
+      }));
+      const res = await fetch(url, { method: 'PUT', headers: auth, body: JSON.stringify(payload) });
+      if (!res.ok) {
+        const b = await res.text();
+        console.error(`  x PUT ${dept} ${year}-${month}: ${res.status} ${b.slice(0, 160)}`);
+        failed++;
+        continue;
+      }
+      sent += batch.length;
+    }
+
+    /* Read it back — the same check --verify makes against the local DB. */
+    const got = await fetch(url, { headers: auth });
+    if (!got.ok) { console.error(`  x GET ${dept} ${year}-${month}: ${got.status}`); failed++; continue; }
+    const stored = new Map((await got.json()).map(r => [r.kpi_key, r]));
+    for (const r of batch) {
+      const s = stored.get(r.kpi_key);
+      if (!s) { console.error(`  ! missing after write: ${dept} ${year}-${month} ${r.kpi_key}`); missing++; continue; }
+      if (round3(s.actual) !== round3(r.actual)) {
+        console.error(`  ! mismatch: ${dept} ${year}-${month} ${r.kpi_key} — remote ${s.actual} vs workbook ${round3(r.actual)}`);
+        mismatched++;
+      }
+    }
+    process.stdout.write(`  ${verifyOnly ? 'checked' : 'seeded '} ${dept.padEnd(11)} ${year}-${String(month).padStart(2, '0')}  ${String(batch.length).padStart(2)} rows\n`);
+  }
+
+  console.log(`\n${verifyOnly ? '' : `sent ${sent} rows · `}failed calls ${failed} · missing ${missing} · mismatched ${mismatched}`);
+  const clean = !failed && !missing && !mismatched;
+  console.log(clean ? 'OK - the remote matches the workbooks exactly.' : 'DISCREPANCIES (see above).');
+  return clean;
+}
+
 async function main() {
   const args   = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const verify = args.includes('--verify');
+  const argOf  = name => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : null; };
+  const apiBase = argOf('--api');
   const dirArg = args.indexOf('--dir');
   const dir    = dirArg >= 0 ? args[dirArg + 1] : DEFAULT_DIR;
 
@@ -265,6 +348,31 @@ async function main() {
     console.log('\n--dry-run: nothing written.');
     process.exit(0);
   }
+
+  /* --api: seed a REMOTE instance over HTTPS instead of the local database,
+     for when the droplet is managed by someone else. Same figures, same
+     upsert, through PUT /api/kpi/:dept/:year/:month. */
+  if (apiBase) {
+    const user = argOf('--user') || process.env.KPI_SEED_USER;
+    const pass = argOf('--password') || process.env.KPI_SEED_PASSWORD;
+    if (!user || !pass) {
+      console.error('--api needs --user and --password (or KPI_SEED_USER / KPI_SEED_PASSWORD).');
+      console.error('The account must be admin or management - those are the roles that may');
+      console.error('write every department (backend/config/kpiAccess.js).');
+      process.exit(1);
+    }
+    console.log(`${verify ? 'Verifying' : 'Seeding'} ${apiBase} as ${user}`);
+    let token;
+    try {
+      token = await apiLogin(apiBase, user, pass);
+    } catch (e) {
+      console.error('  ' + e.message);
+      process.exit(1);
+    }
+    const clean = await apiSeed(apiBase, token, rows, { verifyOnly: verify });
+    process.exit(clean ? 0 : 1);
+  }
+
 
   /* --verify: re-read the workbooks and check every figure against what is
      actually stored, in both directions. Comparison is at the column's own
