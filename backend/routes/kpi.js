@@ -22,8 +22,8 @@
 
 const express = require('express');
 const db      = require('../db');
-const { requireAuth }          = require('../middleware/auth');
-const { requireKpiDeptAccess } = require('../middleware/kpiAccess');
+const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireKpiDeptAccess, requireKpiPeriodOpen } = require('../middleware/kpiAccess');
 const { validate, z, zNumeric } = require('../middleware/validate');
 const { KPI_DEPTS } = require('../config/kpiAccess');
 
@@ -183,7 +183,7 @@ const kpiRowsBody = z.array(z.object({
 const deptYearMonthWrite = z.object({ dept: zRealDept, year: zYear, month: zMonth });
 
 router.put('/:dept/:year/:month',
-  requireAuth, requireKpiDeptAccess,
+  requireAuth, requireKpiDeptAccess, requireKpiPeriodOpen,
   validate(deptYearMonthWrite, 'params'), validate(kpiRowsBody, 'body'),
   async (req, res, next) => {
     try {
@@ -244,6 +244,122 @@ router.put('/:dept/:year/:month',
       });
 
       res.json({ success: true, updated: touched.length });
+    } catch (err) { next(err); }
+  });
+
+/* ══════════════════════════════════════════════════════════════════════
+   MONTHLY SUBMISSION — an HOD declaring a department-month final.
+   Submitting locks kpi_monthly writes for that period (see
+   requireKpiPeriodOpen); only admin/MD can reopen it, and only with a
+   reason. Read the state first so a client can show the right button.
+══════════════════════════════════════════════════════════════════════ */
+
+// Who submitted this department-month, if anyone, and is it locked now?
+router.get('/:dept/:year/:month/submission',
+  requireAuth, validate(deptYearMonthParams, 'params'),
+  async (req, res, next) => {
+    try {
+      const { dept, year, month } = req.validated.params;
+      const { rows } = await db.query(
+        `SELECT s.status, s.submitted_at, s.reopened_at, s.reopen_reason,
+                su.full_name AS submitted_by, ru.full_name AS reopened_by
+           FROM kpi_submissions s
+           LEFT JOIN users su ON su.id = s.submitted_by
+           LEFT JOIN users ru ON ru.id = s.reopened_by
+          WHERE s.department = $1 AND s.year = $2 AND s.month = $3`,
+        [dept, year, month]);
+      // No row at all is a normal, open period — not a 404.
+      res.json(rows[0] || { status: 'open', submitted_at: null, submitted_by: null });
+    } catch (err) { next(err); }
+  });
+
+/* Submit. requireKpiDeptAccess enforces that this is the owning
+   department's L1/HOD (or admin); requireKpiPeriodOpen makes a second
+   submit of an already-locked month a 409 rather than a silent no-op. */
+router.post('/:dept/:year/:month/submit',
+  requireAuth, requireKpiDeptAccess, requireKpiPeriodOpen,
+  validate(deptYearMonthWrite, 'params'),
+  async (req, res, next) => {
+    try {
+      const { dept, year, month } = req.validated.params;
+
+      const result = await db.withTransaction(async (client) => {
+        /* Refuse to "submit" a month with nothing in it — an empty
+           submission would lock the period against the very edits needed
+           to populate it, and would read downstream as a department
+           reporting zero rather than as a department that never filed. */
+        const { rows: [{ n }] } = await client.query(
+          'SELECT COUNT(*)::int AS n FROM kpi_monthly WHERE department = $1 AND year = $2 AND month = $3',
+          [dept, year, month]);
+        if (n === 0) return { empty: true };
+
+        const { rows } = await client.query(
+          `INSERT INTO kpi_submissions (department, year, month, status, submitted_by, submitted_at)
+           VALUES ($1, $2, $3, 'submitted', $4, NOW())
+           ON CONFLICT (department, year, month) DO UPDATE SET
+             status = 'submitted', submitted_by = $4, submitted_at = NOW(),
+             reopened_by = NULL, reopened_at = NULL, reopen_reason = NULL
+           RETURNING status, submitted_at`,
+          [dept, year, month, req.user.id]);
+
+        await client.query(
+          `INSERT INTO audit_log (user_id, username, action, form_type, details, ip_address)
+           VALUES ($1,$2,$3,$4,$5,$6)`,
+          [req.user.id, req.user.username, 'KPI_SUBMIT', `${dept}/${year}/${month}`,
+           `${n} KPI row(s) submitted and locked`, req.ip]);
+
+        return { submission: rows[0], count: n };
+      });
+
+      if (result.empty) {
+        return res.status(400).json({
+          error: `There are no KPI values recorded for ${dept} ${year}-${String(month).padStart(2, '0')}. Fill the month before submitting it.`,
+          code: 'EMPTY_PERIOD',
+        });
+      }
+      res.json({ ok: true, ...result });
+    } catch (err) { next(err); }
+  });
+
+/* Reopen — admin/MD only, reason mandatory. Kept off the department's own
+   HOD on purpose: letting the submitter unlock their own month would make
+   the lock advisory, and the point of it is that the figures management
+   read cannot change underneath them without someone else agreeing. */
+const reopenBody = z.object({
+  reason: z.string().trim().min(10, 'Give a reason of at least 10 characters').max(500),
+});
+router.post('/:dept/:year/:month/reopen',
+  requireAuth, requireRole('admin', 'md'),
+  validate(deptYearMonthWrite, 'params'), validate(reopenBody, 'body'),
+  async (req, res, next) => {
+    try {
+      const { dept, year, month } = req.validated.params;
+      const { reason } = req.validated.body;
+
+      const result = await db.withTransaction(async (client) => {
+        const { rows } = await client.query(
+          `UPDATE kpi_submissions
+              SET status = 'reopened', reopened_by = $4, reopened_at = NOW(), reopen_reason = $5
+            WHERE department = $1 AND year = $2 AND month = $3 AND status = 'submitted'
+            RETURNING status, reopened_at`,
+          [dept, year, month, req.user.id, reason]);
+        if (!rows.length) return null;
+
+        await client.query(
+          `INSERT INTO audit_log (user_id, username, action, form_type, details, ip_address)
+           VALUES ($1,$2,$3,$4,$5,$6)`,
+          [req.user.id, req.user.username, 'KPI_REOPEN', `${dept}/${year}/${month}`,
+           reason.slice(0, 4000), req.ip]);
+
+        return rows[0];
+      });
+
+      if (!result) {
+        return res.status(404).json({
+          error: `${dept} ${year}-${String(month).padStart(2, '0')} is not currently submitted, so there is nothing to reopen.`,
+        });
+      }
+      res.json({ ok: true, ...result });
     } catch (err) { next(err); }
   });
 

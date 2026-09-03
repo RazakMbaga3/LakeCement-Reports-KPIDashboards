@@ -73,10 +73,18 @@
         <div class="summary-chip achieved"><span id="sum-achieved">—</span> Achieved</div>
         <div class="summary-chip not-achieved"><span id="sum-not">—</span> Not Achieved</div>
         <div class="summary-chip rate"><span id="sum-rate">—</span>% Achievement</div>
-        <button class="fill-monthly-btn" onclick="openMonthlyModal()">
+        <button class="fill-monthly-btn" id="fill-monthly-btn" onclick="openMonthlyModal()">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
           Fill Monthly Data
         </button>
+        <!-- Monthly submission (L1/HOD only). Both controls are hidden by
+             default and revealed by refreshKpiLockState() in app.js once it
+             knows whether this department-month is open or locked. -->
+        <button class="fill-monthly-btn" id="submit-monthly-btn" onclick="submitMonthlyKPIs()" style="display:none" title="Declare this month final. Locks these figures against further editing.">
+          <i data-lucide="lock" style="width:13px;height:13px;"></i>
+          Submit Month
+        </button>
+        <span class="summary-chip" id="kpi-lock-chip" style="display:none"></span>
         <button class="print-btn" onclick="window.print()" title="Print / PDF">
           <i data-lucide="printer" style="width:13px;height:13px;"></i>
           Print / PDF

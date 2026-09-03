@@ -88,9 +88,20 @@ test('admin is the break-glass exemption, at any level', () => {
   assert.ok(allowed({ role: 'admin', level: 'officer' }, 'production'));
 });
 
-test('management edits all departments, but only at L1', () => {
-  assert.ok(allowed({ role: 'management', level: 'hod' }, 'mines'));
-  assert.equal(run({ role: 'management', level: 'senior' }, 'mines').status, 403);
+/* Separation of Duties, confirmed by the Plant Head 2026-09-03: management
+   reads every department and writes none. `management` held editDepts:'all'
+   until then, so a CFO or GM could overwrite any HOD's submitted figures —
+   which is precisely the accountability the approval chain exists to
+   create. Whoever reports a number is not whoever reviews it. */
+test('management may NOT edit any department KPIs, at any level', () => {
+  for (const dept of ['mines', 'production', 'powerplant', 'stores', 'ei', 'packing', 'mechanical']) {
+    for (const level of ['hod', 'senior', 'officer']) {
+      const r = run({ role: 'management', level }, dept);
+      assert.equal(r.next, undefined, `management/${level} must not edit ${dept}`);
+      assert.equal(r.status, 403);
+      assert.match(r.body.error, /may not edit KPIs for department/);
+    }
+  }
 });
 
 test('a missing level is treated as not-L1, not as a bypass', () => {

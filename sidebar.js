@@ -18,6 +18,7 @@ const _SB_GROUPS = {
   mis:        { label: 'Management Info.',  cls: 'group-mis'   },
   commercial: { label: 'Sales &amp; Purchases', cls: 'group-comm'  },
   ops:        { label: 'Reports &amp; Tools',   cls: 'group-ops'   },
+  admin:      { label: 'Administration',    cls: 'group-ops'   },
 };
 
 /* Same 9 departments/order as the KPI dashboard used to show in its
@@ -138,7 +139,11 @@ function renderSidebar() {
   const allowedDepts = getAllowedKPIDepts();
   const hasKPI = allowedDepts === 'all' || (Array.isArray(allowedDepts) && allowedDepts.length > 0);
   const isDeptVisible = d => allowedDepts === 'all' || (Array.isArray(allowedDepts) && allowedDepts.includes(d));
-  const hasMIS = Array.isArray(perms.mis_tabs) && perms.mis_tabs.length > 0;
+  /* Management-only as of 2026-09-03 — canViewMIS() is the policy, and
+     mis_tabs then decides which tabs a permitted role sees. Reading the
+     role list rather than mis_tabs.length means a role that keeps a tab
+     entry for some other reason can't quietly re-earn the whole group. */
+  const hasMIS = canViewMIS();
 
   /* Same fallback rule index.html's own bootstrap uses for an incoming
      ?dept= — kept in sync so the sidebar's initial active row already
@@ -258,6 +263,18 @@ function renderSidebar() {
         active: currentPage === it.page,
         href: base + it.page,
       });
+    });
+  }
+
+  /* ── Administration ───────────────────────────────────────────────
+     canManageUsers is admin-only today. Gated on the permission rather
+     than on the role so widening it later is a one-line change in
+     auth.js's PERMISSIONS, not an edit here as well. */
+  if (perms.canManageUsers) {
+    html += _sbGroupLabelHTML('admin');
+    html += _sbItemHTML({
+      icon: 'users', label: 'User Administration',
+      active: currentPage === 'admin-users.html', href: base + 'admin-users.html',
     });
   }
 

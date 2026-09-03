@@ -139,7 +139,7 @@ Also worth confirming: `management` (Sankalp Jaithalia, CFO) carries `editDepts:
 | 1 | Send collection mail to the 15 HODs, with template attached | IT / MIS | 0 |
 | 2 | Migration `011_user_email.sql` — add `email` (UNIQUE), `phone`, `staff_no`, `email_verified` | MIS | — (can run in parallel) |
 | 3 | Load returns; create one account per named person; **deactivate** unclaimed slots rather than delete (audit-log FKs) | MIS | 1, 2 |
-| 4 | Provision SMTP mailbox; fill `SMTP_*` and `DIGEST_TO`; enable verification mail + forced first-login password set | IT | 0, 3 |
+| 4 | **BUILT** — invitation / reset / verification emails, `set-password.html`, `forgot-password.html`, bulk invite. Waiting only on IT to provision a mailbox and set `SMTP_HOST` + `APP_URL` | IT | 0, 3 |
 | 5 | Purge `uitest_verify`, `ap_md`, `ap_production`; rotate `admin`; re-issue all 37 default passwords | MIS | 3 |
 | 6 | Fix `mining` → `department = 'QUARRY'`; re-baseline the Access Matrix onto the 15 current departments | MIS | 3 |
 

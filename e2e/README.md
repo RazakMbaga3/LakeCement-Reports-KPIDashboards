@@ -66,6 +66,8 @@ in `tests/roles.spec.js`.
 | `tests/roles.spec.js` | all 16 roles: sidebar contents, Fill-button visibility, `switchDept()` refusal, override authorisation, account lockout, no rate-limiting of ordinary browsing |
 | `tests/daily-reports.spec.js` | the submission pipeline: partial payloads merge, `replace:true` still overwrites, drafts stay drafts, HOD self-certification, per-department authorisation, drafts and rejected reports stop counting as data, the approvals queue |
 | `tests/daily-forms-ui.spec.js` | all 11 form pages load clean for their owning role, view-only roles get the banner, forms open on the local date, and the four report states (draft / awaiting sign-off / approved / rejected) each render and lock correctly |
+| `tests/admin-users.spec.js` | admin-users.html: an account created through the drawer really works and is audited, a duplicate email is refused case-insensitively, an access change bumps `token_version`, an admin cannot edit their own role/level/status, and a non-admin is both redirected and 403'd |
+| `tests/account-activation.spec.js` | set-password.html / forgot-password.html: an invited user chooses a password and signs in with it, the same link cannot be used twice, expired and tampered links are refused before the form appears, and forgot-password answers identically for a known and an unknown address |
 
 ## Adding a spec for the next section
 

@@ -4,7 +4,8 @@
   GET  /api/mis/daily/:date            → daily report payload (JSON)
   GET  /api/mis/daily/:date/html      → printable HTML (browser print → PDF)
   GET  /api/mis/daily/:date/xlsx      → Excel workbook download
-  GET  /api/mis/daily-summary/:date    → plant-head Daily Summary Report (JSON)
+  GET  /api/mis/daily-summary/:date    → plant-head Daily Summary Report (JSON),
+                                         sections filtered by the caller's role
   GET  /api/mis/monthly/:year/:month       → monthly payload (JSON)
   GET  /api/mis/monthly/:year/:month/html  → printable HTML
   GET  /api/mis/monthly/:year/:month/xlsx  → Excel workbook download
@@ -21,6 +22,7 @@
 const express = require('express');
 const db = require('../db');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const { MIS_VIEW_ROLES } = require('../config/misAccess');
 const { validate, z, zDate } = require('../middleware/validate');
 const report = require('../services/misReport');
 const render = require('../services/misRender');
@@ -109,11 +111,18 @@ router.get('/daily/:date/html', requireAuth, validate(dateParams, 'params'), asy
    The covering "DAILY SUMMARY REPORT dd.mm.yyyy" table the plant head
    reads before the eight workbooks themselves — Mining / Stock /
    Production with ON DATE, MTD and YTD. Rendered at the foot of the
-   Executive Summary (index.html). Read-open to any authenticated user,
-   like the other MIS reads: it aggregates figures each department can
-   already see on its own page. */
+   Executive Summary (index.html).
+
+   Authenticated like the other MIS reads, but NOT read-open: the caller's
+   role is passed down and gatherDailySummary() drops the sections that role
+   may not see. This report is the first thing to put raw-material stock and
+   quarry movements on the Executive Summary, which every role can open, so
+   leaving it open would have quietly widened store.rawmat and the Quarry
+   department to hr, it, sales, purchase, logistics, cpp, pm, ei and packing.
+   Filtered server-side rather than only in the page, so calling the endpoint
+   directly gets the same answer. */
 router.get('/daily-summary/:date', requireAuth, validate(dateParams, 'params'), async (req, res, next) => {
-  try { res.json(await report.gatherDailySummary(req.validated.params.date)); }
+  try { res.json(await report.gatherDailySummary(req.validated.params.date, req.user.role)); }
   catch (err) { next(err); }
 });
 
@@ -158,11 +167,17 @@ router.get('/monthly/:year/:month/xlsx', requireAuth, validate(yearMonthParams, 
   } catch (err) { next(err); }
 });
 
-// ── Reference data (HR / IT / vehicles / compliance) ────────────
-router.get('/employees', requireAuth, (req, res) => { res.json(EMPLOYEES); });
-router.get('/it-assets', requireAuth, (req, res) => { res.json(IT_ASSETS); });
-router.get('/vehicles', requireAuth, (req, res) => { res.json(VEHICLES); });
-router.get('/compliance-certs', requireAuth, (req, res) => { res.json(COMPLIANCE_CERTS); });
+/* ── Reference data (HR / IT / vehicles / compliance) ────────────
+   The MIS Dashboard's own payload, and management-only as of 2026-09-03.
+   These were `requireAuth` alone, so any authenticated user could read the
+   whole company's HR strength, asset register and compliance certificates
+   straight from the API — the mis_tabs check that was supposed to stop
+   them lived only in the browser. A hidden tab is not a permission. */
+const misOnly = requireRole(...MIS_VIEW_ROLES);
+router.get('/employees',        requireAuth, misOnly, (req, res) => { res.json(EMPLOYEES); });
+router.get('/it-assets',        requireAuth, misOnly, (req, res) => { res.json(IT_ASSETS); });
+router.get('/vehicles',         requireAuth, misOnly, (req, res) => { res.json(VEHICLES); });
+router.get('/compliance-certs', requireAuth, misOnly, (req, res) => { res.json(COMPLIANCE_CERTS); });
 
 // ── Digest ───────────────────────────────────────────────────
 router.post('/digest/send',

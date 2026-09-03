@@ -300,6 +300,86 @@
     return res.json();
   }
 
+  /* ── Monthly KPI submission lock ──────────────────────────────────
+     A department-month is "submitted" once its HOD declares it final;
+     kpi_monthly writes for that period are then refused with 409
+     KPI_PERIOD_LOCKED until an admin/MD reopens it. See
+     backend/middleware/kpiAccess.js requireKpiPeriodOpen. */
+
+  // Never throws on a missing record — an unsubmitted period is the normal
+  // case and the API answers { status: 'open' }, not a 404.
+  async function getKpiSubmission(dept, year, month) {
+    const res = await fetch(BASE + '/kpi/' + encodeURIComponent(dept) + '/' + year + '/' + month + '/submission', { headers: _headers() });
+    if (!res.ok) throw _httpError('getKpiSubmission', dept + ' ' + year + '-' + month, res);
+    return res.json();
+  }
+
+  async function submitKpiMonth(dept, year, month) {
+    const res = await fetch(BASE + '/kpi/' + encodeURIComponent(dept) + '/' + year + '/' + month + '/submit', {
+      method: 'POST', headers: _headers(),
+    });
+    const body = await res.json().catch(() => ({}));
+    // Surface the server's own wording (empty month, already locked, not
+    // your department) rather than a generic failure.
+    if (!res.ok) throw new Error(body.error || ('Submit failed (' + res.status + ')'));
+    return body;
+  }
+
+  async function reopenKpiMonth(dept, year, month, reason) {
+    const res = await fetch(BASE + '/kpi/' + encodeURIComponent(dept) + '/' + year + '/' + month + '/reopen', {
+      method: 'POST', headers: _headers(), body: JSON.stringify({ reason }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error || ('Reopen failed (' + res.status + ')'));
+    return body;
+  }
+
+  /* ── Admin: user provisioning (admin-users.html) ───────────────────
+     All admin-only server-side. Errors carry the server's own wording —
+     "that email is already on another account", "you cannot change your
+     own access level" — which is more useful than a status code, so these
+     throw Error(body.error) rather than the generic _httpError. */
+  async function adminGetCatalogue() {
+    const res = await fetch(BASE + '/admin/catalogue', { headers: _headers() });
+    if (!res.ok) throw _httpError('adminGetCatalogue', '', res);
+    return res.json();
+  }
+
+  async function adminListUsers(filters) {
+    const qs = new URLSearchParams();
+    Object.entries(filters || {}).forEach(([k, v]) => { if (v) qs.set(k, v); });
+    const res = await fetch(BASE + '/admin/users?' + qs.toString(), { headers: _headers() });
+    if (!res.ok) throw _httpError('adminListUsers', '', res);
+    return res.json();
+  }
+
+  async function _adminWrite(path, method, body) {
+    const res = await fetch(BASE + path, {
+      method, headers: _headers(),
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const payload = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(payload.error || (method + ' ' + path + ' failed (' + res.status + ')'));
+    return payload;
+  }
+
+  // Resolves to { user, temporaryPassword } — the password is shown once
+  // and is not recoverable afterwards.
+  const adminCreateUser  = (data)     => _adminWrite('/admin/users', 'POST', data);
+  const adminUpdateUser  = (id, data) => _adminWrite('/admin/users/' + id, 'PATCH', data);
+  const adminResetPw     = (id)       => _adminWrite('/admin/users/' + id + '/reset-password', 'POST');
+  const adminUnlockUser  = (id)       => _adminWrite('/admin/users/' + id + '/unlock', 'POST');
+  // Mails a single-use activation link instead of handing a password over.
+  // Also the "resend" — issuing supersedes any earlier outstanding invite.
+  const adminInviteUser  = (id)       => _adminWrite('/admin/users/' + id + '/invite', 'POST');
+  const adminInviteBulk  = (filter)   => _adminWrite('/admin/users/invite-bulk', 'POST', filter || {});
+
+  async function adminInviteReadiness() {
+    const res = await fetch(BASE + '/admin/invite-readiness', { headers: _headers() });
+    if (!res.ok) throw _httpError('adminInviteReadiness', '', res);
+    return res.json();
+  }
+
   global.NyatiAPI = {
     submitForm, getForm, getFormRange,
     evalFormulas, getDailySeries, setOverride, clearOverride, getOverrides,
@@ -310,6 +390,10 @@
     getPurchasesDashboard,
     getApprovals, approveReport, rejectReport,
     getMisEmployees, getMisItAssets, getMisVehicles, getMisComplianceCerts,
+    getKpiSubmission, submitKpiMonth, reopenKpiMonth,
+    adminGetCatalogue, adminListUsers, adminCreateUser, adminUpdateUser,
+    adminResetPw, adminUnlockUser,
+    adminInviteUser, adminInviteBulk, adminInviteReadiness,
   };
 
 }(window));

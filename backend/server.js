@@ -35,6 +35,7 @@ const quarryRoutes  = require('./routes/quarry');
 const salesRoutes   = require('./routes/sales');
 const purchasesRoutes = require('./routes/purchases');
 const approvalsRoutes = require('./routes/approvals');
+const adminRoutes     = require('./routes/admin');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -65,7 +66,14 @@ app.use(helmet());
 const allowedOrigins = (process.env.ALLOWED_ORIGIN || '*').split(',').map(s => s.trim());
 app.use(cors({
   origin: allowedOrigins.includes('*') ? '*' : allowedOrigins,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  // PATCH added 2026-09-03 for routes/admin.js's partial user update. Its
+  // absence only bit in development, where the page (:3000) and the API
+  // (:5000) are separate origins so the preflight actually runs — in
+  // production nginx serves both from one origin and no preflight happens.
+  // A route that works on the droplet and fails on a developer's machine is
+  // worse than one that fails everywhere, so the list now matches the verbs
+  // the API really answers.
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['X-Renewed-Token'], // sliding-session renewal (middleware/auth.js)
 }));
@@ -90,6 +98,15 @@ const credentialRateLimit = rateLimit({
   message: { error: 'Too many attempts from this device. Wait a few minutes and try again.' },
 });
 app.use('/api/auth/login', credentialRateLimit);
+/* The email-link routes are unauthenticated by necessity — they exist to
+   reach someone who cannot sign in — so they sit behind the same limiter.
+   forgot-password answers identically for known and unknown addresses, but
+   without a limit it would still be a free bulk-mail trigger; set-password
+   and verify-email are the only places a token can be guessed at. */
+app.use('/api/auth/forgot-password', credentialRateLimit);
+app.use('/api/auth/set-password',    credentialRateLimit);
+app.use('/api/auth/verify-email',    credentialRateLimit);
+app.use('/api/auth/token',           credentialRateLimit);
 app.use('/api/auth/change-password', credentialRateLimit);
 
 // Parse incoming JSON request bodies
@@ -123,6 +140,7 @@ app.use('/api/quarry',   quarryRoutes);
 app.use('/api/sales',    salesRoutes);
 app.use('/api/purchases', purchasesRoutes);
 app.use('/api/approvals', approvalsRoutes);
+app.use('/api/admin',    adminRoutes);
 app.use('/api/monitor',  monitorRouter);
 app.get('/api/metrics', metricsAuth, metricsHandler);
 

@@ -153,6 +153,7 @@ function switchDept(dept) {
 
   // Re-evaluate "Fill Monthly Data" visibility for the newly selected dept.
   if (typeof refreshFillButtonVisibility === 'function') refreshFillButtonVisibility();
+  refreshKpiLockState();
 
   if (typeof refreshCompletenessBadge === 'function') {
     const mo = +document.getElementById('month-select').value;
@@ -532,3 +533,89 @@ document.addEventListener('DOMContentLoaded', () => {
   applyFilters();
   applyLatestPeriodFallback();
 });
+
+/* ══════════════════════════════════════════════════════════════════════
+   MONTHLY KPI SUBMISSION LOCK
+   An HOD fills a department-month, then submits it — at which point the
+   figures become management's read-only record and kpi_monthly writes for
+   that period are refused (409 KPI_PERIOD_LOCKED). Only admin/MD can
+   reopen, and only with a reason.
+
+   The server is the boundary; this is only so an HOD sees the state
+   before clicking rather than after. A failed or slow lookup therefore
+   leaves the Fill button exactly as refreshFillButtonVisibility() left it
+   — never opened up, never hidden on a network blip.
+══════════════════════════════════════════════════════════════════════ */
+
+/* The dashboard's year-select holds the FISCAL year's start year, while
+   kpi_submissions is keyed by calendar year — same resolution
+   refreshCompletenessBadge() does before hitting a date-keyed API. */
+function _kpiSelectedPeriod() {
+  const mo = +document.getElementById('month-select').value;
+  const fy =  document.getElementById('year-select').value;
+  if (!mo || !fy) return null;
+  const calYear = (typeof fiscalPosToCalYear === 'function' && typeof calMonthToFiscalPos === 'function')
+    ? fiscalPosToCalYear(calMonthToFiscalPos(mo), fy)
+    : +fy;
+  return { dept: (typeof currentDept !== 'undefined') ? currentDept : 'summary', year: calYear, month: mo };
+}
+
+async function refreshKpiLockState() {
+  const submitBtn = document.getElementById('submit-monthly-btn');
+  const chip      = document.getElementById('kpi-lock-chip');
+  /* By id: #submit-monthly-btn above carries the same .fill-monthly-btn
+     class for its styling, so the class selector is no longer unique. */
+  const fillBtn   = document.getElementById('fill-monthly-btn');
+  if (!submitBtn || !chip) return;
+
+  submitBtn.style.display = 'none';
+  chip.style.display      = 'none';
+
+  const p = _kpiSelectedPeriod();
+  // Only a role that could edit this department has any use for the state.
+  if (!p || typeof canFillKPIDept !== 'function' || !canFillKPIDept(p.dept)) return;
+  if (['summary', 'minesworkshop'].includes(p.dept)) return;   // nothing fillable behind them
+
+  let sub;
+  try {
+    sub = await NyatiAPI.getKpiSubmission(p.dept, p.year, p.month);
+  } catch { return; }   // leave the UI as-is rather than guess
+
+  // The user may have switched dept/month while the fetch was in flight.
+  const now = _kpiSelectedPeriod();
+  if (!now || now.dept !== p.dept || now.year !== p.year || now.month !== p.month) return;
+
+  if (sub && sub.status === 'submitted') {
+    if (fillBtn) fillBtn.style.display = 'none';
+    const who  = sub.submitted_by || 'the HOD';
+    const when = sub.submitted_at ? String(sub.submitted_at).slice(0, 10) : '';
+    chip.textContent = `Submitted${when ? ' ' + when : ''} by ${who} — locked`;
+    chip.title = 'These figures are final. An administrator or the MD must reopen the month before it can be edited.';
+    chip.style.display = '';
+  } else {
+    submitBtn.style.display = '';
+  }
+}
+
+async function submitMonthlyKPIs() {
+  const p = _kpiSelectedPeriod();
+  if (!p) return;
+  const label = `${p.dept} ${p.year}-${String(p.month).padStart(2, '0')}`;
+  if (!confirm(
+    `Submit ${label} as final?\n\n` +
+    'These figures become the record management reads, and you will not be able to ' +
+    'edit them afterwards. Only an administrator or the MD can reopen the month.'
+  )) return;
+
+  const btn = document.getElementById('submit-monthly-btn');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+  try {
+    const r = await NyatiAPI.submitKpiMonth(p.dept, p.year, p.month);
+    alert(`${label} submitted — ${r.count} KPI row(s) locked.`);
+  } catch (e) {
+    alert(e.message);   // server's own wording: empty month, already locked, wrong dept
+  } finally {
+    if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+    refreshKpiLockState();
+  }
+}

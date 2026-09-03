@@ -37,12 +37,15 @@
     "test:kpi-keys": "node --test test/kpi-keys.test.js",
     "test:form-facts": "node --test test/form-fact-coverage.test.js",
     "test:kpi-level": "node --test test/kpi-edit-level.test.js",
+    "access:matrix": "node scripts/print-access-matrix.js",
     "test:kpi-keys:snapshot": "node scripts/snapshot-kpi-keys.js",
     "import:stoppage-facts": "node scripts/import-stoppage-facts.js",
     "seed:kpi": "node scripts/import-kpi-monthly-xlsx.js",
     "seed:kpi:dry": "node scripts/import-kpi-monthly-xlsx.js --dry-run",
     "seed:kpi:verify": "node scripts/import-kpi-monthly-xlsx.js --verify",
-    "test": "npm run lint && npm run test:formulas && npm run test:facts && npm run test:access && npm run test:stores && npm run test:kpi-keys && npm run test:form-facts && npm run test:kpi-level && npm run smoke"
+    "test": "npm run lint && npm run test:formulas && npm run test:facts && npm run test:access && npm run test:stores && npm run test:kpi-keys && npm run test:form-facts && npm run test:kpi-level && npm run test:auth-tokens && npm run test:auth-mail && npm run smoke",
+    "test:auth-tokens": "node --test test/auth-tokens.test.js",
+    "test:auth-mail": "node --test test/auth-mail.test.js"
   },
   "keywords": [],
   "author": "",

@@ -79,7 +79,11 @@ for (const r of ROLES) {
     // 2. Fill Monthly Data appears on exactly the fillable departments.
     for (const dept of canView) {
       await page.evaluate(d => switchDept(d), dept);
-      const visible = await page.locator('.fill-monthly-btn').isVisible();
+      /* #fill-monthly-btn, not .fill-monthly-btn: the Submit Month control
+         added alongside the monthly submit-lock reuses that class for its
+         styling, so the bare class selector matches two buttons and trips
+         Playwright's strict mode for every role. */
+      const visible = await page.locator('#fill-monthly-btn').isVisible();
       expect(visible, `${r.role} on ${dept}: Fill button visibility`).toBe(canEdit.includes(dept));
     }
 

@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lake Cement – User Administration</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="auth.js?v=11"></script>
+  <script src="sidebar.js?v=3"></script>
+  <script src="loader.js?v=1"></script>
+  <style>
+    .adm-main { max-width: 1440px; margin: 0 auto; padding: 20px 28px 60px; }
+    .adm-intro { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; max-width: 900px; line-height: 1.6; }
+
+    /* ── Toolbar ── */
+    .adm-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+    .adm-bar input[type=search], .adm-bar select {
+      font-family: var(--font); font-size: 12px; padding: 7px 10px;
+      border: 1.5px solid var(--border); border-radius: 7px; background: white; color: var(--navy);
+    }
+    .adm-bar input[type=search] { min-width: 240px; }
+    .adm-spacer { flex: 1; }
+    .adm-btn { font-family: var(--font); font-size: 11.5px; font-weight: 700; padding: 7px 14px;
+               border-radius: 7px; border: none; cursor: pointer; display: inline-flex;
+               align-items: center; gap: 6px; white-space: nowrap; }
+    .adm-btn-primary { background: var(--navy, #173158); color: white; }
+    .adm-btn-primary:hover { background: #0f2340; }
+    .adm-btn-ghost { background: white; color: var(--navy); border: 1.5px solid var(--border); }
+    .adm-btn-ghost:hover { background: var(--off-white); }
+    .adm-btn-warn { background: white; color: #B45309; border: 1.5px solid #FCD34D; }
+    .adm-btn-warn:hover { background: #FFFBEB; }
+    .adm-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+    /* ── Table ── */
+    .adm-wrap { overflow-x: auto; background: white; border: 1.5px solid var(--border); border-radius: 12px; }
+    table.adm-table { border-collapse: collapse; font-size: 12px; width: 100%; }
+    table.adm-table th, table.adm-table td { padding: 9px 13px; text-align: left; border-bottom: 1px solid #F0F4F8; white-space: nowrap; }
+    table.adm-table th { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+                         color: var(--text-muted); background: var(--off-white); position: sticky; top: 0; z-index: 1; }
+    table.adm-table tr:last-child td { border-bottom: none; }
+    table.adm-table tbody tr:hover { background: #FAFCFF; }
+    .adm-name { font-weight: 700; color: var(--navy); }
+    .adm-user { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; color: var(--text-muted); }
+    .adm-email { font-size: 11.5px; }
+    .adm-none { color: #C0C8D4; font-style: italic; }
+    .adm-dept-row td { background: #F1F5F9; font-weight: 700; font-size: 10.5px;
+                       text-transform: uppercase; letter-spacing: .6px; color: var(--navy); }
+
+    /* ── Badges ── */
+    .adm-tag { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: .4px;
+               padding: 2.5px 7px; border-radius: 4px; text-transform: uppercase; }
+    .tag-l1 { background: #DCFCE7; color: #15803D; }
+    .tag-l2 { background: #DBEAFE; color: #1D4ED8; }
+    .tag-l3 { background: #F1F5F9; color: #475569; }
+    .tag-off { background: #FEE2E2; color: #B91C1C; }
+    .tag-pw  { background: #FEF3C7; color: #B45309; }
+    .tag-lock{ background: #FEE2E2; color: #B91C1C; }
+    .tag-ok  { background: #ECFDF5; color: #047857; }
+
+    /* ── Drawer ── */
+    .adm-scrim { position: fixed; inset: 0; background: rgba(15,25,45,.45); z-index: 900; }
+    .adm-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(460px, 100%);
+                  background: white; z-index: 901; box-shadow: -8px 0 32px rgba(0,0,0,.18);
+                  display: flex; flex-direction: column; }
+    .adm-drawer header { padding: 18px 22px 14px; border-bottom: 1.5px solid var(--border); }
+    .adm-drawer h2 { font-size: 15px; color: var(--navy); margin: 0 0 3px; }
+    .adm-drawer .sub { font-size: 11.5px; color: var(--text-muted); }
+    .adm-drawer .body { padding: 18px 22px; overflow-y: auto; flex: 1; }
+    .adm-drawer footer { padding: 14px 22px; border-top: 1.5px solid var(--border);
+                         display: flex; gap: 10px; justify-content: flex-end; background: var(--off-white); }
+
+    .adm-field { margin-bottom: 14px; }
+    .adm-field label { display: block; font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+                       letter-spacing: .5px; color: var(--text-muted); margin-bottom: 5px; }
+    .adm-field input, .adm-field select {
+      width: 100%; font-family: var(--font); font-size: 13px; padding: 8px 10px;
+      border: 1.5px solid var(--border); border-radius: 7px; background: white; color: var(--navy); }
+    .adm-field input:disabled { background: #F8FAFC; color: var(--text-muted); }
+    .adm-hint { font-size: 10.5px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+
+    /* Live preview of what the chosen role + level will grant. */
+    .adm-grants { background: #F8FAFC; border: 1.5px solid var(--border); border-radius: 9px;
+                  padding: 12px 14px; margin-top: 4px; }
+    .adm-grants h4 { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px;
+                     color: var(--navy); margin: 0 0 8px; }
+    .adm-grant { display: flex; gap: 8px; font-size: 11.5px; padding: 3px 0; line-height: 1.5; }
+    .adm-grant .k { color: var(--text-muted); min-width: 118px; flex-shrink: 0; }
+    .adm-grant .v { color: var(--navy); font-weight: 600; }
+    .adm-grant .v.no { color: #94A3B8; font-weight: 400; }
+
+    .adm-err { background: #FEF2F2; border: 1.5px solid #FCA5A5; color: #B91C1C;
+               font-size: 12px; padding: 10px 12px; border-radius: 7px; margin-bottom: 14px; line-height: 1.5; }
+
+    /* One-time password hand-off. */
+    .adm-pw { background: #ECFDF5; border: 1.5px solid #6EE7B7; border-radius: 9px; padding: 14px; margin-bottom: 16px; }
+    .adm-pw h4 { font-size: 12px; color: #047857; margin: 0 0 6px; }
+    .adm-pw code { display: block; font-family: ui-monospace, "SF Mono", Menlo, monospace;
+                   font-size: 16px; font-weight: 700; letter-spacing: 1px; color: #065F46;
+                   background: white; padding: 10px 12px; border-radius: 6px; margin: 8px 0;
+                   user-select: all; word-break: break-all; }
+    .adm-pw p { font-size: 11px; color: #047857; margin: 0; line-height: 1.5; }
+
+    .adm-empty { text-align: center; padding: 56px 20px; color: var(--text-muted); }
+    .adm-count { font-size: 11px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="app-sidebar"></aside>
+  <script>renderSidebar();</script>
+
+  <div class="main">
+
+<header class="top-header" id="app-header"></header>
+<script>renderTopHeader();</script>
+
+<main class="adm-main">
+  <p class="adm-intro">
+    Create and manage MIS accounts without editing code. Changing a person's role, access level or
+    active status takes effect on their next request — their current session is revoked automatically.
+    Every change here is written to the audit trail. Accounts are never deleted, only deactivated,
+    because their id is referenced by every report, approval and KPI edit they have ever made.
+  </p>
+
+  <div class="adm-bar">
+    <input type="search" id="f-q" placeholder="Search name, username or email…" />
+    <select id="f-dept"><option value="">All departments</option></select>
+    <select id="f-level">
+      <option value="">All levels</option>
+      <option value="hod">L1 — HOD</option>
+      <option value="senior">L2 — Senior</option>
+      <option value="officer">L3 — Officer</option>
+    </select>
+    <select id="f-status">
+      <option value="active">Active only</option>
+      <option value="all">Active + inactive</option>
+      <option value="inactive">Inactive only</option>
+    </select>
+    <span class="adm-count" id="adm-count"></span>
+    <span class="adm-spacer"></span>
+    <button class="adm-btn adm-btn-ghost" onclick="inviteBulk()" id="bulk-btn">
+      <i data-lucide="mail" style="width:13px;height:13px;"></i> Invite unactivated…
+    </button>
+    <button class="adm-btn adm-btn-primary" onclick="openUserDrawer(null)">
+      <i data-lucide="user-plus" style="width:13px;height:13px;"></i> Add User
+    </button>
+  </div>
+
+  <!-- Mail readiness. Rendered only when something needs attention: an
+       unconfigured mail server or a missing APP_URL means every invite and
+       reset silently fails, and an admin should not discover that by
+       sending 37 of them. -->
+  <div id="mail-status" style="display:none"></div>
+
+  <div class="adm-wrap">
+    <table class="adm-table" id="adm-table">
+      <thead>
+        <tr>
+          <th>Name</th><th>Login</th><th>Email</th><th>Level</th><th>Role</th>
+          <th>Status</th><th>Last login</th><th style="text-align:right">Actions</th>
+        </tr>
+      </thead>
+      <tbody><tr><td colspan="8" class="adm-empty">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span id="footer-date"></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+  </div><!-- /.main -->
+</div><!-- /.app-shell -->
+
+<div id="adm-drawer-host"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.544.0/umd/lucide.min.js"></script>
+<script src="forms/api-client.js"></script>
+<script src="forms/client-errors.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  requireAuth();
+  // Admin-only page. The API refuses every route here to anyone else, so
+  // this redirect is about not showing a broken screen, not about security.
+  if (getCurrentUser() && !canManageUsers()) { window.location.href = 'index.html'; return; }
+
+  let CATALOGUE = null;   // { roles, levels, departments } from the server
+  let USERS     = [];
+
+  const $  = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  const LEVEL_TAG = { hod: ['L1', 'tag-l1'], senior: ['L2', 'tag-l2'], officer: ['L3', 'tag-l3'] };
+  const roleMeta  = r => (CATALOGUE?.roles || []).find(x => x.role === r) || { label: r, grants: {} };
+
+  function fmtDate(v) {
+    if (!v) return '';
+    const d = new Date(v);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  /* ── Table ─────────────────────────────────────────────────────── */
+  function render() {
+    const tbody = $('adm-table').querySelector('tbody');
+    $('adm-count').textContent = USERS.length + (USERS.length === 1 ? ' account' : ' accounts');
+
+    if (!USERS.length) {
+      tbody.innerHTML = '<tr><td colspan="8" class="adm-empty">No accounts match these filters.</td></tr>';
+      return;
+    }
+
+    let html = '', lastDept = null;
+    for (const u of USERS) {
+      if (u.department !== lastDept) {
+        lastDept = u.department;
+        html += `<tr class="adm-dept-row"><td colspan="8">${esc(lastDept || 'No department')}</td></tr>`;
+      }
+      const [code, cls] = LEVEL_TAG[u.level] || ['?', 'tag-l3'];
+      const locked = u.locked_until && new Date(u.locked_until) > new Date();
+
+      const status = [];
+      if (!u.active) status.push('<span class="adm-tag tag-off">Inactive</span>');
+      if (locked)    status.push('<span class="adm-tag tag-lock">Locked</span>');
+      if (u.must_change_password) status.push('<span class="adm-tag tag-pw">Must set password</span>');
+      if (!status.length) status.push('<span class="adm-tag tag-ok">Active</span>');
+
+      html += `<tr>
+        <td class="adm-name">${esc(u.full_name)}</td>
+        <td class="adm-user">${esc(u.username)}</td>
+        <td class="adm-email">${u.email ? esc(u.email) : '<span class="adm-none">no email</span>'}</td>
+        <td><span class="adm-tag ${cls}">${code}</span></td>
+        <td>${esc(roleMeta(u.role).label)}</td>
+        <td>${status.join(' ')}</td>
+        <td>${u.last_login ? fmtDate(u.last_login) : '<span class="adm-none">never</span>'}</td>
+        <td style="text-align:right">
+          <button class="adm-btn adm-btn-ghost" onclick="openUserDrawer(${u.id})">Edit</button>
+          ${locked ? `<button class="adm-btn adm-btn-warn" onclick="unlockUser(${u.id})">Unlock</button>` : ''}
+          ${u.email && u.active ? `<button class="adm-btn adm-btn-ghost" onclick="inviteUser(${u.id})"
+             title="Email them a single-use link to set their own password">Invite</button>` : ''}
+        </td>
+      </tr>`;
+    }
+    tbody.innerHTML = html;
+  }
+
+  async function load() {
+    try {
+      USERS = await NyatiAPI.adminListUsers({
+        q: $('f-q').value.trim(), department: $('f-dept').value,
+        level: $('f-level').value, status: $('f-status').value,
+      });
+      render();
+    } catch (e) {
+      $('adm-table').querySelector('tbody').innerHTML =
+        `<tr><td colspan="8" class="adm-empty">Could not load accounts: ${esc(e.message)}</td></tr>`;
+    }
+  }
+
+  /* ── Drawer ────────────────────────────────────────────────────── */
+  /* What choosing this role + level actually grants. Rendered live from
+     the server's catalogue so the admin sees the consequence before
+     saving, rather than discovering it when someone cannot open a page. */
+  function grantsHTML(role, level) {
+    const g = roleMeta(role).grants || {};
+    const isHod = level === 'hod';
+    const row = (k, v, on) => `<div class="adm-grant"><span class="k">${k}</span><span class="v ${on ? '' : 'no'}">${v}</span></div>`;
+
+    const kpi = g.kpiEditDepts === 'all' ? 'every department' :
+                (g.kpiEditDepts || []).length ? g.kpiEditDepts.join(', ') : null;
+    const forms = (g.submitsForms || []).length ? g.submitsForms.join(', ') : null;
+
+    return `<div class="adm-grants">
+      <h4>What this grants</h4>
+      ${row('Daily reports', forms || 'none — this role owns no forms', !!forms)}
+      ${row('Submits as', !forms ? '—' : (isHod ? 'approved immediately (self-certifying)' : 'pending HOD approval'), !!forms)}
+      ${row('Approves', isHod && forms ? forms : 'nothing — L1 only', !!(isHod && forms))}
+      ${row('Edits monthly KPIs', !kpi ? 'no' : (isHod ? kpi : 'no — L1 only'), !!(kpi && isHod))}
+      ${row('Sales dashboard', g.seesSales ? 'yes' : 'no', !!g.seesSales)}
+      ${row('Purchases dashboard', g.seesPurchases ? 'yes' : 'no', !!g.seesPurchases)}
+      ${row('MIS Dashboard', g.seesMIS ? 'yes' : 'no', !!g.seesMIS)}
+    </div>`;
+  }
+
+  function closeDrawer() { $('adm-drawer-host').innerHTML = ''; }
+
+  window.openUserDrawer = function (id) {
+    const u = id ? USERS.find(x => x.id === id) : null;
+    const isNew = !u;
+    const me = getCurrentUser();
+    const isSelf = u && me && String(u.id) === String(me.userId);
+
+    const roleOpts = CATALOGUE.roles.map(r =>
+      `<option value="${r.role}" ${u && u.role === r.role ? 'selected' : ''}>${esc(r.label)} (${r.role})</option>`).join('');
+    const lvlOpts = CATALOGUE.levels.map(l =>
+      `<option value="${l.level}" ${u && u.level === l.level ? 'selected' : ''}>${l.code} — ${esc(l.label)}</option>`).join('');
+    const deptOpts = CATALOGUE.departments.map(d =>
+      `<option value="${esc(d)}" ${u && u.department === d ? 'selected' : ''}>${esc(d)}</option>`).join('');
+
+    $('adm-drawer-host').innerHTML = `
+      <div class="adm-scrim" onclick="closeUserDrawer()"></div>
+      <aside class="adm-drawer">
+        <header>
+          <h2>${isNew ? 'Add user' : esc(u.full_name)}</h2>
+          <div class="sub">${isNew
+            ? 'A temporary password is generated and shown once when you save.'
+            : 'Login <strong>' + esc(u.username) + '</strong> · created ' + fmtDate(u.created_at)}</div>
+        </header>
+        <div class="body">
+          <div id="d-err" style="display:none" class="adm-err"></div>
+          <div id="d-pw" style="display:none"></div>
+
+          <div class="adm-field">
+            <label>Login username</label>
+            <input id="d-username" value="${esc(u ? u.username : '')}" ${isNew ? '' : 'disabled'}
+                   placeholder="e.g. production_officer" />
+            <div class="adm-hint">${isNew
+              ? 'Lowercase letters, digits, dot, dash, underscore. This is what they type to sign in.'
+              : 'Cannot be changed — every audit entry this person has written is filed under it.'}</div>
+          </div>
+
+          <div class="adm-field">
+            <label>Full name</label>
+            <input id="d-name" value="${esc(u ? u.full_name : '')}" placeholder="e.g. Godhania Natha" />
+          </div>
+
+          <div class="adm-field">
+            <label>Company email</label>
+            <input id="d-email" type="email" value="${esc(u && u.email ? u.email : '')}"
+                   placeholder="firstname.lastname@lakecement.co.tz" />
+            <div class="adm-hint">Used for password recovery and the daily digest. Leave blank if no mailbox exists yet.</div>
+          </div>
+
+          <div class="adm-field"><label>Mobile</label>
+            <input id="d-phone" value="${esc(u && u.phone ? u.phone : '')}" placeholder="+255 …" /></div>
+          <div class="adm-field"><label>Staff number</label>
+            <input id="d-staff" value="${esc(u && u.staff_no ? u.staff_no : '')}" /></div>
+
+          <div class="adm-field">
+            <label>Department (label)</label>
+            <select id="d-dept">${deptOpts}</select>
+            <div class="adm-hint">Shown on reports. Access comes from the role below, not from this.</div>
+          </div>
+
+          <div class="adm-field">
+            <label>Role — determines access</label>
+            <select id="d-role" ${isSelf ? 'disabled' : ''}>${roleOpts}</select>
+          </div>
+
+          <div class="adm-field">
+            <label>Access level</label>
+            <select id="d-level" ${isSelf ? 'disabled' : ''}>${lvlOpts}</select>
+            <div class="adm-hint" id="d-level-note"></div>
+          </div>
+
+          ${!isNew ? `<div class="adm-field">
+            <label>Account status</label>
+            <select id="d-active" ${isSelf ? 'disabled' : ''}>
+              <option value="true"  ${u.active ? 'selected' : ''}>Active</option>
+              <option value="false" ${!u.active ? 'selected' : ''}>Inactive — cannot sign in</option>
+            </select>
+          </div>` : ''}
+
+          ${isSelf ? `<div class="adm-hint" style="color:#B45309;margin:-6px 0 14px">
+            Role, level and status are locked on your own account. Another administrator must change them —
+            that is what stops an admin promoting themselves or locking out the last working admin account.
+          </div>` : ''}
+
+          <div id="d-grants"></div>
+
+          ${!isNew ? `<div style="margin-top:18px;padding-top:16px;border-top:1.5px solid var(--border)">
+            <button class="adm-btn adm-btn-warn" onclick="resetPassword(${u.id})">Reset password</button>
+            <div class="adm-hint">Issues a new temporary password, signs them out everywhere and clears any lockout.</div>
+          </div>` : ''}
+        </div>
+        <footer>
+          <button class="adm-btn adm-btn-ghost" onclick="closeUserDrawer()">Cancel</button>
+          <button class="adm-btn adm-btn-primary" id="d-save" onclick="saveUser(${u ? u.id : 'null'})">
+            ${isNew ? 'Create user' : 'Save changes'}
+          </button>
+        </footer>
+      </aside>`;
+
+    const refreshGrants = () => {
+      $('d-grants').innerHTML = grantsHTML($('d-role').value, $('d-level').value);
+      const lv = CATALOGUE.levels.find(l => l.level === $('d-level').value);
+      $('d-level-note').textContent = lv ? lv.note : '';
+    };
+    $('d-role').addEventListener('change', () => {
+      // Suggest the role's home department, but only when adding — never
+      // relabel an existing person's department behind their back.
+      if (isNew) {
+        const m = roleMeta($('d-role').value);
+        if (m.department) $('d-dept').value = m.department;
+      }
+      refreshGrants();
+    });
+    $('d-level').addEventListener('change', refreshGrants);
+    refreshGrants();
+    if (window.lucide) lucide.createIcons();
+  };
+
+  window.closeUserDrawer = closeDrawer;
+
+  function showErr(msg) {
+    const el = $('d-err');
+    el.textContent = msg;
+    el.style.display = '';
+    el.scrollIntoView({ block: 'nearest' });
+  }
+
+  function showPassword(username, pw, heading) {
+    $('d-pw').innerHTML = `<div class="adm-pw">
+      <h4>${esc(heading)}</h4>
+      <code>${esc(pw)}</code>
+      <p>Give this to <strong>${esc(username)}</strong> now. It is not stored and cannot be shown again —
+      if it is lost, reset the password. They must choose their own password at first sign-in.</p>
+    </div>`;
+    $('d-pw').style.display = '';
+    $('d-pw').scrollIntoView({ block: 'nearest' });
+  }
+
+  window.saveUser = async function (id) {
+    $('d-err').style.display = 'none';
+    const btn = $('d-save');
+    btn.disabled = true;
+
+    const data = {
+      full_name:  $('d-name').value.trim(),
+      email:      $('d-email').value.trim(),
+      phone:      $('d-phone').value.trim(),
+      staff_no:   $('d-staff').value.trim(),
+      department: $('d-dept').value,
+      role:       $('d-role').value,
+      level:      $('d-level').value,
+    };
+
+    try {
+      if (id === null) {
+        data.username = $('d-username').value.trim().toLowerCase();
+        const r = await NyatiAPI.adminCreateUser(data);
+        await load();
+        showPassword(r.user.username, r.temporaryPassword, 'Account created — temporary password');
+        $('d-save').textContent = 'Done';
+        $('d-save').onclick = closeDrawer;
+      } else {
+        // Self-edit: role/level/status inputs are disabled, so don't send
+        // them — an unchanged value would still trip the server's guard.
+        if ($('d-role').disabled) { delete data.role; delete data.level; }
+        else if ($('d-active')) data.active = $('d-active').value === 'true';
+        const r = await NyatiAPI.adminUpdateUser(id, data);
+        await load();
+        closeDrawer();
+        if (r.sessionsRevoked) alert('Saved. Their access changed, so they have been signed out and will pick up the new rights at their next sign-in.');
+      }
+    } catch (e) {
+      showErr(e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  };
+
+  window.resetPassword = async function (id) {
+    const u = USERS.find(x => x.id === id);
+    if (!confirm(`Reset the password for ${u.full_name}?\n\nThey will be signed out everywhere and must use the temporary password you are about to be shown.`)) return;
+    try {
+      const r = await NyatiAPI.adminResetPw(id);
+      showPassword(r.username, r.temporaryPassword, 'Password reset — temporary password');
+      await load();
+    } catch (e) { showErr(e.message); }
+  };
+
+  window.unlockUser = async function (id) {
+    try { await NyatiAPI.adminUnlockUser(id); await load(); }
+    catch (e) { alert(e.message); }
+  };
+
+  window.inviteUser = async function (id) {
+    const u = USERS.find(x => x.id === id);
+    const again = !u.must_change_password;
+    if (!confirm(`${again ? 'Re-send an activation link to' : 'Send an activation link to'} ${u.full_name} at ${u.email}?` +
+      `\n\nThey choose their own password from the link. Any earlier link sent to them stops working.` +
+      (again ? '\n\nNote: this account has already been activated. Sending a new link does NOT change their current password until they use it.' : ''))) return;
+    try {
+      const r = await NyatiAPI.adminInviteUser(id);
+      alert(`Invitation sent to ${r.sentTo}. The link is single-use and expires in 7 days.`);
+      await load();
+    } catch (e) { alert(e.message); }
+  };
+
+  /* The way out of "37 accounts on a password published in git". Scoped to
+     accounts that have never been activated, because re-inviting people who
+     already chose a password is noise they will read as a phishing attempt. */
+  window.inviteBulk = async function () {
+    const dept = $('f-dept').value;
+    const scope = dept || 'every department';
+    let ready;
+    try { ready = await NyatiAPI.adminInviteReadiness(); } catch (e) { return alert(e.message); }
+
+    if (!ready.mailConfigured || !ready.appUrl) {
+      return alert('Mail is not configured yet, so no invitation can be delivered.\n\n' +
+        (!ready.mailConfigured ? '• SMTP_HOST is not set in backend/.env\n' : '') +
+        (!ready.appUrl ? '• APP_URL is not set, so no link can be built\n' : '') +
+        '\nSet those and try again.');
+    }
+
+    if (!confirm(`Send activation links to every account in ${scope} that has never been activated?\n\n` +
+      `${ready.never_activated} account(s) across the whole system have never set their own password, and ` +
+      `${ready.no_email} have no email address and will be skipped.\n\nEach person gets one link, valid for 7 days.`)) return;
+
+    const btn = $('bulk-btn'); btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      const r = await NyatiAPI.adminInviteBulk({ department: dept || undefined, onlyUnactivated: true });
+      const failed = r.results.filter(x => !x.sent);
+      alert(`Sent ${r.sent} of ${r.attempted} invitation(s).` +
+        (failed.length ? `\n\nFailed:\n` + failed.map(f => `• ${f.username} (${f.email}) — ${f.reason}`).join('\n') : ''));
+      await load();
+    } catch (e) { alert(e.message); }
+    finally { btn.disabled = false; btn.innerHTML = '<i data-lucide="mail" style="width:13px;height:13px;"></i> Invite unactivated…'; if (window.lucide) lucide.createIcons(); }
+  };
+
+  /* Only speaks up when something is wrong — a green "mail is fine" banner
+     on every page load is noise nobody reads by the third day. */
+  async function renderMailStatus() {
+    let r;
+    try { r = await NyatiAPI.adminInviteReadiness(); } catch { return; }
+    const problems = [];
+    if (!r.mailConfigured) problems.push('<strong>SMTP is not configured</strong> (<code>SMTP_HOST</code> in <code>backend/.env</code>)');
+    if (!r.appUrl)         problems.push('<strong>APP_URL is not set</strong>, so no link can be built');
+    if (!problems.length) return;
+
+    const el = $('mail-status');
+    el.innerHTML = `<div class="adm-err" style="margin-bottom:14px">
+      Invitations and password resets cannot be delivered yet — ${problems.join(', and ')}.
+      Until this is fixed, a new account's temporary password has to be handed over in person.
+      ${r.never_activated} account(s) are still on a password that was never chosen by their owner.
+    </div>`;
+    el.style.display = '';
+  }
+
+  /* ── Boot ──────────────────────────────────────────────────────── */
+  (async function init() {
+    try {
+      CATALOGUE = await NyatiAPI.adminGetCatalogue();
+    } catch (e) {
+      document.querySelector('.adm-main').innerHTML =
+        `<div class="adm-err">Could not load the role catalogue: ${esc(e.message)}</div>`;
+      return;
+    }
+    $('f-dept').innerHTML = '<option value="">All departments</option>' +
+      CATALOGUE.departments.map(d => `<option value="${esc(d)}">${esc(d)}</option>`).join('');
+
+    let t;
+    $('f-q').addEventListener('input', () => { clearTimeout(t); t = setTimeout(load, 250); });
+    ['f-dept', 'f-level', 'f-status'].forEach(k => $(k).addEventListener('change', load));
+
+    await load();
+    renderMailStatus();
+    if (window.lucide) lucide.createIcons();
+    const fd = document.getElementById('footer-date');
+    if (fd) fd.textContent = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  })();
+})();
+</script>
+</body>
+</html>

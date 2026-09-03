@@ -71,15 +71,15 @@ const PERMISSIONS = {
     assets:     { it:'view',       vehicles:'view', spares:'view',      capex:'view', land:'view' },
     compliance: { certs:'view',    mlpl:'view',     legal:'view',       insurance:'view' },
     store:      { rawmat:'view',   spares:'view',   amc:'view' },
-    kpi:        { depts:'all', editDepts:'all', daily:false },
-    commercial: { sales:null, purchase:null },
+    kpi:        { depts:'all', editDepts:[], daily:false },
+    commercial: { sales:'view', purchase:'view' },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     true,
   },
 
   hr: {
-    mis_tabs: ['hr','compliance'],
+    mis_tabs: [],
     hr:         { strength:'edit', roster:'edit',  contractors:'edit', csr:'edit' },
     assets:     null,
     compliance: { certs:'edit',    mlpl:null,       legal:'edit',       insurance:'edit' },
@@ -92,7 +92,7 @@ const PERMISSIONS = {
   },
 
   finance: {
-    mis_tabs: ['hr','assets','compliance','store'],
+    mis_tabs: [],
     hr:         { strength:'view', roster:'view',  contractors:'view', csr:'view' },
     assets:     { it:'view',       vehicles:'view', spares:'view',      capex:'edit', land:'view' },
     compliance: { certs:'view',    mlpl:'view',     legal:'view',       insurance:'edit' },
@@ -105,7 +105,7 @@ const PERMISSIONS = {
   },
 
   stores: {
-    mis_tabs: ['store'],
+    mis_tabs: [],
     hr:         null,
     assets:     null,
     compliance: null,
@@ -118,7 +118,7 @@ const PERMISSIONS = {
   },
 
   cpp: {
-    mis_tabs: ['assets','compliance','store'],
+    mis_tabs: [],
     hr:         null,
     assets:     { it:'own',        vehicles:'own',  spares:'own',       capex:'own',  land:null },
     compliance: { certs:'own',     mlpl:null,        legal:null,         insurance:'own' },
@@ -131,7 +131,7 @@ const PERMISSIONS = {
   },
 
   pm: {
-    mis_tabs: ['assets','compliance','store'],
+    mis_tabs: [],
     hr:         null,
     assets:     { it:'own',        vehicles:'own',  spares:'own',       capex:'own',  land:null },
     compliance: { certs:'own',     mlpl:null,        legal:null,         insurance:'own' },
@@ -144,7 +144,7 @@ const PERMISSIONS = {
   },
 
   it: {
-    mis_tabs: ['assets','audit'],
+    mis_tabs: [],
     hr:         null,
     assets:     { it:'edit',       vehicles:null,   spares:null,        capex:'own',  land:null },
     compliance: null,
@@ -157,7 +157,7 @@ const PERMISSIONS = {
   },
 
   logistics: {
-    mis_tabs: ['assets','compliance'],
+    mis_tabs: [],
     hr:         null,
     assets:     { it:'own',        vehicles:'edit', spares:null,        capex:null,   land:null },
     compliance: { certs:'own',     mlpl:null,        legal:'own',        insurance:'own' },
@@ -170,7 +170,7 @@ const PERMISSIONS = {
   },
 
   mining: {
-    mis_tabs: ['compliance','store'],
+    mis_tabs: [],
     hr:         null,
     assets:     { it:'own',        vehicles:'own',  spares:'own',       capex:'own',  land:'view' },
     compliance: { certs:'own',     mlpl:'edit',     legal:'own',        insurance:'own' },
@@ -183,7 +183,7 @@ const PERMISSIONS = {
   },
 
   production: {
-    mis_tabs: ['store'],
+    mis_tabs: [],
     hr:         null,
     assets:     null,
     compliance: null,
@@ -202,7 +202,7 @@ const PERMISSIONS = {
     compliance: null,
     store:      null,
     kpi:        { depts:['summary'], editDepts:[], daily:true },
-    commercial: { sales:'edit', purchase:'view' },
+    commercial: { sales:'edit', purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     true,
@@ -247,6 +247,19 @@ const PERMISSIONS = {
     canExport:     false,
   },
 };
+
+/* Roles that may open the MIS Dashboard (mis.html — the sidebar's
+   "Management Info." group). Management-only as of 2026-09-03: the page
+   aggregates HR strength, asset registers, compliance certificates and
+   store positions across every department, so under the departmental-
+   boundary rule no single department has grounds to read it.
+
+   Kept as an explicit list rather than inferred from mis_tabs.length so
+   the page guard states the policy outright — mis_tabs then decides which
+   TABS a permitted role sees, not whether it may be here at all. Mirrors
+   MIS_VIEW_ROLES in forms/access-registry.js; the pair is diffed by
+   backend/test/access-consistency.test.js. */
+const MIS_VIEW_ROLES = ['admin', 'management', 'md'];
 
 /* ══════════════════════════════════════════════════════════════════════
    SESSION MANAGEMENT
@@ -427,6 +440,26 @@ function canEditSales() { return _getPerms().commercial?.sales === 'edit'; }
    commercial.sales gate for lack of a check of its own). */
 function canViewPurchases() { const p = _getPerms().commercial?.purchase; return p === 'view' || p === 'edit'; }
 function canEditPurchases() { return _getPerms().commercial?.purchase === 'edit'; }
+
+/* MIS Dashboard (mis.html). Management-only — see MIS_VIEW_ROLES above.
+   Enforced in three places, because a hidden nav link is not a permission:
+   the sidebar hides the group, mis.html redirects on load, and
+   backend/routes/mis.js 403s the dashboard's own data routes. */
+function canViewMIS() {
+  const u = getCurrentUser();
+  return !!u && MIS_VIEW_ROLES.includes(u.role);
+}
+
+/* Page guard for management-only pages: bounces anyone else to the KPI
+   dashboard rather than leaving them on a page rendered empty by the
+   per-tab checks. Call right after requireAuth(). */
+function requireMISAccess() {
+  if (getCurrentUser() && !canViewMIS()) {
+    window.location.href = 'index.html';
+    return false;
+  }
+  return true;
+}
 
 /* Tier accessors — 'officer' | 'senior' | 'hod' (L3 | L2 | L1).
    Two things are HOD-only:

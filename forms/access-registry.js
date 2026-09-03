@@ -18,11 +18,13 @@
    let admin/management lose their KPI-edit rights until caught in the
    2026-08-19 audit).
 
-   Four independent maps, one per axis of "what can this role do":
+   Independent maps, one per axis of "what can this role do":
      FORM_ACCESS           — which daily-report form_types a role may SUBMIT
      KPI_EDIT_DEPTS         — which KPI dashboard departments a role may EDIT
      COMMERCIAL_VIEW_ROLES  — which roles may see the Sales dashboard
      PURCHASE_VIEW_ROLES    — which roles may see the Purchases dashboard
+     RAWMAT_VIEW_ROLES      — which roles may see raw-material stock figures
+     MINES_VIEW_ROLES       — which roles may see Quarry figures
    ══════════════════════════════════════════════════════════════════ */
 (function (global) {
   'use strict';
@@ -38,9 +40,24 @@
     hr: [], it: [], md: [], admin: [], management: [], finance: [], ei: [], packing: [], purchase: [],
   };
 
+  /* Which departments a role may WRITE monthly KPI values for.
+
+     `management` was 'all' until 2026-09-03 and is now [] — deliberately.
+     Management (CFO, GM, Plant Head, Strategic Business Head, MD) reads
+     every department and writes none: the numbers are the HOD's own
+     submission and sign-off, so a manager editing them would erase the
+     accountability the whole approval chain exists to create. This is the
+     Separation-of-Duties rule — whoever reports a figure is not whoever
+     reviews it.
+
+     `admin` keeps 'all' as the break-glass system account (data repair,
+     import fixes), not as a business role. Every other entry is the one
+     department that role owns. See also the L1-only level gate in
+     backend/middleware/kpiAccess.js — role says WHICH department, level
+     says WHO in it, and a KPI write needs both. */
   var KPI_EDIT_DEPTS = {
     admin:      'all',
-    management: 'all',
+    management: [],
     stores:     ['stores'],
     cpp:        ['powerplant'],
     pm:         ['mechanical'],
@@ -65,14 +82,50 @@
     'powerplant', 'packing', 'stores', 'minesworkshop',
   ];
 
-  var COMMERCIAL_VIEW_ROLES = ['md', 'sales'];
+  /* Which roles may see raw-material stock, and which may see the Quarry.
 
-  // Purchases dashboard used to ride on COMMERCIAL_VIEW_ROLES (Sales' gate)
-  // for lack of its own check — now split out. `sales` keeps its existing
-  // incidental view access rather than silently losing it in this change.
-  var PURCHASE_VIEW_ROLES = ['md', 'sales', 'purchase'];
+     Added for the Executive Summary's Daily Summary Report: it puts stock
+     levels and quarry movements on the one page every role can open, so
+     without a gate it would have been a side door around
+     PERMISSIONS[role].store.rawmat and PERMISSIONS[role].kpi.depts. Both
+     lists are DERIVED from auth.js's PERMISSIONS, not invented here —
+     backend/test/access-consistency.test.js recomputes them from auth.js's
+     source and fails if they drift, the same guardrail the four maps above
+     already have.
 
-  var api = { FORM_ACCESS: FORM_ACCESS, KPI_EDIT_DEPTS: KPI_EDIT_DEPTS, KPI_DEPTS: KPI_DEPTS, COMMERCIAL_VIEW_ROLES: COMMERCIAL_VIEW_ROLES, PURCHASE_VIEW_ROLES: PURCHASE_VIEW_ROLES };
+       RAWMAT_VIEW_ROLES — PERMISSIONS[role].store.rawmat is truthy
+       MINES_VIEW_ROLES  — PERMISSIONS[role].kpi.depts covers 'mines' */
+  var RAWMAT_VIEW_ROLES = ['admin', 'finance', 'management', 'md', 'mining', 'production', 'stores'];
+  var MINES_VIEW_ROLES  = ['admin', 'finance', 'management', 'md', 'mining'];
+
+  /* Sales and Purchases: the owning department plus management oversight.
+
+     `sales` used to appear in PURCHASE_VIEW_ROLES — Purchases originally
+     rode on Sales' gate for lack of one of its own, and when it was split
+     out in 2026-09-03's predecessor change `sales` kept that incidental
+     access rather than lose it silently. Removed 2026-09-03: Sales has no
+     business reason to read Purchases, and carrying a permission forward
+     only because it already existed is exactly what Least Privilege
+     forbids. Each dashboard is now its own department plus management.
+
+     `admin` is deliberately absent from both. It is the IT/system account,
+     not a commercial one, and it has never had these rights. */
+  var COMMERCIAL_VIEW_ROLES = ['management', 'md', 'sales'];
+  var PURCHASE_VIEW_ROLES   = ['management', 'md', 'purchase'];
+
+  /* The MIS Dashboard (mis.html — the sidebar's "Management Info." group)
+     is management-only as of 2026-09-03. It aggregates HR strength,
+     asset registers, compliance certificates and store positions across
+     every department, so under the Implicit Departmental Boundary rule no
+     single department has grounds to read it. Before this, twelve roles
+     carried non-empty mis_tabs and the backend enforced nothing at all —
+     every route in backend/routes/mis.js was requireAuth only.
+
+     `admin` is included as the system account that maintains the page.
+     `planthead` is not listed because it holds role 'md'. */
+  var MIS_VIEW_ROLES = ['admin', 'management', 'md'];
+
+  var api = { FORM_ACCESS: FORM_ACCESS, KPI_EDIT_DEPTS: KPI_EDIT_DEPTS, KPI_DEPTS: KPI_DEPTS, COMMERCIAL_VIEW_ROLES: COMMERCIAL_VIEW_ROLES, PURCHASE_VIEW_ROLES: PURCHASE_VIEW_ROLES, RAWMAT_VIEW_ROLES: RAWMAT_VIEW_ROLES, MINES_VIEW_ROLES: MINES_VIEW_ROLES, MIS_VIEW_ROLES: MIS_VIEW_ROLES };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.NyatiAccess = api;

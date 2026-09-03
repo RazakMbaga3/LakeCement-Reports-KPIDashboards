@@ -9,6 +9,7 @@ const db       = require('../db');
 const engine   = require('./formulaEngine');
 const insights = require('./insights');
 const stores   = require('./stores');
+const { RAWMAT_VIEW_ROLES, MINES_VIEW_ROLES } = require('../../forms/access-registry.js');
 const { REPORTED_STATUSES } = require('../config/forms');
 
 /* Display names + section order for the report */
@@ -321,7 +322,34 @@ function stockStatus(closing, min, max) {
   return 'ok';
 }
 
-async function gatherDailySummary(date) {
+/* Which section a role may see. The Daily Summary puts raw-material stock
+   and quarry movements on the Executive Summary — the one page every role
+   can open — so the payload itself is filtered, not just the rendering.
+   kpi-data.js applies the same rule client-side; this is the half that
+   holds when someone calls the endpoint directly.
+
+   Production carries no gate: Kiln Output, Despatch/Day and Specific Heat
+   Consumption have always been on the Executive Summary for every role
+   that can see it, so this section exposes nothing new.
+
+   A section key with no entry here is withheld — a future section has to
+   state its own audience rather than inherit "visible to all" by
+   omission. */
+const DAILY_SUMMARY_SECTION_ROLES = {
+  production:     null,                 // null = no additional gate
+  mining:         MINES_VIEW_ROLES,
+  stock:          RAWMAT_VIEW_ROLES,
+  raw_mill_stock: RAWMAT_VIEW_ROLES,
+  quarry_stock:   RAWMAT_VIEW_ROLES,
+};
+
+function canSeeSection(key, role) {
+  if (!Object.prototype.hasOwnProperty.call(DAILY_SUMMARY_SECTION_ROLES, key)) return false;
+  const allowed = DAILY_SUMMARY_SECTION_ROLES[key];
+  return allowed === null || allowed.includes(role);
+}
+
+async function gatherDailySummary(date, role) {
   const fyFrom = fiscalYearStart(date);
   const moFrom = monthStart(date);
 
@@ -456,54 +484,56 @@ async function gatherDailySummary(date) {
     onDate: null, mtd: null, ytd: null, closing: null, min: null, max: null, status: null,
   }));
 
+  const sections = [
+    {
+      key: 'mining', label: 'Mining Report', columns: ['onDate', 'mtd', 'ytd'],
+      available: miningAvailable,
+      note: miningAvailable ? null
+        : 'No weighbridge tickets loaded for this fiscal year — import them on the Quarry page.',
+      rows: miningRows.concat(unavailable(
+        [{ key: 'ksm1_hours', label: 'Surface Miner KSM-1 — hours' },
+         { key: 'ksm1_fuel',  label: 'Surface Miner KSM-1 — fuel (Ltr)' },
+         { key: 'ksm2_hours', label: 'Surface Miner KSM-2 — hours' },
+         { key: 'ksm2_fuel',  label: 'Surface Miner KSM-2 — fuel (Ltr)' }],
+        'No form in the dashboard captures surface-miner hours or fuel yet.'
+      )),
+    },
+    {
+      key: 'stock', label: 'Stock Report — Stores Ledger', columns: ['closing', 'min', 'max'],
+      available: stockRows.length > 0,
+      note: stockRows.length ? null : 'No Raw Materials report entered for this date.',
+      rows: storesStock,
+    },
+    {
+      key: 'raw_mill_stock', label: 'Stock Report — Raw Mill Pile', columns: ['closing'],
+      available: pileAvailable,
+      note: pileAvailable
+        ? 'Closing stock at the plant, from the Production Report ledger. Not the quarry stockyard figure — see the Quarry page for that.'
+        : 'No raw-material stock entered on this date’s Production Report. (This ledger holds plant closing stock, not the quarry stockyard figure — see the Quarry page for that.)',
+      rows: rawMillStock,
+    },
+    {
+      key: 'quarry_stock', label: 'Stock Report — Quarry Stockyard', columns: ['closing'],
+      available: false,
+      note: 'The quarry stockyard ledger still keeps its opening balances on the Quarry page rather than on the server, so these grades cannot be reported here yet.',
+      /* No per-row reason: the card note already gives it once, and the
+         same sentence repeated down five rows is noise, not candour. */
+      rows: unavailable(QUARRY_STOCK_ROWS, null),
+    },
+    {
+      key: 'production', label: 'Production Report', columns: ['onDate', 'mtd', 'ytd'],
+      available: production.some(r => r.available),
+      note: onDateProd ? null
+        : 'No Production Report entered for this date — MTD and YTD still cover the days that were entered.',
+      rows: production,
+    },
+  ];
+
   return {
     kind: 'daily-summary',
     date, monthFrom: moFrom, fiscalFrom: fyFrom,
     daysWithProduction: prodRows.rows.length,
-    sections: [
-      {
-        key: 'mining', label: 'Mining Report', columns: ['onDate', 'mtd', 'ytd'],
-        available: miningAvailable,
-        note: miningAvailable ? null
-          : 'No weighbridge tickets loaded for this fiscal year — import them on the Quarry page.',
-        rows: miningRows.concat(unavailable(
-          [{ key: 'ksm1_hours', label: 'Surface Miner KSM-1 — hours' },
-           { key: 'ksm1_fuel',  label: 'Surface Miner KSM-1 — fuel (Ltr)' },
-           { key: 'ksm2_hours', label: 'Surface Miner KSM-2 — hours' },
-           { key: 'ksm2_fuel',  label: 'Surface Miner KSM-2 — fuel (Ltr)' }],
-          'No form in the dashboard captures surface-miner hours or fuel yet.'
-        )),
-      },
-      {
-        key: 'stock', label: 'Stock Report — Stores Ledger', columns: ['closing', 'min', 'max'],
-        available: stockRows.length > 0,
-        note: stockRows.length ? null : 'No Raw Materials report entered for this date.',
-        rows: storesStock,
-      },
-      {
-        key: 'raw_mill_stock', label: 'Stock Report — Raw Mill Pile', columns: ['closing'],
-        available: pileAvailable,
-        note: pileAvailable
-          ? 'Closing stock at the plant, from the Production Report ledger. Not the quarry stockyard figure — see the Quarry page for that.'
-          : 'No raw-material stock entered on this date’s Production Report. (This ledger holds plant closing stock, not the quarry stockyard figure — see the Quarry page for that.)',
-        rows: rawMillStock,
-      },
-      {
-        key: 'quarry_stock', label: 'Stock Report — Quarry Stockyard', columns: ['closing'],
-        available: false,
-        note: 'The quarry stockyard ledger still keeps its opening balances on the Quarry page rather than on the server, so these grades cannot be reported here yet.',
-        /* No per-row reason: the card note already gives it once, and the
-           same sentence repeated down five rows is noise, not candour. */
-        rows: unavailable(QUARRY_STOCK_ROWS, null),
-      },
-      {
-        key: 'production', label: 'Production Report', columns: ['onDate', 'mtd', 'ytd'],
-        available: production.some(r => r.available),
-        note: onDateProd ? null
-          : 'No Production Report entered for this date — MTD and YTD still cover the days that were entered.',
-        rows: production,
-      },
-    ],
+    sections: sections.filter(sec => canSeeSection(sec.key, role)),
     generatedAt: new Date().toISOString(),
   };
 }

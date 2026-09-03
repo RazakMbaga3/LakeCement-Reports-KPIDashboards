@@ -3143,6 +3143,11 @@ function showStoreTab(id) {
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   requireAuth();
+  // Management-only page. Bail before applyMISPermissions() so a department
+  // user is redirected outright rather than left on an empty shell with
+  // every tab hidden. The backend 403s this page's data routes regardless —
+  // see MIS_VIEW_ROLES in backend/routes/mis.js.
+  if (!requireMISAccess()) return;
   applyMISPermissions();
 });
 </script>

@@ -19,6 +19,8 @@ const jwt     = require('jsonwebtoken');
 const db      = require('../db');
 const { requireAuth }  = require('../middleware/auth');
 const { validate, z }  = require('../middleware/validate');
+const authTokens = require('../services/authTokens');
+const authMail   = require('../services/authMail');
 
 const router = express.Router();
 
@@ -180,6 +182,166 @@ router.post('/logout', requireAuth, async (req, res, next) => {
     await audit(req.user.id, req.user.username, 'LOGOUT', req.ip);
     res.json({ message: 'Logged out successfully.' });
   } catch (err) { next(err); }
+});
+
+/* ══════════════════════════════════════════════════════════════════════
+   EMAIL-LINK FLOWS — activation, password reset, address verification.
+
+   All three are UNAUTHENTICATED by necessity: the whole point is to reach
+   someone who cannot sign in. The token is the credential, so each route
+   leans on services/authTokens.js for single-use, time-boxed redemption,
+   and none of them reveals whether an account or address exists.
+══════════════════════════════════════════════════════════════════════ */
+
+// ── POST /api/auth/forgot-password ───────────────────────────
+/* Deliberately answers identically whether or not the address is on an
+   account. Anything else turns this into an address oracle — "which of our
+   staff use the MIS" is exactly the list a phisher wants, and the endpoint
+   is public. The audit log records the difference; the response does not.
+
+   Rate limiting is applied at the app level (credentialRateLimit in
+   server.js) alongside login and change-password. */
+const forgotSchema = z.object({
+  email: z.string().trim().toLowerCase().email('Enter a valid email address').max(120),
+});
+
+router.post('/forgot-password', validate(forgotSchema), async (req, res, next) => {
+  try {
+    const { email } = req.validated.body;
+    const SAME_ANSWER = {
+      message: 'If that address belongs to an MIS account, a reset link is on its way. Check your inbox, including junk mail.',
+    };
+
+    const { rows: [user] } = await db.query(
+      `SELECT id, username, full_name, email, active FROM users
+        WHERE LOWER(email) = $1 AND active = true`, [email]);
+
+    if (!user) {
+      // Logged so a burst of these is visible, without telling the caller.
+      await audit(null, email, 'PASSWORD_RESET_REQUESTED_UNKNOWN', req.ip);
+      return res.json(SAME_ANSWER);
+    }
+
+    const token = await authTokens.issue({ userId: user.id, email: user.email, purpose: 'reset' });
+    const mail  = await authMail.sendReset({ to: user.email, fullName: user.full_name, token });
+    await audit(user.id, user.username, mail.sent ? 'PASSWORD_RESET_SENT' : 'PASSWORD_RESET_SEND_FAILED', req.ip);
+
+    /* A send failure is logged and surfaced in the server log, but the
+       caller still gets SAME_ANSWER — "we could not send to that address"
+       would confirm the address exists just as loudly as "sent". */
+    if (!mail.sent) req.log?.error({ reason: mail.reason, username: user.username }, 'password reset email not sent');
+    res.json(SAME_ANSWER);
+  } catch (err) { next(err); }
+});
+
+// ── GET /api/auth/token/:purpose/:token ──────────────────────
+/* Checks a link before showing the form behind it, so someone arriving with
+   a dead link is told why instead of filling in a password that will be
+   rejected. Returns only what the page needs to greet them — never the
+   email, which would make a guessed token an address disclosure. */
+router.get('/token/:purpose/:token', async (req, res, next) => {
+  try {
+    const { purpose, token } = req.params;
+    if (!['invite', 'reset', 'verify'].includes(purpose)) {
+      return res.status(400).json({ error: 'Unknown link type.' });
+    }
+    const r = await authTokens.inspect(token, purpose);
+    if (!r.ok) return res.status(400).json({ error: LINK_ERRORS[r.reason], reason: r.reason });
+    res.json({ ok: true, username: r.token.username, full_name: r.token.full_name, purpose });
+  } catch (err) { next(err); }
+});
+
+const LINK_ERRORS = {
+  invalid: 'This link is not valid. It may have been replaced by a newer one, or the account may no longer be active. Ask IT for a new link.',
+  expired: 'This link has expired. Request a new one from the sign-in page, or ask IT to send another.',
+  used:    'This link has already been used. If you did not use it, tell IT immediately — then sign in, or request a new link.',
+};
+
+// ── POST /api/auth/set-password ──────────────────────────────
+/* Redeems an invite or reset token and sets the password. Same strength
+   rules as change-password: those are the rules, not the rules for people
+   who still remember their old password. */
+const setPasswordSchema = z.object({
+  token:   z.string().min(10).max(200),
+  purpose: z.enum(['invite', 'reset']),
+  newPassword: z.string()
+    .min(10, 'must be at least 10 characters')
+    .max(128)
+    .regex(/[A-Za-z]/, 'must contain a letter')
+    .regex(/[0-9]/,    'must contain a digit'),
+});
+
+router.post('/set-password', validate(setPasswordSchema), async (req, res, next) => {
+  try {
+    const { token, purpose, newPassword } = req.validated.body;
+
+    const r = await authTokens.inspect(token, purpose);
+    if (!r.ok) return res.status(400).json({ error: LINK_ERRORS[r.reason], reason: r.reason });
+    const row = r.token;
+
+    const hash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+    /* Token spend and password write commit together. If the token stayed
+       unspent after a successful write it would remain a working key to the
+       account; if the password write failed after the spend, the user would
+       be locked out holding a dead link. */
+    await db.withTransaction(async (client) => {
+      await authTokens.spend(row.id, client);
+      await client.query(
+        `UPDATE users
+            SET password_hash = $2, must_change_password = false,
+                failed_attempts = 0, locked_until = NULL,
+                token_version = token_version + 1,
+                -- Following a link proves the mailbox reaches them, which is
+                -- exactly what verification asks. No separate step needed.
+                email_verified = true
+          WHERE id = $1`, [row.user_id, hash]);
+      await client.query(
+        `INSERT INTO audit_log (user_id, username, action, form_type, details, ip_address)
+         VALUES ($1,$2,$3,$4,$5,$6)`,
+        [row.user_id, row.username,
+         purpose === 'invite' ? 'ACCOUNT_ACTIVATED' : 'PASSWORD_RESET_COMPLETED',
+         row.username, `via emailed ${purpose} link`, req.ip]);
+    });
+
+    res.json({
+      ok: true,
+      username: row.username,
+      message: purpose === 'invite'
+        ? 'Your account is ready. Sign in with your new password.'
+        : 'Your password has been changed. Sign in with the new one.',
+    });
+  } catch (err) {
+    if (err.code === 'TOKEN_RACE') {
+      return res.status(409).json({ error: LINK_ERRORS.used, reason: 'used' });
+    }
+    next(err);
+  }
+});
+
+// ── POST /api/auth/verify-email ──────────────────────────────
+/* Confirms an address reaches its owner. Grants nothing else — no password
+   change, no session — so a leaked verify link is not a way in. */
+router.post('/verify-email', validate(z.object({ token: z.string().min(10).max(200) })), async (req, res, next) => {
+  try {
+    const { token } = req.validated.body;
+    const r = await authTokens.inspect(token, 'verify');
+    if (!r.ok) return res.status(400).json({ error: LINK_ERRORS[r.reason], reason: r.reason });
+
+    await db.withTransaction(async (client) => {
+      await authTokens.spend(r.token.id, client);
+      await client.query('UPDATE users SET email_verified = true WHERE id = $1', [r.token.user_id]);
+      await client.query(
+        `INSERT INTO audit_log (user_id, username, action, form_type, details, ip_address)
+         VALUES ($1,$2,$3,$4,$5,$6)`,
+        [r.token.user_id, r.token.username, 'EMAIL_VERIFIED', r.token.username, r.token.email, req.ip]);
+    });
+
+    res.json({ ok: true, message: 'Thank you — your email address is confirmed.' });
+  } catch (err) {
+    if (err.code === 'TOKEN_RACE') return res.status(409).json({ error: LINK_ERRORS.used, reason: 'used' });
+    next(err);
+  }
 });
 
 module.exports = router;

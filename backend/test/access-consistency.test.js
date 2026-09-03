@@ -24,7 +24,8 @@ const assert = require('node:assert/strict');
 const fs     = require('fs');
 const path   = require('path');
 
-const { FORM_ACCESS, KPI_EDIT_DEPTS, COMMERCIAL_VIEW_ROLES, PURCHASE_VIEW_ROLES } =
+const { FORM_ACCESS, KPI_EDIT_DEPTS, COMMERCIAL_VIEW_ROLES, PURCHASE_VIEW_ROLES, MIS_VIEW_ROLES,
+        RAWMAT_VIEW_ROLES, MINES_VIEW_ROLES } =
   require(path.join('..', '..', 'forms', 'access-registry.js'));
 
 const AUTH_JS_PATH = path.join(__dirname, '..', '..', 'auth.js');
@@ -120,4 +121,60 @@ test("auth.js's PERMISSIONS[role].commercial.purchase matches forms/access-regis
     }
   }
   assert.equal(mismatches.length, 0, mismatches.join('\n  '));
+});
+
+/* The Daily Summary Report (Executive Summary) filters its stock and Quarry
+   sections on these two lists, server-side. They are not an independent
+   policy — they are a restatement of PERMISSIONS[role].store.rawmat and
+   PERMISSIONS[role].kpi.depts for a backend that cannot read auth.js. So
+   recompute them from auth.js and require an exact match: if someone grants
+   or revokes a role's stock access in auth.js and forgets the registry, the
+   dashboard and the API would disagree about who may see stock levels —
+   silently, and in the direction of showing too much. */
+test("auth.js's PERMISSIONS[role].store.rawmat matches forms/access-registry.js's RAWMAT_VIEW_ROLES, for every role", () => {
+  const permissions = extractObjectLiteral(authSrc, 'const PERMISSIONS');
+  const derived = Object.keys(permissions)
+    .filter(role => !!(permissions[role].store && permissions[role].store.rawmat))
+    .sort();
+  assert.deepEqual(derived, [...RAWMAT_VIEW_ROLES].sort(),
+    "RAWMAT_VIEW_ROLES has drifted from auth.js's PERMISSIONS[role].store.rawmat — " +
+    'the Daily Summary Report gates raw-material stock on it.');
+});
+
+test("auth.js's PERMISSIONS[role].kpi.depts coverage of 'mines' matches forms/access-registry.js's MINES_VIEW_ROLES", () => {
+  const permissions = extractObjectLiteral(authSrc, 'const PERMISSIONS');
+  const derived = Object.keys(permissions)
+    .filter(role => {
+      const depts = permissions[role].kpi && permissions[role].kpi.depts;
+      return depts === 'all' || (Array.isArray(depts) && depts.includes('mines'));
+    })
+    .sort();
+  assert.deepEqual(derived, [...MINES_VIEW_ROLES].sort(),
+    "MINES_VIEW_ROLES has drifted from auth.js's PERMISSIONS[role].kpi.depts — " +
+    'the Daily Summary Report gates Quarry movements on it.');
+});
+
+/* The MIS Dashboard is management-only (2026-09-03). Three places have to
+   agree or the gate is decorative: the registry (which the backend routes
+   read), auth.js's own copy (which the sidebar and the page guard read),
+   and PERMISSIONS[role].mis_tabs (which decides the tabs inside the page).
+   The third is the subtle one — a role left holding a tab entry after
+   losing the group would render a page it is no longer allowed to open. */
+test("auth.js's MIS_VIEW_ROLES matches forms/access-registry.js's MIS_VIEW_ROLES", () => {
+  const m = authSrc.match(/const MIS_VIEW_ROLES\s*=\s*(\[[^\]]*\])/);
+  assert.ok(m, 'MIS_VIEW_ROLES not found in auth.js');
+  const authList = JSON.parse(m[1].replace(/'/g, '"').replace(/,\s*\]/, ']'));
+  assert.deepEqual([...authList].sort(), [...MIS_VIEW_ROLES].sort(),
+    "auth.js's MIS_VIEW_ROLES has drifted from the registry's — the sidebar and " +
+    'the backend would disagree about who may open mis.html.');
+});
+
+test('only MIS_VIEW_ROLES carry a non-empty mis_tabs in auth.js', () => {
+  const permissions = extractObjectLiteral(authSrc, 'const PERMISSIONS');
+  const withTabs = Object.keys(permissions)
+    .filter(role => Array.isArray(permissions[role].mis_tabs) && permissions[role].mis_tabs.length > 0)
+    .sort();
+  assert.deepEqual(withTabs, [...MIS_VIEW_ROLES].sort(),
+    'A role outside MIS_VIEW_ROLES still has MIS tabs configured, or a permitted ' +
+    'role has none. mis_tabs must be [] for every role that cannot open the page.');
 });
