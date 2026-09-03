@@ -4,10 +4,12 @@
   GET  /api/mis/daily/:date            → daily report payload (JSON)
   GET  /api/mis/daily/:date/html      → printable HTML (browser print → PDF)
   GET  /api/mis/daily/:date/xlsx      → Excel workbook download
+  GET  /api/mis/daily-summary/:date    → plant-head Daily Summary Report (JSON)
   GET  /api/mis/monthly/:year/:month       → monthly payload (JSON)
   GET  /api/mis/monthly/:year/:month/html  → printable HTML
   GET  /api/mis/monthly/:year/:month/xlsx  → Excel workbook download
   GET  /api/mis/completeness?from=&to=     → entry-completeness payload (JSON)
+  GET  /api/mis/data-range                 → first/last date holding data, per form
   GET  /api/mis/employees              → HR roster (mis.html "HR" tab)
   GET  /api/mis/it-assets              → IT asset register (mis.html "Assets" tab)
   GET  /api/mis/vehicles               → vehicle fleet register (mis.html "Assets" tab)
@@ -17,6 +19,7 @@
 */
 
 const express = require('express');
+const db = require('../db');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { validate, z, zDate } = require('../middleware/validate');
 const report = require('../services/misReport');
@@ -46,6 +49,49 @@ function xlsxHeaders(res, filename) {
   res.set('Content-Disposition', `attachment; filename="${filename}"`);
 }
 
+/* ── Data range ───────────────────────────────────────────────
+   Which dates actually hold data, per form type, plus the newest kpi_monthly
+   period.
+
+   Every analytics page defaults its date picker to *today*, which is right in
+   a plant entering reports daily and wrong in every other situation: with the
+   current backfill ending 15 Jul 2026, Material & Power Balance, Equipment
+   Reliability and Operational Insights all opened completely empty and looked
+   broken rather than out of date. Pages now ask this endpoint for the latest
+   date that has data and fall back to it, saying so on screen — see
+   forms/latest-period.js. One cheap aggregate over indexed columns. */
+router.get('/data-range', requireAuth, async (req, res, next) => {
+  try {
+    const [forms, kpi] = await Promise.all([
+      db.query(
+        `SELECT form_type, MIN(record_date) AS first, MAX(record_date) AS last, COUNT(*)::int AS days
+         FROM daily_reports GROUP BY form_type ORDER BY form_type`
+      ),
+      db.query(
+        `SELECT MIN(year * 100 + month) AS first, MAX(year * 100 + month) AS last
+         FROM kpi_monthly`
+      ),
+    ]);
+
+    const byForm = {};
+    for (const r of forms.rows) {
+      byForm[r.form_type] = { first: r.first, last: r.last, days: r.days };
+    }
+
+    /* The overall latest is what a page with no single form in mind wants. */
+    const lastDates = forms.rows.map(r => r.last).filter(Boolean).sort();
+    const k = kpi.rows[0] || {};
+    const period = n => (n ? { year: Math.floor(n / 100), month: n % 100 } : null);
+
+    res.json({
+      forms: byForm,
+      overall: { first: forms.rows.map(r => r.first).filter(Boolean).sort()[0] || null,
+                 last:  lastDates[lastDates.length - 1] || null },
+      kpiMonthly: { first: period(Number(k.first)), last: period(Number(k.last)) },
+    });
+  } catch (err) { next(err); }
+});
+
 // ── Daily ────────────────────────────────────────────────────
 router.get('/daily/:date', requireAuth, validate(dateParams, 'params'), async (req, res, next) => {
   try { res.json(await report.gatherDaily(req.validated.params.date)); }
@@ -57,6 +103,18 @@ router.get('/daily/:date/html', requireAuth, validate(dateParams, 'params'), asy
     const payload = await report.gatherDaily(req.validated.params.date);
     res.type('html').send(render.renderDailyHtml(payload));
   } catch (err) { next(err); }
+});
+
+/* ── Daily Summary Report ─────────────────────────────────────
+   The covering "DAILY SUMMARY REPORT dd.mm.yyyy" table the plant head
+   reads before the eight workbooks themselves — Mining / Stock /
+   Production with ON DATE, MTD and YTD. Rendered at the foot of the
+   Executive Summary (index.html). Read-open to any authenticated user,
+   like the other MIS reads: it aggregates figures each department can
+   already see on its own page. */
+router.get('/daily-summary/:date', requireAuth, validate(dateParams, 'params'), async (req, res, next) => {
+  try { res.json(await report.gatherDailySummary(req.validated.params.date)); }
+  catch (err) { next(err); }
 });
 
 router.get('/daily/:date/xlsx', requireAuth, validate(dateParams, 'params'), async (req, res, next) => {

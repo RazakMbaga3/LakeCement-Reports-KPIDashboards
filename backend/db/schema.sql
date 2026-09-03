@@ -20,11 +20,29 @@ CREATE TABLE IF NOT EXISTS users (
   locked_until         TIMESTAMP,                      -- lockout expiry (NULL = not locked)
   must_change_password BOOLEAN NOT NULL DEFAULT false, -- gate all routes until password set
   token_version        INTEGER NOT NULL DEFAULT 0,     -- bump to revoke all outstanding JWTs
-  -- 'officer' | 'senior' | 'hod' — orthogonal to `role` (role = department).
-  -- Only the report-approval gate reads this; view/edit access is unchanged
-  -- across tiers within a department. See migrations/009_user_levels.sql.
-  level        VARCHAR(10)  NOT NULL DEFAULT 'hod' CHECK (level IN ('officer','senior','hod'))
+  -- 'officer' | 'senior' | 'hod' (L3 | L2 | L1) — orthogonal to `role`
+  -- (role = department). Read by the report-approval gate AND, since
+  -- 2026-09-03, by the monthly-KPI write gate: only an HOD may edit KPI
+  -- values, while Officer/Senior fill and submit the daily reports that
+  -- feed them. See migrations/009_user_levels.sql, middleware/approval.js
+  -- and middleware/kpiAccess.js.
+  level        VARCHAR(10)  NOT NULL DEFAULT 'hod' CHECK (level IN ('officer','senior','hod')),
+  -- Identity + recovery address, NOT the login (username is). NULL for the
+  -- AUTOMATION service accounts, which have no mailbox, and for humans not
+  -- yet returned by their department. See migrations/012_user_email.sql.
+  email          VARCHAR(120),
+  phone          VARCHAR(30),
+  staff_no       VARCHAR(30),
+  email_verified BOOLEAN NOT NULL DEFAULT false,
+  CONSTRAINT users_email_shape_check
+    CHECK (email IS NULL OR email ~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$')
 );
+
+-- Case-insensitive; NULLs excluded so many accounts may sit without a
+-- mailbox while two accounts can never share one address.
+CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_uniq
+  ON users (LOWER(email))
+  WHERE email IS NOT NULL;
 
 -- ── SCHEMA MIGRATIONS ───────────────────────────────────────
 -- Tracks applied db/migrations/*.sql files (see db/migrate.js).
@@ -90,6 +108,30 @@ CREATE TABLE IF NOT EXISTS stoppages (
   category        VARCHAR(50),                  -- 'planned' | 'unplanned' | 'breakdown'
   submitted_by    INTEGER REFERENCES users(id),
   submitted_at    TIMESTAMP DEFAULT NOW()
+);
+
+-- ── STOPPAGE FACTS (granular, from the monthly workbook) ────
+-- Additive alongside `daily_reports` form_type='stoppage' (the coarse
+-- shift/day stop_<equip>_<cause> MINUTES matrix, still live for Apr-Jun
+-- 2026 and beyond). This table holds one row per named fault, per
+-- equipment, per cause bucket, per calendar day, in HOURS — imported from
+-- the plant's monthly "Stoppage report" Excel workbooks (see
+-- scripts/import-stoppage-facts.js; migrations/011_stoppage_facts.sql).
+-- Not a replacement for the `stoppages` table above (that one has never
+-- been wired to any route or script) or for daily_reports — services/
+-- insights.js falls back to the coarse source for any date a given
+-- equipment has no rows here.
+CREATE TABLE IF NOT EXISTS stoppage_facts (
+  id                 SERIAL PRIMARY KEY,
+  equipment          VARCHAR(20)   NOT NULL,
+  cause              VARCHAR(20)   NOT NULL,
+  fault_description  VARCHAR(300)  NOT NULL,
+  record_date        DATE          NOT NULL,
+  hours              NUMERIC(6,2)  NOT NULL CHECK (hours > 0),
+  source_file        VARCHAR(200),
+  imported_by        INTEGER REFERENCES users(id),
+  imported_at        TIMESTAMP     NOT NULL DEFAULT NOW(),
+  UNIQUE (equipment, cause, fault_description, record_date)
 );
 
 -- ── WEIGHBRIDGE TICKETS (Quarry) ────────────────────────────
@@ -236,6 +278,10 @@ CREATE INDEX IF NOT EXISTS idx_daily_reports_form     ON daily_reports(form_type
 CREATE INDEX IF NOT EXISTS idx_daily_reports_month    ON daily_reports((EXTRACT(YEAR FROM record_date)), (EXTRACT(MONTH FROM record_date)));
 CREATE INDEX IF NOT EXISTS idx_daily_reports_status   ON daily_reports(status);
 CREATE INDEX IF NOT EXISTS idx_stoppages_date         ON stoppages(record_date);
+CREATE INDEX IF NOT EXISTS idx_stoppage_facts_date        ON stoppage_facts(record_date);
+CREATE INDEX IF NOT EXISTS idx_stoppage_facts_equip_date  ON stoppage_facts(equipment, record_date);
+CREATE INDEX IF NOT EXISTS idx_stoppage_facts_month ON stoppage_facts(
+  equipment, (EXTRACT(YEAR FROM record_date)), (EXTRACT(MONTH FROM record_date)));
 CREATE INDEX IF NOT EXISTS idx_weighbridge_date       ON weighbridge_tickets(ticket_date);
 CREATE INDEX IF NOT EXISTS idx_weighbridge_movement   ON weighbridge_tickets(movement_type);
 CREATE INDEX IF NOT EXISTS idx_kpi_monthly_dept_year  ON kpi_monthly(department, year, month);

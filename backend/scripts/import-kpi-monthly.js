@@ -1,4 +1,11 @@
 /*
+  SUPERSEDED 2026-09-01 by scripts/import-kpi-monthly-xlsx.js, which reads the
+  .xlsx workbooks directly (no Python/openpyxl step, and it also picks up the
+  Jan–Mar history in each sheet's "Full year KPI Tracker" columns that this
+  one discarded). Kept as the record of the original 2026-07-30 backfill; its
+  input JSON lives outside the repo and may no longer exist.
+  Use: npm run seed:kpi
+
   scripts/import-kpi-monthly.js — backfill of department-level Monthly KPI
   targets/actuals/remarks (kpi_monthly table) from the plant's real "M - 11
   LCL Department KPI Report" workbooks (April/May/June 2026), so the

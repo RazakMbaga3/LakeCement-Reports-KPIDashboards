@@ -17,6 +17,7 @@ const express = require('express');
 const db      = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { ROLE_FORM_ACCESS } = require('../config/formAccess');
+const { FORM_LABELS, prettifyField } = require('../services/misReport');
 
 const router = express.Router();
 
@@ -45,7 +46,20 @@ router.get('/', requireAuth, async (req, res, next) => {
     query += ` ORDER BY r.submitted_at ASC`;
 
     const result = await db.query(query, params);
-    res.json(result.rows);
+
+    /* Give the approver the report's own name and its figures. The page used
+       to title-case the raw slug ("Cpp", "Power Cons") and show only a
+       `remarks` field, so an HOD was asked to sign off on numbers the screen
+       never showed them — they had to open the form separately to see what
+       they were approving. FORM_LABELS is the same catalogue the MIS pack
+       uses; `fields` is the row's own data, prettified. */
+    res.json(result.rows.map(r => ({
+      ...r,
+      label: FORM_LABELS[r.form_type] || r.form_type,
+      fields: Object.entries(r.data || {})
+        .filter(([k, v]) => !k.startsWith('_') && v !== '' && v !== null && v !== undefined)
+        .map(([k, v]) => ({ key: k, label: prettifyField(k), value: v })),
+    })));
   } catch (err) { next(err); }
 });
 

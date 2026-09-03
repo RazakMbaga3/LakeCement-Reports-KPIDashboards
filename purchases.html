@@ -45,6 +45,87 @@
     .po-state { font-size: 9.5px; font-weight: 800; letter-spacing: .3px; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; background: var(--section-bg); color: var(--text-muted); }
     .po-state.confirmed { background: var(--green-bg); color: var(--green); }
     .po-state.draft { background: #FFF3E0; color: var(--orange); }
+
+    /* ── Stores / Inventory ─────────────────────────────────────── */
+    .st-divider {
+      display: flex; align-items: center; gap: 10px;
+      margin: 34px 0 4px; padding-top: 22px; border-top: 2px solid var(--border);
+    }
+    .st-divider-title { font-size: 14px; font-weight: 800; color: var(--navy); letter-spacing: -.2px; }
+    .st-chip {
+      font-size: 9.5px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;
+      padding: 3px 9px; border-radius: 10px; background: var(--green-bg); color: var(--green);
+    }
+    .st-chip.warn { background: #FFF3E0; color: var(--orange); }
+
+    /* Category cards — closing stock per reporting category */
+    .st-cat-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    @media (max-width: 1100px) { .st-cat-row { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 700px)  { .st-cat-row { grid-template-columns: repeat(2, 1fr); } }
+    .st-cat {
+      border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 13px;
+      border-left-width: 4px; background: white;
+    }
+    .st-cat-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); }
+    .st-cat-val { font-size: 20px; font-weight: 800; color: var(--navy); line-height: 1.15; margin-top: 6px; }
+    .st-cat-unit { font-size: 10.5px; font-weight: 700; color: var(--text-muted); margin-left: 3px; }
+    .st-cat-meta { font-size: 10px; color: var(--text-muted); margin-top: 5px; font-weight: 500; }
+
+    /* Two-up layout for status + department tables */
+    .st-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 900px) { .st-two { grid-template-columns: 1fr; } }
+
+    .st-donut-wrap { display: flex; align-items: center; gap: 18px; }
+    .st-donut { width: 150px; height: 150px; flex: none; position: relative; }
+    .st-donut-center {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; pointer-events: none;
+    }
+    .st-donut-pct { font-size: 22px; font-weight: 800; color: var(--navy); line-height: 1; }
+    .st-donut-cap { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-top: 3px; }
+    .st-legend { flex: 1; min-width: 0; }
+    .st-legend-row { display: flex; align-items: center; gap: 8px; font-size: 11.5px; padding: 3px 0; }
+    .st-legend-dot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+    .st-legend-name { flex: 1; color: var(--text); font-weight: 600; }
+    .st-legend-val { font-weight: 800; color: var(--navy); }
+
+    .st-tbl { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+    .st-tbl th {
+      font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px;
+      color: var(--text-muted); text-align: right; padding: 7px 10px; border-bottom: 1.5px solid var(--border);
+    }
+    .st-tbl th:first-child, .st-tbl td:first-child { text-align: left; }
+    .st-tbl td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--border); }
+    .st-tbl td:first-child { font-weight: 600; color: var(--navy); }
+    .st-tbl tr:last-child td { border-bottom: none; }
+    .st-tbl .st-short { color: var(--red, #C62828); font-weight: 800; }
+    .st-tbl .st-muted { color: var(--text-muted); font-weight: 500; }
+    .st-bar-cell { width: 34%; }
+    .st-bar { height: 7px; border-radius: 4px; background: var(--section-bg); overflow: hidden; }
+    .st-bar-fill { height: 100%; border-radius: 4px; }
+
+    /* Activity strip */
+    .st-act-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    @media (max-width: 1100px) { .st-act-row { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 700px)  { .st-act-row { grid-template-columns: repeat(2, 1fr); } }
+    .st-act {
+      border: 1.5px solid var(--border); border-radius: 10px; padding: 11px 12px; background: white; text-align: center;
+    }
+    .st-act.pend { border-style: dashed; background: var(--off-white); }
+    .st-act-label { font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; color: var(--text-muted); }
+    .st-act-val { font-size: 17px; font-weight: 800; color: var(--navy); margin-top: 5px; }
+    .st-act.pend .st-act-val { color: var(--text-muted); }
+    .st-act-unit { font-size: 9.5px; font-weight: 700; color: var(--text-muted); margin-left: 2px; }
+
+    /* Pending (Odoo-sourced, not wired) tiles */
+    .st-pending-note {
+      display: flex; gap: 9px; align-items: flex-start;
+      border: 1.5px dashed var(--border); border-radius: 10px;
+      padding: 11px 13px; background: var(--off-white); margin-bottom: 10px;
+    }
+    .st-pending-note:last-child { margin-bottom: 0; }
+    .st-pending-title { font-size: 11.5px; font-weight: 800; color: var(--navy); }
+    .st-pending-msg { font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.45; }
   </style>
 </head>
 <body>
@@ -126,6 +207,97 @@
     <div class="in-empty" id="pd-list-empty" style="display:none">No purchase orders found for this period.</div>
   </div>
 
+  <!-- ══ STORES / INVENTORY ═══════════════════════════════════════
+       Sourced from the MIS materials daily report, not Odoo — this
+       whole block shows real data even while Purchase waits on the
+       Odoo API key. -->
+  <div class="st-divider">
+    <span class="st-divider-title">Stores &amp; Inventory</span>
+    <span class="st-chip" id="st-source-chip">MIS</span>
+    <span class="in-section-sub" id="st-asof"></span>
+  </div>
+
+  <!-- Closing stock by category -->
+  <div class="in-section-hdr">
+    <span class="in-section-title">Closing Stock — by Category</span>
+    <span class="in-section-sub" id="st-cat-sub"></span>
+  </div>
+  <div class="st-cat-row" id="st-categories"></div>
+  <div class="in-empty" id="st-cat-empty" style="display:none"></div>
+
+  <!-- Stock level status + diesel by department -->
+  <div class="st-two" style="margin-top:16px">
+    <div class="in-card" style="margin-bottom:0">
+      <div class="in-section-hdr" style="margin-top:0">
+        <span class="in-section-title">Stock Level Status</span>
+        <span class="in-section-sub">vs. min / max reorder levels</span>
+      </div>
+      <div class="st-donut-wrap">
+        <div class="st-donut">
+          <canvas id="chart-stock-status"></canvas>
+          <div class="st-donut-center">
+            <div class="st-donut-pct" id="st-healthy-pct">—</div>
+            <div class="st-donut-cap">Within level</div>
+          </div>
+        </div>
+        <div class="st-legend" id="st-status-legend"></div>
+      </div>
+      <div style="margin-top:14px" id="st-below-wrap">
+        <div class="in-section-sub" style="font-weight:700;margin-bottom:6px">Below minimum — needs replenishment</div>
+        <div class="tbl-scroll">
+          <table class="st-tbl">
+            <thead><tr><th>Material</th><th>Closing</th><th>Min</th><th>Shortfall</th></tr></thead>
+            <tbody id="st-below-min"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="in-card" style="margin-bottom:0">
+      <div class="in-section-hdr" style="margin-top:0">
+        <span class="in-section-title">Diesel Issued — by Department</span>
+        <span class="in-section-sub" id="st-diesel-sub"></span>
+      </div>
+      <div class="tbl-scroll">
+        <table class="st-tbl">
+          <thead><tr><th>Cost Centre</th><th>Issued (Ltr)</th><th class="st-bar-cell">Share</th></tr></thead>
+          <tbody id="st-diesel"></tbody>
+        </table>
+      </div>
+      <div class="in-empty" id="st-diesel-empty" style="display:none"></div>
+    </div>
+  </div>
+
+  <!-- Receipt vs issue trend -->
+  <div class="in-section-hdr">
+    <span class="in-section-title">Receipt vs Issue — Monthly Trend</span>
+    <span class="in-section-sub">
+      <select id="st-trend-cat" class="in-input" style="margin-left:2px"></select>
+      <select id="st-trend-mode" class="in-input" style="margin-left:4px">
+        <option value="qty">Quantity</option>
+        <option value="tzs">Value (TZS)</option>
+      </select>
+    </span>
+  </div>
+  <div class="in-card">
+    <div class="in-chart-wrap"><canvas id="chart-receipt-issue"></canvas></div>
+    <div class="in-empty" id="st-trend-empty" style="display:none"></div>
+  </div>
+
+  <!-- Store activity on the latest reported day -->
+  <div class="in-section-hdr">
+    <span class="in-section-title">Store Activity</span>
+    <span class="in-section-sub" id="st-act-sub"></span>
+  </div>
+  <div class="st-act-row" id="st-activity"></div>
+
+  <!-- What still needs Odoo / Stores confirmation -->
+  <div class="in-section-hdr">
+    <span class="in-section-title">Not Yet Available</span>
+    <span class="in-section-sub">— sections awaiting Odoo access or Stores confirmation</span>
+  </div>
+  <div class="in-card" id="st-pending"></div>
+
 </main>
 
 <footer class="dash-footer">
@@ -204,9 +376,25 @@
       html += sk({ label: 'POs This Month', pending: true, pendingMsg: trend.message });
     } else {
       var thisMonth = trend.months[d.period.month - 1] || { value_tzs: 0, count: 0 };
-      var ytdTotal = trend.months.slice(0, d.period.month).reduce(function (s, mo) { return s + mo.value_tzs; }, 0);
-      html += sk({ label: d.period.label + ' PO Value', value: tzs(thisMonth.value_tzs), status: thisMonth.count + ' confirmed PO(s)' });
-      html += sk({ label: 'Year to Date', value: tzs(ytdTotal), status: 'Jan–' + MONTHS[d.period.month].slice(0, 3) + ' ' + d.period.year });
+      /* A month can be null when its fetch failed — the API has no
+         pagination and is fetched month by month. Skip those in the YTD
+         sum (adding null would make it NaN) and say how many are missing
+         rather than presenting a short total as complete. */
+      var ytdMonths = trend.months.slice(0, d.period.month);
+      var loaded = ytdMonths.filter(function (mo) { return mo.value_tzs != null; });
+      var ytdTotal = loaded.reduce(function (s, mo) { return s + mo.value_tzs; }, 0);
+      var missing = ytdMonths.length - loaded.length;
+      html += sk({
+        label: d.period.label + ' PO Value',
+        value: tzs(thisMonth.value_tzs),
+        status: thisMonth.value_tzs == null ? 'Not loaded' : thisMonth.count + ' confirmed PO(s)',
+      });
+      html += sk({
+        label: 'Year to Date',
+        value: tzs(ytdTotal),
+        status: 'Jan–' + MONTHS[d.period.month].slice(0, 3) + ' ' + d.period.year +
+                (missing ? ' · ' + missing + ' month(s) unavailable' : ''),
+      });
     }
     if (d.po_list.ok) {
       html += sk({ label: 'PO List (all states)', value: fmt(d.po_list.count), unit: 'POs', status: tzs(d.po_list.total_value_tzs) + ' total' });
@@ -219,19 +407,22 @@
   function renderTrend(trendRes, year) {
     var canvas = document.getElementById('chart-po-trend');
     var empty = document.getElementById('pd-trend-empty');
+    /* Collapse the fixed-height chart box too, not just the canvas —
+       otherwise an unconnected Odoo leaves a tall blank panel. */
+    var box = canvas.parentElement;
     if (!trendRes.ok) {
       empty.textContent = trendRes.message;
-      empty.style.display = 'block'; canvas.style.display = 'none';
+      empty.style.display = 'block'; box.style.display = 'none';
       return;
     }
     var months = trendRes.months;
     var hasData = months.some(function (mo) { return mo.value_tzs > 0; });
     if (!hasData) {
       empty.textContent = 'No confirmed purchase orders found for ' + year + '.';
-      empty.style.display = 'block'; canvas.style.display = 'none';
+      empty.style.display = 'block'; box.style.display = 'none';
       return;
     }
-    empty.style.display = 'none'; canvas.style.display = 'block';
+    empty.style.display = 'none'; box.style.display = 'block';
     if (trendChart) trendChart.destroy();
     trendChart = new Chart(canvas, {
       type: 'bar',
@@ -302,6 +493,241 @@
     tbody.innerHTML = html;
   }
 
+  /* ── Stores / Inventory ───────────────────────────────────────── */
+  var CAT_COLORS = { raw_material: NAVY, coal: '#6B7280', packing_bag: ORANGE, grinding_aid: '#7C5CBF', diesel: GREEN };
+  var statusChart = null, trendCatChart = null, _storesCache = null;
+
+  function qty(v, unit) {
+    if (v == null) return '—';
+    var digits = (unit === 'No.') ? 0 : (Math.abs(v) >= 1000 ? 0 : 1);
+    return v.toLocaleString(undefined, { maximumFractionDigits: digits });
+  }
+
+  function renderStoreCategories(inv) {
+    var wrap = document.getElementById('st-categories');
+    var empty = document.getElementById('st-cat-empty');
+    if (!inv.ok) {
+      wrap.innerHTML = ''; empty.textContent = inv.message; empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    wrap.innerHTML = inv.categories.map(function (c) {
+      var color = CAT_COLORS[c.key] || NAVY;
+      return '<div class="st-cat" style="border-left-color:' + color + '">' +
+        '<div class="st-cat-label">' + esc(c.label) + '</div>' +
+        '<div class="st-cat-val">' + qty(c.closing, c.unit) + '<span class="st-cat-unit">' + esc(c.unit) + '</span></div>' +
+        '<div class="st-cat-meta">' + c.line_count + ' item(s) &middot; issued ' + qty(c.consumed, c.unit) + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function renderStockStatus(st) {
+    var legend = document.getElementById('st-status-legend');
+    var tbody = document.getElementById('st-below-min');
+    var pctEl = document.getElementById('st-healthy-pct');
+    if (!st.ok) {
+      legend.innerHTML = '<div class="in-empty">' + esc(st.message) + '</div>';
+      tbody.innerHTML = ''; return;
+    }
+    var below = st.below_min.length, above = st.above_max.length, within = st.within_count;
+    pctEl.textContent = (st.healthy_pct == null ? '—' : st.healthy_pct + '%');
+
+    var parts = [
+      { name: 'Within min–max', val: within, color: GREEN },
+      { name: 'Below minimum', val: below, color: '#C62828' },
+      { name: 'Above maximum', val: above, color: ORANGE },
+    ];
+    legend.innerHTML = parts.map(function (p) {
+      return '<div class="st-legend-row">' +
+        '<span class="st-legend-dot" style="background:' + p.color + '"></span>' +
+        '<span class="st-legend-name">' + p.name + '</span>' +
+        '<span class="st-legend-val">' + p.val + '</span></div>';
+    }).join('') +
+      '<div class="st-legend-row" style="border-top:1px solid var(--border);margin-top:5px;padding-top:6px">' +
+      '<span class="st-legend-name st-muted" style="font-weight:500">No level set</span>' +
+      '<span class="st-legend-val st-muted">' + st.untracked_count + '</span></div>';
+
+    if (statusChart) statusChart.destroy();
+    statusChart = new Chart(document.getElementById('chart-stock-status'), {
+      type: 'doughnut',
+      data: {
+        labels: parts.map(function (p) { return p.name; }),
+        datasets: [{ data: parts.map(function (p) { return p.val; }), backgroundColor: parts.map(function (p) { return p.color; }), borderWidth: 0 }],
+      },
+      options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { display: false } } },
+    });
+
+    document.getElementById('st-below-wrap').style.display = below ? 'block' : 'none';
+    tbody.innerHTML = st.below_min.map(function (r) {
+      return '<tr><td>' + esc(r.label) + '</td><td>' + qty(r.closing) + '</td><td class="st-muted">' + qty(r.min) + '</td>' +
+        '<td class="st-short">' + qty(r.shortfall) + '</td></tr>';
+    }).join('');
+  }
+
+  function renderDiesel(dsl) {
+    var tbody = document.getElementById('st-diesel');
+    var empty = document.getElementById('st-diesel-empty');
+    document.getElementById('st-diesel-sub').textContent = dsl.ok ? '— ' + qty(dsl.total_issued) + ' Ltr this month' : '';
+    if (!dsl.ok) { tbody.innerHTML = ''; empty.textContent = dsl.message; empty.style.display = 'block'; return; }
+    var max = dsl.rows.reduce(function (m, r) { return Math.max(m, r.issued); }, 0);
+    if (!max) {
+      tbody.innerHTML = '';
+      empty.textContent = 'No diesel issues recorded for this month.';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    tbody.innerHTML = dsl.rows.map(function (r) {
+      var pct = max ? (r.issued / max) * 100 : 0;
+      return '<tr><td>' + esc(r.label) + '</td>' +
+        '<td' + (r.issued ? '' : ' class="st-muted"') + '>' + qty(r.issued) + '</td>' +
+        '<td class="st-bar-cell"><div class="st-bar"><div class="st-bar-fill" style="width:' + pct.toFixed(1) + '%;background:' + GREEN + '"></div></div></td></tr>';
+    }).join('');
+  }
+
+  function renderTrend2(trend, catKey, mode) {
+    var canvas = document.getElementById('chart-receipt-issue');
+    var empty = document.getElementById('st-trend-empty');
+    if (!trend.ok) {
+      empty.textContent = trend.message; empty.style.display = 'block'; canvas.style.display = 'none'; return;
+    }
+    var box = canvas.parentElement;
+    /* Value mode reads a separate TZS series; it stays unavailable until
+       material rates are configured, so say why rather than plot zeroes. */
+    var valueMode = (mode === 'tzs');
+    var src = valueMode ? trend.value : trend;
+    if (valueMode && (!src || !src.ok)) {
+      empty.textContent = (src && src.message) || 'Value view is not available yet.';
+      empty.style.display = 'block'; box.style.display = 'none'; return;
+    }
+    var months = src.by_category[catKey] || [];
+    var live = months.filter(function (m) { return m.days > 0; });
+    if (!live.length) {
+      empty.textContent = 'No materials reports submitted for this category yet.';
+      empty.style.display = 'block'; box.style.display = 'none'; return;
+    }
+    empty.style.display = 'none'; box.style.display = 'block';
+    var unit = valueMode ? 'TZS' : (trend.units[catKey] || '');
+    if (trendCatChart) trendCatChart.destroy();
+    trendCatChart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: live.map(function (m) { return m.label; }),
+        datasets: [
+          { label: 'Received', data: live.map(function (m) { return m.received; }), backgroundColor: NAVY, borderRadius: 4 },
+          { label: 'Issued',   data: live.map(function (m) { return m.issued; }),   backgroundColor: GREEN, borderRadius: 4 },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', align: 'end', labels: { boxWidth: 10, boxHeight: 10, font: { size: 10 }, usePointStyle: true, pointStyle: 'rectRounded' } },
+          tooltip: { callbacks: { label: function (c) {
+            return c.dataset.label + ': ' + (valueMode ? tzs(c.parsed.y) : qty(c.parsed.y, unit) + ' ' + unit);
+          } } },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 9 } } },
+          y: {
+            ticks: { font: { size: 9 }, callback: function (v) { return valueMode ? tzs(v) : qty(v, unit); } },
+            title: { display: true, text: unit, font: { size: 9 }, color: GRAY },
+          },
+        },
+      },
+    });
+  }
+
+  function renderStoreActivity(act) {
+    var wrap = document.getElementById('st-activity');
+    if (!act.ok) { wrap.innerHTML = '<div class="in-empty" style="grid-column:1/-1">' + esc(act.message) + '</div>'; return; }
+    /* Movements are summed per unit, never across units — bags (No.) and
+       diesel (Ltr) get their own tiles rather than being folded into a
+       meaningless combined figure with the MT materials. */
+    function sumByUnit(list, unit) {
+      return list.reduce(function (s, r) { return r.unit === unit ? s + r.value : s; }, 0);
+    }
+    function tile(label, value, unit, pend) {
+      return '<div class="st-act' + (pend ? ' pend' : '') + '">' +
+        '<div class="st-act-label">' + esc(label) + '</div>' +
+        '<div class="st-act-val">' + value + (unit ? '<span class="st-act-unit">' + esc(unit) + '</span>' : '') + '</div>' +
+      '</div>';
+    }
+    var html = '';
+    html += tile('Material Received', qty(sumByUnit(act.received, 'MT'), 'MT'), 'MT');
+    html += tile('Material Issued', qty(sumByUnit(act.issued, 'MT'), 'MT'), 'MT');
+    html += tile('Bags Issued', qty(sumByUnit(act.issued, 'No.'), 'No.'), 'No.');
+    html += tile('Diesel Issued', qty(sumByUnit(act.issued, 'Ltr'), 'Ltr'), 'Ltr');
+    html += tile('Pending GRN Qty', qty(sumByUnit(act.pending_grn, 'MT'), 'MT'), 'MT');
+    /* The reference dashboard's remaining tiles, kept visible as dashed
+       placeholders so it reads as "awaiting Odoo", not "zero today". */
+    html += tile('MRQ / Requisitions', '—', '', true);
+    html += tile('Gate Pass (RGP)', '—', '', true);
+    wrap.innerHTML = html;
+  }
+
+  function renderStorePending(s) {
+    var items = [
+      { key: 'engineering_spare', title: 'Engineering &amp; Spare Inventory' },
+      { key: 'stock_ageing', title: 'Stock Ageing' },
+      { key: 'open_rgp', title: 'Open RGP / NRGP / MRQ' },
+    ];
+    document.getElementById('st-pending').innerHTML = items.map(function (it) {
+      var r = s[it.key] || {};
+      return '<div class="st-pending-note">' +
+        '<i data-lucide="clock" style="width:15px;height:15px;color:var(--text-muted);flex:none;margin-top:1px"></i>' +
+        '<div><div class="st-pending-title">' + it.title + '</div>' +
+        '<div class="st-pending-msg">' + esc(r.message || '') + '</div></div></div>';
+    }).join('');
+  }
+
+  function renderStores(s) {
+    _storesCache = s;
+    var chip = document.getElementById('st-source-chip');
+    var asOf = document.getElementById('st-asof');
+    if (s.inventory.ok) {
+      chip.textContent = 'MIS — Live';
+      chip.className = 'st-chip' + (s.stale ? ' warn' : '');
+      asOf.textContent = 'Closing stock as at ' + s.as_of +
+        (s.stale ? ' — latest materials report predates ' + s.period.label : '') +
+        ' · ' + s.days_reported + '/' + s.days_in_month + ' days reported';
+    } else {
+      chip.textContent = 'No data'; chip.className = 'st-chip warn'; asOf.textContent = '';
+    }
+    document.getElementById('st-cat-sub').textContent = s.inventory.ok ? '— units differ by category; no combined total' : '';
+    document.getElementById('st-act-sub').textContent = s.store_activity.ok ? '— ' + s.as_of : '';
+
+    renderStoreCategories(s.inventory);
+    renderStockStatus(s.stock_status);
+    renderDiesel(s.diesel_by_dept);
+    renderStoreActivity(s.store_activity);
+    renderStorePending(s);
+
+    var sel = document.getElementById('st-trend-cat');
+    var modeSel = document.getElementById('st-trend-mode');
+    function drawTrend() {
+      if (_storesCache) renderTrend2(_storesCache.receipt_issue_trend, sel.value || 'raw_material', modeSel.value);
+    }
+    if (!sel.options.length && s.inventory.ok) {
+      s.inventory.categories.forEach(function (c) {
+        var o = document.createElement('option'); o.value = c.key; o.textContent = c.label;
+        sel.appendChild(o);
+      });
+      sel.addEventListener('change', drawTrend);
+      modeSel.addEventListener('change', drawTrend);
+    }
+    /* Flag the value option as unavailable rather than letting it look
+       selectable-but-broken, and default back to quantity if it is. */
+    var val = s.receipt_issue_trend.value;
+    var tzsOpt = modeSel.querySelector('option[value="tzs"]');
+    if (!val || !val.ok) {
+      tzsOpt.textContent = 'Value (TZS) — not available';
+      if (modeSel.value === 'tzs') modeSel.value = 'qty';
+    } else {
+      tzsOpt.textContent = 'Value (TZS)' + (val.partial ? ' — partial' : '');
+    }
+    drawTrend();
+  }
+
   async function load() {
     var year = yearSel.value;
     var month = monthSel.value;
@@ -315,6 +741,7 @@
       renderTrend(d.po_value_trend, d.period.year);
       renderCategoryGrid(d.category_grid);
       renderPoList(d.po_list);
+      if (d.stores) renderStores(d.stores);
       if (window.lucide) window.lucide.createIcons();
     } catch (e) {
       document.getElementById('pd-source').textContent = '';

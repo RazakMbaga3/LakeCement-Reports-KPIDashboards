@@ -31,7 +31,7 @@
     production: ['production', 'quality', 'limestone', 'pile-quality'],
     pm:         ['stoppage', 'power-cons'],   // P&M owns Stoppage & Power Cons. reports
     logistics:  ['dispatch'],
-    cpp:        ['power-plant', 'cpp'],
+    cpp:        ['cpp'],   // 'power-plant' retired 2026-08-31 — see config/forms.js
     mining:     ['mines'],
     stores:     ['materials'],                // Raw Materials report is owned by Purchase & Stores
     sales:      ['sales-projection'],
@@ -51,6 +51,20 @@
     md: [], hr: [], finance: [], it: [], logistics: [], sales: [], purchase: [],
   };
 
+  /* The complete set of KPI department keys — the <section id="dept-KEY">
+     ids on index.html, which are also kpi_monthly.department values.
+
+     PUT /api/kpi/:dept/... used to accept any /^[a-z0-9_-]+$/i string, so a
+     role with editDepts 'all' could write rows under a mistyped department
+     that no page would ever render — invisible data nothing reports.
+     Validating against this list turns a silent orphan into a 400.
+     (backend/test/kpi-keys.test.js catches orphans that arrive by other
+     routes, e.g. scripts/import-kpi-monthly.js writing straight to the DB.) */
+  var KPI_DEPTS = [
+    'ei', 'production', 'mines', 'mechanical',
+    'powerplant', 'packing', 'stores', 'minesworkshop',
+  ];
+
   var COMMERCIAL_VIEW_ROLES = ['md', 'sales'];
 
   // Purchases dashboard used to ride on COMMERCIAL_VIEW_ROLES (Sales' gate)
@@ -58,7 +72,7 @@
   // incidental view access rather than silently losing it in this change.
   var PURCHASE_VIEW_ROLES = ['md', 'sales', 'purchase'];
 
-  var api = { FORM_ACCESS: FORM_ACCESS, KPI_EDIT_DEPTS: KPI_EDIT_DEPTS, COMMERCIAL_VIEW_ROLES: COMMERCIAL_VIEW_ROLES, PURCHASE_VIEW_ROLES: PURCHASE_VIEW_ROLES };
+  var api = { FORM_ACCESS: FORM_ACCESS, KPI_EDIT_DEPTS: KPI_EDIT_DEPTS, KPI_DEPTS: KPI_DEPTS, COMMERCIAL_VIEW_ROLES: COMMERCIAL_VIEW_ROLES, PURCHASE_VIEW_ROLES: PURCHASE_VIEW_ROLES };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.NyatiAccess = api;

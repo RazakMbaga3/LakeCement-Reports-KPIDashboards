@@ -98,7 +98,7 @@ async function getDashboard(year, month) {
 
   const territories = await getTerritories();
 
-  const [projRange, projToday, mtdSales, collections, uncollectable, payable, advance, agewise, targetsRes] =
+  const [projRange, projToday, mtdSales, collections, uncollectable, payable, advance, agewise, targetsRes, officerAchievement] =
     await Promise.all([
       _sumProjections(fmt(firstOfMonth), fmt(mtdEnd), territories),
       _sumProjections(fmt(today), fmt(today), territories),
@@ -106,9 +106,10 @@ async function getDashboard(year, month) {
       salesOdoo.fetchCollections(fmt(firstOfMonth), fmt(mtdEnd)),
       salesOdoo.fetchReceivedUncollectable(),
       salesOdoo.fetchPayable(),
-      salesOdoo.fetchAdvance(),
-      salesOdoo.fetchAgewiseOutstanding(),
+      salesOdoo.fetchAdvance(fmt(firstOfMonth), fmt(mtdEnd)),
+      salesOdoo.fetchAgewiseOutstanding(fmt(firstOfMonth), fmt(mtdEnd)),
       _getTargets(firstOfMonth),
+      salesOdoo.fetchOfficerAchievement(fmt(firstOfMonth), fmt(mtdEnd)),
     ]);
 
   const mtdActual = mtdSales.ok ? mtdSales.value.qty_mt : null;
@@ -133,8 +134,8 @@ async function getDashboard(year, month) {
 
   const grades = _buildGradeMix(mtdSales);
 
-  const actualByOfficer = mtdSales.ok ? _actualByOfficerFromOrders(mtdSales.value, territories) : {};
-  const performance = _buildPerformance(territories, projRange, targetsRes.byOfficer, actualByOfficer);
+  // See this function's doc comment: null on purpose, not stale data.
+  const performance = _buildPerformance(territories, projRange, targetsRes.byOfficer, {});
 
   const dailyTrend = [];
   for (let d = new Date(firstOfMonth); d <= mtdEnd; d = new Date(d.getTime() + 86400000)) {
@@ -168,6 +169,14 @@ async function getDashboard(year, month) {
     grades,
     daily_trend: dailyTrend,
     performance,
+    /* Real officer actual-vs-target, sourced entirely from Odoo — see
+       salesOdoo.fetchOfficerAchievement() for the customer-target join
+       that makes this correct without needing sale_orders.salesperson
+       fixed. This is the authoritative achievement view; `performance`
+       above is the separate local-projection habit tracker. */
+    officer_achievement: officerAchievement.ok
+      ? { ok: true, ...officerAchievement.value, as_of: officerAchievement.as_of, source: officerAchievement.source }
+      : { ok: false, status: officerAchievement.status, message: officerAchievement.message },
     targets: {
       ok: targetsRes.companyTotal != null,
       source: targetsRes.source,
@@ -278,43 +287,16 @@ function _buildGradeMix(mtdSales) {
   return graded;
 }
 
-/* Per-officer actual MT via sale.order.user_id (Odoo's own "Salesperson"
-   field, confirmed standard 2026-08-24 — distinct from the list view's
-   "Created User", which is just the order-entry clerk) matched against
-   sales_territories.odoo_user_id. The query side is real; the roster's
-   odoo_user_id column isn't backfilled yet, so this returns {} (every
-   officer falls back to projected_mt in _buildPerformance below) until
-   that manual mapping happens — same "ready but inert" pattern as the
-   Purchase dashboard's category grid. */
-function _actualByOfficerFromOrders(mtdValue, territories) {
-  const orderToUid = new Map();
-  for (const o of mtdValue.orders) {
-    orderToUid.set(o.id, Array.isArray(o.user_id) ? o.user_id[0] : o.user_id);
-  }
-  const mtByUid = new Map();
-  for (const line of mtdValue.lines) {
-    const orderId = Array.isArray(line.order_id) ? line.order_id[0] : line.order_id;
-    const uid = orderToUid.get(orderId);
-    if (!uid) continue;
-    const uom = line.product_uom;
-    const uomName = (Array.isArray(uom) ? uom[1] : uom) || '';
-    const qty = line.product_uom_qty || 0;
-    const mt = /MT|TON|TONNE/i.test(uomName) ? qty : qty / 20;
-    mtByUid.set(uid, (mtByUid.get(uid) || 0) + mt);
-  }
-  const byOfficer = {};
-  for (const t of territories) {
-    if (t.odoo_user_id && mtByUid.has(t.odoo_user_id)) {
-      byOfficer[t.officer_code] = Math.round(mtByUid.get(t.odoo_user_id) * 10) / 10;
-    }
-  }
-  return byOfficer;
-}
-
-/* Division -> Zone/Officer rollup. actual_mt now uses the real Odoo
-   attribution above when available, falling back to the manual
-   projection for achievement_pct only when no actual exists yet —
-   projected_mt (manual) and target_mt (sales_targets) are always real. */
+/* Division -> Zone/Officer rollup for the LOCAL manual-projection system
+   (sales_territories + daily "sales-projection" reports + the interim
+   local sales_targets table) — a separate, still-useful thing from the
+   real Odoo achievement view below. actual_mt here stays null: this
+   table's officer roster is placeholder data (sales_territories was
+   never backfilled with the real names/codes), and matching it against
+   Odoo's own officer names would be a fragile guess, not the confirmed
+   join salesOdoo.fetchOfficerAchievement() does via customer_id. Use
+   `officer_achievement` (Odoo-sourced, real officer names, real targets)
+   for actual-vs-target; this table is for the daily projection habit. */
 function _buildPerformance(territories, projRange, targetByOfficer, actualByOfficer) {
   const byDivision = new Map();
   for (const t of territories) {

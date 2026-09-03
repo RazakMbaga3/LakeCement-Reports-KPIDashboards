@@ -88,7 +88,7 @@ async function cleanup() {
 }
 function startServer() {
   const child = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
-    env: { ...process.env, PORT, AUTH_RATE_LIMIT: '500', ODOO_URL: '', ODOO_DISPATCH_URL: '' },
+    env: { ...process.env, PORT, AUTH_RATE_LIMIT: '500', ODOO_URL: '', ODOO_DISPATCH_URL: '', ODOO_DASHBOARD_URL: '', ODOO_DASHBOARD_API_KEY: '' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   let out = '';
@@ -107,7 +107,7 @@ async function waitFor(url, timeoutMs = 45000) {
 }
 
 async function main() {
-  console.log('Purchases acceptance — booting server on port ' + PORT + ' (ODOO_URL unset)…\n');
+  console.log('Purchases acceptance — booting server on port ' + PORT + ' (all Odoo config unset)…\n');
   await seedTestUsers();
   const child = startServer();
 
@@ -145,6 +145,31 @@ async function main() {
     check('sources.po_value_trend propagates the real status', d.sources && d.sources.po_value_trend === 'not_configured', JSON.stringify(d.sources));
     check('sources.po_list propagates the real status', d.sources && d.sources.po_list === 'not_configured', JSON.stringify(d.sources));
     check('sources has no category_grid key (matches services/purchases.js shape)', d.sources && !('category_grid' in d.sources), JSON.stringify(d.sources));
+
+    /* Stores reads the MIS materials report, not Odoo — the whole point is
+       that it still works with every Odoo variable unset above. If the plant
+       has never submitted a materials report these legitimately report
+       no_data, so accept either that or real numbers, never a fabricated one. */
+    const st = d.stores;
+    check('stores block is present on the payload', !!st, JSON.stringify(Object.keys(d)));
+    if (st) {
+      const invOk = st.inventory && st.inventory.ok === true;
+      const invNoData = st.inventory && st.inventory.ok === false && st.inventory.status === 'no_data';
+      check('stores.inventory is live or honestly no_data — never Odoo-gated', invOk || invNoData, JSON.stringify(st.inventory && st.inventory.status));
+      if (invOk) {
+        check('stores.inventory categories each carry their own unit (no cross-unit total)',
+          Array.isArray(st.inventory.categories) && st.inventory.categories.length > 0
+            && st.inventory.categories.every(c => typeof c.unit === 'string' && c.unit.length),
+          JSON.stringify((st.inventory.categories || []).map(c => c.label + ':' + c.unit)));
+        check('stores.as_of names the materials report the numbers came from', /^\d{4}-\d{2}-\d{2}$/.test(st.as_of || ''), String(st.as_of));
+      }
+      // The three sections with no MIS source stay explicitly not_mapped.
+      for (const key of ['engineering_spare', 'stock_ageing', 'open_rgp']) {
+        check(`stores.${key} reports not_mapped with a reason`,
+          st[key] && st[key].ok === false && st[key].status === 'not_mapped' && (st[key].message || '').length > 20,
+          JSON.stringify(st[key]));
+      }
+    }
 
   } finally {
     child.kill();

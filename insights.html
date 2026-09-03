@@ -72,6 +72,10 @@
 </div>
 
 <main class="in-main">
+  <!-- Filled by LatestPeriod.showNote() when the page had to fall back off
+       today because nothing has been entered since an earlier date. -->
+  <div class="stale-note" id="in-stale" style="display:none"></div>
+
 
   <div class="in-section-hdr">
     <span class="in-section-title">Output vs. Downtime</span>
@@ -156,6 +160,7 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="forms/api-client.js"></script>
+<script src="forms/latest-period.js"></script>
 <script src="forms/client-errors.js"></script>
 <script>
 (function () {
@@ -335,21 +340,31 @@
     return dates.map(function (dt) { return byDate[dt] || 0; });
   }
 
+  /* A preset keeps its WIDTH but ends on the last day that has data, so
+     "90 days" stays 90 days of real data instead of 90 days that happen to be
+     mostly empty. See forms/latest-period.js. */
+  async function applyPreset(days) {
+    var r = await LatestPeriod.defaultRange(days, ['production', 'stoppage', 'materials']);
+    fromEl.value = r.from; toEl.value = r.to;
+    LatestPeriod.showNote('in-stale', r);
+    load();
+  }
+
   document.querySelectorAll('.in-pill[data-days]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       document.querySelectorAll('.in-pill[data-days]').forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
-      setPillsRange(parseInt(btn.dataset.days, 10));
-      load();
+      applyPreset(parseInt(btn.dataset.days, 10));
     });
   });
   document.getElementById('in-apply').addEventListener('click', function () {
     document.querySelectorAll('.in-pill[data-days]').forEach(function (b) { b.classList.remove('active'); });
+    LatestPeriod.showNote('in-stale', null); // explicit dates: the user's choice stands
     load();
   });
 
-  setPillsRange(90);
-  load();
+  setPillsRange(90);   // paint something immediately, then correct the window
+  applyPreset(90);
 
   var _dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
   var fEl = document.getElementById('footer-date');

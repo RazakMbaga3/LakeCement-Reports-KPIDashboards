@@ -6,6 +6,8 @@
   GET /api/insights/benchmark/:year/:month       → KPIs vs prev month / last
                                                    year / best-ever / rolling-3
   GET /api/insights/stoppages?from=&to=          → downtime Pareto + MTTR/MTBF
+  GET /api/insights/stoppages/:equip?from=&to=   → same, scoped to one equipment,
+                                                    plus fault-level Pareto + MTBF/month
   GET /api/insights/search?q=                    → institutional memory search
 
   All authenticated; no role restriction — this is read-only insight, and
@@ -53,6 +55,18 @@ router.get('/stoppages',
     try {
       const { from, to } = req.validated.query;
       res.json(await insights.stoppageInsights(from, to));
+    } catch (err) { next(err); }
+  });
+
+router.get('/stoppages/:equip',
+  requireAuth,
+  validate(z.object({ equip: z.enum(Object.keys(insights.STOP_EQUIPMENT)) }), 'params'),
+  validate(z.object({ from: zDate, to: zDate }), 'query'),
+  async (req, res, next) => {
+    try {
+      const { equip } = req.validated.params;
+      const { from, to } = req.validated.query;
+      res.json(await insights.equipmentStoppageDetail(equip, from, to));
     } catch (err) { next(err); }
   });
 

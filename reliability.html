@@ -178,6 +178,10 @@
 </div>
 
 <main class="rl-main">
+  <!-- Filled by LatestPeriod.showNote() when the page had to fall back off
+       today because nothing has been entered since an earlier date. -->
+  <div class="stale-note" id="rl-stale" style="display:none"></div>
+
 
   <!-- ══ Headline KPI strip ══ -->
   <div class="rl-section-hdr">
@@ -265,6 +269,15 @@
   </div>
   <div id="rl-rcfa-wrap"></div>
 
+  <!-- ══ Equipment Detail ══ -->
+  <div class="rl-section-hdr">
+    <span class="rl-section-title"><i data-lucide="cpu" style="width:14px;height:14px;stroke-width:2.2"></i> Equipment Detail</span>
+    <span class="rl-section-sub" id="rl-equip-sub">— named-fault Pareto, MTBF trend and cause breakdown for one section at a time</span>
+    <div class="rl-section-line"></div>
+  </div>
+  <div class="rl-pills" id="rl-equip-tabs" style="margin-bottom:14px"></div>
+  <div id="rl-equip-detail"></div>
+
 </main>
 
 <footer class="dash-footer">
@@ -284,6 +297,7 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="forms/api-client.js"></script>
+<script src="forms/latest-period.js"></script>
 <script src="forms/client-errors.js"></script>
 <script>
 (function () {
@@ -319,6 +333,8 @@
      own — see the main-asset-down RCFA trigger for kiln/rm/cm1/cm2). */
   function availStatus(pct) { return pct >= 90 ? 'good' : (pct >= 80 ? 'warning' : 'critical'); }
   function mtbfStatus(hrs, key) {
+    // No failures at all in the period: MTBF is undefined, not bad.
+    if (hrs === null || hrs === undefined) return 'good';
     var t = MTBF_TARGET[key] || 125;
     return hrs >= t ? 'good' : (hrs >= t * 0.5 ? 'warning' : 'critical');
   }
@@ -411,15 +427,23 @@
      the two series are mathematically tied to the same scale, not an
      arbitrary second axis. Exact hours/events stay in the adjoining table
      (and the bar tooltip) rather than a second y-scale. */
-  function renderParetoChart(canvasId, rows, valueKey) {
+  /* opts.labelKey (default 'label') and opts.colorFn (default: cause-color
+     lookup) let this same renderer serve the fault-level Pareto too (many
+     named faults, not a fixed small category set — see renderFaultPareto,
+     which passes a single sequential hue instead of per-cause colors, per
+     the dataviz skill's "sequential magnitude, one hue" rule). */
+  function renderParetoChart(canvasId, rows, valueKey, opts) {
+    opts = opts || {};
+    var labelKey = opts.labelKey || 'label';
+    var colorFn = opts.colorFn || function (r) { return CAUSE_COLOR[r.cause] || '#94A3B8'; };
     var ctx = document.getElementById(canvasId);
     destroyChart(canvasId);
     if (!rows.length) return;
 
-    var labels = rows.map(function (r) { return r.label; });
+    var labels = rows.map(function (r) { return r[labelKey]; });
     var shareData = rows.map(function (r) { return r.pct; });
     var cumData = rows.map(function (r) { return r.cumPct; });
-    var colors = rows.map(function (r) { return CAUSE_COLOR[r.cause] || '#94A3B8'; });
+    var colors = rows.map(colorFn);
 
     _charts[canvasId] = new Chart(ctx, {
       data: {
@@ -441,7 +465,7 @@
             callbacks: {
               label: function (c) {
                 var r = rows[c.dataIndex];
-                if (c.dataset.label === 'Share of total') return ' ' + r.label + ': ' + r[valueKey] + (valueKey === 'hours' ? 'h' : ' events') + ' (' + r.pct.toFixed(1) + '% share)';
+                if (c.dataset.label === 'Share of total') return ' ' + r[labelKey] + ': ' + r[valueKey] + (valueKey === 'hours' ? 'h' : ' events') + ' (' + r.pct.toFixed(1) + '% share)';
                 if (c.dataset.label === 'Cumulative %') return ' Cumulative: ' + r.cumPct.toFixed(1) + '%';
                 return null;
               },
@@ -456,14 +480,19 @@
     });
   }
 
-  function renderParetoTable(wrapId, rows, valueKey, valueLabel) {
+  function renderParetoTable(wrapId, rows, valueKey, valueLabel, opts) {
+    opts = opts || {};
+    var labelKey = opts.labelKey || 'label';
+    var colorFn = opts.colorFn || function (r) { return CAUSE_COLOR[r.cause] || '#94A3B8'; };
+    var headHdr = opts.headHdr || 'Cause';
+    var emptyMsg = opts.emptyMsg || 'No stoppage data logged in this period.';
     var el = document.getElementById(wrapId);
-    if (!rows.length) { el.innerHTML = '<div class="rl-empty">No stoppage data logged in this period.</div>'; return; }
+    if (!rows.length) { el.innerHTML = '<div class="rl-empty">' + emptyMsg + '</div>'; return; }
     var body = rows.map(function (r) {
-      var dot = '<span class="rl-pareto-dot" style="background:' + (CAUSE_COLOR[r.cause] || '#94A3B8') + '"></span>';
-      return '<tr><td>' + dot + r.label + '</td><td>' + r[valueKey] + '</td><td>' + r.pct.toFixed(1) + '%</td><td>' + r.cumPct.toFixed(1) + '%</td></tr>';
+      var dot = '<span class="rl-pareto-dot" style="background:' + colorFn(r) + '"></span>';
+      return '<tr><td>' + dot + r[labelKey] + '</td><td>' + r[valueKey] + '</td><td>' + r.pct.toFixed(1) + '%</td><td>' + r.cumPct.toFixed(1) + '%</td></tr>';
     }).join('');
-    el.innerHTML = '<table class="rl-pareto-table"><thead><tr><th>Cause</th><th>' + valueLabel + '</th><th>Share</th><th>Cumulative</th></tr></thead><tbody>' + body + '</tbody></table>';
+    el.innerHTML = '<table class="rl-pareto-table"><thead><tr><th>' + headHdr + '</th><th>' + valueLabel + '</th><th>Share</th><th>Cumulative</th></tr></thead><tbody>' + body + '</tbody></table>';
   }
 
   function renderEquipmentTable(equipment) {
@@ -478,8 +507,8 @@
         '<td class="rl-equip-name">' + e.label + '</td>' +
         '<td>' + e.hours.toFixed(1) + '</td>' +
         '<td>' + e.events + '</td>' +
-        '<td>' + e.mttrHours.toFixed(1) + '</td>' +
-        '<td><span class="rl-status-wrap"><span class="rl-status-dot rl-status-' + mStat + '"></span>' + e.mtbfHours.toFixed(1) + '</span></td>' +
+        '<td>' + fmtHrs(e.mttrHours) + '</td>' +
+        '<td><span class="rl-status-wrap"><span class="rl-status-dot rl-status-' + mStat + '"></span>' + fmtHrs(e.mtbfHours) + '</span></td>' +
         '<td><span class="rl-status-wrap"><span class="rl-status-dot rl-status-' + aStat + '"></span>' + e.availabilityPct.toFixed(1) + '% <span class="rl-status-label">' + STATUS_LABEL[aStat] + '</span></span></td>' +
       '</tr>';
     }).join('');
@@ -539,6 +568,232 @@
     if (window.lucide) lucide.createIcons();
   }
 
+  /* ══ Equipment Detail (one section at a time) ══════════════════
+     All 7 sections that exist in the data — not just the 4 named in the
+     original ask — since dropping the other 3 would drop real data. */
+  var EQUIP_LIST = [
+    { key: 'kiln',    label: 'Kiln' },
+    { key: 'rm',      label: 'Raw Mill' },
+    { key: 'cm_coal', label: 'Coal Mill' },
+    { key: 'cm1',     label: 'Cement Mill 1' },
+    { key: 'cm2',     label: 'Cement Mill 2' },
+    { key: 'crusher', label: 'Crusher' },
+    { key: 'packing', label: 'Packing' },
+  ];
+  var SEQUENTIAL_HUE = '#F49545'; // brand orange — magnitude ranking (fault Pareto), not a fixed category, so ONE hue per the dataviz skill's "sequential = one hue" rule (never per-bar categorical colors for a many-named, non-fixed set)
+  var TREND_HUE = '#173158';      // brand navy — MTBF-by-month trend bars
+
+  var _activeEquip = EQUIP_LIST[0].key;
+  var _equipDetailSeq = 0;
+
+  function equipDetailTemplate() {
+    return '' +
+      '<div class="rl-kpi-row" style="margin-bottom:16px">' +
+        '<div class="rl-stat-tile"><div class="rl-stat-top"><i data-lucide="shield-check" class="rl-stat-icon" style="width:15px;height:15px"></i><span class="rl-stat-label">Availability (NAI)</span></div><div class="rl-stat-val" id="eq-avail">—</div><div class="rl-stat-target" id="eq-avail-target">Target: ≥ 90%</div></div>' +
+        '<div class="rl-stat-tile"><div class="rl-stat-top"><i data-lucide="repeat-2" class="rl-stat-icon" style="width:15px;height:15px"></i><span class="rl-stat-label">MTBF</span></div><div class="rl-stat-val" id="eq-mtbf">—</div><div class="rl-stat-target" id="eq-mtbf-target">hours</div></div>' +
+        '<div class="rl-stat-tile"><div class="rl-stat-top"><i data-lucide="wrench" class="rl-stat-icon" style="width:15px;height:15px"></i><span class="rl-stat-label">MTTR</span></div><div class="rl-stat-val" id="eq-mttr">—</div><div class="rl-stat-target">hours / event</div></div>' +
+        '<div class="rl-stat-tile"><div class="rl-stat-top"><i data-lucide="octagon-pause" class="rl-stat-icon" style="width:15px;height:15px"></i><span class="rl-stat-label">Downtime</span></div><div class="rl-stat-val" id="eq-hours">—</div><div class="rl-stat-target" id="eq-events">— events</div></div>' +
+      '</div>' +
+      '<div class="rl-pareto-card" style="margin-bottom:16px">' +
+        '<div class="rl-pareto-hdr"><div class="rl-pareto-title">Fault-Level Pareto</div><div class="rl-pareto-sub" id="eq-fault-sub">—</div></div>' +
+        '<div class="rl-pareto-chart-wrap" id="eq-fault-chart-wrap" style="height:280px"><canvas id="chart-eq-fault"></canvas></div>' +
+        '<div id="table-eq-fault"></div>' +
+      '</div>' +
+      '<div class="rl-pareto-grid" style="margin-bottom:16px">' +
+        '<div class="rl-pareto-card">' +
+          '<div class="rl-pareto-hdr"><div class="rl-pareto-title">Frequency by Cause</div><div class="rl-pareto-sub">Raw event count per cause — how many times, not what share</div></div>' +
+          '<div class="rl-pareto-chart-wrap" style="height:200px"><canvas id="chart-eq-freq-bar"></canvas></div>' +
+          '<div id="table-eq-cause"></div>' +
+        '</div>' +
+        '<div class="rl-pareto-card">' +
+          '<div class="rl-pareto-hdr"><div class="rl-pareto-title">By Event Frequency</div><div class="rl-pareto-sub">Which causes keep recurring on this section</div></div>' +
+          '<div class="rl-pareto-chart-wrap"><canvas id="chart-eq-freq"></canvas></div>' +
+          '<div id="table-eq-freq" style="display:none"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="rl-pareto-card">' +
+        '<div class="rl-pareto-hdr"><div class="rl-pareto-title">MTBF by Month</div><div class="rl-pareto-sub" id="eq-mtbf-month-sub">—</div></div>' +
+        '<div class="rl-pareto-chart-wrap" style="height:220px"><canvas id="chart-eq-mtbf-month"></canvas></div>' +
+      '</div>';
+  }
+
+  function renderEquipTabs() {
+    var wrap = document.getElementById('rl-equip-tabs');
+    wrap.innerHTML = EQUIP_LIST.map(function (e) {
+      return '<button class="rl-pill' + (e.key === _activeEquip ? ' active' : '') + '" data-equip="' + e.key + '">' + e.label + '</button>';
+    }).join('');
+    wrap.querySelectorAll('.rl-pill[data-equip]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        _activeEquip = btn.dataset.equip;
+        wrap.querySelectorAll('.rl-pill[data-equip]').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        loadEquipDetail();
+      });
+    });
+  }
+
+  function renderEquipKpis(d) {
+    var aStat = availStatus(d.availabilityPct);
+    var mStat = mtbfStatus(d.mtbfHours, d.equip);
+    document.getElementById('eq-avail').textContent = d.availabilityPct != null ? d.availabilityPct.toFixed(1) + '%' : '—';
+    document.getElementById('eq-avail').style.color = aStat === 'critical' ? '#d03b3b' : (aStat === 'warning' ? '#d97706' : '');
+    document.getElementById('eq-avail-target').textContent = 'Target: ≥ 90% · ' + STATUS_LABEL[aStat];
+    document.getElementById('eq-mtbf').textContent = fmtHrs(d.mtbfHours) + (d.mtbfHours != null ? 'h' : '');
+    document.getElementById('eq-mtbf').style.color = mStat === 'critical' ? '#d03b3b' : (mStat === 'warning' ? '#d97706' : '');
+    document.getElementById('eq-mtbf-target').textContent = 'Target: ≥ ' + (MTBF_TARGET[d.equip] || 125) + 'h · ' + STATUS_LABEL[mStat];
+    document.getElementById('eq-mttr').textContent = fmtHrs(d.mttrHours) + (d.mttrHours != null ? 'h' : '');
+    document.getElementById('eq-hours').textContent = d.hours != null ? d.hours.toFixed(1) + 'h' : '—';
+    document.getElementById('eq-events').textContent = (d.events != null ? d.events : '—') + ' events';
+  }
+
+  function renderFaultPareto(d) {
+    var fp = d.faultPareto;
+    var sub = document.getElementById('eq-fault-sub');
+    var chartWrap = document.getElementById('eq-fault-chart-wrap');
+    destroyChart('chart-eq-fault');
+
+    if (!fp.available) {
+      sub.textContent = 'Not available for this period — see below.';
+      chartWrap.style.display = 'none';
+      document.getElementById('table-eq-fault').innerHTML = '<div class="rl-empty">' + fp.message + '</div>';
+      return;
+    }
+    chartWrap.style.display = '';
+    sub.textContent = 'Named faults, ' + fmtDateShort(fp.from) + ' – ' + fmtDateShort(fp.to) +
+      ' (granular import coverage within the selected period) — bars are share of this section\'s fault hours, line is cumulative %';
+    var colorFn = function () { return SEQUENTIAL_HUE; };
+    renderParetoChart('chart-eq-fault', fp.rows, 'hours', { labelKey: 'fault', colorFn: colorFn });
+    renderParetoTable('table-eq-fault', fp.rows, 'hours', 'Hours', {
+      labelKey: 'fault', colorFn: colorFn, headHdr: 'Fault',
+      emptyMsg: 'No named-fault hours in this period.',
+    });
+  }
+
+  /* Plain single-series bar chart — raw event COUNT per cause, one axis,
+     no cumulative line and no %-of-total conversion. Deliberately distinct
+     from renderParetoChart('chart-eq-freq', ...): that one answers "which
+     causes dominate the frequency ranking" (share + cumulative curve, per
+     Handbook §8.2); this one answers the plainer "how many times did each
+     cause actually happen" — a Pareto's % bars don't give you that number
+     directly. Same CAUSE_COLOR mapping as every other cause-colored mark
+     on this page (color follows the entity, per the dataviz skill). */
+  function renderFreqByCauseChart(canvasId, rows) {
+    var ctx = document.getElementById(canvasId);
+    destroyChart(canvasId);
+    if (!rows.length) return;
+
+    _charts[canvasId] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: rows.map(function (r) { return r.label; }),
+        datasets: [{
+          label: 'Events',
+          data: rows.map(function (r) { return r.events; }),
+          backgroundColor: rows.map(function (r) { return CAUSE_COLOR[r.cause] || '#94A3B8'; }),
+          borderRadius: 3, maxBarThickness: 40,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: function (c) {
+            var r = rows[c.dataIndex];
+            return ' ' + r.label + ': ' + r.events + ' event' + (r.events === 1 ? '' : 's') + ' · ' + r.hours.toFixed(1) + 'h total';
+          } } },
+        },
+        scales: {
+          x: { ticks: { font: { size: 9 }, maxRotation: 20, minRotation: 0 }, grid: { display: false } },
+          y: { beginAtZero: true, ticks: { precision: 0, font: { size: 9 } },
+               title: { display: true, text: 'Number of events', font: { size: 9 } },
+               grid: { color: 'rgba(0,0,0,0.05)' } },
+        },
+      },
+    });
+  }
+
+  function renderCauseTable(d) {
+    var el = document.getElementById('table-eq-cause');
+    if (!d.pareto.length) { el.innerHTML = '<div class="rl-empty">No stoppage data logged in this period.</div>'; return; }
+    var byHoursDesc = d.pareto; // already sorted by hours desc
+    var body = byHoursDesc.map(function (r) {
+      var dot = '<span class="rl-pareto-dot" style="background:' + (CAUSE_COLOR[r.cause] || '#94A3B8') + '"></span>';
+      return '<tr><td>' + dot + r.label + '</td><td>' + r.hours.toFixed(1) + 'h</td><td>' + r.events + '</td></tr>';
+    }).join('');
+    el.innerHTML = '<table class="rl-pareto-table"><thead><tr><th>Cause</th><th>Hours</th><th>Events</th></tr></thead><tbody>' + body + '</tbody></table>';
+  }
+
+  function renderMtbfByMonth(d) {
+    var sub = document.getElementById('eq-mtbf-month-sub');
+    var rows = d.mtbfByMonth;
+    destroyChart('chart-eq-mtbf-month');
+    if (!rows.length) {
+      sub.textContent = 'No granular monthly import for this section yet — run scripts/import-stoppage-facts.js against a Stoppage report workbook.';
+      return;
+    }
+    sub.textContent = rows.length === 1
+      ? 'Only ' + rows.length + ' month imported so far (' + rows[0].period + ') — this chart grows automatically as more monthly workbooks are imported; one bar is not a trend.'
+      : rows.length + ' months imported (' + rows[0].period + ' – ' + rows[rows.length - 1].period + ') — from the granular monthly import, independent of the period filter above.';
+
+    var ctx = document.getElementById('chart-eq-mtbf-month');
+    _charts['chart-eq-mtbf-month'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: rows.map(function (r) { return r.period; }),
+        datasets: [{ label: 'MTBF (h)', data: rows.map(function (r) { return r.mtbfHours; }), backgroundColor: TREND_HUE, borderRadius: 3, maxBarThickness: 44 }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: function (c) {
+            var r = rows[c.dataIndex];
+            return ' MTBF: ' + (r.mtbfHours != null ? r.mtbfHours.toFixed(1) + 'h' : '—') + ' · ' + r.hours.toFixed(1) + 'h down · ' + r.events + ' events';
+          } } },
+        },
+        scales: {
+          x: { ticks: { font: { size: 10 } }, grid: { display: false } },
+          y: { beginAtZero: true, title: { display: true, text: 'MTBF (hours)', font: { size: 9 } }, ticks: { font: { size: 9 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+        },
+      },
+    });
+  }
+
+  async function loadEquipDetail() {
+    if (!document.getElementById('rl-equip-detail').innerHTML) {
+      document.getElementById('rl-equip-detail').innerHTML = equipDetailTemplate();
+      if (window.lucide) lucide.createIcons();
+    }
+    var from = fromEl.value, to = toEl.value;
+    if (!from || !to || from > to) return;
+    var equip = _activeEquip;
+    var mySeq = ++_equipDetailSeq;
+
+    var d;
+    try {
+      d = await NyatiAPI.getEquipmentStoppageDetail(equip, from, to);
+    } catch (e) {
+      if (mySeq !== _equipDetailSeq) return;
+      document.getElementById('rl-equip-detail').innerHTML = '<div class="rl-no-flags">Could not load ' + equip + ' detail from the server.</div>';
+      return;
+    }
+    if (mySeq !== _equipDetailSeq || equip !== _activeEquip) return; // superseded by a newer range load or tab click
+
+    // A tab switch after a range change can arrive while the template from
+    // a PREVIOUS render is mid-teardown — rebuild the template fresh each
+    // time so canvases always match the equipment just fetched.
+    document.getElementById('rl-equip-detail').innerHTML = equipDetailTemplate();
+    if (window.lucide) lucide.createIcons();
+
+    renderEquipKpis(d);
+    renderFaultPareto(d);
+    renderCauseTable(d);
+    renderFreqByCauseChart('chart-eq-freq-bar', d.paretoByFreq);
+    renderParetoChart('chart-eq-freq', d.paretoByFreq, 'events');
+    renderParetoTable('table-eq-freq', d.paretoByFreq, 'events', 'Events');
+    renderMtbfByMonth(d);
+  }
+
   /* ── Load ─────────────────────────────────────────────────────── */
   var _loadSeq = 0;
   async function load() {
@@ -573,27 +828,41 @@
     renderParetoTable('table-pareto-freq', cur.paretoByFreq, 'events', 'Events');
     renderEquipmentTable(cur.equipment);
     renderRcfa(cur.rcfaFlags);
+    loadEquipDetail(); // refresh the active equipment-detail tab for the new range too
   }
 
   /* ── Preset pills ─────────────────────────────────────────────── */
+  /* Presets are anchored on today. When nothing has been logged since an
+     earlier date, keep the preset's LENGTH and slide the window back to end
+     on that date — a Month/YTD view that opens with an empty Pareto, empty
+     equipment table and no RCFA flags reads as a broken page, not as "the
+     stoppage log stops in June". See forms/latest-period.js. */
+  async function applyPreset(preset) {
+    var r = presetRange(preset);
+    var slid = await LatestPeriod.defaultRange(daysBetween(r.from, r.to), ['stoppage']);
+    fromEl.value = slid.from; toEl.value = slid.to;
+    LatestPeriod.showNote('rl-stale', slid);
+    load();
+  }
+
   document.querySelectorAll('.rl-pill[data-preset]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       document.querySelectorAll('.rl-pill[data-preset]').forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
-      var r = presetRange(btn.dataset.preset);
-      fromEl.value = r.from; toEl.value = r.to;
-      load();
+      applyPreset(btn.dataset.preset);
     });
   });
   document.getElementById('rl-apply').addEventListener('click', function () {
     document.querySelectorAll('.rl-pill[data-preset]').forEach(function (b) { b.classList.remove('active'); });
+    LatestPeriod.showNote('rl-stale', null); // explicit dates: the user's choice stands
     load();
   });
 
   /* ── Bootstrap: default to Month (month-to-date) ─────────────── */
+  renderEquipTabs();
   var initRange = presetRange('month');
   fromEl.value = initRange.from; toEl.value = initRange.to;
-  load();
+  applyPreset('month');
 
   var _dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
   var fEl = document.getElementById('footer-date');

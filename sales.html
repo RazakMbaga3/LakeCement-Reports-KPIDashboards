@@ -135,10 +135,36 @@
   </div>
   <div class="in-card" id="sd-target-card"></div>
 
-  <!-- ── DIVISION / ZONE / OFFICER PERFORMANCE ────────────── -->
+  <!-- ── OFFICER ACHIEVEMENT (real, Odoo-sourced) ─────────── -->
+  <div class="in-section-hdr">
+    <span class="in-section-title">Officer Achievement</span>
+    <span class="in-section-sub" id="sd-oa-sub">— actual sales vs target, from Odoo, attributed via each customer's assigned officer</span>
+  </div>
+  <div class="in-card">
+    <div class="tbl-scroll">
+      <table class="rt perf-table" style="min-width:820px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr">Sales Officer</th>
+            <th class="tl grp-hdr">Division / Zone</th>
+            <th class="grp-hdr">Customers</th>
+            <th class="grp-hdr">Target MT</th>
+            <th class="grp-hdr">Actual MT</th>
+            <th class="grp-hdr">Achievement %</th>
+          </tr>
+        </thead>
+        <tbody id="sd-oa-officers"></tbody>
+        <tfoot id="sd-oa-divisions"></tfoot>
+      </table>
+    </div>
+    <div class="in-empty" id="sd-oa-empty" style="display:none"></div>
+    <div id="sd-oa-unassigned" style="display:none;margin-top:10px;font-size:11px;color:var(--text-muted)"></div>
+  </div>
+
+  <!-- ── DIVISION / ZONE / OFFICER PERFORMANCE (manual projections) ── -->
   <div class="in-section-hdr">
     <span class="in-section-title">Divisional Manager / Sales Officer / Zone Performance</span>
-    <span class="in-section-sub">— projected MT is manual entry; actual MT awaits Odoo officer attribution (Phase B)</span>
+    <span class="in-section-sub">— daily manual projections vs interim local targets (a separate habit-tracker from Officer Achievement above)</span>
   </div>
   <div class="in-card">
     <div class="tbl-scroll">
@@ -399,6 +425,54 @@
     tbody.innerHTML = html;
   }
 
+  function renderOfficerAchievement(oa) {
+    var tbody = document.getElementById('sd-oa-officers');
+    var tfoot = document.getElementById('sd-oa-divisions');
+    var empty = document.getElementById('sd-oa-empty');
+    var unassignedEl = document.getElementById('sd-oa-unassigned');
+    var sub = document.getElementById('sd-oa-sub');
+
+    if (!oa.ok) {
+      tbody.innerHTML = ''; tfoot.innerHTML = '';
+      empty.textContent = oa.message; empty.style.display = 'block';
+      unassignedEl.style.display = 'none';
+      sub.textContent = '— not available yet';
+      return;
+    }
+    empty.style.display = 'none';
+    sub.textContent = '— actual sales vs target, from Odoo, attributed via each customer’s assigned officer';
+
+    function pctColor(p) {
+      if (p == null) return 'var(--text-muted)';
+      return p >= 90 ? 'var(--green)' : p >= 60 ? 'var(--orange)' : '#C62828';
+    }
+
+    tbody.innerHTML = oa.officers.map(function (o) {
+      return '<tr><td class="tl">' + esc(o.salesperson || 'Unassigned') + '</td>' +
+        '<td class="tl">' + esc(o.division || '—') + ' / ' + esc(o.zone || '—') + '</td>' +
+        '<td>' + fmt(o.customer_count) + '</td>' +
+        '<td>' + fmt(o.target_mt) + '</td>' +
+        '<td>' + fmt(o.actual_mt) + '</td>' +
+        '<td style="font-weight:700;color:' + pctColor(o.achievement_pct) + '">' +
+          (o.achievement_pct != null ? o.achievement_pct.toFixed(1) + '%' : '—') + '</td></tr>';
+    }).join('');
+
+    tfoot.innerHTML = '<tr style="font-weight:700;border-top:2px solid var(--border)">' +
+      '<td class="tl" colspan="2">Company Total</td><td>' + fmt(oa.customer_count) + '</td>' +
+      '<td>' + fmt(oa.company_target_mt) + '</td><td>' + fmt(oa.company_actual_mt) + '</td>' +
+      '<td style="color:' + pctColor(oa.company_target_mt ? (oa.company_actual_mt / oa.company_target_mt) * 100 : null) + '">' +
+        (oa.company_target_mt ? ((oa.company_actual_mt / oa.company_target_mt) * 100).toFixed(1) + '%' : '—') +
+      '</td></tr>';
+
+    if (oa.unassigned_order_count > 0) {
+      unassignedEl.style.display = 'block';
+      unassignedEl.textContent = fmt(oa.unassigned_mt) + ' MT across ' + oa.unassigned_order_count +
+        ' order(s) could not be attributed to an officer — the customer has no target line this month (new/one-off customer).';
+    } else {
+      unassignedEl.style.display = 'none';
+    }
+  }
+
   function renderAlert(today) {
     var el = document.getElementById('sd-alert');
     if (today.missing_reporters && today.missing_reporters.length) {
@@ -424,6 +498,7 @@
       renderCollections(d.collections);
       renderFinancials(d.financials);
       renderTarget(d.targets, d.mtd);
+      renderOfficerAchievement(d.officer_achievement);
       renderPerformance(d.performance);
       if (window.lucide) window.lucide.createIcons();
     } catch (e) {

@@ -95,7 +95,7 @@ async function cleanup() {
 }
 function startServer() {
   const child = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
-    env: { ...process.env, PORT, AUTH_RATE_LIMIT: '500', ODOO_URL: '', ODOO_DISPATCH_URL: '' },
+    env: { ...process.env, PORT, AUTH_RATE_LIMIT: '500', ODOO_URL: '', ODOO_DISPATCH_URL: '', ODOO_DASHBOARD_URL: '', ODOO_DASHBOARD_API_KEY: '' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   let out = '';

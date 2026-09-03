@@ -32,7 +32,19 @@
 
     .apv-empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
     .apv-error { text-align: center; padding: 20px; color: #DC2626; font-size: 12px; }
-  </style>
+  
+  /* Figures column + the expandable panel behind it. An approver can now see
+     the numbers on the row they are signing off, instead of only a remark. */
+  .apv-btn-view { background:#F1F5F9; color:var(--navy,#173158); border:1px solid #CBD5E1; }
+  .apv-btn-view.is-open { background:var(--navy,#173158); color:#fff; border-color:var(--navy,#173158); }
+  .apv-none { font-size:11px; color:var(--text-muted,#64748B); }
+  .apv-detail > td { background:#F8FAFC; padding:12px 16px; }
+  .apv-fields { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:6px 18px; }
+  .apv-field { display:flex; justify-content:space-between; gap:10px; font-size:11.5px;
+               padding:3px 0; border-bottom:1px dotted #E2E8F0; }
+  .apv-field-k { color:var(--text-muted,#64748B); }
+  .apv-field-v { font-weight:700; color:var(--navy,#173158); white-space:nowrap; }
+</style>
 </head>
 <body>
 
@@ -51,9 +63,9 @@
   <div class="apv-table-wrap">
     <table class="apv-table" id="apv-table">
       <thead>
-        <tr><th>Report</th><th>Date</th><th>Shift</th><th>Submitted By</th><th>Submitted At</th><th>Notes</th><th>Action</th></tr>
+        <tr><th>Report</th><th>Date</th><th>Shift</th><th>Submitted By</th><th>Submitted At</th><th>Notes</th><th>Figures</th><th>Action</th></tr>
       </thead>
-      <tbody><tr><td colspan="7" class="apv-empty">Loading…</td></tr></tbody>
+      <tbody><tr><td colspan="8" class="apv-empty">Loading…</td></tr></tbody>
     </table>
   </div>
 </main>
@@ -79,12 +91,13 @@
 (function () {
   'use strict';
 
-  /* form_type is a bare slug ('power-plant', 'sales-projection', ...) —
-     no shared formType->label map exists yet (auth.js's nav catalogue is
-     keyed by page filename, not formType), so title-case the slug rather
-     than duplicate that mapping here. */
-  function labelFor(formType) {
-    return String(formType || '').split('-').map(function (w) {
+  /* The API now sends the report's real name (services/misReport.js's
+     FORM_LABELS, the same catalogue the MIS pack uses). Title-casing the raw
+     slug — which is what this did — turned 'cpp' into "Cpp" and 'power-cons'
+     into "Power Cons". Kept as the fallback for an older server. */
+  function labelFor(row) {
+    if (row.label) return row.label;
+    return String(row.form_type || '').split('-').map(function (w) {
       return w.charAt(0).toUpperCase() + w.slice(1);
     }).join(' ');
   }
@@ -102,29 +115,44 @@
     try {
       rows = await NyatiAPI.getApprovals();
     } catch (e) {
-      tbody.innerHTML = '<tr><td colspan="7" class="apv-error">Could not load pending approvals — is the server reachable?</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="apv-error">Could not load pending approvals — is the server reachable?</td></tr>';
       return;
     }
 
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="7" class="apv-empty">Nothing pending — every submitted report has been approved or rejected.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="apv-empty">Nothing pending — every submitted report has been approved or rejected.</td></tr>';
       return;
     }
 
-    tbody.innerHTML = rows.map(function (r) {
+    tbody.innerHTML = rows.map(function (r, i) {
       var remarks = (r.data && (r.data.remarks || r.data.notes)) || '';
+      var fields  = r.fields || [];
+      /* Signing off on figures you cannot see is not a review. This row used
+         to show only `remarks`, so an HOD had to open the form separately to
+         find out what they were approving. */
+      var detail = fields.length
+        ? '<tr class="apv-detail" id="apv-d' + i + '" hidden><td colspan="8">' +
+            '<div class="apv-fields">' + fields.map(function (f) {
+              return '<div class="apv-field"><span class="apv-field-k">' + escHtml(f.label) +
+                     '</span><span class="apv-field-v">' + escHtml(String(f.value)) + '</span></div>';
+            }).join('') + '</div></td></tr>'
+        : '';
       return '<tr data-form-type="' + escHtml(r.form_type) + '" data-date="' + escHtml(r.record_date) + '" data-shift="' + escHtml(r.shift) + '">' +
-        '<td class="apv-form-label">' + escHtml(labelFor(r.form_type)) + '</td>' +
+        '<td class="apv-form-label">' + escHtml(labelFor(r)) + '</td>' +
         '<td>' + escHtml(r.record_date) + '</td>' +
         '<td>' + escHtml(r.shift) + '</td>' +
         '<td>' + escHtml(r.submitted_by_name || '—') + '</td>' +
         '<td>' + fmtDateTime(r.submitted_at) + '</td>' +
         '<td class="apv-remarks">' + escHtml(remarks) + '</td>' +
+        '<td class="apv-figures">' + (fields.length
+            ? '<button class="apv-btn apv-btn-view" data-action="view" data-target="apv-d' + i + '">' +
+              fields.length + ' figures</button>'
+            : '<span class="apv-none">no figures</span>') + '</td>' +
         '<td class="apv-actions">' +
           '<button class="apv-btn apv-btn-approve" data-action="approve">Approve</button>' +
           '<button class="apv-btn apv-btn-reject" data-action="reject">Reject</button>' +
         '</td>' +
-      '</tr>';
+      '</tr>' + detail;
     }).join('');
   }
 
@@ -134,6 +162,15 @@
     var row = btn.closest('tr');
     var formType = row.dataset.formType, date = row.dataset.date, shift = row.dataset.shift;
     var action = btn.dataset.action;
+
+    if (action === 'view') {
+      var panel = document.getElementById(btn.dataset.target);
+      if (panel) {
+        panel.hidden = !panel.hidden;
+        btn.classList.toggle('is-open', !panel.hidden);
+      }
+      return;
+    }
 
     if (action === 'reject') {
       var reason = window.prompt('Reason for rejecting this report:');

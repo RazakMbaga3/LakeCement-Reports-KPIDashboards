@@ -5,14 +5,21 @@
                          powers the unusual-value confirmation at entry time
     benchmark()        — every KPI vs previous month, same month last year,
                          best-ever month and 3-month rolling average
-    stoppageInsights() — Pareto of downtime causes + per-equipment
+    stoppageInsights() — fleet-wide Pareto of downtime causes + per-equipment
                          MTTR/MTBF/availability from the stoppage matrix
+    equipmentStoppageDetail() — same KPIs scoped to ONE equipment, plus
+                         named-fault-level Pareto and an MTBF-by-month
+                         trend, sourced from the granular stoppage_facts
+                         table (scripts/import-stoppage-facts.js) with a
+                         per-day fallback to the coarse matrix above for
+                         any period that table doesn't cover yet
     searchMemory()     — full-text search across form entries, override
                          reasons and audit details ("what did we do last
                          time the cooler tripped?")
 */
 
 const db     = require('../db');
+const { REPORTED_STATUSES } = require('../config/forms');
 const engine = require('./formulaEngine');
 
 function num(v) {
@@ -32,8 +39,9 @@ async function fieldBaseline(formType, { days = 30, before } = {}) {
 
   const rows = await db.query(
     `SELECT data FROM daily_reports
-     WHERE form_type = $1 AND record_date >= $2 AND record_date < $3`,
-    [formType, start, end]
+     WHERE form_type = $1 AND record_date >= $2 AND record_date < $3
+       AND status = ANY($4)`,
+    [formType, start, end, REPORTED_STATUSES]
   );
 
   const acc = {};
@@ -73,7 +81,7 @@ async function benchmark(year, month) {
   const monthsRes = await db.query(
     `SELECT DISTINCT EXTRACT(YEAR FROM record_date)::int AS y,
                      EXTRACT(MONTH FROM record_date)::int AS m
-     FROM daily_reports ORDER BY y, m`);
+     FROM daily_reports WHERE status = ANY($1) ORDER BY y, m`, [REPORTED_STATUSES]);
   const months = monthsRes.rows;
 
   const cache = new Map(); // 'y-m' → evalMonth result array
@@ -178,8 +186,9 @@ const RCFA_MAIN_ASSETS = ['kiln', 'rm', 'cm1', 'cm2']; // Handbook: Kiln / Raw M
 async function stoppageInsights(from, to) {
   const rows = await db.query(
     `SELECT record_date, data FROM daily_reports
-     WHERE form_type = 'stoppage' AND record_date BETWEEN $1 AND $2`,
-    [from, to]
+     WHERE form_type = 'stoppage' AND record_date BETWEEN $1 AND $2
+       AND status = ANY($3)`,
+    [from, to, REPORTED_STATUSES]
   );
 
   const byCause = {}, byEquip = {}, byEquipCause = {}, byEquipDate = {};
@@ -266,21 +275,36 @@ async function stoppageInsights(from, to) {
       return { ...c, pct: parseFloat(pct.toFixed(1)), cumPct: parseFloat(cumF.toFixed(1)) };
     });
 
+  /* Equipment that logged NO downtime at all in the period is absent from
+     byEquip — so it used to be left out of the fleet availability average
+     entirely. Excluding a machine that ran 100% of the period drags the
+     fleet figure DOWN, which is exactly backwards: a perfect month for the
+     kiln made plant availability look worse, not better. Seed every known
+     section at zero so the average is over the whole fleet. */
+  for (const key of Object.keys(STOP_EQUIPMENT)) {
+    if (!byEquip[key]) byEquip[key] = { hours: 0, events: 0 };
+  }
+
   const equipment = Object.entries(byEquip)
     .map(([key, s]) => ({
       key, label: STOP_EQUIPMENT[key] || key,
       hours: parseFloat(s.hours.toFixed(2)),
       events: s.events,
-      mttrHours: parseFloat((s.hours / s.events).toFixed(2)),                 // mean time to repair
-      mtbfHours: parseFloat(((calendarH - s.hours) / s.events).toFixed(1)),   // mean time between failures
+      // MTTR/MTBF divide by the event count, so they are undefined — not
+      // zero, not infinite — for equipment that never failed. null renders as
+      // "—" rather than a fabricated figure; availability is still 100%.
+      mttrHours: s.events ? parseFloat((s.hours / s.events).toFixed(2)) : null,
+      mtbfHours: s.events ? parseFloat(((calendarH - s.hours) / s.events).toFixed(1)) : null,
       availabilityPct: parseFloat((100 * (1 - s.hours / calendarH)).toFixed(2)),
     }))
     .sort((a, b) => b.hours - a.hours);
 
-  // Plant-wide headline figures (§4.7.1/4.7.2). Every section here shares
-  // the same calendarH, so averaging the per-equipment availabilityPct
-  // values is equivalent to 100 * (1 - totalHours / (calendarH * n)) — one
-  // fleet-wide NAI rather than inventing a second formula.
+  // Plant-wide headline figures (§4.7.1/4.7.2). Every section here shares the
+  // same calendarH, so averaging the per-equipment availabilityPct values is
+  // equivalent to 100 * (1 - totalHours / (calendarH * n)) — one fleet-wide
+  // NAI rather than inventing a second formula. n is now always the full
+  // fleet (see the seeding above), so a section with a clean period raises
+  // the fleet figure instead of vanishing from it.
   const overallAvailabilityPct = equipment.length
     ? parseFloat((equipment.reduce((s, e) => s + e.availabilityPct, 0) / equipment.length).toFixed(2))
     : null;
@@ -347,6 +371,178 @@ async function stoppageInsights(from, to) {
   };
 }
 
+/* ── C2. Single-equipment reliability detail ────────────────────
+   Everything the fleet-wide stoppageInsights() above shows, scoped to one
+   equipment, PLUS what only the granular `stoppage_facts` table (the
+   monthly workbook import, migrations/011 + scripts/import-stoppage-facts.js)
+   can give: named-fault-level Pareto and a real MTBF-by-month trend.
+
+   TWO SOURCES, ONE EQUIPMENT, PER-DAY PRECEDENCE — not a whole-range branch:
+   for each calendar day in [from, to], if `stoppage_facts` has ANY row for
+   this equipment on that day, its hours are authoritative for that day
+   (and that day contributes nothing from the coarse source, so nothing is
+   ever double-counted). Any day this equipment has NO granular row falls
+   back to the coarse stop_<equip>_<cause> MINUTES fields on daily_reports
+   (same fields, same /60 conversion, as stoppageInsights() above). This
+   means a range straddling June/July (coarse-only) and August (granular)
+   quietly gets the best available number for every single day, and NAI/
+   MTBF/hours+frequency-per-cause are correct for ANY range — old, new, or
+   mixed. Only the fault-NAME-level Pareto is granular-only by nature (the
+   coarse source was never asked to record fault names) — see faultPareto
+   below, which says so honestly instead of going quietly blank. */
+async function equipmentStoppageDetail(equip, from, to) {
+  const label = STOP_EQUIPMENT[equip];
+  if (!label) throw new Error(`Unknown equipment "${equip}"`);
+
+  const spanDays = Math.max(1, Math.round(
+    (new Date(to + 'T00:00:00') - new Date(from + 'T00:00:00')) / 86400000) + 1);
+  const calendarH = spanDays * 24;
+
+  const factRows = (await db.query(
+    `SELECT record_date, cause, fault_description, hours FROM stoppage_facts
+     WHERE equipment = $1 AND record_date BETWEEN $2 AND $3`,
+    [equip, from, to]
+  )).rows;
+  const granularDates = new Set(factRows.map(r => String(r.record_date).slice(0, 10)));
+
+  // date|cause -> hours, the unit both sources are reconciled onto.
+  const unifiedDC = {};
+  for (const r of factRows) {
+    const key = String(r.record_date).slice(0, 10) + '|' + r.cause;
+    unifiedDC[key] = (unifiedDC[key] || 0) + Number(r.hours);
+  }
+
+  // Fault-name aggregation — granular source only, by construction.
+  const faultAgg = {};
+  for (const r of factRows) {
+    const h = Number(r.hours);
+    if (h <= 0) continue;
+    const f = faultAgg[r.fault_description] = faultAgg[r.fault_description] || { hours: 0, dates: new Set() };
+    f.hours += h;
+    f.dates.add(String(r.record_date).slice(0, 10));
+  }
+
+  // Coarse fallback — only for days this equipment has no granular row.
+  const coarseRows = (await db.query(
+    `SELECT record_date, data FROM daily_reports
+     WHERE form_type = 'stoppage' AND record_date BETWEEN $1 AND $2 AND status = ANY($3)`,
+    [from, to, REPORTED_STATUSES]
+  )).rows;
+  let usedCoarse = false;
+  for (const r of coarseRows) {
+    const date = String(r.record_date).slice(0, 10);
+    if (granularDates.has(date)) continue; // granular already covers this day for this equipment
+    for (const [k, v] of Object.entries(r.data || {})) {
+      const m = k.match(STOP_RE);
+      if (!m || m[1] !== equip) continue;
+      const mins = num(v);
+      if (mins === null || mins <= 0) continue;
+      const key = date + '|' + m[2];
+      unifiedDC[key] = (unifiedDC[key] || 0) + mins / 60;
+      usedCoarse = true;
+    }
+  }
+
+  // ── Totals + cause-level Pareto pair (Handbook §8.2), reconciled ──
+  let totalHours = 0, totalEvents = 0;
+  const causeAgg = {};
+  for (const [key, h] of Object.entries(unifiedDC)) {
+    if (h <= 0) continue;
+    const cause = key.slice(key.indexOf('|') + 1);
+    totalHours += h;
+    totalEvents++;
+    causeAgg[cause] = causeAgg[cause] || { hours: 0, events: 0 };
+    causeAgg[cause].hours += h;
+    causeAgg[cause].events++;
+  }
+
+  function buildCausePareto(byFreq) {
+    let cum = 0;
+    return Object.entries(causeAgg)
+      .map(([cause, s]) => ({ cause, label: STOP_CAUSES[cause] || cause, hours: parseFloat(s.hours.toFixed(2)), events: s.events }))
+      .sort((a, b) => byFreq ? (b.events - a.events || b.hours - a.hours) : (b.hours - a.hours))
+      .map(c => {
+        const base = byFreq ? totalEvents : totalHours;
+        const val = byFreq ? c.events : c.hours;
+        const pct = base > 0 ? (val / base) * 100 : 0;
+        cum += pct;
+        return { ...c, pct: parseFloat(pct.toFixed(1)), cumPct: parseFloat(cum.toFixed(1)) };
+      });
+  }
+  const pareto = buildCausePareto(false);
+  const paretoByFreq = buildCausePareto(true);
+
+  const mttrHours = totalEvents ? parseFloat((totalHours / totalEvents).toFixed(2)) : null;
+  const mtbfHours = totalEvents ? parseFloat(((calendarH - totalHours) / totalEvents).toFixed(1)) : null;
+  const availabilityPct = parseFloat((100 * (1 - totalHours / calendarH)).toFixed(2));
+
+  // ── Fault-name Pareto — granular only; honest empty-state otherwise ──
+  let faultPareto;
+  if (!Object.keys(faultAgg).length) {
+    const earliest = (await db.query(`SELECT MIN(record_date) AS d FROM stoppage_facts`)).rows[0].d;
+    const earliestIso = earliest ? String(earliest).slice(0, 10) : null;
+    faultPareto = {
+      available: false,
+      earliestAvailable: earliestIso,
+      message: earliestIso
+        ? `Fault-level detail is available from ${earliestIso} onward (the earliest month imported via scripts/import-stoppage-facts.js) — no import covers ${from}..${to} yet.`
+        : `Fault-level detail requires importing a monthly Stoppage report workbook (scripts/import-stoppage-facts.js) — none has been imported yet.`,
+    };
+  } else {
+    const totalFaultHours = Object.values(faultAgg).reduce((s, f) => s + f.hours, 0);
+    let cum = 0;
+    const rows = Object.entries(faultAgg)
+      .map(([fault, f]) => ({ fault, hours: parseFloat(f.hours.toFixed(2)), events: f.dates.size }))
+      .sort((a, b) => b.hours - a.hours)
+      .map(f => {
+        const pct = totalFaultHours > 0 ? (f.hours / totalFaultHours) * 100 : 0;
+        cum += pct;
+        return { ...f, pct: parseFloat(pct.toFixed(1)), cumPct: parseFloat(cum.toFixed(1)) };
+      });
+    const covered = [...granularDates].sort();
+    faultPareto = { available: true, from: covered[0], to: covered[covered.length - 1], rows };
+  }
+
+  // ── MTBF-by-month — granular source, full history, NOT scoped to the
+  // page's from/to picker (this chart's whole point is a calendar-time
+  // trend that grows on its own as more monthly workbooks get imported —
+  // scoping it to a query range would make it look "stuck" at 1 bar for a
+  // 1-month range even after 12 months of imports exist). */
+  const allFactRows = (await db.query(
+    `SELECT record_date, cause, hours FROM stoppage_facts WHERE equipment = $1`,
+    [equip]
+  )).rows;
+  const monthBuckets = {};
+  for (const r of allFactRows) {
+    const date = String(r.record_date).slice(0, 10);
+    const ym = date.slice(0, 7);
+    const b = monthBuckets[ym] = monthBuckets[ym] || {};
+    const key = date + '|' + r.cause;
+    b[key] = (b[key] || 0) + Number(r.hours);
+  }
+  const mtbfByMonth = Object.keys(monthBuckets).sort().map(ym => {
+    const [y, m] = ym.split('-').map(Number);
+    const daysInMonth = new Date(y, m, 0).getDate();
+    const calH = daysInMonth * 24;
+    let hours = 0, events = 0;
+    for (const h of Object.values(monthBuckets[ym])) { if (h > 0) { hours += h; events++; } }
+    return {
+      period: ym,
+      hours: parseFloat(hours.toFixed(2)), events,
+      mtbfHours: events ? parseFloat(((calH - hours) / events).toFixed(1)) : null,
+      availabilityPct: parseFloat((100 * (1 - hours / calH)).toFixed(2)),
+    };
+  });
+
+  return {
+    equip, label, from, to, days: spanDays, calendarH,
+    hours: parseFloat(totalHours.toFixed(2)), events: totalEvents,
+    mttrHours, mtbfHours, availabilityPct,
+    pareto, paretoByFreq, faultPareto, mtbfByMonth,
+    source: factRows.length && usedCoarse ? 'mixed' : (factRows.length ? 'granular' : (usedCoarse ? 'coarse' : 'none')),
+  };
+}
+
 /* ── D. Institutional memory search ────────────────────────────
    ILIKE across form JSONB text, override reasons and audit details. */
 async function searchMemory(q, limit = 30) {
@@ -384,4 +580,7 @@ async function searchMemory(q, limit = 30) {
   return { q, forms: formHits, overrides: overrides.rows, audit: audit.rows };
 }
 
-module.exports = { fieldBaseline, benchmark, stoppageInsights, searchMemory };
+module.exports = {
+  fieldBaseline, benchmark, stoppageInsights, equipmentStoppageDetail, searchMemory,
+  STOP_EQUIPMENT,
+};

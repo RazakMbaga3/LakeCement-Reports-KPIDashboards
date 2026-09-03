@@ -43,11 +43,19 @@
   }
 
   /* POST /api/reports/:formType — submit/update a daily form */
-  async function submitForm(formType, date, shift, data) {
+  /* `opts.status` — 'draft' or 'submitted' (default). The server derives the
+     approval state from it: a draft never enters an HOD's queue and is never
+     self-certified as approved.
+     `opts.replace` — overwrite the stored fields instead of merging into
+     them. Only for callers that own the whole record (importers, syncs). */
+  async function submitForm(formType, date, shift, data, opts) {
+    const body = { date, shift: shift || 'day', data };
+    if (opts && opts.status)  body.status  = opts.status;
+    if (opts && opts.replace) body.replace = true;
     const res = await fetch(BASE + '/reports/' + encodeURIComponent(formType), {
       method:  'POST',
       headers: _headers(),
-      body:    JSON.stringify({ date, shift: shift || 'day', data }),
+      body:    JSON.stringify(body),
     });
     if (!res.ok) throw _httpError('submitForm', formType, res);
     return res.json();
@@ -133,11 +141,39 @@
     return res.json();
   }
 
+  /* GET /api/mis/daily-summary/:date — the plant head's Daily Summary
+     Report (Mining / Stock / Production, ON DATE + MTD + YTD) rebuilt from
+     the daily forms. Shown at the foot of the Executive Summary. */
+  async function getDailySummary(date) {
+    const res = await fetch(BASE + '/mis/daily-summary/' + encodeURIComponent(date), { headers: _headers() });
+    if (!res.ok) throw _httpError('getDailySummary', date, res);
+    return res.json();
+  }
+
+  /* GET /api/mis/data-range — which dates actually hold data, per form type,
+     plus the newest kpi_monthly period. Backs forms/latest-period.js, which
+     stops the analytics pages from opening on an empty "today". */
+  async function getDataRange() {
+    const res = await fetch(BASE + '/mis/data-range', { headers: _headers() });
+    if (!res.ok) throw _httpError('getDataRange', '', res);
+    return res.json();
+  }
+
   /* GET /api/insights/stoppages?from=&to= — downtime Pareto (hours + freq),
      per-equipment MTTR/MTBF/availability and RCFA flags (reliability.html) */
   async function getStoppageInsights(from, to) {
     const res = await fetch(BASE + '/insights/stoppages?' + new URLSearchParams({ from, to }), { headers: _headers() });
     if (!res.ok) throw _httpError('getStoppageInsights', from + '..' + to, res);
+    return res.json();
+  }
+
+  /* GET /api/insights/stoppages/:equip?from=&to= — same KPIs scoped to one
+     equipment, plus named-fault-level Pareto and an MTBF-by-month trend
+     (reliability.html's per-equipment section). `equip` is one of
+     crusher|rm|cm_coal|kiln|cm1|cm2|packing. */
+  async function getEquipmentStoppageDetail(equip, from, to) {
+    const res = await fetch(BASE + '/insights/stoppages/' + encodeURIComponent(equip) + '?' + new URLSearchParams({ from, to }), { headers: _headers() });
+    if (!res.ok) throw _httpError('getEquipmentStoppageDetail', equip + ' ' + from + '..' + to, res);
     return res.json();
   }
 
@@ -267,7 +303,8 @@
   global.NyatiAPI = {
     submitForm, getForm, getFormRange,
     evalFormulas, getDailySeries, setOverride, clearOverride, getOverrides,
-    getBaseline, getCompleteness, getStoppageInsights,
+    getBaseline, getCompleteness, getDataRange, getDailySummary,
+    getStoppageInsights, getEquipmentStoppageDetail,
     quarryImportTickets, quarryGetTickets,
     getSalesTerritories, getSalesDashboard, setSalesTarget,
     getPurchasesDashboard,

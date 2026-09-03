@@ -1,212 +1,217 @@
 /*
   services/purchasesOdoo.js — every Odoo-sourced number on the Purchase
-  dashboard, one function per metric. Same contract as services/salesOdoo.js:
-  each function NEVER throws — it returns either
-      { ok: true,  value, as_of, source: 'odoo:<model>' }
-  or  { ok: false, status: 'not_configured' | 'unreachable' | 'not_mapped',
-        message: '<honest, user-facing reason>' }
+  dashboard, one function per metric. Each function NEVER throws — it
+  returns either
+      { ok: true,  value, as_of, source }
+  or  { ok: false, status: 'not_configured' | 'unreachable' | 'parse_error'
+        | 'not_mapped', message: '<honest, user-facing reason>' }
   so routes/purchases.js can Promise.all them and the page renders each
   section's real state without one missing piece blanking the dashboard.
 
-  PO Value trend and PO List use only fields guaranteed present on any
-  Odoo purchase.order (date_order, amount_total, state, partner_id, name)
-  — safe to ship without ever having queried the live database.
+  ── 2026-09-03: rewritten onto the Odoo team's custom endpoint ──────────
+  This used to issue model reads (purchase.order etc.) through the generic
+  External API and infer classifications itself. The Odoo team instead
+  delivered ONE aggregate endpoint per dashboard, so everything here now
+  goes through services/odooDashboardClient.js and the classification
+  guesswork is gone — the endpoint returns the real fields:
 
-  The Service/Local/Import/Raw Material category grid is PARTIALLY
-  mapped, cell by cell (2026-08-24 screenshots of the live Purchase app
-  settled some of this without needing custom field names at all):
-    - Local vs Import: purchase.order.name prefix — LPORD/2026/00747
-      vs IPORD/2026/00051, seen side by side on real records. No custom
-      field needed.
-    - Service vs Goods: product.product's own standard `type` field
-      ('service' vs everything else) — confirmed by the live "Storable
-      Product (13952) / Service (68)" product grouping, matches stock
-      Odoo exactly.
-    - Raw Material: assumed to be product.categ_id containing "Raw
-      Material" (matches the RM-prefixed product codes seen, e.g.
-      RM000003 GYPSUM) — plausible but not directly confirmed; the
-      grouped Products view was cut off alphabetically before reaching
-      it. Low risk, easy to correct if wrong (one regex).
-  Still genuinely blocked, left as per-cell not_mapped:
-    - The entire Open PR row — unresolved whether "PR No" (LPR/2026/xxxx,
-      seen per PO line) is a separate Purchase Requisition object or
-      just a reference number (2026-08-10: "not sure, need to check").
-    - Open PO for Service-type lines — needs the "Qty Serviced"/
-      "Pending Qty" custom field names seen on service PO lines, not
-      confirmed. Local/Import Open PO counts also exclude any PO that
-      has a service line on it, for the same reason — excluded rather
-      than guessed.
+    - purchase_type: 'local' | 'import'   (replaces parsing LPORD/IPORD
+      out of the PO name — that inference is retired)
+    - po_for_key:    'material' | 'service'  (replaces inferring Service
+      from product.type)
+    - purchase_order_lines.pending_quantity, alongside quantity and
+      received_quantity — this is what finally makes Open PO computable
+      for SERVICE lines too, which was blocked for months on the
+      unconfirmed "Qty Serviced" field name.
+    - product_categories.classification carries the full category path,
+      and "Raw Material" is confirmed present as a real category (it was
+      previously an educated guess from RM-prefixed product codes).
+
+  Still genuinely unavailable, so still per-cell not_mapped:
+    - The entire Open PR row. The endpoint returns no PR/requisition data
+      at all — no pr_no, no requisition record. Requested 2026-09-03.
+
+  Caveat carried from the client: the endpoint's `products` and
+  `product_categories` arrays are themselves date-filtered (a server-side
+  defect), so they are NOT a full catalogue. Harmless here because we only
+  use them to classify orders inside the same range — but do not reuse
+  them as a product master anywhere else.
 */
-const odoo = require('./odooClient');
+const client = require('./odooDashboardClient');
 
-const CACHE_TTL_MS = 5 * 60 * 1000;
-const _cache = new Map(); // 'metric|from|to' -> { at, result }
-
-function _cached(key, fn) {
-  const hit = _cache.get(key);
-  if (hit && Date.now() - hit.at < CACHE_TTL_MS) return Promise.resolve(hit.result);
-  return fn().then(result => {
-    _cache.set(key, { at: Date.now(), result });
-    return result;
-  });
-}
-
-function _configured() {
-  return !!process.env.ODOO_URL;
-}
-
-function _notConfigured() {
-  return { ok: false, status: 'not_configured', message: 'Odoo is not configured on this server yet.' };
-}
-
-function _unreachable(err) {
-  return { ok: false, status: 'unreachable', message: 'Odoo did not respond: ' + (err && err.message || 'unknown error') };
-}
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function _notMapped(message) {
   return { ok: false, status: 'not_mapped', message };
 }
 
-const _MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+/* Pass a failed bundle straight through — its status/message already say
+   whether Odoo is unconfigured, unreachable, or truncated the response. */
+function _fail(bundle) {
+  return { ok: false, status: bundle.status, message: bundle.message };
+}
 
-/* Total PO value by month for a calendar year — confirmed POs only
-   (state in purchase/done), same "exclude drafts and cancellations"
-   convention salesOdoo.fetchMtdSales uses for sale.order. */
+function _monthRange(year, monthIndex) {
+  const m = String(monthIndex + 1).padStart(2, '0');
+  const last = new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
+  return [`${year}-${m}-01`, `${year}-${m}-${String(last).padStart(2, '0')}`];
+}
+
+/* PO value by month for a year.
+
+   The endpoint has no pagination and truncates on large ranges, so a
+   whole year in one call is impossible — this fetches month by month.
+   Uncached that is ~5s per month, but the client caches closed months for
+   12h, so in practice only the current month is re-fetched. Months run
+   with limited concurrency to avoid hammering the test server, and a
+   month that fails degrades to null (rendered as a gap) rather than zero,
+   so a fetch failure can never read as "no purchases that month". */
 async function fetchPoValueTrend(year) {
-  if (!_configured()) return _notConfigured();
-  return _cached(`poValueTrend|${year}`, async () => {
-    try {
-      const from = `${year}-01-01`, to = `${year}-12-31`;
-      const orders = await odoo.searchRead('purchase.order',
-        [['date_order', '>=', from], ['date_order', '<=', to], ['state', 'in', ['purchase', 'done']]],
-        ['id', 'date_order', 'amount_total']);
+  if (!client.isConfigured()) {
+    return { ok: false, status: 'not_configured', message: 'The Odoo dashboard API is not configured on this server yet.' };
+  }
 
-      const byMonth = _MONTHS.map((label, i) => ({ month: i + 1, label, count: 0, value_tzs: 0 }));
-      for (const o of orders) {
-        const m = new Date(o.date_order).getUTCMonth();
-        byMonth[m].count += 1;
-        byMonth[m].value_tzs += o.amount_total || 0;
-      }
-      byMonth.forEach(b => { b.value_tzs = Math.round(b.value_tzs); });
+  const today = new Date().toISOString().slice(0, 10);
+  const months = [];
+  for (let i = 0; i < 12; i++) {
+    const [from, to] = _monthRange(year, i);
+    months.push({ i, from, to, label: MONTHS[i], future: from > today });
+  }
 
-      return { ok: true, value: byMonth, as_of: new Date().toISOString(), source: 'odoo:purchase.order' };
-    } catch (err) { return _unreachable(err); }
+  const results = new Array(12).fill(null);
+  const queue = months.filter(m => !m.future);
+  const CONCURRENCY = 3;
+
+  async function worker() {
+    for (;;) {
+      const m = queue.shift();
+      if (!m) return;
+      const bundle = await client.fetchPurchaseBundle(m.from, m.to);
+      if (!bundle.ok) { results[m.i] = { error: bundle.status }; continue; }
+      const orders = bundle.data.purchase_orders || [];
+      results[m.i] = {
+        value_tzs: Math.round(orders.reduce((s, o) => s + (o.total_amount || 0), 0)),
+        count: orders.length,
+      };
+    }
+  }
+  await Promise.all(Array.from({ length: CONCURRENCY }, worker));
+
+  const value = months.map(m => {
+    const r = results[m.i];
+    if (!r) return { label: m.label, value_tzs: null, count: null, status: m.future ? 'future' : 'unavailable' };
+    if (r.error) return { label: m.label, value_tzs: null, count: null, status: r.error };
+    return { label: m.label, value_tzs: r.value_tzs, count: r.count, status: 'ok' };
   });
+
+  if (!value.some(v => v.status === 'ok')) {
+    return { ok: false, status: 'unreachable', message: `No month of ${year} could be loaded from Odoo.` };
+  }
+  return { ok: true, value, as_of: new Date().toISOString(), source: 'odoo:purchase_dashboard_report' };
 }
 
-/* Browsable PO list for a period — every non-cancelled PO regardless of
-   approval stage, so RFQs-in-progress are visible alongside confirmed
-   orders (the category/PR-vs-PO split is a separate, still-unmapped cut
-   — see fetchCategoryGrid). */
+/* PO list for a period — one call, straight mapping. */
 async function fetchPoList(from, to) {
-  if (!_configured()) return _notConfigured();
-  return _cached(`poList|${from}|${to}`, async () => {
-    try {
-      const orders = await odoo.searchRead('purchase.order',
-        [['date_order', '>=', from], ['date_order', '<=', to], ['state', '!=', 'cancel']],
-        ['id', 'name', 'date_order', 'partner_id', 'amount_total', 'state'],
-        { order: 'date_order desc' });
+  const bundle = await client.fetchPurchaseBundle(from, to);
+  if (!bundle.ok) return _fail(bundle);
 
-      return {
-        ok: true,
-        value: {
-          count: orders.length,
-          total_value_tzs: Math.round(orders.reduce((s, o) => s + (o.amount_total || 0), 0)),
-          orders: orders.map(o => ({
-            id: o.id, name: o.name, date_order: o.date_order,
-            vendor: Array.isArray(o.partner_id) ? o.partner_id[1] : null,
-            amount_total: o.amount_total, state: o.state,
-          })),
-        },
-        as_of: new Date().toISOString(),
-        source: 'odoo:purchase.order',
-      };
-    } catch (err) { return _unreachable(err); }
-  });
+  const orders = (bundle.data.purchase_orders || []).map(o => ({
+    name: o.purchase_order,
+    vendor: o.vendor,
+    date_order: o.order_date,
+    amount_total: o.total_amount,
+    currency: o.currency,
+    state: o.status,
+    approval_status: o.approval_status,
+    purchase_type: o.purchase_type,
+    po_for: o.po_for,
+    incoming_status: o.incoming_status,
+  }));
+
+  return {
+    ok: true,
+    value: {
+      count: orders.length,
+      total_value_tzs: Math.round(orders.reduce((s, o) => s + (o.amount_total || 0), 0)),
+      orders: orders.slice(0, 200), // the page renders a table, not the whole period
+      truncated: orders.length > 200,
+    },
+    as_of: bundle.as_of,
+    source: bundle.source,
+  };
 }
 
-/* Service / Local / Import / Raw Material x Open PR / Open PO grid — see
-   the file header for which cells are real vs per-cell not_mapped.
-   Returns ok:true (when Odoo is reachable) with a per-cell {ok,...}
-   shape even though some cells are still pending — only a hard
-   not_configured/unreachable blanks the whole grid, same as every
-   other metric in this file. */
+/* Open PR / Open PO by category (Service · Local · Import · Raw Material).
+
+   Open PO is now real for every column INCLUDING Service: a line is open
+   when pending_quantity > 0, which the endpoint computes for goods and
+   service lines alike. The columns are deliberately NOT mutually
+   exclusive — a Raw Material PO is also Local or Import — so these are
+   four independent filters over the same orders, not a partition.
+
+   Open PR stays not_mapped: the endpoint carries no requisition data. */
 async function fetchCategoryGrid(from, to) {
-  if (!_configured()) return _notConfigured();
-  return _cached(`categoryGrid|${from}|${to}`, async () => {
-    try {
-      const orders = await odoo.searchRead('purchase.order',
-        [['date_order', '>=', from], ['date_order', '<=', to], ['state', '!=', 'cancel']],
-        ['id', 'name', 'amount_total']);
+  const bundle = await client.fetchPurchaseBundle(from, to);
+  if (!bundle.ok) return _fail(bundle);
 
-      const orderIds = orders.map(o => o.id);
-      const lines = orderIds.length
-        ? await odoo.searchRead('purchase.order.line',
-            [['order_id', 'in', orderIds]],
-            ['order_id', 'product_id', 'product_qty', 'qty_received', 'price_subtotal'])
-        : [];
+  const orders = bundle.data.purchase_orders || [];
+  const lines = bundle.data.purchase_order_lines || [];
+  const products = bundle.data.products || [];
+  const categories = bundle.data.product_categories || [];
 
-      const productIds = [...new Set(lines
-        .map(l => Array.isArray(l.product_id) ? l.product_id[0] : l.product_id)
-        .filter(Boolean))];
-      const products = productIds.length
-        ? await odoo.searchRead('product.product', [['id', 'in', productIds]], ['type', 'categ_id'])
-        : [];
-      const productById = new Map(products.map(p => [p.id, p]));
+  // Raw Material is identified from the full category path the endpoint
+  // supplies on product_categories.classification.
+  const rawMaterialCategoryIds = new Set(
+    categories.filter(c => /raw material/i.test(c.classification || c.category || ''))
+      .map(c => c.category_id));
+  const rawMaterialProductIds = new Set(
+    products.filter(p => rawMaterialCategoryIds.has(p.category_id)).map(p => p.product_id));
 
-      const linesByOrder = new Map();
-      for (const l of lines) {
-        const oid = Array.isArray(l.order_id) ? l.order_id[0] : l.order_id;
-        if (!linesByOrder.has(oid)) linesByOrder.set(oid, []);
-        linesByOrder.get(oid).push(l);
-      }
-      const isServiceLine = l => productById.get(Array.isArray(l.product_id) ? l.product_id[0] : l.product_id)?.type === 'service';
-      const isOpenLine = l => (l.qty_received || 0) < (l.product_qty || 0);
+  const orderById = new Map(orders.map(o => [o.purchase_order_id, o]));
 
-      /* Local / Import — PO-header granularity via the name prefix. A PO
-         only counts toward "open" if every line on it is a goods line we
-         can actually assess receipt progress for; one with any service
-         line is excluded rather than guessed at (see servicePoPending). */
-      const byPrefix = { local: { count: 0, value_tzs: 0 }, import: { count: 0, value_tzs: 0 } };
-      for (const o of orders) {
-        const key = o.name.startsWith('IPORD') ? 'import' : o.name.startsWith('LPORD') ? 'local' : null;
-        if (!key) continue;
-        const oLines = linesByOrder.get(o.id) || [];
-        if (!oLines.length || oLines.some(isServiceLine)) continue;
-        if (oLines.some(isOpenLine)) {
-          byPrefix[key].count += 1;
-          byPrefix[key].value_tzs += o.amount_total || 0;
-        }
-      }
+  /* An order is "open" for a column when it has at least one still-pending
+     line matching that column; its contribution is the value of those
+     pending lines only, not the whole PO. */
+  const openByOrder = new Map();
+  for (const l of lines) {
+    if (!(l.pending_quantity > 0)) continue;
+    const o = orderById.get(l.purchase_order_id);
+    if (!o) continue;
+    if (!openByOrder.has(o.purchase_order_id)) {
+      openByOrder.set(o.purchase_order_id, { order: o, value: 0, rawMaterial: false });
+    }
+    const entry = openByOrder.get(o.purchase_order_id);
+    const qty = l.quantity || 0;
+    const unitValue = qty > 0 ? (l.line_amount || 0) / qty : 0;
+    entry.value += unitValue * l.pending_quantity;
+    if (rawMaterialProductIds.has(l.product_id)) entry.rawMaterial = true;
+  }
 
-      /* Raw Material — line granularity via product.categ_id path. */
-      const rawMaterial = { count: 0, value_tzs: 0 };
-      for (const l of lines) {
-        const product = productById.get(Array.isArray(l.product_id) ? l.product_id[0] : l.product_id);
-        const categPath = product && Array.isArray(product.categ_id) ? product.categ_id[1] : '';
-        if (!/raw material/i.test(categPath || '')) continue;
-        if (isOpenLine(l)) {
-          rawMaterial.count += 1;
-          rawMaterial.value_tzs += l.price_subtotal || 0;
-        }
-      }
+  const open = Array.from(openByOrder.values());
+  const cell = (predicate) => {
+    const matched = open.filter(predicate);
+    return {
+      ok: true,
+      count: matched.length,
+      value_tzs: Math.round(matched.reduce((s, e) => s + e.value, 0)),
+    };
+  };
 
-      const okCell = c => ({ ok: true, count: c.count, value_tzs: Math.round(c.value_tzs) });
-      const prPending = _notMapped('Open PR pending: unresolved whether "PR No" (LPR/2026/...) is a ' +
-        'separate Purchase Requisition object or just a reference number on the PO.');
-      const servicePoPending = _notMapped('Needs the "Qty Serviced" / "Pending Qty" technical field names ' +
-        'for service lines — not yet confirmed.');
+  const prPending = _notMapped(
+    'Purchase Requisition data is not included in the Odoo dashboard endpoint — ' +
+    'no PR number or requisition record is returned. Requested from the Odoo team.');
 
-      const value = {
-        service:      { open_pr: prPending, open_po: servicePoPending },
-        local:        { open_pr: prPending, open_po: okCell(byPrefix.local) },
-        import:       { open_pr: prPending, open_po: okCell(byPrefix.import) },
-        raw_material: { open_pr: prPending, open_po: okCell(rawMaterial) },
-      };
-
-      return { ok: true, value, as_of: new Date().toISOString(), source: 'odoo:purchase.order+purchase.order.line' };
-    } catch (err) { return _unreachable(err); }
-  });
+  return {
+    ok: true,
+    value: {
+      service:      { open_pr: prPending, open_po: cell(e => e.order.po_for_key === 'service') },
+      local:        { open_pr: prPending, open_po: cell(e => e.order.purchase_type === 'local') },
+      import:       { open_pr: prPending, open_po: cell(e => e.order.purchase_type === 'import') },
+      raw_material: { open_pr: prPending, open_po: cell(e => e.rawMaterial) },
+    },
+    as_of: bundle.as_of,
+    source: bundle.source,
+  };
 }
 
 module.exports = { fetchPoValueTrend, fetchPoList, fetchCategoryGrid };

@@ -10,6 +10,6 @@
   whose admin/management entries drifted from auth.js until the
   2026-08-19 audit caught it.
 */
-const { KPI_EDIT_DEPTS } = require('../../forms/access-registry.js');
+const { KPI_EDIT_DEPTS, KPI_DEPTS } = require('../../forms/access-registry.js');
 
-module.exports = { ROLE_KPI_EDIT_DEPTS: KPI_EDIT_DEPTS };
+module.exports = { ROLE_KPI_EDIT_DEPTS: KPI_EDIT_DEPTS, KPI_DEPTS: KPI_DEPTS };

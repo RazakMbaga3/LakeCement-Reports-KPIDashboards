@@ -1,0 +1,13 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Smoke B</title>
+<link rel="stylesheet" href="styles.css" />
+<script src="loader.js?v=1"></script>
+</head><body>
+<div class="app-shell"><main style="padding:40px">
+<h1>Smoke B</h1>
+<div class="sk-card" data-formula-key="test"><div class="sk-value">123</div></div>
+</main></div>
+<script>
+  // Stands in for a page's first data call; Playwright stalls this route.
+  fetch('/api/formula/eval/2026/9').catch(function () {});
+</script>
+</body></html>

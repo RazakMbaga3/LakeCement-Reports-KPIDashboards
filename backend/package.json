@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "backend",
   "version": "1.0.0",
   "main": "server.js",
@@ -33,7 +33,16 @@
     "test:formulas": "node --test test/formulas.test.js",
     "test:facts": "node --test test/fact-fields.test.js",
     "test:access": "node --test test/access-consistency.test.js",
-    "test": "npm run lint && npm run test:formulas && npm run test:facts && npm run test:access && npm run smoke"
+    "test:stores": "node --test test/store-materials.test.js",
+    "test:kpi-keys": "node --test test/kpi-keys.test.js",
+    "test:form-facts": "node --test test/form-fact-coverage.test.js",
+    "test:kpi-level": "node --test test/kpi-edit-level.test.js",
+    "test:kpi-keys:snapshot": "node scripts/snapshot-kpi-keys.js",
+    "import:stoppage-facts": "node scripts/import-stoppage-facts.js",
+    "seed:kpi": "node scripts/import-kpi-monthly-xlsx.js",
+    "seed:kpi:dry": "node scripts/import-kpi-monthly-xlsx.js --dry-run",
+    "seed:kpi:verify": "node scripts/import-kpi-monthly-xlsx.js --verify",
+    "test": "npm run lint && npm run test:formulas && npm run test:facts && npm run test:access && npm run test:stores && npm run test:kpi-keys && npm run test:form-facts && npm run test:kpi-level && npm run smoke"
   },
   "keywords": [],
   "author": "",
