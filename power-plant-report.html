@@ -804,12 +804,23 @@
 <script src="forms/nav-status.js"></script>
 <script src="forms/collapsible.js"></script>
 <script src="forms/report-loader.js"></script>
+<script src="forms/kpi-live.js"></script>
 <script src="forms/report-rollup.js"></script>
 <script>initReportRollup({ form: 'cpp' });</script>
 <script>
-initReportLoader({
-  forms: ['cpp'],
-  computes: [
+/* The CPP derived formulas, defined ONCE and handed to two engines:
+
+     report-loader  — runs them on page load and on date change, against the
+                      SAVED record fetched from the server for that date.
+     kpi-live       — re-runs the same functions on every keystroke, against
+                      the live [data-field] inputs, so the derived figures
+                      move while a CPP officer is still filling the form
+                      instead of only after saving.
+
+   Both take the identical rule shape ({kpi, fmt, compute(fields, num)}), so
+   this stays one definition — a formula edited here changes both paths and
+   they cannot drift apart. */
+var CPP_COMPUTES = [
 
     /* ── summary strip (top) ── */
     { kpi:'cpp_gross_gen', fmt:'n0', compute: function(d,n){ return n(d.cpp_gross_gen_kwh) || null; } },
@@ -856,9 +867,10 @@ initReportLoader({
         return (g>0 && coal>0) ? coal*1000/g : null;
       }
     }
-  ],
-  fills: []
-});
+];
+
+initReportLoader({ forms: ['cpp'], computes: CPP_COMPUTES, fills: [] });
+initKpiLive(CPP_COMPUTES);
 </script>
 <script>
 /* ══════════════════════════════════════════════════════════════
