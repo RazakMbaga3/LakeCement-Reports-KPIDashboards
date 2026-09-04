@@ -7,15 +7,16 @@
   it pools every candidate page into one set, so a field belonging to form
   type A satisfies a fact declared against form type B.
 
-  It therefore missed the real defect. power-plant-report.html is a read-only
-  report — 22 CPP metrics rendered from stored data through data-kpi /
-  data-roll-mtd cells, with only `date` and `prepared_by` bound to actual
-  inputs — yet it is wired to initFormPersist('cpp') with Save Draft and
-  Submit buttons. The fields cpp-heat-rate and cpp-auxiliary-power are
-  computed from (cpp_heat_rate_plant, cpp_gross_gen_kwh, cpp_aux_kwh) exist
-  on that page only as read-side display attributes, so the form can never
-  produce them. Before the submit route was changed to merge rather than
-  replace, one click of Submit also wiped all 22 stored fields for that day.
+  It therefore missed the real defect it was written for. power-plant-report.html
+  used to be a read-only report — 22 CPP metrics rendered from stored data
+  through data-kpi / data-roll-mtd cells, with only `date` and `prepared_by`
+  bound to actual inputs — yet wired to initFormPersist('cpp') with Save Draft
+  and Submit buttons. cpp-heat-rate and cpp-auxiliary-power are computed from
+  (cpp_heat_rate_plant, cpp_gross_gen_kwh, cpp_aux_kwh), which existed on that
+  page only as read-side display attributes, so the form could never produce
+  them. Before the submit route was changed to merge rather than replace, one
+  click of Submit also wiped all 22 stored fields for that day. The "On Date"
+  column became real inputs on 2026-09-04; this test is what keeps it that way.
 
   This test binds each fact to the page that actually submits its form type —
   discovered from the page's own initFormPersist('…') call, so the mapping
@@ -54,11 +55,11 @@ const RUNTIME_FIELD_SOURCES = {
 /* Form types whose data has NO entry page yet, acknowledged rather than
    silently tolerated. Each needs an owner and a plan, not a suppression. */
 const NO_ENTRY_FORM = {
-  /* power-plant-report.html displays CPP metrics but captures none of them;
-     all 91 stored days arrived through an import, and there is no screen a
-     CPP officer can type tomorrow's readings into. Raised 2026-08-31 —
-     needs a real CPP entry form (22 fields) designed with the CPP HOD. */
-  cpp: 'power-plant-report.html is a display-only report; CPP has no data-entry screen',
+  /* Empty since 2026-09-04. The one entry here was `cpp`: all 91 stored days
+     had arrived through an import and there was no screen a CPP officer
+     could type tomorrow's readings into. power-plant-report.html's "On Date"
+     column is now 22 real inputs, so CPP is checked by the test below like
+     every other form type. */
 };
 
 function readPage(rel) {

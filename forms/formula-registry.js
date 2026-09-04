@@ -138,20 +138,19 @@
     cm1_425n_bm_cons_mt: { source: 'manual', form: 'production', field: 'cm1_425n_bm_cons_mt', unit: 'MT' },
 
     // CPP (Captive Power Plant) daily generation report — FRM-LCL-PP-06
-    // unwired: true — found 2026-08-19 by backend/test/fact-fields.test.js
-    // (a new automated cross-check): form_type 'cpp' has no real <input
-    // data-field> anywhere in the app. power-plant-report.html shows
-    // cpp_gross_gen_kwh/cpp_aux_kwh only as read-only data-kpi rollup
-    // cells (no entry point behind them); the other three have no trace
-    // at all. cpp-heat-rate and cpp-auxiliary-power (the two formulas
-    // that read these) have always computed null as a result — see their
-    // provisional flags below. Fixing this needs a real CPP data-entry
-    // decision (which page, whose responsibility), not a code change.
-    cpp_gross_gen_kwh:    { source: 'manual', form: 'cpp', field: 'cpp_gross_gen_kwh',    unit: 'kWh', unwired: true },
-    cpp_aux_kwh:          { source: 'manual', form: 'cpp', field: 'cpp_aux_kwh',          unit: 'kWh', unwired: true },
-    cpp_coal_cons:        { source: 'manual', form: 'cpp', field: 'cpp_coal_cons',        unit: 'MT', unwired: true },
-    cpp_coal_gcv:         { source: 'manual', form: 'cpp', field: 'cpp_coal_gcv',         unit: 'kcal/kg', unwired: true },
-    cpp_heat_rate_plant:  { source: 'manual', form: 'cpp', field: 'cpp_heat_rate_plant',  unit: 'kcal/kWh', unwired: true },
+    // These were `unwired: true` from 2026-08-19 to 2026-09-04: form_type
+    // 'cpp' had no real <input data-field> anywhere in the app, because
+    // power-plant-report.html rendered all 22 CPP metrics as read-only
+    // data-kpi cells, so cpp-heat-rate and cpp-auxiliary-power could only
+    // ever compute null and the 91 imported days had no way to be extended
+    // by hand. The page's "On Date" column is now 22 real inputs owned by
+    // the cpp role (_DAILY_ACCESS.cpp.edit), so these facts are captured
+    // the same way every other manual fact is.
+    cpp_gross_gen_kwh:    { source: 'manual', form: 'cpp', field: 'cpp_gross_gen_kwh',    unit: 'kWh' },
+    cpp_aux_kwh:          { source: 'manual', form: 'cpp', field: 'cpp_aux_kwh',          unit: 'kWh' },
+    cpp_coal_cons:        { source: 'manual', form: 'cpp', field: 'cpp_coal_cons',        unit: 'MT' },
+    cpp_coal_gcv:         { source: 'manual', form: 'cpp', field: 'cpp_coal_gcv',         unit: 'kcal/kg' },
+    cpp_heat_rate_plant:  { source: 'manual', form: 'cpp', field: 'cpp_heat_rate_plant',  unit: 'kcal/kWh' },
   };
 
   // pile-quality form: 18 CaO hole samples
@@ -451,8 +450,6 @@
     'cpp-heat-rate': {
       label: 'CPP Heat Rate', unit: 'kcal/kWh', dp: 0, version: 1,
       target: 3800, signage: '<', targetLabel: 'Target < 3,800 kcal/kWh',
-      provisional: true,
-      provisionalNote: 'Always null — its input facts (cpp_heat_rate_plant, cpp_gross_gen_kwh) have no real data-entry field anywhere in the app yet (found 2026-08-19). Needs a CPP data-entry decision before this KPI can ever show a real number.',
       notes: 'Captive Power Plant heat rate (Plant, 3300 @ MCR basis) as reported daily on FRM-LCL-PP-06 — a lab/DCS-derived figure taken as-is, not re-derived from coal×GCV÷gross_gen (verified against the source workbook: the reported figure differs slightly from that naive formula, similar to Turbine Steam Consumption not equalling Boiler−Bleed — both are independently measured values). Monthly figure is the gross-generation-weighted mean.',
       inputs: ['cpp_heat_rate_plant', 'cpp_gross_gen_kwh'],
       daily: function (f) { return pos(f.cpp_heat_rate_plant); },
@@ -462,8 +459,6 @@
     'cpp-auxiliary-power': {
       label: 'CPP Auxiliary Power', unit: '%', dp: 2, version: 1,
       target: 10, signage: '<', targetLabel: 'Target < 10.0%',
-      provisional: true,
-      provisionalNote: 'Always null — its input facts (cpp_aux_kwh, cpp_gross_gen_kwh) have no real data-entry field anywhere in the app yet (found 2026-08-19). Needs a CPP data-entry decision before this KPI can ever show a real number.',
       notes: 'Captive Power Plant auxiliary (house-load) power consumption as a % of gross generation — verified against FRM-LCL-PP-06 (aux ÷ gross × 100). Monthly figure is Σaux ÷ Σgross (gross-generation-weighted), not a simple average of daily percentages.',
       inputs: ['cpp_aux_kwh', 'cpp_gross_gen_kwh'],
       daily: function (f) {
