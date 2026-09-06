@@ -486,11 +486,46 @@
           <td class="cf"><div class="cv" data-kpi="cpp_sfc_mtd">—</div></td>
           <td class="cf"><div class="cv" data-kpi="cpp_sfc_ytd">—</div></td>
         </tr>
+        <tr class="srow"><td colspan="6">Heat Rate Constants (Lab / DCS — enter daily)</td></tr>
+        <tr>
+          <td class="ts"></td>
+          <td class="tp">Superheated Steam Enthalpy</td>
+          <td class="tu">kcal / kg</td>
+          <td class="cm"><input class="ci" type="number" step="any" data-field="cpp_superheated_steam_enthalpy" placeholder="e.g. 803" /></td>
+          <td class="cf"></td>
+          <td class="cf"></td>
+        </tr>
+        <tr>
+          <td class="ts"></td>
+          <td class="tp">Feed Water Enthalpy</td>
+          <td class="tu">kcal / kg</td>
+          <td class="cm"><input class="ci" type="number" step="any" data-field="cpp_feedwater_enthalpy" placeholder="e.g. 130" /></td>
+          <td class="cf"></td>
+          <td class="cf"></td>
+        </tr>
+        <tr>
+          <td class="ts"></td>
+          <td class="tp">DM Water Enthalpy</td>
+          <td class="tu">kcal / kg</td>
+          <td class="cm"><input class="ci" type="number" step="any" data-field="cpp_dm_water_enthalpy" placeholder="e.g. 30" /></td>
+          <td class="cf"></td>
+          <td class="cf"></td>
+        </tr>
+        <tr>
+          <td class="ts"></td>
+          <td class="tp">Boiler Efficiency</td>
+          <td class="tu">ratio</td>
+          <td class="cm"><input class="ci" type="number" step="any" min="0" max="1" data-field="cpp_boiler_efficiency" placeholder="e.g. 0.78" /></td>
+          <td class="cf"></td>
+          <td class="cf"></td>
+        </tr>
+
+        <tr class="srow"><td colspan="6">HEAT RATE</td></tr>
         <tr>
           <td class="ts">16</td>
           <td class="tp">Heat Rate TG 2880</td>
           <td class="tu">kcal / kWh</td>
-          <td class="cm"><input class="ci" type="number" step="any" data-field="cpp_heat_rate_tg" /></td>
+          <td class="cf"><input class="ci" type="number" step="any" data-field="cpp_heat_rate_tg" readonly data-auto-computed="1" title="Auto-calculated: [Turbine Steam × (Superheated − Feedwater Enthalpy) + DM Water Consumption × DM Water Enthalpy] × 1000 ÷ Gross Generation" /></td>
           <td class="cf"><div class="cv" data-kpi="cpp_heat_rate_tg_mtd">—</div></td>
           <td class="cf"><div class="cv" data-kpi="cpp_heat_rate_tg_ytd">—</div></td>
         </tr>
@@ -498,7 +533,7 @@
           <td class="ts">17</td>
           <td class="tp">Heat Rate Plant 3300 @ MCR</td>
           <td class="tu">kcal / kWh</td>
-          <td class="cm"><input class="ci" type="number" step="any" data-field="cpp_heat_rate_plant" /></td>
+          <td class="cf"><input class="ci" type="number" step="any" data-field="cpp_heat_rate_plant" readonly data-auto-computed="1" title="Auto-calculated: Boiler Steam Generation × (Superheated − Feedwater Enthalpy) × 1000 ÷ (Gross Generation × Boiler Efficiency)" /></td>
           <td class="cf"><div class="cv" data-kpi="cpp_heat_rate_plant_mtd">—</div></td>
           <td class="cf"><div class="cv" data-kpi="cpp_heat_rate_plant_ytd">—</div></td>
         </tr>
@@ -820,6 +855,30 @@
    Both take the identical rule shape ({kpi, fmt, compute(fields, num)}), so
    this stays one definition — a formula edited here changes both paths and
    they cannot drift apart. */
+
+/* Heat Rate (TG) and Heat Rate (Plant) — FRM-LCL-PP-06's own formula cells.
+   The source Excel hardcodes today's lab/DCS enthalpy readings straight into
+   the formula (=((E17*(803-130)+E31*(30))*1000)/E7, etc.), which silently
+   goes stale the day those readings change. Here they're their own daily
+   inputs (cpp_superheated_steam_enthalpy, cpp_feedwater_enthalpy,
+   cpp_dm_water_enthalpy, cpp_boiler_efficiency) and these two functions do
+   the same arithmetic against whichever day's readings are live. Exported
+   as named functions (not inlined into CPP_COMPUTES below) so the
+   auto-fill sync block further down can call the exact same formula. */
+function computeHeatRateTG(f, n) {
+  var turbine = n(f.cpp_turbine_steam_mt), dmCons = n(f.cpp_dm_water_cons_m3),
+      sh = n(f.cpp_superheated_steam_enthalpy), fw = n(f.cpp_feedwater_enthalpy),
+      dmEnthalpy = n(f.cpp_dm_water_enthalpy), gross = n(f.cpp_gross_gen_kwh);
+  if (!(gross > 0) || !(sh > 0)) return null;
+  return ((turbine * (sh - fw) + dmCons * dmEnthalpy) * 1000) / gross;
+}
+function computeHeatRatePlant(f, n) {
+  var boiler = n(f.cpp_boiler_steam_mt), sh = n(f.cpp_superheated_steam_enthalpy),
+      fw = n(f.cpp_feedwater_enthalpy), gross = n(f.cpp_gross_gen_kwh), eff = n(f.cpp_boiler_efficiency);
+  if (!(gross > 0) || !(eff > 0) || !(sh > 0)) return null;
+  return (boiler * (sh - fw) * 1000) / (gross * eff);
+}
+
 var CPP_COMPUTES = [
 
     /* ── summary strip (top) ── */
@@ -868,6 +927,40 @@ var CPP_COMPUTES = [
       }
     }
 ];
+
+/* Write the computed Heat Rate (TG)/(Plant) into their own readonly
+   data-field input — NOT just a [data-kpi] display — so Save Draft/Submit
+   still persists a real cpp_heat_rate_tg / cpp_heat_rate_plant value. Every
+   downstream reader (this page's own MTD/YTD weighted average below, the
+   Executive Summary "CPP Heat Rate" tile, forms/formula-registry.js) reads
+   that stored field directly rather than re-deriving it, so keeping it a
+   real saved field avoids touching any of them.
+   Skips writing when the formula can't resolve yet (missing enthalpy/
+   efficiency readings) so it never blanks out a value saved before this
+   feature existed — e.g. the 91 imported days, or the manually-typed
+   figures entered 2026-09-04/05, none of which have the new constants.
+   Registered before initKpiLive below so it updates cpp_heat_rate_plant's
+   value first on every keystroke — the summary strip's cpp_heat_rate tile
+   (fed by CPP_COMPUTES, reading that same field) then sees the fresh
+   number on the same event instead of lagging one keystroke behind. */
+(function () {
+  var AUTO = { cpp_heat_rate_tg: computeHeatRateTG, cpp_heat_rate_plant: computeHeatRatePlant };
+  function num(v) { if (v === '' || v == null) return 0; var x = +(String(v).replace(/,/g, '')); return isNaN(x) ? 0 : x; }
+  function syncAutoHeatRate() {
+    var f = {};
+    document.querySelectorAll('[data-field]').forEach(function (el) { f[el.getAttribute('data-field')] = el.value; });
+    Object.keys(AUTO).forEach(function (field) {
+      var el = document.querySelector('input[data-field="' + field + '"]');
+      if (!el) return;
+      var val = AUTO[field](f, num);
+      if (val !== null && !isNaN(val)) el.value = Math.round(val * 10) / 10;
+    });
+  }
+  document.addEventListener('input', syncAutoHeatRate);
+  document.addEventListener('change', syncAutoHeatRate);
+  document.addEventListener('nyati:restored', function () { setTimeout(syncAutoHeatRate, 80); });
+  setTimeout(syncAutoHeatRate, 80);
+})();
 
 initReportLoader({ forms: ['cpp'], computes: CPP_COMPUTES, fills: [] });
 initKpiLive(CPP_COMPUTES);

@@ -437,6 +437,12 @@
      changed away from a previously-submitted date. ─────────────────── */
   function _unlockForm() {
     document.querySelectorAll('.ci, .tb-ctl').forEach(inp => {
+      // data-auto-computed marks an input that is ALWAYS readonly — its
+      // value is derived from other fields on the page (e.g. power-plant-
+      // report.html's Heat Rate cells), not something the submit-lock made
+      // readonly. Unlocking the form must not turn these into free-typed
+      // fields.
+      if (inp.hasAttribute('data-auto-computed')) return;
       inp.removeAttribute('readonly');
       if (inp.dataset.rawValue !== undefined) {
         inp.value = inp.dataset.rawValue;

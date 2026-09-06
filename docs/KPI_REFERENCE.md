@@ -569,7 +569,7 @@ function (f) {
 | Formula version | v1 |
 | Registry key | `cpp-heat-rate` |
 
-Captive Power Plant heat rate (Plant, 3300 @ MCR basis) as reported daily on FRM-LCL-PP-06 — a lab/DCS-derived figure taken as-is, not re-derived from coal×GCV÷gross_gen (verified against the source workbook: the reported figure differs slightly from that naive formula, similar to Turbine Steam Consumption not equalling Boiler−Bleed — both are independently measured values). Monthly figure is the gross-generation-weighted mean.
+Captive Power Plant heat rate (Plant, 3300 @ MCR basis), matching FRM-LCL-PP-06's own formula cell: Boiler Steam Generation × (Superheated Steam Enthalpy − Feedwater Enthalpy) × 1000 ÷ (Gross Generation × Boiler Efficiency). The source Excel hardcoded that day's enthalpy/efficiency readings straight into the formula; power-plant-report.html (since 2026-09-05) instead collects them as their own daily inputs (cpp_superheated_steam_enthalpy, cpp_feedwater_enthalpy, cpp_boiler_efficiency) and auto-computes cpp_heat_rate_plant from them client-side before save, so this fact still reads a plain stored number. Still not coal×GCV÷gross_gen — that naive formula was verified against the source workbook to differ slightly, since coal energy input and the boiler's actual steam enthalpy gain are independently measured quantities. Monthly figure is the gross-generation-weighted mean.
 
 **Inputs**
 

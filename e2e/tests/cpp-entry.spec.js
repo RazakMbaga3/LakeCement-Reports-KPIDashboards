@@ -7,11 +7,21 @@
   into. Every stored day had arrived through backend/scripts/import-cpp.js.
 
   These tests hold the two halves of the fix in place:
-    1. the 22 readings are real inputs the owning role can edit, and
+    1. the raw readings are real inputs the owning role can edit, and
     2. the derived figures recompute AS YOU TYPE, before anything is saved
        (the page feeds one CPP_COMPUTES array to both report-loader, which
        runs it against the saved record, and kpi-live, which re-runs it
        against the live inputs).
+
+  Since 2026-09-05, Heat Rate (TG) and Heat Rate (Plant) moved from that
+  editable set into a third category: FRM-LCL-PP-06's own formula cells
+  (Boiler/Turbine Steam × (Superheated − Feedwater Enthalpy) [+ DM Water
+  term] × 1000 ÷ Gross Generation [÷ Boiler Efficiency]). The source Excel
+  hardcoded that day's enthalpy/efficiency readings straight into the
+  formula; this page instead collects them as their own daily constants and
+  auto-computes the two heat rates from them, so they are still a real
+  data-field input (Save Draft/Submit must still persist a number) but are
+  no longer one the officer types into directly.
 
   Entry is asserted as `cpp_officer` — level 'officer' is the person who
   actually fills this in on shift, and their submission needs the HOD's
@@ -23,19 +33,27 @@ const { pool } = require('../fixtures/db');
 
 const D = '1999-06-17';
 
-/* Every reading the importer writes — the form must be able to produce the
-   same record shape by hand, or UI-entered days stay poorer than imported
-   ones. Mirrors ROW_FACT in backend/scripts/import-cpp.js plus the two
-   fly-ash quality fields it reads from row 33. */
+/* Every reading the importer writes, minus the two now-computed heat rate
+   fields (see HEAT_RATE_FIELDS below), plus the four constants the heat
+   rate formulas are built from — the form must be able to produce the same
+   record shape by hand, or UI-entered days stay poorer than imported ones.
+   Mirrors ROW_FACT in backend/scripts/import-cpp.js plus the two fly-ash
+   quality fields it reads from row 33. */
 const READINGS = [
   'cpp_gross_gen_kwh', 'cpp_aux_kwh', 'cpp_run_hrs', 'cpp_feed_water_mt',
   'cpp_boiler_steam_mt', 'cpp_bleed_steam_mt', 'cpp_turbine_steam_mt',
-  'cpp_condensate_mt', 'cpp_aux_steam_mt', 'cpp_heat_rate_tg',
-  'cpp_heat_rate_plant', 'cpp_dg_gen_kwh', 'cpp_coal_cons', 'cpp_coal_gcv',
+  'cpp_condensate_mt', 'cpp_aux_steam_mt',
+  'cpp_superheated_steam_enthalpy', 'cpp_feedwater_enthalpy',
+  'cpp_dm_water_enthalpy', 'cpp_boiler_efficiency',
+  'cpp_dg_gen_kwh', 'cpp_coal_cons', 'cpp_coal_gcv',
   'cpp_dm_water_gen_m3', 'cpp_dm_water_cons_m3', 'cpp_ct_makeup_m3',
   'cpp_flyash_combustible_pct', 'cpp_flyash_gcv', 'cpp_flyash_to_cm_mt',
   'cpp_flyash_to_coalyard_nos', 'cpp_flyash_to_dumpyard_nos',
 ];
+
+/* Importer-written fields that are on the page but are no longer meant to
+   be typed into — FRM-LCL-PP-06's own formula cells, auto-computed here. */
+const HEAT_RATE_FIELDS = ['cpp_heat_rate_tg', 'cpp_heat_rate_plant'];
 
 async function cleanup() {
   await pool.query("DELETE FROM daily_reports WHERE form_type = 'cpp' AND record_date = $1", [D]);
@@ -66,6 +84,16 @@ test('every CPP reading the importer writes has an input on the page', async ({ 
   expect(missing, 'CPP readings with no input on power-plant-report.html').toEqual([]);
 });
 
+test('heat rate fields exist to hold a value but are no longer typed in by hand', async ({ page }) => {
+  await openForm(page);
+
+  for (const field of HEAT_RATE_FIELDS) {
+    const input = page.locator(`input[data-field="${field}"]`);
+    await expect(input, `${field} must still be a real input so Submit persists it`).toHaveCount(1);
+    await expect(input, `${field} should be auto-computed, not hand-typed`).not.toBeEditable();
+  }
+});
+
 test('derived figures recompute while typing, before anything is saved', async ({ page }) => {
   const errors = collectErrors(page);
   await openForm(page);
@@ -76,8 +104,15 @@ test('derived figures recompute while typing, before anything is saved', async (
   await page.fill('input[data-field="cpp_run_hrs"]',         '24');
   await page.fill('input[data-field="cpp_turbine_steam_mt"]', '300');
   await page.fill('input[data-field="cpp_coal_cons"]',       '120');
+  /* Heat rate constants, read off the lab/DCS each day (FRM-LCL-PP-06). */
+  await page.fill('input[data-field="cpp_boiler_steam_mt"]',              '280');
+  await page.fill('input[data-field="cpp_superheated_steam_enthalpy"]',   '800');
+  await page.fill('input[data-field="cpp_feedwater_enthalpy"]',           '150');
+  await page.fill('input[data-field="cpp_dm_water_cons_m3"]',             '10');
+  await page.fill('input[data-field="cpp_dm_water_enthalpy"]',            '30');
+  await page.fill('input[data-field="cpp_boiler_efficiency"]',            '0.8');
   /* kpi-live listens on input/change; blur the last field so change fires. */
-  await page.locator('input[data-field="cpp_coal_cons"]').blur();
+  await page.locator('input[data-field="cpp_boiler_efficiency"]').blur();
   await page.waitForTimeout(300);
 
   /* Nothing has been saved — these must come from the live inputs alone. */
@@ -93,6 +128,16 @@ test('derived figures recompute while typing, before anything is saved', async (
   await expect(page.locator('[data-kpi="cpp_ssc"]').first()).toHaveText('1.3');
   /* SFC = 120 MT x 1000 / 240,000 kWh = 0.5 kg/kWh */
   await expect(page.locator('[data-kpi="cpp_sfc"]').first()).toHaveText('0.5');
+
+  /* Heat Rate (Plant) = 280 MT x (800-150) kcal/kg x 1000 / (240,000 kWh x 0.8)
+     = 182,000,000 / 192,000 = 947.9 kcal/kWh */
+  await expect(page.locator('input[data-field="cpp_heat_rate_plant"]')).toHaveValue('947.9');
+  /* Heat Rate (TG) = [300 MT x (800-150) + 10 m³ x 30] x 1000 / 240,000 kWh
+     = 195,300,000 / 240,000 = 813.8 kcal/kWh */
+  await expect(page.locator('input[data-field="cpp_heat_rate_tg"]')).toHaveValue('813.8');
+  /* The top summary strip reads cpp_heat_rate_plant, so it must see the same
+     freshly-computed number on this tick, not the previous keystroke's. */
+  await expect(page.locator('[data-kpi="cpp_heat_rate"]').first()).toHaveText('948');
 
   expect(errors(), 'uncaught errors while typing').toEqual([]);
 });
