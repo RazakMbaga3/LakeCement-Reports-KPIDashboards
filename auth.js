@@ -604,7 +604,7 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
       line-height: 1.2;
     }
     .auth-user-name {
-      font-size: 11.5px; font-weight: 700;
+      font-size: 12px; font-weight: 700;
       color: #fff;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       max-width: 130px;
@@ -616,7 +616,7 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
       background: rgba(255,255,255,.1);
       border: 1px solid rgba(255,255,255,.2);
       color: rgba(255,255,255,.85);
-      font-family: inherit; font-size: 10.5px; font-weight: 700;
+      font-family: inherit; font-size: 12px; font-weight: 700;
       cursor: pointer;
       transition: background .15s, color .15s;
       white-space: nowrap; flex-shrink: 0;
@@ -641,7 +641,7 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
       align-items:center;
     }
     .audit-filter-bar input, .audit-filter-bar select {
-      font-family:inherit; font-size:11px; padding:5px 9px;
+      font-family:inherit; font-size:12px; padding:5px 9px;
       border:1.5px solid var(--border,#E2E8F0); border-radius:6px; outline:none;
     }
     .audit-filter-bar input:focus, .audit-filter-bar select:focus {
@@ -649,7 +649,7 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
     }
     .audit-action-badge {
       display:inline-block; padding:2px 8px; border-radius:4px;
-      font-size:10px; font-weight:700;
+      font-size:12px; font-weight:700;
     }
     .audit-empty {
       text-align:center; padding:40px; color:var(--text-muted,#64748B); font-size:12px;
@@ -658,7 +658,7 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
     /* ── Audit role badge ── */
     .audit-role-badge {
       display:inline-block; padding:1px 7px; border-radius:4px;
-      font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px;
+      font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.4px;
       background:#F1F5F9; color:#475569; border:1px solid #E2E8F0;
     }
 
@@ -678,43 +678,43 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
       overflow-x:auto; max-height:480px;
     }
     .arm-table {
-      font-size:10.5px; white-space:nowrap; border-collapse:collapse;
+      font-size:12px; white-space:nowrap; border-collapse:collapse;
     }
     .arm-table th, .arm-table td {
       padding:5px 8px; border:1px solid var(--border,#E2E8F0);
     }
     .arm-role-hdr {
-      background:#F1F5F9; font-size:11px; font-weight:800;
+      background:#F1F5F9; font-size:12px; font-weight:800;
       color:var(--navy,#173158); text-align:left;
       position:sticky; left:0; z-index:2;
     }
     .arm-group-hdr {
       background:var(--navy,#173158); color:white;
-      font-size:10px; font-weight:800; text-align:center;
+      font-size:12px; font-weight:800; text-align:center;
       letter-spacing:.5px; text-transform:uppercase;
     }
     .arm-special-grp { background:#4B5563; }
     .arm-col-hdr {
-      background:#F8FAFC; font-size:9.5px; font-weight:700;
+      background:#F8FAFC; font-size:12px; font-weight:700;
       color:#475569; text-align:center; text-transform:uppercase;
     }
     .arm-special-col, .arm-kpi-col {
       background:#F0FDF4;
     }
     .arm-role-cell {
-      background:#F8FAFC; font-size:11px;
+      background:#F8FAFC; font-size:12px;
       position:sticky; left:0; z-index:1;
       white-space:nowrap;
     }
     .arm-role-cell strong { display:block; color:var(--navy,#173158); }
     .arm-role-slug {
-      font-size:9px; font-weight:600; color:#94A3B8;
+      font-size:12px; font-weight:600; color:#94A3B8;
       text-transform:uppercase; letter-spacing:.4px;
     }
     .arm-cell { text-align:center; padding:4px 6px; }
     .arm-badge {
       display:inline-block; padding:2px 7px; border-radius:4px;
-      font-size:9px; font-weight:800; letter-spacing:.3px;
+      font-size:12px; font-weight:800; letter-spacing:.3px;
     }
     .arm-edit  { background:#DCFCE7; color:#166534; border:1px solid #86EFAC; }
     .arm-view  { background:#DBEAFE; color:#1E40AF; border:1px solid #93C5FD; }
@@ -722,12 +722,12 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
     .arm-none  { background:#F1F5F9; color:#94A3B8; border:1px solid #E2E8F0; }
     .arm-tick  { color:#16A34A; font-weight:800; font-size:12px; }
     .arm-kpi-depts {
-      font-size:9px; font-weight:700; color:#0369A1;
+      font-size:12px; font-weight:700; color:#0369A1;
       border-bottom:1px dashed #93C5FD; cursor:default;
     }
     .arm-legend {
       display:flex; flex-wrap:wrap; gap:12px; align-items:center;
-      padding:10px 16px; font-size:10.5px; color:#475569;
+      padding:10px 16px; font-size:12px; color:#475569;
       background:#F8FAFC; border-bottom:1px solid var(--border,#E2E8F0);
     }
   `;
@@ -1082,7 +1082,7 @@ function applyDailyPermissions() {
       banner.id = 'dr-view-only-banner';
       banner.style.cssText = [
         'background:#1E3A5F','color:white','padding:9px 24px',
-        'font-size:11.5px','font-weight:700','letter-spacing:.3px',
+        'font-size:12px','font-weight:700','letter-spacing:.3px',
         'display:flex','align-items:center','justify-content:center','gap:10px',
         'position:sticky','top:0','z-index:200','box-shadow:0 2px 8px rgba(0,0,0,.25)',
       ].join(';');
@@ -1090,7 +1090,7 @@ function applyDailyPermissions() {
         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">' +
         '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
         'VIEW ONLY &mdash; ' + user.dept + ' does not have edit access to this report.' +
-        '<span style="font-size:10px;font-weight:500;opacity:.75;margin-left:8px">' +
+        '<span style="font-size:12px;font-weight:500;opacity:.75;margin-left:8px">' +
         'Contact the responsible department to update data.</span>';
 
       /* Insert after the <header> element */

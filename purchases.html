@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Lake Cement – Purchase Dashboard</title>
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -16,33 +16,33 @@
       position: sticky; top: var(--header-h, 68px); z-index: 80; box-shadow: var(--shadow-sm);
     }
     .in-bar-inner { display: flex; align-items: center; gap: 14px; padding: 10px 28px; flex-wrap: wrap; }
-    .in-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); }
+    .in-lbl { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); }
     .in-input {
       padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border);
-      background: var(--off-white); font-family: var(--font); font-size: 11px; font-weight: 600;
+      background: var(--off-white); font-family: var(--font); font-size: 12px; font-weight: 600;
       color: var(--navy); cursor: pointer;
     }
     .in-main { max-width: 1300px; margin: 0 auto; padding: 20px 28px 60px; }
     .in-section-hdr { display: flex; align-items: center; gap: 8px; margin: 24px 0 12px; }
     .in-section-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--navy); }
-    .in-section-sub { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+    .in-section-sub { font-size: 12px; color: var(--text-muted); font-weight: 500; }
     .in-card { background: white; border: 1.5px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 16px; }
     .in-chart-wrap { height: 260px; }
-    .in-empty { text-align: center; padding: 30px 20px; color: var(--text-muted); font-size: 11.5px; }
+    .in-empty { text-align: center; padding: 30px 20px; color: var(--text-muted); font-size: 12px; }
 
     .sk-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
     @media (max-width: 900px) { .sk-row { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 700px) { .sk-row { grid-template-columns: 1fr; } }
 
     /* Category grid — Service/Local/Import/Raw Material x Open PR/Open PO */
-    .cat-grid { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+    .cat-grid { width: 100%; border-collapse: collapse; font-size: 12px; }
     .cat-grid th, .cat-grid td { padding: 10px 12px; text-align: center; border-bottom: 1px solid var(--border); }
-    .cat-grid th { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); }
+    .cat-grid th { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); }
     .cat-grid td:first-child, .cat-grid th:first-child { text-align: left; font-weight: 700; color: var(--navy); }
     .cat-grid .cat-pending { color: var(--text-muted); font-style: italic; }
 
     .tbl-scroll { overflow-x: auto; }
-    .po-state { font-size: 9.5px; font-weight: 800; letter-spacing: .3px; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; background: var(--section-bg); color: var(--text-muted); }
+    .po-state { font-size: 12px; font-weight: 800; letter-spacing: .3px; text-transform: uppercase; padding: 2px 8px; border-radius: 10px; background: var(--section-bg); color: var(--text-muted); }
     .po-state.confirmed { background: var(--green-bg); color: var(--green); }
     .po-state.draft { background: #FFF3E0; color: var(--orange); }
 
@@ -53,7 +53,7 @@
     }
     .st-divider-title { font-size: 14px; font-weight: 800; color: var(--navy); letter-spacing: -.2px; }
     .st-chip {
-      font-size: 9.5px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;
+      font-size: 12px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;
       padding: 3px 9px; border-radius: 10px; background: var(--green-bg); color: var(--green);
     }
     .st-chip.warn { background: #FFF3E0; color: var(--orange); }
@@ -66,10 +66,10 @@
       border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 13px;
       border-left-width: 4px; background: white;
     }
-    .st-cat-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); }
+    .st-cat-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); }
     .st-cat-val { font-size: 20px; font-weight: 800; color: var(--navy); line-height: 1.15; margin-top: 6px; }
-    .st-cat-unit { font-size: 10.5px; font-weight: 700; color: var(--text-muted); margin-left: 3px; }
-    .st-cat-meta { font-size: 10px; color: var(--text-muted); margin-top: 5px; font-weight: 500; }
+    .st-cat-unit { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-left: 3px; }
+    .st-cat-meta { font-size: 12px; color: var(--text-muted); margin-top: 5px; font-weight: 500; }
 
     /* Two-up layout for status + department tables */
     .st-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -82,16 +82,16 @@
       align-items: center; justify-content: center; pointer-events: none;
     }
     .st-donut-pct { font-size: 22px; font-weight: 800; color: var(--navy); line-height: 1; }
-    .st-donut-cap { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-top: 3px; }
+    .st-donut-cap { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-top: 3px; }
     .st-legend { flex: 1; min-width: 0; }
-    .st-legend-row { display: flex; align-items: center; gap: 8px; font-size: 11.5px; padding: 3px 0; }
+    .st-legend-row { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 3px 0; }
     .st-legend-dot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
     .st-legend-name { flex: 1; color: var(--text); font-weight: 600; }
     .st-legend-val { font-weight: 800; color: var(--navy); }
 
-    .st-tbl { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+    .st-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
     .st-tbl th {
-      font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px;
+      font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px;
       color: var(--text-muted); text-align: right; padding: 7px 10px; border-bottom: 1.5px solid var(--border);
     }
     .st-tbl th:first-child, .st-tbl td:first-child { text-align: left; }
@@ -112,10 +112,10 @@
       border: 1.5px solid var(--border); border-radius: 10px; padding: 11px 12px; background: white; text-align: center;
     }
     .st-act.pend { border-style: dashed; background: var(--off-white); }
-    .st-act-label { font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; color: var(--text-muted); }
+    .st-act-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; color: var(--text-muted); }
     .st-act-val { font-size: 17px; font-weight: 800; color: var(--navy); margin-top: 5px; }
     .st-act.pend .st-act-val { color: var(--text-muted); }
-    .st-act-unit { font-size: 9.5px; font-weight: 700; color: var(--text-muted); margin-left: 2px; }
+    .st-act-unit { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-left: 2px; }
 
     /* Pending (Odoo-sourced, not wired) tiles */
     .st-pending-note {
@@ -124,9 +124,12 @@
       padding: 11px 13px; background: var(--off-white); margin-bottom: 10px;
     }
     .st-pending-note:last-child { margin-bottom: 0; }
-    .st-pending-title { font-size: 11.5px; font-weight: 800; color: var(--navy); }
-    .st-pending-msg { font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.45; }
+    .st-pending-title { font-size: 12px; font-weight: 800; color: var(--navy); }
+    .st-pending-msg { font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.45; }
   </style>
+  <!-- Design system — loaded last so it settles equal-specificity ties -->
+  <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>
 
@@ -457,7 +460,7 @@
       CATEGORIES.forEach(function (cat) {
         var cell = grid[cat] && grid[cat][row];
         if (cell && cell.ok) {
-          html += '<td>' + fmt(cell.count) + '<br><span style="font-size:10px;color:var(--text-muted)">' + tzs(cell.value_tzs) + '</span></td>';
+          html += '<td>' + fmt(cell.count) + '<br><span style="font-size:12px;color:var(--text-muted)">' + tzs(cell.value_tzs) + '</span></td>';
         } else {
           html += '<td class="cat-pending" title="' + esc(cell ? cell.message : '') + '">Pending</td>';
         }

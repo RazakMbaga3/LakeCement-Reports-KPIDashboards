@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Lake Cement – User Administration</title>
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -22,7 +22,7 @@
     }
     .adm-bar input[type=search] { min-width: 240px; }
     .adm-spacer { flex: 1; }
-    .adm-btn { font-family: var(--font); font-size: 11.5px; font-weight: 700; padding: 7px 14px;
+    .adm-btn { font-family: var(--font); font-size: 12px; font-weight: 700; padding: 7px 14px;
                border-radius: 7px; border: none; cursor: pointer; display: inline-flex;
                align-items: center; gap: 6px; white-space: nowrap; }
     .adm-btn-primary { background: var(--navy, #173158); color: white; }
@@ -37,19 +37,19 @@
     .adm-wrap { overflow-x: auto; background: white; border: 1.5px solid var(--border); border-radius: 12px; }
     table.adm-table { border-collapse: collapse; font-size: 12px; width: 100%; }
     table.adm-table th, table.adm-table td { padding: 9px 13px; text-align: left; border-bottom: 1px solid #F0F4F8; white-space: nowrap; }
-    table.adm-table th { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+    table.adm-table th { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
                          color: var(--text-muted); background: var(--off-white); position: sticky; top: 0; z-index: 1; }
     table.adm-table tr:last-child td { border-bottom: none; }
     table.adm-table tbody tr:hover { background: #FAFCFF; }
     .adm-name { font-weight: 700; color: var(--navy); }
-    .adm-user { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11px; color: var(--text-muted); }
-    .adm-email { font-size: 11.5px; }
+    .adm-user { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; color: var(--text-muted); }
+    .adm-email { font-size: 12px; }
     .adm-none { color: #C0C8D4; font-style: italic; }
-    .adm-dept-row td { background: #F1F5F9; font-weight: 700; font-size: 10.5px;
+    .adm-dept-row td { background: #F1F5F9; font-weight: 700; font-size: 12px;
                        text-transform: uppercase; letter-spacing: .6px; color: var(--navy); }
 
     /* ── Badges ── */
-    .adm-tag { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: .4px;
+    .adm-tag { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .4px;
                padding: 2.5px 7px; border-radius: 4px; text-transform: uppercase; }
     .tag-l1 { background: #DCFCE7; color: #15803D; }
     .tag-l2 { background: #DBEAFE; color: #1D4ED8; }
@@ -66,26 +66,26 @@
                   display: flex; flex-direction: column; }
     .adm-drawer header { padding: 18px 22px 14px; border-bottom: 1.5px solid var(--border); }
     .adm-drawer h2 { font-size: 15px; color: var(--navy); margin: 0 0 3px; }
-    .adm-drawer .sub { font-size: 11.5px; color: var(--text-muted); }
+    .adm-drawer .sub { font-size: 12px; color: var(--text-muted); }
     .adm-drawer .body { padding: 18px 22px; overflow-y: auto; flex: 1; }
     .adm-drawer footer { padding: 14px 22px; border-top: 1.5px solid var(--border);
                          display: flex; gap: 10px; justify-content: flex-end; background: var(--off-white); }
 
     .adm-field { margin-bottom: 14px; }
-    .adm-field label { display: block; font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+    .adm-field label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase;
                        letter-spacing: .5px; color: var(--text-muted); margin-bottom: 5px; }
     .adm-field input, .adm-field select {
       width: 100%; font-family: var(--font); font-size: 13px; padding: 8px 10px;
       border: 1.5px solid var(--border); border-radius: 7px; background: white; color: var(--navy); }
     .adm-field input:disabled { background: #F8FAFC; color: var(--text-muted); }
-    .adm-hint { font-size: 10.5px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+    .adm-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
 
     /* Live preview of what the chosen role + level will grant. */
     .adm-grants { background: #F8FAFC; border: 1.5px solid var(--border); border-radius: 9px;
                   padding: 12px 14px; margin-top: 4px; }
-    .adm-grants h4 { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px;
+    .adm-grants h4 { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px;
                      color: var(--navy); margin: 0 0 8px; }
-    .adm-grant { display: flex; gap: 8px; font-size: 11.5px; padding: 3px 0; line-height: 1.5; }
+    .adm-grant { display: flex; gap: 8px; font-size: 12px; padding: 3px 0; line-height: 1.5; }
     .adm-grant .k { color: var(--text-muted); min-width: 118px; flex-shrink: 0; }
     .adm-grant .v { color: var(--navy); font-weight: 600; }
     .adm-grant .v.no { color: #94A3B8; font-weight: 400; }
@@ -100,11 +100,14 @@
                    font-size: 16px; font-weight: 700; letter-spacing: 1px; color: #065F46;
                    background: white; padding: 10px 12px; border-radius: 6px; margin: 8px 0;
                    user-select: all; word-break: break-all; }
-    .adm-pw p { font-size: 11px; color: #047857; margin: 0; line-height: 1.5; }
+    .adm-pw p { font-size: 12px; color: #047857; margin: 0; line-height: 1.5; }
 
     .adm-empty { text-align: center; padding: 56px 20px; color: var(--text-muted); }
-    .adm-count { font-size: 11px; color: var(--text-muted); }
+    .adm-count { font-size: 12px; color: var(--text-muted); }
   </style>
+  <!-- Design system — loaded last so it settles equal-specificity ties -->
+  <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>
 

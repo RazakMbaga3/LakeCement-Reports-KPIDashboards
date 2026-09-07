@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Lake Cement Ltd – Operations KPI Dashboard</title>
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -10,6 +10,9 @@
   <script src="auth.js?v=10"></script>
   <script src="sidebar.js?v=2"></script>
   <script src="loader.js?v=1"></script>
+  <!-- Design system — loaded last so it settles equal-specificity ties -->
+  <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>
 
@@ -1717,7 +1720,7 @@
       <div class="table-wrapper" style="overflow-x:auto;">
 
         <!-- ── MINES EQUIPMENT ───────────────────────────────────── -->
-        <table class="kpi-table mw-table" style="min-width:1800px;font-size:11px;">
+        <table class="kpi-table mw-table" style="min-width:1800px;font-size:12px;">
           <thead>
             <tr class="thead-row">
               <th rowspan="2" class="col-kpi" style="min-width:200px">MONTHLY KEY PERFORMANCE INDICATOR</th>
@@ -1734,7 +1737,7 @@
               <th colspan="2" style="background:var(--navy)">NOVO TR-2</th>
               <th colspan="2" style="background:var(--navy)">NOVO TR-3</th>
             </tr>
-            <tr class="thead-row" style="font-size:10px">
+            <tr class="thead-row" style="font-size:12px">
               <th>TARGET</th><th>ACTUAL</th>
               <th>TARGET</th><th>ACTUAL</th>
               <th>TARGET</th><th>ACTUAL</th>
@@ -1920,7 +1923,7 @@
 
       <!-- ── PLANT EQUIPMENT ───────────────────────────────────── -->
       <div class="table-wrapper" style="overflow-x:auto; margin-top:24px;">
-        <table class="kpi-table mw-table" style="min-width:1600px;font-size:11px;">
+        <table class="kpi-table mw-table" style="min-width:1600px;font-size:12px;">
           <thead>
             <tr class="thead-row">
               <th rowspan="2" class="col-kpi" style="min-width:220px">MONTHLY KEY PERFORMANCE INDICATOR</th>
@@ -1938,7 +1941,7 @@
               <th style="background:var(--navy)">3 COMPAC</th>
               <th style="background:var(--navy)">MAHINDRA TTR-1</th>
             </tr>
-            <tr class="thead-row" style="font-size:10px">
+            <tr class="thead-row" style="font-size:12px">
               <th>ACTUAL</th><th>ACTUAL</th><th>ACTUAL</th><th>ACTUAL</th><th>ACTUAL</th>
               <th>ACTUAL</th><th>ACTUAL</th><th>ACTUAL</th><th>ACTUAL</th><th>ACTUAL</th><th>ACTUAL</th>
             </tr>

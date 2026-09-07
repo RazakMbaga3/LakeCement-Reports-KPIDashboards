@@ -111,15 +111,15 @@ function renderAuditPanel(filters) {
     const roleLabel = escHtml(e.role || '—');
 
     return `<tr>
-      <td style="white-space:nowrap;font-size:10px">
+      <td style="white-space:nowrap;font-size:12px">
         <span style="color:var(--text-muted,#64748B)">${ts}</span><br/>
-        <strong style="font-size:10.5px">${timeStr}</strong>
+        <strong style="font-size:12px">${timeStr}</strong>
       </td>
       <td>
-        <strong style="font-size:11px">${escHtml(e.user||'—')}</strong>
+        <strong style="font-size:12px">${escHtml(e.user||'—')}</strong>
       </td>
-      <td style="font-size:10px;color:var(--text-muted,#64748B)">${escHtml(e.dept||'—')}</td>
-      <td style="font-size:10px">
+      <td style="font-size:12px;color:var(--text-muted,#64748B)">${escHtml(e.dept||'—')}</td>
+      <td style="font-size:12px">
         <span class="audit-role-badge">${roleLabel}</span>
       </td>
       <td>
@@ -127,10 +127,10 @@ function renderAuditPanel(filters) {
           ${escHtml(e.action||'—')}
         </span>
       </td>
-      <td style="font-size:10px">${escHtml(e.tab||'—')}</td>
-      <td style="font-size:10px">${escHtml(e.section||'—')}</td>
-      <td style="font-size:10px;color:var(--text-muted,#64748B)">${escHtml(e.field||'—')}</td>
-      <td style="font-size:10px;max-width:220px;word-break:break-word">${change}</td>
+      <td style="font-size:12px">${escHtml(e.tab||'—')}</td>
+      <td style="font-size:12px">${escHtml(e.section||'—')}</td>
+      <td style="font-size:12px;color:var(--text-muted,#64748B)">${escHtml(e.field||'—')}</td>
+      <td style="font-size:12px;max-width:220px;word-break:break-word">${change}</td>
     </tr>`;
   }).join('');
 }

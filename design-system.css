@@ -1,0 +1,893 @@
+/* ══════════════════════════════════════════════════════════════════════
+   Lake Cement Ltd — DESIGN SYSTEM  |  design-system.css
+   ──────────────────────────────────────────────────────────────────────
+   Loaded LAST in every <head>, after styles.css and after each page's own
+   inline <style> block. That load order is deliberate: it means the rules
+   here settle equal-specificity ties instead of losing them, so a single
+   file can hold the line on legibility, touch size and responsive shell
+   across all 28 pages without editing 28 files.
+
+   What lives here:
+     1. TOKENS        one spacing scale, one type scale, one chart palette
+     2. FOUNDATION    focus rings, motion, selection, scroll behaviour
+     3. RESPONSIVE    the mobile shell — drawer, app bar, bottom tab bar
+     4. LEGIBILITY    the mobile type floor (nothing below 12px)
+     5. TOUCH         44px minimum targets on coarse pointers
+     6. TABLES        scroll affordance + card fallback for wide tables
+
+   What does NOT live here: page-specific layout. That stays with its page.
+
+   Design doctrine (see docs/DESIGN_SYSTEM.md for the full rationale):
+     · Few          — maximise data-ink; colour carries meaning, never decoration
+     · Knaflic      — one focal point per view; grey is the default, colour is the exception
+     · Wathan/Schoger — hierarchy from weight and colour before size; spacing from a scale
+     · Johnson      — legibility floors, Gestalt grouping, never colour alone
+     · Tidwell      — use the known pattern (off-canvas drawer, bottom tabs, disclosure)
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════════════════════════
+   1. TOKENS
+   ══════════════════════════════════════════════════════════════════════ */
+:root {
+  /* ── Spacing — 4px base. Every gap/padding in new work uses these. ── */
+  --sp-1:   4px;
+  --sp-2:   8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+
+  /* ── Type scale ──────────────────────────────────────────────────
+     Desktop is a dense analytical surface and density is correct there
+     (Few); mobile raises the floor because the plant floor is bright,
+     the device is at arm's length, and the readers are not 22. The
+     --fs-* values below are the DESKTOP scale; the mobile block in §4
+     lifts the bottom of it.
+
+     12px is the hard floor and it is enforced at the source, not by
+     override: a codemod raised 1,845 declarations across the HTML, CSS
+     and JS that were between 7.5px and 11.5px. Below ~12px, size stops
+     working as a hierarchy cue anyway (Johnson) — weight and colour
+     carry it instead, which is why merging the old 8/9/10/11px tiers
+     into one cost no legible structure. Nothing may go below --fs-xs;
+     e2e/responsive-audit.js fails the build if anything does. */
+  --fs-xs:     12px;   /* THE FLOOR — badges, axis ticks, dense cells  */
+  --fs-sm:     13px;   /* secondary labels, captions                   */
+  --fs-base:   14px;   /* body copy, data cells                        */
+  --fs-md:     15px;   /* emphasised body                              */
+  --fs-lg:     17px;   /* card titles                                  */
+  --fs-xl:     20px;   /* section titles                               */
+  --fs-2xl:    25px;   /* KPI tile values                              */
+  --fs-3xl:    31px;   /* hero number                                  */
+  --fs-4xl:    39px;   /* single headline figure                       */
+
+  --lh-tight:  1.2;
+  --lh-snug:   1.35;
+  --lh-normal: 1.5;
+
+  --fw-normal:   400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+  --fw-heavy:    800;
+
+  /* Tabular figures — every number in a data app must align vertically.
+     Applied to values via .num / [data-num] and to table cells in §6. */
+  --font-num: 'Inter', system-ui, sans-serif;
+
+  /* ── Radii & elevation ──────────────────────────────────────────── */
+  --r-sm:   6px;
+  --r-md:   9px;
+  --r-lg:  14px;
+  --r-pill: 999px;
+
+  --el-1: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.10);
+  --el-2: 0 2px 4px rgba(16,24,40,.06), 0 4px 12px rgba(16,24,40,.08);
+  --el-3: 0 4px 8px rgba(16,24,40,.06), 0 12px 28px rgba(16,24,40,.12);
+  --el-4: 0 8px 16px rgba(16,24,40,.08), 0 24px 48px rgba(16,24,40,.16);
+
+  /* ── Motion — one duration set, one easing. ─────────────────────── */
+  --dur-fast: 120ms;
+  --dur-med:  200ms;
+  --dur-slow: 300ms;
+  --ease:     cubic-bezier(.4, 0, .2, 1);
+  --ease-out: cubic-bezier(0, 0, .2, 1);
+
+  /* ── Touch ──────────────────────────────────────────────────────── */
+  --tap:      44px;   /* WCAG 2.2 AA target size (min 24, 44 is the humane floor) */
+  --tap-cozy: 40px;   /* inside dense data grids only                              */
+
+  /* ── Status — reserved. Never reused as a chart series colour. ──── */
+  --st-good:      #157F4B;   /* 4.9:1 on white — passes AA for text  */
+  --st-good-bg:   #E7F5ED;
+  --st-good-bd:   #A8DCC1;
+  --st-warn:      #9A6100;   /* 4.6:1 on white                       */
+  --st-warn-bg:   #FDF3E2;
+  --st-warn-bd:   #F0CE92;
+  --st-bad:       #C0271F;   /* 5.6:1 on white                       */
+  --st-bad-bg:    #FDECEA;
+  --st-bad-bd:    #F3B4AE;
+  --st-neutral:   #5A6270;
+  --st-neutral-bg:#F1F3F7;
+  --st-neutral-bd:#DDE3EC;
+
+  /* ── Chart palette ───────────────────────────────────────────────
+     Nyati-anchored categorical set. Slot 1 is the brand navy stepped
+     into a usable chart blue; slot 2 is the brand orange stepped up in
+     chroma so it survives colour-vision deficiency next to slot 4.
+
+     VALIDATED — do not re-order and do not add a 9th hue by hand.
+       node scripts/validate_palette.js "<the 8 hexes>" --mode light
+       → all checks pass. Worst adjacent CVD ΔE 9.1 (protan, ≥8 target);
+         worst adjacent normal-vision ΔE 19.6 (≥15 floor).
+     Slots 3, 4 and 5 fall below 3:1 against a white surface, so any
+     chart using them owes the relief rule: visible direct labels or a
+     table view. Past 3 series in a scatter/bubble form, fold to
+     "Other" or facet — the all-pairs floors do not clear at 4+. */
+  --series-1: #1F5FA8;   /* blue    — Nyati navy family */
+  --series-2: #EB6834;   /* orange  — Nyati orange family */
+  --series-3: #1BAF7A;   /* aqua   */
+  --series-4: #EDA100;   /* yellow */
+  --series-5: #E87BA4;   /* magenta */
+  --series-6: #008300;   /* green  */
+  --series-7: #4A3AA7;   /* violet */
+  --series-8: #E34948;   /* red    */
+
+  /* Sequential — one hue, light→dark (magnitude only, never identity) */
+  --seq-1: #EAF1F9;
+  --seq-2: #C5D8EE;
+  --seq-3: #93B6DC;
+  --seq-4: #5B8FC7;
+  --seq-5: #2F6BAE;
+  --seq-6: #1F5FA8;
+  --seq-7: #14406F;
+
+  /* Diverging — two poles + a NEUTRAL GREY midpoint (never a hue) */
+  --div-neg-3: #A32E24;
+  --div-neg-2: #D8604F;
+  --div-neg-1: #F0A99C;
+  --div-mid:   #EFEFEF;
+  --div-pos-1: #A5D9BF;
+  --div-pos-2: #4FA97C;
+  --div-pos-3: #14713F;
+
+  /* Chart chrome — recessive by construction */
+  --chart-grid:    #EDF0F5;
+  --chart-axis:    #C8CDD5;
+  --chart-surface: #FFFFFF;
+  --chart-ink:     #111827;
+  --chart-ink-2:   #5A6270;
+
+  /* ── Shell metrics ──────────────────────────────────────────────── */
+  --appbar-h:     56px;
+  --bottomnav-h:  60px;
+  --drawer-w:     min(86vw, 320px);
+  --safe-b:       env(safe-area-inset-bottom, 0px);
+  --safe-t:       env(safe-area-inset-top, 0px);
+
+  --z-scrim:     1150;
+  --z-drawer:    1200;
+  --z-bottomnav: 1100;
+  --z-toast:     2400;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   2. FOUNDATION
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Focus — the app had no visible focus ring, which fails WCAG 2.4.7 and
+   makes the whole thing keyboard-hostile. :focus-visible keeps it off for
+   mouse users, so nothing looks noisier than before for existing staff. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--orange, #F49545);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+/* Dark surfaces (sidebar, header) need a light ring to be seen at all. */
+.sidebar :where(a, button, [tabindex]):focus-visible,
+.top-header :where(a, button, [tabindex]):focus-visible,
+.ms-bottomnav :where(a, button):focus-visible {
+  outline-color: #FFFFFF;
+  outline-offset: -2px;
+}
+
+/* Skip link — first tab stop on every page. */
+.ms-skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 3000;
+  background: var(--navy, #173158);
+  color: #fff;
+  padding: var(--sp-4) var(--sp-5);
+  min-height: var(--tap);
+  border-radius: 0 0 var(--r-md) 0;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
+  text-decoration: none;
+}
+.ms-skip:focus {
+  left: 0;
+}
+
+/* Numbers align. Non-negotiable in a reporting tool. */
+.num, [data-num], .kpi-table td, .rt td, table td.tr, table td.tc {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Respect the OS motion setting — vestibular safety, and it also makes
+   the drawer instant for anyone who has asked for that. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   3. RESPONSIVE SHELL — mobile drawer + app bar + bottom tabs
+   ──────────────────────────────────────────────────────────────────────
+   Replaces the old `@media (max-width:959px)` rule in styles.css that
+   turned the sidebar into a static full-width block. That block put
+   ~1,500px of navy navigation above the content of EVERY page, so a
+   phone user scrolled two full screens of menu before reaching a single
+   number, and every page looked identical on open. This is the fix.
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 959px) {
+
+  /* ── Shell geometry ─────────────────────────────────────────────── */
+  html body .app-shell {
+    flex-direction: row;              /* undo the old column stack */
+    min-height: 100vh;
+  }
+
+  /* Sidebar becomes an off-canvas drawer, out of flow entirely. */
+  html body .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--drawer-w);
+    height: 100%;
+    max-height: 100%;
+    margin: 0;
+    z-index: var(--z-drawer);
+    transform: translateX(-100%);
+    transition: transform var(--dur-med) var(--ease);
+    box-shadow: none;
+    overscroll-behavior: contain;
+    padding-bottom: var(--safe-b);
+    visibility: hidden;
+  }
+  html body .app-shell.ms-drawer-open .sidebar {
+    transform: translateX(0);
+    box-shadow: var(--el-4);
+    visibility: visible;
+  }
+  /* A collapsed desktop preference must not shrink the mobile drawer. */
+  html body .app-shell.sidebar-collapsed .sidebar {
+    width: var(--drawer-w);
+  }
+  html body .app-shell.sidebar-collapsed .sb-group-label,
+  html body .app-shell.sidebar-collapsed .sb-item-label,
+  html body .app-shell.sidebar-collapsed .sb-top-label,
+  html body .app-shell.sidebar-collapsed .sb-badge-fill,
+  html body .app-shell.sidebar-collapsed .sb-badge-view,
+  html body .app-shell.sidebar-collapsed .sb-stub-tag {
+    display: revert;
+  }
+  html body .app-shell.sidebar-collapsed .sb-item {
+    grid-template-columns: 26px 1fr auto;
+    justify-items: stretch;
+  }
+
+  /* Main takes the full width and clears the fixed bottom bar. */
+  html body .main,
+  html body .app-shell.sidebar-collapsed .main {
+    margin-left: 0;
+    width: 100%;
+    padding-bottom: calc(var(--bottomnav-h) + var(--safe-b) + var(--sp-2));
+  }
+
+  /* The desktop collapse toggle is meaningless on mobile — it becomes
+     the drawer's close button instead (relabelled in mobile-shell.js). */
+  html body .sb-top {
+    height: var(--appbar-h);
+    min-height: var(--appbar-h);
+    padding-top: var(--safe-t);
+  }
+
+  /* ── Scrim ──────────────────────────────────────────────────────── */
+  .ms-scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(9, 18, 33, .55);
+    backdrop-filter: blur(2px);
+    z-index: var(--z-scrim);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-med) var(--ease);
+  }
+  .app-shell.ms-drawer-open ~ .ms-scrim,
+  body.ms-drawer-open .ms-scrim {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Lock background scroll while the drawer is open. */
+  body.ms-drawer-open {
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  /* ── Top app bar ────────────────────────────────────────────────── */
+  html body .top-header {
+    height: auto;
+    min-height: var(--appbar-h);
+    padding: var(--safe-t) var(--sp-3) 0;
+    gap: var(--sp-2);
+  }
+  html body .top-header > * { min-width: 0; }
+
+  /* Hamburger — injected by mobile-shell.js as the first header child. */
+  .ms-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--tap);
+    height: var(--tap);
+    flex-shrink: 0;
+    margin-left: -6px;
+    border: 0;
+    border-radius: var(--r-md);
+    background: rgba(255, 255, 255, .10);
+    color: #fff;
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease);
+  }
+  .ms-menu-btn:active { background: rgba(255, 255, 255, .22); }
+  .ms-menu-btn svg { width: 22px; height: 22px; stroke-width: 2.2; }
+
+  /* Page title — tells you WHICH page you are on. The old mobile shell
+     could not: every page opened to the same wall of navy menu. */
+  .ms-title {
+    display: block;
+    flex: 1;
+    min-width: 0;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    letter-spacing: .1px;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: var(--lh-tight);
+  }
+  .ms-title small {
+    display: block;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    color: rgba(255, 255, 255, .62);
+    letter-spacing: .3px;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+
+  /* Header furniture that does not earn its width on a phone. */
+  html body .home-btn,
+  html body .sh-sep,
+  html body .header-meta,
+  html body .header-center,
+  html body .auth-user-details { display: none; }
+
+  html body .header-left  { padding-right: 0; gap: var(--sp-2); flex: 1; min-width: 0; }
+  html body .header-right { padding-left: 0; gap: var(--sp-2); min-width: 0; flex-shrink: 0; }
+  html body .nyati-logo   { height: 28px; }
+  html body .logo-block   { flex-shrink: 0; }
+  html body .lc-wordmark  { display: none; }
+
+  html body .auth-user-avatar {
+    width: 34px; height: 34px;
+    font-size: var(--fs-base);
+  }
+  /* Logout lives in the drawer on mobile; the avatar opens it. */
+  html body .auth-logout-btn { display: none; }
+
+  /* ── Bottom tab bar ─────────────────────────────────────────────
+     The primary navigation on a phone. Thumb-reachable, role-derived,
+     max 5 slots (Tidwell: a tab bar past 5 stops being scannable), the
+     last always "Menu" which opens the full drawer. */
+  .ms-bottomnav {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: var(--z-bottomnav);
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    align-items: stretch;
+    height: calc(var(--bottomnav-h) + var(--safe-b));
+    padding-bottom: var(--safe-b);
+    background: rgba(255, 255, 255, .96);
+    backdrop-filter: saturate(180%) blur(12px);
+    border-top: 1px solid var(--border, #DDE3EC);
+    box-shadow: 0 -2px 14px rgba(16, 24, 40, .08);
+  }
+  .ms-bn-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: var(--tap);
+    padding: var(--sp-1) 2px;
+    border: 0;
+    background: none;
+    color: var(--text-muted, #5A6270);
+    font-family: var(--font, 'Inter', system-ui, sans-serif);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-bold);
+    letter-spacing: 0;
+    text-decoration: none;
+    cursor: pointer;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    transition: color var(--dur-fast) var(--ease);
+  }
+  .ms-bn-item svg { width: 21px; height: 21px; stroke-width: 2; }
+  .ms-bn-item.active { color: var(--navy, #173158); }
+  /* Identity is never colour-alone — the active tab also gets a bar. */
+  .ms-bn-item.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 26px;
+    height: 3px;
+    border-radius: 0 0 3px 3px;
+    background: var(--orange, #F49545);
+  }
+  .ms-bn-item:active { color: var(--navy, #173158); }
+  .ms-bn-label {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* Count badge (pending approvals) — number + label, never colour alone */
+  .ms-bn-badge {
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    margin-left: 4px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    border-radius: var(--r-pill);
+    background: var(--st-bad);
+    color: #fff;
+    font-size: 10px;
+    font-weight: var(--fw-heavy);
+    line-height: 17px;
+    text-align: center;
+  }
+
+  /* Drawer rows get real touch height. */
+  html body .sb-item {
+    min-height: var(--tap);
+    margin: 2px var(--sp-2);
+    padding: var(--sp-2) var(--sp-3);
+    font-size: var(--fs-base);
+    border-radius: var(--r-md);
+  }
+  html body .sb-item-icon { width: 26px; height: 26px; }
+  html body .sb-item-icon i, html body .sb-item-icon svg { width: 15px; height: 15px; }
+  html body .sb-item-label { font-size: var(--fs-base); }
+  html body .sb-group-label { font-size: var(--fs-xs); margin: var(--sp-4) var(--sp-3) var(--sp-2); }
+  html body .sb-badge-fill,
+  html body .sb-badge-view,
+  html body .sb-stub-tag { font-size: 10px; padding: 2px 6px; }
+}
+
+/* Desktop keeps the drawer machinery inert. */
+@media (min-width: 960px) {
+  .ms-scrim, .ms-bottomnav, .ms-menu-btn, .ms-title { display: none !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   3b. CONTAINMENT — the horizontal-overflow class of bug
+   ──────────────────────────────────────────────────────────────────────
+   The audit found 390px phones rendering pages 672–914px wide. Body
+   carries `overflow-x: hidden`, so this never showed as a scrollbar — it
+   showed as content silently cut off at the right edge, which is worse:
+   nobody reports a bug they cannot see.
+
+   Two root causes, both confirmed by walking the ancestor chain:
+
+   (a) Each page's `<main class="*-main">` is a flex ITEM of `.main`
+       (a column flex container). A flex item's default `min-width: auto`
+       refuses to shrink below min-content, so one nowrap table cell or
+       one chart canvas deep inside dragged the whole page wider than the
+       screen — approvals.html reached 745px off a single nowrap <td>,
+       sales.html 914px off a Chart.js canvas still sized for desktop.
+
+   (b) Rows of controls (.mis-tabs, .period-strip) are flex rows that
+       neither wrap nor scroll, so past ~3 items they simply spilled.
+       Five 135px MIS tabs need 672px and had 390px.
+   ══════════════════════════════════════════════════════════════════════ */
+/* ── CONTAINMENT (all widths) ──────────────────────────────────────
+   Each page's `<main class="*-main">` is a flex ITEM of `.main`, a column
+   flex container. A flex item defaults to `min-width: auto` — "never
+   shrink below your own min-content" — so a single nowrap table cell or a
+   canvas still sized for a wider layout could drag the whole page wider
+   than its column. That is not a mobile-only failure: completeness.html
+   overflowed by 170px on a 1440px desktop, because the sidebar takes
+   210px and the content column is narrower than the page.
+
+   Tables are deliberately not touched. Their explicit min-widths
+   (.kpi-table { min-width: 1400px }) are correct — a 40-column shift
+   report is a grid, and it scrolls inside its wrapper. */
+html body .main > main,
+html body .main > section,
+html body .main > div,
+html body .main > article,
+html body .main > header,
+html body .main > footer {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* A Chart.js canvas holds the pixel width it was constructed at until its
+   resize observer catches up — and on a first paint it may never have
+   been constructed narrow at all. */
+html body canvas { max-width: 100%; }
+
+@media (max-width: 959px) {
+
+  /* (a) and the canvas clamp are NOT in this media block — they apply at
+     every width. See "CONTAINMENT (all widths)" above: completeness.html
+     proved the same min-width:auto bug bites a 1440px desktop too, once
+     the sidebar takes 210px out of the content column. */
+
+  /* THE ROOT OF THE WHOLE OVERFLOW CLASS.
+     A flex or grid item defaults to `min-width: auto`, which means "never
+     shrink below your own min-content width". A `repeat(8, 1fr)` track is
+     really `minmax(auto, 1fr)`, so one long uppercase label like
+     MINES WORKSHOP sets a floor for its column, eight columns multiply
+     it, and the grid quietly grows wider than the phone. An explicit
+     `min-width: 0` overrides that automatic minimum and lets the content
+     wrap instead.
+
+     `:where()` contributes zero specificity, so this whole selector
+     weighs only as much as `html body .main` — enough to beat a plain
+     class rule, not enough to disturb anything more deliberate. Tables
+     are deliberately absent from the list: their explicit min-widths
+     (.kpi-table { min-width: 1400px }) are correct and scroll inside
+     their wrapper. */
+  html body .main :where(div, section, article, aside, header, footer, a, li, label) {
+    min-width: 0;
+  }
+
+  /* Letting tracks shrink is only half the answer — eight columns on a
+     390px screen would be 45px each. These grids re-flow to as many
+     columns as will actually hold a readable tile, and no more. */
+  html body .smry-scorecard { grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); }
+  html body .smry-hero,
+  html body .smry-hero-3,
+  html body .smry-row-3,
+  html body .smry-row-4,
+  html body .sk-row,
+  html body .sk-row-3,
+  html body .rl-kpi-row,
+  html body .kt-row { grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); }
+
+  /* Long unbroken strings (report codes, equipment tags) must not act as
+     a width floor either. */
+  html body .main { overflow-wrap: break-word; }
+
+  /* Page gutters: 28px of side padding is generous on a 1440px desktop
+     and is 16% of a 360px phone. Reclaim it for the data — the screen
+     edge is not a scarce resource, horizontal space is. */
+  html body .main > main,
+  html body .dashboard-main,
+  html body .in-main,
+  html body .rl-main,
+  html body .apv-main {
+    padding-left: var(--sp-3);
+    padding-right: var(--sp-3);
+  }
+
+  /* (b) Control strips scroll horizontally instead of spilling. This is
+         the standard scrollable-tabs pattern: the strip keeps its single
+         row, the overflow becomes a swipe, and scroll-snap makes each
+         tab settle cleanly rather than half-off-screen. */
+  html body .mis-tabs,
+  html body .period-strip,
+  html body .view-switcher,
+  html body .ms-hscroll {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  html body .mis-tabs::-webkit-scrollbar,
+  html body .period-strip::-webkit-scrollbar,
+  html body .view-switcher::-webkit-scrollbar,
+  html body .ms-hscroll::-webkit-scrollbar { display: none; }
+
+  html body .mis-tab,
+  html body .per-chip,
+  html body .period-strip-lbl,
+  html body .vs-tab,
+  html body .ms-hscroll > * {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+  /* Tabs and chips get real touch height without losing the row. */
+  html body .mis-tab { padding: var(--sp-3) var(--sp-4); }
+  html body .per-chip { padding: var(--sp-2) var(--sp-4); font-size: var(--fs-xs); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   4. LEGIBILITY FLOOR (mobile)
+   ──────────────────────────────────────────────────────────────────────
+   The audit found 84–97% of all text rendering below 12px on a phone —
+   9,660 of 9,998 text nodes on mis.html alone. Density is right for a
+   desktop analyst (Few) and wrong for a superintendent reading in
+   daylight on a 390px screen (Johnson). These rules lift the bottom of
+   the scale on small viewports only; the desktop scale is untouched.
+
+   !important is used deliberately and only here and in §5: 28 pages
+   carry their own inline <style> blocks, and a legibility floor that
+   any page can silently undercut is not a floor.
+   ══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 959px) {
+
+  /* Body copy and data cells */
+  html body table td,
+  html body table th,
+  html body .kpi-table td,
+  html body .rt td,
+  html body .cv,
+  html body p,
+  html body li { font-size: var(--fs-sm) !important; line-height: var(--lh-snug); }
+
+  html body table th,
+  html body .kpi-table thead th,
+  html body .rt th { font-size: var(--fs-xs) !important; }
+
+  /* Labels, captions, chips — the 8–10px band that dominated the audit */
+  html body .mis-badge,
+  html body .mis-tag,
+  html body .mis-bar-lbl,
+  html body .mis-kv-lbl,
+  html body .mis-kv-sub,
+  html body .an-stat-lbl,
+  html body .an-atype-spec,
+  html body .ie-label,
+  html body .sk-label,
+  html body .sk-unit,
+  html body .sk-status,
+  html body .sk-dept-tag,
+  html body .rcard-title,
+  html body .rcard-chip,
+  html body .kt-badge,
+  html body .kt-unit,
+  html body .kt-vs,
+  html body .summary-chip,
+  html body .ctx-dept,
+  html body .dash-footer,
+  html body label,
+  html body .btn,
+  html body option,
+  html body small { font-size: var(--fs-xs) !important; }
+
+  /* Values are never smaller than body copy — they are the point. */
+  html body td.actual,
+  html body td.target,
+  html body td.status,
+  html body .summary-chip span,
+  html body .kt-value,
+  html body .sk-value { font-size: var(--fs-base) !important; font-weight: var(--fw-bold); }
+
+  /* Headings get real hierarchy back rather than 1px increments. */
+  html body h1 { font-size: var(--fs-xl)  !important; line-height: var(--lh-tight); }
+  html body h2 { font-size: var(--fs-lg)  !important; line-height: var(--lh-tight); }
+  html body h3 { font-size: var(--fs-md)  !important; line-height: var(--lh-snug);  }
+
+  /* iOS Safari zooms the whole page when a focused field is under 16px.
+     This single rule is the difference between a usable and an
+     infuriating mobile form. */
+  html body input:not([type="checkbox"]):not([type="radio"]),
+  html body select,
+  html body textarea { font-size: 16px !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   5. TOUCH TARGETS
+   ──────────────────────────────────────────────────────────────────────
+   Keyed off pointer capability, not width — a touchscreen laptop needs
+   these too, and a phone in desktop-mode does not stop being a phone.
+   The audit found 163 of 174 interactive elements on daily-report.html
+   under 40px.
+   ══════════════════════════════════════════════════════════════════════ */
+@media (pointer: coarse) {
+  html body button,
+  html body .btn,
+  html body a.home-btn,
+  html body .vs-tab,
+  html body .mis-tab,
+  html body .per-chip,
+  html body .sb-item,
+  html body select,
+  html body textarea,
+  html body input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]) {
+    min-height: var(--tap);
+  }
+
+  /* A class-scoped height beats the bare-element rule above on
+     specificity, so the controls that set their own must be named. The
+     KPI dashboard's three filter selects were the last holdout: 36px on
+     a tablet, where the <768px block that fixes them never applies. */
+  html body .filter-card select,
+  html body .filter-card input,
+  html body .dsr-controls input,
+  html body .dsr-controls button,
+  html body .an-month-input,
+  html body .tb-ctl {
+    min-height: var(--tap);
+  }
+
+  /* Chip-shaped links act as buttons and must be sized as buttons —
+     .smry-ops-chip was rendering 20px tall, well under half a fingertip. */
+  html body .smry-ops-chip,
+  html body .rcard-chip,
+  html body .sc-chip,
+  html body .rl-pill,
+  html body .sec-tab,
+  html body .summary-chip {
+    min-height: var(--tap);
+    display: inline-flex;
+    align-items: center;
+    padding-top: var(--sp-1);
+    padding-bottom: var(--sp-1);
+  }
+
+  /* Inside a dense data grid a 44px row would double the form's height,
+     so grid cells get the cozy target instead — still well above the
+     WCAG 2.2 24px minimum. */
+  html body td button,
+  html body td .btn,
+  html body td input,
+  html body td select,
+  html body th button,
+  html body .rt input,
+  html body .rt select {
+    min-height: var(--tap-cozy);
+  }
+
+  /* Checkboxes and radios are the one control people genuinely miss. */
+  html body input[type="checkbox"],
+  html body input[type="radio"] {
+    width: 22px;
+    height: 22px;
+    accent-color: var(--navy, #173158);
+  }
+
+  /* Give adjacent inline controls breathing room so the wrong one is
+     not tapped (Fitts: target size AND separation). */
+  html body .filter-group,
+  html body .toolbar,
+  html body .btn-row { gap: var(--sp-2); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   6. WIDE TABLES — scroll affordance
+   ──────────────────────────────────────────────────────────────────────
+   Several tables are legitimately 1,400–3,100px wide and should stay
+   that way: a 40-column shift report is a grid, not a list, and turning
+   it into stacked cards destroys the row-to-row comparison that is the
+   entire reason it exists (Few). What was missing is any signal that
+   more columns exist off-screen. These rules add the signal and make
+   the first column sticky so a scrolled row keeps its identity.
+   ══════════════════════════════════════════════════════════════════════ */
+/* `.tbl-scroll` is the app's table scroll wrapper, but it was DEFINED in
+   purchases.html and forms/forms.css and merely USED in sales.html —
+   which loads neither, so its two 760–820px tables had a wrapper that
+   did not scroll and spilled 478px off a 390px screen. Defining the
+   utility once, here, fixes sales.html and every page that reaches for
+   the class next. */
+.tbl-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.ms-scroll-x {
+  position: relative;
+}
+/* Right-edge fade — appears only while there is more to scroll to.
+   mobile-shell.js toggles .ms-has-more / .ms-has-prev on scroll. */
+.ms-scroll-x::after,
+.ms-scroll-x::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 26px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-med) var(--ease);
+  z-index: 4;
+}
+.ms-scroll-x::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(255,255,255,.96), rgba(255,255,255,0));
+}
+.ms-scroll-x::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(255,255,255,.96), rgba(255,255,255,0));
+}
+.ms-scroll-x.ms-has-more::after { opacity: 1; }
+.ms-scroll-x.ms-has-prev::before { opacity: 1; }
+
+/* A one-time hint, shown only on touch and only where it applies. */
+.ms-swipe-hint {
+  display: none;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--text-muted, #5A6270);
+  background: var(--st-neutral-bg);
+  border: 1px solid var(--st-neutral-bd);
+  border-radius: var(--r-md);
+}
+@media (pointer: coarse) {
+  .ms-swipe-hint.ms-show { display: flex; }
+}
+.ms-swipe-hint svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+@media (max-width: 959px) {
+  html body .table-wrapper,
+  html body .rt-wrap {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+  /* Sticky row identity: the label column stays put while the numbers
+     scroll under it. Without this a scrolled wide table is unreadable —
+     you are looking at a value with no idea which KPI it belongs to. */
+  html body .rt thead th:first-child,
+  html body .rt tbody td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--white, #fff);
+    box-shadow: 2px 0 5px rgba(16, 24, 40, .07);
+  }
+  html body .rt thead th:first-child { z-index: 3; background: var(--navy, #173158); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   7. PRINT — reports get printed and pinned up in the control room.
+   ══════════════════════════════════════════════════════════════════════ */
+@media print {
+  .ms-bottomnav, .ms-scrim, .ms-menu-btn, .ms-skip, .ms-swipe-hint { display: none !important; }
+  .sidebar { display: none !important; }
+  .main { margin-left: 0 !important; width: 100% !important; padding-bottom: 0 !important; }
+  .ms-scroll-x::after, .ms-scroll-x::before { display: none !important; }
+}

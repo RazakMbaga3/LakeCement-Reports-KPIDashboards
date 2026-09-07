@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Lake Cement – MIS Dashboard</title>
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -45,8 +45,8 @@
       padding:14px 20px; flex:1; min-width:120px;
     }
     .mis-kv-val { font-size:28px; font-weight:800; color:var(--navy); line-height:1; }
-    .mis-kv-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--text-muted); margin-top:4px; }
-    .mis-kv-sub { font-size:11px; color:var(--text-muted); margin-top:2px; }
+    .mis-kv-lbl { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--text-muted); margin-top:4px; }
+    .mis-kv-sub { font-size:12px; color:var(--text-muted); margin-top:2px; }
 
     /* Section card */
     .mis-section {
@@ -62,10 +62,10 @@
     .mis-sec-title { font-size:13px; font-weight:800; color:var(--navy); margin:0; }
 
     /* Tables */
-    .mis-table { width:100%; border-collapse:collapse; font-size:11.5px; }
+    .mis-table { width:100%; border-collapse:collapse; font-size:12px; }
     .mis-table thead th {
       background:#F8FAFC; padding:9px 14px;
-      font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.6px;
+      font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.6px;
       color:var(--text-muted); border-bottom:1px solid var(--border); text-align:left;
     }
     .mis-table tbody tr { border-bottom:1px solid #F1F5F9; }
@@ -82,7 +82,7 @@
     /* Badges */
     .mis-badge {
       display:inline-block; padding:3px 9px; border-radius:10px;
-      font-size:10px; font-weight:700;
+      font-size:12px; font-weight:700;
     }
     .mis-badge.valid   { background:#ECFDF5; color:#059669; border:1px solid #A7F3D0; }
     .mis-badge.expiring { background:#FFF7ED; color:#D97706; border:1px solid #FDE68A; }
@@ -91,14 +91,14 @@
     /* Tags */
     .mis-tag {
       display:inline-block; padding:2px 8px; border-radius:8px;
-      font-size:10px; font-weight:600; background:#EFF6FF; color:#3B82F6;
+      font-size:12px; font-weight:600; background:#EFF6FF; color:#3B82F6;
       border:1px solid #BFDBFE;
     }
 
     /* Progress bars */
     .mis-bar-wrap { display:inline-block; width:80px; height:6px; background:#E2E8F0; border-radius:3px; overflow:hidden; vertical-align:middle; margin-right:6px; }
     .mis-bar-fill  { height:100%; border-radius:3px; transition:width .3s; }
-    .mis-bar-lbl   { font-size:10px; font-weight:600; color:var(--text-muted); vertical-align:middle; }
+    .mis-bar-lbl   { font-size:12px; font-weight:600; color:var(--text-muted); vertical-align:middle; }
 
     /* Dept dot (reused from stoppage) */
     .sc-dept-dot { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:6px; vertical-align:middle; }
@@ -110,7 +110,7 @@
       border-radius:10px; overflow:hidden; margin-bottom:18px;
     }
     .hr-stab {
-      flex:1; padding:10px 0; font-size:11px; font-weight:700;
+      flex:1; padding:10px 0; font-size:12px; font-weight:700;
       color:var(--text-muted); background:transparent; border:none;
       border-right:1px solid var(--border); cursor:pointer;
       font-family:var(--font); transition:all .15s;
@@ -131,7 +131,7 @@
     .csr-yr-hdr::-webkit-details-marker { display:none; }
     .csr-yr-hdr:hover { background:#EFF6FF; }
     .csr-yr-label { font-size:14px; font-weight:800; color:var(--navy); min-width:45px; }
-    .csr-yr-meta  { font-size:11px; color:var(--text-muted); }
+    .csr-yr-meta  { font-size:12px; color:var(--text-muted); }
     .csr-yr-meta strong { color:var(--text-dark); }
     .csr-chevron  { width:14px; height:14px; margin-left:auto; color:var(--text-muted); transition:transform .2s; }
     details[open] .csr-chevron { transform:rotate(180deg); }
@@ -144,7 +144,7 @@
     .mis-edit-btn {
       display:inline-flex; align-items:center; gap:5px;
       padding:4px 12px; border-radius:6px; border:1.5px solid var(--border);
-      background:white; font-family:var(--font); font-size:11px; font-weight:600;
+      background:white; font-family:var(--font); font-size:12px; font-weight:600;
       color:var(--text-muted); cursor:pointer; transition:all .15s;
     }
     .mis-edit-btn:hover { border-color:var(--orange); color:var(--orange); }
@@ -155,6 +155,9 @@
       .mis-tabs, .dept-nav, .top-header { position:static !important; }
     }
   </style>
+  <!-- Design system — loaded last so it settles equal-specificity ties -->
+  <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>
 
@@ -220,7 +223,7 @@
         <div class="mis-sec-hdr">
           <i data-lucide="bar-chart-horizontal" class="mis-sec-icon"></i>
           <h3 class="mis-sec-title">Employee Headcount by Department</h3>
-          <span style="margin-left:auto;font-size:10px;color:var(--text-muted)">Total: <strong>277</strong></span>
+          <span style="margin-left:auto;font-size:12px;color:var(--text-muted)">Total: <strong>277</strong></span>
         </div>
         <div class="mis-table-wrap">
           <table class="mis-table">
@@ -302,18 +305,18 @@
         <i data-lucide="users" class="mis-sec-icon"></i>
         <h3 class="mis-sec-title">Employee Roster (277 employees)</h3>
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-          <input type="text" id="emp-search" placeholder="Search name, EmpNo, dept…" oninput="filterEmployees()" style="font-family:var(--font);font-size:11px;padding:5px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:220px" />
-          <select id="emp-filter-branch" onchange="filterEmployees()" style="font-family:var(--font);font-size:11px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
+          <input type="text" id="emp-search" placeholder="Search name, EmpNo, dept…" oninput="filterEmployees()" style="font-family:var(--font);font-size:12px;padding:5px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:220px" />
+          <select id="emp-filter-branch" onchange="filterEmployees()" style="font-family:var(--font);font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
             <option value="">All Locations</option>
             <option value="Kimbiji">Kimbiji</option>
             <option value="Head Office">Head Office</option>
           </select>
-          <select id="emp-filter-cat" onchange="filterEmployees()" style="font-family:var(--font);font-size:11px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
+          <select id="emp-filter-cat" onchange="filterEmployees()" style="font-family:var(--font);font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
             <option value="">Local &amp; Expat</option>
             <option value="LOCAL">Local Only</option>
             <option value="EXPAT">Expat Only</option>
           </select>
-          <span id="emp-count-lbl" style="font-size:11px;color:var(--text-muted);white-space:nowrap"></span>
+          <span id="emp-count-lbl" style="font-size:12px;color:var(--text-muted);white-space:nowrap"></span>
         </div>
       </div>
       <div class="mis-table-wrap" style="max-height:560px">
@@ -456,7 +459,7 @@
       <div class="mis-sec-hdr">
         <i data-lucide="heart-handshake" class="mis-sec-icon"></i>
         <h3 class="mis-sec-title">Corporate Social Responsibility — Project History (2011–2026)</h3>
-        <span style="margin-left:auto;font-size:10px;color:var(--text-muted)">172 projects over 15 years</span>
+        <span style="margin-left:auto;font-size:12px;color:var(--text-muted)">172 projects over 15 years</span>
       </div>
       <div style="padding:12px 18px">
         
@@ -915,13 +918,13 @@
           <i data-lucide="laptop" class="mis-sec-icon"></i>
           <h3 class="mis-sec-title">Computer Register (237 devices)</h3>
           <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-            <input type="text" id="pc-search" placeholder="Search name, user, dept…" oninput="filterPCs()" style="font-family:var(--font);font-size:11px;padding:5px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:200px" />
-            <select id="pc-filter-loc" onchange="filterPCs()" style="font-family:var(--font);font-size:11px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
+            <input type="text" id="pc-search" placeholder="Search name, user, dept…" oninput="filterPCs()" style="font-family:var(--font);font-size:12px;padding:5px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:200px" />
+            <select id="pc-filter-loc" onchange="filterPCs()" style="font-family:var(--font);font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
               <option value="">All Locations</option>
               <option value="Head Office">Head Office</option>
               <option value="Factory / Kimbiji">Factory</option>
             </select>
-            <span id="pc-count-lbl" style="font-size:11px;color:var(--text-muted);white-space:nowrap"></span>
+            <span id="pc-count-lbl" style="font-size:12px;color:var(--text-muted);white-space:nowrap"></span>
           </div>
         </div>
         <div class="mis-table-wrap" style="max-height:460px">
@@ -995,36 +998,36 @@
         <div class="mis-table-wrap" style="max-height:320px">
           <table class="mis-table">
             <thead><tr><th>#</th><th>Camera Name</th><th>IP Address</th><th>Model</th></tr></thead>
-            <tbody><tr><td>1</td><td>HIK Vision NVR</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.11</td><td>DS-7732NI-K4</td></tr>
-<tr><td>2</td><td>LOADING 04</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.22</td><td>DS-2CD2643G0-IZS</td></tr>
-<tr><td>3</td><td>LOADING 03</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.24</td><td>DS-2CD2643G0-IZS</td></tr>
-<tr><td>4</td><td>LOADING 02</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.32</td><td>DS-2CD2643G0-IZS</td></tr>
-<tr><td>5</td><td>LOADING 01</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.31</td><td>DS-2CD2643G0-IZS</td></tr>
-<tr><td>6</td><td>STORE 02</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.26</td><td>DS-2CD2643G0-IZS</td></tr>
-<tr><td>7</td><td>Block J Front View</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.71</td><td>DS-2CD2643G2-IZS</td></tr>
-<tr><td>8</td><td>STORE 03</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.28</td><td>DS-2CD2643G0-IZS</td></tr>
-<tr><td>9</td><td>STORE AREA O.SIDE</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.29</td><td>DS-2CD2643G0-IZS</td></tr>
-<tr><td>10</td><td>STORE FRONT SIDE</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.30</td><td>DS-2CD2643G0-IZS</td></tr>
-<tr><td>11</td><td>CEMENT 01 MIL</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.25</td><td>DS-2CD2643G0-IZS</td></tr>
-<tr><td>12</td><td>SUB-STATION</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.86</td><td>DS-2CD2643G2-IZS</td></tr>
-<tr><td>13</td><td>CM MILL FEEDER</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.33</td><td>DS-2CD2643G0-IZS</td></tr>
-<tr><td>14</td><td>CRUSHER PTZ CAM</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.34</td><td>DS-2DE7225IW-AE</td></tr>
-<tr><td>15</td><td>WB2 SIDE 02</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.44</td><td>DS-2CD1023G0E-I</td></tr>
-<tr><td>16</td><td>Staff Colon inside Gate</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.74</td><td>DS-2CD2643G2-IZS</td></tr>
-<tr><td>17</td><td>MINE WB</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.51</td><td>DS-2CD2643G0-IZS</td></tr>
-<tr><td>18</td><td>MAIN ROAD VIEW</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.45</td><td>DS-2DE7225IW-AE</td></tr>
-<tr><td>19</td><td>NEW COLONY SIDE 2</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.80</td><td>DS-2DE7225IW-AE</td></tr>
-<tr><td>20</td><td>FUEL STATION</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.48</td><td>DS-2DE7225IW-AE</td></tr>
-<tr><td>21</td><td>WB1 SIDE 1</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.244</td><td>DS-2CD1023G0E-I</td></tr>
-<tr><td>22</td><td>STORE INSIDE</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.73</td><td>DS-2CD1643G0-I</td></tr>
-<tr><td>23</td><td>Mining Office inside</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.2</td><td>DS-2CD1643G0-I</td></tr>
-<tr><td>24</td><td>PACKER 02</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.38</td><td>DS-2CD1023G0E-I</td></tr>
-<tr><td>25</td><td>CANTEEN TOILET</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.92</td><td>DS-2CD1023G0E-I</td></tr>
-<tr><td>26</td><td>Staff Colon Gate No 2</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.76</td><td>DS-2CD2643G2-IZS</td></tr>
-<tr><td>27</td><td>WB1 TOP VIEW</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.3</td><td>DS-2CD1023G0E-I</td></tr>
-<tr><td>28</td><td>Staff Colon Block B and C</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.67</td><td>DS-2CD2643G2-IZS</td></tr>
-<tr><td>29</td><td>Block J Back View</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.68</td><td>DS-2CD2643G2-IZS</td></tr>
-<tr><td>30</td><td>PUNCHING</td><td style="font-size:10px;color:var(--text-muted)">192.168.10.70</td><td>DS-2CD2643G2-IZS</td></tr>
+            <tbody><tr><td>1</td><td>HIK Vision NVR</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.11</td><td>DS-7732NI-K4</td></tr>
+<tr><td>2</td><td>LOADING 04</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.22</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>3</td><td>LOADING 03</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.24</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>4</td><td>LOADING 02</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.32</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>5</td><td>LOADING 01</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.31</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>6</td><td>STORE 02</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.26</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>7</td><td>Block J Front View</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.71</td><td>DS-2CD2643G2-IZS</td></tr>
+<tr><td>8</td><td>STORE 03</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.28</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>9</td><td>STORE AREA O.SIDE</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.29</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>10</td><td>STORE FRONT SIDE</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.30</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>11</td><td>CEMENT 01 MIL</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.25</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>12</td><td>SUB-STATION</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.86</td><td>DS-2CD2643G2-IZS</td></tr>
+<tr><td>13</td><td>CM MILL FEEDER</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.33</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>14</td><td>CRUSHER PTZ CAM</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.34</td><td>DS-2DE7225IW-AE</td></tr>
+<tr><td>15</td><td>WB2 SIDE 02</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.44</td><td>DS-2CD1023G0E-I</td></tr>
+<tr><td>16</td><td>Staff Colon inside Gate</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.74</td><td>DS-2CD2643G2-IZS</td></tr>
+<tr><td>17</td><td>MINE WB</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.51</td><td>DS-2CD2643G0-IZS</td></tr>
+<tr><td>18</td><td>MAIN ROAD VIEW</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.45</td><td>DS-2DE7225IW-AE</td></tr>
+<tr><td>19</td><td>NEW COLONY SIDE 2</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.80</td><td>DS-2DE7225IW-AE</td></tr>
+<tr><td>20</td><td>FUEL STATION</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.48</td><td>DS-2DE7225IW-AE</td></tr>
+<tr><td>21</td><td>WB1 SIDE 1</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.244</td><td>DS-2CD1023G0E-I</td></tr>
+<tr><td>22</td><td>STORE INSIDE</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.73</td><td>DS-2CD1643G0-I</td></tr>
+<tr><td>23</td><td>Mining Office inside</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.2</td><td>DS-2CD1643G0-I</td></tr>
+<tr><td>24</td><td>PACKER 02</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.38</td><td>DS-2CD1023G0E-I</td></tr>
+<tr><td>25</td><td>CANTEEN TOILET</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.92</td><td>DS-2CD1023G0E-I</td></tr>
+<tr><td>26</td><td>Staff Colon Gate No 2</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.76</td><td>DS-2CD2643G2-IZS</td></tr>
+<tr><td>27</td><td>WB1 TOP VIEW</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.3</td><td>DS-2CD1023G0E-I</td></tr>
+<tr><td>28</td><td>Staff Colon Block B and C</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.67</td><td>DS-2CD2643G2-IZS</td></tr>
+<tr><td>29</td><td>Block J Back View</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.68</td><td>DS-2CD2643G2-IZS</td></tr>
+<tr><td>30</td><td>PUNCHING</td><td style="font-size:12px;color:var(--text-muted)">192.168.10.70</td><td>DS-2CD2643G2-IZS</td></tr>
 </tbody>
           </table>
         </div>
@@ -1039,27 +1042,27 @@
         <div class="mis-table-wrap">
           <table class="mis-table">
             <thead><tr><th>#</th><th>Location</th><th>Equipment</th><th>Software</th><th>Responsible</th></tr></thead>
-            <tbody><tr><td>1</td><td>CPP</td><td><strong>Symap - Synchronization Panel</strong></td><td style="font-size:10.5px">Symap Parameter Tool v.2.108</td><td>Mayank</td></tr>
-<tr><td>2</td><td>Plant MCC</td><td><strong>Simocode</strong></td><td style="font-size:10.5px">Simocode Es 2007+SP2  Version 2007+SP2</td><td>Mayank</td></tr>
-<tr><td>3</td><td>Pyro</td><td><strong>Coal Firing Pfister</strong></td><td style="font-size:10.5px">Twin -Cat System Manager V 2.11 or 192.168.240.1</td><td>Ramesh / Mahesh</td></tr>
-<tr><td>4</td><td>CM 2</td><td><strong>Cement Mill 2 VLRS  PLC</strong></td><td style="font-size:10.5px">CPU Sr 20- Step7 Microwin Smart</td><td>Ramesh / Mahesh</td></tr>
-<tr><td>5</td><td>CM 2</td><td><strong>Coniq Weighfeeder</strong></td><td style="font-size:10.5px">192.168.240.1</td><td>Ramesh / Mahesh</td></tr>
-<tr><td>6</td><td>Reclaimer</td><td><strong>Reclaimer Bridge Type</strong></td><td style="font-size:10.5px">TIA portal V.16</td><td>Ramesh / Mahesh</td></tr>
-<tr><td>7</td><td>Stacker/Reclaimer</td><td><strong>Stacker &Reclaimer</strong></td><td style="font-size:10.5px">Step7-300,Ssimatic Manager PCS7 V 8.0</td><td>Ramesh / Mahesh</td></tr>
-<tr><td>8</td><td>Pyro</td><td><strong>Shell Scanner</strong></td><td style="font-size:10.5px">Raytek CS6.0.3.2</td><td>Ramesh / Mahesh</td></tr>
-<tr><td>9</td><td>General</td><td><strong>CCTV Camera</strong></td><td style="font-size:10.5px">IVMS-4200</td><td>Ramesh / Mahesh</td></tr>
-<tr><td>10</td><td>CM 2</td><td><strong>ABB VFDs</strong></td><td style="font-size:10.5px">Drive composer Entry V.2.8.2  ABB</td><td>Ramesh / Mahesh</td></tr>
-<tr><td>11</td><td>Plant Server</td><td><strong>DCS System</strong></td><td style="font-size:10.5px">PCS 7 Ver 9.1</td><td>Ramesh / Mahesh</td></tr>
-<tr><td>12</td><td>QC Lab</td><td><strong>QCX</strong></td><td style="font-size:10.5px">Work Place QCX FL Smidth 7504</td><td>Auto Generate</td></tr>
-<tr><td>13</td><td>Server Room</td><td><strong>Employee Punching Machine</strong></td><td style="font-size:10.5px">Com Master / Pay Roll</td><td>Saurabh</td></tr>
-<tr><td>14</td><td>Server Room</td><td><strong>ERP Back up - ORION</strong></td><td style="font-size:10.5px">ERP - Orion (Data Mining)</td><td>Saurabh</td></tr>
-<tr><td>15</td><td>Local Canteen</td><td><strong>Canteen Management System</strong></td><td style="font-size:10.5px">Canteen Management System</td><td>Saurabh</td></tr>
-<tr><td>16</td><td>Server Room</td><td><strong>Contractor Employee Punching</strong></td><td style="font-size:10.5px">Smart Pay</td><td>Saurabh</td></tr>
-<tr><td>17</td><td>Server Room</td><td><strong>Unmanned Weighbridge</strong></td><td style="font-size:10.5px">UMS Software</td><td>Saurabh</td></tr>
-<tr><td>18</td><td>Server Room</td><td><strong>Mining Weighbridge</strong></td><td style="font-size:10.5px">UMS Software</td><td>Saurabh</td></tr>
-<tr><td>19</td><td>Server Room</td><td><strong>Nozzle Packer Systems</strong></td><td style="font-size:10.5px">UMS Software</td><td>Saurabh</td></tr>
-<tr><td>19</td><td>ODOO</td><td><strong>Cloud Backup FTP</strong></td><td style="font-size:10.5px">ODOO</td><td>Saurabh</td></tr>
-<tr><td>20</td><td>UPS Room</td><td><strong>Sophos Firewall</strong></td><td style="font-size:10.5px">Sophos Software and Configuration Backup</td><td>Saurabh</td></tr>
+            <tbody><tr><td>1</td><td>CPP</td><td><strong>Symap - Synchronization Panel</strong></td><td style="font-size:12px">Symap Parameter Tool v.2.108</td><td>Mayank</td></tr>
+<tr><td>2</td><td>Plant MCC</td><td><strong>Simocode</strong></td><td style="font-size:12px">Simocode Es 2007+SP2  Version 2007+SP2</td><td>Mayank</td></tr>
+<tr><td>3</td><td>Pyro</td><td><strong>Coal Firing Pfister</strong></td><td style="font-size:12px">Twin -Cat System Manager V 2.11 or 192.168.240.1</td><td>Ramesh / Mahesh</td></tr>
+<tr><td>4</td><td>CM 2</td><td><strong>Cement Mill 2 VLRS  PLC</strong></td><td style="font-size:12px">CPU Sr 20- Step7 Microwin Smart</td><td>Ramesh / Mahesh</td></tr>
+<tr><td>5</td><td>CM 2</td><td><strong>Coniq Weighfeeder</strong></td><td style="font-size:12px">192.168.240.1</td><td>Ramesh / Mahesh</td></tr>
+<tr><td>6</td><td>Reclaimer</td><td><strong>Reclaimer Bridge Type</strong></td><td style="font-size:12px">TIA portal V.16</td><td>Ramesh / Mahesh</td></tr>
+<tr><td>7</td><td>Stacker/Reclaimer</td><td><strong>Stacker &Reclaimer</strong></td><td style="font-size:12px">Step7-300,Ssimatic Manager PCS7 V 8.0</td><td>Ramesh / Mahesh</td></tr>
+<tr><td>8</td><td>Pyro</td><td><strong>Shell Scanner</strong></td><td style="font-size:12px">Raytek CS6.0.3.2</td><td>Ramesh / Mahesh</td></tr>
+<tr><td>9</td><td>General</td><td><strong>CCTV Camera</strong></td><td style="font-size:12px">IVMS-4200</td><td>Ramesh / Mahesh</td></tr>
+<tr><td>10</td><td>CM 2</td><td><strong>ABB VFDs</strong></td><td style="font-size:12px">Drive composer Entry V.2.8.2  ABB</td><td>Ramesh / Mahesh</td></tr>
+<tr><td>11</td><td>Plant Server</td><td><strong>DCS System</strong></td><td style="font-size:12px">PCS 7 Ver 9.1</td><td>Ramesh / Mahesh</td></tr>
+<tr><td>12</td><td>QC Lab</td><td><strong>QCX</strong></td><td style="font-size:12px">Work Place QCX FL Smidth 7504</td><td>Auto Generate</td></tr>
+<tr><td>13</td><td>Server Room</td><td><strong>Employee Punching Machine</strong></td><td style="font-size:12px">Com Master / Pay Roll</td><td>Saurabh</td></tr>
+<tr><td>14</td><td>Server Room</td><td><strong>ERP Back up - ORION</strong></td><td style="font-size:12px">ERP - Orion (Data Mining)</td><td>Saurabh</td></tr>
+<tr><td>15</td><td>Local Canteen</td><td><strong>Canteen Management System</strong></td><td style="font-size:12px">Canteen Management System</td><td>Saurabh</td></tr>
+<tr><td>16</td><td>Server Room</td><td><strong>Contractor Employee Punching</strong></td><td style="font-size:12px">Smart Pay</td><td>Saurabh</td></tr>
+<tr><td>17</td><td>Server Room</td><td><strong>Unmanned Weighbridge</strong></td><td style="font-size:12px">UMS Software</td><td>Saurabh</td></tr>
+<tr><td>18</td><td>Server Room</td><td><strong>Mining Weighbridge</strong></td><td style="font-size:12px">UMS Software</td><td>Saurabh</td></tr>
+<tr><td>19</td><td>Server Room</td><td><strong>Nozzle Packer Systems</strong></td><td style="font-size:12px">UMS Software</td><td>Saurabh</td></tr>
+<tr><td>19</td><td>ODOO</td><td><strong>Cloud Backup FTP</strong></td><td style="font-size:12px">ODOO</td><td>Saurabh</td></tr>
+<tr><td>20</td><td>UPS Room</td><td><strong>Sophos Firewall</strong></td><td style="font-size:12px">Sophos Software and Configuration Backup</td><td>Saurabh</td></tr>
 </tbody>
           </table>
         </div>
@@ -1078,15 +1081,15 @@
         <i data-lucide="truck" class="mis-sec-icon"></i>
         <h3 class="mis-sec-title">Fleet Register (144 vehicles)</h3>
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-          <select id="veh-filter-cat" onchange="filterVehicles()" style="font-family:var(--font);font-size:11px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
+          <select id="veh-filter-cat" onchange="filterVehicles()" style="font-family:var(--font);font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
             <option value="">All Categories</option>
             <option value="Passenger">Passenger</option>
             <option value="Plant">Plant</option>
             <option value="Mining">Mining</option>
             <option value="Logistics">Logistics</option>
           </select>
-          <input type="text" id="veh-search" placeholder="Search reg, make, type…" oninput="filterVehicles()" style="font-family:var(--font);font-size:11px;padding:5px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:190px" />
-          <span id="veh-count-lbl" style="font-size:11px;color:var(--text-muted);white-space:nowrap"></span>
+          <input type="text" id="veh-search" placeholder="Search reg, make, type…" oninput="filterVehicles()" style="font-family:var(--font);font-size:12px;padding:5px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:190px" />
+          <span id="veh-count-lbl" style="font-size:12px;color:var(--text-muted);white-space:nowrap"></span>
         </div>
       </div>
       <div class="mis-table-wrap" style="max-height:540px">
@@ -1115,140 +1118,140 @@
             <thead><tr><th>Class</th><th>Code</th><th>Description</th><th style="text-align:center">UOM</th><th style="text-align:right">Value (TSH)</th></tr></thead>
             <tbody><tr>
       <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">CPRGM002</td>
+      <td style="font-size:12px;color:var(--text-muted)">CPRGM002</td>
       <td>GRINDING MEDIA HIGH CHROME  SIZE 20 MM</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 298,141,026</td>
     </tr>
 <tr>
       <td><span class="mis-badge" style="background:#94A3B81a;color:#94A3B8;border-color:#94A3B866">C</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">CPRRF013</td>
+      <td style="font-size:12px;color:var(--text-muted)">CPRRF013</td>
       <td>BRICK AC 70  /20 SPL 3K 618 SIZE 198 X 180 X 103 / 97 SA FOR KILN</td>
       <td class="tc">NOS</td>
       <td class="tr">TSH 246,253,450</td>
     </tr>
 <tr>
       <td><span class="mis-badge" style="background:#94A3B81a;color:#94A3B8;border-color:#94A3B866">C</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">CPMBG002</td>
+      <td style="font-size:12px;color:var(--text-muted)">CPMBG002</td>
       <td>BAG EMPTY FOR CEMENT PACKING GRADE 42.5R MATERIAL WOVEN POLYPROPY</td>
       <td class="tc">NOS</td>
       <td class="tr">TSH 233,390,115</td>
     </tr>
 <tr>
       <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">CPRGM001</td>
+      <td style="font-size:12px;color:var(--text-muted)">CPRGM001</td>
       <td>GRINDING MEDIA HIGH CHROME  SIZE 17 MM</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 204,785,435</td>
     </tr>
 <tr>
       <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">CPRGM004</td>
+      <td style="font-size:12px;color:var(--text-muted)">CPRGM004</td>
       <td>GRINDING MEDIA HIGH CHROME  SIZE 30 MM</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 189,693,906</td>
     </tr>
 <tr>
       <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">CPRRF026</td>
+      <td style="font-size:12px;color:var(--text-muted)">CPRRF026</td>
       <td>CASTABLE  CALDEMON BPTC</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 155,721,278</td>
     </tr>
 <tr>
       <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">CPRGM008</td>
+      <td style="font-size:12px;color:var(--text-muted)">CPRGM008</td>
       <td>GRINDING MEDIA HIGH CHROME  SIZE 70 MM</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 154,913,844</td>
     </tr>
 <tr>
       <td><span class="mis-badge" style="background:#94A3B81a;color:#94A3B8;border-color:#94A3B866">C</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">CFLFL001</td>
+      <td style="font-size:12px;color:var(--text-muted)">CFLFL001</td>
       <td>FUEL DIESEL</td>
       <td class="tc">LTR</td>
       <td class="tr">TSH 140,973,479</td>
     </tr>
 <tr>
       <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">CPRGM003</td>
+      <td style="font-size:12px;color:var(--text-muted)">CPRGM003</td>
       <td>GRINDING MEDIA HIGH CHROME  SIZE 25 MM</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 139,844,512</td>
     </tr>
 <tr>
       <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">CPRGM006</td>
+      <td style="font-size:12px;color:var(--text-muted)">CPRGM006</td>
       <td>GRINDING MEDIA HIGH CHROME  SIZE 50 MM</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 136,779,279</td>
     </tr>
 <tr>
       <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">CPRGM009</td>
+      <td style="font-size:12px;color:var(--text-muted)">CPRGM009</td>
       <td>GRINDING MEDIA HIGH CHROME  SIZE 80 MM</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 134,271,985</td>
     </tr>
 <tr>
       <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">CPRGM005</td>
+      <td style="font-size:12px;color:var(--text-muted)">CPRGM005</td>
       <td>GRINDING MEDIA HIGH CHROME  SIZE 40 MM</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 124,002,885</td>
     </tr>
 <tr>
       <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">CPRRF005</td>
+      <td style="font-size:12px;color:var(--text-muted)">CPRRF005</td>
       <td>CASTABLE HASLE D59A</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 93,868,318</td>
     </tr>
 <tr>
       <td><span class="mis-badge" style="background:#94A3B81a;color:#94A3B8;border-color:#94A3B866">C</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">CFLGR008</td>
+      <td style="font-size:12px;color:var(--text-muted)">CFLGR008</td>
       <td>GREASE BERUGEAR HV 20 FOR CEMENT MILL GIRTH GEAR</td>
       <td class="tc">KG</td>
       <td class="tr">TSH 92,125,944</td>
     </tr>
 <tr>
       <td><span class="mis-badge" style="background:#94A3B81a;color:#94A3B8;border-color:#94A3B866">C</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">CPMBG004</td>
+      <td style="font-size:12px;color:var(--text-muted)">CPMBG004</td>
       <td>BAG EMPTY FOR CEMENT PACKING GRADE 42.5N CEM II MATERIAL WOVEN PO</td>
       <td class="tc">NOS</td>
       <td class="tr">TSH 76,749,123</td>
     </tr>
 <tr>
       <td><span class="mis-badge" style="background:#94A3B81a;color:#94A3B8;border-color:#94A3B866">C</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">CPRRF014</td>
+      <td style="font-size:12px;color:var(--text-muted)">CPRRF014</td>
       <td>BRICK AC 70 /20 SPL 3K - 218 SIZE 198 X 180 X 103/ 84 SA FOR KILN</td>
       <td class="tc">NOS</td>
       <td class="tr">TSH 75,859,058</td>
     </tr>
 <tr>
       <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">CQCGS009</td>
+      <td style="font-size:12px;color:var(--text-muted)">CQCGS009</td>
       <td>NORMAL SAND EN196-1</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 74,086,855</td>
     </tr>
 <tr>
       <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">EISGS011</td>
+      <td style="font-size:12px;color:var(--text-muted)">EISGS011</td>
       <td>POSITION TRANSDUCER MODEL NO. 8TL7 E501 M0300 P S32 SUPPLY 10 TO </td>
       <td class="tc">NOS</td>
       <td class="tr">TSH 70,282,800</td>
     </tr>
 <tr>
       <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">CPRGM007</td>
+      <td style="font-size:12px;color:var(--text-muted)">CPRGM007</td>
       <td>GRINDING MEDIA HIGH CHROME  SIZE 60 MM</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 67,655,615</td>
     </tr>
 <tr>
       <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">EAUSM179</td>
+      <td style="font-size:12px;color:var(--text-muted)">EAUSM179</td>
       <td>COUPLING PART NO. 101013 FOR SURFACE MINER KSM304</td>
       <td class="tc">NOS</td>
       <td class="tr">TSH 66,620,825</td>
@@ -1300,20 +1303,20 @@
       <div class="mis-table-wrap">
         <table class="mis-table">
           <thead><tr><th>Cost Head</th><th>Account</th><th style="text-align:right">Actual (USD)</th><th style="text-align:right">Budget (USD)</th><th style="text-align:center">% Used</th></tr></thead>
-          <tbody><tr style=""><td style="padding-left:28px">2200 TPD Commissioning</td><td style="font-size:10px;color:var(--text-muted)">371021 CWIP-PYRO UPGRADATION</td><td class="tr">$266,545</td><td class="tr">$300,000</td><td class="tc"><span style="color:#10B981;font-weight:700">89%</span></td></tr>
-<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">2200 TPD Commissioning Total</td><td style="font-size:10px;color:var(--text-muted)"></td><td class="tr">$289,460</td><td class="tr">$300,000</td><td class="tc"><span style="color:#10B981;font-weight:700">96%</span></td></tr>
-<tr style=""><td style="padding-left:28px">MINING LAND</td><td style="font-size:10px;color:var(--text-muted)">301003 LAND COST</td><td class="tr">$252,452</td><td class="tr">$600,000</td><td class="tc"><span style="color:#10B981;font-weight:700">42%</span></td></tr>
-<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">MINING LAND Total</td><td style="font-size:10px;color:var(--text-muted)"></td><td class="tr">$252,452</td><td class="tr">$600,000</td><td class="tc"><span style="color:#10B981;font-weight:700">42%</span></td></tr>
-<tr style=""><td style="padding-left:28px">OTHERS</td><td style="font-size:10px;color:var(--text-muted)">371039 CWIP-CONSTRUCTION OF LIME STONE AND GYPSUM FEEDING SY</td><td class="tr">$45,637</td><td class="tr">$70,000</td><td class="tc"><span style="color:#10B981;font-weight:700">65%</span></td></tr>
-<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">OTHERS Total</td><td style="font-size:10px;color:var(--text-muted)"></td><td class="tr">$80,240</td><td class="tr">$70,000</td><td class="tc"><span style="color:#EF4444;font-weight:700">115%</span></td></tr>
-<tr style=""><td style="padding-left:28px">RM SHED</td><td style="font-size:10px;color:var(--text-muted)">371012 CWIP-QUARRY RAW MATERIAL SHED EXTENSION</td><td class="tr">$73,219</td><td class="tr">$300,000</td><td class="tc"><span style="color:#10B981;font-weight:700">24%</span></td></tr>
-<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">RM SHED Total</td><td style="font-size:10px;color:var(--text-muted)"></td><td class="tr">$73,219</td><td class="tr">$300,000</td><td class="tc"><span style="color:#10B981;font-weight:700">24%</span></td></tr>
-<tr style=""><td style="padding-left:28px">ROADS</td><td style="font-size:10px;color:var(--text-muted)">371014 CWIP-GYPSUM SHED SURROUNDING & CEMENT MILL AREA NEW R</td><td class="tr">$9,932</td><td class="tr">—</td><td class="tc"><span style="color:var(--text-muted)">—</span></td></tr>
-<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">ROADS Total</td><td style="font-size:10px;color:var(--text-muted)"></td><td class="tr">$33,601</td><td class="tr">$35,000</td><td class="tc"><span style="color:#10B981;font-weight:700">96%</span></td></tr>
-<tr style=""><td style="padding-left:28px">WALL</td><td style="font-size:10px;color:var(--text-muted)">371059 CWIP-CONSTRUCTION OF PLANT BOUNDARY WALL</td><td class="tr">$40,352</td><td class="tr">$60,000</td><td class="tc"><span style="color:#10B981;font-weight:700">67%</span></td></tr>
-<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">WALL Total</td><td style="font-size:10px;color:var(--text-muted)"></td><td class="tr">$40,352</td><td class="tr">$60,000</td><td class="tc"><span style="color:#10B981;font-weight:700">67%</span></td></tr>
-<tr style=""><td style="padding-left:28px">OPC Project</td><td style="font-size:10px;color:var(--text-muted)">371038 CWIP-CONSTRUCTION OF NEW RAW MILL FEEDING AND UPGRADA</td><td class="tr">$169,812</td><td class="tr">—</td><td class="tc"><span style="color:var(--text-muted)">—</span></td></tr>
-<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">OPC Project Total</td><td style="font-size:10px;color:var(--text-muted)"></td><td class="tr">$540,717</td><td class="tr">—</td><td class="tc"><span style="color:var(--text-muted)">—</span></td></tr>
+          <tbody><tr style=""><td style="padding-left:28px">2200 TPD Commissioning</td><td style="font-size:12px;color:var(--text-muted)">371021 CWIP-PYRO UPGRADATION</td><td class="tr">$266,545</td><td class="tr">$300,000</td><td class="tc"><span style="color:#10B981;font-weight:700">89%</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">2200 TPD Commissioning Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$289,460</td><td class="tr">$300,000</td><td class="tc"><span style="color:#10B981;font-weight:700">96%</span></td></tr>
+<tr style=""><td style="padding-left:28px">MINING LAND</td><td style="font-size:12px;color:var(--text-muted)">301003 LAND COST</td><td class="tr">$252,452</td><td class="tr">$600,000</td><td class="tc"><span style="color:#10B981;font-weight:700">42%</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">MINING LAND Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$252,452</td><td class="tr">$600,000</td><td class="tc"><span style="color:#10B981;font-weight:700">42%</span></td></tr>
+<tr style=""><td style="padding-left:28px">OTHERS</td><td style="font-size:12px;color:var(--text-muted)">371039 CWIP-CONSTRUCTION OF LIME STONE AND GYPSUM FEEDING SY</td><td class="tr">$45,637</td><td class="tr">$70,000</td><td class="tc"><span style="color:#10B981;font-weight:700">65%</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">OTHERS Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$80,240</td><td class="tr">$70,000</td><td class="tc"><span style="color:#EF4444;font-weight:700">115%</span></td></tr>
+<tr style=""><td style="padding-left:28px">RM SHED</td><td style="font-size:12px;color:var(--text-muted)">371012 CWIP-QUARRY RAW MATERIAL SHED EXTENSION</td><td class="tr">$73,219</td><td class="tr">$300,000</td><td class="tc"><span style="color:#10B981;font-weight:700">24%</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">RM SHED Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$73,219</td><td class="tr">$300,000</td><td class="tc"><span style="color:#10B981;font-weight:700">24%</span></td></tr>
+<tr style=""><td style="padding-left:28px">ROADS</td><td style="font-size:12px;color:var(--text-muted)">371014 CWIP-GYPSUM SHED SURROUNDING & CEMENT MILL AREA NEW R</td><td class="tr">$9,932</td><td class="tr">—</td><td class="tc"><span style="color:var(--text-muted)">—</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">ROADS Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$33,601</td><td class="tr">$35,000</td><td class="tc"><span style="color:#10B981;font-weight:700">96%</span></td></tr>
+<tr style=""><td style="padding-left:28px">WALL</td><td style="font-size:12px;color:var(--text-muted)">371059 CWIP-CONSTRUCTION OF PLANT BOUNDARY WALL</td><td class="tr">$40,352</td><td class="tr">$60,000</td><td class="tc"><span style="color:#10B981;font-weight:700">67%</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">WALL Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$40,352</td><td class="tr">$60,000</td><td class="tc"><span style="color:#10B981;font-weight:700">67%</span></td></tr>
+<tr style=""><td style="padding-left:28px">OPC Project</td><td style="font-size:12px;color:var(--text-muted)">371038 CWIP-CONSTRUCTION OF NEW RAW MILL FEEDING AND UPGRADA</td><td class="tr">$169,812</td><td class="tr">—</td><td class="tc"><span style="color:var(--text-muted)">—</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">OPC Project Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$540,717</td><td class="tr">—</td><td class="tc"><span style="color:var(--text-muted)">—</span></td></tr>
 </tbody>
           <tfoot><tr style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">
             <td>GRAND TOTAL</td><td></td>
@@ -1345,8 +1348,8 @@
         <div class="mis-table-wrap">
           <table class="mis-table">
             <thead><tr><th>Location</th><th style="text-align:center">Parcels</th><th style="text-align:right">Acres</th><th style="text-align:right">Value (TSH)</th><th>ML / PL</th></tr></thead>
-            <tbody><tr><td><strong>Beach, Gezaulole</strong></td><td class="tc">1</td><td class="tr">0.97</td><td class="tr">TSH 180,000,000</td><td style="font-size:10px">ML/395/10</td></tr>
-<tr><td><strong>Kimbiji</strong></td><td class="tc">359</td><td class="tr">546.98</td><td class="tr">TSH 9,865,110,351</td><td style="font-size:10px">ML/395/10, PL/17158/2021</td></tr>
+            <tbody><tr><td><strong>Beach, Gezaulole</strong></td><td class="tc">1</td><td class="tr">0.97</td><td class="tr">TSH 180,000,000</td><td style="font-size:12px">ML/395/10</td></tr>
+<tr><td><strong>Kimbiji</strong></td><td class="tc">359</td><td class="tr">546.98</td><td class="tr">TSH 9,865,110,351</td><td style="font-size:12px">ML/395/10, PL/17158/2021</td></tr>
 </tbody>
             <tfoot><tr style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">
               <td>TOTAL (M4)</td>
@@ -1423,10 +1426,10 @@
       <div class="mis-sec-hdr">
         <i data-lucide="shield-check" class="mis-sec-icon"></i>
         <h3 class="mis-sec-title">Certificates &amp; Licenses Register</h3>
-        <span id="cert-total-lbl" style="margin-left:6px;font-size:10px;color:var(--text-muted)">88 items</span>
+        <span id="cert-total-lbl" style="margin-left:6px;font-size:12px;color:var(--text-muted)">88 items</span>
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <input type="text" id="cert-search" placeholder="Search description, agency…" oninput="filterCerts()" style="font-family:var(--font);font-size:11px;padding:5px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:220px" />
-          <select id="cert-filter-status" onchange="filterCerts()" style="font-family:var(--font);font-size:11px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
+          <input type="text" id="cert-search" placeholder="Search description, agency…" oninput="filterCerts()" style="font-family:var(--font);font-size:12px;padding:5px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:220px" />
+          <select id="cert-filter-status" onchange="filterCerts()" style="font-family:var(--font);font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
             <option value="">All Status</option>
             <option value="active">Active</option>
             <option value="expiring">Expiring</option>
@@ -1434,7 +1437,7 @@
             <option value="renewal">Under Renewal</option>
             <option value="inactive">Inactive</option>
           </select>
-          <span id="cert-count-lbl" style="font-size:11px;color:var(--text-muted);white-space:nowrap"></span>
+          <span id="cert-count-lbl" style="font-size:12px;color:var(--text-muted);white-space:nowrap"></span>
         </div>
       </div>
       <div class="mis-table-wrap" style="max-height:600px">
@@ -1485,8 +1488,8 @@
   <div class="mis-sec-hdr">
     <i data-lucide="shield" class="mis-sec-icon"></i>
     <h3 class="mis-sec-title">ML 395/10 — Kimbiji, Kigamboni</h3>
-    <span style="margin-left:12px;font-size:10px;color:var(--text-muted)"> &nbsp;·&nbsp;  km²</span>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:11px">
+    <span style="margin-left:12px;font-size:12px;color:var(--text-muted)"> &nbsp;·&nbsp;  km²</span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px">
       <span style="color:#10B981;font-weight:700">20 Complied</span>
       <span style="color:#EF4444;font-weight:700">0 Not Complied</span>
       <span style="color:#D97706;font-weight:700">3 Partial</span>
@@ -1497,29 +1500,29 @@
   <div class="mis-table-wrap" style="max-height:380px">
     <table class="mis-table">
       <thead><tr><th>Compliance Requirement</th><th>Frequency</th><th>Status</th><th style="text-align:center">Due Next</th><th>Responsible</th></tr></thead>
-      <tbody><tr><td style="white-space:normal;line-height:1.4;max-width:320px">License Type</td><td style="font-size:10px;color:var(--text-muted)">ML - Industrial Minerals</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)"></td><td style="font-size:10px;color:var(--text-muted)"></td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mining Lease (Date of Issue - 24/05/10)</td><td style="font-size:10px;color:var(--text-muted)">Every 10 Years</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">23 May 2030</td><td style="font-size:10px;color:var(--text-muted)">PSS Sajiv</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Rent @ US $12,320</td><td style="font-size:10px;color:var(--text-muted)">Annual</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">24 May 2026</td><td style="font-size:10px;color:var(--text-muted)">PSS Sajiv</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mining Royalty Returns</td><td style="font-size:10px;color:var(--text-muted)">Annual (before 15th Jan)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">15 Jan 2027</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mining Plan Compliance Report (before 30th Jan)</td><td style="font-size:10px;color:var(--text-muted)">Annual (before 30th Jan)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">30 Jan 2027</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Local Content Implementation Plan (before 15th Jan)</td><td style="font-size:10px;color:var(--text-muted)">Annual (before 15th Jan)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">15 Jan 2027</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Local Content Compliance Annual Report (before 30th Jan)</td><td style="font-size:10px;color:var(--text-muted)">Annual (before 30th Jan)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">30 Jan 2026</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Submission of CSR Plan to Local Municipal Council / Ward for the next year (befo</td><td style="font-size:10px;color:var(--text-muted)">Annual (before July)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">07 Jan 2026</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mines Closure Plan</td><td style="font-size:10px;color:var(--text-muted)">One-time, Review Every 3 yrs</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">04 Jan 2026</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Hydrogeological Investigation</td><td style="font-size:10px;color:var(--text-muted)">Every 3 yrs</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)"></td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Submission of compensation plan for the surface right owners within lease area t</td><td style="font-size:10px;color:var(--text-muted)">One-time, Review Every 3 yrs</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)"></td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Demarcation of lease boundary with coordinates displayed at site</td><td style="font-size:10px;color:var(--text-muted)">One-time. To be reviewed annually</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)"></td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Providing fence or rock bund along the lease boundary for prevention of unauthor</td><td style="font-size:10px;color:var(--text-muted)">One-time. To be reviewed annually</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)"></td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mandatory Insurance of own mining assets, covering- environmental damage, third </td><td style="font-size:10px;color:var(--text-muted)">Should cover the lease period</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)"></td><td style="font-size:10px;color:var(--text-muted)">Punit Aswala</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Monthly mining royalty returns in prescribed format</td><td style="font-size:10px;color:var(--text-muted)">Monthly (before 4th)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">12 Apr 2025</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Quarterly mining royalty returns prescribed format</td><td style="font-size:10px;color:var(--text-muted)">Quarterly - (Jan/Apr/July/Oct by 15th)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">15 Jan 2026</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Maintain the records of all the boreholes drilled within lease area</td><td style="font-size:10px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Display of Safety Signage at prominently and key locations as needed</td><td style="font-size:10px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Compliance to the Environmental Act</td><td style="font-size:10px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Maintain a distance of minimum 200 meters from any Govt. or public building alre</td><td style="font-size:10px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Maintain a distance of at least 1000 meters from any aerodrome or Helipad</td><td style="font-size:10px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Pollution control - Water sprinkling on all haul roads for dust suppression</td><td style="font-size:10px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Payment of Ushuru to local Municipal Council for transport od sand from Kijaka</td><td style="font-size:10px;color:var(--text-muted)">As & when required</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">As & when required</td><td style="font-size:10px;color:var(--text-muted)">Pavan Gandhi</td></tr>
+      <tbody><tr><td style="white-space:normal;line-height:1.4;max-width:320px">License Type</td><td style="font-size:12px;color:var(--text-muted)">ML - Industrial Minerals</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)"></td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mining Lease (Date of Issue - 24/05/10)</td><td style="font-size:12px;color:var(--text-muted)">Every 10 Years</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">23 May 2030</td><td style="font-size:12px;color:var(--text-muted)">PSS Sajiv</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Rent @ US $12,320</td><td style="font-size:12px;color:var(--text-muted)">Annual</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">24 May 2026</td><td style="font-size:12px;color:var(--text-muted)">PSS Sajiv</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mining Royalty Returns</td><td style="font-size:12px;color:var(--text-muted)">Annual (before 15th Jan)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">15 Jan 2027</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mining Plan Compliance Report (before 30th Jan)</td><td style="font-size:12px;color:var(--text-muted)">Annual (before 30th Jan)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">30 Jan 2027</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Local Content Implementation Plan (before 15th Jan)</td><td style="font-size:12px;color:var(--text-muted)">Annual (before 15th Jan)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">15 Jan 2027</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Local Content Compliance Annual Report (before 30th Jan)</td><td style="font-size:12px;color:var(--text-muted)">Annual (before 30th Jan)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">30 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Submission of CSR Plan to Local Municipal Council / Ward for the next year (befo</td><td style="font-size:12px;color:var(--text-muted)">Annual (before July)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">07 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mines Closure Plan</td><td style="font-size:12px;color:var(--text-muted)">One-time, Review Every 3 yrs</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">04 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Hydrogeological Investigation</td><td style="font-size:12px;color:var(--text-muted)">Every 3 yrs</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Submission of compensation plan for the surface right owners within lease area t</td><td style="font-size:12px;color:var(--text-muted)">One-time, Review Every 3 yrs</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Demarcation of lease boundary with coordinates displayed at site</td><td style="font-size:12px;color:var(--text-muted)">One-time. To be reviewed annually</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Providing fence or rock bund along the lease boundary for prevention of unauthor</td><td style="font-size:12px;color:var(--text-muted)">One-time. To be reviewed annually</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mandatory Insurance of own mining assets, covering- environmental damage, third </td><td style="font-size:12px;color:var(--text-muted)">Should cover the lease period</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">Punit Aswala</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Monthly mining royalty returns in prescribed format</td><td style="font-size:12px;color:var(--text-muted)">Monthly (before 4th)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">12 Apr 2025</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Quarterly mining royalty returns prescribed format</td><td style="font-size:12px;color:var(--text-muted)">Quarterly - (Jan/Apr/July/Oct by 15th)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">15 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Maintain the records of all the boreholes drilled within lease area</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Display of Safety Signage at prominently and key locations as needed</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Compliance to the Environmental Act</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Maintain a distance of minimum 200 meters from any Govt. or public building alre</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Maintain a distance of at least 1000 meters from any aerodrome or Helipad</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Pollution control - Water sprinkling on all haul roads for dust suppression</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Payment of Ushuru to local Municipal Council for transport od sand from Kijaka</td><td style="font-size:12px;color:var(--text-muted)">As & when required</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">As & when required</td><td style="font-size:12px;color:var(--text-muted)">Pavan Gandhi</td></tr>
 </tbody>
     </table>
   </div>
@@ -1528,8 +1531,8 @@
   <div class="mis-sec-hdr">
     <i data-lucide="shield" class="mis-sec-icon"></i>
     <h3 class="mis-sec-title">ML 552/15 — Tarawanda, Bagamoyo</h3>
-    <span style="margin-left:12px;font-size:10px;color:var(--text-muted)"> &nbsp;·&nbsp;  km²</span>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:11px">
+    <span style="margin-left:12px;font-size:12px;color:var(--text-muted)"> &nbsp;·&nbsp;  km²</span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px">
       <span style="color:#10B981;font-weight:700">14 Complied</span>
       <span style="color:#EF4444;font-weight:700">4 Not Complied</span>
       <span style="color:#D97706;font-weight:700">5 Partial</span>
@@ -1540,29 +1543,29 @@
   <div class="mis-table-wrap" style="max-height:380px">
     <table class="mis-table">
       <thead><tr><th>Compliance Requirement</th><th>Frequency</th><th>Status</th><th style="text-align:center">Due Next</th><th>Responsible</th></tr></thead>
-      <tbody><tr><td style="white-space:normal;line-height:1.4;max-width:320px">License Type</td><td style="font-size:10px;color:var(--text-muted)">ML - Industrial Minerals</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)"></td><td style="font-size:10px;color:var(--text-muted)"></td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mining Lease (Date of Issue - 30/09/15)</td><td style="font-size:10px;color:var(--text-muted)">Every 10 Years</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">30 Sep 2025</td><td style="font-size:10px;color:var(--text-muted)">PSS Sajiv</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Rent @ US$ 10,120 or Tsh 25,603,600</td><td style="font-size:10px;color:var(--text-muted)">Annual</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">24 May 2026</td><td style="font-size:10px;color:var(--text-muted)">PSS Sajiv</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mining Royalty Returns</td><td style="font-size:10px;color:var(--text-muted)">Annual (before 15th Jan)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">15 Jan 2026</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mining Plan Compliance Report (before 30th Jan)</td><td style="font-size:10px;color:var(--text-muted)">Annual (before 30th Jan)</td><td><span class="mis-badge expired">Not Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">30 Jan 2026</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Local Content Implementation Plan (before 15th Jan)</td><td style="font-size:10px;color:var(--text-muted)">Annual (before 15th Jan)</td><td><span class="mis-badge expired">Not Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">15 Jan 2026</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Local Content Compliance Annual Report (before 30th Jan)</td><td style="font-size:10px;color:var(--text-muted)">Annual (before 30th Jan)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">30 Jan 2026</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Submission of CSR Plan to Local Municipal Council / Ward for the next year (befo</td><td style="font-size:10px;color:var(--text-muted)">Annual (before July)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">07 Jan 2026</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mines Closure Plan</td><td style="font-size:10px;color:var(--text-muted)">One-time, Review Every 3 yrs</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">04 Jan 2026</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Hydrogeological Investigation</td><td style="font-size:10px;color:var(--text-muted)">Every 3 yrs</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)"></td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Submission of compensation plan for the surface right owners within lease area t</td><td style="font-size:10px;color:var(--text-muted)">One-time, Review Every 3 yrs</td><td><span class="mis-badge expired">Not Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)"></td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Demarcation of lease boundary with coordinates displayed at site</td><td style="font-size:10px;color:var(--text-muted)">One-time. To be reviewed annually</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">15 Jan 2015</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Providing fence or rock bund along the lease boundary for prevention of unauthor</td><td style="font-size:10px;color:var(--text-muted)">One-time. To be reviewed annually</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)"></td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mandatory Insurance of own mining assets, covering- environmental damage, third </td><td style="font-size:10px;color:var(--text-muted)">Should cover the lease period</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)"></td><td style="font-size:10px;color:var(--text-muted)">Punit Aswala</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Monthly mining royalty returns in prescribed format</td><td style="font-size:10px;color:var(--text-muted)">Monthly (before 4th)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">12 Apr 2025</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Quarterly mining royalty returns prescribed format</td><td style="font-size:10px;color:var(--text-muted)">Quarterly - (Jan/Apr/July/Oct by 15th)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">15 Jan 2026</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Maintain the records of all the boreholes drilled within lease area</td><td style="font-size:10px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Display of Safety Signage at prominently and key locations as needed</td><td style="font-size:10px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge expired">Not Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Compliance to the Environmental Act</td><td style="font-size:10px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Maintain a distance of minimum 200 meters from any Govt. or public building alre</td><td style="font-size:10px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Maintain a distance of at least 1000 meters from any aerodrome or Helipad</td><td style="font-size:10px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Pollution control - Water sprinkling on all haul roads for dust suppression</td><td style="font-size:10px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">One operations start</td><td style="font-size:10px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Payment of Ushuru to local Municipal Council for transport od sand from Kijaka</td><td style="font-size:10px;color:var(--text-muted)">As & when required</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">As & when required</td><td style="font-size:10px;color:var(--text-muted)"></td></tr>
+      <tbody><tr><td style="white-space:normal;line-height:1.4;max-width:320px">License Type</td><td style="font-size:12px;color:var(--text-muted)">ML - Industrial Minerals</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)"></td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mining Lease (Date of Issue - 30/09/15)</td><td style="font-size:12px;color:var(--text-muted)">Every 10 Years</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">30 Sep 2025</td><td style="font-size:12px;color:var(--text-muted)">PSS Sajiv</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Rent @ US$ 10,120 or Tsh 25,603,600</td><td style="font-size:12px;color:var(--text-muted)">Annual</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">24 May 2026</td><td style="font-size:12px;color:var(--text-muted)">PSS Sajiv</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mining Royalty Returns</td><td style="font-size:12px;color:var(--text-muted)">Annual (before 15th Jan)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">15 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mining Plan Compliance Report (before 30th Jan)</td><td style="font-size:12px;color:var(--text-muted)">Annual (before 30th Jan)</td><td><span class="mis-badge expired">Not Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">30 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Local Content Implementation Plan (before 15th Jan)</td><td style="font-size:12px;color:var(--text-muted)">Annual (before 15th Jan)</td><td><span class="mis-badge expired">Not Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">15 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Local Content Compliance Annual Report (before 30th Jan)</td><td style="font-size:12px;color:var(--text-muted)">Annual (before 30th Jan)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">30 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Submission of CSR Plan to Local Municipal Council / Ward for the next year (befo</td><td style="font-size:12px;color:var(--text-muted)">Annual (before July)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">07 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mines Closure Plan</td><td style="font-size:12px;color:var(--text-muted)">One-time, Review Every 3 yrs</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">04 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Hydrogeological Investigation</td><td style="font-size:12px;color:var(--text-muted)">Every 3 yrs</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Submission of compensation plan for the surface right owners within lease area t</td><td style="font-size:12px;color:var(--text-muted)">One-time, Review Every 3 yrs</td><td><span class="mis-badge expired">Not Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Demarcation of lease boundary with coordinates displayed at site</td><td style="font-size:12px;color:var(--text-muted)">One-time. To be reviewed annually</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">15 Jan 2015</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Providing fence or rock bund along the lease boundary for prevention of unauthor</td><td style="font-size:12px;color:var(--text-muted)">One-time. To be reviewed annually</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mandatory Insurance of own mining assets, covering- environmental damage, third </td><td style="font-size:12px;color:var(--text-muted)">Should cover the lease period</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">Punit Aswala</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Monthly mining royalty returns in prescribed format</td><td style="font-size:12px;color:var(--text-muted)">Monthly (before 4th)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">12 Apr 2025</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Quarterly mining royalty returns prescribed format</td><td style="font-size:12px;color:var(--text-muted)">Quarterly - (Jan/Apr/July/Oct by 15th)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">15 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Maintain the records of all the boreholes drilled within lease area</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Display of Safety Signage at prominently and key locations as needed</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge expired">Not Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Compliance to the Environmental Act</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Maintain a distance of minimum 200 meters from any Govt. or public building alre</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Maintain a distance of at least 1000 meters from any aerodrome or Helipad</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Pollution control - Water sprinkling on all haul roads for dust suppression</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">One operations start</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Payment of Ushuru to local Municipal Council for transport od sand from Kijaka</td><td style="font-size:12px;color:var(--text-muted)">As & when required</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">As & when required</td><td style="font-size:12px;color:var(--text-muted)"></td></tr>
 </tbody>
     </table>
   </div>
@@ -1571,8 +1574,8 @@
   <div class="mis-sec-hdr">
     <i data-lucide="shield" class="mis-sec-icon"></i>
     <h3 class="mis-sec-title">PL/31929/25 — Tarawanda, Bagamoyo</h3>
-    <span style="margin-left:12px;font-size:10px;color:var(--text-muted)"> &nbsp;·&nbsp;  km²</span>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:11px">
+    <span style="margin-left:12px;font-size:12px;color:var(--text-muted)"> &nbsp;·&nbsp;  km²</span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px">
       <span style="color:#10B981;font-weight:700">0 Complied</span>
       <span style="color:#EF4444;font-weight:700">0 Not Complied</span>
       <span style="color:#D97706;font-weight:700">3 Partial</span>
@@ -1583,9 +1586,9 @@
   <div class="mis-table-wrap" style="max-height:380px">
     <table class="mis-table">
       <thead><tr><th>Compliance Requirement</th><th>Frequency</th><th>Status</th><th style="text-align:center">Due Next</th><th>Responsible</th></tr></thead>
-      <tbody><tr><td style="white-space:normal;line-height:1.4;max-width:320px">License Type</td><td style="font-size:10px;color:var(--text-muted)">ML - Industrial Minerals</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)"></td><td style="font-size:10px;color:var(--text-muted)"></td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Prospective License (Date of Issue - xxxxxxx)</td><td style="font-size:10px;color:var(--text-muted)">1st renewal 4 yrs, 2nd renewal 3 yrs, 3rd renewal 2 yrs, ext</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)"></td><td style="font-size:10px;color:var(--text-muted)">PSS Sajiv</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Rent @ Tsh 538,000</td><td style="font-size:10px;color:var(--text-muted)">Annual</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)"></td><td style="font-size:10px;color:var(--text-muted)">PSS Sajiv</td></tr>
+      <tbody><tr><td style="white-space:normal;line-height:1.4;max-width:320px">License Type</td><td style="font-size:12px;color:var(--text-muted)">ML - Industrial Minerals</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)"></td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Prospective License (Date of Issue - xxxxxxx)</td><td style="font-size:12px;color:var(--text-muted)">1st renewal 4 yrs, 2nd renewal 3 yrs, 3rd renewal 2 yrs, ext</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">PSS Sajiv</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Rent @ Tsh 538,000</td><td style="font-size:12px;color:var(--text-muted)">Annual</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">PSS Sajiv</td></tr>
 </tbody>
     </table>
   </div>
@@ -1594,8 +1597,8 @@
   <div class="mis-sec-hdr">
     <i data-lucide="shield" class="mis-sec-icon"></i>
     <h3 class="mis-sec-title">PL/11811/2022 — Kimbiji, Kigamboni</h3>
-    <span style="margin-left:12px;font-size:10px;color:var(--text-muted)"> &nbsp;·&nbsp;  km²</span>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:11px">
+    <span style="margin-left:12px;font-size:12px;color:var(--text-muted)"> &nbsp;·&nbsp;  km²</span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px">
       <span style="color:#10B981;font-weight:700">2 Complied</span>
       <span style="color:#EF4444;font-weight:700">0 Not Complied</span>
       <span style="color:#D97706;font-weight:700">1 Partial</span>
@@ -1606,9 +1609,9 @@
   <div class="mis-table-wrap" style="max-height:380px">
     <table class="mis-table">
       <thead><tr><th>Compliance Requirement</th><th>Frequency</th><th>Status</th><th style="text-align:center">Due Next</th><th>Responsible</th></tr></thead>
-      <tbody><tr><td style="white-space:normal;line-height:1.4;max-width:320px">License Type</td><td style="font-size:10px;color:var(--text-muted)">ML - Industrial Minerals</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)"></td><td style="font-size:10px;color:var(--text-muted)"></td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Prospective License (Date of Issue - 02/02/2022)</td><td style="font-size:10px;color:var(--text-muted)">1st renewal 4 yrs, 2nd renewal 3 yrs, 3rd renewal 2 yrs, ext</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">01 Feb 2026</td><td style="font-size:10px;color:var(--text-muted)">PSS Sajiv</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Payment @ US$ 1,140</td><td style="font-size:10px;color:var(--text-muted)">Annual</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:10px;color:var(--text-muted)">01 Feb 2026</td><td style="font-size:10px;color:var(--text-muted)">PSS Sajiv</td></tr>
+      <tbody><tr><td style="white-space:normal;line-height:1.4;max-width:320px">License Type</td><td style="font-size:12px;color:var(--text-muted)">ML - Industrial Minerals</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)"></td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Prospective License (Date of Issue - 02/02/2022)</td><td style="font-size:12px;color:var(--text-muted)">1st renewal 4 yrs, 2nd renewal 3 yrs, 3rd renewal 2 yrs, ext</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">01 Feb 2026</td><td style="font-size:12px;color:var(--text-muted)">PSS Sajiv</td></tr>
+<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Payment @ US$ 1,140</td><td style="font-size:12px;color:var(--text-muted)">Annual</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">01 Feb 2026</td><td style="font-size:12px;color:var(--text-muted)">PSS Sajiv</td></tr>
 </tbody>
     </table>
   </div>
@@ -1623,29 +1626,29 @@
       <div class="mis-table-wrap" style="max-height:420px">
         <table class="mis-table">
           <thead><tr><th>#</th><th>Legal Requirement</th><th>Frequency</th><th>Status</th></tr></thead>
-          <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4;max-width:360px">Mining Plan compliance report</td><td style="font-size:10px;color:var(--text-muted)">Every Year by 30th January</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>2</td><td style="white-space:normal;line-height:1.4;max-width:360px">Mining Lease</td><td style="font-size:10px;color:var(--text-muted)">Once in 10 Years</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>3</td><td style="white-space:normal;line-height:1.4;max-width:360px">Mines closure plan</td><td style="font-size:10px;color:var(--text-muted)">One time, Review once in 3 year</td><td><span class="mis-badge expiring">Partial</span></td></tr>
-<tr><td>4</td><td style="white-space:normal;line-height:1.4;max-width:360px">Hydrogeological investigation</td><td style="font-size:10px;color:var(--text-muted)">Every 3  years</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>5</td><td style="white-space:normal;line-height:1.4;max-width:360px">Demarcation of lease boundary with coordinates displayed at site</td><td style="font-size:10px;color:var(--text-muted)">One-time. To be reviewed annually</td><td><span class="mis-badge expiring">Partial</span></td></tr>
-<tr><td>6</td><td style="white-space:normal;line-height:1.4;max-width:360px">Providing fence or rock bund along the lease boundary for prevetion of unauthori</td><td style="font-size:10px;color:var(--text-muted)">One-time. To be reviewed annually</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>7</td><td style="white-space:normal;line-height:1.4;max-width:360px">Display of Safety Signage at prominently and key locations as needed</td><td style="font-size:10px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>8</td><td style="white-space:normal;line-height:1.4;max-width:360px">Submission of Annual Local Content implementation plan</td><td style="font-size:10px;color:var(--text-muted)">Every year by 15t January</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>9</td><td style="white-space:normal;line-height:1.4;max-width:360px">Submission of Local Content compliance annual report in prescribed format</td><td style="font-size:10px;color:var(--text-muted)">Everty year by 30th Jaunuary</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>10</td><td style="white-space:normal;line-height:1.4;max-width:360px">Monthly mining royalty returns in prescribed format</td><td style="font-size:10px;color:var(--text-muted)">Every Month before 4th</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>11</td><td style="white-space:normal;line-height:1.4;max-width:360px">Quarterly mining royalty returns prescribed format</td><td style="font-size:10px;color:var(--text-muted)">Jan/Apr/July/Oct by 15th</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>12</td><td style="white-space:normal;line-height:1.4;max-width:360px">Annual mining royalty returns prescribed format</td><td style="font-size:10px;color:var(--text-muted)">Every year by 15th January</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>13</td><td style="white-space:normal;line-height:1.4;max-width:360px">Annual land rent payment (Municipal Council)</td><td style="font-size:10px;color:var(--text-muted)">Every Year</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>14</td><td style="white-space:normal;line-height:1.4;max-width:360px">Payment of City Service Levy (Municipal Council)</td><td style="font-size:10px;color:var(--text-muted)">Quarterly - Jan/Apr/July/Oct by 15th</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>15</td><td style="white-space:normal;line-height:1.4;max-width:360px">Payment of Ushuru to local Municipal Council for transport od sand from Kijaka</td><td style="font-size:10px;color:var(--text-muted)">As & when required</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>16</td><td style="white-space:normal;line-height:1.4;max-width:360px">Maintain a distance of minimum 200 meters from any Govt. or public building alrt</td><td style="font-size:10px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>17</td><td style="white-space:normal;line-height:1.4;max-width:360px">Maintain a distance of atleast 1000 meters from any aerodrome or Helipad</td><td style="font-size:10px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>18</td><td style="white-space:normal;line-height:1.4;max-width:360px">Submission of compensation plan for the surface right owners within lease area t</td><td style="font-size:10px;color:var(--text-muted)">One time, Review once in 3 year</td><td><span class="mis-badge expired">Not Complied</span></td></tr>
-<tr><td>19</td><td style="white-space:normal;line-height:1.4;max-width:360px">Submission of CSR Plan approved by local municipal council / Kimbiji ward for th</td><td style="font-size:10px;color:var(--text-muted)">Every Year before July</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>20</td><td style="white-space:normal;line-height:1.4;max-width:360px">Pollution control - Water sprinkling on all haul roads for dust suppression</td><td style="font-size:10px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>21</td><td style="white-space:normal;line-height:1.4;max-width:360px">Mandatory insurance of own mining assets, to cover envronmental damage, thrird p</td><td style="font-size:10px;color:var(--text-muted)">Should cover the lease period</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>22</td><td style="white-space:normal;line-height:1.4;max-width:360px">Maintain the records of all the boreholes drilled within lease area</td><td style="font-size:10px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>23</td><td style="white-space:normal;line-height:1.4;max-width:360px">Compliance to the Environmental Act</td><td style="font-size:10px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td></tr>
+          <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4;max-width:360px">Mining Plan compliance report</td><td style="font-size:12px;color:var(--text-muted)">Every Year by 30th January</td><td><span class="mis-badge valid">Complied</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4;max-width:360px">Mining Lease</td><td style="font-size:12px;color:var(--text-muted)">Once in 10 Years</td><td><span class="mis-badge valid">Complied</span></td></tr>
+<tr><td>3</td><td style="white-space:normal;line-height:1.4;max-width:360px">Mines closure plan</td><td style="font-size:12px;color:var(--text-muted)">One time, Review once in 3 year</td><td><span class="mis-badge expiring">Partial</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4;max-width:360px">Hydrogeological investigation</td><td style="font-size:12px;color:var(--text-muted)">Every 3  years</td><td><span class="mis-badge valid">Complied</span></td></tr>
+<tr><td>5</td><td style="white-space:normal;line-height:1.4;max-width:360px">Demarcation of lease boundary with coordinates displayed at site</td><td style="font-size:12px;color:var(--text-muted)">One-time. To be reviewed annually</td><td><span class="mis-badge expiring">Partial</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4;max-width:360px">Providing fence or rock bund along the lease boundary for prevetion of unauthori</td><td style="font-size:12px;color:var(--text-muted)">One-time. To be reviewed annually</td><td><span class="mis-badge valid">Complied</span></td></tr>
+<tr><td>7</td><td style="white-space:normal;line-height:1.4;max-width:360px">Display of Safety Signage at prominently and key locations as needed</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td></tr>
+<tr><td>8</td><td style="white-space:normal;line-height:1.4;max-width:360px">Submission of Annual Local Content implementation plan</td><td style="font-size:12px;color:var(--text-muted)">Every year by 15t January</td><td><span class="mis-badge valid">Complied</span></td></tr>
+<tr><td>9</td><td style="white-space:normal;line-height:1.4;max-width:360px">Submission of Local Content compliance annual report in prescribed format</td><td style="font-size:12px;color:var(--text-muted)">Everty year by 30th Jaunuary</td><td><span class="mis-badge valid">Complied</span></td></tr>
+<tr><td>10</td><td style="white-space:normal;line-height:1.4;max-width:360px">Monthly mining royalty returns in prescribed format</td><td style="font-size:12px;color:var(--text-muted)">Every Month before 4th</td><td><span class="mis-badge valid">Complied</span></td></tr>
+<tr><td>11</td><td style="white-space:normal;line-height:1.4;max-width:360px">Quarterly mining royalty returns prescribed format</td><td style="font-size:12px;color:var(--text-muted)">Jan/Apr/July/Oct by 15th</td><td><span class="mis-badge valid">Complied</span></td></tr>
+<tr><td>12</td><td style="white-space:normal;line-height:1.4;max-width:360px">Annual mining royalty returns prescribed format</td><td style="font-size:12px;color:var(--text-muted)">Every year by 15th January</td><td><span class="mis-badge valid">Complied</span></td></tr>
+<tr><td>13</td><td style="white-space:normal;line-height:1.4;max-width:360px">Annual land rent payment (Municipal Council)</td><td style="font-size:12px;color:var(--text-muted)">Every Year</td><td><span class="mis-badge valid">Complied</span></td></tr>
+<tr><td>14</td><td style="white-space:normal;line-height:1.4;max-width:360px">Payment of City Service Levy (Municipal Council)</td><td style="font-size:12px;color:var(--text-muted)">Quarterly - Jan/Apr/July/Oct by 15th</td><td><span class="mis-badge valid">Complied</span></td></tr>
+<tr><td>15</td><td style="white-space:normal;line-height:1.4;max-width:360px">Payment of Ushuru to local Municipal Council for transport od sand from Kijaka</td><td style="font-size:12px;color:var(--text-muted)">As & when required</td><td><span class="mis-badge valid">Complied</span></td></tr>
+<tr><td>16</td><td style="white-space:normal;line-height:1.4;max-width:360px">Maintain a distance of minimum 200 meters from any Govt. or public building alrt</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td></tr>
+<tr><td>17</td><td style="white-space:normal;line-height:1.4;max-width:360px">Maintain a distance of atleast 1000 meters from any aerodrome or Helipad</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td></tr>
+<tr><td>18</td><td style="white-space:normal;line-height:1.4;max-width:360px">Submission of compensation plan for the surface right owners within lease area t</td><td style="font-size:12px;color:var(--text-muted)">One time, Review once in 3 year</td><td><span class="mis-badge expired">Not Complied</span></td></tr>
+<tr><td>19</td><td style="white-space:normal;line-height:1.4;max-width:360px">Submission of CSR Plan approved by local municipal council / Kimbiji ward for th</td><td style="font-size:12px;color:var(--text-muted)">Every Year before July</td><td><span class="mis-badge valid">Complied</span></td></tr>
+<tr><td>20</td><td style="white-space:normal;line-height:1.4;max-width:360px">Pollution control - Water sprinkling on all haul roads for dust suppression</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td></tr>
+<tr><td>21</td><td style="white-space:normal;line-height:1.4;max-width:360px">Mandatory insurance of own mining assets, to cover envronmental damage, thrird p</td><td style="font-size:12px;color:var(--text-muted)">Should cover the lease period</td><td><span class="mis-badge valid">Complied</span></td></tr>
+<tr><td>22</td><td style="white-space:normal;line-height:1.4;max-width:360px">Maintain the records of all the boreholes drilled within lease area</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td></tr>
+<tr><td>23</td><td style="white-space:normal;line-height:1.4;max-width:360px">Compliance to the Environmental Act</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td></tr>
 </tbody>
         </table>
       </div>
@@ -1659,7 +1662,7 @@
       <div class="mis-sec-hdr">
         <i data-lucide="scale" class="mis-sec-icon"></i>
         <h3 class="mis-sec-title">Ongoing Legal Cases</h3>
-        <span id="legal-count-lbl" style="margin-left:6px;font-size:10px;color:var(--text-muted)">(4 cases)</span>
+        <span id="legal-count-lbl" style="margin-left:6px;font-size:12px;color:var(--text-muted)">(4 cases)</span>
       </div>
       <div class="mis-table-wrap">
         <table class="mis-table">
@@ -1671,40 +1674,40 @@
       <td><strong>WAMILUMA</strong></td>
       <td><span class="mis-tag">COMPANY</span></td>
       <td>DISPATCH</td>
-      <td style="white-space:normal;line-height:1.4;max-width:280px;font-size:10.5px">FRAUD CASE AT WEIGHBRIDGE-2017</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">Sep 2022</td>
-      <td style="font-size:10px">COURT OF APPEAL</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted);font-weight:400">AWAITED</td>
+      <td style="white-space:normal;line-height:1.4;max-width:280px;font-size:12px">FRAUD CASE AT WEIGHBRIDGE-2017</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">Sep 2022</td>
+      <td style="font-size:12px">COURT OF APPEAL</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted);font-weight:400">AWAITED</td>
     </tr>
 <tr>
       <td>2</td>
       <td><strong>WAMILUMA</strong></td>
       <td><span class="mis-tag">COMPANY</span></td>
       <td>DISPATCH</td>
-      <td style="white-space:normal;line-height:1.4;max-width:280px;font-size:10.5px">EXECUTION OF AWARD</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">Apr 2022</td>
-      <td style="font-size:10px">RESIDENT MAGISTRATES COURT- AT KISUTU</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted);font-weight:400">ON HOLD TILL FURTHER NOTIFICATION</td>
+      <td style="white-space:normal;line-height:1.4;max-width:280px;font-size:12px">EXECUTION OF AWARD</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">Apr 2022</td>
+      <td style="font-size:12px">RESIDENT MAGISTRATES COURT- AT KISUTU</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted);font-weight:400">ON HOLD TILL FURTHER NOTIFICATION</td>
     </tr>
 <tr>
       <td>3</td>
       <td><strong>WAMILUMA</strong></td>
       <td><span class="mis-tag">COMPANY</span></td>
       <td>DISPATCH</td>
-      <td style="white-space:normal;line-height:1.4;max-width:280px;font-size:10.5px">BILL OF COSTS</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">Apr 2022</td>
-      <td style="font-size:10px">HIGH COURT OF TANZANIA - HON. NOMGWA, DR</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted);font-weight:400"></td>
+      <td style="white-space:normal;line-height:1.4;max-width:280px;font-size:12px">BILL OF COSTS</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">Apr 2022</td>
+      <td style="font-size:12px">HIGH COURT OF TANZANIA - HON. NOMGWA, DR</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted);font-weight:400"></td>
     </tr>
 <tr>
       <td>4</td>
       <td><strong>ASIA ALLY B. URASSA</strong></td>
       <td><span class="mis-tag">LOCAL STAKEHOLDER</span></td>
       <td>QUARRYING</td>
-      <td style="white-space:normal;line-height:1.4;max-width:280px;font-size:10.5px">COMPENSATION OF TSH 300,000,000 FOR LAND BOUGHT BY LAKE CEMENT FROM SUZANA HUSSE</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">Aug 2025</td>
-      <td style="font-size:10px">DISTRICT LAND AND HOUSING TRIBUNAL - KIGAMBONI</td>
-      <td class="tc" style="font-size:10px;color:#EF4444;font-weight:700">06.03.2026 @ 09:30am</td>
+      <td style="white-space:normal;line-height:1.4;max-width:280px;font-size:12px">COMPENSATION OF TSH 300,000,000 FOR LAND BOUGHT BY LAKE CEMENT FROM SUZANA HUSSE</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">Aug 2025</td>
+      <td style="font-size:12px">DISTRICT LAND AND HOUSING TRIBUNAL - KIGAMBONI</td>
+      <td class="tc" style="font-size:12px;color:#EF4444;font-weight:700">06.03.2026 @ 09:30am</td>
     </tr>
 </tbody>
         </table>
@@ -1726,7 +1729,7 @@
       <div class="mis-sec-hdr">
         <i data-lucide="file-check" class="mis-sec-icon"></i>
         <h3 class="mis-sec-title">Insurance Claims Register</h3>
-        <span id="ins-count-lbl" style="margin-left:6px;font-size:10px;color:var(--text-muted)">(23 claims)</span>
+        <span id="ins-count-lbl" style="margin-left:6px;font-size:12px;color:var(--text-muted)">(23 claims)</span>
       </div>
       <div class="mis-table-wrap" style="max-height:560px">
         <table class="mis-table">
@@ -1735,7 +1738,7 @@
           </thead>
           <tbody><tr>
       <td>1</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">01 May 2023</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">01 May 2023</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">JUPITER BUSINESS SYSTEM LTD</td>
       <td class="tr">TSH 27,466</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 10,000</td>
@@ -1744,7 +1747,7 @@
     </tr>
 <tr>
       <td>2</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">20 Sep 2023</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">20 Sep 2023</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">T922 DSZ ACCIDENT CLAIM</td>
       <td class="tr">TSH 8,202,622</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 8,202,622</td>
@@ -1753,7 +1756,7 @@
     </tr>
 <tr>
       <td>3</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">20 Sep 2023</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">20 Sep 2023</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">T297 DBZ -TRUCK ACCIDENT CLAIM</td>
       <td class="tr">TSH 12,137,480</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 11,983,449</td>
@@ -1762,7 +1765,7 @@
     </tr>
 <tr>
       <td>4</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">17 Nov 2023</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">17 Nov 2023</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">DAMAGE TO CRANE</td>
       <td class="tr">TSH 48,521,600</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 48,521,600</td>
@@ -1771,7 +1774,7 @@
     </tr>
 <tr>
       <td>5</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">27 Nov 2023</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">27 Nov 2023</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">THEFT OF CEMENT 600 BAGS</td>
       <td class="tr">TSH 7,971,803</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 7,971,803</td>
@@ -1780,7 +1783,7 @@
     </tr>
 <tr>
       <td>6</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">18 Jan 2024</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">18 Jan 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">ACCIDENT - T680DRG / T804DCT</td>
       <td class="tr">TSH 36,146,859</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 36,146,859</td>
@@ -1789,7 +1792,7 @@
     </tr>
 <tr>
       <td>7</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">01 Feb 2024</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">01 Feb 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">MATERIAL DAMAGE IN TRANSIT (SEA)</td>
       <td class="tr" style="color:#3B82F6">USD 4,409</td>
       <td class="tr" style="color:#10B981;font-weight:600">USD 4,409</td>
@@ -1798,7 +1801,7 @@
     </tr>
 <tr>
       <td>8</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">08 Mar 2024</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">08 Mar 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">THEFT/FIDELITY (Salma)</td>
       <td class="tr">TSH 10,000</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 10,000</td>
@@ -1807,7 +1810,7 @@
     </tr>
 <tr>
       <td>9</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">11 May 2024</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">11 May 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">THEFT CASE T741/T810 DCT-EMMANUEL KATIGULA (VEHICLE PARTS MISSING)</td>
       <td class="tr">TSH 12,051,798</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 12,051,798</td>
@@ -1816,7 +1819,7 @@
     </tr>
 <tr>
       <td>10</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">17 May 2024</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">17 May 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">600 cement bags theft of GSM INV/2024/04/00535 (T736 DCF & T786 DCT)</td>
       <td class="tr">TSH 9,105,000</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 7,769,700</td>
@@ -1825,7 +1828,7 @@
     </tr>
 <tr>
       <td>11</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">03 Jun 2024</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">03 Jun 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">Third Party Cliam : Our Truck met accident by climbing hill and hit a </td>
       <td class="tr">—</td>
       <td class="tr" style="color:#10B981;font-weight:600">—</td>
@@ -1834,7 +1837,7 @@
     </tr>
 <tr>
       <td>12</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">01 Aug 2024</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">01 Aug 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">Sweeping Truck - Internal Accident Loss</td>
       <td class="tr">TSH 1,457,300</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 1,457,300</td>
@@ -1843,7 +1846,7 @@
     </tr>
 <tr>
       <td>13</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">19 Nov 2024</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">19 Nov 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">HARINARAYAN PEDDA- Life insurance</td>
       <td class="tr">TSH 42,000,000</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 42,000,000</td>
@@ -1852,7 +1855,7 @@
     </tr>
 <tr>
       <td>14</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">19 Nov 2024</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">19 Nov 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">HARINARAYAN PEDDA- Medical Insurance</td>
       <td class="tr">TSH 1,000,000</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 1,000,000</td>
@@ -1861,7 +1864,7 @@
     </tr>
 <tr>
       <td>15</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">28 Nov 2024</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">28 Nov 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">Diamond Cutting tool Claim</td>
       <td class="tr">TSH 21,220,408</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 21,220,408</td>
@@ -1870,7 +1873,7 @@
     </tr>
 <tr>
       <td>16</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">28 Nov 2024</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">28 Nov 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">550 MT Crane Claim- T727 EDH</td>
       <td class="tr">TSH 17,819,133</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 17,819,133</td>
@@ -1879,7 +1882,7 @@
     </tr>
 <tr>
       <td>17</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">28 Nov 2024</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">28 Nov 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">70 MT Zoomlian Crane Claim</td>
       <td class="tr">TSH 21,224,129</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 21,224,129</td>
@@ -1888,7 +1891,7 @@
     </tr>
 <tr>
       <td>18</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">28 Dec 2024</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">28 Dec 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">T741 DCF, Mvuti, repair</td>
       <td class="tr">TSH 6,218,010</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 6,218,010</td>
@@ -1897,7 +1900,7 @@
     </tr>
 <tr>
       <td>19</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">11 Feb 2025</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">11 Feb 2025</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">Clinker - Water Affected Cargo at Port - 196 MT</td>
       <td class="tr">TSH 28,672,004</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 28,672,004</td>
@@ -1906,7 +1909,7 @@
     </tr>
 <tr>
       <td>20</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">01 Mar 2025</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">01 Mar 2025</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">T741 DCF, Hydraulic boom broke</td>
       <td class="tr">TSH 5,900,000</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 5,900,000</td>
@@ -1915,7 +1918,7 @@
     </tr>
 <tr>
       <td>21</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">04 Jul 2025</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">04 Jul 2025</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">T273 DZX Horse repair</td>
       <td class="tr">TSH 50,157,088</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 50,157,088</td>
@@ -1924,7 +1927,7 @@
     </tr>
 <tr>
       <td>22</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">13 Aug 2025</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">13 Aug 2025</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">T796 DCT Trailer</td>
       <td class="tr">TSH 2,844,200</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 2,844,200</td>
@@ -1933,7 +1936,7 @@
     </tr>
 <tr>
       <td>23</td>
-      <td class="tc" style="font-size:10px;color:var(--text-muted)">16 Sep 2025</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">16 Sep 2025</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">T275 EJP</td>
       <td class="tr">TSH 50,718,582</td>
       <td class="tr" style="color:#10B981;font-weight:600">TSH 50,718,582</td>
@@ -1950,7 +1953,7 @@
               <td></td>
             </tr>
             <tr>
-              <td colspan="7" style="padding:8px 14px;font-size:10px;color:var(--text-muted);font-style:italic;background:#F8FAFC;border-top:1px solid var(--border)">
+              <td colspan="7" style="padding:8px 14px;font-size:12px;color:var(--text-muted);font-style:italic;background:#F8FAFC;border-top:1px solid var(--border)">
                 * TSH totals exclude Claim #7 (Material Damage in Transit — USD 4,409). USD amounts shown in blue.
               </td>
             </tr>
@@ -1989,35 +1992,35 @@
   <div class="mis-sec-hdr">
     <i data-lucide="layers" class="mis-sec-icon"></i>
     <h3 class="mis-sec-title">Physical Stock Audit — 20 Oct 2025</h3>
-    <span style="margin-left:8px;font-size:10px;color:#D97706;font-weight:600">⚑ Data is 8 months old</span>
-    <span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--navy)">Grand Total: 52,768.6 MT</span>
+    <span style="margin-left:8px;font-size:12px;color:#D97706;font-weight:600">⚑ Data is 8 months old</span>
+    <span style="margin-left:auto;font-size:12px;font-weight:700;color:var(--navy)">Grand Total: 52,768.6 MT</span>
   </div>
   <div class="mis-table-wrap">
     <table class="mis-table">
       <thead><tr><th>Material</th><th>Heap / Location Breakdown</th><th style="text-align:right">Physical Total (MT)</th><th style="text-align:center">Odoo System</th></tr></thead>
       <tbody><tr>
           <td><strong>Iron Ore</strong></td>
-          <td style="font-size:10px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Near yard area Heap-1 (1,496 MT)</td>
+          <td style="font-size:12px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Near yard area Heap-1 (1,496 MT)</td>
           <td class="tr" style="font-weight:700;color:var(--navy)">1,514.0 MT</td>
           <td class="tc">—</td>
         </tr>
 <tr>
           <td><strong>Clinker</strong></td>
-          <td style="font-size:10px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Clinker Stock Pile (19,784 MT); Gypsum shed  Size L 50 M x W 20 M x (1,299 MT); Mining yard (2,822 MT)</td>
+          <td style="font-size:12px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Clinker Stock Pile (19,784 MT); Gypsum shed  Size L 50 M x W 20 M x (1,299 MT); Mining yard (2,822 MT)</td>
           <td class="tr" style="font-weight:700;color:var(--navy)">24,204.3 MT</td>
-          <td class="tc"><span style="color:#EF4444;font-size:10px">Sys:23,373 Δ+831</span></td>
+          <td class="tc"><span style="color:#EF4444;font-size:12px">Sys:23,373 Δ+831</span></td>
         </tr>
 <tr>
           <td><strong>Coal</strong></td>
-          <td style="font-size:10px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Open Yard-Heap-1 (7,262 MT); Open Yard-Heap-2 (5,542 MT); Coal Shed Heap-1 Size L 90 M x W 35 (5,905 MT); Coal Shed Heap-1 (2,940 MT)</td>
+          <td style="font-size:12px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Open Yard-Heap-1 (7,262 MT); Open Yard-Heap-2 (5,542 MT); Coal Shed Heap-1 Size L 90 M x W 35 (5,905 MT); Coal Shed Heap-1 (2,940 MT)</td>
           <td class="tr" style="font-weight:700;color:var(--navy)">21,698.9 MT</td>
-          <td class="tc"><span style="color:#EF4444;font-size:10px">Sys:20,090 Δ+1,609</span></td>
+          <td class="tc"><span style="color:#EF4444;font-size:12px">Sys:20,090 Δ+1,609</span></td>
         </tr>
 <tr>
           <td><strong>Gypsum</strong></td>
-          <td style="font-size:10px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">New yard Heap-1 (4,468 MT); Heap-2 (680 MT); Gypsum powder (150 MT)</td>
+          <td style="font-size:12px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">New yard Heap-1 (4,468 MT); Heap-2 (680 MT); Gypsum powder (150 MT)</td>
           <td class="tr" style="font-weight:700;color:var(--navy)">5,351.4 MT</td>
-          <td class="tc"><span style="color:#EF4444;font-size:10px">Sys:4,889 Δ+462</span></td>
+          <td class="tc"><span style="color:#EF4444;font-size:12px">Sys:4,889 Δ+462</span></td>
         </tr>
 </tbody>
     </table>
@@ -2027,35 +2030,35 @@
   <div class="mis-sec-hdr">
     <i data-lucide="layers" class="mis-sec-icon"></i>
     <h3 class="mis-sec-title">Physical Stock Audit — 09 Jul 2025</h3>
-    <span style="margin-left:8px;font-size:10px;color:#D97706;font-weight:600">⚑ Data is 11 months old</span>
-    <span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--navy)">Grand Total: 35,126.6 MT</span>
+    <span style="margin-left:8px;font-size:12px;color:#D97706;font-weight:600">⚑ Data is 11 months old</span>
+    <span style="margin-left:auto;font-size:12px;font-weight:700;color:var(--navy)">Grand Total: 35,126.6 MT</span>
   </div>
   <div class="mis-table-wrap">
     <table class="mis-table">
       <thead><tr><th>Material</th><th>Heap / Location Breakdown</th><th style="text-align:right">Physical Total (MT)</th><th style="text-align:center">Odoo System</th></tr></thead>
       <tbody><tr>
           <td><strong>Iron Ore</strong></td>
-          <td style="font-size:10px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Near yard area Heap-1 (6,600 MT)</td>
+          <td style="font-size:12px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Near yard area Heap-1 (6,600 MT)</td>
           <td class="tr" style="font-weight:700;color:var(--navy)">6,624.0 MT</td>
           <td class="tc">—</td>
         </tr>
 <tr>
           <td><strong>Clinker</strong></td>
-          <td style="font-size:10px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Clinker Stock Pile (1,411 MT)</td>
+          <td style="font-size:12px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Clinker Stock Pile (1,411 MT)</td>
           <td class="tr" style="font-weight:700;color:var(--navy)">1,695.2 MT</td>
-          <td class="tc"><span style="color:#EF4444;font-size:10px">Sys:1,122 Δ+573</span></td>
+          <td class="tc"><span style="color:#EF4444;font-size:12px">Sys:1,122 Δ+573</span></td>
         </tr>
 <tr>
           <td><strong>Coal</strong></td>
-          <td style="font-size:10px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Open Yard-Heap-1 (2,867 MT); Open Yard-Heap-2 (399 MT); Open Yard-Heap-3 (5,998 MT); Open Yard-Heap-4 (259 MT); Open Yard-Heap-5 (346 MT); Coal Shed Heap-1 (8,036 MT); Coal Shed Heap-1 (2,016 MT)</td>
+          <td style="font-size:12px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Open Yard-Heap-1 (2,867 MT); Open Yard-Heap-2 (399 MT); Open Yard-Heap-3 (5,998 MT); Open Yard-Heap-4 (259 MT); Open Yard-Heap-5 (346 MT); Coal Shed Heap-1 (8,036 MT); Coal Shed Heap-1 (2,016 MT)</td>
           <td class="tr" style="font-weight:700;color:var(--navy)">19,971.0 MT</td>
-          <td class="tc"><span style="color:#EF4444;font-size:10px">Sys:18,774 Δ+1,197</span></td>
+          <td class="tc"><span style="color:#EF4444;font-size:12px">Sys:18,774 Δ+1,197</span></td>
         </tr>
 <tr>
           <td><strong>Gypsum</strong></td>
-          <td style="font-size:10px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">New yard Heap-1 (5,601 MT); Gypsum powder (1,200 MT)</td>
+          <td style="font-size:12px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">New yard Heap-1 (5,601 MT); Gypsum powder (1,200 MT)</td>
           <td class="tr" style="font-weight:700;color:var(--navy)">6,836.4 MT</td>
-          <td class="tc"><span style="color:#EF4444;font-size:10px">Sys:5,701 Δ+1,136</span></td>
+          <td class="tc"><span style="color:#EF4444;font-size:12px">Sys:5,701 Δ+1,136</span></td>
         </tr>
 </tbody>
     </table>
@@ -2063,7 +2066,7 @@
 </div>
 
     <!-- Inventory closing values -->
-    <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:12px 18px;margin-bottom:14px;display:flex;align-items:center;gap:10px"><i data-lucide="upload" style="width:15px;height:15px;color:#3B82F6;flex-shrink:0"></i><span style="font-size:11px;color:#1E40AF"><strong>To update stock data:</strong> Replace the Excel file <code style="background:#DBEAFE;padding:1px 5px;border-radius:3px">M - 12 Stock Audit Report - Raw Materials.xlsx</code> and re-run the build script.</span></div>
+    <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:12px 18px;margin-bottom:14px;display:flex;align-items:center;gap:10px"><i data-lucide="upload" style="width:15px;height:15px;color:#3B82F6;flex-shrink:0"></i><span style="font-size:12px;color:#1E40AF"><strong>To update stock data:</strong> Replace the Excel file <code style="background:#DBEAFE;padding:1px 5px;border-radius:3px">M - 12 Stock Audit Report - Raw Materials.xlsx</code> and re-run the build script.</span></div>
 <div class="mis-section">
       <div class="mis-sec-hdr">
         <i data-lucide="database" class="mis-sec-icon"></i>
@@ -2072,17 +2075,17 @@
       <div class="mis-table-wrap" style="max-height:420px">
         <table class="mis-table">
           <thead><tr><th>Material</th><th style="text-align:right">Closing Qty</th><th style="text-align:right">Closing Value</th></tr></thead>
-          <tbody><tr style="background:#F8FAFC;font-weight:700"><td colspan="3" style="padding:8px 14px;border-top:2px solid var(--border);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted)">08-01-2026 to 09-01-2026</td></tr>
+          <tbody><tr style="background:#F8FAFC;font-weight:700"><td colspan="3" style="padding:8px 14px;border-top:2px solid var(--border);border-bottom:1px solid var(--border);font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted)">08-01-2026 to 09-01-2026</td></tr>
 <tr><td>COAL</td><td class="tr">20,513.3 MT</td><td class="tr">—</td></tr>
 <tr><td>GYPSUM</td><td class="tr">2,148.9 MT</td><td class="tr">—</td></tr>
 <tr><td>IRON ORE</td><td class="tr">3,118.7 MT</td><td class="tr">—</td></tr>
 <tr><td>CLINKER SPG</td><td class="tr">2,418.1 MT</td><td class="tr">—</td></tr>
-<tr style="background:#F8FAFC;font-weight:700"><td colspan="3" style="padding:8px 14px;border-top:2px solid var(--border);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted)">02-02-2026 to 03-02-2026</td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td colspan="3" style="padding:8px 14px;border-top:2px solid var(--border);border-bottom:1px solid var(--border);font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted)">02-02-2026 to 03-02-2026</td></tr>
 <tr><td>COAL</td><td class="tr">23,959.1 MT</td><td class="tr">TSH 5,165M</td></tr>
 <tr><td>GYPSUM</td><td class="tr">5,588.0 MT</td><td class="tr">TSH 630M</td></tr>
 <tr><td>IRON ORE</td><td class="tr">1,486.7 MT</td><td class="tr">TSH 138M</td></tr>
 <tr><td>CLINKER SPG</td><td class="tr">3,858.6 MT</td><td class="tr">TSH 784M</td></tr>
-<tr style="background:#F8FAFC;font-weight:700"><td colspan="3" style="padding:8px 14px;border-top:2px solid var(--border);border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted)">30-03-2026 to 31-03-2026</td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td colspan="3" style="padding:8px 14px;border-top:2px solid var(--border);border-bottom:1px solid var(--border);font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted)">30-03-2026 to 31-03-2026</td></tr>
 <tr><td>COAL</td><td class="tr">28,619.9 MT</td><td class="tr">TSH 5,932M</td></tr>
 <tr><td>GYPSUM</td><td class="tr">7,445.4 MT</td><td class="tr">TSH 835M</td></tr>
 <tr><td>IRON ORE</td><td class="tr">5,365.7 MT</td><td class="tr">TSH 533M</td></tr>
@@ -2469,7 +2472,7 @@
       <td class="tc" style="color:#F59E0B">1</td>
       <td class="tc" style="color:#94A3B8">—</td>
       <td class="tc"><span style="color:#EF4444;font-weight:700">1 ⚠</span></td>
-      <td style="font-size:10px;color:var(--text-muted)"></td>
+      <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
 <tr style="background:#FFF7ED">
       <td>Nov-2025</td>
@@ -2479,7 +2482,7 @@
       <td class="tc" style="color:#F59E0B">—</td>
       <td class="tc" style="color:#94A3B8">—</td>
       <td class="tc"><span style="color:#EF4444;font-weight:700">2 ⚠</span></td>
-      <td style="font-size:10px;color:var(--text-muted)"></td>
+      <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
 <tr style="background:#FFF7ED">
       <td>Dec-2025</td>
@@ -2489,7 +2492,7 @@
       <td class="tc" style="color:#F59E0B">2</td>
       <td class="tc" style="color:#94A3B8">—</td>
       <td class="tc"><span style="color:#EF4444;font-weight:700">2 ⚠</span></td>
-      <td style="font-size:10px;color:var(--text-muted)"></td>
+      <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
 <tr>
       <td>Jan-2026</td>
@@ -2499,7 +2502,7 @@
       <td class="tc" style="color:#F59E0B">—</td>
       <td class="tc" style="color:#94A3B8">—</td>
       <td class="tc"><span style="color:var(--text-muted)">0</span></td>
-      <td style="font-size:10px;color:var(--text-muted)"></td>
+      <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
 <tr style="background:#FFF7ED">
       <td>Feb-2026</td>
@@ -2509,7 +2512,7 @@
       <td class="tc" style="color:#F59E0B">—</td>
       <td class="tc" style="color:#94A3B8">1</td>
       <td class="tc"><span style="color:#EF4444;font-weight:700">1 ⚠</span></td>
-      <td style="font-size:10px;color:var(--text-muted)">BOLT HT ALLEN HEAD M20 X 50MM FULL THREAD GRADE 8.8 (3 Nos Shorte</td>
+      <td style="font-size:12px;color:var(--text-muted)">BOLT HT ALLEN HEAD M20 X 50MM FULL THREAD GRADE 8.8 (3 Nos Shorte</td>
     </tr>
 <tr>
       <td>Mar-2026</td>
@@ -2519,7 +2522,7 @@
       <td class="tc" style="color:#F59E0B">—</td>
       <td class="tc" style="color:#94A3B8">—</td>
       <td class="tc"><span style="color:var(--text-muted)">0</span></td>
-      <td style="font-size:10px;color:var(--text-muted)"></td>
+      <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
 <tr>
       <td>Apr-2026</td>
@@ -2529,7 +2532,7 @@
       <td class="tc" style="color:#F59E0B">—</td>
       <td class="tc" style="color:#94A3B8">—</td>
       <td class="tc"><span style="color:var(--text-muted)">0</span></td>
-      <td style="font-size:10px;color:var(--text-muted)"></td>
+      <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
 <tr>
       <td>May-2026</td>
@@ -2539,7 +2542,7 @@
       <td class="tc" style="color:#F59E0B">—</td>
       <td class="tc" style="color:#94A3B8">—</td>
       <td class="tc"><span style="color:var(--text-muted)">0</span></td>
-      <td style="font-size:10px;color:var(--text-muted)"></td>
+      <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
 <tr>
       <td>Jun-2026</td>
@@ -2549,7 +2552,7 @@
       <td class="tc" style="color:#F59E0B">—</td>
       <td class="tc" style="color:#94A3B8">—</td>
       <td class="tc"><span style="color:var(--text-muted)">0</span></td>
-      <td style="font-size:10px;color:var(--text-muted)"></td>
+      <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
 <tr>
       <td>Jul-2026</td>
@@ -2559,7 +2562,7 @@
       <td class="tc" style="color:#F59E0B">—</td>
       <td class="tc" style="color:#94A3B8">—</td>
       <td class="tc"><span style="color:var(--text-muted)">0</span></td>
-      <td style="font-size:10px;color:var(--text-muted)"></td>
+      <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
 <tr>
       <td>Aug-2026</td>
@@ -2569,7 +2572,7 @@
       <td class="tc" style="color:#F59E0B">—</td>
       <td class="tc" style="color:#94A3B8">—</td>
       <td class="tc"><span style="color:var(--text-muted)">0</span></td>
-      <td style="font-size:10px;color:var(--text-muted)"></td>
+      <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
 <tr>
       <td>Sep-2026</td>
@@ -2579,7 +2582,7 @@
       <td class="tc" style="color:#F59E0B">—</td>
       <td class="tc" style="color:#94A3B8">—</td>
       <td class="tc"><span style="color:var(--text-muted)">0</span></td>
-      <td style="font-size:10px;color:var(--text-muted)"></td>
+      <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
 </tbody>
             </table>
@@ -2602,14 +2605,14 @@
       <i data-lucide="alert-triangle" style="width:16px;height:16px;color:#DC2626;flex-shrink:0"></i>
       <div>
         <strong style="color:#DC2626;font-size:12px">6 AMC contracts have expired</strong>
-        <span style="color:#7F1D1D;font-size:11px;margin-left:8px">— verify renewal status with respective departments before next service visit</span>
+        <span style="color:#7F1D1D;font-size:12px;margin-left:8px">— verify renewal status with respective departments before next service visit</span>
       </div>
     </div>
     <div class="mis-section">
       <div class="mis-sec-hdr">
         <i data-lucide="wrench" class="mis-sec-icon"></i>
         <h3 class="mis-sec-title">Annual Maintenance Contracts</h3>
-        <span id="amc-count-lbl" style="margin-left:6px;font-size:10px;color:var(--text-muted)">(13)</span>
+        <span id="amc-count-lbl" style="margin-left:6px;font-size:12px;color:var(--text-muted)">(13)</span>
       </div>
       <div class="mis-table-wrap">
         <table class="mis-table" id="store-amc">
@@ -2620,143 +2623,143 @@
       <td>1</td>
       <td>QC</td>
       <td><strong>Avantgarde INC FZCO</strong></td>
-      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">XRF Analyser</td>
-      <td class="tc" style="font-size:10px">01.04.2025</td>
-      <td class="tc" style="font-size:10px">31.03.2026</td>
-      <td style="font-size:10px;color:var(--text-muted)">1 PM & 1 BM</td>
-      <td class="tr" style="font-size:10.5px">USD 11,764</td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:12px">XRF Analyser</td>
+      <td class="tc" style="font-size:12px">01.04.2025</td>
+      <td class="tc" style="font-size:12px">31.03.2026</td>
+      <td style="font-size:12px;color:var(--text-muted)">1 PM & 1 BM</td>
+      <td class="tr" style="font-size:12px">USD 11,764</td>
       <td class="tc"><span class="mis-badge expired">Expired</span></td>
     </tr>
 <tr>
       <td>2</td>
       <td>Powerplant</td>
       <td><strong>Car & General Trading Ltd</strong></td>
-      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">CPP - DG Maintenance - 3 Nos (1.5MW Each) + Kiln DG (1 No)</td>
-      <td class="tc" style="font-size:10px">18.03.2025</td>
-      <td class="tc" style="font-size:10px">17.03.2026</td>
-      <td style="font-size:10px;color:var(--text-muted)">2 Visits Per DG & 2 Inspection Visits / Year</td>
-      <td class="tr" style="font-size:10.5px">TSH 9,950,000</td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:12px">CPP - DG Maintenance - 3 Nos (1.5MW Each) + Kiln DG (1 No)</td>
+      <td class="tc" style="font-size:12px">18.03.2025</td>
+      <td class="tc" style="font-size:12px">17.03.2026</td>
+      <td style="font-size:12px;color:var(--text-muted)">2 Visits Per DG & 2 Inspection Visits / Year</td>
+      <td class="tr" style="font-size:12px">TSH 9,950,000</td>
       <td class="tc"><span class="mis-badge expired">Expired</span></td>
     </tr>
 <tr>
       <td>3</td>
       <td>E&I</td>
       <td><strong>Endeavour Software Solutions Limited</strong></td>
-      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">Time & Attendance System</td>
-      <td class="tc" style="font-size:10px">01.06.2025</td>
-      <td class="tc" style="font-size:10px">31.05.2026</td>
-      <td style="font-size:10px;color:var(--text-muted)">Online (Need Based Visits)</td>
-      <td class="tr" style="font-size:10.5px">TSH 5,562,000</td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:12px">Time & Attendance System</td>
+      <td class="tc" style="font-size:12px">01.06.2025</td>
+      <td class="tc" style="font-size:12px">31.05.2026</td>
+      <td style="font-size:12px;color:var(--text-muted)">Online (Need Based Visits)</td>
+      <td class="tr" style="font-size:12px">TSH 5,562,000</td>
       <td class="tc"><span class="mis-badge expired">Expired</span></td>
     </tr>
 <tr>
       <td>4</td>
       <td>E&I</td>
       <td><strong>Endel Tanzania Limited</strong></td>
-      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">5 x Weigh Bridge & 3 x Platform Scales</td>
-      <td class="tc" style="font-size:10px">01.11.2025</td>
-      <td class="tc" style="font-size:10px">30.10.2026</td>
-      <td style="font-size:10px;color:var(--text-muted)">2</td>
-      <td class="tr" style="font-size:10.5px">TSH 13,419,000</td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:12px">5 x Weigh Bridge & 3 x Platform Scales</td>
+      <td class="tc" style="font-size:12px">01.11.2025</td>
+      <td class="tc" style="font-size:12px">30.10.2026</td>
+      <td style="font-size:12px;color:var(--text-muted)">2</td>
+      <td class="tr" style="font-size:12px">TSH 13,419,000</td>
       <td class="tc"><span class="mis-badge valid">Active</span></td>
     </tr>
 <tr>
       <td>5</td>
       <td>E&I</td>
       <td><strong>I Magic Solution</strong></td>
-      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">RFID System for WB1, WB2, MInes WB1 & WB2 and 02 nos Of Packer Sy</td>
-      <td class="tc" style="font-size:10px">01.08.2025</td>
-      <td class="tc" style="font-size:10px">31.07.2026</td>
-      <td style="font-size:10px;color:var(--text-muted)">Online (No Visit)</td>
-      <td class="tr" style="font-size:10.5px">USD 2,353</td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:12px">RFID System for WB1, WB2, MInes WB1 & WB2 and 02 nos Of Packer Sy</td>
+      <td class="tc" style="font-size:12px">01.08.2025</td>
+      <td class="tc" style="font-size:12px">31.07.2026</td>
+      <td style="font-size:12px;color:var(--text-muted)">Online (No Visit)</td>
+      <td class="tr" style="font-size:12px">USD 2,353</td>
       <td class="tc"><span class="mis-badge expiring">Expiring</span></td>
     </tr>
 <tr>
       <td>6</td>
       <td>E&I</td>
       <td><strong>Pinnacle Computer Systems LLC</strong></td>
-      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">Orion ERP</td>
-      <td class="tc" style="font-size:10px">01.01.2026</td>
-      <td class="tc" style="font-size:10px">31.12.2026</td>
-      <td style="font-size:10px;color:var(--text-muted)">Online (No Visit)</td>
-      <td class="tr" style="font-size:10.5px">USD 8,000</td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:12px">Orion ERP</td>
+      <td class="tc" style="font-size:12px">01.01.2026</td>
+      <td class="tc" style="font-size:12px">31.12.2026</td>
+      <td style="font-size:12px;color:var(--text-muted)">Online (No Visit)</td>
+      <td class="tr" style="font-size:12px">USD 8,000</td>
       <td class="tc"><span class="mis-badge valid">Active</span></td>
     </tr>
 <tr>
       <td>7</td>
       <td>E&I</td>
       <td><strong>Satconet</strong></td>
-      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">ICT Service Outsourcing</td>
-      <td class="tc" style="font-size:10px">01.10.2023</td>
-      <td class="tc" style="font-size:10px">30.09.2024</td>
-      <td style="font-size:10px;color:var(--text-muted)">Online (Need Based Visits)</td>
-      <td class="tr" style="font-size:10.5px">TSH 25,910,000</td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:12px">ICT Service Outsourcing</td>
+      <td class="tc" style="font-size:12px">01.10.2023</td>
+      <td class="tc" style="font-size:12px">30.09.2024</td>
+      <td style="font-size:12px;color:var(--text-muted)">Online (Need Based Visits)</td>
+      <td class="tr" style="font-size:12px">TSH 25,910,000</td>
       <td class="tc"><span class="mis-badge expired">Expired</span></td>
     </tr>
 <tr>
       <td>8</td>
       <td>Admin</td>
       <td><strong>Total Cool</strong></td>
-      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">Samsung ACs (Head Office)</td>
-      <td class="tc" style="font-size:10px">01.03.2026</td>
-      <td class="tc" style="font-size:10px">28.02.2027</td>
-      <td style="font-size:10px;color:var(--text-muted)">4 Visits</td>
-      <td class="tr" style="font-size:10.5px">TSH 2,640,000</td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:12px">Samsung ACs (Head Office)</td>
+      <td class="tc" style="font-size:12px">01.03.2026</td>
+      <td class="tc" style="font-size:12px">28.02.2027</td>
+      <td style="font-size:12px;color:var(--text-muted)">4 Visits</td>
+      <td class="tr" style="font-size:12px">TSH 2,640,000</td>
       <td class="tc"><span class="mis-badge valid">Active</span></td>
     </tr>
 <tr>
       <td>9</td>
       <td>Accounts</td>
       <td><strong>Pergamon Group Limited</strong></td>
-      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">TRA Fiscal Device 611 Maintenance</td>
-      <td class="tc" style="font-size:10px">01.01.2026</td>
-      <td class="tc" style="font-size:10px">31.12.2026</td>
-      <td style="font-size:10px;color:var(--text-muted)">Online (No Visit)</td>
-      <td class="tr" style="font-size:10.5px">TSH 400,000</td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:12px">TRA Fiscal Device 611 Maintenance</td>
+      <td class="tc" style="font-size:12px">01.01.2026</td>
+      <td class="tc" style="font-size:12px">31.12.2026</td>
+      <td style="font-size:12px;color:var(--text-muted)">Online (No Visit)</td>
+      <td class="tr" style="font-size:12px">TSH 400,000</td>
       <td class="tc"><span class="mis-badge valid">Active</span></td>
     </tr>
 <tr>
       <td>10</td>
       <td>Accounts</td>
       <td><strong>Power Computers Ltd</strong></td>
-      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">TRA Fiscal Device Maintenance</td>
-      <td class="tc" style="font-size:10px">01.06.2025</td>
-      <td class="tc" style="font-size:10px">30.05.2026</td>
-      <td style="font-size:10px;color:var(--text-muted)">Online (No Visit)</td>
-      <td class="tr" style="font-size:10.5px">TSH 457,000</td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:12px">TRA Fiscal Device Maintenance</td>
+      <td class="tc" style="font-size:12px">01.06.2025</td>
+      <td class="tc" style="font-size:12px">30.05.2026</td>
+      <td style="font-size:12px;color:var(--text-muted)">Online (No Visit)</td>
+      <td class="tr" style="font-size:12px">TSH 457,000</td>
       <td class="tc"><span class="mis-badge expired">Expired</span></td>
     </tr>
 <tr>
       <td>11</td>
       <td>Safety</td>
       <td><strong>Winow Fire & Motor Works Limited</strong></td>
-      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">Fire Extinguishers</td>
-      <td class="tc" style="font-size:10px">01.05.2025</td>
-      <td class="tc" style="font-size:10px">31.04.2026</td>
-      <td style="font-size:10px;color:var(--text-muted)">3 Visits</td>
-      <td class="tr" style="font-size:10.5px">TSH 7,010,000</td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:12px">Fire Extinguishers</td>
+      <td class="tc" style="font-size:12px">01.05.2025</td>
+      <td class="tc" style="font-size:12px">31.04.2026</td>
+      <td style="font-size:12px;color:var(--text-muted)">3 Visits</td>
+      <td class="tr" style="font-size:12px">TSH 7,010,000</td>
       <td class="tc"><span class="mis-badge valid">Active</span></td>
     </tr>
 <tr>
       <td>12</td>
       <td>E&I</td>
       <td><strong>Wintech Sales & Services Ltd</strong></td>
-      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">Lift Service & Inspection</td>
-      <td class="tc" style="font-size:10px">01.02.2024</td>
-      <td class="tc" style="font-size:10px">30.04.2025</td>
-      <td style="font-size:10px;color:var(--text-muted)">6 Visits</td>
-      <td class="tr" style="font-size:10.5px">TSH 9,200,000</td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:12px">Lift Service & Inspection</td>
+      <td class="tc" style="font-size:12px">01.02.2024</td>
+      <td class="tc" style="font-size:12px">30.04.2025</td>
+      <td style="font-size:12px;color:var(--text-muted)">6 Visits</td>
+      <td class="tr" style="font-size:12px">TSH 9,200,000</td>
       <td class="tc"><span class="mis-badge expired">Expired</span></td>
     </tr>
 <tr>
       <td>13</td>
       <td>E&I</td>
       <td><strong>Ahead Africa Solution Ltd</strong></td>
-      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:10.5px">AMC for IT Services</td>
-      <td class="tc" style="font-size:10px">15.09.2025</td>
-      <td class="tc" style="font-size:10px">14.09.2026</td>
-      <td style="font-size:10px;color:var(--text-muted)">2 Resident Engineers Available On Site in 2 S</td>
-      <td class="tr" style="font-size:10.5px">TSH 38,880,000</td>
+      <td style="max-width:280px;white-space:normal;line-height:1.4;font-size:12px">AMC for IT Services</td>
+      <td class="tc" style="font-size:12px">15.09.2025</td>
+      <td class="tc" style="font-size:12px">14.09.2026</td>
+      <td style="font-size:12px;color:var(--text-muted)">2 Resident Engineers Available On Site in 2 S</td>
+      <td class="tr" style="font-size:12px">TSH 38,880,000</td>
       <td class="tc"><span class="mis-badge valid">Active</span></td>
     </tr>
 </tbody>
@@ -2803,7 +2806,7 @@
     <div class="mis-sec-hdr">
       <i data-lucide="shield" class="mis-sec-icon"></i>
       <h3 class="mis-sec-title">Audit Log — All User Activity</h3>
-      <span id="audit-count-lbl" style="margin-left:6px;font-size:10px;color:var(--text-muted)"></span>
+      <span id="audit-count-lbl" style="margin-left:6px;font-size:12px;color:var(--text-muted)"></span>
       <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
         <button class="mis-edit-btn" onclick="exportAuditLog()" title="Export to CSV">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -2818,7 +2821,7 @@
 
     <!-- Filter bar -->
     <div class="audit-filter-bar">
-      <label style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">Filters:</label>
+      <label style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">Filters:</label>
       <input type="text"   id="af-user"   placeholder="User name…"   style="width:140px" oninput="applyAuditFilters()" />
       <select id="af-action" onchange="applyAuditFilters()">
         <option value="">All Actions</option>
@@ -2871,7 +2874,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px"><polyline points="15 18 9 12 15 6"/></svg>
         Prev
       </button>
-      <span id="audit-page-info" style="font-size:11px;color:var(--text-muted,#64748B);font-weight:600"></span>
+      <span id="audit-page-info" style="font-size:12px;color:var(--text-muted,#64748B);font-weight:600"></span>
       <button class="mis-edit-btn" id="audit-next-btn" onclick="goAuditPage(1)" disabled>
         Next
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px"><polyline points="9 18 15 12 9 6"/></svg>
@@ -2884,10 +2887,10 @@
     <div class="mis-sec-hdr">
       <i data-lucide="lock" class="mis-sec-icon"></i>
       <h3 class="mis-sec-title">Access Rights Matrix</h3>
-      <span style="margin-left:8px;font-size:10px;color:var(--text-muted)">Role → section permission grid</span>
+      <span style="margin-left:8px;font-size:12px;color:var(--text-muted)">Role → section permission grid</span>
     </div>
     <div id="access-matrix-container" style="padding:0 0 8px">
-      <p style="padding:16px;font-size:11px;color:var(--text-muted)">Loading…</p>
+      <p style="padding:16px;font-size:12px;color:var(--text-muted)">Loading…</p>
     </div>
   </div>
 
@@ -2944,14 +2947,14 @@ function renderEmployees(data) {
       ? '<span class="mis-badge expired" style="background:#FEF2F2;color:#DC2626;border-color:#FECACA">Expat</span>'
       : '<span class="mis-badge valid">Local</span>';
     return `<tr>
-      <td style="color:var(--text-muted);font-size:10.5px">${e.e}</td>
+      <td style="color:var(--text-muted);font-size:12px">${e.e}</td>
       <td><strong>${e.n}</strong></td>
       <td class="tc">${e.s}</td>
-      <td style="font-size:10.5px">${e.ds}</td>
+      <td style="font-size:12px">${e.ds}</td>
       <td>${e.dp}</td>
       <td>${e.b}</td>
       <td class="tc">${catBadge}</td>
-      <td class="tc" style="font-size:10.5px;color:var(--text-muted)">${e.d}</td>
+      <td class="tc" style="font-size:12px;color:var(--text-muted)">${e.d}</td>
     </tr>`;
   }).join('');
   const lbl = document.getElementById('emp-count-lbl');
@@ -2999,11 +3002,11 @@ function renderPCs(data) {
   const tbody = document.getElementById('pc-tbody');
   if (!tbody) return;
   tbody.innerHTML = data.map(p => `<tr>
-    <td style="font-size:10.5px"><strong>${p.n}</strong></td>
+    <td style="font-size:12px"><strong>${p.n}</strong></td>
     <td>${p.u}</td>
     <td>${p.d}</td>
-    <td style="font-size:10.5px">${p.m}</td>
-    <td style="font-size:10px;color:var(--text-muted)">${p.o}</td>
+    <td style="font-size:12px">${p.m}</td>
+    <td style="font-size:12px;color:var(--text-muted)">${p.o}</td>
     <td><span class="mis-tag">${p.l}</span></td>
   </tr>`).join('');
   const lbl = document.getElementById('pc-count-lbl');
@@ -3030,10 +3033,10 @@ function renderVehicles(data) {
       <td><span class="sc-dept-dot" style="background:${col}"></span>${v.c}</td>
       <td><strong>${v.r}</strong></td>
       <td>${v.mk}</td>
-      <td style="font-size:10.5px">${v.md}</td>
+      <td style="font-size:12px">${v.md}</td>
       <td>${v.t}</td>
       <td>${v.l}</td>
-      <td style="font-size:10.5px;color:var(--text-muted)">${v.a}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${v.a}</td>
     </tr>`;
   }).join('');
   const lbl = document.getElementById('veh-count-lbl');
@@ -3087,13 +3090,13 @@ function renderCerts(data) {
   const tbody = document.getElementById('cert-tbody');
   if (!tbody) return;
   tbody.innerHTML = data.map(c => `<tr>
-    <td style="color:var(--text-muted);font-size:10px">${c.n}</td>
+    <td style="color:var(--text-muted);font-size:12px">${c.n}</td>
     <td style="white-space:normal;line-height:1.4;max-width:280px"><strong>${c.d}</strong></td>
-    <td style="font-size:10.5px">${c.a}</td>
-    <td style="font-size:10px;color:var(--text-muted)">${c.no}</td>
-    <td class="tc" style="font-size:10px;color:var(--text-muted)">${c.vf}</td>
-    <td class="tc" style="font-size:10px;color:var(--text-muted)">${c.vt}</td>
-    <td style="font-size:10px;color:var(--text-muted);max-width:200px;white-space:normal;line-height:1.4">${c.r}</td>
+    <td style="font-size:12px">${c.a}</td>
+    <td style="font-size:12px;color:var(--text-muted)">${c.no}</td>
+    <td class="tc" style="font-size:12px;color:var(--text-muted)">${c.vf}</td>
+    <td class="tc" style="font-size:12px;color:var(--text-muted)">${c.vt}</td>
+    <td style="font-size:12px;color:var(--text-muted);max-width:200px;white-space:normal;line-height:1.4">${c.r}</td>
     <td class="tc">${certBadgeHtml(c.s)}</td>
   </tr>`).join('');
   const lbl = document.getElementById('cert-count-lbl');

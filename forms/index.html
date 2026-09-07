@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Lake Cement – Daily Operations Status</title>
   <link rel="icon" type="image/png" href="../favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -22,11 +22,11 @@
     .sb-title { font-size:13px; font-weight:800; text-transform:uppercase;
       letter-spacing:.8px; color:var(--navy); display:flex; align-items:center; gap:8px; }
     .sb-date-badge {
-      font-size:11px; font-weight:700; background:var(--navy); color:white;
+      font-size:12px; font-weight:700; background:var(--navy); color:white;
       padding:4px 12px; border-radius:20px; letter-spacing:.3px;
     }
     .sb-summary {
-      font-size:11px; color:var(--text-muted); display:flex; gap:16px; flex-wrap:wrap;
+      font-size:12px; color:var(--text-muted); display:flex; gap:16px; flex-wrap:wrap;
     }
     .sb-sum-item { display:flex; align-items:center; gap:5px; font-weight:600; }
     .sb-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
@@ -61,11 +61,11 @@
 
     .sb-card-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
     .sb-card-name {
-      font-size:11.5px; font-weight:700; color:var(--navy); text-transform:uppercase;
+      font-size:12px; font-weight:700; color:var(--navy); text-transform:uppercase;
       letter-spacing:.5px; display:flex; align-items:center; gap:6px;
     }
     .sb-badge {
-      font-size:8.5px; font-weight:800; padding:2px 8px; border-radius:12px;
+      font-size:12px; font-weight:800; padding:2px 8px; border-radius:12px;
       text-transform:uppercase; letter-spacing:.5px; flex-shrink:0;
     }
     .sb-badge.submitted { background:#D1FAE5; color:#065F46; }
@@ -73,21 +73,21 @@
     .sb-badge.missing   { background:#F1F5F9; color:#94A3B8; }
 
     .sb-card-by {
-      font-size:11px; color:var(--text-muted); margin-bottom:3px;
+      font-size:12px; color:var(--text-muted); margin-bottom:3px;
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     }
     .sb-card-by strong { color:var(--navy); }
-    .sb-card-time { font-size:9.5px; color:#94A3B8; }
+    .sb-card-time { font-size:12px; color:#94A3B8; }
     .sb-card-open {
       position:absolute; bottom:10px; right:14px;
-      font-size:10px; font-weight:700; color:var(--orange);
+      font-size:12px; font-weight:700; color:var(--orange);
       display:flex; align-items:center; gap:3px;
     }
 
     /* ── Divider ────────────────────────────────────────────────────── */
     .section-divider {
       padding:20px 24px 10px;
-      font-size:11px; font-weight:700; text-transform:uppercase;
+      font-size:12px; font-weight:700; text-transform:uppercase;
       letter-spacing:.8px; color:var(--text-muted);
       display:flex; align-items:center; gap:10px;
     }
@@ -117,16 +117,19 @@
       border:1px solid var(--border); }
     .fc-sm-icon svg { width:14px; height:14px; color:var(--navy); }
     .fc-sm-name { font-size:12px; font-weight:700; color:var(--navy); }
-    .fc-sm-desc { font-size:10.5px; color:var(--text-muted); line-height:1.5; }
-    .fc-sm-owner { font-size:9.5px; color:var(--text-muted); margin-top:6px; border-top:1px solid var(--border); padding-top:6px; }
+    .fc-sm-desc { font-size:12px; color:var(--text-muted); line-height:1.5; }
+    .fc-sm-owner { font-size:12px; color:var(--text-muted); margin-top:6px; border-top:1px solid var(--border); padding-top:6px; }
 
     /* ── Refresh hint ─────────────────────────────────────────────── */
     .sb-refresh {
-      font-size:10px; color:#94A3B8; display:flex; align-items:center; gap:5px;
+      font-size:12px; color:#94A3B8; display:flex; align-items:center; gap:5px;
       cursor:pointer; padding:3px 8px; border-radius:4px; transition:background .1s;
     }
     .sb-refresh:hover { background:var(--off-white); color:var(--navy); }
   </style>
+  <!-- Design system — loaded last so it settles equal-specificity ties -->
+  <link rel="stylesheet" href="../design-system.css?v=1" />
+  <script src="../mobile-shell.js?v=1"></script>
 </head>
 <body>
 
@@ -164,7 +167,7 @@
       <span class="sb-sum-item"><span class="sb-dot ok"></span><span id="cnt-submitted">0 submitted</span></span>
       <span class="sb-sum-item"><span class="sb-dot warn"></span><span id="cnt-draft">0 in draft</span></span>
       <span class="sb-sum-item"><span class="sb-dot na"></span><span id="cnt-missing">9 not started</span></span>
-      <span style="color:#94A3B8;font-size:10.5px" id="sb-note">Reads from this browser's local storage — submit each form to record it here.</span>
+      <span style="color:#94A3B8;font-size:12px" id="sb-note">Reads from this browser's local storage — submit each form to record it here.</span>
     </div>
 
     <!-- Status card grid (built by JS) -->

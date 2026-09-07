@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Lake Cement — Coming Soon</title>
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -25,11 +25,14 @@
     .cs-title { font-size:20px; font-weight:800; color:var(--navy); margin-bottom:8px; }
     .cs-sub { font-size:13px; color:var(--text-muted); max-width:420px; line-height:1.6; }
     .cs-badge {
-      margin-top:18px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.8px;
+      margin-top:18px; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.8px;
       background:var(--section-bg); color:var(--text-muted); border:1px solid var(--border);
       border-radius:20px; padding:5px 14px;
     }
   </style>
+  <!-- Design system — loaded last so it settles equal-specificity ties -->
+  <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>
 

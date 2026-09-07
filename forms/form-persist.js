@@ -191,7 +191,7 @@
     if (!chip) {
       chip = document.createElement('span');
       chip.id = '_ny-saved-chip';
-      chip.style.cssText = 'font-size:10px;font-weight:600;color:var(--text-muted);white-space:nowrap;flex-shrink:0;transition:color .3s;padding:0 2px';
+      chip.style.cssText = 'font-size:12px;font-weight:600;color:var(--text-muted);white-space:nowrap;flex-shrink:0;transition:color .3s;padding:0 2px';
       // Insert between toolbar sep and btn-grp
       const grp = document.querySelector('.btn-grp');
       if (grp) grp.parentElement.insertBefore(chip, grp);
@@ -322,8 +322,8 @@
 
     // Header
     const hdr = document.createElement('div');
-    hdr.style.cssText = 'background:#173158;color:white;padding:10px 14px;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center';
-    hdr.innerHTML = `<span>Saved Snapshots</span><span style="font-size:10px;opacity:.6">${saved.length} saved</span>`;
+    hdr.style.cssText = 'background:#173158;color:white;padding:10px 14px;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center';
+    hdr.innerHTML = `<span>Saved Snapshots</span><span style="font-size:12px;opacity:.6">${saved.length} saved</span>`;
     panel.appendChild(hdr);
 
     if (saved.length === 0) {
@@ -356,8 +356,8 @@
         row.innerHTML = `
           <span style="font-weight:600;color:#173158;font-size:12px">${date}</span>
           <div style="display:flex;align-items:center;gap:6px">
-            <span style="color:#94A3B8;font-size:10px">${time}</span>
-            <span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px;${badgeStyle}">${status.toUpperCase()}</span>
+            <span style="color:#94A3B8;font-size:12px">${time}</span>
+            <span style="font-size:12px;font-weight:700;padding:2px 7px;border-radius:3px;${badgeStyle}">${status.toUpperCase()}</span>
           </div>`;
         row.onclick = async () => {
           const loadedMeta = await _read(formId, date);
@@ -375,7 +375,7 @@
 
     // Footer close
     const foot = document.createElement('div');
-    foot.style.cssText = 'padding:9px 14px;text-align:center;font-size:11px;color:#94A3B8;cursor:pointer;background:#F7F8FA;border-top:1px solid #EEF2F7';
+    foot.style.cssText = 'padding:9px 14px;text-align:center;font-size:12px;color:#94A3B8;cursor:pointer;background:#F7F8FA;border-top:1px solid #EEF2F7';
     foot.textContent = '✕  Close';
     foot.onclick = () => panel.remove();
     panel.appendChild(foot);

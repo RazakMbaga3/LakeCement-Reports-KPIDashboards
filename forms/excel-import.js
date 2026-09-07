@@ -469,7 +469,7 @@
     var rowsHtml = fields.filter(function (k) { return k !== 'date'; }).map(function (k) {
       var inForm = !!document.querySelector('[data-field="' + k + '"]');
       return '<tr style="border-bottom:1px solid #EEF2F7">' +
-        '<td style="padding:5px 12px;font-size:11px;color:#5A6270;font-family:monospace;white-space:nowrap">' + k + '</td>' +
+        '<td style="padding:5px 12px;font-size:12px;color:#5A6270;font-family:monospace;white-space:nowrap">' + k + '</td>' +
         '<td style="padding:5px 12px;font-size:12px;font-weight:700;color:#111827;text-align:right">' + data[k] + '</td>' +
         '<td style="padding:5px 12px;text-align:center;font-size:13px">' + (inForm ? '<span style="color:#239557">✓</span>' : '<span style="color:#94A3B8">—</span>') + '</td>' +
       '</tr>';
@@ -484,22 +484,22 @@
         '<div style="background:#173158;border-radius:10px 10px 0 0;padding:13px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">' +
           '<div>' +
             '<div style="color:white;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase">Excel Import Preview</div>' +
-            '<div style="color:rgba(255,255,255,.5);font-size:10px;margin-top:2px">' + formId + ' · ' + matched.length + ' fields matched</div>' +
+            '<div style="color:rgba(255,255,255,.5);font-size:12px;margin-top:2px">' + formId + ' · ' + matched.length + ' fields matched</div>' +
           '</div>' +
           '<button onclick="document.getElementById(\'_xi-modal\').remove()" style="background:rgba(255,255,255,.12);border:none;color:white;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>' +
         '</div>' +
         /* body */
         '<div style="padding:14px 18px;overflow-y:auto;flex:1">' +
-          (data.date ? '<div style="font-size:11px;color:#5A6270;margin-bottom:10px">Report date: <strong style="color:#173158">' + data.date + '</strong></div>' : '') +
+          (data.date ? '<div style="font-size:12px;color:#5A6270;margin-bottom:10px">Report date: <strong style="color:#173158">' + data.date + '</strong></div>' : '') +
           '<div style="display:flex;gap:8px;margin-bottom:12px">' +
-            '<span style="background:#D1FAE5;color:#065F46;font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px">' + matched.length + ' matched</span>' +
-            (extra.length ? '<span style="background:#F1F5F9;color:#64748B;font-size:10px;font-weight:700;padding:3px 10px;border-radius:10px">' + extra.length + ' not in form</span>' : '') +
+            '<span style="background:#D1FAE5;color:#065F46;font-size:12px;font-weight:700;padding:3px 10px;border-radius:10px">' + matched.length + ' matched</span>' +
+            (extra.length ? '<span style="background:#F1F5F9;color:#64748B;font-size:12px;font-weight:700;padding:3px 10px;border-radius:10px">' + extra.length + ' not in form</span>' : '') +
           '</div>' +
           '<table style="width:100%;border-collapse:collapse">' +
             '<thead><tr style="background:#F7F8FA">' +
-              '<th style="padding:5px 12px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#5A6270;text-align:left">Field</th>' +
-              '<th style="padding:5px 12px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#5A6270;text-align:right">Value</th>' +
-              '<th style="padding:5px 12px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#5A6270;text-align:center">In form</th>' +
+              '<th style="padding:5px 12px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#5A6270;text-align:left">Field</th>' +
+              '<th style="padding:5px 12px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#5A6270;text-align:right">Value</th>' +
+              '<th style="padding:5px 12px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#5A6270;text-align:center">In form</th>' +
             '</tr></thead>' +
             '<tbody>' + rowsHtml + '</tbody>' +
           '</table>' +

@@ -236,7 +236,7 @@
   cursor:pointer;padding:6px 10px;border-radius:8px;}\
 .ndp-title:hover{background:var(--off-white,#F7F8FA);}\
 .ndp-weekdays{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px;}\
-.ndp-weekdays span{text-align:center;font-size:11px;font-weight:700;letter-spacing:.4px;\
+.ndp-weekdays span{text-align:center;font-size:12px;font-weight:700;letter-spacing:.4px;\
   color:var(--text-muted,#5A6270);text-transform:uppercase;padding:4px 0;}\
 .ndp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}\
 .ndp-day{aspect-ratio:1;border:none;background:none;border-radius:8px;font-size:14px;\

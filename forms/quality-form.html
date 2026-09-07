@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Lake Cement – Quality / Lab Daily Report</title>
   <link rel="icon" type="image/png" href="../favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -12,6 +12,9 @@
   <script src="../loader.js?v=1"></script>
   <script src="date-picker.js"></script>
   <link rel="stylesheet" href="forms.css" />
+  <!-- Design system — loaded last so it settles equal-specificity ties -->
+  <link rel="stylesheet" href="../design-system.css?v=1" />
+  <script src="../mobile-shell.js?v=1"></script>
 </head>
 <body>
 
@@ -147,11 +150,11 @@
             <td class="tp">Blaine (Fineness)</td>
             <td class="cm">
               <input class="ci" type="number" data-field="blaine_425r" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥3,600 cm²/g</div>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥3,600 cm²/g</div>
             </td>
             <td class="cm">
               <input class="ci" type="number" data-field="blaine_425n" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥3,500 cm²/g</div>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥3,500 cm²/g</div>
             </td>
             <td class="cf"><div class="cv" data-kpi="blaine_425r_mtd">—</div></td>
             <td class="cf"><div class="cv" data-kpi="blaine_425n_mtd">—</div></td>
@@ -161,11 +164,11 @@
             <td class="tp">Residue @ 45µ</td>
             <td class="cm">
               <input class="ci" type="number" step="0.1" data-field="residue_425r" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;5.0%</div>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;5.0%</div>
             </td>
             <td class="cm">
               <input class="ci" type="number" step="0.1" data-field="residue_425n" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;6.0%</div>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;6.0%</div>
             </td>
             <td class="cf"><div class="cv" data-kpi="residue_425r_mtd">—</div></td>
             <td class="cf"><div class="cv" data-kpi="residue_425n_mtd">—</div></td>
@@ -175,11 +178,11 @@
             <td class="tp">Setting Time — Initial</td>
             <td class="cm">
               <input class="ci" type="number" data-field="setting_initial_425r" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥60 min</div>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥60 min</div>
             </td>
             <td class="cm">
               <input class="ci" type="number" data-field="setting_initial_425n" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥60 min</div>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥60 min</div>
             </td>
             <td class="cf"><div class="cv" data-kpi="setting_initial_425r_mtd">—</div></td>
             <td class="cf"><div class="cv" data-kpi="setting_initial_425n_mtd">—</div></td>
@@ -189,11 +192,11 @@
             <td class="tp">Setting Time — Final</td>
             <td class="cm">
               <input class="ci" type="number" data-field="setting_final_425r" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;600 min</div>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;600 min</div>
             </td>
             <td class="cm">
               <input class="ci" type="number" data-field="setting_final_425n" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;600 min</div>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;600 min</div>
             </td>
             <td class="cf"><div class="cv" data-kpi="setting_final_425r_mtd">—</div></td>
             <td class="cf"><div class="cv" data-kpi="setting_final_425n_mtd">—</div></td>
@@ -203,11 +206,11 @@
             <td class="tp">Compressive Strength 3-day</td>
             <td class="cm">
               <input class="ci" type="number" step="0.1" data-field="strength_3d_425r" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥20 MPa</div>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥20 MPa</div>
             </td>
             <td class="cm">
               <input class="ci" type="number" step="0.1" data-field="strength_3d_425n" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥20 MPa</div>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥20 MPa</div>
             </td>
             <td class="cf"><div class="cv" data-kpi="strength_3d_425r_mtd">—</div></td>
             <td class="cf"><div class="cv" data-kpi="strength_3d_425n_mtd">—</div></td>
@@ -217,11 +220,11 @@
             <td class="tp">Compressive Strength 28-day</td>
             <td class="cm">
               <input class="ci" type="number" step="0.1" data-field="strength_28d" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥42.5 MPa</div>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥42.5 MPa</div>
             </td>
             <td class="cm">
               <input class="ci" type="number" step="0.1" data-field="strength_28d_425n" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥42.5 MPa</div>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥42.5 MPa</div>
             </td>
             <td class="cf"><div class="cv" data-kpi="strength_28d_mtd">—</div></td>
             <td class="cf"><div class="cv" data-kpi="strength_28d_425n_mtd">—</div></td>
@@ -231,11 +234,11 @@
             <td class="tp">Free Lime</td>
             <td class="cm">
               <input class="ci" type="number" step="0.1" data-field="free_lime" />
-              <div style="font-size:9px;color:var(--m-fg);text-align:center;padding-bottom:3px">&lt;3.0%</div>
+              <div style="font-size:12px;color:var(--m-fg);text-align:center;padding-bottom:3px">&lt;3.0%</div>
             </td>
             <td class="cm">
               <input class="ci" type="number" step="0.1" data-field="free_lime_425n" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;3.0%</div>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;3.0%</div>
             </td>
             <td class="cf"><div class="cv" data-kpi="free_lime_mtd">—</div></td>
             <td class="cf"><div class="cv" data-kpi="free_lime_425n_mtd">—</div></td>
@@ -245,11 +248,11 @@
             <td class="tp">Soundness (Le-Chatelier)</td>
             <td class="cm">
               <input class="ci" type="number" step="0.5" data-field="soundness_425r" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;10 mm</div>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;10 mm</div>
             </td>
             <td class="cm">
               <input class="ci" type="number" step="0.5" data-field="soundness_425n" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;10 mm</div>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;10 mm</div>
             </td>
             <td class="cf"><div class="cv" data-kpi="soundness_425r_mtd">—</div></td>
             <td class="cf"><div class="cv" data-kpi="soundness_425n_mtd">—</div></td>
@@ -289,7 +292,7 @@
             <td class="tp">Coal Residue @ 90µ (Kiln)</td>
             <td class="cm">
               <input class="ci" type="number" step="0.1" data-field="coal_residue" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;5.0%</div>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;5.0%</div>
             </td>
             <td class="cf"><div class="cv" data-kpi="coal_residue_mtd">—</div></td>
             <td class="cf"><div class="cv" data-kpi="coal_residue_ytd">—</div></td>
@@ -299,7 +302,7 @@
             <td class="tp">Coal Moisture (as ground)</td>
             <td class="cm">
               <input class="ci" type="number" step="0.1" data-field="coal_moisture" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;2.0%</div>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;2.0%</div>
             </td>
             <td class="cf"><div class="cv" data-kpi="coal_moisture_mtd">—</div></td>
             <td class="cf"><div class="cv" data-kpi="coal_moisture_ytd">—</div></td>
@@ -342,102 +345,102 @@
           <tr>
             <td class="tp">LSF</td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_rm_h1" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_rm_h2" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_rm_h3" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_rm_h4" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_rm_h5" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_rm_h6" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
             <td class="cf"><div class="cv" data-kpi="lsf_rm_avg">—</div></td>
             <td class="cf"><div class="cv" data-kpi="lsf_rm_avg_mtd">—</div></td>
           </tr>
           <tr>
             <td class="tp">SM (Silica Modulus)</td>
             <td class="cm"><input class="ci" type="number" step="0.01" data-field="sm_rm_h1" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">2.35–2.50</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">2.35–2.50</div></td>
             <td class="cm"><input class="ci" type="number" step="0.01" data-field="sm_rm_h2" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">2.35–2.50</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">2.35–2.50</div></td>
             <td class="cm"><input class="ci" type="number" step="0.01" data-field="sm_rm_h3" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">2.35–2.50</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">2.35–2.50</div></td>
             <td class="cm"><input class="ci" type="number" step="0.01" data-field="sm_rm_h4" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">2.35–2.50</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">2.35–2.50</div></td>
             <td class="cm"><input class="ci" type="number" step="0.01" data-field="sm_rm_h5" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">2.35–2.50</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">2.35–2.50</div></td>
             <td class="cm"><input class="ci" type="number" step="0.01" data-field="sm_rm_h6" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">2.35–2.50</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">2.35–2.50</div></td>
             <td class="cf"><div class="cv" data-kpi="sm_rm_avg">—</div></td>
             <td class="cf"><div class="cv" data-kpi="sm_rm_avg_mtd">—</div></td>
           </tr>
           <tr>
             <td class="tp">AM (Alumina Modulus)</td>
             <td class="cm"><input class="ci" type="number" step="0.01" data-field="am_rm_h1" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">1.30–1.50</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">1.30–1.50</div></td>
             <td class="cm"><input class="ci" type="number" step="0.01" data-field="am_rm_h2" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">1.30–1.50</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">1.30–1.50</div></td>
             <td class="cm"><input class="ci" type="number" step="0.01" data-field="am_rm_h3" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">1.30–1.50</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">1.30–1.50</div></td>
             <td class="cm"><input class="ci" type="number" step="0.01" data-field="am_rm_h4" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">1.30–1.50</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">1.30–1.50</div></td>
             <td class="cm"><input class="ci" type="number" step="0.01" data-field="am_rm_h5" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">1.30–1.50</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">1.30–1.50</div></td>
             <td class="cm"><input class="ci" type="number" step="0.01" data-field="am_rm_h6" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">1.30–1.50</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">1.30–1.50</div></td>
             <td class="cf"><div class="cv" data-kpi="am_rm_avg">—</div></td>
             <td class="cf"><div class="cv" data-kpi="am_rm_avg_mtd">—</div></td>
           </tr>
           <tr>
             <td class="tp">R90 (Residue at 90µ)</td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="r90_rm_h1" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;16%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;16%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="r90_rm_h2" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;16%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;16%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="r90_rm_h3" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;16%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;16%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="r90_rm_h4" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;16%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;16%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="r90_rm_h5" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;16%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;16%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="r90_rm_h6" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;16%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;16%</div></td>
             <td class="cf"><div class="cv" data-kpi="r90_rm_avg">—</div></td>
             <td class="cf"><div class="cv" data-kpi="r90_rm_avg_mtd">—</div></td>
           </tr>
           <tr>
             <td class="tp">Moisture</td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="moisture_rm_h1" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">—</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">—</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="moisture_rm_h2" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">—</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">—</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="moisture_rm_h3" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">—</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">—</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="moisture_rm_h4" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">—</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">—</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="moisture_rm_h5" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">—</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">—</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="moisture_rm_h6" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">—</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">—</div></td>
             <td class="cf"><div class="cv" data-kpi="moisture_rm_avg">—</div></td>
             <td class="cf"><div class="cv" data-kpi="moisture_rm_avg_mtd">—</div></td>
           </tr>
           <tr>
             <td class="tp">CaCO₃ Equivalent</td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="caco3_rm_h1" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">75–78%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">75–78%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="caco3_rm_h2" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">75–78%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">75–78%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="caco3_rm_h3" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">75–78%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">75–78%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="caco3_rm_h4" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">75–78%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">75–78%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="caco3_rm_h5" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">75–78%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">75–78%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="caco3_rm_h6" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">75–78%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">75–78%</div></td>
             <td class="cf"><div class="cv" data-kpi="caco3_rm_avg">—</div></td>
             <td class="cf"><div class="cv" data-kpi="caco3_rm_avg_mtd">—</div></td>
           </tr>
@@ -534,51 +537,51 @@
           <tr>
             <td class="tp">C₃S</td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="c3s_ck_h1" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">&gt;50%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&gt;50%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="c3s_ck_h2" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">&gt;50%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&gt;50%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="c3s_ck_h3" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">&gt;50%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&gt;50%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="c3s_ck_h4" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">&gt;50%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&gt;50%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="c3s_ck_h5" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">&gt;50%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&gt;50%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="c3s_ck_h6" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">&gt;50%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&gt;50%</div></td>
             <td class="cf"><div class="cv" data-kpi="c3s_ck_avg">—</div></td>
             <td class="cf"><div class="cv" data-kpi="c3s_ck_avg_mtd">—</div></td>
           </tr>
           <tr>
             <td class="tp">Free Lime (Clinker)</td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="freelime_ck_h1" />
-              <div style="font-size:9px;color:var(--m-fg);text-align:center;padding-bottom:2px">&lt;3.0%</div></td>
+              <div style="font-size:12px;color:var(--m-fg);text-align:center;padding-bottom:2px">&lt;3.0%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="freelime_ck_h2" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;3.0%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;3.0%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="freelime_ck_h3" />
-              <div style="font-size:9px;color:var(--m-fg);text-align:center;padding-bottom:2px">&lt;3.0%</div></td>
+              <div style="font-size:12px;color:var(--m-fg);text-align:center;padding-bottom:2px">&lt;3.0%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="freelime_ck_h4" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;3.0%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;3.0%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="freelime_ck_h5" />
-              <div style="font-size:9px;color:var(--m-fg);text-align:center;padding-bottom:2px">&lt;3.0%</div></td>
+              <div style="font-size:12px;color:var(--m-fg);text-align:center;padding-bottom:2px">&lt;3.0%</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="freelime_ck_h6" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;3.0%</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;3.0%</div></td>
             <td class="cf"><div class="cv" data-kpi="freelime_ck_avg">—</div></td>
             <td class="cf"><div class="cv" data-kpi="freelime_ck_avg_mtd">—</div></td>
           </tr>
           <tr>
             <td class="tp">LSF (Clinker)</td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_ck_h1" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">94–98</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">94–98</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_ck_h2" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">94–98</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">94–98</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_ck_h3" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">94–98</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">94–98</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_ck_h4" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">94–98</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">94–98</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_ck_h5" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">94–98</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">94–98</div></td>
             <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_ck_h6" />
-              <div style="font-size:9px;color:var(--text-muted);text-align:center;padding-bottom:2px">94–98</div></td>
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">94–98</div></td>
             <td class="cf"><div class="cv" data-kpi="lsf_ck_avg">—</div></td>
             <td class="cf"><div class="cv" data-kpi="lsf_ck_avg_mtd">—</div></td>
           </tr>
@@ -590,7 +593,7 @@
   <!-- SIGN-OFF -->
   <div class="rcard">
     <div class="rcard-hdr"><div class="rcard-title"><i data-lucide="pen-line" class="title-icon"></i> Report Sign-off &amp; Approval</div></div>
-    <div style="padding:2px 18px 8px;font-size:10.5px;color:var(--text-muted)">For the printed record only — does not replace the <a href="../approvals.html" style="color:var(--orange)">Approvals</a> workflow.</div>
+    <div style="padding:2px 18px 8px;font-size:12px;color:var(--text-muted)">For the printed record only — does not replace the <a href="../approvals.html" style="color:var(--orange)">Approvals</a> workflow.</div>
     <div class="signoff">
       <div class="so-cell">
         <div class="so-role">Lab Analyst</div>
@@ -614,7 +617,7 @@
       </div>
     </div>
     <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <span style="font-size:11px;color:var(--text-muted)">
+      <span style="font-size:12px;color:var(--text-muted)">
         Status: <strong style="color:var(--orange)">DRAFT</strong> &nbsp;·&nbsp;
         Date: <strong>21 April 2026</strong>
       </span>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Import Local Data — Lake Cement MIS</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <style>
@@ -20,17 +20,20 @@
   .btn-orange:disabled { background:#CBD5E1; cursor:not-allowed; }
   .btn-ghost { background:#EEF2F7; color:#173158; }
   table { width:100%; border-collapse:collapse; font-size:12px; }
-  th { text-align:left; padding:9px 14px; background:#F7F8FA; color:#64748B; font-size:10px;
+  th { text-align:left; padding:9px 14px; background:#F7F8FA; color:#64748B; font-size:12px;
        text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid #EEF2F7; }
   td { padding:9px 14px; border-bottom:1px solid #F0F4F8; }
-  .tag { font-size:9px; font-weight:700; padding:2px 7px; border-radius:3px; }
+  .tag { font-size:12px; font-weight:700; padding:2px 7px; border-radius:3px; }
   .tag-draft { background:#FEF3C7; color:#92400E; }
   .tag-submitted { background:#BBF7D0; color:#14532D; }
-  .st { font-size:11px; color:#64748B; }
+  .st { font-size:12px; color:#64748B; }
   .st.ok { color:#239557; font-weight:700; }
   .st.err { color:#DC2626; font-weight:700; }
   .empty { padding:34px; text-align:center; color:#94A3B8; font-size:13px; }
 </style>
+  <!-- Design system — loaded last so it settles equal-specificity ties -->
+  <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>
 

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Lake Cement – Trend Analytics</title>
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -28,7 +28,7 @@
       flex-wrap: wrap;
     }
     .an-period-lbl {
-      font-size: 10px;
+      font-size: 12px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: .8px;
@@ -49,7 +49,7 @@
       border: none;
       background: transparent;
       font-family: var(--font);
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
       color: var(--text-muted);
       cursor: pointer;
@@ -64,7 +64,7 @@
       border: 1px solid var(--border);
       background: var(--off-white);
       font-family: var(--font);
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
       color: var(--navy);
       cursor: pointer;
@@ -82,7 +82,7 @@
       gap: 5px;
       padding: 3px 10px;
       border-radius: 10px;
-      font-size: 10px;
+      font-size: 12px;
       font-weight: 600;
       border: 1px solid transparent;
     }
@@ -119,7 +119,7 @@
       background: var(--border);
     }
     .an-section-badge {
-      font-size: 10px;
+      font-size: 12px;
       font-weight: 700;
       background: var(--section-bg);
       color: var(--text-muted);
@@ -173,7 +173,7 @@
       flex-shrink: 0;
     }
     .an-card-sub {
-      font-size: 10px;
+      font-size: 12px;
       color: var(--text-muted);
       margin-top: 2px;
     }
@@ -203,7 +203,7 @@
     .an-stat-val.fail   { color: var(--red); }
     .an-stat-lbl {
       display: block;
-      font-size: 9px;
+      font-size: 12px;
       font-weight: 600;
       color: var(--text-muted);
       text-transform: uppercase;
@@ -236,8 +236,8 @@
       flex: 1;
     }
     .an-card-empty .emp-icon { font-size: 30px; margin-bottom: 8px; opacity: .4; }
-    .an-card-empty .emp-msg  { font-size: 11px; font-weight: 600; }
-    .an-card-empty .emp-sub  { font-size: 10px; margin-top: 4px; opacity: .7; }
+    .an-card-empty .emp-msg  { font-size: 12px; font-weight: 600; }
+    .an-card-empty .emp-sub  { font-size: 12px; margin-top: 4px; opacity: .7; }
 
     /* ── Anomaly panel ──────────────────────────────────────────── */
     .an-anomaly-wrap {
@@ -256,7 +256,7 @@
     }
     .an-anomaly-title {
       color: white;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: .8px;
@@ -265,7 +265,7 @@
       gap: 7px;
     }
     .an-anomaly-count {
-      font-size: 10px;
+      font-size: 12px;
       font-weight: 700;
       background: rgba(255,255,255,.15);
       color: white;
@@ -276,12 +276,12 @@
     .an-atable {
       width: 100%;
       border-collapse: collapse;
-      font-size: 11.5px;
+      font-size: 12px;
     }
     .an-atable thead th {
       background: #F1F5FB;
       color: var(--navy);
-      font-size: 9px;
+      font-size: 12px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: .5px;
@@ -296,9 +296,9 @@
     }
     .an-atable tbody tr:last-child td { border-bottom: none; }
     .an-atable tbody tr:hover td { background: #F8FAFE; }
-    .an-atype-spec  { background: #FFEBEE; color: #B71C1C; padding: 2px 8px; border-radius: 8px; font-size: 9px; font-weight: 700; white-space: nowrap; }
-    .an-atype-stat  { background: #EDE9FE; color: #5B21B6; padding: 2px 8px; border-radius: 8px; font-size: 9px; font-weight: 700; white-space: nowrap; }
-    .an-atype-trend { background: #FEF3C7; color: #92400E; padding: 2px 8px; border-radius: 8px; font-size: 9px; font-weight: 700; white-space: nowrap; }
+    .an-atype-spec  { background: #FFEBEE; color: #B71C1C; padding: 2px 8px; border-radius: 8px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .an-atype-stat  { background: #EDE9FE; color: #5B21B6; padding: 2px 8px; border-radius: 8px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .an-atype-trend { background: #FEF3C7; color: #92400E; padding: 2px 8px; border-radius: 8px; font-size: 12px; font-weight: 700; white-space: nowrap; }
 
     .an-no-anomaly {
       text-align: center;
@@ -343,6 +343,9 @@
       .an-anomaly-wrap { break-inside: avoid; }
     }
   </style>
+  <!-- Design system — loaded last so it settles equal-specificity ties -->
+  <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>
 
@@ -371,7 +374,7 @@
         <input type="month" id="an-month-input" class="an-month-input" />
       </div>
       <div class="an-coverage-chips" id="an-cov-chips"></div>
-      <button onclick="window.print()" style="margin-left:8px;padding:5px 14px;border-radius:var(--radius);border:1.5px solid var(--border);background:transparent;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;color:var(--navy);display:flex;align-items:center;gap:5px;flex-shrink:0">
+      <button onclick="window.print()" style="margin-left:8px;padding:5px 14px;border-radius:var(--radius);border:1.5px solid var(--border);background:transparent;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;color:var(--navy);display:flex;align-items:center;gap:5px;flex-shrink:0">
         <i data-lucide="printer" style="width:12px;height:12px;stroke-width:2.5"></i> Export PDF
       </button>
     </div>
@@ -394,7 +397,7 @@
         &nbsp;&nbsp;·&nbsp;&nbsp;
         <a href="javascript:seedDemoData()" style="color:var(--navy)">Load sample data →</a>
         <br><br>
-        <span style="font-size:11px;opacity:.7">Or import historical Excel files using the Import Excel button on each form.</span>
+        <span style="font-size:12px;opacity:.7">Or import historical Excel files using the Import Excel button on each form.</span>
       </div>
     </div>
 

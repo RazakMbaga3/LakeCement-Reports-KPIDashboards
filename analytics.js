@@ -713,9 +713,9 @@
     if (!banner) {
       banner = document.createElement('div');
       banner.id = '_demo-banner';
-      banner.style.cssText = 'background:#FEF3C7;border-bottom:1px solid #FDE68A;padding:8px 28px;display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:600;color:#92400E';
+      banner.style.cssText = 'background:#FEF3C7;border-bottom:1px solid #FDE68A;padding:8px 28px;display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:600;color:#92400E';
       banner.innerHTML = '<span>⚠ Demo data loaded — submit real daily reports to populate with actual values.</span>' +
-        '<button onclick="clearDemoData()" style="background:#92400E;color:white;border:none;padding:4px 12px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Clear Demo</button>';
+        '<button onclick="clearDemoData()" style="background:#92400E;color:white;border:none;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Clear Demo</button>';
       document.querySelector('.an-period-bar').after(banner);
     }
 

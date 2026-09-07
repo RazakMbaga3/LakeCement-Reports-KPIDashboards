@@ -217,22 +217,22 @@
     });
 
     var html =
-      '<div style="background:#173158;color:white;padding:10px 14px;font-size:11px;font-weight:700;' +
+      '<div style="background:#173158;color:white;padding:10px 14px;font-size:12px;font-weight:700;' +
       'letter-spacing:.6px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center">' +
       '<span>Offline Sync</span>' +
-      '<button id="_nyq-sync" style="background:#F49545;border:none;color:white;font-size:10px;font-weight:700;' +
+      '<button id="_nyq-sync" style="background:#F49545;border:none;color:white;font-size:12px;font-weight:700;' +
       'padding:4px 10px;border-radius:5px;cursor:pointer;font-family:inherit">Sync now</button></div>';
 
     l.conflicts.forEach(function (it, i) {
       html +=
         '<div style="padding:10px 14px;border-bottom:1px solid #F0F4F8;font-size:12px">' +
         '<div style="font-weight:700;color:#DC2626">⚠ ' + it.formType + ' — ' + it.date + '</div>' +
-        '<div style="color:#64748B;font-size:11px;margin:3px 0 7px;line-height:1.45">' + it.reason +
+        '<div style="color:#64748B;font-size:12px;margin:3px 0 7px;line-height:1.45">' + it.reason +
         '<br>Yours queued ' + _fmtTime(it.queuedAt) +
         (it.serverSavedAt ? ' · server saved ' + _fmtTime(it.serverSavedAt) : '') + '</div>' +
-        '<button data-nyq-resolve="mine:' + i + '" style="background:#F49545;border:none;color:white;font-size:11px;' +
+        '<button data-nyq-resolve="mine:' + i + '" style="background:#F49545;border:none;color:white;font-size:12px;' +
         'font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;margin-right:6px;font-family:inherit">Use mine</button>' +
-        '<button data-nyq-resolve="server:' + i + '" style="background:#EEF2F7;border:none;color:#173158;font-size:11px;' +
+        '<button data-nyq-resolve="server:' + i + '" style="background:#EEF2F7;border:none;color:#173158;font-size:12px;' +
         'font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit">Keep server</button>' +
         '</div>';
     });
@@ -241,7 +241,7 @@
       html +=
         '<div style="padding:10px 14px;border-bottom:1px solid #F0F4F8;font-size:12px;display:flex;justify-content:space-between">' +
         '<span style="font-weight:600;color:#173158">' + it.formType + ' — ' + it.date + '</span>' +
-        '<span style="color:#94A3B8;font-size:11px">queued ' + _fmtTime(it.queuedAt) + '</span></div>';
+        '<span style="color:#94A3B8;font-size:12px">queued ' + _fmtTime(it.queuedAt) + '</span></div>';
     });
 
     if (!l.conflicts.length && !l.pending.length) {

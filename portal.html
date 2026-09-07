@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Lake Cement — Home</title>
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -41,13 +41,13 @@
       letter-spacing: -.2px;
     }
     .pg-sub {
-      font-size: 11.5px;
+      font-size: 12px;
       color: var(--text-muted, #64748B);
       font-weight: 500;
       margin: 0;
     }
     .pg-date {
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 600;
       color: var(--text-muted, #64748B);
       white-space: nowrap;
@@ -80,14 +80,14 @@
       flex-shrink: 0;
     }
     .psh-label {
-      font-size: 10px;
+      font-size: 12px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 1.1px;
       color: var(--text-muted, #64748B);
     }
     .psh-count {
-      font-size: 10px;
+      font-size: 12px;
       font-weight: 700;
       color: var(--text-muted, #64748B);
       background: var(--off-white, #F8FAFC);
@@ -141,7 +141,7 @@
       line-height: 1.35;
     }
     .pcard-sub {
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-muted, #64748B);
       line-height: 1.6;
       font-weight: 500;
@@ -154,7 +154,7 @@
       margin-top: 16px;
     }
     .pcard-badge {
-      font-size: 9px;
+      font-size: 12px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: .7px;
@@ -183,7 +183,7 @@
     .portal-footer {
       text-align: center;
       padding: 14px 24px;
-      font-size: 10px;
+      font-size: 12px;
       font-weight: 600;
       color: #94A3B8;
       letter-spacing: .4px;
@@ -208,7 +208,7 @@
       .pcard-icon   { padding: 0; flex-shrink: 0; }
       .pcard-body   { padding: 0; flex: 1; }
       .pcard-title  { font-size: 13.5px; margin-bottom: 5px; }
-      .pcard-sub    { font-size: 11px; line-height: 1.5; }
+      .pcard-sub    { font-size: 12px; line-height: 1.5; }
       .pcard-footer { padding: 0; margin-top: 0; flex-shrink: 0; gap: 10px; }
     }
     /* ── Mobile ────────────────────────────────────────────────── */
@@ -222,6 +222,9 @@
       .portal-grid { grid-template-columns: 1fr; }
     }
   </style>
+  <!-- Design system — loaded last so it settles equal-specificity ties -->
+  <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>
 

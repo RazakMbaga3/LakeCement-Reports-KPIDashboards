@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Lake Cement – Sales Dashboard</title>
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -17,21 +17,21 @@
       position: sticky; top: var(--header-h, 68px); z-index: 80; box-shadow: var(--shadow-sm);
     }
     .in-bar-inner { display: flex; align-items: center; gap: 14px; padding: 10px 28px; flex-wrap: wrap; }
-    .in-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); }
+    .in-lbl { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); }
     .in-input {
       padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border);
-      background: var(--off-white); font-family: var(--font); font-size: 11px; font-weight: 600;
+      background: var(--off-white); font-family: var(--font); font-size: 12px; font-weight: 600;
       color: var(--navy); cursor: pointer;
     }
     .in-main { max-width: 1300px; margin: 0 auto; padding: 20px 28px 60px; }
     .in-section-hdr { display: flex; align-items: center; gap: 8px; margin: 24px 0 12px; }
     .in-section-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--navy); }
-    .in-section-sub { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+    .in-section-sub { font-size: 12px; color: var(--text-muted); font-weight: 500; }
     .in-card { background: white; border: 1.5px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 16px; }
-    .in-card-title { font-size: 11px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
-    .in-card-sub { font-size: 10.5px; color: var(--text-muted); margin-bottom: 10px; }
+    .in-card-title { font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
+    .in-card-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
     .in-chart-wrap { height: 260px; }
-    .in-empty { text-align: center; padding: 30px 20px; color: var(--text-muted); font-size: 11.5px; }
+    .in-empty { text-align: center; padding: 30px 20px; color: var(--text-muted); font-size: 12px; }
 
     .sk-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
     @media (max-width: 900px) { .sk-row { grid-template-columns: repeat(2, 1fr); } }
@@ -51,14 +51,17 @@
     .cta-flash:hover { background: #D97F30; }
 
     .target-source-chip {
-      font-size: 9px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase;
+      font-size: 12px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase;
       padding: 2px 8px; border-radius: 10px; background: var(--section-bg); color: var(--text-muted);
     }
     .target-source-chip.odoo { background: var(--green-bg); color: var(--green); }
 
-    .perf-table .div-row td { background: #F1F5FB; font-weight: 700; color: var(--navy); font-size: 11px; }
+    .perf-table .div-row td { background: #F1F5FB; font-weight: 700; color: var(--navy); font-size: 12px; }
     .perf-table .zone-row td:first-child { padding-left: 28px; color: var(--text-muted); }
   </style>
+  <!-- Design system — loaded last so it settles equal-specificity ties -->
+  <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>
 
@@ -158,7 +161,7 @@
       </table>
     </div>
     <div class="in-empty" id="sd-oa-empty" style="display:none"></div>
-    <div id="sd-oa-unassigned" style="display:none;margin-top:10px;font-size:11px;color:var(--text-muted)"></div>
+    <div id="sd-oa-unassigned" style="display:none;margin-top:10px;font-size:12px;color:var(--text-muted)"></div>
   </div>
 
   <!-- ── DIVISION / ZONE / OFFICER PERFORMANCE (manual projections) ── -->

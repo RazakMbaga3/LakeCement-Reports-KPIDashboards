@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Lake Cement – Material &amp; Power Balance</title>
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -17,10 +17,10 @@
       position: sticky; top: var(--header-h, 68px); z-index: 80; box-shadow: var(--shadow-sm);
     }
     .bl-bar-inner { display: flex; align-items: center; gap: 14px; padding: 10px 28px; flex-wrap: wrap; }
-    .bl-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); }
+    .bl-lbl { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); }
     .bl-input {
       padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border);
-      background: var(--off-white); font-family: var(--font); font-size: 11px; font-weight: 600;
+      background: var(--off-white); font-family: var(--font); font-size: 12px; font-weight: 600;
       color: var(--navy); cursor: pointer;
     }
 
@@ -30,22 +30,25 @@
 
     .bl-card { background: white; border: 1.5px solid var(--border); border-radius: 12px; overflow: hidden; }
     .bl-card-hdr { background: var(--navy); color: white; padding: 12px 18px; }
-    .bl-card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; }
-    .bl-card-sub { font-size: 10.5px; color: rgba(255,255,255,.65); margin-top: 2px; }
+    .bl-card-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; }
+    .bl-card-sub { font-size: 12px; color: rgba(255,255,255,.65); margin-top: 2px; }
     .bl-card-body { padding: 16px 18px; }
     .bl-chart-wrap { height: 220px; }
 
-    .bl-figures { display: flex; justify-content: space-between; margin-top: 12px; font-size: 11px; }
+    .bl-figures { display: flex; justify-content: space-between; margin-top: 12px; font-size: 12px; }
     .bl-fig { text-align: center; flex: 1; }
     .bl-fig-val { font-size: 15px; font-weight: 800; color: var(--navy); }
-    .bl-fig-lbl { color: var(--text-muted); font-size: 9.5px; text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+    .bl-fig-lbl { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
 
     .bl-gap-note {
       background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 10px;
-      padding: 12px 18px; font-size: 11.5px; color: #92400E; margin-bottom: 20px; line-height: 1.5;
+      padding: 12px 18px; font-size: 12px; color: #92400E; margin-bottom: 20px; line-height: 1.5;
     }
     .bl-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 12px; }
   </style>
+  <!-- Design system — loaded last so it settles equal-specificity ties -->
+  <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>
 
@@ -62,7 +65,7 @@
   <div class="bl-bar-inner">
     <span class="bl-lbl">Date</span>
     <input type="date" id="bl-date" class="bl-input" />
-    <span id="bl-status" style="font-size:11px;color:var(--text-muted)"></span>
+    <span id="bl-status" style="font-size:12px;color:var(--text-muted)"></span>
   </div>
 </div>
 
@@ -123,7 +126,7 @@
             <div class="bl-fig"><div class="bl-fig-val" id="fig-clinker-out">—</div><div class="bl-fig-lbl">Clinker out, MT</div></div>
             <div class="bl-fig"><div class="bl-fig-val" id="fig-ste" style="color:#7c3aed">—</div><div class="bl-fig-lbl">kcal / kg clinker</div></div>
           </div>
-          <div style="font-size:10.5px;color:var(--text-muted);margin-top:14px;line-height:1.5">
+          <div style="font-size:12px;color:var(--text-muted);margin-top:14px;line-height:1.5">
             No separate "heat losses" fact exists yet — this is an input/output
             pair (coal in, thermal efficiency out), not a full balance with a
             reconciled loss term.
