@@ -58,6 +58,7 @@
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="../design-system.css?v=1" />
   <script src="../mobile-shell.js?v=1"></script>
+  <script src="mobile-entry.js?v=1"></script>
 </head>
 <body>
 
@@ -756,7 +757,12 @@
   // CaO out-of-spec auto-highlighting
   const CAO_SPEC = 45.00;
   function checkCao(input) {
-    const cell = input.closest('td');
+    /* On a phone, mobile-entry.js relocates this input out of its <td>
+       and into a card field, so closest('td') is null there. Fall back to
+       whatever now wraps the input — the .ooc class only needs somewhere
+       to hang the out-of-spec highlight. */
+    const cell = input.closest('td') || input.parentElement;
+    if (!cell) return;
     const val = parseFloat(input.value);
     if (!isNaN(val) && val < CAO_SPEC) {
       cell.classList.add('ooc');

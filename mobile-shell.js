@@ -427,6 +427,10 @@
     const wraps = document.querySelectorAll('.table-wrapper, .rt-wrap, .tbl-scroll, [data-scroll-x]');
     wraps.forEach(w => {
       if (w.dataset.msScroll) return;
+      /* A grid that mobile-entry.js has replaced with cards is hidden, and
+         telling someone to swipe a table they cannot see is worse than
+         saying nothing. */
+      if (w.classList.contains('me-hidden')) return;
       w.dataset.msScroll = '1';
       w.classList.add('ms-scroll-x');
 

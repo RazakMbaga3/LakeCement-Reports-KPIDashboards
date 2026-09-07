@@ -37,6 +37,7 @@ which page you were on without scrolling past all of it.
 |---|---|
 | `design-system.css` | Tokens, legibility floor, touch floor, mobile shell CSS, containment |
 | `mobile-shell.js` | Drawer, app bar, bottom tab bar, filter disclosure, scroll affordances |
+| `forms/mobile-entry.js` | Shift grids as per-parameter cards on a phone; entry progress |
 | `chart-theme.js` | Chart.js defaults and the validated data palette |
 | `e2e/responsive-audit.js` | The acceptance criteria, as runnable checks |
 | `styles.css` | Everything desktop. **Nothing below 960px is styled here any more.** |
@@ -135,18 +136,12 @@ entire page wider than the screen. This was **not** mobile-only:
 children at every width, lets `repeat(N, 1fr)` grids re-flow via `auto-fit`,
 and turns control strips that would spill into horizontal scrollers.
 
-Tables are deliberately exempt. **Wide data tables stay wide.** A 40-column
-shift report is a grid, and stacking it into cards destroys the row-to-row
-comparison that is the entire reason it exists. What they get instead is a
-sticky first column, a scroll-affordance fade, and a one-time swipe hint.
+Tables are deliberately exempt. **Report tables stay wide.** A 40-column
+shift report is a grid, and stacking a *read* table into cards destroys the
+row-to-row comparison that is the entire reason it exists. Those get a sticky
+first column, a scroll-affordance fade, and a one-time swipe hint.
 
-### Motion & accessibility
-
-One duration set and one easing. `prefers-reduced-motion` is honoured. Every
-page has a skip link and a visible `:focus-visible` ring (light on dark
-surfaces). The drawer is a real modal: focus trap, Esc, scroll lock, restore.
-
----
+**Entry grids are the exception to that exception** — see §5.
 
 ## 4. The mobile shell
 
@@ -162,7 +157,59 @@ surfaces). The drawer is a real modal: focus trap, Esc, scroll lock, restore.
 
 ---
 
-## 5. Working in this codebase
+## 5. Mobile entry — `forms/mobile-entry.js`
+
+Reading a wide grid on a phone is awkward. *Typing into* one is not workable:
+the parameter you are entering a value for has scrolled off the left edge
+while you type. So below 960px each **row becomes a card** — parameter as the
+title, its spec range beside it, each entry cell a labelled field, and the
+computed cells a read-back strip underneath that updates as you type.
+
+Every card block keeps a **Table view** toggle. This is not a one-way door:
+some checks genuinely need row-and-column comparison, and the grid is only
+hidden, never destroyed.
+
+### The one rule this file cannot break
+
+**It moves the real `<input>` nodes. It never clones them.**
+
+`form-persist.js`, `report-rollup.js` and `formula-registry.js` all bind by
+attribute — `[data-field]`, `[data-kpi]`, `.ci` — and never by row or cell
+position, which is what makes relocation safe. A clone would produce two
+elements carrying the same `data-field`; the officer would fill one and the
+form would save the other, silently. Every moved node's original parent and
+next-sibling are recorded, so restoring on resize is exact.
+
+Verified both ways: a value typed into a card field saves to the server and
+comes back after a reload still in the card; resizing to desktop returns all
+84 inputs to their `<td>`s with values intact and **zero duplicate
+`data-field`s** in either direction.
+
+The one positional selector in the codebase, `checkCao()` in
+`pile-quality-form.html`, was hardened to tolerate the move.
+
+### Other things worth knowing
+
+- **Every `.rt` grid converts**, not just ones measured as too wide. The first
+  rule here tested `scrollWidth`, which reports **0** inside a collapsed
+  section — that left 48 inputs stranded in table cells on `stoppage-form.html`.
+- **Progress counts the report, not the page.** `0 of 84 filled` excludes the
+  toolbar's date and Prepared By, which are never disabled — counting them made
+  a report the role cannot edit read `1 of 1 filled` instead of **View only**.
+- **Disabled fields are not work outstanding.** A form disables every input when
+  the role does not own the report, or the day is already submitted.
+
+### Motion & accessibility
+
+One duration set and one easing. `prefers-reduced-motion` is honoured. Every
+page has a skip link and a visible `:focus-visible` ring (light on dark
+surfaces). The drawer is a real modal: focus trap, Esc, scroll lock, restore.
+
+---
+
+---
+
+## 6. Working in this codebase
 
 **Do**
 
@@ -180,7 +227,7 @@ surfaces). The drawer is a real modal: focus trap, Esc, scroll lock, restore.
 
 ### Running the audit
 
-Needs both servers and an `e2e_admin_hod` account. **The Playwright suite's
+Needs both servers and an `e2e_admin` account. **The Playwright suite's
 global teardown drops every `e2e_*` account**, so after running `npx playwright
 test` you must recreate it or the audit exits 2:
 
@@ -203,7 +250,7 @@ them there, not per chart.
 
 ---
 
-## 6. Known open items
+## 7. Known open items
 
 - **`forgot-password` returns 500 for a known address and 200 for an unknown
   one when SMTP is unset**, which leaks whether an account exists — the exact
@@ -213,5 +260,10 @@ them there, not per chart.
 - Dark mode is not implemented. The tokens are structured for it; the dark
   steps must be *selected and validated against the dark surface*, not
   generated by flipping the light ones.
-- The daily entry forms work on a phone but are not yet *designed* for one —
-  they remain wide grids with a sticky first column.
+- The daily entry forms have no **save affordance within reach** on a long
+  card list: an officer 60 fields down must scroll back to the toolbar to save
+  a draft. A sticky save action is the obvious next step, but it has to be
+  designed around the bottom tab bar rather than competing with it.
+- `mobile-entry.js` rebuilds cards only on the rows present when it runs.
+  Forms that add rows later (`materials`, `limestone`, the pile log) show those
+  rows in Table view until the page is reloaded.

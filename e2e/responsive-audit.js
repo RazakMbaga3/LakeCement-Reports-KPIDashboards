@@ -11,7 +11,7 @@
      node e2e/responsive-audit.js --json <file>    # machine-readable result
 
    Requires both servers up (backend :5000, preview :3000) and an
-   e2e_admin_hod account — `node e2e/global-setup.js` creates one.
+   e2e_admin account — `node e2e/global-setup.js` creates one.
 
    THE CRITERIA
    ────────────
@@ -39,7 +39,7 @@ const fs   = require('fs');
 const { chromium } = require('@playwright/test');
 
 const BASE = process.env.AUDIT_BASE || 'http://localhost:3000';
-const USER = process.env.AUDIT_USER || 'e2e_admin_hod';
+const USER = process.env.AUDIT_USER || 'e2e_admin';
 const PASS = process.env.AUDIT_PASS || 'E2E@Harness2026!';
 
 const argShots = (() => { const i = process.argv.indexOf('--shots'); return i > -1 ? process.argv[i + 1] : null; })();
