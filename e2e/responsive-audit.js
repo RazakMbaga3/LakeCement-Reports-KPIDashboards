@@ -227,6 +227,21 @@ function measure(opts) {
     ]);
     await page.waitForTimeout(1200);
 
+    /* Fail loudly rather than audit the login page 18 times. The e2e
+       accounts are dropped by the Playwright suite's global teardown, so
+       running `npx playwright test` and then this audit in the same
+       session leaves no account to log in with — and a silently
+       unauthenticated run measures the wrong pages entirely. */
+    if (/login\.html/.test(page.url())) {
+      console.error(
+        `\nCannot sign in as ${USER}. The account is missing, locked, or the password changed.\n` +
+        `The Playwright suite's global teardown drops every e2e_* account, so re-create it with:\n` +
+        `    node -e "require('./global-setup.js')()"\n`
+      );
+      await browser.close();
+      process.exit(2);
+    }
+
     const floor = vp.mobile ? FLOOR_MOBILE : FLOOR_DESKTOP;
 
     for (const [label, url] of PAGES) {

@@ -299,6 +299,7 @@
   applyReliabilityPermissions();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="chart-theme.js"></script>
 <script src="forms/api-client.js"></script>
 <script src="forms/latest-period.js"></script>
 <script src="forms/client-errors.js"></script>
@@ -318,8 +319,15 @@
      white surface — mitigated here by making direct labels + the adjoining
      data table mandatory (never color-only encoding), per the skill's
      relief rule. */
-  var CAUSE_COLOR = { mech:'#EF4444', ei:'#3B82F6', prod:'#10B981', planned:'#8B5CF6', power:'#F59E0B', other:'#94A3B8' };
-  var CUM_LINE_COLOR = '#173158'; // brand navy — matches this app's prior Pareto cumulative-% line color
+  /* Downtime causes are identities, so they take categorical slots in a
+     fixed order — the same cause keeps the same hue whatever the filter
+     leaves on screen. "Other" is a residual, not an identity, so it
+     takes the neutral and never a hue of its own. */
+  var CAUSE_COLOR = { mech: LCL_CHART.series[0], ei: LCL_CHART.series[1], prod: LCL_CHART.series[2],
+                      planned: LCL_CHART.series[3], power: LCL_CHART.series[4], other: LCL_CHART.status.neutral };
+  /* The Pareto cumulative line is an overlay, not a category: it wears
+     ink so it reads as annotation over the bars rather than as a 7th cause. */
+  var CUM_LINE_COLOR = LCL_CHART.ink;
 
   /* MTBF targets by equipment TYPE (Handbook §4.7.2): kilns >=500h, ball
      mills (raw mill + both cement mills, all tube/ball-type grinding
@@ -438,7 +446,7 @@
   function renderParetoChart(canvasId, rows, valueKey, opts) {
     opts = opts || {};
     var labelKey = opts.labelKey || 'label';
-    var colorFn = opts.colorFn || function (r) { return CAUSE_COLOR[r.cause] || '#94A3B8'; };
+    var colorFn = opts.colorFn || function (r) { return CAUSE_COLOR[r.cause] || LCL_CHART.status.neutral; };
     var ctx = document.getElementById(canvasId);
     destroyChart(canvasId);
     if (!rows.length) return;
@@ -463,7 +471,7 @@
         responsive: true, maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: { position: 'top', labels: { font: { size: 9.5, weight: '600' }, boxWidth: 10, filter: function (item) { return item.text !== '80% line'; } } },
+          legend: { position: 'top', labels: { font: { size: 12, weight: '600' }, boxWidth: 10, filter: function (item) { return item.text !== '80% line'; } } },
           tooltip: {
             callbacks: {
               label: function (c) {
@@ -476,8 +484,8 @@
           },
         },
         scales: {
-          x: { ticks: { font: { size: 9 }, maxRotation: 20, minRotation: 0 }, grid: { display: false } },
-          y: { min: 0, max: 100, title: { display: true, text: '% of total', font: { size: 9 } }, ticks: { font: { size: 9 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+          x: { ticks: { font: { size: 12 }, maxRotation: 20, minRotation: 0 }, grid: { display: false } },
+          y: { min: 0, max: 100, title: { display: true, text: '% of total', font: { size: 12 } }, ticks: { font: { size: 12 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
         },
       },
     });
@@ -486,7 +494,7 @@
   function renderParetoTable(wrapId, rows, valueKey, valueLabel, opts) {
     opts = opts || {};
     var labelKey = opts.labelKey || 'label';
-    var colorFn = opts.colorFn || function (r) { return CAUSE_COLOR[r.cause] || '#94A3B8'; };
+    var colorFn = opts.colorFn || function (r) { return CAUSE_COLOR[r.cause] || LCL_CHART.status.neutral; };
     var headHdr = opts.headHdr || 'Cause';
     var emptyMsg = opts.emptyMsg || 'No stoppage data logged in this period.';
     var el = document.getElementById(wrapId);
@@ -584,7 +592,7 @@
     { key: 'packing', label: 'Packing' },
   ];
   var SEQUENTIAL_HUE = '#F49545'; // brand orange — magnitude ranking (fault Pareto), not a fixed category, so ONE hue per the dataviz skill's "sequential = one hue" rule (never per-bar categorical colors for a many-named, non-fixed set)
-  var TREND_HUE = '#173158';      // brand navy — MTBF-by-month trend bars
+  var TREND_HUE = LCL_CHART.series[0];   // single series — slot 1
 
   var _activeEquip = EQUIP_LIST[0].key;
   var _equipDetailSeq = 0;
@@ -692,7 +700,7 @@
         datasets: [{
           label: 'Events',
           data: rows.map(function (r) { return r.events; }),
-          backgroundColor: rows.map(function (r) { return CAUSE_COLOR[r.cause] || '#94A3B8'; }),
+          backgroundColor: rows.map(function (r) { return CAUSE_COLOR[r.cause] || LCL_CHART.status.neutral; }),
           borderRadius: 3, maxBarThickness: 40,
         }],
       },
@@ -706,9 +714,9 @@
           } } },
         },
         scales: {
-          x: { ticks: { font: { size: 9 }, maxRotation: 20, minRotation: 0 }, grid: { display: false } },
-          y: { beginAtZero: true, ticks: { precision: 0, font: { size: 9 } },
-               title: { display: true, text: 'Number of events', font: { size: 9 } },
+          x: { ticks: { font: { size: 12 }, maxRotation: 20, minRotation: 0 }, grid: { display: false } },
+          y: { beginAtZero: true, ticks: { precision: 0, font: { size: 12 } },
+               title: { display: true, text: 'Number of events', font: { size: 12 } },
                grid: { color: 'rgba(0,0,0,0.05)' } },
         },
       },
@@ -755,8 +763,8 @@
           } } },
         },
         scales: {
-          x: { ticks: { font: { size: 10 } }, grid: { display: false } },
-          y: { beginAtZero: true, title: { display: true, text: 'MTBF (hours)', font: { size: 9 } }, ticks: { font: { size: 9 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+          x: { ticks: { font: { size: 12 } }, grid: { display: false } },
+          y: { beginAtZero: true, title: { display: true, text: 'MTBF (hours)', font: { size: 12 } }, ticks: { font: { size: 12 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
         },
       },
     });

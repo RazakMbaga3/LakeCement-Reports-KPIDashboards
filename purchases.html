@@ -318,13 +318,21 @@
   requireAuth();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="chart-theme.js"></script>
 <script src="forms/api-client.js"></script>
 <script src="forms/client-errors.js"></script>
 <script>
 (function () {
   'use strict';
 
-  var ORANGE = '#F49545', NAVY = '#173158', GREEN = '#239557', GRAY = '#9CA3AF';
+  /* Chart colours come from the validated categorical palette, not from
+     the brand palette: #173158 fails the categorical checks (too dark,
+     and chroma low enough to read as grey rather than as a hue). Status
+     colours are a SEPARATE, reserved set — a "stock above maximum"
+     warning must never be mistakable for "series 2". */
+  var S     = LCL_CHART.series;
+  var ST    = LCL_CHART.status;
+  var GRAY  = ST.neutral;
   var CATEGORIES = ['service', 'local', 'import', 'raw_material'];
 
   function fmt(v) { return (v == null) ? '—' : v.toLocaleString(undefined, { maximumFractionDigits: 1 }); }
@@ -431,14 +439,14 @@
       type: 'bar',
       data: {
         labels: months.map(function (mo) { return mo.label; }),
-        datasets: [{ label: 'PO Value', data: months.map(function (mo) { return mo.value_tzs; }), backgroundColor: ORANGE, borderRadius: 4 }],
+        datasets: [{ label: 'PO Value', data: months.map(function (mo) { return mo.value_tzs; }), backgroundColor: S[0], borderRadius: 4 }],
       },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-          x: { grid: { display: false }, ticks: { font: { size: 9 } } },
-          y: { ticks: { font: { size: 9 }, callback: function (v) { return tzs(v); } } },
+          x: { grid: { display: false }, ticks: { font: { size: 12 } } },
+          y: { ticks: { font: { size: 12 }, callback: function (v) { return tzs(v); } } },
         },
       },
     });
@@ -497,7 +505,8 @@
   }
 
   /* ── Stores / Inventory ───────────────────────────────────────── */
-  var CAT_COLORS = { raw_material: NAVY, coal: '#6B7280', packing_bag: ORANGE, grinding_aid: '#7C5CBF', diesel: GREEN };
+  /* Five spend categories = five identities, assigned in fixed order. */
+  var CAT_COLORS = { raw_material: S[0], coal: S[1], packing_bag: S[2], grinding_aid: S[3], diesel: S[4] };
   var statusChart = null, trendCatChart = null, _storesCache = null;
 
   function qty(v, unit) {
@@ -515,7 +524,7 @@
     }
     empty.style.display = 'none';
     wrap.innerHTML = inv.categories.map(function (c) {
-      var color = CAT_COLORS[c.key] || NAVY;
+      var color = CAT_COLORS[c.key] || GRAY;
       return '<div class="st-cat" style="border-left-color:' + color + '">' +
         '<div class="st-cat-label">' + esc(c.label) + '</div>' +
         '<div class="st-cat-val">' + qty(c.closing, c.unit) + '<span class="st-cat-unit">' + esc(c.unit) + '</span></div>' +
@@ -536,9 +545,9 @@
     pctEl.textContent = (st.healthy_pct == null ? '—' : st.healthy_pct + '%');
 
     var parts = [
-      { name: 'Within min–max', val: within, color: GREEN },
+      { name: 'Within min–max', val: within, color: ST.good },
       { name: 'Below minimum', val: below, color: '#C62828' },
-      { name: 'Above maximum', val: above, color: ORANGE },
+      { name: 'Above maximum', val: above, color: ST.warning },
     ];
     legend.innerHTML = parts.map(function (p) {
       return '<div class="st-legend-row">' +
@@ -584,7 +593,7 @@
       var pct = max ? (r.issued / max) * 100 : 0;
       return '<tr><td>' + esc(r.label) + '</td>' +
         '<td' + (r.issued ? '' : ' class="st-muted"') + '>' + qty(r.issued) + '</td>' +
-        '<td class="st-bar-cell"><div class="st-bar"><div class="st-bar-fill" style="width:' + pct.toFixed(1) + '%;background:' + GREEN + '"></div></div></td></tr>';
+        '<td class="st-bar-cell"><div class="st-bar"><div class="st-bar-fill" style="width:' + pct.toFixed(1) + '%;background:' + ST.good + '"></div></div></td></tr>';
     }).join('');
   }
 
@@ -617,23 +626,23 @@
       data: {
         labels: live.map(function (m) { return m.label; }),
         datasets: [
-          { label: 'Received', data: live.map(function (m) { return m.received; }), backgroundColor: NAVY, borderRadius: 4 },
-          { label: 'Issued',   data: live.map(function (m) { return m.issued; }),   backgroundColor: GREEN, borderRadius: 4 },
+          { label: 'Received', data: live.map(function (m) { return m.received; }), backgroundColor: S[0], borderRadius: 4 },
+          { label: 'Issued',   data: live.map(function (m) { return m.issued; }),   backgroundColor: S[1], borderRadius: 4 },
         ],
       },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'top', align: 'end', labels: { boxWidth: 10, boxHeight: 10, font: { size: 10 }, usePointStyle: true, pointStyle: 'rectRounded' } },
+          legend: { position: 'top', align: 'end', labels: { boxWidth: 10, boxHeight: 10, font: { size: 12 }, usePointStyle: true, pointStyle: 'rectRounded' } },
           tooltip: { callbacks: { label: function (c) {
             return c.dataset.label + ': ' + (valueMode ? tzs(c.parsed.y) : qty(c.parsed.y, unit) + ' ' + unit);
           } } },
         },
         scales: {
-          x: { grid: { display: false }, ticks: { font: { size: 9 } } },
+          x: { grid: { display: false }, ticks: { font: { size: 12 } } },
           y: {
-            ticks: { font: { size: 9 }, callback: function (v) { return valueMode ? tzs(v) : qty(v, unit); } },
-            title: { display: true, text: unit, font: { size: 9 }, color: GRAY },
+            ticks: { font: { size: 12 }, callback: function (v) { return valueMode ? tzs(v) : qty(v, unit); } },
+            title: { display: true, text: unit, font: { size: 12 }, color: GRAY },
           },
         },
       },

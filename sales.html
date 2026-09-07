@@ -205,13 +205,19 @@
   applySalesPermissions();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="chart-theme.js"></script>
 <script src="forms/api-client.js"></script>
 <script src="forms/client-errors.js"></script>
 <script>
 (function () {
   'use strict';
 
-  var ORANGE = '#F49545', NAVY = '#173158', GREEN = '#239557', RED = '#C62828', GRAY = '#9CA3AF';
+  /* Series colours from the validated palette; achievement colours from
+     the reserved status set. These are different jobs and must not share
+     a value — see chart-theme.js. */
+  var S    = LCL_CHART.series;
+  var ST   = LCL_CHART.status;
+  var GRAY = ST.neutral;
 
   function fmt(v) { return (v == null) ? '—' : v.toLocaleString(undefined, { maximumFractionDigits: 1 }); }
   function pct(v) { return (v == null) ? '—' : v.toFixed(1) + '%'; }
@@ -348,15 +354,15 @@
         labels: trend.map(function (t) { return t.date.slice(5); }),
         datasets: [
           { label: 'Projected', data: trend.map(function (t) { return t.projected; }), borderColor: '#cbd5e1', borderDash: [4, 3], borderWidth: 1.5, fill: false, tension: .3 },
-          { label: 'Actual', data: trend.map(function (t) { return t.actual; }), borderColor: ORANGE, backgroundColor: ORANGE + '22', borderWidth: 2.5, fill: true, tension: .3, spanGaps: true },
+          { label: 'Actual', data: trend.map(function (t) { return t.actual; }), borderColor: S[1], backgroundColor: LCL_CHART.alpha(S[1], .13), borderWidth: 2.5, fill: true, tension: .3, spanGaps: true },
         ],
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'top', labels: { font: { size: 10 }, boxWidth: 12 } } },
+        plugins: { legend: { position: 'top', labels: { font: { size: 12 }, boxWidth: 12 } } },
         scales: {
-          x: { grid: { display: false }, ticks: { font: { size: 9 } } },
-          y: { ticks: { font: { size: 9 } }, title: { display: true, text: 'MT', font: { size: 9 } } },
+          x: { grid: { display: false }, ticks: { font: { size: 12 } } },
+          y: { ticks: { font: { size: 12 } }, title: { display: true, text: 'MT', font: { size: 12 } } },
         },
       },
     });
@@ -400,7 +406,7 @@
       return;
     }
     var pctVal = mtd.vs_target_pct;
-    var color = pctVal == null ? GRAY : pctVal >= 100 ? GREEN : pctVal >= 80 ? ORANGE : RED;
+    var color = pctVal == null ? GRAY : pctVal >= 100 ? ST.good : pctVal >= 80 ? ST.warning : ST.bad;
     card.innerHTML =
       '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px">' +
         '<span>' + (mtd.actual_mt == null ? 'Actual pending Odoo' : fmt(mtd.actual_mt) + ' MT actual') + '</span>' +
