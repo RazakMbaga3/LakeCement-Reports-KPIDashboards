@@ -73,14 +73,14 @@
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">SPC — Clinker</div>
-      <div class="kt-val">79.1</div>
+      <div class="kt-val" data-kpi="spc_clinker">—</div>
       <div class="kt-unit">kWh/MT — Target 61</div>
       <div class="kt-vs vs-ng">▼ 29.7% above target — kiln audit needed</div>
     </div>
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">SPC — Cement Grinding</div>
-      <div class="kt-val">29.1</div>
+      <div class="kt-val" data-kpi="spc_grinding">—</div>
       <div class="kt-unit">kWh/MT — Target 27</div>
       <div class="kt-vs vs-wa">▼ 7.8% above target</div>
     </div>
@@ -94,7 +94,7 @@
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">CPP Auxiliary %</div>
-      <div class="kt-val">12.31%</div>
+      <div class="kt-val" data-kpi="cpp_aux_pct_xform">—</div>
       <div class="kt-unit">% of Gross Generation</div>
       <div class="kt-vs vs-ng">▼ Above 10% target — review aux loads</div>
     </div>
@@ -136,12 +136,12 @@
           <tr>
             <td class="ts">1</td>
             <td class="tp">Crusher (Limestone)</td>
-            <td class="cm"><input class="ci" type="number" value="1624.19" data-field="pwr_crusher_kwh" /></td>
-            <td class="cm"><input class="ci" type="number" value="3182" /></td>
-            <td class="cf"><div class="cv">0.51</div></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_crusher_kwh" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_crusher_prod_mt" /></td>
+            <td class="cf"><div class="cv" data-kpi="pwr_spc_crusher">—</div></td>
             <td class="cm"><input class="ci" type="number" value="1.20" step="0.01" /></td>
             <td class="cs"><div class="cv"><span class="var-chip var-g">▼ 0.69</span></div></td>
-            <td class="cf"><div class="cv">0.53</div></td>
+            <td class="cf"><div class="cv" data-kpi="pwr_spc_crusher_mtd">—</div></td>
             <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
           </tr>
 
@@ -150,23 +150,23 @@
           <tr>
             <td class="ts">2</td>
             <td class="tp">Raw Mill (RM-1)</td>
-            <td class="cm"><input class="ci" type="number" value="31560" data-field="pwr_rawmill_kwh" /></td>
-            <td class="cm"><input class="ci" type="number" value="1680" /></td>
-            <td class="cf"><div class="cv">18.79</div></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_rawmill_kwh" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_rawmill_prod_mt" /></td>
+            <td class="cf"><div class="cv" data-kpi="pwr_spc_rawmill">—</div></td>
             <td class="cm"><input class="ci" type="number" value="19.00" step="0.01" /></td>
             <td class="cs"><div class="cv"><span class="var-chip var-g">▼ 0.21</span></div></td>
-            <td class="cf"><div class="cv">18.85</div></td>
+            <td class="cf"><div class="cv" data-kpi="pwr_spc_rawmill_mtd">—</div></td>
             <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
             <td class="ts">3</td>
             <td class="tp">Raw Mill (RM-2)</td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="pwr_rawmill2_kwh" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_rawmill2_kwh" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_rawmill2_prod_mt" /></td>
+            <td class="cf"><div class="cv" data-kpi="pwr_spc_rawmill2">—</div></td>
             <td class="cm"><input class="ci" type="number" value="19.00" step="0.01" /></td>
             <td class="cs"><div class="cv"><span class="var-chip var-na">Idle</span></div></td>
-            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="pwr_spc_rawmill2_mtd">—</div></td>
             <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
           </tr>
 
@@ -175,12 +175,12 @@
           <tr>
             <td class="ts">4</td>
             <td class="tp">Coal Mill (CM)</td>
-            <td class="cm"><input class="ci" type="number" value="2430" data-field="pwr_coalmill_kwh" /></td>
-            <td class="cm"><input class="ci" type="number" value="120" /></td>
-            <td class="cf"><div class="cv">20.25</div></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_coalmill_kwh" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_coalmill_prod_mt" /></td>
+            <td class="cf"><div class="cv" data-kpi="pwr_spc_coalmill">—</div></td>
             <td class="cm"><input class="ci" type="number" value="20.00" step="0.01" /></td>
             <td class="cs"><div class="cv"><span class="var-chip var-a">▲ 0.25</span></div></td>
-            <td class="cf"><div class="cv">20.10</div></td>
+            <td class="cf"><div class="cv" data-kpi="pwr_spc_coalmill_mtd">—</div></td>
             <td class="cm"><input class="ci" type="text" value="Slightly above — coal grinding harder" style="text-align:left;padding-left:8px" /></td>
           </tr>
 
@@ -189,12 +189,12 @@
           <tr>
             <td class="ts">5</td>
             <td class="tp">Kiln (Preheater + Kiln + Cooler)</td>
-            <td class="cm"><input class="ci" type="number" value="52950" data-field="pwr_kiln_kwh" /></td>
-            <td class="cm"><input class="ci" type="number" value="1625" data-field="pwr_kiln_prod_mt" /></td>
-            <td class="cf"><div class="cv">32.58</div></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_kiln_kwh" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_kiln_prod_mt" /></td>
+            <td class="cf"><div class="cv" data-kpi="pwr_spc_kiln">—</div></td>
             <td class="cm"><input class="ci" type="number" value="32.00" step="0.01" /></td>
             <td class="cs"><div class="cv"><span class="var-chip var-a">▲ 0.58</span></div></td>
-            <td class="cf"><div class="cv">32.42</div></td>
+            <td class="cf"><div class="cv" data-kpi="pwr_spc_kiln_mtd">—</div></td>
             <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
           </tr>
 
@@ -203,12 +203,12 @@
           <tr>
             <td class="ts">6</td>
             <td class="tp">Cement Mill-1 (CM-1)</td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="pwr_cm1_kwh" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="pwr_cm1_prod_mt" /></td>
-            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_cm1_kwh" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_cm1_prod_mt" /></td>
+            <td class="cf"><div class="cv" data-kpi="pwr_spc_cm1">—</div></td>
             <td class="cm"><input class="ci" type="number" value="27.00" step="0.01" /></td>
             <td class="cs"><div class="cv"><span class="var-chip var-na">Idle</span></div></td>
-            <td class="cf"><div class="cv">28.10</div></td>
+            <td class="cf"><div class="cv" data-kpi="pwr_spc_cm1_mtd">—</div></td>
             <td class="cm"><input class="ci" type="text" value="Under planned maintenance" style="text-align:left;padding-left:8px" /></td>
           </tr>
 
@@ -217,12 +217,12 @@
           <tr>
             <td class="ts">7</td>
             <td class="tp">Cement Mill-2 (CM-2)</td>
-            <td class="cm"><input class="ci" type="number" value="9462.5" data-field="pwr_cm2_kwh" /></td>
-            <td class="cm"><input class="ci" type="number" value="325" data-field="pwr_cm2_prod_mt" /></td>
-            <td class="cf"><div class="cv">29.12</div></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_cm2_kwh" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_cm2_prod_mt" /></td>
+            <td class="cf"><div class="cv" data-kpi="pwr_spc_cm2">—</div></td>
             <td class="cm"><input class="ci" type="number" value="27.00" step="0.01" /></td>
             <td class="cs"><div class="cv"><span class="var-chip var-r">▲ 2.12</span></div></td>
-            <td class="cf"><div class="cv">28.45</div></td>
+            <td class="cf"><div class="cv" data-kpi="pwr_spc_cm2_mtd">—</div></td>
             <td class="cm"><input class="ci" type="text" value="High — separator efficiency review needed" style="text-align:left;padding-left:8px" /></td>
           </tr>
 
@@ -231,23 +231,23 @@
           <tr>
             <td class="ts">8</td>
             <td class="tp">Packing Plant-1</td>
-            <td class="cm"><input class="ci" type="number" value="2040" data-field="pwr_packing_kwh" /></td>
-            <td class="cm"><input class="ci" type="number" value="346.5" /></td>
-            <td class="cf"><div class="cv">5.88</div></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_packing_kwh" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_packing_prod_mt" /></td>
+            <td class="cf"><div class="cv" data-kpi="pwr_spc_packing">—</div></td>
             <td class="cm"><input class="ci" type="number" value="6.00" step="0.01" /></td>
             <td class="cs"><div class="cv"><span class="var-chip var-g">▼ 0.12</span></div></td>
-            <td class="cf"><div class="cv">5.90</div></td>
+            <td class="cf"><div class="cv" data-kpi="pwr_spc_packing_mtd">—</div></td>
             <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
             <td class="ts">9</td>
             <td class="tp">Packing Plant-2</td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="pwr_packing2_kwh" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_packing2_kwh" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_packing2_prod_mt" /></td>
+            <td class="cf"><div class="cv" data-kpi="pwr_spc_packing2">—</div></td>
             <td class="cm"><input class="ci" type="number" value="6.00" step="0.01" /></td>
             <td class="cs"><div class="cv"><span class="var-chip var-na">Idle</span></div></td>
-            <td class="cf"><div class="cv">5.95</div></td>
+            <td class="cf"><div class="cv" data-kpi="pwr_spc_packing2_mtd">—</div></td>
             <td class="cm"><input class="ci" type="text" value="Idle — CM-1 down" style="text-align:left;padding-left:8px" /></td>
           </tr>
 
@@ -256,7 +256,7 @@
           <tr>
             <td class="ts">10</td>
             <td class="tp">Lighting &amp; General Services</td>
-            <td class="cm"><input class="ci" type="number" value="3600" data-field="pwr_lighting_kwh" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_lighting_kwh" /></td>
             <td class="cs"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
             <td class="cs"><div class="cv">—</div></td>
@@ -267,7 +267,7 @@
           <tr>
             <td class="ts">11</td>
             <td class="tp">Colony</td>
-            <td class="cm"><input class="ci" type="number" value="1012.02" data-field="pwr_colony_kwh" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_colony_kwh" /></td>
             <td class="cs"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
             <td class="cs"><div class="cv">—</div></td>
@@ -319,12 +319,12 @@
           <tr class="srow"><td colspan="3">Import / Generation</td></tr>
           <tr>
             <td class="tp">TANESCO Import (kWh)</td>
-            <td class="cm"><input class="ci" type="number" value="35718" data-field="pwr_tanesco_kwh" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_tanesco_kwh" /></td>
             <td class="cf"><div class="cv" data-kpi="pwr_tanesco_pct">—</div></td>
           </tr>
           <tr>
             <td class="tp">CPP Generation (kWh)</td>
-            <td class="cm"><input class="ci" type="number" value="126304" data-field="pwr_cpp_kwh" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_cpp_kwh" /></td>
             <td class="cf"><div class="cv" data-kpi="pwr_cpp_pct">—</div></td>
           </tr>
           <tr class="trow">
@@ -368,18 +368,18 @@
         <tbody>
           <tr>
             <td class="tp">Clinker</td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="pwr_tanesco_clinker_kwh" /></td>
-            <td class="cm"><input class="ci" type="number" value="113268.68" data-field="pwr_cpp_clinker_kwh" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_tanesco_clinker_kwh" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_cpp_clinker_kwh" /></td>
           </tr>
           <tr>
             <td class="tp">Cement</td>
-            <td class="cm"><input class="ci" type="number" value="108307.69" data-field="pwr_tanesco_cement_kwh" /></td>
-            <td class="cm"><input class="ci" type="number" value="12951.61" data-field="pwr_cpp_cement_kwh" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_tanesco_cement_kwh" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_cpp_cement_kwh" /></td>
           </tr>
           <tr>
             <td class="tp">Colony</td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="pwr_tanesco_colony_kwh" /></td>
-            <td class="cm"><input class="ci" type="number" value="1012.02" data-field="pwr_cpp_colony_kwh" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_tanesco_colony_kwh" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="pwr_cpp_colony_kwh" /></td>
           </tr>
         </tbody>
       </table>
@@ -414,33 +414,33 @@
         <tbody>
           <tr>
             <td class="tp">SPC Total (kWh/MT eq. cement)</td>
-            <td class="cf"><div class="cv">156.7</div></td>
-            <td class="cf"><div class="cv">157.2</div></td>
-            <td class="cf"><div class="cv">158.0</div></td>
+            <td class="cf"><div class="cv" data-kpi="spc_total">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="spc_total_mtd">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="spc_total_ytd">—</div></td>
             <td class="cm"><input class="ci" type="number" value="150" /></td>
             <td class="cf"><div class="cv"><span class="var-chip var-r">Above target</span></div></td>
           </tr>
           <tr>
             <td class="tp">SPC Clinker (kWh/MT clinker)</td>
-            <td class="cf"><div class="cv">79.1</div></td>
-            <td class="cf"><div class="cv">78.8</div></td>
-            <td class="cf"><div class="cv">79.0</div></td>
+            <td class="cf"><div class="cv" data-kpi="spc_clinker">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="spc_clinker_mtd">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="spc_clinker_ytd">—</div></td>
             <td class="cm"><input class="ci" type="number" value="61" /></td>
             <td class="cf"><div class="cv"><span class="var-chip var-r">Above target</span></div></td>
           </tr>
           <tr>
             <td class="tp">SPC Grinding (kWh/MT cement)</td>
-            <td class="cf"><div class="cv">29.1</div></td>
-            <td class="cf"><div class="cv">28.5</div></td>
-            <td class="cf"><div class="cv">28.7</div></td>
+            <td class="cf"><div class="cv" data-kpi="spc_grinding">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="spc_grinding_mtd">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="spc_grinding_ytd">—</div></td>
             <td class="cm"><input class="ci" type="number" value="27" /></td>
             <td class="cf"><div class="cv"><span class="var-chip var-a">Slightly above</span></div></td>
           </tr>
           <tr>
             <td class="tp">CPP Auxiliary %</td>
-            <td class="cf"><div class="cv">12.31%</div></td>
-            <td class="cf"><div class="cv">12.46%</div></td>
-            <td class="cf"><div class="cv">12.47%</div></td>
+            <td class="cf"><div class="cv" data-kpi="cpp_aux_pct_xform">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cpp_aux_pct_xform_mtd">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="cpp_aux_pct_xform_ytd">—</div></td>
             <td class="cm"><input class="ci" type="number" value="10" /></td>
             <td class="cf"><div class="cv"><span class="var-chip var-r">Above target</span></div></td>
           </tr>
@@ -518,27 +518,50 @@
 <script src="excel-import.js"></script>
 <script src="excel-export.js"></script>
 <script src="kpi-live.js"></script>
+<script src="report-rollup.js"></script>
+<script>initReportRollup({ form: 'power-cons', live: true });</script>
+<script src="formula-registry.js"></script>
 <script>
 function _sectionKwh(f, n) {
   return n(f.pwr_crusher_kwh)+n(f.pwr_rawmill_kwh)+n(f.pwr_rawmill2_kwh)+n(f.pwr_coalmill_kwh)
         +n(f.pwr_kiln_kwh)+n(f.pwr_cm1_kwh)+n(f.pwr_cm2_kwh)+n(f.pwr_packing_kwh)
         +n(f.pwr_packing2_kwh)+n(f.pwr_lighting_kwh)+n(f.pwr_colony_kwh);
 }
-initKpiLive([
+
+/* Section 1's per-equipment Specific Power (kWh/MT) rows — On Date is a
+   plain ratio of this form's own live fields (kpi-live.js, below); MTD
+   divides the SAME two fields' live report-rollup sums (this month's
+   history + the still-unsaved open day), via reportRollupLiveSum(), since
+   a ratio can't be produced by report-rollup's own [data-roll-mtd]
+   painting (that only sums, it never divides by a second field). One
+   table drives both, so the nine rows can't drift out of sync with each
+   other. Kiln/CM-1/CM-2's kWh+MT were already real, wired inputs (they
+   feed the registry's Specific Power Consumption KPIs); Crusher, RM-1,
+   RM-2, Coal Mill and both Packing lines had a visible Production (MT)
+   box that was never bound to a data-field — added here, matching the
+   naming the wired three already use (pwr_<equip>_prod_mt). */
+var EQUIPMENT = [
+  { kwh: 'pwr_crusher_kwh',  mt: 'pwr_crusher_prod_mt',  onDate: 'pwr_spc_crusher',  mtd: 'pwr_spc_crusher_mtd' },
+  { kwh: 'pwr_rawmill_kwh',  mt: 'pwr_rawmill_prod_mt',  onDate: 'pwr_spc_rawmill',  mtd: 'pwr_spc_rawmill_mtd' },
+  { kwh: 'pwr_rawmill2_kwh', mt: 'pwr_rawmill2_prod_mt', onDate: 'pwr_spc_rawmill2', mtd: 'pwr_spc_rawmill2_mtd' },
+  { kwh: 'pwr_coalmill_kwh', mt: 'pwr_coalmill_prod_mt', onDate: 'pwr_spc_coalmill', mtd: 'pwr_spc_coalmill_mtd' },
+  { kwh: 'pwr_kiln_kwh',     mt: 'pwr_kiln_prod_mt',     onDate: 'pwr_spc_kiln',     mtd: 'pwr_spc_kiln_mtd' },
+  { kwh: 'pwr_cm1_kwh',      mt: 'pwr_cm1_prod_mt',      onDate: 'pwr_spc_cm1',      mtd: 'pwr_spc_cm1_mtd' },
+  { kwh: 'pwr_cm2_kwh',      mt: 'pwr_cm2_prod_mt',      onDate: 'pwr_spc_cm2',      mtd: 'pwr_spc_cm2_mtd' },
+  { kwh: 'pwr_packing_kwh',  mt: 'pwr_packing_prod_mt',  onDate: 'pwr_spc_packing',  mtd: 'pwr_spc_packing_mtd' },
+  { kwh: 'pwr_packing2_kwh', mt: 'pwr_packing2_prod_mt', onDate: 'pwr_spc_packing2', mtd: 'pwr_spc_packing2_mtd' }
+];
+var EQUIPMENT_SPC_RULES = EQUIPMENT.map(function (eq) {
+  return { kpi: eq.onDate, fmt: 'n2', compute: function (f, n) {
+    var kwh = n(f[eq.kwh]), mt = n(f[eq.mt]);
+    return mt > 0 ? kwh / mt : null;
+  } };
+});
+initKpiLive(EQUIPMENT_SPC_RULES.concat([
   { kpi:'total_power', fmt:'n0', compute: function(f,n){ return _sectionKwh(f,n); } },
-  /* Simplified live-as-you-type preview only — kpi-live.js reads this
-     form's own fields, not the cement-mill form's clinker-factor inputs,
-     so it can't replicate the registry's 3-layer clinker-factor build.
-     The authoritative dashboard figure comes from /api/formula (registry). */
-  { kpi:'spc_total', fmt:'n1',
-    compute: function(f,n){
-      var pwr = n(f.pwr_crusher_kwh)+n(f.pwr_rawmill_kwh)+n(f.pwr_rawmill2_kwh)+n(f.pwr_coalmill_kwh)
-               +n(f.pwr_kiln_kwh)+n(f.pwr_cm1_kwh)+n(f.pwr_cm2_kwh)+n(f.pwr_packing_kwh)
-               +n(f.pwr_packing2_kwh)+n(f.pwr_lighting_kwh);
-      var prod = n(f.pwr_kiln_prod_mt)+n(f.pwr_cm1_prod_mt)+n(f.pwr_cm2_prod_mt);
-      return (pwr > 0 && prod > 0) ? pwr/prod : null;
-    }
-  },
+  /* spc_total/spc_clinker/spc_grinding/cpp_aux_pct_xform are painted by
+     the cross-form engine further down (needs production + cpp form data
+     this form's own fields can't supply), not by kpi-live here. */
   /* Power source split — TANESCO import vs CPP generation */
   { kpi:'pwr_total_unit', fmt:'n0', compute: function(f,n){ return n(f.pwr_tanesco_kwh)+n(f.pwr_cpp_kwh); } },
   { kpi:'pwr_tanesco_pct', fmt:'pct1', compute: function(f,n){
@@ -555,7 +578,203 @@ initKpiLive([
       var loss = (n(f.pwr_tanesco_kwh)+n(f.pwr_cpp_kwh)) - cons;
       return cons > 0 ? loss/cons*100 : null;
   } }
-]);
+]));
+</script>
+<script>
+/* MTD Specific Power per equipment = ΣkWh(this month, incl. the live
+   unsaved open day) ÷ ΣMT(same range) — the SAME EQUIPMENT table as the
+   On Date rules above, so the two can't disagree about which fields
+   pair up. reportRollupLiveSum() is report-rollup.js's live cache
+   (populated once its first history fetch lands), not a fresh fetch per
+   keystroke. */
+(function () {
+  function paint() {
+    if (typeof window.reportRollupLiveSum !== 'function') return;
+    EQUIPMENT.forEach(function (eq) {
+      var kwh = window.reportRollupLiveSum('mtd', eq.kwh);
+      var mt  = window.reportRollupLiveSum('mtd', eq.mt);
+      if (kwh === null || mt === null) return;   // history hasn't loaded yet
+      var val = mt > 0 ? kwh / mt : null;
+      document.querySelectorAll('[data-kpi="' + eq.mtd + '"]').forEach(function (el) {
+        el.textContent = val === null ? '—' : val.toFixed(2);
+      });
+    });
+  }
+  document.addEventListener('input', paint);
+  document.addEventListener('change', paint);
+  document.addEventListener('nyati:restored', function () { setTimeout(paint, 260); });
+  setTimeout(paint, 260);
+  setTimeout(paint, 800);   // retry once more in case the initial history fetch was still in flight
+})();
+</script>
+<script>
+/* Section 4 (SPC Total/Clinker/Grinding, CPP Auxiliary %) reuses the
+   EXACT registry formulas the Executive Summary/KPI Reference use
+   (forms/formula-registry.js, loaded above as window.NyatiFormulas) — not
+   a re-derived approximation — so this table can never quietly disagree
+   with the rest of the dashboard. Two of the four
+   (specific-power-consumption-total, cpp-auxiliary-power) need data this
+   form doesn't have: SPC Total's clinker-factor build reads the
+   production form's cement-grade/clinker-consumption fields, and CPP
+   Auxiliary % is entirely CPP-form data. So all four are computed from a
+   per-day merge of THREE forms (production + power-cons + cpp), with
+   power-cons's contribution to the currently-open day read live from
+   this page's own inputs — production/cpp for that day are whatever's
+   already saved, since this page has no way to see unsaved edits
+   happening on a different page.
+
+   aggregateOverRows() is a direct port of backend/services/
+   formulaEngine.js's aggregate() — the same Σ(value×weight)÷Σweight
+   algorithm for monthlyAgg:{type:'weighted'} — kept in sync deliberately,
+   not by accident. */
+(function () {
+  var XFORM_KEYS = {
+    spc_total:         'specific-power-consumption-total',
+    spc_clinker:       'specific-power-consumption-up-to-clinker',
+    spc_grinding:      'specific-power-consumption-cement-grinding',
+    cpp_aux_pct_xform: 'cpp-auxiliary-power'
+  };
+  var XFORM_FORMS = ['production', 'power-cons', 'cpp'];
+
+  function monthStart(dateStr) { return dateStr.slice(0, 8) + '01'; }
+  function fiscalStart(dateStr) {
+    var d = new Date(dateStr + 'T00:00:00');
+    var y = d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1;
+    return y + '-04-01';
+  }
+
+  /* Per form: local snapshots first (offline/demo data), then overlay
+     server records for the same range — matches analytics.js's own
+     harvest() merge order (server wins on a date both have). Returns
+     { formId: { date: data } }. */
+  async function harvest(forms, from, to) {
+    var store = {};
+    await Promise.all(forms.map(async function (formId) {
+      store[formId] = {};
+      var re = new RegExp('^nyati-' + formId + '-(\\d{4}-\\d{2}-\\d{2})$');
+      for (var i = 0; i < localStorage.length; i++) {
+        var key = localStorage.key(i);
+        var m = key && key.match(re);
+        if (!m) continue;
+        var date = m[1];
+        if (date < from || date > to) continue;
+        try { var p = JSON.parse(localStorage.getItem(key)); store[formId][date] = p.data || {}; } catch (e) {}
+      }
+      if (window.NyatiAPI) {
+        try {
+          var records = await window.NyatiAPI.getFormRange(formId, from, to);
+          records.forEach(function (r) {
+            var d = r.record_date ? String(r.record_date).slice(0, 10) : null;
+            if (d) store[formId][d] = r.data || {};
+          });
+        } catch (e) {}
+      }
+    }));
+    return store;
+  }
+
+  function datesOf(store) {
+    var dates = {};
+    XFORM_FORMS.forEach(function (formId) {
+      Object.keys(store[formId] || {}).forEach(function (d) { dates[d] = true; });
+    });
+    return Object.keys(dates);
+  }
+
+  function mergedRow(store, date) {
+    var merged = {};
+    XFORM_FORMS.forEach(function (formId) {
+      Object.assign(merged, (store[formId] && store[formId][date]) || {});
+    });
+    return merged;
+  }
+
+  function liveDomFields() {
+    var f = {};
+    document.querySelectorAll('[data-field]').forEach(function (el) { f[el.getAttribute('data-field')] = el.value; });
+    return f;
+  }
+
+  function aggregateOverRows(formula, rows) {
+    var valid = rows.map(function (facts) {
+      var v; try { v = formula.daily(facts); } catch (e) { v = null; }
+      return (v === null || v === undefined || isNaN(v)) ? null : v;
+    }).map(function (v, i) { return { value: v, facts: rows[i] }; }).filter(function (r) { return r.value !== null; });
+    if (!valid.length) return null;
+    var agg = formula.monthlyAgg || 'avg';
+    if (agg === 'sum') return valid.reduce(function (s, r) { return s + r.value; }, 0);
+    if (agg === 'avg') return valid.reduce(function (s, r) { return s + r.value; }, 0) / valid.length;
+    if (agg.type === 'weighted') {
+      var wSum = 0, vSum = 0;
+      valid.forEach(function (r) {
+        var w = agg.weight(r.facts) || 0;
+        if (w > 0) { wSum += w; vSum += r.value * w; }
+      });
+      return wSum > 0 ? vSum / wSum : null;
+    }
+    return null;
+  }
+
+  var cache = null; // { date, store, mtdRows, ytdRows } — rows EXCLUDE `date`, each a merged facts dict
+
+  function liveFacts(date) {
+    var merged = mergedRow(cache.store, date);
+    Object.assign(merged, liveDomFields());   // this page's own live fields win for the open day
+    return merged;
+  }
+
+  function paintOne(kpi, val, dp, unit) {
+    var text = (val === null || val === undefined || isNaN(val))
+      ? '—'
+      : val.toLocaleString('en-US', { minimumFractionDigits: dp != null ? dp : 1, maximumFractionDigits: dp != null ? dp : 1 })
+        + (unit === '%' ? '%' : '');
+    document.querySelectorAll('[data-kpi="' + kpi + '"]').forEach(function (el) { el.textContent = text; });
+  }
+
+  function paint() {
+    if (!cache || !window.NyatiFormulas) return;
+    var FORMULAS = window.NyatiFormulas.FORMULAS;
+    var todayFacts = liveFacts(cache.date);
+
+    Object.keys(XFORM_KEYS).forEach(function (kpi) {
+      var formula = FORMULAS[XFORM_KEYS[kpi]];
+      if (!formula) return;
+
+      var onDate;
+      try { onDate = formula.daily(todayFacts); } catch (e) { onDate = null; }
+      paintOne(kpi, onDate, formula.dp, formula.unit);
+      paintOne(kpi + '_mtd', aggregateOverRows(formula, cache.mtdRows.concat([todayFacts])), formula.dp, formula.unit);
+      paintOne(kpi + '_ytd', aggregateOverRows(formula, cache.ytdRows.concat([todayFacts])), formula.dp, formula.unit);
+    });
+  }
+
+  async function run() {
+    var dateEl = document.querySelector('input[type="date"]');
+    var date = dateEl ? dateEl.value : new Date().toISOString().slice(0, 10);
+    if (!date) return;
+    var mStart = monthStart(date), fStart = fiscalStart(date);
+    /* Fiscal year encloses the calendar month, so one fetch covers both. */
+    var store = await harvest(XFORM_FORMS, fStart, date);
+    var allDates = datesOf(store);
+    var mtdDates = allDates.filter(function (d) { return d >= mStart && d < date; }).sort();
+    var ytdDates = allDates.filter(function (d) { return d >= fStart && d < date; }).sort();
+    cache = {
+      date: date,
+      store: store,
+      mtdRows: mtdDates.map(function (d) { return mergedRow(store, d); }),
+      ytdRows: ytdDates.map(function (d) { return mergedRow(store, d); })
+    };
+    paint();
+  }
+
+  var dateEl = document.querySelector('input[type="date"]');
+  if (dateEl) dateEl.addEventListener('change', function () { setTimeout(run, 150); });
+  document.addEventListener('nyati:restored', function () { setTimeout(run, 250); });
+  document.addEventListener('input', paint);
+  document.addEventListener('change', paint);
+  setTimeout(run, 300);
+  setTimeout(run, 900);   // retry once more in case the initial harvest was still in flight
+})();
 </script>
   </div><!-- /.main -->
 </div><!-- /.app-shell -->

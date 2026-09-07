@@ -196,3 +196,41 @@ test('the sidebar fill-status dots report the server, not this browser', async (
 
   await pool.query("DELETE FROM daily_reports WHERE record_date = $1 AND form_type = 'quality'", [todayIso]);
 });
+
+test('production MTD folds in the live, unsaved day without waiting for a save', async ({ page }) => {
+  /* Mirrors power-plant-report.html's live-MTD test: report-rollup.js's
+     `live: true` flag (initReportRollup({form:'production', live:true}))
+     should update data-roll-mtd cells as the open day is typed, not just
+     after Save/Submit. kiln_prod_mt is a plain additive quantity here (no
+     ratio/weighted-average fields on this page per the survey), so a
+     simple sum check is enough. */
+  const MTD_SEED_DATE = '1999-06-01';
+  await pool.query("DELETE FROM daily_reports WHERE form_type = 'production' AND record_date IN ($1, $2)", [D, MTD_SEED_DATE]);
+
+  const { rows } = await pool.query('SELECT id FROM users WHERE username = $1', ['e2e_production']);
+  await pool.query(
+    `INSERT INTO daily_reports (form_type, record_date, shift, data, submitted_by, submitted_at, status)
+     VALUES ('production', $1, 'day', $2, $3, NOW(), 'approved')`,
+    [MTD_SEED_DATE, JSON.stringify({ kiln_prod_mt: 500 }), rows[0].id]
+  );
+
+  await loginAs(page, 'production');
+  await page.goto('/daily-report.html');
+  await page.waitForLoadState('networkidle');
+  await page.fill('input[type="date"]', D);
+  await page.waitForTimeout(400);
+
+  await expect(page.locator('[data-roll-mtd="kiln_prod_mt"]').first()).toHaveText('500');
+
+  await page.fill('input[data-field="kiln_prod_mt"]', '300');
+  await page.locator('input[data-field="kiln_prod_mt"]').blur();
+  await page.waitForTimeout(300);
+
+  const check = await pool.query(
+    "SELECT 1 FROM daily_reports WHERE form_type = 'production' AND record_date = $1", [D]);
+  expect(check.rowCount, 'nothing should be persisted yet').toBe(0);
+
+  await expect(page.locator('[data-roll-mtd="kiln_prod_mt"]').first()).toHaveText('800');
+
+  await pool.query("DELETE FROM daily_reports WHERE form_type = 'production' AND record_date IN ($1, $2)", [D, MTD_SEED_DATE]);
+});

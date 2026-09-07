@@ -61,25 +61,25 @@
       <div class="kt-lbl">Total Dispatch — On Date</div>
       <div class="kt-val" data-kpi="dispatch_total">376.5</div>
       <div class="kt-unit">MT / Today</div>
-      <div class="kt-vs vs-wa">▼ MTD pace: 81.3% of monthly target</div>
+      <div class="kt-vs vs-wa" id="dispatch-pace-vs">—</div>
     </div>
     <div class="kt kt-f watch">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">MTD Dispatch</div>
-      <div class="kt-val">8,292</div>
+      <div class="kt-val" data-roll-mtd="dispatch_reg_425r,dispatch_reg_425nbm,dispatch_reg_425n,dispatch_reg_325n,dispatch_reg_opc425n,dispatch_blk_425r,dispatch_blk_425nbm,dispatch_blk_425n,dispatch_blk_325n,dispatch_blk_opc425n,dispatch_bag_425r,dispatch_bag_425nbm,dispatch_bag_425n,dispatch_clinker">—</div>
       <div class="kt-unit">MT / Month to Date</div>
-      <div class="kt-bar"><div class="kt-bar-fill" style="width:81.3%"></div></div>
-      <div class="kt-foot"><span class="kt-tgt">Target: 10,200 MT</span><span class="kt-pct">81.3%</span></div>
-      <div class="kt-vs vs-wa">▼ Target 10,200 MT — 1,908 MT behind</div>
+      <div class="kt-bar"><div class="kt-bar-fill" id="dispatch-mtd-bar" style="width:0%"></div></div>
+      <div class="kt-foot"><span class="kt-tgt" id="dispatch-mtd-target-lbl">Target: — MT</span><span class="kt-pct" id="dispatch-mtd-pct-lbl">—</span></div>
+      <div class="kt-vs vs-wa" id="dispatch-mtd-vs">Set this month's target below to see pace</div>
     </div>
     <div class="kt kt-f watch">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">MTD Target Achievement</div>
-      <div class="kt-val">81.3%</div>
+      <div class="kt-val" data-kpi="dispatch_mtd_pct">—</div>
       <div class="kt-unit">% vs Monthly Plan</div>
-      <div class="kt-bar"><div class="kt-bar-fill" style="width:90.3%"></div></div>
-      <div class="kt-foot"><span class="kt-tgt">Threshold: ≥ 90%</span><span class="kt-pct">90.3%</span></div>
-      <div class="kt-vs vs-wa">▼ Below 90% threshold</div>
+      <div class="kt-bar"><div class="kt-bar-fill" id="dispatch-achv-bar" style="width:0%"></div></div>
+      <div class="kt-foot"><span class="kt-tgt">Threshold: ≥ 90%</span><span class="kt-pct" id="dispatch-achv-pct-lbl">—</span></div>
+      <div class="kt-vs vs-wa" id="dispatch-achv-vs">—</div>
     </div>
     <div class="kt kt-m">
       <span class="kt-badge">Manual</span>
@@ -168,50 +168,49 @@
             <td class="tp">Sales On Date</td>
             <!-- Regular Bags -->
             <td class="cm"><input class="ci" type="number" value="346.5" data-field="dispatch_reg_425r" /></td>
-            <td class="cf"><div class="cv">7,412</div></td>
-            <td class="cf"><div class="cv">26,890</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_425r">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_425r">—</div></td>
             <td class="cm"><input class="ci" type="number" value="30" data-field="dispatch_reg_425nbm" /></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_425nbm">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_425nbm">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_reg_425n" /></td>
-            <td class="cf"><div class="cv">880</div></td>
-            <td class="cf"><div class="cv">3,200</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_425n">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_425n">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_reg_325n" /></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_325n">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_325n">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_reg_opc425n" /></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_opc425n">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_opc425n">—</div></td>
             <!-- Bulker -->
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_425r" /></td>
-            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_425r">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_425nbm" /></td>
-            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_425nbm">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_425n" /></td>
-            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_425n">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_325n" /></td>
-            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_325n">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_opc425n" /></td>
-            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_opc425n">—</div></td>
             <!-- Big Bags -->
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_bag_425r" /></td>
-            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_bag_425r">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_bag_425nbm" /></td>
-            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_bag_425nbm">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_bag_425n" /></td>
-            <td class="cf"><div class="cv">0</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_bag_425n">—</div></td>
             <!-- Clinker / Total -->
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_clinker" /></td>
             <td class="cf"><div class="cv" data-kpi="dispatch_total_col">376.5</div></td>
-            <td class="cf"><div class="cv">8,292</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_425r,dispatch_reg_425nbm,dispatch_reg_425n,dispatch_reg_325n,dispatch_reg_opc425n,dispatch_blk_425r,dispatch_blk_425nbm,dispatch_blk_425n,dispatch_blk_325n,dispatch_blk_opc425n,dispatch_bag_425r,dispatch_bag_425nbm,dispatch_bag_425n,dispatch_clinker">—</div></td>
             <td class="cf"><div class="cv">415.1</div></td>
           </tr>
         </tbody>
       </table>
     </div>
     <div class="rcard-sub" style="padding:8px 20px 4px;font-style:italic">
-      MTD/YTD for grades other than Regular-Bags 42.5R/42.5N are not yet
-      auto-accumulated from daily entries — shown as "—" until that rollup is built.
+      MTD/YTD accumulate live from every day's entries for this channel/grade — Bulker and Big Bags carry MTD only (no YTD column), matching this table's own header.
     </div>
   </div>
 
@@ -309,7 +308,7 @@
             <td class="cs"><div class="cv">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cf"><div class="cv">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="10,200" /></td>
+            <td class="cm"><input class="ci" type="number" value="10200" data-field="dispatch_mtd_target" /></td>
             <td class="cf"><div class="cv">510.0</div></td>
           </tr>
 
@@ -406,10 +405,10 @@
         <tbody>
           <tr>
             <td class="tp">42.5 R Bags Packed</td>
-            <td class="cm"><input class="ci" type="number" value="6,930" data-field="bags_pl1" /></td>
+            <td class="cm"><input class="ci" type="number" value="6930" data-field="bags_pl1" /></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cf"><div class="cv">6,930</div></td>
-            <td class="cf"><div class="cv">148,240</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="bags_pl1">—</div></td>
             <td class="cm"><input class="ci" type="number" value="7,000" /></td>
             <td class="cm"><input class="ci" type="number" value="0.50" data-field="burst_rate_pl1" /></td>
             <td class="cm"><input class="ci" type="text" value="Line 2 idle – CM2 feeding" style="text-align:left;padding-left:10px" /></td>
@@ -419,7 +418,7 @@
             <td class="cm"><input class="ci" type="number" value="600" data-field="bags_pl2" /></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cf"><div class="cv">600</div></td>
-            <td class="cf"><div class="cv">17,600</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="bags_pl2">—</div></td>
             <td class="cm"><input class="ci" type="number" value="600" /></td>
             <td class="cm"><input class="ci" type="number" value="0.33" data-field="burst_rate_pl2" /></td>
             <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:10px" /></td>
@@ -429,7 +428,7 @@
             <td class="cf"><div class="cv">7,530</div></td>
             <td class="cf"><div class="cv">0</div></td>
             <td class="cf"><div class="cv">7,530</div></td>
-            <td class="cf"><div class="cv">165,840</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="bags_pl1,bags_pl2">—</div></td>
             <td class="cf"><div class="cv">7,600</div></td>
             <td class="cf"><div class="cv">0.47%</div></td>
             <td class="cs"><div class="cv" style="text-align:left;padding-left:10px">—</div></td>
@@ -641,6 +640,8 @@
 <script src="excel-import.js"></script>
 <script src="excel-export.js"></script>
 <script src="kpi-live.js"></script>
+<script src="report-rollup.js"></script>
+<script>initReportRollup({ form: 'dispatch', live: true });</script>
 <script>
 function _dispatchTotal(f, n) {
   return n(f.dispatch_reg_425r)+n(f.dispatch_reg_425nbm)+n(f.dispatch_reg_425n)+n(f.dispatch_reg_325n)+n(f.dispatch_reg_opc425n)
@@ -669,6 +670,73 @@ initKpiLive([
   { kpi:'veh_inside_total',  compute: function(f,n){ return n(f.veh_reg_inside_waiting)+n(f.veh_bulker_inside_waiting)+n(f.veh_bigbag_inside_waiting); }, fmt:'n0' },
   { kpi:'veh_outside_total', compute: function(f,n){ return n(f.veh_reg_outside_waiting)+n(f.veh_bulker_outside_waiting)+n(f.veh_bigbag_outside_waiting); }, fmt:'n0' }
 ]);
+</script>
+<script>
+/* MTD Target Achievement % = this month's live dispatch sum (the same
+   total report-rollup.js already tracks for the KPI strip's "MTD
+   Dispatch" tile and the matrix's TOTAL/MTD cell) ÷ this month's target
+   (dispatch_mtd_target, a plain manual figure — not itself a per-day sum,
+   so report-rollup can't produce it; only reportRollupLiveSum can supply
+   the numerator). Recomputed on every keystroke so it never lags behind
+   the MTD Dispatch tile it's built from. */
+(function () {
+  var DISPATCH_FIELDS = 'dispatch_reg_425r,dispatch_reg_425nbm,dispatch_reg_425n,dispatch_reg_325n,dispatch_reg_opc425n,' +
+    'dispatch_blk_425r,dispatch_blk_425nbm,dispatch_blk_425n,dispatch_blk_325n,dispatch_blk_opc425n,' +
+    'dispatch_bag_425r,dispatch_bag_425nbm,dispatch_bag_425n,dispatch_clinker';
+  var ACHIEVEMENT_THRESHOLD = 90; // "Threshold: >= 90%" — fixed business target, not a form field
+
+  function num(v) { if (v === '' || v == null) return 0; var n = +(String(v).replace(/,/g, '')); return isNaN(n) ? 0 : n; }
+  function fmtMT(v) { return v.toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+
+  function paint() {
+    if (typeof window.reportRollupLiveSum !== 'function') return;
+    var mtd = window.reportRollupLiveSum('mtd', DISPATCH_FIELDS);
+    if (mtd === null) return;   // first fetch hasn't landed yet
+
+    var targetEl = document.querySelector('[data-field="dispatch_mtd_target"]');
+    var target = targetEl ? num(targetEl.value) : 0;
+    var pct = target > 0 ? mtd / target * 100 : null;
+
+    document.querySelectorAll('[data-kpi="dispatch_mtd_pct"]').forEach(function (el) {
+      el.textContent = pct === null ? '—' : pct.toFixed(1) + '%';
+    });
+
+    var mtdBar = document.getElementById('dispatch-mtd-bar');
+    if (mtdBar) mtdBar.style.width = Math.min(pct || 0, 100).toFixed(1) + '%';
+    var mtdTgtLbl = document.getElementById('dispatch-mtd-target-lbl');
+    if (mtdTgtLbl) mtdTgtLbl.textContent = target > 0 ? 'Target: ' + fmtMT(target) + ' MT' : 'Target: — MT';
+    var mtdPctLbl = document.getElementById('dispatch-mtd-pct-lbl');
+    if (mtdPctLbl) mtdPctLbl.textContent = pct === null ? '—' : pct.toFixed(1) + '%';
+    var mtdVs = document.getElementById('dispatch-mtd-vs');
+    if (mtdVs && pct !== null) {
+      var behind = target - mtd;
+      mtdVs.textContent = behind > 0
+        ? '▼ Target ' + fmtMT(target) + ' MT — ' + fmtMT(behind) + ' MT behind'
+        : '▲ Target ' + fmtMT(target) + ' MT — met, ' + fmtMT(-behind) + ' MT ahead';
+    }
+
+    var achvBar = document.getElementById('dispatch-achv-bar');
+    var thresholdPct = pct === null ? null : Math.min(pct / ACHIEVEMENT_THRESHOLD * 100, 100);
+    if (achvBar) achvBar.style.width = (thresholdPct || 0).toFixed(1) + '%';
+    var achvPctLbl = document.getElementById('dispatch-achv-pct-lbl');
+    if (achvPctLbl) achvPctLbl.textContent = thresholdPct === null ? '—' : thresholdPct.toFixed(1) + '%';
+    var achvVs = document.getElementById('dispatch-achv-vs');
+    if (achvVs && pct !== null) {
+      achvVs.textContent = pct >= ACHIEVEMENT_THRESHOLD
+        ? '▲ At or above ' + ACHIEVEMENT_THRESHOLD + '% threshold'
+        : '▼ Below ' + ACHIEVEMENT_THRESHOLD + '% threshold';
+    }
+
+    var paceVs = document.getElementById('dispatch-pace-vs');
+    if (paceVs) paceVs.textContent = pct === null ? '—' : '▼ MTD pace: ' + pct.toFixed(1) + '% of monthly target';
+  }
+
+  document.addEventListener('input', paint);
+  document.addEventListener('change', paint);
+  document.addEventListener('nyati:restored', function () { setTimeout(paint, 260); });
+  setTimeout(paint, 260);
+  setTimeout(paint, 800);   // retry once more in case the initial history fetch was still in flight
+})();
 </script>
   </div><!-- /.main -->
 </div><!-- /.app-shell -->

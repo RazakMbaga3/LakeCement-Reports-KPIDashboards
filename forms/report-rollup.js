@@ -160,4 +160,51 @@
     setTimeout(() => _run(config), 200);
   };
 
+  /* Public read of the same live MTD/YTD sum [data-roll-mtd]/[data-roll-ytd]
+     cells are painted from — for a page's own ratio built on top of a
+     report-rollup total (e.g. dispatch-form.html's "MTD Target
+     Achievement %" = this month's live dispatch sum ÷ this month's target,
+     a number that isn't itself a sum so report-rollup can't paint it
+     directly). Only meaningful in live mode, once the first fetch has
+     landed; returns null otherwise rather than a stale or partial number,
+     so a caller should treat null as "not ready yet" and skip painting. */
+  global.reportRollupLiveSum = function (period, fieldSpec) {
+    if (!_liveCache) return null;
+    const history = period === 'ytd' ? _liveCache.ytdHistory : _liveCache.mtdHistory;
+    const live = _liveRow(_liveCache.date);
+    return _sumFields(history.concat([live]), fieldSpec);
+  };
+
+  /* Generalized live rollup: computeFn(dayData) -> a value for ONE day, or
+     null if that day doesn't apply — averages the non-null results across
+     history + the live open day. This is what lets a page average
+     something DERIVED from several fields (e.g. a lab parameter's Day Avg,
+     itself the mean of six hourly samples) rather than only one stored
+     field directly. reportRollupLiveAvg() below is the single-field
+     special case (computeFn = d => d[field]). Same null-when-not-ready
+     contract as reportRollupLiveSum(). */
+  global.reportRollupLiveCompute = function (period, computeFn) {
+    if (!_liveCache) return null;
+    const history = period === 'ytd' ? _liveCache.ytdHistory : _liveCache.mtdHistory;
+    const live = _liveRow(_liveCache.date);
+    const valid = history.concat([live])
+      .map(r => computeFn(r.data))
+      .filter(v => v !== null && v !== undefined && !isNaN(v));
+    return valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
+  };
+
+  /* Plain arithmetic mean over days that actually carry a value for this
+     ONE field — the right rollup for an intensive quantity (a lab quality
+     reading, a rate) rather than a stock, matching forms/formula-registry
+     .js's own `monthlyAgg: 'avg'` convention for free_lime/blaine_425r/
+     strength_28d (Σvalid ÷ count(valid), never zero-filling a day with no
+     reading). Returns null if live mode isn't on, the cache hasn't loaded
+     yet, or no day in range has a value. */
+  global.reportRollupLiveAvg = function (period, field) {
+    return global.reportRollupLiveCompute(period, function (d) {
+      const v = d[field];
+      return (v === '' || v === null || v === undefined || isNaN(+v)) ? null : +v;
+    });
+  };
+
 }(window));
