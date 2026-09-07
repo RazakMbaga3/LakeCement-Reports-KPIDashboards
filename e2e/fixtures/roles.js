@@ -24,7 +24,15 @@ const ALL_KPI_DEPTS = [
 const ROLES = [
   { role: 'admin',      view: 'all',                                          edit: 'all' },
   { role: 'md',         view: 'all',                                          edit: [] },
-  { role: 'management', view: 'all',                                          edit: 'all' },
+  /* view-only, NOT edit — reconciled 2026-09-07. This row still said
+     edit:'all' and had been failing `role management: ... Fill button`
+     on every run since management was made view-only. All three
+     authorities agree it cannot edit: forms/access-registry.js
+     (KPI_EDIT_DEPTS.management = []), auth.js (kpi.editDepts = []) and
+     the backend, whose access-consistency test passes against them. This
+     deliberate third copy was simply never updated, so the failure was
+     the fixture being stale rather than the app being wrong. */
+  { role: 'management', view: 'all',                                          edit: [] },
   { role: 'finance',    view: 'all',                                          edit: [] },
   { role: 'hr',         view: ['summary'],                                    edit: [] },
   { role: 'it',         view: ['summary'],                                    edit: [] },
