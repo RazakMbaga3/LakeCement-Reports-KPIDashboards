@@ -841,7 +841,7 @@
 <script src="forms/report-loader.js"></script>
 <script src="forms/kpi-live.js"></script>
 <script src="forms/report-rollup.js"></script>
-<script>initReportRollup({ form: 'cpp' });</script>
+<script>initReportRollup({ form: 'cpp', live: true });</script>
 <script>
 /* The CPP derived formulas, defined ONCE and handed to two engines:
 
@@ -986,8 +986,9 @@ initKpiLive(CPP_COMPUTES);
   function localRange(formId, from, to) {
     var rows = [], cur = new Date(from + 'T00:00:00'), end = new Date(to + 'T00:00:00');
     while (cur <= end) {
-      var raw = localStorage.getItem('nyati-' + formId + '-' + iso(cur));
-      if (raw) { try { var p = JSON.parse(raw); if (p.data) rows.push(p.data); } catch (e) {} }
+      var d = iso(cur);
+      var raw = localStorage.getItem('nyati-' + formId + '-' + d);
+      if (raw) { try { var p = JSON.parse(raw); if (p.data) rows.push({ record_date: d, data: p.data }); } catch (e) {} }
       cur.setDate(cur.getDate() + 1);
     }
     return rows;
@@ -996,15 +997,15 @@ initKpiLive(CPP_COMPUTES);
     if (window.NyatiAPI) {
       try {
         var rows = await window.NyatiAPI.getFormRange(formId, from, to);
-        if (Array.isArray(rows)) return rows.map(function (r) { return r.data || {}; });
+        if (Array.isArray(rows)) return rows.map(function (r) { return { record_date: r.record_date, data: r.data || {} }; });
       } catch (e) {}
     }
     return localRange(formId, from, to);
   }
-  function sum(rows, field) { return rows.reduce(function (t, d) { return t + num(d[field]); }, 0); }
+  function sum(rows, field) { return rows.reduce(function (t, r) { return t + num(r.data[field]); }, 0); }
   /* generation-weighted sum of a per-day rate field, e.g. Heat Rate (kcal/kWh) × gross gen (kWh) */
   function weightedSum(rows, valField, weightField) {
-    return rows.reduce(function (t, d) { return t + num(d[valField]) * num(d[weightField]); }, 0);
+    return rows.reduce(function (t, r) { return t + num(r.data[valField]) * num(r.data[weightField]); }, 0);
   }
   function paint(id, val, fmt) {
     var el = document.querySelector('[data-kpi="' + id + '"]');
@@ -1032,13 +1033,28 @@ initKpiLive(CPP_COMPUTES);
       hrPlant: gross > 0 && hrPlantW > 0 ? hrPlantW / gross : null
     };
   }
-  async function run() {
-    var dateEl = document.querySelector('input[type="date"]');
-    var date = dateEl ? dateEl.value : new Date().toISOString().slice(0, 10);
-    if (!date) return;
-    var mtdRows = await fetchRange('cpp', monthStart(date), date);
-    var ytdRows = await fetchRange('cpp', fiscalStart(date), date);
-    var mtd = computeRatios(mtdRows), ytd = computeRatios(ytdRows);
+
+  /* Live mode: the day open in the form may be mid-edit and unsaved, so it
+     can't come from the last fetch — run() below fetches MTD/YTD history
+     as before but drops the open date's own row, caching the rest;
+     paintFromCache() rebuilds that one day's row from the live
+     [data-field] inputs and folds it back in before computing the ratios.
+     Right after a restore (no edits yet) the DOM holds exactly what the
+     server sent, so this reproduces the old fetch-only figure; typing
+     into today's readings then moves the MTD/YTD figures immediately
+     instead of only after Save/Submit. */
+  var cache = null;   // { date, mtdHistory, ytdHistory } — history EXCLUDES `date`
+
+  function liveRow(date) {
+    var data = {};
+    document.querySelectorAll('[data-field]').forEach(function (el) { data[el.getAttribute('data-field')] = el.value; });
+    return { record_date: date, data: data };
+  }
+
+  function paintFromCache() {
+    if (!cache) return;
+    var live = liveRow(cache.date);
+    var mtd = computeRatios(cache.mtdHistory.concat([live])), ytd = computeRatios(cache.ytdHistory.concat([live]));
     paint('cpp_net_gen_mtd', mtd.net); paint('cpp_net_gen_ytd', ytd.net);
     paint('cpp_aux_pct_mtd', mtd.aux, 'pct'); paint('cpp_aux_pct_ytd', ytd.aux, 'pct');
     paint('cpp_avg_gen_mtd', mtd.avg); paint('cpp_avg_gen_ytd', ytd.avg);
@@ -1048,9 +1064,25 @@ initKpiLive(CPP_COMPUTES);
     paint('cpp_heat_rate_tg_mtd', mtd.hrTg); paint('cpp_heat_rate_tg_ytd', ytd.hrTg);
     paint('cpp_heat_rate_plant_mtd', mtd.hrPlant); paint('cpp_heat_rate_plant_ytd', ytd.hrPlant);
   }
+
+  async function run() {
+    var dateEl = document.querySelector('input[type="date"]');
+    var date = dateEl ? dateEl.value : new Date().toISOString().slice(0, 10);
+    if (!date) return;
+    var mtdRows = await fetchRange('cpp', monthStart(date), date);
+    var ytdRows = await fetchRange('cpp', fiscalStart(date), date);
+    cache = {
+      date: date,
+      mtdHistory: mtdRows.filter(function (r) { return r.record_date !== date; }),
+      ytdHistory: ytdRows.filter(function (r) { return r.record_date !== date; })
+    };
+    paintFromCache();
+  }
   var dateEl = document.querySelector('input[type="date"]');
   if (dateEl) dateEl.addEventListener('change', function () { setTimeout(run, 120); });
   document.addEventListener('nyati:restored', function () { setTimeout(run, 200); });
+  document.addEventListener('input', paintFromCache);
+  document.addEventListener('change', paintFromCache);
   setTimeout(run, 260);
 }());
 

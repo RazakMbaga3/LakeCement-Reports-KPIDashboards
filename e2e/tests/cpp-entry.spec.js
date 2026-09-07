@@ -32,6 +32,11 @@ const { loginAs, collectErrors } = require('../fixtures/auth');
 const { pool } = require('../fixtures/db');
 
 const D = '1999-06-17';
+/* An earlier day in the same fiscal-year-month as D, seeded as an already-
+   saved report — stands in for "history already on the server" so the MTD
+   live-blend tests can check it's folded in alongside the still-unsaved,
+   currently-typed day. */
+const MTD_SEED_DATE = '1999-06-01';
 
 /* Every reading the importer writes, minus the two now-computed heat rate
    fields (see HEAT_RATE_FIELDS below), plus the four constants the heat
@@ -56,7 +61,16 @@ const READINGS = [
 const HEAT_RATE_FIELDS = ['cpp_heat_rate_tg', 'cpp_heat_rate_plant'];
 
 async function cleanup() {
-  await pool.query("DELETE FROM daily_reports WHERE form_type = 'cpp' AND record_date = $1", [D]);
+  await pool.query("DELETE FROM daily_reports WHERE form_type = 'cpp' AND record_date IN ($1, $2)", [D, MTD_SEED_DATE]);
+}
+
+async function seedMtdHistory(data) {
+  const { rows } = await pool.query('SELECT id FROM users WHERE username = $1', ['e2e_cpp_officer']);
+  await pool.query(
+    `INSERT INTO daily_reports (form_type, record_date, shift, data, submitted_by, submitted_at, status)
+     VALUES ('cpp', $1, 'day', $2, $3, NOW(), 'approved')`,
+    [MTD_SEED_DATE, JSON.stringify(data), rows[0].id]
+  );
 }
 
 async function openForm(page) {
@@ -140,6 +154,37 @@ test('derived figures recompute while typing, before anything is saved', async (
   await expect(page.locator('[data-kpi="cpp_heat_rate"]').first()).toHaveText('948');
 
   expect(errors(), 'uncaught errors while typing').toEqual([]);
+});
+
+test('MTD figures fold in the live, unsaved day without waiting for a save', async ({ page }) => {
+  /* MTD_SEED_DATE (already "saved" on the server): gross 100,000 kWh,
+     aux 5,000 kWh -> 5% aux. D (typed live, never saved): gross 50,000 kWh,
+     aux 10,000 kWh -> 20% aux. A naive average of the two days' percentages
+     is 12.5% — the correct generation-weighted MTD figure is
+     15,000 / 150,000 = 10%. Only the weighted math tells them apart, so
+     this also stands as the "some MTD/YTD figures are not cumulative"
+     regression check. */
+  await seedMtdHistory({ cpp_gross_gen_kwh: 100000, cpp_aux_kwh: 5000 });
+  await openForm(page);
+
+  /* Before any typing, the seeded day alone is the whole MTD/YTD figure. */
+  await expect(page.locator('[data-roll-mtd="cpp_gross_gen_kwh"]')).toHaveText('100,000');
+  await expect(page.locator('[data-kpi="cpp_aux_pct_mtd"]').first()).toHaveText('5.00%');
+
+  await page.fill('input[data-field="cpp_gross_gen_kwh"]', '50000');
+  await page.fill('input[data-field="cpp_aux_kwh"]',       '10000');
+  await page.locator('input[data-field="cpp_aux_kwh"]').blur();
+  await page.waitForTimeout(300);
+
+  /* Nothing for D has been saved — the update must come from the DOM alone. */
+  const rows = await pool.query(
+    "SELECT 1 FROM daily_reports WHERE form_type = 'cpp' AND record_date = $1", [D]);
+  expect(rows.rowCount, 'nothing should be persisted yet').toBe(0);
+
+  await expect(page.locator('[data-roll-mtd="cpp_gross_gen_kwh"]')).toHaveText('150,000');
+  await expect(page.locator('[data-roll-mtd="cpp_aux_kwh"]')).toHaveText('15,000');
+  /* Generation-weighted, not (5% + 20%) / 2 = 12.5%. */
+  await expect(page.locator('[data-kpi="cpp_aux_pct_mtd"]').first()).toHaveText('10.00%');
 });
 
 test('coal received total sums the source tiles live', async ({ page }) => {

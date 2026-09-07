@@ -92,6 +92,35 @@
     });
   }
 
+  /* ── Live mode (config.live: true) ───────────────────────────────────
+     The day open in the form may be mid-edit and not yet saved, so its
+     figures can't come from the last server fetch. _run() below fetches
+     the MTD/YTD history as before but DROPS the open date's own row from
+     it, caching the rest; _paintFromCache() rebuilds that one day's row
+     straight from the live [data-field] inputs and appends it before
+     summing. Right after a restore (no edits yet) the DOM holds exactly
+     what the server just sent, so this repaints the same total the old
+     fetch-only path would have — the only change is that it keeps
+     tracking the open day as its inputs change, instead of only on
+     save/date-change. Off by default: every other page keeps the exact
+     fetch-and-paint behaviour until it's deliberately opted in. */
+  let _liveCache = null;   // { form, date, mtdHistory, ytdHistory } — history EXCLUDES `date`
+
+  function _liveRow(date) {
+    const data = {};
+    document.querySelectorAll('[data-field]').forEach(el => {
+      data[el.getAttribute('data-field')] = el.value;
+    });
+    return { record_date: date, data };
+  }
+
+  function _paintFromCache() {
+    if (!_liveCache) return;
+    const live = _liveRow(_liveCache.date);
+    _paint('data-roll-mtd', _liveCache.mtdHistory.concat([live]));
+    _paint('data-roll-ytd', _liveCache.ytdHistory.concat([live]));
+  }
+
   async function _run(config) {
     const dateEl = document.querySelector('input[type="date"]');
     const date   = dateEl ? dateEl.value : new Date().toISOString().slice(0, 10);
@@ -102,8 +131,18 @@
       _fetchRange(config.form, _fiscalStart(date), date),
     ]);
 
-    _paint('data-roll-mtd', mtdRows);
-    _paint('data-roll-ytd', ytdRows);
+    if (!config.live) {
+      _paint('data-roll-mtd', mtdRows);
+      _paint('data-roll-ytd', ytdRows);
+      return;
+    }
+
+    _liveCache = {
+      date,
+      mtdHistory: mtdRows.filter(r => r.record_date !== date),
+      ytdHistory: ytdRows.filter(r => r.record_date !== date),
+    };
+    _paintFromCache();
   }
 
   global.initReportRollup = function (config) {
@@ -112,6 +151,11 @@
 
     document.addEventListener('nyati:restored', () => setTimeout(() => _run(config), 120));
     document.addEventListener('nyati:inline-saved', () => setTimeout(() => _run(config), 120));
+
+    if (config.live) {
+      document.addEventListener('input', _paintFromCache);
+      document.addEventListener('change', _paintFromCache);
+    }
 
     setTimeout(() => _run(config), 200);
   };
