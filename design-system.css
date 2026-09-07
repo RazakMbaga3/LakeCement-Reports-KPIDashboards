@@ -891,3 +891,146 @@ html body canvas { max-width: 100%; }
   .main { margin-left: 0 !important; width: 100% !important; padding-bottom: 0 !important; }
   .ms-scroll-x::after, .ms-scroll-x::before { display: none !important; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   8. FILTER BAR — collapsed on mobile, open on desktop
+   ──────────────────────────────────────────────────────────────────────
+   Three 44px selects plus a print button is ~250px of controls sitting
+   above the data on every visit, to answer a question ("which period?")
+   that gets re-answered maybe once a session. Collapsed, it is one line
+   that still states the answer. See wireFilterCollapse() in
+   mobile-shell.js. Desktop is untouched: there is room, and an analyst
+   at a desk changes period constantly.
+   ══════════════════════════════════════════════════════════════════════ */
+.ms-fb-toggle { display: none; }
+
+@media (max-width: 959px) {
+  html body .filter-inner { padding: var(--sp-2) var(--sp-3); gap: var(--sp-2); }
+
+  html body .ms-fb-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    width: 100%;
+    min-height: var(--tap);
+    padding: var(--sp-2) var(--sp-3);
+    border: 1px solid var(--border, #DDE3EC);
+    border-radius: var(--r-md);
+    background: var(--white, #fff);
+    color: var(--navy, #173158);
+    font-family: var(--font, 'Inter', system-ui, sans-serif);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-bold);
+    text-align: left;
+    cursor: pointer;
+  }
+  html body .ms-fb-toggle:active { background: var(--section-bg, #EEF2F8); }
+  .ms-fb-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ms-fb-caret {
+    flex-shrink: 0;
+    transition: transform var(--dur-med) var(--ease);
+  }
+  .filter-inner.ms-filters-open .ms-fb-caret { transform: rotate(180deg); }
+
+  /* Collapsed: the controls and the print action stand down; the result
+     chips stay, because they are the answer, not the question. */
+  html body .filter-inner.ms-filters-collapsible:not(.ms-filters-open) .filter-group,
+  html body .filter-inner.ms-filters-collapsible:not(.ms-filters-open) .print-btn {
+    display: none;
+  }
+  html body .filter-inner.ms-filters-open .filter-group {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--sp-2);
+    width: 100%;
+  }
+  html body .filter-inner.ms-filters-open .filter-card { width: 100%; }
+
+  /* Result chips: three equal columns, value over label so each stays
+     readable at a glance instead of ellipsising. */
+  html body .filter-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-2);
+    width: 100%;
+  }
+  html body .filter-summary .fill-monthly-btn,
+  html body .filter-summary .print-btn { grid-column: 1 / -1; justify-content: center; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   9. EXEC SUMMARY — mobile density
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* A period badge must never wrap: "July 2026" breaking after "202" reads
+   as a rendering fault, and the containment rules in §3b legitimately let
+   narrow containers shrink far enough for it to happen. */
+.smry-period-badge,
+.kt-badge,
+.sk-dept-tag,
+.summary-chip span { white-space: nowrap; }
+
+/* The Today's-Reports chips get their own scroll track (see the renderer
+   in index.html). Wrapping freely they were five rows of pills — ~400px
+   — restating what the summary line says in one. */
+.smry-ops-track { display: contents; }
+
+@media (max-width: 959px) {
+  html body .smry-ops-strip {
+    flex-wrap: wrap;
+    padding: var(--sp-2) var(--sp-3);
+    gap: var(--sp-2);
+    row-gap: var(--sp-2);
+  }
+  /* DOM order stays label -> track -> sum so desktop is untouched; only
+     the track is re-ordered onto its own line here. */
+  html body .smry-ops-sum { order: 0; margin-left: auto; }
+
+  html body .smry-ops-track {
+    display: flex;
+    order: 1;
+    width: 100%;
+    gap: var(--sp-2);
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  html body .smry-ops-track::-webkit-scrollbar { display: none; }
+  html body .smry-ops-track .smry-ops-chip { flex: 0 0 auto; scroll-snap-align: start; }
+
+  /* The section header stacks: a title and its period badge fighting for
+     one 360px line is what forced the badge to wrap in the first place. */
+  html body .smry-header { flex-wrap: wrap; gap: var(--sp-2); padding: var(--sp-4) var(--sp-3) var(--sp-3); }
+}
+
+/* ── KPI tiles on a narrow screen ────────────────────────────────────
+   .sk-top puts the KPI name and its department tag on one flex row. At
+   two tiles across a 390px phone the tag takes ~100px of a ~170px card,
+   leaving too little for the name: "KILN OUTPUT" was breaking after
+   "OUTPU". The tag is metadata — the name is the point — so on mobile
+   the row becomes a stack and the name gets the full width. */
+@media (max-width: 959px) {
+  html body .sk-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sp-1);
+  }
+  html body .sk-label {
+    width: 100%;
+    letter-spacing: .2px;      /* tracking costs width the label needs */
+    line-height: var(--lh-snug);
+  }
+  html body .sk-dept-tag { order: 2; }
+
+  /* The value is what the tile exists for — let it lead clearly. */
+  html body .sk-value { font-size: var(--fs-2xl); line-height: var(--lh-tight); }
+}

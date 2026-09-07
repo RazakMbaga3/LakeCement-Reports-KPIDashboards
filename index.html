@@ -2111,9 +2111,14 @@
             : nSub + ' submitted &nbsp;&middot;&nbsp; ' + nDraft + ' draft &nbsp;&middot;&nbsp; ' +
               (nTotal - nSub - nDraft) + ' pending');
 
+      /* The ten chips get their own scroll track. Left to wrap freely they
+         took ~400px on a phone — five rows of pills ahead of the first
+         actual KPI — to say what the summary line beside the heading
+         already says. On desktop the track is display:contents, so the
+         chips still lay out exactly as before. */
       strip.innerHTML =
         '<span class="smry-ops-lbl">Today\'s Reports &mdash; ' + today + '</span>' +
-        chips +
+        '<span class="smry-ops-track">' + chips + '</span>' +
         '<span class="smry-ops-sum">' + sumText + '</span>';
     }
 

@@ -455,6 +455,75 @@
   }
 
   /* ══════════════════════════════════════════════════════════════════
+     FILTER BAR — progressive disclosure on mobile
+     ──────────────────────────────────────────────────────────────────
+     The KPI dashboard's filter bar is three full-width selects plus a
+     print button. Once every control is a 44px touch target — which it
+     must be — that stack is roughly 250px, and it sits above the data
+     on every visit even though the period changes maybe once a session.
+
+     So it collapses to one line that STATES the current period and
+     expands on tap. The summary is not a label reading "Filters": it
+     reads "July 2026 · Current Month", so the collapsed state carries
+     the answer to the question the controls exist to answer (Tidwell:
+     a collapsed panel must still say what it is set to). Desktop keeps
+     all three controls open — there is room, and an analyst changes
+     period constantly.
+     ══════════════════════════════════════════════════════════════════ */
+  function summariseFilters(group) {
+    const parts = [];
+    group.querySelectorAll('select').forEach(sel => {
+      const opt = sel.options[sel.selectedIndex];
+      if (!opt) return;
+      let t = (opt.textContent || '').trim();
+      /* "FY 2026–27 (Apr'26–Mar'27)" carries its own explanation; the
+         summary line only has room for the identity. */
+      t = t.replace(/\s*\([^)]*\)\s*$/, '').trim();
+      if (t && t !== '—') parts.push(t);
+    });
+    return parts.length ? parts.join(' · ') : 'Set period';
+  }
+
+  function wireFilterCollapse() {
+    const inner = document.querySelector('.filter-bar .filter-inner');
+    if (!inner || inner.dataset.msFilters) return;
+    const group = inner.querySelector('.filter-group');
+    if (!group || !group.querySelector('select')) return;
+
+    inner.dataset.msFilters = '1';
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ms-fb-toggle';
+    btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML =
+      '<span class="ms-fb-label"></span>' +
+      '<svg class="ms-fb-caret" viewBox="0 0 24 24" width="16" height="16" fill="none" ' +
+      'stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" ' +
+      'aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+
+    const label = btn.querySelector('.ms-fb-label');
+    const sync  = () => { label.textContent = summariseFilters(group); };
+    sync();
+
+    /* The selects are re-populated from the API after load
+       (buildFiscalYearOptions, applyLatestPeriodFallback), so the
+       summary has to follow them rather than be read once. */
+    group.addEventListener('change', sync);
+    setTimeout(sync, 1200);
+    setTimeout(sync, 3000);
+
+    btn.addEventListener('click', () => {
+      const open = inner.classList.toggle('ms-filters-open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (!open) sync();
+    });
+
+    inner.insertBefore(btn, inner.firstChild);
+    inner.classList.add('ms-filters-collapsible');
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
      HORIZONTAL STRIP SAFETY NET
      design-system.css names the control strips that overflow today
      (.mis-tabs, .period-strip, .view-switcher). This catches the ones
@@ -504,6 +573,7 @@
     wireDrawerDismissOnNav();
     wireScrollAffordance();
     wireHScrollStrips();
+    wireFilterCollapse();
     loadApprovalBadge();
 
     /* Crossing the breakpoint with the drawer open would leave the
