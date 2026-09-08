@@ -1090,7 +1090,7 @@ function applyDailyPermissions() {
         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">' +
         '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
         'VIEW ONLY &mdash; ' + user.dept + ' does not have edit access to this report.' +
-        '<span style="font-size:12px;font-weight:500;opacity:.75;margin-left:8px">' +
+        '<span style="font-size:12px;font-weight:500;margin-left:8px">' +
         'Contact the responsible department to update data.</span>';
 
       /* Insert after the <header> element */

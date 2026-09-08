@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Lake Cement – Quarry Report (TMH &amp; MIS)</title>
   <link rel="icon" type="image/png" href="favicon.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <script src="auth.js?v=10"></script>
   <script src="sidebar.js?v=2"></script>
@@ -219,7 +219,7 @@
     .mis .c-mtd { background:#F8FAFF; }
     .mis .c-ytd { background:#F1F5FB; }
     .mis .na { color:#C3CBD8; font-weight:400; }
-    .mis-sub { font-size:12px; font-weight:600; opacity:.8; }
+    .mis-sub { font-size:12px; font-weight:600; }
     .mis tbody tr:hover td:not(.gradec) { filter:brightness(.965); }
 
     /* ══ CONTRACTOR TILES ══ */
@@ -508,7 +508,7 @@
   <div id="drop-ovl"><div class="dz">
     <div style="font-size:52px;margin-bottom:14px">⛏️</div>
     <div style="font-size:20px;font-weight:700">Drop weighbridge Excel to import</div>
-    <div style="font-size:12px;opacity:.6;margin-top:8px">.xlsx with an "Uploaded_Data" ticket sheet</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-top:8px">.xlsx with an "Uploaded_Data" ticket sheet</div>
   </div></div>
 
   <!-- ticket inspector modal -->
@@ -1672,7 +1672,7 @@
   })();
   </script>
 
-  <script src="https://unpkg.com/lucide@1.38.0/dist/umd/lucide.min.js"></script>
+  <script src="lucide-icons.js?v=1"></script>
   <script>
     lucide.createIcons();
     requireAuth();

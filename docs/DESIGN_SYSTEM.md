@@ -1,12 +1,13 @@
 # Design system & UX standard
 
 How this dashboard is allowed to look and behave, why, and how the rules are
-enforced. The short version: **the standard is executable**. Anything claimed
-here is asserted by `e2e/responsive-audit.js`, which fails if the app drifts.
+enforced. The short version: **the standard is executable**. Every claim below
+is asserted by one of three audits, each of which fails if the app drifts.
 
 ```bash
 cd e2e && npm run audit:responsive        # 18 pages x 4 viewports, 72 checks
 cd e2e && npm run audit:a11y              # 19 pages x 2 viewports, WCAG 2.2 AA
+cd e2e && npm run audit:perf              # 10 pages, throttled to a plant connection
 ```
 
 ---
@@ -24,6 +25,9 @@ desktop app was in good shape. On a phone it was, in practice, unusable:
 | Smallest rendered text | 7.5px | 12px |
 | Tap targets under 44px | 163 of 174 on one page | **0** of 2,111 |
 | Form controls under 16px (iOS zooms on focus) | 384 | **0** |
+| WCAG 2.2 AA violations (axe-core) | **859** across 5 rules | **0** |
+| Transfer per page, average | 1,679 KB | **648 KB** |
+| Load on a 1.6 Mbps connection, average | 6,610 ms | **3,354 ms** |
 
 The root cause of the navigation figure: the `<960px` rule in `styles.css`
 turned the sidebar into a static full-width block **above** the content. Every
@@ -43,6 +47,8 @@ which page you were on without scrolling past all of it.
 | `a11y.js` | Accessible names for form controls; keyboard reach into scroll regions |
 | `e2e/responsive-audit.js` | Layout/legibility criteria, as runnable checks |
 | `e2e/a11y-audit.js` | WCAG 2.2 AA, via axe-core |
+| `e2e/perf-audit.js` | Page weight and load time against a budget |
+| `lucide-icons.js` | **Generated.** The 93 icons this app uses, self-hosted |
 | `styles.css` | Everything desktop. **Nothing below 960px is styled here any more.** |
 
 `design-system.css` is loaded **last** in every `<head>` — after `styles.css`
@@ -245,6 +251,47 @@ What axe cannot check stays a review job: whether alt text is *accurate*,
 whether a heading structure is *meaningful*, and whether colour is the *only*
 thing carrying a signal. The design system's standing answer to the last one is
 that a status colour always ships with a label or an icon.
+
+### Performance — budgeted, on the plant's own connection
+
+`npm run audit:perf` drives ten pages throttled to 1.6 Mbps / 300ms RTT.
+Measuring on a LAN beside the server would say everything is instant and tell
+us nothing.
+
+| | Before | After |
+|---|---|---|
+| Transfer per page (avg) | 1,679 KB | **648 KB** |
+| Load, throttled (avg) | 6,610 ms | **3,354 ms** |
+
+Three things accounted for nearly all of it:
+
+- **The logo was 641 KB.** A 5,357 × 6,230 px PNG, rendered at 42px tall, on
+  every page. Now 20 KB at 240px tall; the original is kept as
+  `NYATI-LOGO-full.png`. If you ever need print resolution, use that one.
+- **The whole Lucide library, 424 KB, from unpkg, on 24 pages** — 2,045 icons
+  to draw the 93 this app uses. `lucide-icons.js` is a generated subset at
+  22 KB, self-hosted. That removes bytes *and* a hard dependency on a third-
+  party CDN being reachable from a plant whose internet is not always good.
+- **No compression and no cache headers in nginx.** Both added; gzip alone
+  takes roughly 75% off every text response.
+
+Also: the Inter request asked for weight 300 on 25 pages, and nothing in the
+app uses weight 300.
+
+**Budgets are set just above measured reality and are meant to ratchet down.**
+A budget nothing can breach is not a budget. They are held against
+*uncompressed* numbers, because `preview-server.js` does not gzip — production
+is materially better than what the audit reports.
+
+**If you add an icon**, rebuild the subset — the generator is recorded in the
+file header, and `lucide-icons.js` warns to the console on an unknown name.
+There is a verification pass worth re-running: load every page and assert that
+no `[data-lucide]` placeholder survives. That is how the subset was proven, and
+how a real pre-existing bug surfaced — four pages rendered the sidebar but never
+loaded the icon library at all, so their icons had always been invisible.
+
+**If you edit a shared asset, bump its `?v=` in every page that loads it.**
+JS and CSS are cached for a day.
 
 ### Motion & accessibility
 

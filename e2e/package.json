@@ -9,7 +9,8 @@
     "test:roles": "playwright test tests/roles.spec.js",
     "report": "playwright show-report",
     "audit:responsive": "node responsive-audit.js",
-    "audit:a11y": "node a11y-audit.js"
+    "audit:a11y": "node a11y-audit.js",
+    "audit:perf": "node perf-audit.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0"

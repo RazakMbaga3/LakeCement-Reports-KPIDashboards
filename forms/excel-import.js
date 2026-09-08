@@ -561,7 +561,7 @@
       '<div style="border:3px dashed rgba(255,255,255,.55);border-radius:16px;padding:52px 80px;text-align:center">' +
         '<div style="font-size:52px;margin-bottom:14px">📊</div>' +
         '<div style="font-size:20px;font-weight:700;letter-spacing:.3px">Drop Excel file to import</div>' +
-        '<div style="font-size:12px;opacity:.6;margin-top:8px">.xlsx — ' + formId + ' report</div>' +
+        '<div style="font-size:12px;opacity:.85;margin-top:8px">.xlsx — ' + formId + ' report</div>' +
       '</div>';
     document.body.appendChild(overlay);
 

@@ -323,7 +323,7 @@
     // Header
     const hdr = document.createElement('div');
     hdr.style.cssText = 'background:#173158;color:white;padding:10px 14px;font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center';
-    hdr.innerHTML = `<span>Saved Snapshots</span><span style="font-size:12px;opacity:.6">${saved.length} saved</span>`;
+    hdr.innerHTML = `<span>Saved Snapshots</span><span style="font-size:12px;color:var(--text-muted)">${saved.length} saved</span>`;
     panel.appendChild(hdr);
 
     if (saved.length === 0) {

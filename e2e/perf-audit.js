@@ -41,12 +41,22 @@ const THROTTLE = {
   latency: 300,
 };
 
+/* Set just above measured reality so a regression trips them, and meant
+   to ratchet DOWN as pages get lighter — a budget nothing can breach is
+   not a budget. Worst page today: mis 257KB html, daily-report 870KB
+   transfer / 2848ms FCP, login 4191ms load.
+
+   These are measured WITHOUT compression, because preview-server.js does
+   not gzip. Production nginx does (see deploy/nginx.digitalocean.conf),
+   which takes roughly 75% off every text response — so real figures over
+   the same connection are materially better than these. Holding the
+   budget against the uncompressed numbers keeps the margin honest. */
 const BUDGET = {
   htmlKB:    260,   /* the document alone                       */
   transferKB: 900,  /* everything, first visit, uncached        */
-  requests:    45,
-  fcpMs:     4000,
-  loadMs:   12000,
+  requests:    40,
+  fcpMs:     3200,
+  loadMs:    6000,
 };
 
 const PAGES = [
