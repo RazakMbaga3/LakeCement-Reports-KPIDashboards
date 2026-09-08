@@ -293,6 +293,40 @@ loaded the icon library at all, so their icons had always been invisible.
 **If you edit a shared asset, bump its `?v=` in every page that loads it.**
 JS and CSS are cached for a day.
 
+### Period is a row, not a column
+
+The dispatch form put On Date / MTD / YTD as sub-columns *under every grade*,
+which is what made it 36 columns wide and, in the plant head's words,
+complicated. The plant's own Excel has never done that — it has one column per
+channel and grade, and one **row** per period. The form now matches it:
+
+| | Columns | Rows | Header depth |
+|---|---|---|---|
+| Cement Dispatch | 36 → **17** | 1 → 3 | 3 → 2 |
+| Sales Orders & Target | ~22 → **11** | 2 | 2 → 2 |
+
+Only the top row is typed; MTD and YTD accumulate from it. Bulker, Big Bags and
+Clinker gained YTD in the process — the rollup layer always supported it, the
+old header simply had no room.
+
+**`.prow` is the class for a row that is entirely derived.** Do not reach for
+`.trow` there: `.trow` is a *totals* row and deliberately paints its `.cf` cells
+navy so the total pops. On a row where every cell is computed, that turns the
+whole row into a navy bar that then outranks the one row the officer actually
+types into.
+
+Two defects surfaced while doing this, both older than the change:
+
+- **`value="1,240"` in an `<input type="number">` renders blank.** A comma is
+  not valid in a number input. Four fields were affected, including the two
+  largest figures in the Sales Orders table — and because a blank field
+  contributes zero, the SO Pendency total had been reading 1,879 when the
+  entered figures actually sum to 2,119. **Never write a thousands separator
+  into a number input's value.**
+- The Sales Orders header declared 24 columns over 23 body cells. Rebuilding
+  the table fixed the mismatch; `e2e/` now has a check that header and body
+  column counts agree once colspan and rowspan are resolved.
+
 ### Motion & accessibility
 
 One duration set and one easing. `prefers-reduced-motion` is honoured. Every
@@ -346,6 +380,16 @@ them there, not per chart.
 
 ## 7. Known open items
 
+- **`/api/quarry/tickets` returns 1.1 MB in one unpaginated response** and grows
+  without bound. On the plant's connection that request alone is about six
+  seconds, and it is the only thing keeping `mines-report.html` over the
+  performance budget — the page's own assets are well inside it. Needs paging or
+  a date window.
+- **Per-grade monthly targets in the dispatch form are typed but never saved** —
+  those inputs carry no `data-field`. Only the Total (`dispatch_mtd_target`)
+  persists. Fixing it means adding fields to the stored schema.
+- **Two cells are hardcoded and never recompute**: Avg Daily Dispatch (415.1)
+  and the Target row's 510.0.
 - **`forgot-password` returns 500 for a known address and 200 for an unknown
   one when SMTP is unset**, which leaks whether an account exists — the exact
   thing the endpoint is written to avoid. It is masked once `SMTP_HOST` is

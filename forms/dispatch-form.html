@@ -132,90 +132,90 @@
       </div>
     </div>
     <div class="tbl-scroll">
-      <table class="rt" style="min-width:3100px">
+      <table class="rt" style="min-width:1500px">
         <thead>
           <tr>
-            <th class="tl grp-hdr" rowspan="3" style="min-width:120px">Metric</th>
-            <th class="grp-hdr" colspan="15">Regular Bags</th>
-            <th class="grp-hdr" colspan="10">Bulker</th>
-            <th class="grp-hdr" colspan="6">Big Bags</th>
-            <th class="grp-hdr" rowspan="3">Clinker<br><small style="font-size:12px;font-weight:400;color:rgba(255,255,255,.6)">(MT)</small></th>
-            <th class="grp-hdr" colspan="2">TOTAL</th>
-            <th class="grp-hdr" rowspan="3">Avg Daily<br>Dispatch</th>
+            <th class="tl grp-hdr" rowspan="2" style="min-width:150px">Metric</th>
+            <th class="grp-hdr" colspan="5">Regular Bags</th>
+            <th class="grp-hdr" colspan="5">Bulker</th>
+            <th class="grp-hdr" colspan="3">Big Bags</th>
+            <th class="grp-hdr" rowspan="2">Clinker<br><small style="font-size:12px;font-weight:400;color:var(--on-navy)">(MT)</small></th>
+            <th class="grp-hdr" rowspan="2">Total</th>
+            <th class="grp-hdr" rowspan="2">Avg Daily<br>Dispatch</th>
           </tr>
           <tr>
-            <th colspan="3">42.5 R</th><th colspan="3">42.5 N B-M</th><th colspan="3">42.5 N</th><th colspan="3">32.5 N</th><th colspan="3">OPC 42.5 N</th>
-            <th colspan="2">42.5 R</th><th colspan="2">42.5 N B-M</th><th colspan="2">42.5 N</th><th colspan="2">32.5 N</th><th colspan="2">OPC 42.5 N</th>
-            <th colspan="2">42.5 R</th><th colspan="2">42.5 N B-M</th><th colspan="2">42.5 N</th>
-            <th rowspan="2">On Date</th><th rowspan="2">MTD</th>
-          </tr>
-          <tr>
-            <th>On Date</th><th>MTD</th><th>YTD</th>
-            <th>On Date</th><th>MTD</th><th>YTD</th>
-            <th>On Date</th><th>MTD</th><th>YTD</th>
-            <th>On Date</th><th>MTD</th><th>YTD</th>
-            <th>On Date</th><th>MTD</th><th>YTD</th>
-            <th>On Date</th><th>MTD</th>
-            <th>On Date</th><th>MTD</th>
-            <th>On Date</th><th>MTD</th>
-            <th>On Date</th><th>MTD</th>
-            <th>On Date</th><th>MTD</th>
-            <th>On Date</th><th>MTD</th>
-            <th>On Date</th><th>MTD</th>
-            <th>On Date</th><th>MTD</th>
+            <th>42.5 R</th><th>42.5 N B-M</th><th>42.5 N</th><th>32.5 N</th><th>OPC 42.5 N</th>
+            <th>42.5 R</th><th>42.5 N B-M</th><th>42.5 N</th><th>32.5 N</th><th>OPC 42.5 N</th>
+            <th>42.5 R</th><th>42.5 N B-M</th><th>42.5 N</th>
           </tr>
         </thead>
         <tbody>
-          <!-- SALES ON DATE -->
-          <tr class="srow"><td colspan="36">Sales Dispatch — On Date / MTD / YTD per cell (Bulker &amp; Big Bags: On Date / MTD)</td></tr>
+          <tr class="srow"><td colspan="17">Sales Dispatch — one row per period, one column per channel and grade</td></tr>
 
           <tr>
             <td class="tp">Sales On Date</td>
-            <!-- Regular Bags -->
             <td class="cm"><input class="ci" type="number" value="346.5" data-field="dispatch_reg_425r" /></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_425r">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_425r">—</div></td>
             <td class="cm"><input class="ci" type="number" value="30" data-field="dispatch_reg_425nbm" /></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_425nbm">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_425nbm">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_reg_425n" /></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_425n">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_425n">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_reg_325n" /></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_325n">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_325n">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_reg_opc425n" /></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_opc425n">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_opc425n">—</div></td>
-            <!-- Bulker -->
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_425r" /></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_425r">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_425nbm" /></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_425nbm">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_425n" /></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_425n">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_325n" /></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_325n">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_opc425n" /></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_opc425n">—</div></td>
-            <!-- Big Bags -->
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_bag_425r" /></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_bag_425r">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_bag_425nbm" /></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_bag_425nbm">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_bag_425n" /></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_bag_425n">—</div></td>
-            <!-- Clinker / Total -->
             <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_clinker" /></td>
             <td class="cf"><div class="cv" data-kpi="dispatch_total_col">376.5</div></td>
+            <td class="cs"><div class="cv">—</div></td>
+          </tr>
+
+          <tr class="prow prow-first">
+            <td class="tp">MTD Sales</td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_425r">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_425nbm">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_425n">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_325n">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_opc425n">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_425r">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_425nbm">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_425n">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_325n">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_opc425n">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_bag_425r">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_bag_425nbm">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_bag_425n">—</div></td>
+            <td class="cf"><div class="cv" data-roll-mtd="dispatch_clinker">—</div></td>
             <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_425r,dispatch_reg_425nbm,dispatch_reg_425n,dispatch_reg_325n,dispatch_reg_opc425n,dispatch_blk_425r,dispatch_blk_425nbm,dispatch_blk_425n,dispatch_blk_325n,dispatch_blk_opc425n,dispatch_bag_425r,dispatch_bag_425nbm,dispatch_bag_425n,dispatch_clinker">—</div></td>
             <td class="cf"><div class="cv">415.1</div></td>
+          </tr>
+
+          <tr class="prow">
+            <td class="tp">YTD Sales</td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_425r">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_425nbm">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_425n">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_325n">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_opc425n">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_blk_425r">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_blk_425nbm">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_blk_425n">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_blk_325n">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_blk_opc425n">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_bag_425r">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_bag_425nbm">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_bag_425n">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_clinker">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_425r,dispatch_reg_425nbm,dispatch_reg_425n,dispatch_reg_325n,dispatch_reg_opc425n,dispatch_blk_425r,dispatch_blk_425nbm,dispatch_blk_425n,dispatch_blk_325n,dispatch_blk_opc425n,dispatch_bag_425r,dispatch_bag_425nbm,dispatch_bag_425n,dispatch_clinker">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
           </tr>
         </tbody>
       </table>
     </div>
     <div class="rcard-sub" style="padding:8px 20px 4px;font-style:italic">
-      MTD/YTD accumulate live from every day's entries for this channel/grade — Bulker and Big Bags carry MTD only (no YTD column), matching this table's own header.
+      MTD and YTD are rows, not columns — the same shape as the plant’s own spreadsheet. Both accumulate live from every day’s entries for that channel and grade; only the top row is typed.
     </div>
   </div>
 
@@ -235,88 +235,51 @@
       </div>
     </div>
     <div class="tbl-scroll">
-      <table class="rt" style="min-width:1900px">
+      <table class="rt" style="min-width:1050px">
         <thead>
           <tr>
-            <th class="tl grp-hdr" rowspan="2" style="min-width:120px">Metric</th>
-            <th class="grp-hdr" colspan="3">42.5 R</th>
-            <th class="grp-hdr" colspan="3">42.5 N B-M</th>
-            <th class="grp-hdr" colspan="3">42.5 N</th>
-            <th class="grp-hdr" colspan="3">32.5 N</th>
-            <th class="grp-hdr" colspan="3">OPC 42.5 N</th>
-            <th class="grp-hdr" colspan="2">Bulker</th>
-            <th class="grp-hdr" colspan="2">Big Bags</th>
-            <th class="grp-hdr" rowspan="2">Clinker<br><small style="font-size:12px;font-weight:400;color:rgba(255,255,255,.6)">(MT)</small></th>
-            <th class="grp-hdr" colspan="2">TOTAL</th>
+            <th class="tl grp-hdr" rowspan="2" style="min-width:150px">Metric</th>
+            <th class="grp-hdr" colspan="5">Regular Bags</th>
+            <th class="grp-hdr" rowspan="2">Bulker</th>
+            <th class="grp-hdr" rowspan="2">Big Bags</th>
+            <th class="grp-hdr" rowspan="2">Clinker<br><small style="font-size:12px;font-weight:400;color:var(--on-navy)">(MT)</small></th>
+            <th class="grp-hdr" rowspan="2">Total</th>
             <th class="grp-hdr" rowspan="2">Avg Daily<br>Dispatch</th>
           </tr>
           <tr>
-            <th>On Date<br><small style="font-size:12px;font-weight:400;color:rgba(255,255,255,.6)">(MT)</small></th>
-            <th>MTD</th><th>YTD</th>
-            <th>On Date</th><th>MTD</th><th>YTD</th>
-            <th>On Date</th><th>MTD</th><th>YTD</th>
-            <th>On Date</th><th>MTD</th><th>YTD</th>
-            <th>On Date</th><th>MTD</th><th>YTD</th>
-            <th>On Date</th><th>MTD</th>
-            <th>On Date</th><th>MTD</th>
-            <th>On Date</th><th>MTD</th>
+            <th>42.5 R</th><th>42.5 N B-M</th><th>42.5 N</th><th>32.5 N</th><th>OPC 42.5 N</th>
           </tr>
         </thead>
         <tbody>
-          <tr class="srow"><td colspan="22">Sales Orders &amp; Pendency</td></tr>
+          <tr class="srow"><td colspan="11">Sales Orders &amp; Pendency</td></tr>
 
           <tr>
             <td class="tp">SO Pendency</td>
-            <td class="cm"><input class="ci" type="number" value="1,240" data-field="so_425r" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="1240" data-field="so_425r" /></td>
             <td class="cm"><input class="ci" type="number" value="315" data-field="so_425nbm" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
             <td class="cm"><input class="ci" type="number" value="320" data-field="so_425n" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
             <td class="cm"><input class="ci" type="number" value="154" data-field="so_325n" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="so_opc425n" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
             <td class="cm"><input class="ci" type="number" value="30" data-field="so_bulker" /></td>
-            <td class="cf"><div class="cv">—</div></td>
             <td class="cm"><input class="ci" type="number" value="60" data-field="so_bigbag" /></td>
-            <td class="cf"><div class="cv">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" data-field="so_clinker" /></td>
             <td class="cf"><div class="cv" data-kpi="so_total_col">1,879</div></td>
-            <td class="cf"><div class="cv">—</div></td>
+            <td class="cs"><div class="cv">—</div></td>
           </tr>
 
           <tr class="trow">
             <td class="tp">Target (Month)</td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="9,000" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="9000" /></td>
             <td class="cm"><input class="ci" type="number" value="900" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="1,200" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="1200" /></td>
             <td class="cm"><input class="ci" type="number" value="300" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cs"><div class="cv">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">—</div></td>
             <td class="cm"><input class="ci" type="number" value="10200" data-field="dispatch_mtd_target" /></td>
             <td class="cf"><div class="cv">510.0</div></td>
           </tr>
-
         </tbody>
       </table>
     </div>
@@ -414,7 +377,7 @@
             <td class="cm"><input class="ci" type="number" value="0" /></td>
             <td class="cf"><div class="cv">6,930</div></td>
             <td class="cf"><div class="cv" data-roll-mtd="bags_pl1">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="7,000" /></td>
+            <td class="cm"><input class="ci" type="number" value="7000" /></td>
             <td class="cm"><input class="ci" type="number" value="0.50" data-field="burst_rate_pl1" /></td>
             <td class="cm"><input class="ci" type="text" value="Line 2 idle – CM2 feeding" style="text-align:left;padding-left:10px" /></td>
           </tr>

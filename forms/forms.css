@@ -648,3 +648,20 @@ td.cm .ci:focus {
 
   a[href]::after { content:none !important; }
 }
+
+/* ── Period rows (MTD / YTD) ────────────────────────────────────────
+   A row whose cells are ALL derived. Distinct from .trow, which is for a
+   totals row and deliberately paints its .cf cells navy to make the total
+   pop — applied to a row that is nothing but computed cells, that turns
+   the whole row into a navy bar which then outranks the one row the
+   officer actually types into.
+
+   These recede instead: a quiet ground, the value in ink, and a rule
+   above the first of them separating "what you entered" from "what that
+   adds up to". ─────────────────────────────────────────────────────── */
+.prow td            { background:var(--off-white); }
+.prow.prow-first td { border-top:2px solid var(--border); }
+.prow .tp           { font-weight:700; color:var(--navy); font-size:12px; }
+.prow td.cf         { background:var(--off-white); }
+.prow td.cf .cv     { color:var(--text-main); font-weight:600; }
+.prow td.cs .cv     { color:var(--text-muted); }
