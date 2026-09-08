@@ -208,6 +208,37 @@ sudo nginx -t && sudo systemctl reload nginx
 sudo certbot --nginx -d atlas.lakecement.co.tz
 ```
 
+**Don't have a real domain yet?** You don't have to wait for one just to stop
+serving over plain HTTP. [nip.io](https://nip.io) is a free wildcard-DNS
+service — `138.68.166.86.nip.io` (dots kept, no dashes) resolves straight to
+`138.68.166.86`, so Let's Encrypt's HTTP-01 challenge (which connects to
+whatever the domain resolves to, on port 80) succeeds exactly as it would for
+a real domain. This gets you a genuine, browser-trusted certificate today,
+for testing/interim use, with no domain purchase or approval needed:
+
+```bash
+sudo nano /etc/nginx/sites-available/lake-cement
+# server_name 138.68.166.86.nip.io;
+
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d 138.68.166.86.nip.io
+```
+
+Then in `backend/.env`: `ALLOWED_ORIGIN=https://138.68.166.86.nip.io`, and
+share that URL (not the bare IP) — it's real HTTPS, no "Not secure" warning.
+
+**Once the real domain is approved and its DNS A record points here**, swap
+over — this is a routine reconfigure, not a rebuild:
+```bash
+sudo nano /etc/nginx/sites-available/lake-cement   # server_name <real-domain>
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d <real-domain>              # issues the real-domain cert
+sudo certbot delete --cert-name 138.68.166.86.nip.io   # drop the interim one
+```
+Update `ALLOWED_ORIGIN` in `.env` to match, and `pm2 reload
+ecosystem.config.js` (or wait for the next auto-deploy) so the backend picks
+it up.
+
 ### 2.8 Verify before calling it done
 
 - [ ] Open the site in a browser, log in.
