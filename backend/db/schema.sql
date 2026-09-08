@@ -149,10 +149,12 @@ CREATE TABLE IF NOT EXISTS weighbridge_tickets (
   ticket_date    DATE         NOT NULL,
   net_qty        NUMERIC(10,3) NOT NULL,
   gross_datetime VARCHAR(40),            -- raw exported timestamp, informational only
-  imported_by    INTEGER REFERENCES users(id),
+  source         VARCHAR(12)  NOT NULL DEFAULT 'excel',  -- 'excel' (manual upload) | 'odoo' (mining_report sync)
+  imported_by    INTEGER REFERENCES users(id),           -- NULL for API-sourced rows: no human imported them
   imported_at    TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at     TIMESTAMP NOT NULL DEFAULT NOW()
 );
+CREATE INDEX IF NOT EXISTS idx_weighbridge_source_date ON weighbridge_tickets(source, ticket_date);
 
 -- ── KPI MONTHLY ─────────────────────────────────────────────
 -- Stores manually entered or auto-calculated monthly KPI targets and actuals

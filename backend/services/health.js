@@ -45,15 +45,22 @@ function checkOdoo() {
   // Config presence only — a live RPC call here would make every health
   // poll depend on Odoo's own network/uptime. Use GET /api/monitor/odoo/test
   // (or `npm run odoo:test`) to verify real connectivity to the generic
-  // Odoo API specifically. Two independent connections can each report
-  // configured — see services/odooSync.js for why they're separate.
+  // Odoo API specifically. These connections are independent and can each
+  // report configured — see services/odooSync.js for why they're separate.
   const generic  = !!process.env.ODOO_URL;
   const dispatch = !!process.env.ODOO_DISPATCH_URL;
-  if (!generic && !dispatch) return 'not_configured';
+  // Mining falls back to the dashboard host/key when its own vars are
+  // unset (see odooMiningClient.js), so testing ODOO_MINING_URL alone
+  // would report 'not_configured' on a server that is in fact pulling.
+  const mining   = !!(process.env.ODOO_MINING_URL || process.env.ODOO_DASHBOARD_URL);
+  const dashboard = !!process.env.ODOO_DASHBOARD_URL;
+  if (!generic && !dispatch && !mining && !dashboard) return 'not_configured';
   return {
     ok: true,
-    generic:  generic  ? 'configured, no pulls wired up yet' : 'not_configured',
-    dispatch: dispatch ? 'configured, pulling on schedule'   : 'not_configured',
+    generic:   generic   ? 'configured, no pulls wired up yet' : 'not_configured',
+    dispatch:  dispatch  ? 'configured, pulling on schedule'   : 'not_configured',
+    mining:    mining    ? 'configured, pulling on schedule'   : 'not_configured',
+    dashboard: dashboard ? 'configured, read on demand'        : 'not_configured',
   };
 }
 
