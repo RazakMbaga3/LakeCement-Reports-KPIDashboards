@@ -12,6 +12,7 @@
   <script src="loader.js?v=1"></script>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>
@@ -2107,7 +2108,7 @@
       var sumText = offline
         ? '<span style="color:var(--text-muted)">server unreachable — showing this device only</span>'
         : (nSub === nTotal
-            ? '<span style="color:var(--green);font-weight:700">&#10003; All ' + nTotal + ' submitted</span>'
+            ? '<span style="color:var(--green-ink);font-weight:700">&#10003; All ' + nTotal + ' submitted</span>'
             : nSub + ' submitted &nbsp;&middot;&nbsp; ' + nDraft + ' draft &nbsp;&middot;&nbsp; ' +
               (nTotal - nSub - nDraft) + ' pending');
 

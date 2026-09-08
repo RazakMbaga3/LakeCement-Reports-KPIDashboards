@@ -105,7 +105,7 @@ function renderAuditPanel(filters) {
 
     const color  = ACTION_COLORS[e.action] || ACTION_COLORS.DEFAULT;
     const change = e.oldVal && e.oldVal !== '—'
-      ? `<span style="color:#EF4444;text-decoration:line-through">${escHtml(e.oldVal)}</span>&nbsp;→&nbsp;<span style="color:#10B981">${escHtml(e.newVal)}</span>`
+      ? `<span style="color:var(--red-ink);text-decoration:line-through">${escHtml(e.oldVal)}</span>&nbsp;→&nbsp;<span style="color:var(--green-ink)">${escHtml(e.newVal)}</span>`
       : escHtml(e.newVal || '—');
 
     const roleLabel = escHtml(e.role || '—');

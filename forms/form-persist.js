@@ -198,7 +198,7 @@
     }
     const t = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     if (status === 'submitted') {
-      chip.style.color = 'var(--green)';
+      chip.style.color = 'var(--green-ink)';
       chip.textContent = '✓ Submitted ' + t;
     } else {
       chip.style.color = 'var(--text-muted)';
@@ -328,7 +328,7 @@
 
     if (saved.length === 0) {
       const empty = document.createElement('div');
-      empty.style.cssText = 'padding:20px 14px;font-size:12px;color:#94A3B8;text-align:center;line-height:1.6';
+      empty.style.cssText = 'padding:20px 14px;font-size:12px;color:var(--text-muted);text-align:center;line-height:1.6';
       empty.innerHTML = 'No drafts saved yet.<br>Fill the form and click <strong>Save Draft</strong>.';
       panel.appendChild(empty);
     } else {
@@ -356,7 +356,7 @@
         row.innerHTML = `
           <span style="font-weight:600;color:#173158;font-size:12px">${date}</span>
           <div style="display:flex;align-items:center;gap:6px">
-            <span style="color:#94A3B8;font-size:12px">${time}</span>
+            <span style="color:var(--text-muted);font-size:12px">${time}</span>
             <span style="font-size:12px;font-weight:700;padding:2px 7px;border-radius:3px;${badgeStyle}">${status.toUpperCase()}</span>
           </div>`;
         row.onclick = async () => {
@@ -375,7 +375,7 @@
 
     // Footer close
     const foot = document.createElement('div');
-    foot.style.cssText = 'padding:9px 14px;text-align:center;font-size:12px;color:#94A3B8;cursor:pointer;background:#F7F8FA;border-top:1px solid #EEF2F7';
+    foot.style.cssText = 'padding:9px 14px;text-align:center;font-size:12px;color:var(--text-muted);cursor:pointer;background:#F7F8FA;border-top:1px solid #EEF2F7';
     foot.textContent = '✕  Close';
     foot.onclick = () => panel.remove();
     panel.appendChild(foot);

@@ -543,6 +543,11 @@
     main.querySelectorAll('div, nav, ul, header, section').forEach(el => {
       if (el.dataset.msStrip || el.classList.contains('ms-hscroll')) return;
 
+      /* A card's computed read-back strip is a set of label/value pairs,
+         not a toolbar. Turning it into a sideways scroller hid values and
+         created a keyboard-unreachable scroll region. */
+      if (el.closest('.me-derived, .me-card')) return;
+
       const cs = getComputedStyle(el);
       if (cs.display !== 'flex' && cs.display !== 'inline-flex') return;
       if (cs.flexDirection.startsWith('column')) return;

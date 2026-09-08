@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="forms.css" />
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="../design-system.css?v=1" />
+  <script src="../a11y.js?v=1"></script>
   <script src="../mobile-shell.js?v=1"></script>
   <script src="mobile-entry.js?v=1"></script>
 </head>
@@ -333,7 +334,7 @@
   <!-- SIGN-OFF -->
   <div class="rcard">
     <div class="rcard-hdr"><div class="rcard-title"><i data-lucide="pen-line" class="title-icon"></i> Report Sign-off &amp; Approval</div></div>
-    <div style="padding:2px 18px 8px;font-size:12px;color:var(--text-muted)">For the printed record only — does not replace the <a href="../approvals.html" style="color:var(--orange)">Approvals</a> workflow.</div>
+    <div style="padding:2px 18px 8px;font-size:12px;color:var(--text-muted)">For the printed record only — does not replace the <a href="../approvals.html" style="color:var(--orange-ink)">Approvals</a> workflow.</div>
     <div class="signoff">
       <div class="so-cell">
         <div class="so-role">Purchase &amp; Stores Head</div>
@@ -475,7 +476,7 @@ window.MATERIALS_SECTIONS = MATERIALS_SECTIONS;
     return '<td class="cm"><input class="ci" type="number" step="any" value="' + val + '" data-field="' + f + '_' + suffix + '" /></td>';
   }
   function calc(id) { return '<td class="cf"><div class="cv" data-calc="' + id + '">—</div></td>'; }
-  function dash()   { return '<td class="ts" style="text-align:center;color:#CBD5E1">—</td>'; }
+  function dash()   { return '<td class="ts" style="text-align:center;color:var(--text-muted)">—</td>'; }
 
   MATERIALS_SECTIONS.forEach(sec => {
     const tb = document.getElementById(sec.tbody);
@@ -489,7 +490,7 @@ window.MATERIALS_SECTIONS = MATERIALS_SECTIONS;
         ? ' title="Stock held under Coal — Kiln (same supplier). This row records the CPP draw only."'
         : (r.tank ? ' title="Main diesel tank — closing deducts every cost centre\'s on-date consumption."' : '');
       const note = r.consOnly
-        ? ' <span style="font-size:12px;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:.4px">kiln pile</span>'
+        ? ' <span style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px">kiln pile</span>'
         : '';
 
       html += '<tr>' +

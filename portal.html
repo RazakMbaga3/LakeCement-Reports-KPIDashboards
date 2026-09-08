@@ -164,7 +164,7 @@
     .badge-view   { background:#DBEAFE; color:#1E40AF; border:1px solid #93C5FD; }
     .badge-submit { background:#FEF3C7; color:#92400E; border:1px solid #FCD34D; }
     .pcard-arrow {
-      color: #94A3B8;
+      color: var(--text-muted);
       transition: transform .15s, color .15s;
       flex-shrink: 0;
     }
@@ -185,7 +185,7 @@
       padding: 14px 24px;
       font-size: 12px;
       font-weight: 600;
-      color: #94A3B8;
+      color: var(--text-muted);
       letter-spacing: .4px;
       border-top: 1px solid var(--border, #E2E8F0);
       background: white;
@@ -224,6 +224,7 @@
   </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>

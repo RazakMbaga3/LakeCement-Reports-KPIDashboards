@@ -46,58 +46,23 @@
   let uid = 0;
 
   /* ══════════════════════════════════════════════════════════════════
-     HEADER MATRIX
-     A 3-level <thead> with rowspan and colspan cannot be read by index —
-     dispatch-form.html's is "Regular Bags" / "42.5 R" / "On Date" across
-     three rows, where the leaf label alone ("On Date") appears thirteen
-     times and means something different each time. This walks the header
-     the way a browser does and returns, for each column, the full stack
-     of headings that cover it.
+     HEADER MATRIX — owned by a11y.js
+     Both files need the same answer: which headings cover column N of a
+     <thead> that uses rowspan and colspan. a11y.js needs it to name a
+     field for a screen reader; this file needs it to label the same
+     field on a card. It is a subtle enough algorithm that two copies
+     would eventually disagree, so there is one, and a11y.js loads first
+     on every page. If it is somehow absent, cards still build — the
+     fields just carry their leaf heading only.
      ══════════════════════════════════════════════════════════════════ */
   function headerMatrix(table) {
+    if (window.LCL_A11Y && typeof window.LCL_A11Y.headerMatrix === 'function') {
+      return window.LCL_A11Y.headerMatrix(table);
+    }
     const thead = table.tHead;
     if (!thead) return [];
-
-    const grid = [];   /* grid[row][col] = <th> */
-    [...thead.rows].forEach((tr, r) => {
-      let c = 0;
-      [...tr.cells].forEach(th => {
-        while (grid[r] && grid[r][c]) c++;
-        const rs = th.rowSpan || 1;
-        const cs = th.colSpan || 1;
-        for (let dr = 0; dr < rs; dr++) {
-          const rr = r + dr;
-          grid[rr] = grid[rr] || [];
-          for (let dc = 0; dc < cs; dc++) grid[rr][c + dc] = th;
-        }
-        c += cs;
-      });
-    });
-
-    const width = grid.reduce((m, row) => Math.max(m, row ? row.length : 0), 0);
-    const cols = [];
-    for (let c = 0; c < width; c++) {
-      const parts = [];
-      for (let r = 0; r < grid.length; r++) {
-        const th = grid[r] && grid[r][c];
-        if (!th) continue;
-        /* A <th> spanning several rows must not repeat down the stack. */
-        if (parts.length && parts[parts.length - 1].el === th) continue;
-        const txt = cellLabel(th);
-        if (txt) parts.push({ el: th, txt });
-      }
-      cols.push(parts.map(p => p.txt));
-    }
-    return cols;
-  }
-
-  /* Header text without the sub-labels the grid uses for spec ranges and
-     units — those are shown separately on the card so they do not bloat
-     every field label. */
-  function cellLabel(th) {
-    const clone = th.cloneNode(true);
-    clone.querySelectorAll('.spec-range, small, .unit').forEach(n => n.remove());
-    return squash(clone.textContent);
+    const last = thead.rows[thead.rows.length - 1];
+    return [...(last ? last.cells : [])].map(th => [squash(th.textContent)]);
   }
 
   const squash = s => String(s || '').replace(/\s+/g, ' ').trim();

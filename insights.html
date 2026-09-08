@@ -46,6 +46,7 @@
   </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>
@@ -70,7 +71,7 @@
     <input type="date" id="in-from" class="in-input" />
     <span class="in-lbl">to</span>
     <input type="date" id="in-to" class="in-input" />
-    <button class="in-pill" id="in-apply" style="background:var(--orange);color:white">Apply</button>
+    <button class="in-pill" id="in-apply" style="background:var(--orange);color:var(--on-orange)">Apply</button>
   </div>
 </div>
 
@@ -88,7 +89,7 @@
     <div class="in-card-title">Kiln Output &amp; Total Stoppage Minutes</div>
     <div class="in-card-sub">Left axis: clinker output (MT). Right axis: total logged stoppage minutes that day (all sections, all categories).
       For availability (NAI), MTBF, downtime-cause Pareto and RCFA flags, see the
-      <a href="reliability.html" style="color:var(--orange);font-weight:700;text-decoration:none">Equipment Reliability &amp; Downtime Report →</a>
+      <a href="reliability.html" style="color:var(--orange-ink);font-weight:700;text-decoration:none">Equipment Reliability &amp; Downtime Report →</a>
       — this chart only answers whether a stoppage day coincides with an output dip.</div>
     <div class="in-chart-wrap"><canvas id="chart-output-downtime"></canvas></div>
     <div class="in-empty" id="empty-downtime" style="display:none"></div>

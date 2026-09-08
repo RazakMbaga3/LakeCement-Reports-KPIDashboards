@@ -10,7 +10,7 @@
   body { font-family:'Inter',system-ui,sans-serif; background:#F4F6FA; color:#173158; min-height:100vh; }
   .top { background:#173158; color:white; padding:14px 22px; display:flex; align-items:center; gap:14px; }
   .top h1 { font-size:15px; font-weight:800; letter-spacing:.4px; }
-  .top a { color:#F49545; font-size:12px; font-weight:700; text-decoration:none; margin-left:auto; }
+  .top a { color:var(--orange-ink); font-size:12px; font-weight:700; text-decoration:none; margin-left:auto; }
   .wrap { max-width:960px; margin:26px auto; padding:0 18px; }
   .card { background:white; border:1.5px solid #DDE3EC; border-radius:12px; overflow:hidden; margin-bottom:18px; }
   .card-head { padding:14px 18px; border-bottom:1px solid #EEF2F7; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
@@ -27,12 +27,13 @@
   .tag-draft { background:#FEF3C7; color:#92400E; }
   .tag-submitted { background:#BBF7D0; color:#14532D; }
   .st { font-size:12px; color:#64748B; }
-  .st.ok { color:#239557; font-weight:700; }
-  .st.err { color:#DC2626; font-weight:700; }
-  .empty { padding:34px; text-align:center; color:#94A3B8; font-size:13px; }
+  .st.ok { color:var(--green-ink); font-weight:700; }
+  .st.err { color:var(--red-ink); font-weight:700; }
+  .empty { padding:34px; text-align:center; color:var(--text-muted); font-size:13px; }
 </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>

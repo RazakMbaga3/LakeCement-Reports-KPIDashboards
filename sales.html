@@ -54,13 +54,14 @@
       font-size: 12px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase;
       padding: 2px 8px; border-radius: 10px; background: var(--section-bg); color: var(--text-muted);
     }
-    .target-source-chip.odoo { background: var(--green-bg); color: var(--green); }
+    .target-source-chip.odoo { background: var(--green-bg); color: var(--green-ink); }
 
     .perf-table .div-row td { background: #F1F5FB; font-weight: 700; color: var(--navy); font-size: 12px; }
     .perf-table .zone-row td:first-child { padding-left: 28px; color: var(--text-muted); }
   </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>
@@ -88,7 +89,7 @@
 
 <main class="in-main">
 
-  <div class="in-empty" id="sd-alert" style="display:none;background:#FFF3E0;border:1px solid #FDE68A;border-radius:10px;color:var(--orange);font-weight:600;padding:10px 16px;text-align:left;margin-bottom:16px"></div>
+  <div class="in-empty" id="sd-alert" style="display:none;background:#FFF3E0;border:1px solid #FDE68A;border-radius:10px;color:var(--orange-ink);font-weight:600;padding:10px 16px;text-align:left;margin-bottom:16px"></div>
 
   <!-- ── HERO ─────────────────────────────────────────────── -->
   <div class="sk-row" id="sd-hero"></div>

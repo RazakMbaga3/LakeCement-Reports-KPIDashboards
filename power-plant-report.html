@@ -43,8 +43,8 @@
     }
     .tb-ctl:focus { border-color:var(--orange); background:white; }
     input[type="date"].tb-ctl { min-width:148px; cursor:text; }
-    .rpt-pill { display:flex; align-items:center; gap:5px; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; background:#FFF3E0; color:var(--orange); border:1px solid #FDE68A; }
-    .rpt-pill.is-submitted { background:#E8F5EC; color:var(--green); border-color:#B7E4C7; }
+    .rpt-pill { display:flex; align-items:center; gap:5px; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; background:#FFF3E0; color:var(--orange-ink); border:1px solid #FDE68A; }
+    .rpt-pill.is-submitted { background:#E8F5EC; color:var(--green-ink); border-color:#B7E4C7; }
     .rpt-pill::before { content:''; width:7px; height:7px; border-radius:50%; background:currentColor; }
     .btn { padding:6px 16px; border-radius:var(--radius); font-family:var(--font); font-size:12px; font-weight:700; cursor:pointer; border:1.5px solid transparent; transition:all .15s; }
     .btn-save  { background:var(--orange); color:white; border-color:var(--orange); }
@@ -92,13 +92,13 @@
     .kt-val  { font-size:22px; font-weight:800; color:var(--navy); line-height:1.1; }
     .kt-unit { font-size:12px; color:var(--text-muted); margin-top:2px; }
     .kt-vs   { margin-top:5px; font-size:12px; font-weight:700; }
-    .vs-ok { color:var(--green); } .vs-ng { color:var(--red); } .vs-wa { color:var(--orange); }
+    .vs-ok { color:var(--green-ink); } .vs-ng { color:var(--red); } .vs-wa { color:var(--orange-ink); }
 
     /* report card */
     .rcard { background:white; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow-sm); margin-bottom:14px; }
     .rcard-hdr { background:var(--navy); padding:9px 16px; display:flex; align-items:center; justify-content:space-between; }
     .rcard-title { color:white; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; }
-    .rcard-sub   { color:rgba(255,255,255,.5); font-size:12px; }
+    .rcard-sub   { color:var(--on-navy); font-size:12px; }
     .rcard-chips { display:flex; gap:6px; }
     .rcard-chip  { padding:2px 9px; border-radius:10px; font-size:12px; font-weight:700; background:rgba(255,255,255,.15); color:white; text-transform:uppercase; }
     .rcard-chip.orange { background:var(--orange); }
@@ -240,6 +240,7 @@
   </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=1"></script>
   <script src="forms/mobile-entry.js?v=1"></script>
 </head>
@@ -778,7 +779,7 @@
   ════════════════════════════════════════════════ -->
   <div class="rcard">
     <div class="rcard-hdr"><div class="rcard-title"><i data-lucide="pen-line" class="title-icon"></i> Report Sign-off &amp; Approval</div></div>
-    <div style="padding:2px 18px 8px;font-size:12px;color:var(--text-muted)">For the printed record only — does not replace the <a href="approvals.html" style="color:var(--orange)">Approvals</a> workflow.</div>
+    <div style="padding:2px 18px 8px;font-size:12px;color:var(--text-muted)">For the printed record only — does not replace the <a href="approvals.html" style="color:var(--orange-ink)">Approvals</a> workflow.</div>
     <div class="signoff">
       <div class="so-cell">
         <div class="so-role">CPP Shift Operator</div>
@@ -803,7 +804,7 @@
     </div>
     <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;">
       <span style="font-size:12px;color:var(--text-muted)">
-        Status: <strong style="color:var(--orange)">DRAFT</strong> &nbsp;·&nbsp;
+        Status: <strong style="color:var(--orange-ink)">DRAFT</strong> &nbsp;·&nbsp;
         Date: <strong>06 May 2026</strong>
       </span>
       <div style="display:flex;gap:8px">

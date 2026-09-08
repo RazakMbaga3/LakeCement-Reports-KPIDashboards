@@ -708,7 +708,7 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
     }
     .arm-role-cell strong { display:block; color:var(--navy,#173158); }
     .arm-role-slug {
-      font-size:12px; font-weight:600; color:#94A3B8;
+      font-size:12px; font-weight:600; color:var(--text-muted);
       text-transform:uppercase; letter-spacing:.4px;
     }
     .arm-cell { text-align:center; padding:4px 6px; }
@@ -719,7 +719,7 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
     .arm-edit  { background:#DCFCE7; color:#166534; border:1px solid #86EFAC; }
     .arm-view  { background:#DBEAFE; color:#1E40AF; border:1px solid #93C5FD; }
     .arm-own   { background:#FEF3C7; color:#92400E; border:1px solid #FCD34D; }
-    .arm-none  { background:#F1F5F9; color:#94A3B8; border:1px solid #E2E8F0; }
+    .arm-none  { background:#F1F5F9; color:var(--text-muted); border:1px solid #E2E8F0; }
     .arm-tick  { color:#16A34A; font-weight:800; font-size:12px; }
     .arm-kpi-depts {
       font-size:12px; font-weight:700; color:#0369A1;

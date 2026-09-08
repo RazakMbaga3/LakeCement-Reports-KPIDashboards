@@ -39,7 +39,7 @@
     .rl-section-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--navy); display: flex; align-items: center; gap: 7px; }
     .rl-section-sub { font-size: 12px; color: var(--text-muted); font-weight: 500; }
     .rl-section-line { flex: 1; height: 1px; background: var(--border); }
-    .rl-doc-link { font-size: 12px; color: var(--orange); font-weight: 700; text-decoration: none; }
+    .rl-doc-link { font-size: 12px; color: var(--orange-ink); font-weight: 700; text-decoration: none; }
     .rl-doc-link:hover { text-decoration: underline; }
 
     /* ══ Headline KPI strip ══ */
@@ -50,12 +50,12 @@
       padding: 14px 16px; box-shadow: var(--shadow-sm);
     }
     .rl-stat-top { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
-    .rl-stat-icon { color: var(--orange); flex-shrink: 0; }
+    .rl-stat-icon { color: var(--orange-ink); flex-shrink: 0; }
     .rl-stat-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); }
     .rl-stat-val { font-size: 26px; font-weight: 800; color: var(--navy); line-height: 1; font-variant-numeric: proportional-nums; }
     .rl-stat-target { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
     .rl-stat-delta { font-size: 12px; font-weight: 700; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
-    .rl-delta-good { color: var(--green); }
+    .rl-delta-good { color: var(--green-ink); }
     .rl-delta-bad  { color: var(--red); }
     .rl-delta-flat { color: var(--text-muted); }
 
@@ -112,7 +112,7 @@
     .rl-rcfa-item.sev-warning  { border-left-color: #d97706; }
     .rl-rcfa-icon { flex-shrink: 0; margin-top: 1px; }
     .rl-rcfa-item.sev-critical .rl-rcfa-icon { color: #d03b3b; }
-    .rl-rcfa-item.sev-warning  .rl-rcfa-icon { color: #d97706; }
+    .rl-rcfa-item.sev-warning  .rl-rcfa-icon { color: var(--amber-ink); }
     .rl-rcfa-body { flex: 1; }
     .rl-rcfa-tag {
       display: inline-block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
@@ -149,6 +149,7 @@
   </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>

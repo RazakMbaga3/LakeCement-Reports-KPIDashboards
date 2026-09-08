@@ -226,7 +226,7 @@
     l.conflicts.forEach(function (it, i) {
       html +=
         '<div style="padding:10px 14px;border-bottom:1px solid #F0F4F8;font-size:12px">' +
-        '<div style="font-weight:700;color:#DC2626">⚠ ' + it.formType + ' — ' + it.date + '</div>' +
+        '<div style="font-weight:700;color:var(--red-ink)">⚠ ' + it.formType + ' — ' + it.date + '</div>' +
         '<div style="color:#64748B;font-size:12px;margin:3px 0 7px;line-height:1.45">' + it.reason +
         '<br>Yours queued ' + _fmtTime(it.queuedAt) +
         (it.serverSavedAt ? ' · server saved ' + _fmtTime(it.serverSavedAt) : '') + '</div>' +
@@ -241,11 +241,11 @@
       html +=
         '<div style="padding:10px 14px;border-bottom:1px solid #F0F4F8;font-size:12px;display:flex;justify-content:space-between">' +
         '<span style="font-weight:600;color:#173158">' + it.formType + ' — ' + it.date + '</span>' +
-        '<span style="color:#94A3B8;font-size:12px">queued ' + _fmtTime(it.queuedAt) + '</span></div>';
+        '<span style="color:var(--text-muted);font-size:12px">queued ' + _fmtTime(it.queuedAt) + '</span></div>';
     });
 
     if (!l.conflicts.length && !l.pending.length) {
-      html += '<div style="padding:18px 14px;font-size:12px;color:#94A3B8;text-align:center">All synced ✓</div>';
+      html += '<div style="padding:18px 14px;font-size:12px;color:var(--text-muted);text-align:center">All synced ✓</div>';
     }
 
     panel.innerHTML = html;

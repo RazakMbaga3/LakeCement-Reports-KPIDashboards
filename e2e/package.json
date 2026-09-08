@@ -8,7 +8,8 @@
     "test:kpi": "playwright test tests/kpi-dashboard.spec.js tests/kpi-write.spec.js",
     "test:roles": "playwright test tests/roles.spec.js",
     "report": "playwright show-report",
-    "audit:responsive": "node responsive-audit.js"
+    "audit:responsive": "node responsive-audit.js",
+    "audit:a11y": "node a11y-audit.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0"

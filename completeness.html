@@ -62,12 +62,13 @@
     .cp-dot.missing { background: #FCA5A5; }
     .cp-dot.future  { background: #F1F5FB; }
     .cp-pct { padding: 8px 12px !important; text-align: right; font-weight: 700; }
-    .cp-pct.good { color: #239557; } .cp-pct.fair { color: #D97706; } .cp-pct.poor { color: #DC2626; }
+    .cp-pct.good { color: var(--green-ink); } .cp-pct.fair { color: var(--amber-ink); } .cp-pct.poor { color: var(--red-ink); }
 
     .cp-empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
   </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>
@@ -93,7 +94,7 @@
     <input type="date" id="cp-from" class="cp-input" />
     <span class="cp-lbl">to</span>
     <input type="date" id="cp-to" class="cp-input" />
-    <button class="cp-pill" id="cp-apply" style="background:var(--orange);color:white">Apply</button>
+    <button class="cp-pill" id="cp-apply" style="background:var(--orange);color:var(--on-orange)">Apply</button>
   </div>
 </div>
 

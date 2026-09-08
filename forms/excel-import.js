@@ -471,7 +471,7 @@
       return '<tr style="border-bottom:1px solid #EEF2F7">' +
         '<td style="padding:5px 12px;font-size:12px;color:#5A6270;font-family:monospace;white-space:nowrap">' + k + '</td>' +
         '<td style="padding:5px 12px;font-size:12px;font-weight:700;color:#111827;text-align:right">' + data[k] + '</td>' +
-        '<td style="padding:5px 12px;text-align:center;font-size:13px">' + (inForm ? '<span style="color:#239557">✓</span>' : '<span style="color:#94A3B8">—</span>') + '</td>' +
+        '<td style="padding:5px 12px;text-align:center;font-size:13px">' + (inForm ? '<span style="color:var(--green-ink)">✓</span>' : '<span style="color:var(--text-muted)">—</span>') + '</td>' +
       '</tr>';
     }).join('');
 
@@ -484,7 +484,7 @@
         '<div style="background:#173158;border-radius:10px 10px 0 0;padding:13px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">' +
           '<div>' +
             '<div style="color:white;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase">Excel Import Preview</div>' +
-            '<div style="color:rgba(255,255,255,.5);font-size:12px;margin-top:2px">' + formId + ' · ' + matched.length + ' fields matched</div>' +
+            '<div style="color:var(--on-navy);font-size:12px;margin-top:2px">' + formId + ' · ' + matched.length + ' fields matched</div>' +
           '</div>' +
           '<button onclick="document.getElementById(\'_xi-modal\').remove()" style="background:rgba(255,255,255,.12);border:none;color:white;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>' +
         '</div>' +
@@ -607,7 +607,7 @@
     btn.className = 'btn btn-out';
     btn.id = '_xi-btn';
     btn.title = 'Import data from Excel (.xlsx)';
-    btn.style.cssText = 'border-color:#4F74B2;color:#4F74B2;';
+    btn.style.cssText = 'border-color:#4F74B2;color:#2C5A9E;';
     btn.innerHTML =
       '<svg style="width:13px;height:13px;stroke-width:2.5;vertical-align:-2px;margin-right:4px;display:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor">' +
         '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>' +

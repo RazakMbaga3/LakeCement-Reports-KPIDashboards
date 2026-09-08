@@ -218,10 +218,13 @@
     var last  = valid.slice(-half).reduce(function(a,b){return a+b;},0) / half;
     var pct   = (last - first) / (Math.abs(first) || 1) * 100;
     var goingUp = pct > 3, goingDown = pct < -3;
-    if (!goingUp && !goingDown) return { symbol: '→', color: '#94A3B8' };
+    if (!goingUp && !goingDown) return { symbol: '→', color: 'var(--text-muted)' };
     /* Color: green if direction matches target, red if against target */
     var good = targetDir === '>=' ? goingUp : (targetDir === '<=' ? goingDown : null);
-    var color = good === null ? '#94A3B8' : (good ? '#239557' : '#e53935');
+    /* These paint TEXT (an arrow and its percentage), so they take the
+       AA-passing inks, not the raw brand/palette hues. */
+    var color = good === null ? 'var(--text-muted)'
+              : (good ? 'var(--green-ink)' : 'var(--red-ink)');
     return { symbol: goingUp ? '↑' : '↓', color: color };
   }
 
@@ -447,7 +450,13 @@
       return '<tr>' +
         '<td>' + a.dateLabel + '</td>' +
         '<td style="color:var(--navy);font-weight:700">' + a.metric + '</td>' +
-        '<td style="font-weight:700;color:' + a.color + '">' + a.value + '</td>' +
+        /* The value wears ink, not the series colour: a hue chosen to
+           separate lines on a chart is not chosen to be legible as
+           13px text, and two of them measured 2.27:1 and 3.74:1 here.
+           Identity moves to a swatch beside the number. */
+        '<td style="font-weight:700;color:var(--text-main)">' +
+          '<span class="an-swatch" style="background:' + a.color + '"></span>' +
+          a.value + '</td>' +
         '<td>' + typeHtml + '</td>' +
         '<td style="color:var(--text-muted)">' + (a.note || '') + '</td>' +
       '</tr>';

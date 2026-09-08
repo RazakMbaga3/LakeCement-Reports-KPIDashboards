@@ -88,7 +88,7 @@
     .adm-grant { display: flex; gap: 8px; font-size: 12px; padding: 3px 0; line-height: 1.5; }
     .adm-grant .k { color: var(--text-muted); min-width: 118px; flex-shrink: 0; }
     .adm-grant .v { color: var(--navy); font-weight: 600; }
-    .adm-grant .v.no { color: #94A3B8; font-weight: 400; }
+    .adm-grant .v.no { color: var(--text-muted); font-weight: 400; }
 
     .adm-err { background: #FEF2F2; border: 1.5px solid #FCA5A5; color: #B91C1C;
                font-size: 12px; padding: 10px 12px; border-radius: 7px; margin-bottom: 14px; line-height: 1.5; }
@@ -107,6 +107,7 @@
   </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>

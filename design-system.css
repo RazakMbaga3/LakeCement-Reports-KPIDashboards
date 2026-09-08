@@ -1335,3 +1335,65 @@ html body canvas { max-width: 100%; }
   html body .kt-val { font-size: var(--fs-2xl); line-height: var(--lh-tight); }
   html body .kt-foot { width: 100%; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   12. TEXT INKS — brand colours are fills, not text colours
+   ──────────────────────────────────────────────────────────────────────
+   The same lesson the chart palette taught, in a second place. A colour
+   that identifies the company on a button does not automatically carry
+   legible text: measured against WCAG 2.2 AA, the Nyati orange as TEXT
+   scores 2.27:1 on white (needs 4.5) and white ON that orange scores the
+   same 2.27:1. Brand green as text is 3.81:1. Together they accounted
+   for 379 contrast failures across 19 pages.
+
+   So each brand colour gets an "ink" sibling: the same hue, stepped dark
+   enough to read. The fill colours are untouched — a button is still
+   Nyati orange, its label is just no longer white.
+
+   Every value here is computed, not chosen by eye. Ratios are against
+   white and against the tint each colour actually sits on in this app.
+   ══════════════════════════════════════════════════════════════════════ */
+:root {
+  --orange-ink: #A85C14;   /* 4.99:1 on white · 4.55:1 on #FFF3E0        */
+  --green-ink:  #12703F;   /* 6.15:1 on white · 5.48:1 on #E8F5EE        */
+  --amber-ink:  #B45309;   /* 5.02:1 on white · 4.93:1 on #FFFDF5        */
+  --blue-ink:   #2C5A9E;   /* 6.26:1 on #F1F5F9                          */
+  --red-ink:    #C0271F;   /* 5.91:1 on white — red-500 as text is 3.76:1 */
+
+  /* Text ON a brand-orange fill. Darkening the orange enough for white
+     text would have cost the brand hue; brand navy on brand orange keeps
+     both and measures better than white ever could. */
+  --on-orange:  #173158;   /* 5.71:1 on #F49545                          */
+
+  /* White on the navy ground needs 0.55 alpha to clear AA; the app was
+     using 0.45 (3.89:1) in headers, footers and sidebar badges. */
+  --on-navy:    rgba(255, 255, 255, .55);   /* 5.04:1 on #173158         */
+}
+
+/* Buttons that fill with brand orange take navy labels, not white.
+   Scoped to the actual orange-filled controls rather than applied by
+   background detection, which CSS cannot do. */
+.btn-save,
+.btn-submit,
+.me-pg-save,
+.btn-primary,
+.rcard-chip.orange,
+#login-btn,
+#rl-apply,
+#in-apply,
+#cp-apply,
+#an-apply,
+.tb-apply,
+button.apply-btn {
+  color: var(--on-orange);
+}
+.btn-save .btn-label,
+.btn-submit .btn-label,
+.me-pg-save .btn-label,
+#login-btn .btn-label,
+.btn-primary .btn-label { color: inherit; }
+
+/* Their icons follow the label rather than staying white. */
+.btn-save svg, .btn-save i,
+#login-btn svg, #login-btn i,
+.btn-primary svg, .btn-primary i { color: inherit; stroke: currentColor; }

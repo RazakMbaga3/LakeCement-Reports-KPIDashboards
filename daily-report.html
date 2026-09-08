@@ -45,10 +45,10 @@
     input[type="date"].tb-ctl { min-width:148px; cursor:text; }
     .rpt-pill {
       display:flex; align-items:center; gap:5px; padding:4px 12px; border-radius:20px;
-      font-size:12px; font-weight:700; background:#FFF3E0; color:var(--orange);
+      font-size:12px; font-weight:700; background:#FFF3E0; color:var(--orange-ink);
       border:1px solid #FDE68A;
     }
-    .rpt-pill.is-submitted { background:#E8F5EC; color:var(--green); border-color:#B7E4C7; }
+    .rpt-pill.is-submitted { background:#E8F5EC; color:var(--green-ink); border-color:#B7E4C7; }
     .rpt-pill::before { content:''; width:7px; height:7px; border-radius:50%; background:currentColor; }
     .btn { padding:6px 16px; border-radius:var(--radius); font-family:var(--font); font-size:12px; font-weight:700; cursor:pointer; border:1.5px solid transparent; transition:all .15s; }
     .btn-save   { background:var(--orange); color:white; border-color:var(--orange); }
@@ -99,7 +99,7 @@
     .kt-val { font-size:26px; font-weight:800; color:var(--navy); line-height:1; margin:3px 0 2px; }
     .kt-unit { font-size:12px; color:var(--text-muted); margin-top:1px; }
     .kt-vs   { margin-top:4px; font-size:12px; font-weight:700; }
-    .vs-ok { color:var(--green); } .vs-ng { color:var(--red); } .vs-wa { color:var(--orange); }
+    .vs-ok { color:var(--green-ink); } .vs-ng { color:var(--red); } .vs-wa { color:var(--orange-ink); }
 
     /* Phase 3 RAG + progress bar */
     .kt { transition:box-shadow .15s ease, transform .1s ease; }
@@ -119,8 +119,8 @@
     .kt-foot { display:flex; justify-content:space-between; align-items:center; margin-bottom:3px; }
     .kt-tgt { font-size:12px; color:var(--text-muted); font-weight:500; }
     .kt-pct { font-size:12px; font-weight:700; }
-    .kt.on-track .kt-pct { color:var(--green); }
-    .kt.watch    .kt-pct { color:var(--orange); }
+    .kt.on-track .kt-pct { color:var(--green-ink); }
+    .kt.watch    .kt-pct { color:var(--orange-ink); }
     .kt.concern  .kt-pct { color:var(--red); }
     @media (min-width:1024px) { .kt-val { font-size:24px; } }
     @media (max-width:767px)  { .kt-val { font-size:20px; } .kt:hover { transform:none; } }
@@ -129,10 +129,10 @@
     .rcard { background:white; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow-sm); margin-bottom:14px; }
     .rcard-hdr { background:var(--navy); padding:9px 16px; display:flex; align-items:center; justify-content:space-between; }
     .rcard-title { color:white; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; }
-    .rcard-sub   { color:rgba(255,255,255,.5); font-size:12px; }
+    .rcard-sub   { color:var(--on-navy); font-size:12px; }
     .rcard-chips { display:flex; gap:6px; }
     .rcard-chip  { padding:2px 9px; border-radius:10px; font-size:12px; font-weight:700; background:rgba(255,255,255,.15); color:white; text-transform:uppercase; }
-    .rcard-chip.orange { background:var(--orange); }
+    .rcard-chip.orange { background:var(--orange); color:var(--on-orange); }
 
     /* ── wide scroll wrapper ── */
     .tbl-scroll { overflow-x:auto; }
@@ -195,9 +195,9 @@
 
     /* pills */
     .pill { display:inline-block; padding:1px 7px; border-radius:8px; font-size:12px; font-weight:700; }
-    .pg { background:var(--green-bg); color:var(--green); }
+    .pg { background:var(--green-bg); color:var(--green-ink); }
     .pr { background:var(--red-bg); color:var(--red); }
-    .po { background:#FFF3E0; color:var(--orange); }
+    .po { background:#FFF3E0; color:var(--orange-ink); }
 
     /* notes grid — single column on mobile, 2-col on tablet+ */
     .notes-grid { display:grid; grid-template-columns:1fr; gap:0; }
@@ -310,7 +310,7 @@
       display:inline-flex; align-items:center; gap:5px;
       padding:4px 12px; border-radius:6px;
       background:rgba(244,149,69,.13); border:1px solid rgba(244,149,69,.4);
-      color:#F49545; font-family:var(--font); font-size:12px; font-weight:700;
+      color:var(--orange-ink); font-family:var(--font); font-size:12px; font-weight:700;
       cursor:pointer; flex-shrink:0; transition:background .15s;
     }
     .ie-edit-btn:hover { background:rgba(244,149,69,.22); }
@@ -341,10 +341,11 @@
     .ie-actions { display:flex; gap:8px; justify-content:flex-end; padding-top:4px; }
     .ie-save { background:var(--orange); color:white; border:none; padding:7px 20px; border-radius:6px; font-family:var(--font); font-size:12px; font-weight:700; cursor:pointer; }
     .ie-cancel { background:#F1F5F9; color:#475569; border:1.5px solid #E2E8F0; padding:7px 14px; border-radius:6px; font-family:var(--font); font-size:12px; font-weight:600; cursor:pointer; }
-    .ie-owner-tag { font-size:12px; color:rgba(255,255,255,.45); margin-left:6px; font-weight:500; }
+    .ie-owner-tag { font-size:12px; color:rgba(255,255,255,.55); margin-left:6px; font-weight:500; }
   </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=1"></script>
   <script src="forms/mobile-entry.js?v=1"></script>
 </head>
@@ -1562,7 +1563,7 @@
   ════════════════════════════════════════════════ -->
   <div class="rcard" style="margin-top:14px">
     <div class="rcard-hdr"><div class="rcard-title"><i data-lucide="pen-line" class="title-icon"></i> Report Sign-off &amp; Approval</div></div>
-    <div style="padding:2px 18px 8px;font-size:12px;color:var(--text-muted)">For the printed record only — does not replace the <a href="approvals.html" style="color:var(--orange)">Approvals</a> workflow.</div>
+    <div style="padding:2px 18px 8px;font-size:12px;color:var(--text-muted)">For the printed record only — does not replace the <a href="approvals.html" style="color:var(--orange-ink)">Approvals</a> workflow.</div>
     <div class="signoff">
       <div class="so-cell">
         <div class="so-role">Production Head</div>
@@ -1587,7 +1588,7 @@
     </div>
     <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;">
       <span style="font-size:12px;color:var(--text-muted)">
-        Status: <strong id="so-status-lbl" style="color:var(--orange)">DRAFT</strong> &nbsp;·&nbsp;
+        Status: <strong id="so-status-lbl" style="color:var(--orange-ink)">DRAFT</strong> &nbsp;·&nbsp;
         Date: <strong id="so-date-lbl">—</strong>
       </span>
       <div style="display:flex;gap:8px">
@@ -2339,7 +2340,7 @@ initReportLoader({
         try { status = (JSON.parse(raw)._m.status || 'draft').toUpperCase(); } catch (e) {}
       }
       statusLbl.textContent = status;
-      statusLbl.style.color = status === 'SUBMITTED' ? 'var(--green)' : 'var(--orange)';
+      statusLbl.style.color = status === 'SUBMITTED' ? 'var(--green-ink)' : 'var(--orange-ink)';
     }
   }
 

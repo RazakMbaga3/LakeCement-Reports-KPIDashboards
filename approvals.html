@@ -26,12 +26,12 @@
     .apv-btn { font-family: var(--font); font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer; }
     .apv-btn-approve { background: #239557; color: white; }
     .apv-btn-approve:hover { background: #1c7a46; }
-    .apv-btn-reject { background: white; color: #DC2626; border: 1.5px solid #FCA5A5; }
+    .apv-btn-reject { background: white; color: var(--red-ink); border: 1.5px solid #FCA5A5; }
     .apv-btn-reject:hover { background: #FEF2F2; }
     .apv-btn:disabled { opacity: .5; cursor: not-allowed; }
 
     .apv-empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
-    .apv-error { text-align: center; padding: 20px; color: #DC2626; font-size: 12px; }
+    .apv-error { text-align: center; padding: 20px; color: var(--red-ink); font-size: 12px; }
   
   /* Figures column + the expandable panel behind it. An approver can now see
      the numbers on the row they are signing off, instead of only a remark. */
@@ -47,6 +47,7 @@
 </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>

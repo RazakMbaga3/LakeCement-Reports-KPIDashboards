@@ -6,6 +6,7 @@ here is asserted by `e2e/responsive-audit.js`, which fails if the app drifts.
 
 ```bash
 cd e2e && npm run audit:responsive        # 18 pages x 4 viewports, 72 checks
+cd e2e && npm run audit:a11y              # 19 pages x 2 viewports, WCAG 2.2 AA
 ```
 
 ---
@@ -39,7 +40,9 @@ which page you were on without scrolling past all of it.
 | `mobile-shell.js` | Drawer, app bar, bottom tab bar, filter disclosure, scroll affordances |
 | `forms/mobile-entry.js` | Shift grids as per-parameter cards on a phone; entry progress |
 | `chart-theme.js` | Chart.js defaults and the validated data palette |
-| `e2e/responsive-audit.js` | The acceptance criteria, as runnable checks |
+| `a11y.js` | Accessible names for form controls; keyboard reach into scroll regions |
+| `e2e/responsive-audit.js` | Layout/legibility criteria, as runnable checks |
+| `e2e/a11y-audit.js` | WCAG 2.2 AA, via axe-core |
 | `styles.css` | Everything desktop. **Nothing below 960px is styled here any more.** |
 
 `design-system.css` is loaded **last** in every `<head>` — after `styles.css`
@@ -103,6 +106,25 @@ validator, the brand trio **fails**: `#173158` has OKLCH lightness 0.315
 reads as grey rather than as a hue. A brand colour identifies a company; a
 series colour has to identify a series to a reader with colour-vision
 deficiency, on a projector, in a print-out.
+
+**A brand colour is a fill, not a text colour.** The same lesson in a second
+place. Measured against AA, Nyati orange as *text* is 2.27:1 on white and white
+*on* that orange is also 2.27:1; brand green as text is 3.81:1. Together they
+caused 379 of the 859 accessibility violations found. So each brand colour has
+an "ink" sibling — same hue, stepped dark enough to read — while the fills stay
+exactly as they were:
+
+```
+--orange-ink #A85C14   4.99:1 on white · 4.55:1 on its own tint
+--green-ink  #12703F   6.15:1 on white · 5.48:1 on #E8F5EE
+--amber-ink  #B45309   5.02:1
+--red-ink    #C0271F   5.91:1
+--on-orange  #173158   5.71:1 — brand navy is what goes ON a brand-orange fill
+--on-navy    rgba(255,255,255,.55)   5.04:1 on #173158
+```
+
+A button is still Nyati orange; its label is navy rather than white. Darkening
+the orange enough for white text would have cost the brand hue — this keeps it.
 
 The series palette is Nyati-anchored and validated, not chosen by eye:
 
@@ -198,6 +220,31 @@ The one positional selector in the codebase, `checkCao()` in
   a report the role cannot edit read `1 of 1 filled` instead of **View only**.
 - **Disabled fields are not work outstanding.** A form disables every input when
   the role does not own the report, or the day is already submitted.
+
+### Accessibility — WCAG 2.2 AA, enforced
+
+`npm run audit:a11y` runs axe-core over 19 pages at two viewports. It went from
+**859 violations across 5 rules to 0**. What was wrong, and the standing rules:
+
+- **400 unlabelled form controls.** Not an oversight — a consequence of the
+  shape. In a shift grid a field's meaning comes from its row heading ("LSF")
+  and its column heading ("04:00–08:00"); a sighted officer reads both, a screen
+  reader announced "edit text, blank" 84 times on one report. `a11y.js` composes
+  the name from exactly what a sighted user reads. It **only fills a gap** — a
+  control with a real label is left alone, and a name it added is withdrawn if a
+  real one appears later. It never invents: no source, no name.
+- **379 contrast failures** — the brand-as-text problem above.
+- **58 keyboard-unreachable scroll regions.** A region that scrolls but holds
+  nothing focusable cannot be reached at all; you can see there is more table to
+  the right and have no way to get there. Note that *disabled* controls are not
+  focusable, so a form a role does not own is full of them and still needs the
+  region itself to be a tab stop.
+- **A 18px-wide password toggle**, under the 2.5.8 target-size minimum.
+
+What axe cannot check stays a review job: whether alt text is *accurate*,
+whether a heading structure is *meaningful*, and whether colour is the *only*
+thing carrying a signal. The design system's standing answer to the last one is
+that a status colour always ships with a label or an icon.
 
 ### Motion & accessibility
 

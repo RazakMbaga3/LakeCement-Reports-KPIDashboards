@@ -251,7 +251,7 @@
 .ndp-month:hover{background:#E9EDF3;}\
 .ndp-ftr{display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;\
   border-top:1px solid var(--border,#DDE3EC);}\
-.ndp-link{border:none;background:none;font-size:12.5px;font-weight:700;color:var(--orange,#F49545);\
+.ndp-link{border:none;background:none;font-size:12.5px;font-weight:700;color:var(--orange-ink);\
   cursor:pointer;padding:4px 6px;}\
 .ndp-link:hover{text-decoration:underline;}\
 .ndp-link-muted{color:var(--text-muted,#5A6270);}\

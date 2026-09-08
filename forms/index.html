@@ -70,17 +70,17 @@
     }
     .sb-badge.submitted { background:#D1FAE5; color:#065F46; }
     .sb-badge.draft     { background:#FEF3C7; color:#92400E; }
-    .sb-badge.missing   { background:#F1F5F9; color:#94A3B8; }
+    .sb-badge.missing   { background:#F1F5F9; color:var(--text-muted); }
 
     .sb-card-by {
       font-size:12px; color:var(--text-muted); margin-bottom:3px;
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     }
     .sb-card-by strong { color:var(--navy); }
-    .sb-card-time { font-size:12px; color:#94A3B8; }
+    .sb-card-time { font-size:12px; color:var(--text-muted); }
     .sb-card-open {
       position:absolute; bottom:10px; right:14px;
-      font-size:12px; font-weight:700; color:var(--orange);
+      font-size:12px; font-weight:700; color:var(--orange-ink);
       display:flex; align-items:center; gap:3px;
     }
 
@@ -122,13 +122,14 @@
 
     /* ── Refresh hint ─────────────────────────────────────────────── */
     .sb-refresh {
-      font-size:12px; color:#94A3B8; display:flex; align-items:center; gap:5px;
+      font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:5px;
       cursor:pointer; padding:3px 8px; border-radius:4px; transition:background .1s;
     }
     .sb-refresh:hover { background:var(--off-white); color:var(--navy); }
   </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="../design-system.css?v=1" />
+  <script src="../a11y.js?v=1"></script>
   <script src="../mobile-shell.js?v=1"></script>
 </head>
 <body>
@@ -167,7 +168,7 @@
       <span class="sb-sum-item"><span class="sb-dot ok"></span><span id="cnt-submitted">0 submitted</span></span>
       <span class="sb-sum-item"><span class="sb-dot warn"></span><span id="cnt-draft">0 in draft</span></span>
       <span class="sb-sum-item"><span class="sb-dot na"></span><span id="cnt-missing">9 not started</span></span>
-      <span style="color:#94A3B8;font-size:12px" id="sb-note">Reads from this browser's local storage — submit each form to record it here.</span>
+      <span style="color:var(--text-muted);font-size:12px" id="sb-note">Reads from this browser's local storage — submit each form to record it here.</span>
     </div>
 
     <!-- Status card grid (built by JS) -->
@@ -399,7 +400,7 @@ function buildBoard() {
       <div class="sb-card-by">
         ${cls !== 'missing'
           ? `By: <strong>${preparedBy}</strong>`
-          : `<span style="color:#CBD5E1">No data for ${_todayShort}</span>`}
+          : `<span style="color:var(--text-muted)">No data for ${_todayShort}</span>`}
       </div>
       <div class="sb-card-time">
         ${savedAt ? _fmt(savedAt) : lastSubmitted ? `Last: ${lastSubmitted._m.date}` : `Owner: ${form.owner}`}

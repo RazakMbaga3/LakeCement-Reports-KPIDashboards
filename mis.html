@@ -31,7 +31,7 @@
       transition:all .15s; white-space:nowrap; font-family:var(--font);
     }
     .mis-tab:hover { color:var(--navy); background:#F8FAFC; }
-    .mis-tab.active { color:var(--orange); border-bottom-color:var(--orange); background:white; }
+    .mis-tab.active { color:var(--orange-ink); border-bottom-color:var(--orange); background:white; }
     .mis-tab-icon { width:15px; height:15px; stroke-width:2; flex-shrink:0; }
 
     /* Panels */
@@ -58,7 +58,7 @@
       padding:14px 18px; border-bottom:1px solid var(--border);
       background:linear-gradient(135deg,#F8FAFC 0%,white 100%);
     }
-    .mis-sec-icon { color:var(--orange); width:16px; height:16px; flex-shrink:0; }
+    .mis-sec-icon { color:var(--orange-ink); width:16px; height:16px; flex-shrink:0; }
     .mis-sec-title { font-size:13px; font-weight:800; color:var(--navy); margin:0; }
 
     /* Tables */
@@ -85,8 +85,8 @@
       font-size:12px; font-weight:700;
     }
     .mis-badge.valid   { background:#ECFDF5; color:#059669; border:1px solid #A7F3D0; }
-    .mis-badge.expiring { background:#FFF7ED; color:#D97706; border:1px solid #FDE68A; }
-    .mis-badge.expired  { background:#FEF2F2; color:#DC2626; border:1px solid #FECACA; }
+    .mis-badge.expiring { background:#FFF7ED; color:var(--amber-ink); border:1px solid #FDE68A; }
+    .mis-badge.expired  { background:#FEF2F2; color:var(--red-ink); border:1px solid #FECACA; }
 
     /* Tags */
     .mis-tag {
@@ -147,7 +147,7 @@
       background:white; font-family:var(--font); font-size:12px; font-weight:600;
       color:var(--text-muted); cursor:pointer; transition:all .15s;
     }
-    .mis-edit-btn:hover { border-color:var(--orange); color:var(--orange); }
+    .mis-edit-btn:hover { border-color:var(--orange); color:var(--orange-ink); }
     .mis-edit-btn.active { background:var(--navy); color:white; border-color:var(--navy); }
     .mis-edit-btn svg { width:12px; height:12px; flex-shrink:0; }
 
@@ -157,6 +157,7 @@
   </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=1"></script>
 </head>
 <body>
@@ -197,8 +198,8 @@
   <!-- KV strip -->
   <div class="mis-kv-strip">
     <div class="mis-kv"><div class="mis-kv-val">277</div><div class="mis-kv-lbl">Total Employees</div><div class="mis-kv-sub">Kimbiji + Head Office</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:#10B981">236</div><div class="mis-kv-lbl">Local</div><div class="mis-kv-sub">Tanzanian nationals</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:#EF4444">41</div><div class="mis-kv-lbl">Expat</div><div class="mis-kv-sub">International staff</div></div>
+    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--green-ink)">236</div><div class="mis-kv-lbl">Local</div><div class="mis-kv-sub">Tanzanian nationals</div></div>
+    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--red-ink)">41</div><div class="mis-kv-lbl">Expat</div><div class="mis-kv-sub">International staff</div></div>
     <div class="mis-kv"><div class="mis-kv-val">248</div><div class="mis-kv-lbl">Male</div></div>
     <div class="mis-kv"><div class="mis-kv-val">29</div><div class="mis-kv-lbl">Female</div></div>
     <div class="mis-kv"><div class="mis-kv-val">2</div><div class="mis-kv-lbl">Locations</div><div class="mis-kv-sub">Kimbiji &amp; Head Office</div></div>
@@ -230,31 +231,31 @@
             <thead>
               <tr><th>Department</th><th style="text-align:center">Total</th><th style="text-align:center">Local</th><th style="text-align:center">Expat</th><th style="text-align:center">Male</th><th style="text-align:center">Female</th><th style="text-align:center">Kimbiji</th><th style="text-align:center">Head Office</th></tr>
             </thead>
-            <tbody><tr><td>Accounts</td><td class="tc">8</td><td class="tc">6</td><td class="tc"><span style="color:#EF4444;font-weight:700">2</span></td><td class="tc">5</td><td class="tc">3</td><td class="tc">4</td><td class="tc">4</td></tr>
+            <tbody><tr><td>Accounts</td><td class="tc">8</td><td class="tc">6</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">2</span></td><td class="tc">5</td><td class="tc">3</td><td class="tc">4</td><td class="tc">4</td></tr>
 <tr><td>Admin</td><td class="tc">3</td><td class="tc">3</td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc">0</td><td class="tc">3</td><td class="tc">0</td><td class="tc">3</td></tr>
-<tr><td>Captive Power Plant</td><td class="tc">33</td><td class="tc">27</td><td class="tc"><span style="color:#EF4444;font-weight:700">6</span></td><td class="tc">32</td><td class="tc">1</td><td class="tc">33</td><td class="tc">0</td></tr>
+<tr><td>Captive Power Plant</td><td class="tc">33</td><td class="tc">27</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">6</span></td><td class="tc">32</td><td class="tc">1</td><td class="tc">33</td><td class="tc">0</td></tr>
 <tr><td>Civil</td><td class="tc">1</td><td class="tc">1</td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc">1</td><td class="tc">0</td><td class="tc">1</td><td class="tc">0</td></tr>
-<tr><td>Corporate</td><td class="tc">5</td><td class="tc">0</td><td class="tc"><span style="color:#EF4444;font-weight:700">5</span></td><td class="tc">5</td><td class="tc">0</td><td class="tc">2</td><td class="tc">3</td></tr>
+<tr><td>Corporate</td><td class="tc">5</td><td class="tc">0</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">5</span></td><td class="tc">5</td><td class="tc">0</td><td class="tc">2</td><td class="tc">3</td></tr>
 <tr><td>Dispatch</td><td class="tc">22</td><td class="tc">22</td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc">16</td><td class="tc">6</td><td class="tc">22</td><td class="tc">0</td></tr>
-<tr><td>Electrical</td><td class="tc">15</td><td class="tc">13</td><td class="tc"><span style="color:#EF4444;font-weight:700">2</span></td><td class="tc">15</td><td class="tc">0</td><td class="tc">15</td><td class="tc">0</td></tr>
+<tr><td>Electrical</td><td class="tc">15</td><td class="tc">13</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">2</span></td><td class="tc">15</td><td class="tc">0</td><td class="tc">15</td><td class="tc">0</td></tr>
 <tr><td>HR</td><td class="tc">15</td><td class="tc">15</td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc">7</td><td class="tc">8</td><td class="tc">15</td><td class="tc">0</td></tr>
-<tr><td>Instrumentation</td><td class="tc">18</td><td class="tc">14</td><td class="tc"><span style="color:#EF4444;font-weight:700">4</span></td><td class="tc">18</td><td class="tc">0</td><td class="tc">18</td><td class="tc">0</td></tr>
-<tr><td>Logistic Division</td><td class="tc">29</td><td class="tc">28</td><td class="tc"><span style="color:#EF4444;font-weight:700">1</span></td><td class="tc">29</td><td class="tc">0</td><td class="tc">29</td><td class="tc">0</td></tr>
-<tr><td>Mechanical</td><td class="tc">36</td><td class="tc">33</td><td class="tc"><span style="color:#EF4444;font-weight:700">3</span></td><td class="tc">36</td><td class="tc">0</td><td class="tc">36</td><td class="tc">0</td></tr>
-<tr><td>Production</td><td class="tc">24</td><td class="tc">16</td><td class="tc"><span style="color:#EF4444;font-weight:700">8</span></td><td class="tc">23</td><td class="tc">1</td><td class="tc">24</td><td class="tc">0</td></tr>
+<tr><td>Instrumentation</td><td class="tc">18</td><td class="tc">14</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">4</span></td><td class="tc">18</td><td class="tc">0</td><td class="tc">18</td><td class="tc">0</td></tr>
+<tr><td>Logistic Division</td><td class="tc">29</td><td class="tc">28</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">1</span></td><td class="tc">29</td><td class="tc">0</td><td class="tc">29</td><td class="tc">0</td></tr>
+<tr><td>Mechanical</td><td class="tc">36</td><td class="tc">33</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">3</span></td><td class="tc">36</td><td class="tc">0</td><td class="tc">36</td><td class="tc">0</td></tr>
+<tr><td>Production</td><td class="tc">24</td><td class="tc">16</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">8</span></td><td class="tc">23</td><td class="tc">1</td><td class="tc">24</td><td class="tc">0</td></tr>
 <tr><td>Project</td><td class="tc">1</td><td class="tc">1</td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc">1</td><td class="tc">0</td><td class="tc">1</td><td class="tc">0</td></tr>
-<tr><td>Purchase</td><td class="tc">5</td><td class="tc">3</td><td class="tc"><span style="color:#EF4444;font-weight:700">2</span></td><td class="tc">5</td><td class="tc">0</td><td class="tc">1</td><td class="tc">4</td></tr>
-<tr><td>Quality Control</td><td class="tc">12</td><td class="tc">11</td><td class="tc"><span style="color:#EF4444;font-weight:700">1</span></td><td class="tc">10</td><td class="tc">2</td><td class="tc">12</td><td class="tc">0</td></tr>
-<tr><td>Quarrying</td><td class="tc">23</td><td class="tc">21</td><td class="tc"><span style="color:#EF4444;font-weight:700">2</span></td><td class="tc">23</td><td class="tc">0</td><td class="tc">23</td><td class="tc">0</td></tr>
-<tr><td>Sales & Marketing</td><td class="tc">19</td><td class="tc">16</td><td class="tc"><span style="color:#EF4444;font-weight:700">3</span></td><td class="tc">17</td><td class="tc">2</td><td class="tc">0</td><td class="tc">19</td></tr>
-<tr><td>Store</td><td class="tc">8</td><td class="tc">6</td><td class="tc"><span style="color:#EF4444;font-weight:700">2</span></td><td class="tc">5</td><td class="tc">3</td><td class="tc">8</td><td class="tc">0</td></tr>
+<tr><td>Purchase</td><td class="tc">5</td><td class="tc">3</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">2</span></td><td class="tc">5</td><td class="tc">0</td><td class="tc">1</td><td class="tc">4</td></tr>
+<tr><td>Quality Control</td><td class="tc">12</td><td class="tc">11</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">1</span></td><td class="tc">10</td><td class="tc">2</td><td class="tc">12</td><td class="tc">0</td></tr>
+<tr><td>Quarrying</td><td class="tc">23</td><td class="tc">21</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">2</span></td><td class="tc">23</td><td class="tc">0</td><td class="tc">23</td><td class="tc">0</td></tr>
+<tr><td>Sales & Marketing</td><td class="tc">19</td><td class="tc">16</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">3</span></td><td class="tc">17</td><td class="tc">2</td><td class="tc">0</td><td class="tc">19</td></tr>
+<tr><td>Store</td><td class="tc">8</td><td class="tc">6</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">2</span></td><td class="tc">5</td><td class="tc">3</td><td class="tc">8</td><td class="tc">0</td></tr>
 </tbody>
             <tfoot>
               <tr style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">
                 <td>TOTAL</td>
                 <td class="tc">277</td>
-                <td class="tc" style="color:#10B981">236</td>
-                <td class="tc" style="color:#EF4444">41</td>
+                <td class="tc" style="color:var(--green-ink)">236</td>
+                <td class="tc" style="color:var(--red-ink)">41</td>
                 <td class="tc">248</td>
                 <td class="tc">29</td>
                 <td class="tc">244</td>
@@ -277,19 +278,19 @@
               <tr><th>#</th><th>Department</th><th style="text-align:center">Target</th><th style="text-align:center">Actual</th><th style="text-align:center">Variance</th><th style="text-align:center">Contract Target</th><th>Fill Rate</th></tr>
             </thead>
             <tbody><tr><td>1</td><td>Accounts</td><td class="tc">5</td><td class="tc"><strong>5</strong></td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc" style="color:var(--text-muted)">—</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
-<tr><td>2</td><td>HR (Admin/Safety/Training/Security)</td><td class="tc">15</td><td class="tc"><strong>16</strong></td><td class="tc"><span style="color:#10B981;font-weight:700">+1</span></td><td class="tc" style="color:var(--text-muted)">45</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
-<tr><td>3</td><td>Civil</td><td class="tc">3</td><td class="tc"><strong>1</strong></td><td class="tc"><span style="color:#EF4444;font-weight:700">-2</span></td><td class="tc" style="color:var(--text-muted)">12</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:33%;background:#EF4444"></div></div></td></tr>
-<tr><td>4</td><td>CPP</td><td class="tc">31</td><td class="tc"><strong>33</strong></td><td class="tc"><span style="color:#10B981;font-weight:700">+2</span></td><td class="tc" style="color:var(--text-muted)">9</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
-<tr><td>5</td><td>Dispatch</td><td class="tc">25</td><td class="tc"><strong>22</strong></td><td class="tc"><span style="color:#EF4444;font-weight:700">-3</span></td><td class="tc" style="color:var(--text-muted)">25</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:88%;background:#F59E0B"></div></div></td></tr>
-<tr><td>6</td><td>E & I</td><td class="tc">32</td><td class="tc"><strong>33</strong></td><td class="tc"><span style="color:#10B981;font-weight:700">+1</span></td><td class="tc" style="color:var(--text-muted)">15</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
-<tr><td>7</td><td>Logistics</td><td class="tc">40</td><td class="tc"><strong>29</strong></td><td class="tc"><span style="color:#EF4444;font-weight:700">-11</span></td><td class="tc" style="color:var(--text-muted)">24</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:72%;background:#EF4444"></div></div></td></tr>
-<tr><td>8</td><td>Mechanical</td><td class="tc">34</td><td class="tc"><strong>36</strong></td><td class="tc"><span style="color:#10B981;font-weight:700">+2</span></td><td class="tc" style="color:var(--text-muted)">32</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
-<tr><td>9</td><td>Mines & Workshop</td><td class="tc">18</td><td class="tc"><strong>23</strong></td><td class="tc"><span style="color:#10B981;font-weight:700">+5</span></td><td class="tc" style="color:var(--text-muted)">25</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
-<tr><td>10</td><td>Production</td><td class="tc">20</td><td class="tc"><strong>24</strong></td><td class="tc"><span style="color:#10B981;font-weight:700">+4</span></td><td class="tc" style="color:var(--text-muted)">62</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
+<tr><td>2</td><td>HR (Admin/Safety/Training/Security)</td><td class="tc">15</td><td class="tc"><strong>16</strong></td><td class="tc"><span style="color:var(--green-ink);font-weight:700">+1</span></td><td class="tc" style="color:var(--text-muted)">45</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
+<tr><td>3</td><td>Civil</td><td class="tc">3</td><td class="tc"><strong>1</strong></td><td class="tc"><span style="color:var(--red-ink);font-weight:700">-2</span></td><td class="tc" style="color:var(--text-muted)">12</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:33%;background:#EF4444"></div></div></td></tr>
+<tr><td>4</td><td>CPP</td><td class="tc">31</td><td class="tc"><strong>33</strong></td><td class="tc"><span style="color:var(--green-ink);font-weight:700">+2</span></td><td class="tc" style="color:var(--text-muted)">9</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
+<tr><td>5</td><td>Dispatch</td><td class="tc">25</td><td class="tc"><strong>22</strong></td><td class="tc"><span style="color:var(--red-ink);font-weight:700">-3</span></td><td class="tc" style="color:var(--text-muted)">25</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:88%;background:#F59E0B"></div></div></td></tr>
+<tr><td>6</td><td>E & I</td><td class="tc">32</td><td class="tc"><strong>33</strong></td><td class="tc"><span style="color:var(--green-ink);font-weight:700">+1</span></td><td class="tc" style="color:var(--text-muted)">15</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
+<tr><td>7</td><td>Logistics</td><td class="tc">40</td><td class="tc"><strong>29</strong></td><td class="tc"><span style="color:var(--red-ink);font-weight:700">-11</span></td><td class="tc" style="color:var(--text-muted)">24</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:72%;background:#EF4444"></div></div></td></tr>
+<tr><td>8</td><td>Mechanical</td><td class="tc">34</td><td class="tc"><strong>36</strong></td><td class="tc"><span style="color:var(--green-ink);font-weight:700">+2</span></td><td class="tc" style="color:var(--text-muted)">32</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
+<tr><td>9</td><td>Mines & Workshop</td><td class="tc">18</td><td class="tc"><strong>23</strong></td><td class="tc"><span style="color:var(--green-ink);font-weight:700">+5</span></td><td class="tc" style="color:var(--text-muted)">25</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
+<tr><td>10</td><td>Production</td><td class="tc">20</td><td class="tc"><strong>24</strong></td><td class="tc"><span style="color:var(--green-ink);font-weight:700">+4</span></td><td class="tc" style="color:var(--text-muted)">62</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
 <tr><td>11</td><td>Purchases</td><td class="tc">1</td><td class="tc"><strong>1</strong></td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc" style="color:var(--text-muted)">—</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
 <tr><td>12</td><td>Quality Control</td><td class="tc">12</td><td class="tc"><strong>12</strong></td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc" style="color:var(--text-muted)">16</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
-<tr><td>13</td><td>Stores</td><td class="tc">6</td><td class="tc"><strong>8</strong></td><td class="tc"><span style="color:#10B981;font-weight:700">+2</span></td><td class="tc" style="color:var(--text-muted)">5</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
-<tr><td>14</td><td>Projects</td><td class="tc">7</td><td class="tc"><strong>1</strong></td><td class="tc"><span style="color:#EF4444;font-weight:700">-6</span></td><td class="tc" style="color:var(--text-muted)">—</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:14%;background:#EF4444"></div></div></td></tr>
+<tr><td>13</td><td>Stores</td><td class="tc">6</td><td class="tc"><strong>8</strong></td><td class="tc"><span style="color:var(--green-ink);font-weight:700">+2</span></td><td class="tc" style="color:var(--text-muted)">5</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div></td></tr>
+<tr><td>14</td><td>Projects</td><td class="tc">7</td><td class="tc"><strong>1</strong></td><td class="tc"><span style="color:var(--red-ink);font-weight:700">-6</span></td><td class="tc" style="color:var(--text-muted)">—</td><td style="min-width:100px"><div class="mis-bar-wrap"><div class="mis-bar-fill" style="width:14%;background:#EF4444"></div></div></td></tr>
 </tbody>
           </table>
         </div>
@@ -472,22 +473,22 @@
   <div class="csr-yr-body">
     <table class="mis-table">
       <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
-      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">DONATED 5 TRIPS OF SAND & RUBBLES TO MILITARY UNIVERSITY AT KIMBIJI.</td><td class="tc">Jan 2025</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>2</td><td style="white-space:normal;line-height:1.4">DONATED 5 TRIPS OF SAND & RUBBLES TO GOLANI VILLAGE COUNCIL</td><td class="tc">Feb 2025</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>3</td><td style="white-space:normal;line-height:1.4">DONATED 5 TRIPS OF SAND & RUBBLES TO MILITARY UNIVERSITY AT KIMBIJI.</td><td class="tc">Mar 2025</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>4</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CEMENT LTD (4 APPRENTICEES)</td><td class="tc">Apr 2025</td><td class="tc">TSH 6,240,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>5</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION TO TUICO FOR MEI MOSI (WORKERS' DAY)  CELEBRATION EVENT</td><td class="tc">Apr 2025</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>6</td><td style="white-space:normal;line-height:1.4">REPAIRING OF  KIJAKA - MWASONGA ROAD</td><td class="tc">May 2025</td><td class="tc">TSH 27,800,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>7</td><td style="white-space:normal;line-height:1.4">DONATED 10 TRIPS OF SAND & RUBBLES TO MILLITARY UNIVERSITY AT KIMBIJI</td><td class="tc">Jun 2025</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>8</td><td style="white-space:normal;line-height:1.4">REPAIRING OF KIJAKA - MWASONGA ROAD</td><td class="tc">Jun 2025</td><td class="tc">TSH 14,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>9</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR UHURU TORCH CEREMONY TO KIGAMBONI DISTRICT</td><td class="tc">Jun 2025</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>10</td><td style="white-space:normal;line-height:1.4">CHARITY DONATION TO PATEL SAMAJ FOR CHARITY RELIGIOUS EVENT</td><td class="tc">Jun 2025</td><td class="tc">TSH 10,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>11</td><td style="white-space:normal;line-height:1.4">BLOOD DONATION CAMPAIGN</td><td class="tc">Aug 2025</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>12</td><td style="white-space:normal;line-height:1.4">GENERAL ELECTION CONTRIBUTION - CCM PARTY AT KIMBIJI</td><td class="tc">Sep 2025</td><td class="tc">TSH 5,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>13</td><td style="white-space:normal;line-height:1.4">DONATED 119 TRIPS OF SANDS TO GOLANI VILLAGE IN KIGAMBONI FOR REPAIRING OF ROADS</td><td class="tc">Sep 2025</td><td class="tc">TSH 8,806,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>14</td><td style="white-space:normal;line-height:1.4">TOILET PIT DIGGING FOR NGOBANYA PRIMARY SCHOOL</td><td class="tc">Oct 2025</td><td class="tc">TSH 1,500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>15</td><td style="white-space:normal;line-height:1.4">CONSTRUCTION OF THE ROAD FROM PLANT (GOLANI) TO CHEKA ( KIMBIJI ROAD) ( 87 TRIPS)</td><td class="tc">Nov 2025</td><td class="tc">TSH 21,150,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>14</td><td style="white-space:normal;line-height:1.4">ASSISTANCE OF SAND & RUBBLES TO MILITARY UNIVERSITY AT KIMBIJI (14 TRIPS)</td><td class="tc">Nov 2025</td><td class="tc">TSH 3,500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">DONATED 5 TRIPS OF SAND & RUBBLES TO MILITARY UNIVERSITY AT KIMBIJI.</td><td class="tc">Jan 2025</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">DONATED 5 TRIPS OF SAND & RUBBLES TO GOLANI VILLAGE COUNCIL</td><td class="tc">Feb 2025</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>3</td><td style="white-space:normal;line-height:1.4">DONATED 5 TRIPS OF SAND & RUBBLES TO MILITARY UNIVERSITY AT KIMBIJI.</td><td class="tc">Mar 2025</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CEMENT LTD (4 APPRENTICEES)</td><td class="tc">Apr 2025</td><td class="tc">TSH 6,240,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>5</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION TO TUICO FOR MEI MOSI (WORKERS' DAY)  CELEBRATION EVENT</td><td class="tc">Apr 2025</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4">REPAIRING OF  KIJAKA - MWASONGA ROAD</td><td class="tc">May 2025</td><td class="tc">TSH 27,800,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>7</td><td style="white-space:normal;line-height:1.4">DONATED 10 TRIPS OF SAND & RUBBLES TO MILLITARY UNIVERSITY AT KIMBIJI</td><td class="tc">Jun 2025</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>8</td><td style="white-space:normal;line-height:1.4">REPAIRING OF KIJAKA - MWASONGA ROAD</td><td class="tc">Jun 2025</td><td class="tc">TSH 14,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>9</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR UHURU TORCH CEREMONY TO KIGAMBONI DISTRICT</td><td class="tc">Jun 2025</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>10</td><td style="white-space:normal;line-height:1.4">CHARITY DONATION TO PATEL SAMAJ FOR CHARITY RELIGIOUS EVENT</td><td class="tc">Jun 2025</td><td class="tc">TSH 10,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>11</td><td style="white-space:normal;line-height:1.4">BLOOD DONATION CAMPAIGN</td><td class="tc">Aug 2025</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>12</td><td style="white-space:normal;line-height:1.4">GENERAL ELECTION CONTRIBUTION - CCM PARTY AT KIMBIJI</td><td class="tc">Sep 2025</td><td class="tc">TSH 5,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>13</td><td style="white-space:normal;line-height:1.4">DONATED 119 TRIPS OF SANDS TO GOLANI VILLAGE IN KIGAMBONI FOR REPAIRING OF ROADS</td><td class="tc">Sep 2025</td><td class="tc">TSH 8,806,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>14</td><td style="white-space:normal;line-height:1.4">TOILET PIT DIGGING FOR NGOBANYA PRIMARY SCHOOL</td><td class="tc">Oct 2025</td><td class="tc">TSH 1,500,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>15</td><td style="white-space:normal;line-height:1.4">CONSTRUCTION OF THE ROAD FROM PLANT (GOLANI) TO CHEKA ( KIMBIJI ROAD) ( 87 TRIPS)</td><td class="tc">Nov 2025</td><td class="tc">TSH 21,150,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>14</td><td style="white-space:normal;line-height:1.4">ASSISTANCE OF SAND & RUBBLES TO MILITARY UNIVERSITY AT KIMBIJI (14 TRIPS)</td><td class="tc">Nov 2025</td><td class="tc">TSH 3,500,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
 </tbody>
       <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2025</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 102,496,000</td><td></td></tr></tfoot>
     </table>
@@ -502,21 +503,21 @@
   <div class="csr-yr-body">
     <table class="mis-table">
       <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
-      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CEMENT LTD (8 APPRENTICEES)</td><td class="tc">Jan-March </td><td class="tc">TSH 3,120,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>2</td><td style="white-space:normal;line-height:1.4">DONATION OF 308 BAGS TO THE DC KIGAMBONI FOR THE CONSTRUCTION OF TOILET BLOCKS IN MWONGOZO PRIMARY SCHOOL</td><td class="tc">Feb 2024</td><td class="tc">TSH 4,419,800</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>3</td><td style="white-space:normal;line-height:1.4">DONATION OF  166 KG PREMIUM QUALITY RICE TO TANZANIA LOCAL GOVERNMENT WORKERS UNION TEMEKE REGION  FOR WOMENS'  DAY CELEBRATION</td><td class="tc">Feb 2024</td><td class="tc">TSH 498,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>4</td><td style="white-space:normal;line-height:1.4">EXCAVATOR FOR CLEANING AREA AT KIJAKA</td><td class="tc">Feb 2024</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CEMENT LTD (8 APPRENTICEES)</td><td class="tc">Jan-March </td><td class="tc">TSH 3,120,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">DONATION OF 308 BAGS TO THE DC KIGAMBONI FOR THE CONSTRUCTION OF TOILET BLOCKS IN MWONGOZO PRIMARY SCHOOL</td><td class="tc">Feb 2024</td><td class="tc">TSH 4,419,800</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>3</td><td style="white-space:normal;line-height:1.4">DONATION OF  166 KG PREMIUM QUALITY RICE TO TANZANIA LOCAL GOVERNMENT WORKERS UNION TEMEKE REGION  FOR WOMENS'  DAY CELEBRATION</td><td class="tc">Feb 2024</td><td class="tc">TSH 498,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4">EXCAVATOR FOR CLEANING AREA AT KIJAKA</td><td class="tc">Feb 2024</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
 <tr><td>5</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CMENT LTD (8 APPRENTICEES)</td><td class="tc">April - De</td><td class="tc">TSH 9,360,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">Ongoing</span></td></tr>
-<tr><td>6</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR UHURU TORCH CEREMONY TO KIGAMBONI DISTRICT</td><td class="tc">Mar 2024</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>7</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION TO TUICO FOR MEI MOSI (WORKERS' DAY)  CELEBRATION EVENT</td><td class="tc">Apr 2024</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>8</td><td style="white-space:normal;line-height:1.4">DONATED 20 UMBRELLAS TO KIMBIJI WARD</td><td class="tc">May 2024</td><td class="tc">TSH 100,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>9</td><td style="white-space:normal;line-height:1.4">DONATED 10 BARRELS/ DRUMS TO GOLANI VILLAGE COUNCIL</td><td class="tc">May 2024</td><td class="tc">TSH 100,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>10</td><td style="white-space:normal;line-height:1.4">REPAIRS TO TARURA & TANROADS ROUGH ROADS IN THE KIMBIJI-MWASONGA ZONE</td><td class="tc">May 2024</td><td class="tc">TSH 15,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>11</td><td style="white-space:normal;line-height:1.4">DONATED 10 BARRELS/DRUM TO KIMBIJI PRISION FORCE</td><td class="tc">Jun 2024</td><td class="tc">TSH 100,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>12</td><td style="white-space:normal;line-height:1.4">DONATED CONSTRUCTION DEBRIS/ WASTE FOR CONSTRUCTION FOR ROAD RECONSTRUCTION AROUND KIMBIJI PRISON AREA</td><td class="tc">Jun 2024</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>13</td><td style="white-space:normal;line-height:1.4">DONATED CONSTRUCTION DEBRIS/ WASTE FOR CONSTRUCTION OF TWO CLASSES IN GOLANI AND GOBANYA</td><td class="tc">Jun 2024</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>14</td><td style="white-space:normal;line-height:1.4">DONATED 6 TRIPS OF WASTE MATERIAL TO KIMBIJI PRESBITARIAN CHURCH</td><td class="tc">Nov 2024</td><td class="tc">TSH 600,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>14</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICE APRIL TO DECEMBER 2024</td><td class="tc">Dec 2024</td><td class="tc">TSH 9,360,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR UHURU TORCH CEREMONY TO KIGAMBONI DISTRICT</td><td class="tc">Mar 2024</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>7</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION TO TUICO FOR MEI MOSI (WORKERS' DAY)  CELEBRATION EVENT</td><td class="tc">Apr 2024</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>8</td><td style="white-space:normal;line-height:1.4">DONATED 20 UMBRELLAS TO KIMBIJI WARD</td><td class="tc">May 2024</td><td class="tc">TSH 100,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>9</td><td style="white-space:normal;line-height:1.4">DONATED 10 BARRELS/ DRUMS TO GOLANI VILLAGE COUNCIL</td><td class="tc">May 2024</td><td class="tc">TSH 100,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>10</td><td style="white-space:normal;line-height:1.4">REPAIRS TO TARURA & TANROADS ROUGH ROADS IN THE KIMBIJI-MWASONGA ZONE</td><td class="tc">May 2024</td><td class="tc">TSH 15,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>11</td><td style="white-space:normal;line-height:1.4">DONATED 10 BARRELS/DRUM TO KIMBIJI PRISION FORCE</td><td class="tc">Jun 2024</td><td class="tc">TSH 100,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>12</td><td style="white-space:normal;line-height:1.4">DONATED CONSTRUCTION DEBRIS/ WASTE FOR CONSTRUCTION FOR ROAD RECONSTRUCTION AROUND KIMBIJI PRISON AREA</td><td class="tc">Jun 2024</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>13</td><td style="white-space:normal;line-height:1.4">DONATED CONSTRUCTION DEBRIS/ WASTE FOR CONSTRUCTION OF TWO CLASSES IN GOLANI AND GOBANYA</td><td class="tc">Jun 2024</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>14</td><td style="white-space:normal;line-height:1.4">DONATED 6 TRIPS OF WASTE MATERIAL TO KIMBIJI PRESBITARIAN CHURCH</td><td class="tc">Nov 2024</td><td class="tc">TSH 600,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>14</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICE APRIL TO DECEMBER 2024</td><td class="tc">Dec 2024</td><td class="tc">TSH 9,360,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
 </tbody>
       <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2024</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 46,157,800</td><td></td></tr></tfoot>
     </table>
@@ -531,21 +532,21 @@
   <div class="csr-yr-body">
     <table class="mis-table">
       <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
-      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CMENT LTD (10 APPRENTICEES)</td><td class="tc">Jan-March </td><td class="tc">TSH 3,300,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>2</td><td style="white-space:normal;line-height:1.4">DONATION OF RUBBLE  MATERIAL FOR THE FOUNDATION OF CHURCH BULIDING -  20 TRIPS</td><td class="tc">Feb 2023</td><td class="tc">TSH 1,488,400</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>3</td><td style="white-space:normal;line-height:1.4">DONATION OF  200 KG PREMIUM QUALITY RICE TO KIGAMBONI MUNICIPAL FOR WOMENS'  DAY CELEBRATION</td><td class="tc">Mar 2023</td><td class="tc">TSH 700,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>4</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION TO TUICO FOR MEI MOSI (WORKERS' DAY)  CELEBRATION EVENT</td><td class="tc">Mar 2023</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>5</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR UHURU TORCH CEREMONY TO KIGAMBONI DISTRICT</td><td class="tc">Apr 2023</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>6</td><td style="white-space:normal;line-height:1.4">ROAD REPAIR AT KIMBIJI WARD FOR PREPARATION OF UHURU TORCH</td><td class="tc">May 2023</td><td class="tc">TSH 850,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>7</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CMENT LTD (10 APPRENTICEES)</td><td class="tc">April-June</td><td class="tc">TSH 3,780,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>8</td><td style="white-space:normal;line-height:1.4">CONSTRUCTION OF TWO (2) CLASSROOMS AT NGOBANYA PRIMARY SCHOOL</td><td class="tc">Jun 2023</td><td class="tc">TSH 42,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>9</td><td style="white-space:normal;line-height:1.4">DONATION OF  SPORT EQUIPMENTS FOR BIGSTONE BASKETBALL TEAM</td><td class="tc">March 2023</td><td class="tc">TSH 1,215,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>10</td><td style="white-space:normal;line-height:1.4">NGOBANYA PRIMARY SCHOOL ROAD REPAIR -22 TRIPS</td><td class="tc">Aug 2023</td><td class="tc">TSH 1,188,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>11</td><td style="white-space:normal;line-height:1.4">MWASONGA ROAD REPAIR - 83 TRIPS</td><td class="tc">Aug 2023</td><td class="tc">TSH 4,897,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>12</td><td style="white-space:normal;line-height:1.4">HIRING OF MOTOR GRADER FOR NGOBANYA SCHOOL & MWASONGA ROAD REPAIR</td><td class="tc">Aug 2023</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CMENT LTD (10 APPRENTICEES)</td><td class="tc">Jan-March </td><td class="tc">TSH 3,300,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">DONATION OF RUBBLE  MATERIAL FOR THE FOUNDATION OF CHURCH BULIDING -  20 TRIPS</td><td class="tc">Feb 2023</td><td class="tc">TSH 1,488,400</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>3</td><td style="white-space:normal;line-height:1.4">DONATION OF  200 KG PREMIUM QUALITY RICE TO KIGAMBONI MUNICIPAL FOR WOMENS'  DAY CELEBRATION</td><td class="tc">Mar 2023</td><td class="tc">TSH 700,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION TO TUICO FOR MEI MOSI (WORKERS' DAY)  CELEBRATION EVENT</td><td class="tc">Mar 2023</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>5</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR UHURU TORCH CEREMONY TO KIGAMBONI DISTRICT</td><td class="tc">Apr 2023</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4">ROAD REPAIR AT KIMBIJI WARD FOR PREPARATION OF UHURU TORCH</td><td class="tc">May 2023</td><td class="tc">TSH 850,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>7</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CMENT LTD (10 APPRENTICEES)</td><td class="tc">April-June</td><td class="tc">TSH 3,780,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>8</td><td style="white-space:normal;line-height:1.4">CONSTRUCTION OF TWO (2) CLASSROOMS AT NGOBANYA PRIMARY SCHOOL</td><td class="tc">Jun 2023</td><td class="tc">TSH 42,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>9</td><td style="white-space:normal;line-height:1.4">DONATION OF  SPORT EQUIPMENTS FOR BIGSTONE BASKETBALL TEAM</td><td class="tc">March 2023</td><td class="tc">TSH 1,215,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>10</td><td style="white-space:normal;line-height:1.4">NGOBANYA PRIMARY SCHOOL ROAD REPAIR -22 TRIPS</td><td class="tc">Aug 2023</td><td class="tc">TSH 1,188,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>11</td><td style="white-space:normal;line-height:1.4">MWASONGA ROAD REPAIR - 83 TRIPS</td><td class="tc">Aug 2023</td><td class="tc">TSH 4,897,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>12</td><td style="white-space:normal;line-height:1.4">HIRING OF MOTOR GRADER FOR NGOBANYA SCHOOL & MWASONGA ROAD REPAIR</td><td class="tc">Aug 2023</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
 <tr><td>13</td><td style="white-space:normal;line-height:1.4">KIGAMBONI MUNICIPAL TOP SOIL FOR PLANTATION (for loading only) - 16 TRIPS</td><td class="tc">Aug 2023</td><td class="tc">TSH 320,000</td><td class="tc"><span style="color:#F59E0B;font-weight:600">Planned</span></td></tr>
-<tr><td>14</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CMENT LTD (10 APPRENTICEES)</td><td class="tc">July-Augus</td><td class="tc">TSH 2,520,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>15</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CMENT LTD (10 APPRENTICEES)</td><td class="tc">Sept-Dec 2</td><td class="tc">TSH 5,040,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+<tr><td>14</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CMENT LTD (10 APPRENTICEES)</td><td class="tc">July-Augus</td><td class="tc">TSH 2,520,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>15</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICES SPONSORED BY LAKE CMENT LTD (10 APPRENTICEES)</td><td class="tc">Sept-Dec 2</td><td class="tc">TSH 5,040,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
 </tbody>
       <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2023</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 70,798,400</td><td></td></tr></tfoot>
     </table>
@@ -560,25 +561,25 @@
   <div class="csr-yr-body">
     <table class="mis-table">
       <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
-      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">SUPPLY OF WATER (CARTON 100) AND 200 KG RICE TO KIGAMBONI MUNICIPAL FOR WOMENS  DAY</td><td class="tc">Mar 2022</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>2</td><td style="white-space:normal;line-height:1.4">DONATED  600 CEMENT  BAGS OF 42.5 TO RUANGWA DISTRICT COUNCIL (REQUEST FROM PMO)</td><td class="tc">Mar 2022</td><td class="tc">TSH 7,997,999</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>3</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICEES SPONSORED BY LAKE CMENT LTD (8 APPRENTICEES)</td><td class="tc">Jan-March </td><td class="tc">TSH 3,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>4</td><td style="white-space:normal;line-height:1.4">DONATED 200 CEMENT BAGS TO RPC ILALA FOR THE CONSTRUCTION OF POLICE STATION AT MWANAGATI</td><td class="tc">Mar 2022</td><td class="tc">TSH 2,666,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>5</td><td style="white-space:normal;line-height:1.4">SUPPLY OF RUBBLES AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">Apr 2022</td><td class="tc">TSH 325,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>6</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR UHURU TORCH CEREMONY TO KIGAMBONI DISTRICT</td><td class="tc">Apr 2022</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>7</td><td style="white-space:normal;line-height:1.4">DONATION OF 30 RAIN COATS TO SIX STREETS FOR KIMBIJI WARD</td><td class="tc">Apr 2022</td><td class="tc">TSH 900,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>8</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR UHURU TORCH CEREMONY TO CHALINZE MUNICIPAL COUNCIL</td><td class="tc">Apr 2022</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>9</td><td style="white-space:normal;line-height:1.4">DONATION OF 10 DUST BINS TO WARD COUNCILOR FOR THE KIMBIJI WARD</td><td class="tc">May 2022</td><td class="tc">TSH 650,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>10</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICEES SPONSORED BY LAKE CMENT LTD (8 APPRENTICEES)</td><td class="tc">Apr-June 2</td><td class="tc">TSH 3,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>11</td><td style="white-space:normal;line-height:1.4">REPAIR OF ROAD AT THE BEACH AT KIDAGAA AREA</td><td class="tc">Jul 2022</td><td class="tc">TSH 480,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>12</td><td style="white-space:normal;line-height:1.4">SIGNAGES - GOLAN PRIMARY SCHOOL</td><td class="tc">Oct 2022</td><td class="tc">TSH 424,800</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>13</td><td style="white-space:normal;line-height:1.4">2 SPEED HUMPS,4 TRIPS OF WASTE MATERIAL - GOLAN PRIMARY SCHOOL</td><td class="tc">Oct 2022</td><td class="tc">TSH 344,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>14</td><td style="white-space:normal;line-height:1.4">5 TRIPS OF WASTE MARERIAL FOR LANDSCAPING - KIMBIJI SECONDARY SCHOOL</td><td class="tc">Oct 2022</td><td class="tc">TSH 430,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>15</td><td style="white-space:normal;line-height:1.4">8 TRIPS OF WASTE MATERIAL FOR LANDSCAPING - KIJAKA DISPENSARY & KIJAKA PRIMARY SCHOOL</td><td class="tc">Oct 2022</td><td class="tc">TSH 688,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>16</td><td style="white-space:normal;line-height:1.4">CONSTRUCTION OF GEZAULOLE BUS STAND AT KIGAMBONI MUNICIPAL COUNCIL</td><td class="tc">Nov 2022</td><td class="tc">TSH 46,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>17</td><td style="white-space:normal;line-height:1.4">SUPPLY AGGREGATE MATERIALS FOR KIMBIJI WARD SECONDARY SCHOOL 5trips</td><td class="tc">Dec 2022</td><td class="tc">TSH 715,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>18</td><td style="white-space:normal;line-height:1.4">SUPPLY TOP SOIL AT KIJAKA HEALTH CENTER 8trips</td><td class="tc">Dec 2022</td><td class="tc">TSH 1,144,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>19</td><td style="white-space:normal;line-height:1.4">GROUND LEVELLING AT TUNDWI SONGANI SECONDARY SCHOOL 28hrs</td><td class="tc">Dec 2022</td><td class="tc">TSH 2,565,060</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">SUPPLY OF WATER (CARTON 100) AND 200 KG RICE TO KIGAMBONI MUNICIPAL FOR WOMENS  DAY</td><td class="tc">Mar 2022</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">DONATED  600 CEMENT  BAGS OF 42.5 TO RUANGWA DISTRICT COUNCIL (REQUEST FROM PMO)</td><td class="tc">Mar 2022</td><td class="tc">TSH 7,997,999</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>3</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICEES SPONSORED BY LAKE CMENT LTD (8 APPRENTICEES)</td><td class="tc">Jan-March </td><td class="tc">TSH 3,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4">DONATED 200 CEMENT BAGS TO RPC ILALA FOR THE CONSTRUCTION OF POLICE STATION AT MWANAGATI</td><td class="tc">Mar 2022</td><td class="tc">TSH 2,666,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>5</td><td style="white-space:normal;line-height:1.4">SUPPLY OF RUBBLES AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">Apr 2022</td><td class="tc">TSH 325,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR UHURU TORCH CEREMONY TO KIGAMBONI DISTRICT</td><td class="tc">Apr 2022</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>7</td><td style="white-space:normal;line-height:1.4">DONATION OF 30 RAIN COATS TO SIX STREETS FOR KIMBIJI WARD</td><td class="tc">Apr 2022</td><td class="tc">TSH 900,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>8</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR UHURU TORCH CEREMONY TO CHALINZE MUNICIPAL COUNCIL</td><td class="tc">Apr 2022</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>9</td><td style="white-space:normal;line-height:1.4">DONATION OF 10 DUST BINS TO WARD COUNCILOR FOR THE KIMBIJI WARD</td><td class="tc">May 2022</td><td class="tc">TSH 650,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>10</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICEES SPONSORED BY LAKE CMENT LTD (8 APPRENTICEES)</td><td class="tc">Apr-June 2</td><td class="tc">TSH 3,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>11</td><td style="white-space:normal;line-height:1.4">REPAIR OF ROAD AT THE BEACH AT KIDAGAA AREA</td><td class="tc">Jul 2022</td><td class="tc">TSH 480,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>12</td><td style="white-space:normal;line-height:1.4">SIGNAGES - GOLAN PRIMARY SCHOOL</td><td class="tc">Oct 2022</td><td class="tc">TSH 424,800</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>13</td><td style="white-space:normal;line-height:1.4">2 SPEED HUMPS,4 TRIPS OF WASTE MATERIAL - GOLAN PRIMARY SCHOOL</td><td class="tc">Oct 2022</td><td class="tc">TSH 344,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>14</td><td style="white-space:normal;line-height:1.4">5 TRIPS OF WASTE MARERIAL FOR LANDSCAPING - KIMBIJI SECONDARY SCHOOL</td><td class="tc">Oct 2022</td><td class="tc">TSH 430,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>15</td><td style="white-space:normal;line-height:1.4">8 TRIPS OF WASTE MATERIAL FOR LANDSCAPING - KIJAKA DISPENSARY & KIJAKA PRIMARY SCHOOL</td><td class="tc">Oct 2022</td><td class="tc">TSH 688,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>16</td><td style="white-space:normal;line-height:1.4">CONSTRUCTION OF GEZAULOLE BUS STAND AT KIGAMBONI MUNICIPAL COUNCIL</td><td class="tc">Nov 2022</td><td class="tc">TSH 46,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>17</td><td style="white-space:normal;line-height:1.4">SUPPLY AGGREGATE MATERIALS FOR KIMBIJI WARD SECONDARY SCHOOL 5trips</td><td class="tc">Dec 2022</td><td class="tc">TSH 715,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>18</td><td style="white-space:normal;line-height:1.4">SUPPLY TOP SOIL AT KIJAKA HEALTH CENTER 8trips</td><td class="tc">Dec 2022</td><td class="tc">TSH 1,144,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>19</td><td style="white-space:normal;line-height:1.4">GROUND LEVELLING AT TUNDWI SONGANI SECONDARY SCHOOL 28hrs</td><td class="tc">Dec 2022</td><td class="tc">TSH 2,565,060</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
 </tbody>
       <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2022</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 73,829,859</td><td></td></tr></tfoot>
     </table>
@@ -593,33 +594,33 @@
   <div class="csr-yr-body">
     <table class="mis-table">
       <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
-      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">DONATION OF 13 SETS OF CHAIRS AND TABLES FOR KIMBIJI SECONDARY SCHOOL</td><td class="tc">Jan 2021</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>2</td><td style="white-space:normal;line-height:1.4">CONSTRUCTION OF  FIVE (5) TOILETS IN GOLANI PRIMARY SCHOOL INCLUDING SOAK PIT AND DEVELOPMENT OF SURROUNDING AREA</td><td class="tc">Jan 2021</td><td class="tc">TSH 11,270,897</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>3</td><td style="white-space:normal;line-height:1.4">SUPPAORT TO GOLANI PRIMARY SCHOOL (2 CLASSROOMS), INCLUDING DOORS, WINDOWS, FLOORING, ROOFING SHEETS, WALL PLASTERING AND DEVELOPMENT OF SURROUNDING AREA</td><td class="tc">Jan 2021</td><td class="tc">TSH 6,033,946</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>4</td><td style="white-space:normal;line-height:1.4">CLEANING OF DAMPO- KIMBIJI WARD</td><td class="tc">Feb 2021</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>5</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION TOWARDS FIRE & RESCUE WELFARE FUND</td><td class="tc">Feb 2021</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>6</td><td style="white-space:normal;line-height:1.4">DONATED 200 KGS OF RICE TO ORPHANAGE  DURING WOMEN'S DAY</td><td class="tc">Mar 2021</td><td class="tc">TSH 400,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>7</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION TO TUICO FOR MEI MOSI (WORKERS' DAY)  CELEBRATION EVENT</td><td class="tc">Mar 2021</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>8</td><td style="white-space:normal;line-height:1.4">RENOVATION OF ONE DOMITORY  AND CONSTRUCTION OF SEPTIC TANK AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">Apr 2021</td><td class="tc">TSH 6,351,157</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>9</td><td style="white-space:normal;line-height:1.4">CLEARING THE  AREA FOR CONSTRUCTION OF BOY'S DORMITORY AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">May 2021</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>10</td><td style="white-space:normal;line-height:1.4">SUPPLY OF GRAVEL FOR CONSTRUCTION OF BOY'S DORMITORY AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">May 2021</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>11</td><td style="white-space:normal;line-height:1.4">SUPPLY OF SAND FOR CONSTRUCTION OF BOY'S DORMITORY AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">May 2021</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>12</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION OF 5 NEW BALLS TO SUPPORT LOCAL FOOTBALL TOURNAMENT AT MIKENGE FOOTBALL CLUB</td><td class="tc">Jun-21</td><td class="tc">TSH 300,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>13</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR UHURU TORCH CEREMONY TO KIGAMBONI DISTRICT</td><td class="tc">Jul-21</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>14</td><td style="white-space:normal;line-height:1.4">SUPPLY OF RUBBLES  AND CLEANLINESS  AT KIMBIJI HOSPITAL  FOR THE PREPARATION OF UHURU TORCH</td><td class="tc">Aug-21</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>15</td><td style="white-space:normal;line-height:1.4">CLEANING OF DAMPO  AREA AT LINGATO - KISARAWE 2 TO SUPPORT NEMC</td><td class="tc">Sept-21</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>16</td><td style="white-space:normal;line-height:1.4">SUPPLY OF RUBBLES  AROUND  GOLANI OFFICE AND PRIMARY SCHOOL</td><td class="tc">Oct-21</td><td class="tc">TSH 10,075,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>17</td><td style="white-space:normal;line-height:1.4">SUPPLY  OF RUBBLES  FOR LEVELING OF ONE CLASS AT MIKENGE PRIMARY SCHOOL</td><td class="tc">Oct-21</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>18</td><td style="white-space:normal;line-height:1.4">CLEAR BUSH / MAINTAIN  ROAD FROM GOLANI TO KIDAGAA/MIKENGE</td><td class="tc">Oct-21</td><td class="tc">TSH 9,870,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>19</td><td style="white-space:normal;line-height:1.4">SUPPORT TO KIGAMBONI DISTRICT CLEANING CAMPAIGN BY DONATING (10 WASTE BINS) @70,000</td><td class="tc">Oct-21</td><td class="tc">TSH 700,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>20</td><td style="white-space:normal;line-height:1.4">SUPPLY OF RUBBLES  FOR CONSTRUCTION OF (8 CLASSES) AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">Nov-21</td><td class="tc">TSH 1,040,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>21</td><td style="white-space:normal;line-height:1.4">SUPPLY OF RUBBLES  FOR CONSTRUCTION OF (2 CLASSES ) AT GOLAN SHIKIZI PRIMARY  SCHOOL</td><td class="tc">Nov-21</td><td class="tc">TSH 260,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>22</td><td style="white-space:normal;line-height:1.4">CONSTRUCTION OF KWA CHARLE OFFICE (20 BAGS OF CEMENT)</td><td class="tc">Nov-21</td><td class="tc">TSH 218,120</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>23</td><td style="white-space:normal;line-height:1.4">DONATED  600 CEMENT  BAGS OF 42.5 TO RUANGWA DISTRICT COUNCIL (REQUEST FROM PMO)</td><td class="tc">Nov-21</td><td class="tc">TSH 7,997,999</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>24</td><td style="white-space:normal;line-height:1.4">SUPPLY OF WATER FOR KIMBIJI CLEANING COMPAIGN (200 bottles @400)</td><td class="tc">Dec-21</td><td class="tc">TSH 80,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>25</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICEES SPONSORED BY LAKE CMENT LTD (9 APPRENTICEES)</td><td class="tc">Jan 21-Dec</td><td class="tc">TSH 10,170,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>1</td><td style="white-space:normal;line-height:1.4">DEVELOPMENT  OF ROAD  OF KIJAKA DISPENSARY</td><td class="tc">Feb 2021</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>2</td><td style="white-space:normal;line-height:1.4">SUPPLY OF RUBBLES ( 6 TRIPS )  AT KIMBIJI HEALTH CENTRE  FOR PREPARATION OF UHURU TORCH</td><td class="tc">Feb 2021</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">DONATION OF 13 SETS OF CHAIRS AND TABLES FOR KIMBIJI SECONDARY SCHOOL</td><td class="tc">Jan 2021</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">CONSTRUCTION OF  FIVE (5) TOILETS IN GOLANI PRIMARY SCHOOL INCLUDING SOAK PIT AND DEVELOPMENT OF SURROUNDING AREA</td><td class="tc">Jan 2021</td><td class="tc">TSH 11,270,897</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>3</td><td style="white-space:normal;line-height:1.4">SUPPAORT TO GOLANI PRIMARY SCHOOL (2 CLASSROOMS), INCLUDING DOORS, WINDOWS, FLOORING, ROOFING SHEETS, WALL PLASTERING AND DEVELOPMENT OF SURROUNDING AREA</td><td class="tc">Jan 2021</td><td class="tc">TSH 6,033,946</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4">CLEANING OF DAMPO- KIMBIJI WARD</td><td class="tc">Feb 2021</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>5</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION TOWARDS FIRE & RESCUE WELFARE FUND</td><td class="tc">Feb 2021</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4">DONATED 200 KGS OF RICE TO ORPHANAGE  DURING WOMEN'S DAY</td><td class="tc">Mar 2021</td><td class="tc">TSH 400,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>7</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION TO TUICO FOR MEI MOSI (WORKERS' DAY)  CELEBRATION EVENT</td><td class="tc">Mar 2021</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>8</td><td style="white-space:normal;line-height:1.4">RENOVATION OF ONE DOMITORY  AND CONSTRUCTION OF SEPTIC TANK AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">Apr 2021</td><td class="tc">TSH 6,351,157</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>9</td><td style="white-space:normal;line-height:1.4">CLEARING THE  AREA FOR CONSTRUCTION OF BOY'S DORMITORY AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">May 2021</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>10</td><td style="white-space:normal;line-height:1.4">SUPPLY OF GRAVEL FOR CONSTRUCTION OF BOY'S DORMITORY AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">May 2021</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>11</td><td style="white-space:normal;line-height:1.4">SUPPLY OF SAND FOR CONSTRUCTION OF BOY'S DORMITORY AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">May 2021</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>12</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION OF 5 NEW BALLS TO SUPPORT LOCAL FOOTBALL TOURNAMENT AT MIKENGE FOOTBALL CLUB</td><td class="tc">Jun-21</td><td class="tc">TSH 300,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>13</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR UHURU TORCH CEREMONY TO KIGAMBONI DISTRICT</td><td class="tc">Jul-21</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>14</td><td style="white-space:normal;line-height:1.4">SUPPLY OF RUBBLES  AND CLEANLINESS  AT KIMBIJI HOSPITAL  FOR THE PREPARATION OF UHURU TORCH</td><td class="tc">Aug-21</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>15</td><td style="white-space:normal;line-height:1.4">CLEANING OF DAMPO  AREA AT LINGATO - KISARAWE 2 TO SUPPORT NEMC</td><td class="tc">Sept-21</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>16</td><td style="white-space:normal;line-height:1.4">SUPPLY OF RUBBLES  AROUND  GOLANI OFFICE AND PRIMARY SCHOOL</td><td class="tc">Oct-21</td><td class="tc">TSH 10,075,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>17</td><td style="white-space:normal;line-height:1.4">SUPPLY  OF RUBBLES  FOR LEVELING OF ONE CLASS AT MIKENGE PRIMARY SCHOOL</td><td class="tc">Oct-21</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>18</td><td style="white-space:normal;line-height:1.4">CLEAR BUSH / MAINTAIN  ROAD FROM GOLANI TO KIDAGAA/MIKENGE</td><td class="tc">Oct-21</td><td class="tc">TSH 9,870,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>19</td><td style="white-space:normal;line-height:1.4">SUPPORT TO KIGAMBONI DISTRICT CLEANING CAMPAIGN BY DONATING (10 WASTE BINS) @70,000</td><td class="tc">Oct-21</td><td class="tc">TSH 700,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>20</td><td style="white-space:normal;line-height:1.4">SUPPLY OF RUBBLES  FOR CONSTRUCTION OF (8 CLASSES) AT KIMBIJI SECONDARY SCHOOL</td><td class="tc">Nov-21</td><td class="tc">TSH 1,040,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>21</td><td style="white-space:normal;line-height:1.4">SUPPLY OF RUBBLES  FOR CONSTRUCTION OF (2 CLASSES ) AT GOLAN SHIKIZI PRIMARY  SCHOOL</td><td class="tc">Nov-21</td><td class="tc">TSH 260,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>22</td><td style="white-space:normal;line-height:1.4">CONSTRUCTION OF KWA CHARLE OFFICE (20 BAGS OF CEMENT)</td><td class="tc">Nov-21</td><td class="tc">TSH 218,120</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>23</td><td style="white-space:normal;line-height:1.4">DONATED  600 CEMENT  BAGS OF 42.5 TO RUANGWA DISTRICT COUNCIL (REQUEST FROM PMO)</td><td class="tc">Nov-21</td><td class="tc">TSH 7,997,999</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>24</td><td style="white-space:normal;line-height:1.4">SUPPLY OF WATER FOR KIMBIJI CLEANING COMPAIGN (200 bottles @400)</td><td class="tc">Dec-21</td><td class="tc">TSH 80,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>25</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICEES SPONSORED BY LAKE CMENT LTD (9 APPRENTICEES)</td><td class="tc">Jan 21-Dec</td><td class="tc">TSH 10,170,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>1</td><td style="white-space:normal;line-height:1.4">DEVELOPMENT  OF ROAD  OF KIJAKA DISPENSARY</td><td class="tc">Feb 2021</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">SUPPLY OF RUBBLES ( 6 TRIPS )  AT KIMBIJI HEALTH CENTRE  FOR PREPARATION OF UHURU TORCH</td><td class="tc">Feb 2021</td><td class="tc">TSH 500,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
 </tbody>
       <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2021</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 79,267,119</td><td></td></tr></tfoot>
     </table>
@@ -634,19 +635,19 @@
   <div class="csr-yr-body">
     <table class="mis-table">
       <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
-      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">BALAKRISHNA FOUNDATION CONSTRUCTION OF CANTEEN FOR UPANGA PRIMARY SCHOOL</td><td class="tc">Feb 2020</td><td class="tc">TSH 7,524,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>2</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR VISITATION OF THE PRESIDENT IN KIGAMBONI MUNICIPAL</td><td class="tc">Feb 2020</td><td class="tc">TSH 5,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>3</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR EIGHT TYRES FOR TWO POLICE VEHICLES OF KIGAMBONI</td><td class="tc">Feb 2020</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>4</td><td style="white-space:normal;line-height:1.4">DONATION FOR RENOVATION OF GOLANI PRIMARY SCHOOL (2 CLASSES)</td><td class="tc">May 2020</td><td class="tc">TSH 17,993,400</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>5</td><td style="white-space:normal;line-height:1.4">IRIMBA ,SINGIDA CONSTITUENCY FOR CONSTRUCTION OF GIRL'S SECONDARY SCHOOL HOSTEL</td><td class="tc">Aug 2020</td><td class="tc">TSH 3,999,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>6</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR REPAIRING KIGAMBONI POLICE VEHICLE TOYOTA LAND CRUISER</td><td class="tc">Sep 2020</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>7</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR ELECTION TO DC 30 MILLION</td><td class="tc">Sep 2020</td><td class="tc">TSH 30,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>8</td><td style="white-space:normal;line-height:1.4">CEMENT TO REGIONAL COMMISSIONER (RC) 1500 BAGS</td><td class="tc">Mar 2020</td><td class="tc">TSH 20,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>9</td><td style="white-space:normal;line-height:1.4">SUPPLIED TO TARURA 60 TRIPS OF WASTE FOR THE ROAD REPAIR AT KIMBIJI MWASONGA ROAD</td><td class="tc">Apr 2020</td><td class="tc">TSH 24,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>10</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR ELECTION TO REGIONAL COMMISSIONER 40 MILLION</td><td class="tc">Sep 2020</td><td class="tc">TSH 40,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>11</td><td style="white-space:normal;line-height:1.4">RECONSTRUCTION OF DOMITORY FOR KIMBIJI SECONDARY SCHOOL</td><td class="tc">Oct 2020</td><td class="tc">TSH 7,526,020</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>12</td><td style="white-space:normal;line-height:1.4">REPAIRING OF ROAD NEAR KIMBIJI VILLAGE HOSPITAL</td><td class="tc">Dec 2020</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>13</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICEES  SPONSORED BY LAKE CEMENT LTD (6 APPRENTICEES)</td><td class="tc">JAN -DEC  </td><td class="tc">TSH 8,280,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">BALAKRISHNA FOUNDATION CONSTRUCTION OF CANTEEN FOR UPANGA PRIMARY SCHOOL</td><td class="tc">Feb 2020</td><td class="tc">TSH 7,524,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR VISITATION OF THE PRESIDENT IN KIGAMBONI MUNICIPAL</td><td class="tc">Feb 2020</td><td class="tc">TSH 5,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>3</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR EIGHT TYRES FOR TWO POLICE VEHICLES OF KIGAMBONI</td><td class="tc">Feb 2020</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4">DONATION FOR RENOVATION OF GOLANI PRIMARY SCHOOL (2 CLASSES)</td><td class="tc">May 2020</td><td class="tc">TSH 17,993,400</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>5</td><td style="white-space:normal;line-height:1.4">IRIMBA ,SINGIDA CONSTITUENCY FOR CONSTRUCTION OF GIRL'S SECONDARY SCHOOL HOSTEL</td><td class="tc">Aug 2020</td><td class="tc">TSH 3,999,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR REPAIRING KIGAMBONI POLICE VEHICLE TOYOTA LAND CRUISER</td><td class="tc">Sep 2020</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>7</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR ELECTION TO DC 30 MILLION</td><td class="tc">Sep 2020</td><td class="tc">TSH 30,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>8</td><td style="white-space:normal;line-height:1.4">CEMENT TO REGIONAL COMMISSIONER (RC) 1500 BAGS</td><td class="tc">Mar 2020</td><td class="tc">TSH 20,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>9</td><td style="white-space:normal;line-height:1.4">SUPPLIED TO TARURA 60 TRIPS OF WASTE FOR THE ROAD REPAIR AT KIMBIJI MWASONGA ROAD</td><td class="tc">Apr 2020</td><td class="tc">TSH 24,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>10</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR ELECTION TO REGIONAL COMMISSIONER 40 MILLION</td><td class="tc">Sep 2020</td><td class="tc">TSH 40,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>11</td><td style="white-space:normal;line-height:1.4">RECONSTRUCTION OF DOMITORY FOR KIMBIJI SECONDARY SCHOOL</td><td class="tc">Oct 2020</td><td class="tc">TSH 7,526,020</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>12</td><td style="white-space:normal;line-height:1.4">REPAIRING OF ROAD NEAR KIMBIJI VILLAGE HOSPITAL</td><td class="tc">Dec 2020</td><td class="tc">TSH 1,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>13</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICEES  SPONSORED BY LAKE CEMENT LTD (6 APPRENTICEES)</td><td class="tc">JAN -DEC  </td><td class="tc">TSH 8,280,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
 </tbody>
       <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2020</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 169,322,420</td><td></td></tr></tfoot>
     </table>
@@ -661,22 +662,22 @@
   <div class="csr-yr-body">
     <table class="mis-table">
       <thead><tr><th>#</th><th>Activity / Project</th><th style="text-align:center">Date</th><th style="text-align:center">Cost (TSH)</th><th style="text-align:center">Status</th></tr></thead>
-      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">DOZZER    (WEEK)     -KIMBIJI HOSPITAL  (levelling)</td><td class="tc">Feb 2019</td><td class="tc">TSH 3,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>2</td><td style="white-space:normal;line-height:1.4">WHEEL LOADER ( 1 WEEK) -NEW KIGAMBONI  HOSPITAL GEZA ( cleaning)</td><td class="tc">Mar 2019</td><td class="tc">TSH 4,800,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>3</td><td style="white-space:normal;line-height:1.4">CLEANING OF DAMPO- KIMBIJI WARD</td><td class="tc">Jun 2019</td><td class="tc">—</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>4</td><td style="white-space:normal;line-height:1.4">SUPPLY OF WASTE MATERIALS ( 5TRIPS) - KIMBIJI HOSPITAL (Reparing kimbiji hospital road) 5*20*20,000=2,000,000</td><td class="tc">Jun 2019</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>5</td><td style="white-space:normal;line-height:1.4">SUPPLY OF WASTE MATERIAL (8 TRIPS)-KIJAKA 8*20*20,000 = 3,200,000</td><td class="tc">Jul 2019</td><td class="tc">TSH 3,200,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>6</td><td style="white-space:normal;line-height:1.4">HYDRA  (6HRS) -KIMBIJI HOSPITAL    ( shifting washing machines)</td><td class="tc">Jul 2019</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>7</td><td style="white-space:normal;line-height:1.4">TREE PLANTATION ( KIMBIJI SECONDARY) (150TREES) - SHADES AND FRUITS TREES</td><td class="tc">Jul 2019</td><td class="tc">TSH 950,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>8</td><td style="white-space:normal;line-height:1.4">TREE PLANTATION (150 TREES) ( KIJAKA PRIMARY SCHOOL & HOSPITAL)-      ''</td><td class="tc">Aug 2019</td><td class="tc">TSH 950,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>9</td><td style="white-space:normal;line-height:1.4">CEMENT   300 BGS (PRISON)</td><td class="tc">Aug 2019</td><td class="tc">—</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>10</td><td style="white-space:normal;line-height:1.4">TREE PLANTATION (150) MIKENGE PRIMARY SCHOOL-              ''</td><td class="tc">Aug 2019</td><td class="tc">TSH 950,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>11</td><td style="white-space:normal;line-height:1.4">TREE PLANTATION (150) ( GOLANI PRIMARY SCHOOL)-                       ''</td><td class="tc">Aug 2019</td><td class="tc">TSH 950,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>12</td><td style="white-space:normal;line-height:1.4">SUPPLY OF CLAY MATERIAL (5TRIPS) -PRISON (5*20*15,000 = 1,500,000 /=</td><td class="tc">Aug 2019</td><td class="tc">TSH 1,500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>13</td><td style="white-space:normal;line-height:1.4">DONATION OF IRRIGATION PIPES (3) ROLLS-KIMBIJI WARD</td><td class="tc">Sep 2019</td><td class="tc">TSH 520,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>14</td><td style="white-space:normal;line-height:1.4">TREE PLANTATION (150) BOHARI PRIMARY SCHOOL -          ''</td><td class="tc"> SEPT-19</td><td class="tc">TSH 950,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>15</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR MAINTAIN SECURITY AT KIGAMBONI MINICIPAL</td><td class="tc">Dec 2019</td><td class="tc">TSH 1,500,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
-<tr><td>16</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICEES SPONSORED BY LAKE CEMENT LTD (4 APPRENTICEES)</td><td class="tc">JAN-DEC 20</td><td class="tc">TSH 4,440,000</td><td class="tc"><span style="color:#10B981;font-weight:600">Completed</span></td></tr>
+      <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4">DOZZER    (WEEK)     -KIMBIJI HOSPITAL  (levelling)</td><td class="tc">Feb 2019</td><td class="tc">TSH 3,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>2</td><td style="white-space:normal;line-height:1.4">WHEEL LOADER ( 1 WEEK) -NEW KIGAMBONI  HOSPITAL GEZA ( cleaning)</td><td class="tc">Mar 2019</td><td class="tc">TSH 4,800,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>3</td><td style="white-space:normal;line-height:1.4">CLEANING OF DAMPO- KIMBIJI WARD</td><td class="tc">Jun 2019</td><td class="tc">—</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>4</td><td style="white-space:normal;line-height:1.4">SUPPLY OF WASTE MATERIALS ( 5TRIPS) - KIMBIJI HOSPITAL (Reparing kimbiji hospital road) 5*20*20,000=2,000,000</td><td class="tc">Jun 2019</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>5</td><td style="white-space:normal;line-height:1.4">SUPPLY OF WASTE MATERIAL (8 TRIPS)-KIJAKA 8*20*20,000 = 3,200,000</td><td class="tc">Jul 2019</td><td class="tc">TSH 3,200,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>6</td><td style="white-space:normal;line-height:1.4">HYDRA  (6HRS) -KIMBIJI HOSPITAL    ( shifting washing machines)</td><td class="tc">Jul 2019</td><td class="tc">TSH 2,000,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>7</td><td style="white-space:normal;line-height:1.4">TREE PLANTATION ( KIMBIJI SECONDARY) (150TREES) - SHADES AND FRUITS TREES</td><td class="tc">Jul 2019</td><td class="tc">TSH 950,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>8</td><td style="white-space:normal;line-height:1.4">TREE PLANTATION (150 TREES) ( KIJAKA PRIMARY SCHOOL & HOSPITAL)-      ''</td><td class="tc">Aug 2019</td><td class="tc">TSH 950,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>9</td><td style="white-space:normal;line-height:1.4">CEMENT   300 BGS (PRISON)</td><td class="tc">Aug 2019</td><td class="tc">—</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>10</td><td style="white-space:normal;line-height:1.4">TREE PLANTATION (150) MIKENGE PRIMARY SCHOOL-              ''</td><td class="tc">Aug 2019</td><td class="tc">TSH 950,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>11</td><td style="white-space:normal;line-height:1.4">TREE PLANTATION (150) ( GOLANI PRIMARY SCHOOL)-                       ''</td><td class="tc">Aug 2019</td><td class="tc">TSH 950,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>12</td><td style="white-space:normal;line-height:1.4">SUPPLY OF CLAY MATERIAL (5TRIPS) -PRISON (5*20*15,000 = 1,500,000 /=</td><td class="tc">Aug 2019</td><td class="tc">TSH 1,500,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>13</td><td style="white-space:normal;line-height:1.4">DONATION OF IRRIGATION PIPES (3) ROLLS-KIMBIJI WARD</td><td class="tc">Sep 2019</td><td class="tc">TSH 520,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>14</td><td style="white-space:normal;line-height:1.4">TREE PLANTATION (150) BOHARI PRIMARY SCHOOL -          ''</td><td class="tc"> SEPT-19</td><td class="tc">TSH 950,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>15</td><td style="white-space:normal;line-height:1.4">CONTRIBUTION FOR MAINTAIN SECURITY AT KIGAMBONI MINICIPAL</td><td class="tc">Dec 2019</td><td class="tc">TSH 1,500,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
+<tr><td>16</td><td style="white-space:normal;line-height:1.4">VETA APPRENTICEES SPONSORED BY LAKE CEMENT LTD (4 APPRENTICEES)</td><td class="tc">JAN-DEC 20</td><td class="tc">TSH 4,440,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:600">Completed</span></td></tr>
 </tbody>
       <tfoot><tr><td colspan="3" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border);padding:8px 14px">TOTAL 2019</td><td class="tc" style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">TSH 27,710,000</td><td></td></tr></tfoot>
     </table>
@@ -1074,7 +1075,7 @@
   <!-- â•â• VEHICLES â•â• -->
   <div class="hr-panel" id="asset-vehicles">
     <div class="mis-kv-strip" style="margin-bottom:16px">
-      <div class="mis-kv"><div class="mis-kv-val" style="color:#10B981">96</div><div class="mis-kv-lbl">Logistics</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:#EF4444">7</div><div class="mis-kv-lbl">Mining</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:#3B82F6">26</div><div class="mis-kv-lbl">Passenger</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:#F59E0B">15</div><div class="mis-kv-lbl">Plant</div></div>
+      <div class="mis-kv"><div class="mis-kv-val" style="color:var(--green-ink)">96</div><div class="mis-kv-lbl">Logistics</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:var(--red-ink)">7</div><div class="mis-kv-lbl">Mining</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:#3B82F6">26</div><div class="mis-kv-lbl">Passenger</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:#F59E0B">15</div><div class="mis-kv-lbl">Plant</div></div>
     </div>
     <div class="mis-section">
       <div class="mis-sec-hdr">
@@ -1105,7 +1106,7 @@
   <div class="hr-panel" id="asset-spares">
     <div class="mis-kv-strip" style="margin-bottom:16px">
       <div class="mis-kv"><div class="mis-kv-val">TSH 6.65B</div><div class="mis-kv-lbl">Total Inventory Value</div></div>
-      <div class="mis-kv"><div class="mis-kv-val" style="color:#EF4444">294</div><div class="mis-kv-lbl">Class A Items</div><div class="mis-kv-sub">TSH 3595M</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:#F59E0B">838</div><div class="mis-kv-lbl">Class B Items</div><div class="mis-kv-sub">TSH 834M</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:#94A3B8">1672</div><div class="mis-kv-lbl">Class C Items</div><div class="mis-kv-sub">TSH 2217M</div></div>
+      <div class="mis-kv"><div class="mis-kv-val" style="color:var(--red-ink)">294</div><div class="mis-kv-lbl">Class A Items</div><div class="mis-kv-sub">TSH 3595M</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:#F59E0B">838</div><div class="mis-kv-lbl">Class B Items</div><div class="mis-kv-sub">TSH 834M</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:var(--text-muted)">1672</div><div class="mis-kv-lbl">Class C Items</div><div class="mis-kv-sub">TSH 2217M</div></div>
     </div>
     <div class="mis-grid">
       <div class="mis-section">
@@ -1117,140 +1118,140 @@
           <table class="mis-table">
             <thead><tr><th>Class</th><th>Code</th><th>Description</th><th style="text-align:center">UOM</th><th style="text-align:right">Value (TSH)</th></tr></thead>
             <tbody><tr>
-      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td><span class="mis-badge" style="background:#EF44441a;color:var(--red-ink);border-color:#EF444466">A</span></td>
       <td style="font-size:12px;color:var(--text-muted)">CPRGM002</td>
       <td>GRINDING MEDIA HIGH CHROME  SIZE 20 MM</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 298,141,026</td>
     </tr>
 <tr>
-      <td><span class="mis-badge" style="background:#94A3B81a;color:#94A3B8;border-color:#94A3B866">C</span></td>
+      <td><span class="mis-badge" style="background:#94A3B81a;color:var(--text-muted);border-color:#94A3B866">C</span></td>
       <td style="font-size:12px;color:var(--text-muted)">CPRRF013</td>
       <td>BRICK AC 70  /20 SPL 3K 618 SIZE 198 X 180 X 103 / 97 SA FOR KILN</td>
       <td class="tc">NOS</td>
       <td class="tr">TSH 246,253,450</td>
     </tr>
 <tr>
-      <td><span class="mis-badge" style="background:#94A3B81a;color:#94A3B8;border-color:#94A3B866">C</span></td>
+      <td><span class="mis-badge" style="background:#94A3B81a;color:var(--text-muted);border-color:#94A3B866">C</span></td>
       <td style="font-size:12px;color:var(--text-muted)">CPMBG002</td>
       <td>BAG EMPTY FOR CEMENT PACKING GRADE 42.5R MATERIAL WOVEN POLYPROPY</td>
       <td class="tc">NOS</td>
       <td class="tr">TSH 233,390,115</td>
     </tr>
 <tr>
-      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td><span class="mis-badge" style="background:#EF44441a;color:var(--red-ink);border-color:#EF444466">A</span></td>
       <td style="font-size:12px;color:var(--text-muted)">CPRGM001</td>
       <td>GRINDING MEDIA HIGH CHROME  SIZE 17 MM</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 204,785,435</td>
     </tr>
 <tr>
-      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td><span class="mis-badge" style="background:#EF44441a;color:var(--red-ink);border-color:#EF444466">A</span></td>
       <td style="font-size:12px;color:var(--text-muted)">CPRGM004</td>
       <td>GRINDING MEDIA HIGH CHROME  SIZE 30 MM</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 189,693,906</td>
     </tr>
 <tr>
-      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td><span class="mis-badge" style="background:#EF44441a;color:var(--red-ink);border-color:#EF444466">A</span></td>
       <td style="font-size:12px;color:var(--text-muted)">CPRRF026</td>
       <td>CASTABLE  CALDEMON BPTC</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 155,721,278</td>
     </tr>
 <tr>
-      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td><span class="mis-badge" style="background:#EF44441a;color:var(--red-ink);border-color:#EF444466">A</span></td>
       <td style="font-size:12px;color:var(--text-muted)">CPRGM008</td>
       <td>GRINDING MEDIA HIGH CHROME  SIZE 70 MM</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 154,913,844</td>
     </tr>
 <tr>
-      <td><span class="mis-badge" style="background:#94A3B81a;color:#94A3B8;border-color:#94A3B866">C</span></td>
+      <td><span class="mis-badge" style="background:#94A3B81a;color:var(--text-muted);border-color:#94A3B866">C</span></td>
       <td style="font-size:12px;color:var(--text-muted)">CFLFL001</td>
       <td>FUEL DIESEL</td>
       <td class="tc">LTR</td>
       <td class="tr">TSH 140,973,479</td>
     </tr>
 <tr>
-      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td><span class="mis-badge" style="background:#EF44441a;color:var(--red-ink);border-color:#EF444466">A</span></td>
       <td style="font-size:12px;color:var(--text-muted)">CPRGM003</td>
       <td>GRINDING MEDIA HIGH CHROME  SIZE 25 MM</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 139,844,512</td>
     </tr>
 <tr>
-      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td><span class="mis-badge" style="background:#EF44441a;color:var(--red-ink);border-color:#EF444466">A</span></td>
       <td style="font-size:12px;color:var(--text-muted)">CPRGM006</td>
       <td>GRINDING MEDIA HIGH CHROME  SIZE 50 MM</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 136,779,279</td>
     </tr>
 <tr>
-      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td><span class="mis-badge" style="background:#EF44441a;color:var(--red-ink);border-color:#EF444466">A</span></td>
       <td style="font-size:12px;color:var(--text-muted)">CPRGM009</td>
       <td>GRINDING MEDIA HIGH CHROME  SIZE 80 MM</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 134,271,985</td>
     </tr>
 <tr>
-      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td><span class="mis-badge" style="background:#EF44441a;color:var(--red-ink);border-color:#EF444466">A</span></td>
       <td style="font-size:12px;color:var(--text-muted)">CPRGM005</td>
       <td>GRINDING MEDIA HIGH CHROME  SIZE 40 MM</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 124,002,885</td>
     </tr>
 <tr>
-      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td><span class="mis-badge" style="background:#EF44441a;color:var(--red-ink);border-color:#EF444466">A</span></td>
       <td style="font-size:12px;color:var(--text-muted)">CPRRF005</td>
       <td>CASTABLE HASLE D59A</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 93,868,318</td>
     </tr>
 <tr>
-      <td><span class="mis-badge" style="background:#94A3B81a;color:#94A3B8;border-color:#94A3B866">C</span></td>
+      <td><span class="mis-badge" style="background:#94A3B81a;color:var(--text-muted);border-color:#94A3B866">C</span></td>
       <td style="font-size:12px;color:var(--text-muted)">CFLGR008</td>
       <td>GREASE BERUGEAR HV 20 FOR CEMENT MILL GIRTH GEAR</td>
       <td class="tc">KG</td>
       <td class="tr">TSH 92,125,944</td>
     </tr>
 <tr>
-      <td><span class="mis-badge" style="background:#94A3B81a;color:#94A3B8;border-color:#94A3B866">C</span></td>
+      <td><span class="mis-badge" style="background:#94A3B81a;color:var(--text-muted);border-color:#94A3B866">C</span></td>
       <td style="font-size:12px;color:var(--text-muted)">CPMBG004</td>
       <td>BAG EMPTY FOR CEMENT PACKING GRADE 42.5N CEM II MATERIAL WOVEN PO</td>
       <td class="tc">NOS</td>
       <td class="tr">TSH 76,749,123</td>
     </tr>
 <tr>
-      <td><span class="mis-badge" style="background:#94A3B81a;color:#94A3B8;border-color:#94A3B866">C</span></td>
+      <td><span class="mis-badge" style="background:#94A3B81a;color:var(--text-muted);border-color:#94A3B866">C</span></td>
       <td style="font-size:12px;color:var(--text-muted)">CPRRF014</td>
       <td>BRICK AC 70 /20 SPL 3K - 218 SIZE 198 X 180 X 103/ 84 SA FOR KILN</td>
       <td class="tc">NOS</td>
       <td class="tr">TSH 75,859,058</td>
     </tr>
 <tr>
-      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td><span class="mis-badge" style="background:#EF44441a;color:var(--red-ink);border-color:#EF444466">A</span></td>
       <td style="font-size:12px;color:var(--text-muted)">CQCGS009</td>
       <td>NORMAL SAND EN196-1</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 74,086,855</td>
     </tr>
 <tr>
-      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td><span class="mis-badge" style="background:#EF44441a;color:var(--red-ink);border-color:#EF444466">A</span></td>
       <td style="font-size:12px;color:var(--text-muted)">EISGS011</td>
       <td>POSITION TRANSDUCER MODEL NO. 8TL7 E501 M0300 P S32 SUPPLY 10 TO </td>
       <td class="tc">NOS</td>
       <td class="tr">TSH 70,282,800</td>
     </tr>
 <tr>
-      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td><span class="mis-badge" style="background:#EF44441a;color:var(--red-ink);border-color:#EF444466">A</span></td>
       <td style="font-size:12px;color:var(--text-muted)">CPRGM007</td>
       <td>GRINDING MEDIA HIGH CHROME  SIZE 60 MM</td>
       <td class="tc">MT</td>
       <td class="tr">TSH 67,655,615</td>
     </tr>
 <tr>
-      <td><span class="mis-badge" style="background:#EF44441a;color:#EF4444;border-color:#EF444466">A</span></td>
+      <td><span class="mis-badge" style="background:#EF44441a;color:var(--red-ink);border-color:#EF444466">A</span></td>
       <td style="font-size:12px;color:var(--text-muted)">EAUSM179</td>
       <td>COUPLING PART NO. 101013 FOR SURFACE MINER KSM304</td>
       <td class="tc">NOS</td>
@@ -1292,7 +1293,7 @@
     <div class="mis-kv-strip" style="margin-bottom:16px">
       <div class="mis-kv"><div class="mis-kv-val">$1,310,041</div><div class="mis-kv-lbl">Total Spent (YTD)</div></div>
       <div class="mis-kv"><div class="mis-kv-val">$1,365,000</div><div class="mis-kv-lbl">Total Budget</div></div>
-      <div class="mis-kv"><div class="mis-kv-val"><span style="color:#10B981;font-weight:700">96%</span></div><div class="mis-kv-lbl">Budget Utilisation</div></div>
+      <div class="mis-kv"><div class="mis-kv-val"><span style="color:var(--green-ink);font-weight:700">96%</span></div><div class="mis-kv-lbl">Budget Utilisation</div></div>
       <div class="mis-kv"><div class="mis-kv-val">$54,959</div><div class="mis-kv-lbl">Remaining Budget</div></div>
     </div>
     <div class="mis-section">
@@ -1303,18 +1304,18 @@
       <div class="mis-table-wrap">
         <table class="mis-table">
           <thead><tr><th>Cost Head</th><th>Account</th><th style="text-align:right">Actual (USD)</th><th style="text-align:right">Budget (USD)</th><th style="text-align:center">% Used</th></tr></thead>
-          <tbody><tr style=""><td style="padding-left:28px">2200 TPD Commissioning</td><td style="font-size:12px;color:var(--text-muted)">371021 CWIP-PYRO UPGRADATION</td><td class="tr">$266,545</td><td class="tr">$300,000</td><td class="tc"><span style="color:#10B981;font-weight:700">89%</span></td></tr>
-<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">2200 TPD Commissioning Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$289,460</td><td class="tr">$300,000</td><td class="tc"><span style="color:#10B981;font-weight:700">96%</span></td></tr>
-<tr style=""><td style="padding-left:28px">MINING LAND</td><td style="font-size:12px;color:var(--text-muted)">301003 LAND COST</td><td class="tr">$252,452</td><td class="tr">$600,000</td><td class="tc"><span style="color:#10B981;font-weight:700">42%</span></td></tr>
-<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">MINING LAND Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$252,452</td><td class="tr">$600,000</td><td class="tc"><span style="color:#10B981;font-weight:700">42%</span></td></tr>
-<tr style=""><td style="padding-left:28px">OTHERS</td><td style="font-size:12px;color:var(--text-muted)">371039 CWIP-CONSTRUCTION OF LIME STONE AND GYPSUM FEEDING SY</td><td class="tr">$45,637</td><td class="tr">$70,000</td><td class="tc"><span style="color:#10B981;font-weight:700">65%</span></td></tr>
-<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">OTHERS Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$80,240</td><td class="tr">$70,000</td><td class="tc"><span style="color:#EF4444;font-weight:700">115%</span></td></tr>
-<tr style=""><td style="padding-left:28px">RM SHED</td><td style="font-size:12px;color:var(--text-muted)">371012 CWIP-QUARRY RAW MATERIAL SHED EXTENSION</td><td class="tr">$73,219</td><td class="tr">$300,000</td><td class="tc"><span style="color:#10B981;font-weight:700">24%</span></td></tr>
-<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">RM SHED Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$73,219</td><td class="tr">$300,000</td><td class="tc"><span style="color:#10B981;font-weight:700">24%</span></td></tr>
+          <tbody><tr style=""><td style="padding-left:28px">2200 TPD Commissioning</td><td style="font-size:12px;color:var(--text-muted)">371021 CWIP-PYRO UPGRADATION</td><td class="tr">$266,545</td><td class="tr">$300,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:700">89%</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">2200 TPD Commissioning Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$289,460</td><td class="tr">$300,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:700">96%</span></td></tr>
+<tr style=""><td style="padding-left:28px">MINING LAND</td><td style="font-size:12px;color:var(--text-muted)">301003 LAND COST</td><td class="tr">$252,452</td><td class="tr">$600,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:700">42%</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">MINING LAND Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$252,452</td><td class="tr">$600,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:700">42%</span></td></tr>
+<tr style=""><td style="padding-left:28px">OTHERS</td><td style="font-size:12px;color:var(--text-muted)">371039 CWIP-CONSTRUCTION OF LIME STONE AND GYPSUM FEEDING SY</td><td class="tr">$45,637</td><td class="tr">$70,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:700">65%</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">OTHERS Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$80,240</td><td class="tr">$70,000</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">115%</span></td></tr>
+<tr style=""><td style="padding-left:28px">RM SHED</td><td style="font-size:12px;color:var(--text-muted)">371012 CWIP-QUARRY RAW MATERIAL SHED EXTENSION</td><td class="tr">$73,219</td><td class="tr">$300,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:700">24%</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">RM SHED Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$73,219</td><td class="tr">$300,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:700">24%</span></td></tr>
 <tr style=""><td style="padding-left:28px">ROADS</td><td style="font-size:12px;color:var(--text-muted)">371014 CWIP-GYPSUM SHED SURROUNDING & CEMENT MILL AREA NEW R</td><td class="tr">$9,932</td><td class="tr">—</td><td class="tc"><span style="color:var(--text-muted)">—</span></td></tr>
-<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">ROADS Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$33,601</td><td class="tr">$35,000</td><td class="tc"><span style="color:#10B981;font-weight:700">96%</span></td></tr>
-<tr style=""><td style="padding-left:28px">WALL</td><td style="font-size:12px;color:var(--text-muted)">371059 CWIP-CONSTRUCTION OF PLANT BOUNDARY WALL</td><td class="tr">$40,352</td><td class="tr">$60,000</td><td class="tc"><span style="color:#10B981;font-weight:700">67%</span></td></tr>
-<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">WALL Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$40,352</td><td class="tr">$60,000</td><td class="tc"><span style="color:#10B981;font-weight:700">67%</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">ROADS Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$33,601</td><td class="tr">$35,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:700">96%</span></td></tr>
+<tr style=""><td style="padding-left:28px">WALL</td><td style="font-size:12px;color:var(--text-muted)">371059 CWIP-CONSTRUCTION OF PLANT BOUNDARY WALL</td><td class="tr">$40,352</td><td class="tr">$60,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:700">67%</span></td></tr>
+<tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">WALL Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$40,352</td><td class="tr">$60,000</td><td class="tc"><span style="color:var(--green-ink);font-weight:700">67%</span></td></tr>
 <tr style=""><td style="padding-left:28px">OPC Project</td><td style="font-size:12px;color:var(--text-muted)">371038 CWIP-CONSTRUCTION OF NEW RAW MILL FEEDING AND UPGRADA</td><td class="tr">$169,812</td><td class="tr">—</td><td class="tc"><span style="color:var(--text-muted)">—</span></td></tr>
 <tr style="background:#F8FAFC;font-weight:700"><td style="padding-left:14px">OPC Project Total</td><td style="font-size:12px;color:var(--text-muted)"></td><td class="tr">$540,717</td><td class="tr">—</td><td class="tc"><span style="color:var(--text-muted)">—</span></td></tr>
 </tbody>
@@ -1322,7 +1323,7 @@
             <td>GRAND TOTAL</td><td></td>
             <td class="tr">$1,310,041</td>
             <td class="tr">$1,365,000</td>
-            <td class="tc"><span style="color:#10B981;font-weight:700">96%</span></td>
+            <td class="tc"><span style="color:var(--green-ink);font-weight:700">96%</span></td>
           </tr></tfoot>
         </table>
       </div>
@@ -1404,10 +1405,10 @@
   <!-- KV strip -->
   <div class="mis-kv-strip">
     <div class="mis-kv"><div class="mis-kv-val">88</div><div class="mis-kv-lbl">Certificates & Licenses</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:#10B981">37</div><div class="mis-kv-lbl">Active</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:#D97706">5</div><div class="mis-kv-lbl">Under Renewal</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:#94A3B8">10</div><div class="mis-kv-lbl">Inactive</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:#D97706">10</div><div class="mis-kv-lbl">Expiring</div><div class="mis-kv-sub">Within 6 months</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:#EF4444">26</div><div class="mis-kv-lbl">Expired</div></div><div class="mis-kv"><div class="mis-kv-val">5</div><div class="mis-kv-lbl">Mining Licenses</div><div class="mis-kv-sub">ML + PL</div></div>
+    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--green-ink)">37</div><div class="mis-kv-lbl">Active</div></div>
+    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--amber-ink)">5</div><div class="mis-kv-lbl">Under Renewal</div></div>
+    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--text-muted)">10</div><div class="mis-kv-lbl">Inactive</div></div>
+    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--amber-ink)">10</div><div class="mis-kv-lbl">Expiring</div><div class="mis-kv-sub">Within 6 months</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:var(--red-ink)">26</div><div class="mis-kv-lbl">Expired</div></div><div class="mis-kv"><div class="mis-kv-val">5</div><div class="mis-kv-lbl">Mining Licenses</div><div class="mis-kv-sub">ML + PL</div></div>
     <div class="mis-kv"><div class="mis-kv-val">4</div><div class="mis-kv-lbl">Legal Cases</div><div class="mis-kv-sub">Ongoing</div></div>
     <div class="mis-kv"><div class="mis-kv-val">23</div><div class="mis-kv-lbl">Insurance Claims</div><div class="mis-kv-sub">TSH 382M received</div></div>
   </div>
@@ -1490,9 +1491,9 @@
     <h3 class="mis-sec-title">ML 395/10 — Kimbiji, Kigamboni</h3>
     <span style="margin-left:12px;font-size:12px;color:var(--text-muted)"> &nbsp;·&nbsp;  km²</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px">
-      <span style="color:#10B981;font-weight:700">20 Complied</span>
-      <span style="color:#EF4444;font-weight:700">0 Not Complied</span>
-      <span style="color:#D97706;font-weight:700">3 Partial</span>
+      <span style="color:var(--green-ink);font-weight:700">20 Complied</span>
+      <span style="color:var(--red-ink);font-weight:700">0 Not Complied</span>
+      <span style="color:var(--amber-ink);font-weight:700">3 Partial</span>
       <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:87%;background:#F59E0B"></div></div>
       <span style="font-weight:700;color:#F59E0B">87%</span>
     </div>
@@ -1533,11 +1534,11 @@
     <h3 class="mis-sec-title">ML 552/15 — Tarawanda, Bagamoyo</h3>
     <span style="margin-left:12px;font-size:12px;color:var(--text-muted)"> &nbsp;·&nbsp;  km²</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px">
-      <span style="color:#10B981;font-weight:700">14 Complied</span>
-      <span style="color:#EF4444;font-weight:700">4 Not Complied</span>
-      <span style="color:#D97706;font-weight:700">5 Partial</span>
+      <span style="color:var(--green-ink);font-weight:700">14 Complied</span>
+      <span style="color:var(--red-ink);font-weight:700">4 Not Complied</span>
+      <span style="color:var(--amber-ink);font-weight:700">5 Partial</span>
       <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:61%;background:#EF4444"></div></div>
-      <span style="font-weight:700;color:#EF4444">61%</span>
+      <span style="font-weight:700;color:var(--red-ink)">61%</span>
     </div>
   </div>
   <div class="mis-table-wrap" style="max-height:380px">
@@ -1576,11 +1577,11 @@
     <h3 class="mis-sec-title">PL/31929/25 — Tarawanda, Bagamoyo</h3>
     <span style="margin-left:12px;font-size:12px;color:var(--text-muted)"> &nbsp;·&nbsp;  km²</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px">
-      <span style="color:#10B981;font-weight:700">0 Complied</span>
-      <span style="color:#EF4444;font-weight:700">0 Not Complied</span>
-      <span style="color:#D97706;font-weight:700">3 Partial</span>
+      <span style="color:var(--green-ink);font-weight:700">0 Complied</span>
+      <span style="color:var(--red-ink);font-weight:700">0 Not Complied</span>
+      <span style="color:var(--amber-ink);font-weight:700">3 Partial</span>
       <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:0%;background:#EF4444"></div></div>
-      <span style="font-weight:700;color:#EF4444">0%</span>
+      <span style="font-weight:700;color:var(--red-ink)">0%</span>
     </div>
   </div>
   <div class="mis-table-wrap" style="max-height:380px">
@@ -1599,11 +1600,11 @@
     <h3 class="mis-sec-title">PL/11811/2022 — Kimbiji, Kigamboni</h3>
     <span style="margin-left:12px;font-size:12px;color:var(--text-muted)"> &nbsp;·&nbsp;  km²</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px">
-      <span style="color:#10B981;font-weight:700">2 Complied</span>
-      <span style="color:#EF4444;font-weight:700">0 Not Complied</span>
-      <span style="color:#D97706;font-weight:700">1 Partial</span>
+      <span style="color:var(--green-ink);font-weight:700">2 Complied</span>
+      <span style="color:var(--red-ink);font-weight:700">0 Not Complied</span>
+      <span style="color:var(--amber-ink);font-weight:700">1 Partial</span>
       <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:67%;background:#EF4444"></div></div>
-      <span style="font-weight:700;color:#EF4444">67%</span>
+      <span style="font-weight:700;color:var(--red-ink)">67%</span>
     </div>
   </div>
   <div class="mis-table-wrap" style="max-height:380px">
@@ -1707,7 +1708,7 @@
       <td style="white-space:normal;line-height:1.4;max-width:280px;font-size:12px">COMPENSATION OF TSH 300,000,000 FOR LAND BOUGHT BY LAKE CEMENT FROM SUZANA HUSSE</td>
       <td class="tc" style="font-size:12px;color:var(--text-muted)">Aug 2025</td>
       <td style="font-size:12px">DISTRICT LAND AND HOUSING TRIBUNAL - KIGAMBONI</td>
-      <td class="tc" style="font-size:12px;color:#EF4444;font-weight:700">06.03.2026 @ 09:30am</td>
+      <td class="tc" style="font-size:12px;color:var(--red-ink);font-weight:700">06.03.2026 @ 09:30am</td>
     </tr>
 </tbody>
         </table>
@@ -1720,10 +1721,10 @@
     <div class="mis-kv-strip" style="margin-bottom:16px">
       <div class="mis-kv"><div class="mis-kv-val">23</div><div class="mis-kv-lbl">Total Claims</div></div>
       <div class="mis-kv"><div class="mis-kv-val">TSH 383M</div><div class="mis-kv-lbl">Total Claimed</div></div>
-      <div class="mis-kv"><div class="mis-kv-val" style="color:#10B981">TSH 382M</div><div class="mis-kv-lbl">Total Received</div></div>
-      <div class="mis-kv"><div class="mis-kv-val" style="color:#EF4444">TSH 1.5M</div><div class="mis-kv-lbl">Outstanding Variance</div></div>
+      <div class="mis-kv"><div class="mis-kv-val" style="color:var(--green-ink)">TSH 382M</div><div class="mis-kv-lbl">Total Received</div></div>
+      <div class="mis-kv"><div class="mis-kv-val" style="color:var(--red-ink)">TSH 1.5M</div><div class="mis-kv-lbl">Outstanding Variance</div></div>
       <div class="mis-kv"><div class="mis-kv-val">18</div><div class="mis-kv-lbl">Fully Settled</div></div>
-      <div class="mis-kv"><div class="mis-kv-val" style="color:#D97706">5</div><div class="mis-kv-lbl">Pending / Partial</div></div>
+      <div class="mis-kv"><div class="mis-kv-val" style="color:var(--amber-ink)">5</div><div class="mis-kv-lbl">Pending / Partial</div></div>
     </div>
     <div class="mis-section">
       <div class="mis-sec-hdr">
@@ -1741,8 +1742,8 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">01 May 2023</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">JUPITER BUSINESS SYSTEM LTD</td>
       <td class="tr">TSH 27,466</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 10,000</td>
-      <td class="tc"><span style="color:#EF4444;font-weight:600">TSH 17,466</span></td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 10,000</td>
+      <td class="tc"><span style="color:var(--red-ink);font-weight:600">TSH 17,466</span></td>
       <td class="tc"><span class="mis-badge expiring">Partial</span></td>
     </tr>
 <tr>
@@ -1750,7 +1751,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">20 Sep 2023</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">T922 DSZ ACCIDENT CLAIM</td>
       <td class="tr">TSH 8,202,622</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 8,202,622</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 8,202,622</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge valid">Settled</span></td>
     </tr>
@@ -1759,8 +1760,8 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">20 Sep 2023</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">T297 DBZ -TRUCK ACCIDENT CLAIM</td>
       <td class="tr">TSH 12,137,480</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 11,983,449</td>
-      <td class="tc"><span style="color:#EF4444;font-weight:600">TSH 154,031</span></td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 11,983,449</td>
+      <td class="tc"><span style="color:var(--red-ink);font-weight:600">TSH 154,031</span></td>
       <td class="tc"><span class="mis-badge expiring">Partial</span></td>
     </tr>
 <tr>
@@ -1768,7 +1769,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">17 Nov 2023</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">DAMAGE TO CRANE</td>
       <td class="tr">TSH 48,521,600</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 48,521,600</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 48,521,600</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge valid">Settled</span></td>
     </tr>
@@ -1777,7 +1778,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">27 Nov 2023</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">THEFT OF CEMENT 600 BAGS</td>
       <td class="tr">TSH 7,971,803</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 7,971,803</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 7,971,803</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge valid">Settled</span></td>
     </tr>
@@ -1786,7 +1787,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">18 Jan 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">ACCIDENT - T680DRG / T804DCT</td>
       <td class="tr">TSH 36,146,859</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 36,146,859</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 36,146,859</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge valid">Settled</span></td>
     </tr>
@@ -1795,7 +1796,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">01 Feb 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">MATERIAL DAMAGE IN TRANSIT (SEA)</td>
       <td class="tr" style="color:#3B82F6">USD 4,409</td>
-      <td class="tr" style="color:#10B981;font-weight:600">USD 4,409</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">USD 4,409</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge valid">Settled</span></td>
     </tr>
@@ -1804,7 +1805,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">08 Mar 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">THEFT/FIDELITY (Salma)</td>
       <td class="tr">TSH 10,000</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 10,000</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 10,000</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge valid">Settled</span></td>
     </tr>
@@ -1813,7 +1814,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">11 May 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">THEFT CASE T741/T810 DCT-EMMANUEL KATIGULA (VEHICLE PARTS MISSING)</td>
       <td class="tr">TSH 12,051,798</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 12,051,798</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 12,051,798</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge valid">Settled</span></td>
     </tr>
@@ -1822,8 +1823,8 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">17 May 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">600 cement bags theft of GSM INV/2024/04/00535 (T736 DCF & T786 DCT)</td>
       <td class="tr">TSH 9,105,000</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 7,769,700</td>
-      <td class="tc"><span style="color:#EF4444;font-weight:600">TSH 1,335,300</span></td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 7,769,700</td>
+      <td class="tc"><span style="color:var(--red-ink);font-weight:600">TSH 1,335,300</span></td>
       <td class="tc"><span class="mis-badge expiring">Partial</span></td>
     </tr>
 <tr>
@@ -1831,7 +1832,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">03 Jun 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">Third Party Cliam : Our Truck met accident by climbing hill and hit a </td>
       <td class="tr">—</td>
-      <td class="tr" style="color:#10B981;font-weight:600">—</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">—</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge expiring">Pending</span></td>
     </tr>
@@ -1840,7 +1841,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">01 Aug 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">Sweeping Truck - Internal Accident Loss</td>
       <td class="tr">TSH 1,457,300</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 1,457,300</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 1,457,300</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge valid">Settled</span></td>
     </tr>
@@ -1849,7 +1850,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">19 Nov 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">HARINARAYAN PEDDA- Life insurance</td>
       <td class="tr">TSH 42,000,000</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 42,000,000</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 42,000,000</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge valid">Settled</span></td>
     </tr>
@@ -1858,7 +1859,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">19 Nov 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">HARINARAYAN PEDDA- Medical Insurance</td>
       <td class="tr">TSH 1,000,000</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 1,000,000</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 1,000,000</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge valid">Settled</span></td>
     </tr>
@@ -1867,7 +1868,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">28 Nov 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">Diamond Cutting tool Claim</td>
       <td class="tr">TSH 21,220,408</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 21,220,408</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 21,220,408</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge valid">Settled</span></td>
     </tr>
@@ -1876,7 +1877,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">28 Nov 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">550 MT Crane Claim- T727 EDH</td>
       <td class="tr">TSH 17,819,133</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 17,819,133</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 17,819,133</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge valid">Settled</span></td>
     </tr>
@@ -1885,7 +1886,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">28 Nov 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">70 MT Zoomlian Crane Claim</td>
       <td class="tr">TSH 21,224,129</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 21,224,129</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 21,224,129</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge valid">Settled</span></td>
     </tr>
@@ -1894,7 +1895,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">28 Dec 2024</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">T741 DCF, Mvuti, repair</td>
       <td class="tr">TSH 6,218,010</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 6,218,010</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 6,218,010</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge valid">Settled</span></td>
     </tr>
@@ -1903,7 +1904,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">11 Feb 2025</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">Clinker - Water Affected Cargo at Port - 196 MT</td>
       <td class="tr">TSH 28,672,004</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 28,672,004</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 28,672,004</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge expiring">Partial</span></td>
     </tr>
@@ -1912,7 +1913,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">01 Mar 2025</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">T741 DCF, Hydraulic boom broke</td>
       <td class="tr">TSH 5,900,000</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 5,900,000</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 5,900,000</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge valid">Settled</span></td>
     </tr>
@@ -1921,7 +1922,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">04 Jul 2025</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">T273 DZX Horse repair</td>
       <td class="tr">TSH 50,157,088</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 50,157,088</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 50,157,088</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge valid">Settled</span></td>
     </tr>
@@ -1930,7 +1931,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">13 Aug 2025</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">T796 DCT Trailer</td>
       <td class="tr">TSH 2,844,200</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 2,844,200</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 2,844,200</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge valid">Settled</span></td>
     </tr>
@@ -1939,7 +1940,7 @@
       <td class="tc" style="font-size:12px;color:var(--text-muted)">16 Sep 2025</td>
       <td style="max-width:240px;white-space:normal;line-height:1.4">T275 EJP</td>
       <td class="tr">TSH 50,718,582</td>
-      <td class="tr" style="color:#10B981;font-weight:600">TSH 50,718,582</td>
+      <td class="tr" style="color:var(--green-ink);font-weight:600">TSH 50,718,582</td>
       <td class="tc">—</td>
       <td class="tc"><span class="mis-badge valid">Settled</span></td>
     </tr>
@@ -1948,8 +1949,8 @@
             <tr style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">
               <td colspan="3">TOTAL</td>
               <td class="tr">TSH 383,409,892</td>
-              <td class="tr" style="color:#10B981">TSH 381,903,095</td>
-              <td class="tc" style="color:#EF4444">TSH 1,506,797</td>
+              <td class="tr" style="color:var(--green-ink)">TSH 381,903,095</td>
+              <td class="tc" style="color:var(--red-ink)">TSH 1,506,797</td>
               <td></td>
             </tr>
             <tr>
@@ -1974,8 +1975,8 @@
     <div class="mis-kv"><div class="mis-kv-val">6,697</div><div class="mis-kv-lbl">Inventory Line Items</div><div class="mis-kv-sub">Spares &amp; consumables</div></div>
     <div class="mis-kv"><div class="mis-kv-val">TSH 13.2B</div><div class="mis-kv-lbl">Spares Inventory Value</div></div>
     <div class="mis-kv"><div class="mis-kv-val">13</div><div class="mis-kv-lbl">AMC Contracts</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:#10B981">6</div><div class="mis-kv-lbl">Active AMCs</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:#EF4444">6</div><div class="mis-kv-lbl">Expired AMCs</div></div>
+    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--green-ink)">6</div><div class="mis-kv-lbl">Active AMCs</div></div>
+    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--red-ink)">6</div><div class="mis-kv-lbl">Expired AMCs</div></div>
   </div>
 
   <!-- Sub-tabs -->
@@ -1992,7 +1993,7 @@
   <div class="mis-sec-hdr">
     <i data-lucide="layers" class="mis-sec-icon"></i>
     <h3 class="mis-sec-title">Physical Stock Audit — 20 Oct 2025</h3>
-    <span style="margin-left:8px;font-size:12px;color:#D97706;font-weight:600">⚑ Data is 8 months old</span>
+    <span style="margin-left:8px;font-size:12px;color:var(--amber-ink);font-weight:600">⚑ Data is 8 months old</span>
     <span style="margin-left:auto;font-size:12px;font-weight:700;color:var(--navy)">Grand Total: 52,768.6 MT</span>
   </div>
   <div class="mis-table-wrap">
@@ -2008,19 +2009,19 @@
           <td><strong>Clinker</strong></td>
           <td style="font-size:12px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Clinker Stock Pile (19,784 MT); Gypsum shed  Size L 50 M x W 20 M x (1,299 MT); Mining yard (2,822 MT)</td>
           <td class="tr" style="font-weight:700;color:var(--navy)">24,204.3 MT</td>
-          <td class="tc"><span style="color:#EF4444;font-size:12px">Sys:23,373 Δ+831</span></td>
+          <td class="tc"><span style="color:var(--red-ink);font-size:12px">Sys:23,373 Δ+831</span></td>
         </tr>
 <tr>
           <td><strong>Coal</strong></td>
           <td style="font-size:12px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Open Yard-Heap-1 (7,262 MT); Open Yard-Heap-2 (5,542 MT); Coal Shed Heap-1 Size L 90 M x W 35 (5,905 MT); Coal Shed Heap-1 (2,940 MT)</td>
           <td class="tr" style="font-weight:700;color:var(--navy)">21,698.9 MT</td>
-          <td class="tc"><span style="color:#EF4444;font-size:12px">Sys:20,090 Δ+1,609</span></td>
+          <td class="tc"><span style="color:var(--red-ink);font-size:12px">Sys:20,090 Δ+1,609</span></td>
         </tr>
 <tr>
           <td><strong>Gypsum</strong></td>
           <td style="font-size:12px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">New yard Heap-1 (4,468 MT); Heap-2 (680 MT); Gypsum powder (150 MT)</td>
           <td class="tr" style="font-weight:700;color:var(--navy)">5,351.4 MT</td>
-          <td class="tc"><span style="color:#EF4444;font-size:12px">Sys:4,889 Δ+462</span></td>
+          <td class="tc"><span style="color:var(--red-ink);font-size:12px">Sys:4,889 Δ+462</span></td>
         </tr>
 </tbody>
     </table>
@@ -2030,7 +2031,7 @@
   <div class="mis-sec-hdr">
     <i data-lucide="layers" class="mis-sec-icon"></i>
     <h3 class="mis-sec-title">Physical Stock Audit — 09 Jul 2025</h3>
-    <span style="margin-left:8px;font-size:12px;color:#D97706;font-weight:600">⚑ Data is 11 months old</span>
+    <span style="margin-left:8px;font-size:12px;color:var(--amber-ink);font-weight:600">⚑ Data is 11 months old</span>
     <span style="margin-left:auto;font-size:12px;font-weight:700;color:var(--navy)">Grand Total: 35,126.6 MT</span>
   </div>
   <div class="mis-table-wrap">
@@ -2046,19 +2047,19 @@
           <td><strong>Clinker</strong></td>
           <td style="font-size:12px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Clinker Stock Pile (1,411 MT)</td>
           <td class="tr" style="font-weight:700;color:var(--navy)">1,695.2 MT</td>
-          <td class="tc"><span style="color:#EF4444;font-size:12px">Sys:1,122 Δ+573</span></td>
+          <td class="tc"><span style="color:var(--red-ink);font-size:12px">Sys:1,122 Δ+573</span></td>
         </tr>
 <tr>
           <td><strong>Coal</strong></td>
           <td style="font-size:12px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">Open Yard-Heap-1 (2,867 MT); Open Yard-Heap-2 (399 MT); Open Yard-Heap-3 (5,998 MT); Open Yard-Heap-4 (259 MT); Open Yard-Heap-5 (346 MT); Coal Shed Heap-1 (8,036 MT); Coal Shed Heap-1 (2,016 MT)</td>
           <td class="tr" style="font-weight:700;color:var(--navy)">19,971.0 MT</td>
-          <td class="tc"><span style="color:#EF4444;font-size:12px">Sys:18,774 Δ+1,197</span></td>
+          <td class="tc"><span style="color:var(--red-ink);font-size:12px">Sys:18,774 Δ+1,197</span></td>
         </tr>
 <tr>
           <td><strong>Gypsum</strong></td>
           <td style="font-size:12px;color:var(--text-muted);max-width:250px;white-space:normal;line-height:1.4">New yard Heap-1 (5,601 MT); Gypsum powder (1,200 MT)</td>
           <td class="tr" style="font-weight:700;color:var(--navy)">6,836.4 MT</td>
-          <td class="tc"><span style="color:#EF4444;font-size:12px">Sys:5,701 Δ+1,136</span></td>
+          <td class="tc"><span style="color:var(--red-ink);font-size:12px">Sys:5,701 Δ+1,136</span></td>
         </tr>
 </tbody>
     </table>
@@ -2468,39 +2469,39 @@
       <td>Oct-2025</td>
       <td class="tc">560</td>
       <td class="tc">560</td>
-      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:var(--red-ink)">—</td>
       <td class="tc" style="color:#F59E0B">1</td>
-      <td class="tc" style="color:#94A3B8">—</td>
-      <td class="tc"><span style="color:#EF4444;font-weight:700">1 ⚠</span></td>
+      <td class="tc" style="color:var(--text-muted)">—</td>
+      <td class="tc"><span style="color:var(--red-ink);font-weight:700">1 ⚠</span></td>
       <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
 <tr style="background:#FFF7ED">
       <td>Nov-2025</td>
       <td class="tc">560</td>
       <td class="tc">560</td>
-      <td class="tc" style="color:#EF4444">2</td>
+      <td class="tc" style="color:var(--red-ink)">2</td>
       <td class="tc" style="color:#F59E0B">—</td>
-      <td class="tc" style="color:#94A3B8">—</td>
-      <td class="tc"><span style="color:#EF4444;font-weight:700">2 ⚠</span></td>
+      <td class="tc" style="color:var(--text-muted)">—</td>
+      <td class="tc"><span style="color:var(--red-ink);font-weight:700">2 ⚠</span></td>
       <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
 <tr style="background:#FFF7ED">
       <td>Dec-2025</td>
       <td class="tc">560</td>
       <td class="tc">560</td>
-      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:var(--red-ink)">—</td>
       <td class="tc" style="color:#F59E0B">2</td>
-      <td class="tc" style="color:#94A3B8">—</td>
-      <td class="tc"><span style="color:#EF4444;font-weight:700">2 ⚠</span></td>
+      <td class="tc" style="color:var(--text-muted)">—</td>
+      <td class="tc"><span style="color:var(--red-ink);font-weight:700">2 ⚠</span></td>
       <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
 <tr>
       <td>Jan-2026</td>
       <td class="tc">560</td>
       <td class="tc">560</td>
-      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:var(--red-ink)">—</td>
       <td class="tc" style="color:#F59E0B">—</td>
-      <td class="tc" style="color:#94A3B8">—</td>
+      <td class="tc" style="color:var(--text-muted)">—</td>
       <td class="tc"><span style="color:var(--text-muted)">0</span></td>
       <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
@@ -2508,19 +2509,19 @@
       <td>Feb-2026</td>
       <td class="tc">560</td>
       <td class="tc">560</td>
-      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:var(--red-ink)">—</td>
       <td class="tc" style="color:#F59E0B">—</td>
-      <td class="tc" style="color:#94A3B8">1</td>
-      <td class="tc"><span style="color:#EF4444;font-weight:700">1 ⚠</span></td>
+      <td class="tc" style="color:var(--text-muted)">1</td>
+      <td class="tc"><span style="color:var(--red-ink);font-weight:700">1 ⚠</span></td>
       <td style="font-size:12px;color:var(--text-muted)">BOLT HT ALLEN HEAD M20 X 50MM FULL THREAD GRADE 8.8 (3 Nos Shorte</td>
     </tr>
 <tr>
       <td>Mar-2026</td>
       <td class="tc">560</td>
       <td class="tc">—</td>
-      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:var(--red-ink)">—</td>
       <td class="tc" style="color:#F59E0B">—</td>
-      <td class="tc" style="color:#94A3B8">—</td>
+      <td class="tc" style="color:var(--text-muted)">—</td>
       <td class="tc"><span style="color:var(--text-muted)">0</span></td>
       <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
@@ -2528,9 +2529,9 @@
       <td>Apr-2026</td>
       <td class="tc">558</td>
       <td class="tc">—</td>
-      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:var(--red-ink)">—</td>
       <td class="tc" style="color:#F59E0B">—</td>
-      <td class="tc" style="color:#94A3B8">—</td>
+      <td class="tc" style="color:var(--text-muted)">—</td>
       <td class="tc"><span style="color:var(--text-muted)">0</span></td>
       <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
@@ -2538,9 +2539,9 @@
       <td>May-2026</td>
       <td class="tc">558</td>
       <td class="tc">—</td>
-      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:var(--red-ink)">—</td>
       <td class="tc" style="color:#F59E0B">—</td>
-      <td class="tc" style="color:#94A3B8">—</td>
+      <td class="tc" style="color:var(--text-muted)">—</td>
       <td class="tc"><span style="color:var(--text-muted)">0</span></td>
       <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
@@ -2548,9 +2549,9 @@
       <td>Jun-2026</td>
       <td class="tc">557</td>
       <td class="tc">—</td>
-      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:var(--red-ink)">—</td>
       <td class="tc" style="color:#F59E0B">—</td>
-      <td class="tc" style="color:#94A3B8">—</td>
+      <td class="tc" style="color:var(--text-muted)">—</td>
       <td class="tc"><span style="color:var(--text-muted)">0</span></td>
       <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
@@ -2558,9 +2559,9 @@
       <td>Jul-2026</td>
       <td class="tc">557</td>
       <td class="tc">—</td>
-      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:var(--red-ink)">—</td>
       <td class="tc" style="color:#F59E0B">—</td>
-      <td class="tc" style="color:#94A3B8">—</td>
+      <td class="tc" style="color:var(--text-muted)">—</td>
       <td class="tc"><span style="color:var(--text-muted)">0</span></td>
       <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
@@ -2568,9 +2569,9 @@
       <td>Aug-2026</td>
       <td class="tc">557</td>
       <td class="tc">—</td>
-      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:var(--red-ink)">—</td>
       <td class="tc" style="color:#F59E0B">—</td>
-      <td class="tc" style="color:#94A3B8">—</td>
+      <td class="tc" style="color:var(--text-muted)">—</td>
       <td class="tc"><span style="color:var(--text-muted)">0</span></td>
       <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
@@ -2578,9 +2579,9 @@
       <td>Sep-2026</td>
       <td class="tc">557</td>
       <td class="tc">—</td>
-      <td class="tc" style="color:#EF4444">—</td>
+      <td class="tc" style="color:var(--red-ink)">—</td>
       <td class="tc" style="color:#F59E0B">—</td>
-      <td class="tc" style="color:#94A3B8">—</td>
+      <td class="tc" style="color:var(--text-muted)">—</td>
       <td class="tc"><span style="color:var(--text-muted)">0</span></td>
       <td style="font-size:12px;color:var(--text-muted)"></td>
     </tr>
@@ -2597,14 +2598,14 @@
   <div class="hr-panel" id="store-amc">
     <div class="mis-kv-strip" style="margin-bottom:16px">
       <div class="mis-kv"><div class="mis-kv-val">13</div><div class="mis-kv-lbl">Total AMC Contracts</div></div>
-      <div class="mis-kv"><div class="mis-kv-val" style="color:#10B981">6</div><div class="mis-kv-lbl">Active</div></div>
-      <div class="mis-kv"><div class="mis-kv-val" style="color:#D97706">1</div><div class="mis-kv-lbl">Expiring Soon</div></div>
-      <div class="mis-kv"><div class="mis-kv-val" style="color:#EF4444">6</div><div class="mis-kv-lbl">Expired</div></div>
+      <div class="mis-kv"><div class="mis-kv-val" style="color:var(--green-ink)">6</div><div class="mis-kv-lbl">Active</div></div>
+      <div class="mis-kv"><div class="mis-kv-val" style="color:var(--amber-ink)">1</div><div class="mis-kv-lbl">Expiring Soon</div></div>
+      <div class="mis-kv"><div class="mis-kv-val" style="color:var(--red-ink)">6</div><div class="mis-kv-lbl">Expired</div></div>
     </div>
     <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:12px 18px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
-      <i data-lucide="alert-triangle" style="width:16px;height:16px;color:#DC2626;flex-shrink:0"></i>
+      <i data-lucide="alert-triangle" style="width:16px;height:16px;color:var(--red-ink);flex-shrink:0"></i>
       <div>
-        <strong style="color:#DC2626;font-size:12px">6 AMC contracts have expired</strong>
+        <strong style="color:var(--red-ink);font-size:12px">6 AMC contracts have expired</strong>
         <span style="color:#7F1D1D;font-size:12px;margin-left:8px">— verify renewal status with respective departments before next service visit</span>
       </div>
     </div>
@@ -2812,7 +2813,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Export CSV
         </button>
-        <button class="mis-edit-btn" onclick="clearAuditLog()" title="Clear all logs" style="border-color:#FECACA;color:#DC2626">
+        <button class="mis-edit-btn" onclick="clearAuditLog()" title="Clear all logs" style="border-color:#FECACA;color:var(--red-ink)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
           Clear Log
         </button>
@@ -2944,7 +2945,7 @@ function renderEmployees(data) {
   if (!tbody) return;
   tbody.innerHTML = data.map(e => {
     const catBadge = e.c === 'EXPAT'
-      ? '<span class="mis-badge expired" style="background:#FEF2F2;color:#DC2626;border-color:#FECACA">Expat</span>'
+      ? '<span class="mis-badge expired" style="background:#FEF2F2;color:var(--red-ink);border-color:#FECACA">Expat</span>'
       : '<span class="mis-badge valid">Local</span>';
     return `<tr>
       <td style="color:var(--text-muted);font-size:12px">${e.e}</td>
