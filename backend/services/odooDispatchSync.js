@@ -39,13 +39,19 @@
   has no field for at all (e.g. dispatch_bag_* only covers 3 of the 5
   grades) — unmapped, never force-written to an invented key.
 
-  grade 'CEMENT B-M 42.5 N' -> '425nbm' confirmed 2026-09-09 from the
-  first production backfill (Jan–Mar 2026): 3 rows surfaced in the
-  'unmapped' log for March under 'Bulker' and '50 Kg Bag', the exact
-  channels dispatch_blk_425nbm/dispatch_reg_425nbm already existed for —
-  this is the '42.5N B-M' grade the header above previously said had
-  never been observed, just with 'B-M' and '42.5 N' in the opposite word
-  order from what was expected.
+  grade 'CEMENT B-M 42.5 N' — surfaced 2026-09-09 in production's first
+  historical backfill (3 March rows, unmapped). Briefly mapped to
+  dispatch_*_425nbm on the assumption it was the long-anticipated
+  '42.5N B-M' grade with its words reordered — WRONG, corrected the same
+  day: it's actually the Duramax 42 marketing name (confirmed against
+  services/sales.js's Odoo product catalogue — Duramax 42 = product code
+  FG005, whose real Odoo name is this exact string). dispatch-form.html
+  has no field for Duramax at all, so this stays deliberately UNMAPPED —
+  filing it under dispatch_*_425nbm would have meant real Duramax
+  tonnage silently misreported as 42.5N B-M, which is worse than an
+  honest "unmapped" bucket. Adding a Duramax column to the Dispatch
+  report is a real, separate ask — not done here without sign-off, since
+  it changes a form the plant actively fills in.
 */
 const db     = require('../db');
 const logger = require('./logger');
@@ -61,7 +67,7 @@ const GRADE_SUFFIX = {
   'CEMENT 42.5 N':     '425n',
   'CEMENT OPC 42.5 N': 'opc425n',
   'CEMENT 32.5':       '325n', // see header note — assumed, not confirmed
-  'CEMENT B-M 42.5 N': '425nbm', // see header note — confirmed 2026-09-09
+  // 'CEMENT B-M 42.5 N': Duramax 42 — no dispatch-form field exists yet, see header note
 };
 const OUT_OF_SCOPE_GRADES = new Set(['SCRAP STEEL']); // not a cement dispatch
 

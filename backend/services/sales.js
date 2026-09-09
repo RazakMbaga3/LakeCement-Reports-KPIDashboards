@@ -240,17 +240,18 @@ function _todayActualFromOrders(mtdValue, todayStr) {
    bug against this catalogue: FG003 and FG005 both contain "42.5" too,
    so their volumes were silently folding into the SUPER 42 bucket
    alongside FG001, overcounting it. Pinning SUPER 42 to the one
-   confirmed code (FG001) instead — FG003/FG005 now correctly fall
-   through to the "Unmatched product" bucket until Sales/marketing
-   confirms which one is DURAMAX 42 (a marketing name that appears in
-   neither product's actual Odoo name, so no string match will ever
-   find it — needs the product code, not a name guess). "DURAMAX" and
-   "OPC"/"PREMIUM" checks are kept since they're literal, unambiguous
-   substrings of the real names where they apply (only FG004 contains
-   "OPC" — no false-positive risk like the 42.5 case). */
+   confirmed code (FG001) instead — FG003 correctly falls through to the
+   "Unmatched product" bucket until its own identity is confirmed.
+   FG005's identity WAS confirmed 2026-09-09: it's the Duramax 42 marketing
+   name, which (as already suspected here) appears nowhere in FG005's
+   actual Odoo name "CEMENT B-M 42.5 N" — a plain "DURAMAX" substring
+   check could never have found it, so FG005 is pinned by product code
+   below, the same way FG001 is. "OPC"/"PREMIUM" checks are kept as
+   literal, unambiguous substrings of the real names where they apply
+   (only FG004 contains "OPC" — no false-positive risk like the 42.5 case). */
 function _matchGrade(productName) {
   const n = (productName || '').toUpperCase();
-  if (n.includes('DURAMAX')) return 'duramax42';
+  if (n.includes('[FG005]')) return 'duramax42'; // CEMENT B-M 42.5 N — confirmed 2026-09-09
   if (n.includes('OPC') || n.includes('PREMIUM')) return 'premiumopc';
   if (n.includes('32.5')) return 'max32';
   if (n.includes('[FG001]')) return 'super42';
