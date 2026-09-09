@@ -31,14 +31,21 @@
              byte-exact confirmed match — flag to the Odoo/quality team
              if this ever needs correcting.
 
-  '42.5N B-M' (dispatch_reg_425nbm et al) and a distinct 'Big Bag' channel
-  (dispatch_bag_*) have never appeared in any Odoo sample pulled so far —
-  deliberately NOT mapped by guesswork. If either value shows up in a
-  future pull it lands in the "unmapped" bucket below (logged with a
-  sample) rather than being silently dropped or filed under the wrong key.
-  Same for any channel×grade combination this form has no field for at
-  all (e.g. dispatch_bag_* only covers 3 of the 5 grades) — unmapped,
-  never force-written to an invented key.
+  A distinct 'Big Bag' channel (dispatch_bag_*) has never appeared in any
+  Odoo sample pulled so far — deliberately NOT mapped by guesswork. If it
+  shows up in a future pull it lands in the "unmapped" bucket below
+  (logged with a sample) rather than being silently dropped or filed
+  under the wrong key. Same for any channel×grade combination this form
+  has no field for at all (e.g. dispatch_bag_* only covers 3 of the 5
+  grades) — unmapped, never force-written to an invented key.
+
+  grade 'CEMENT B-M 42.5 N' -> '425nbm' confirmed 2026-09-09 from the
+  first production backfill (Jan–Mar 2026): 3 rows surfaced in the
+  'unmapped' log for March under 'Bulker' and '50 Kg Bag', the exact
+  channels dispatch_blk_425nbm/dispatch_reg_425nbm already existed for —
+  this is the '42.5N B-M' grade the header above previously said had
+  never been observed, just with 'B-M' and '42.5 N' in the opposite word
+  order from what was expected.
 */
 const db     = require('../db');
 const logger = require('./logger');
@@ -54,7 +61,7 @@ const GRADE_SUFFIX = {
   'CEMENT 42.5 N':     '425n',
   'CEMENT OPC 42.5 N': 'opc425n',
   'CEMENT 32.5':       '325n', // see header note — assumed, not confirmed
-  // 'CEMENT 42.5 N B-M': '425nbm', -- not yet observed from Odoo
+  'CEMENT B-M 42.5 N': '425nbm', // see header note — confirmed 2026-09-09
 };
 const OUT_OF_SCOPE_GRADES = new Set(['SCRAP STEEL']); // not a cement dispatch
 
