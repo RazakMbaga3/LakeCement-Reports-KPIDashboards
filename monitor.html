@@ -29,6 +29,15 @@
   .tag { font-size:12px; font-weight:700; padding:2px 7px; border-radius:3px; }
   .t-ok { background:#BBF7D0; color:#14532D; } .t-warn { background:#FEF3C7; color:#92400E; } .t-bad { background:#FECACA; color:#7F1D1D; }
   .empty { padding:20px; text-align:center; color:var(--text-muted); font-size:12px; }
+  .pull-box { padding:14px 16px; }
+  .pull-note { font-size:12px; color:var(--text-muted); margin-bottom:12px; line-height:1.5; }
+  .pull-row { display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; }
+  .pull-row label { display:flex; flex-direction:column; gap:4px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#64748B; }
+  .pull-row select, .pull-row input[type="date"] { border:1.5px solid #DDE3EC; border-radius:7px; padding:8px 10px; font:600 13px 'Inter',sans-serif; color:#173158; }
+  .pull-check { flex-direction:row !important; align-items:center; gap:7px !important; font-weight:600 !important; text-transform:none !important; letter-spacing:0 !important; padding-bottom:9px; }
+  .pull-row .btn { margin-left:0; }
+  #pull-result { margin-top:12px; font-size:12px; }
+  #pull-result .mono { display:block; white-space:pre-wrap; background:#F7F8FA; border:1px solid #EEF2F7; border-radius:7px; padding:10px 12px; margin-top:6px; }
 </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="design-system.css?v=1" />
@@ -54,6 +63,33 @@
     <div class="chip"><div class="lbl">Backup</div><div class="val" id="c-backup">…</div></div>
     <div class="chip"><div class="lbl">Uptime</div><div class="val" id="c-uptime">…</div></div>
     <button class="btn" onclick="runWatchdog()" id="wd-btn">▶ Run checks now</button>
+  </div>
+
+  <div class="card">
+    <h2>Odoo historical data pull</h2>
+    <div class="pull-box">
+      <p class="pull-note">
+        Pulls an explicit date range from Odoo right now — for backfilling a period the daily
+        sync's 5-day rolling window never reaches, without SSH access to the server.
+        Max 31 days per run (Odoo truncates larger ranges silently).
+      </p>
+      <div class="pull-row">
+        <label>Source
+          <select id="pull-target">
+            <option value="mining">Mining (Quarry weighbridge tickets)</option>
+            <option value="dispatch">Dispatch (daily summary)</option>
+          </select>
+        </label>
+        <label>From <input type="date" id="pull-from"></label>
+        <label>To <input type="date" id="pull-to"></label>
+        <label class="pull-check" id="pull-overwrite-wrap">
+          <input type="checkbox" id="pull-overwrite">
+          Replace Excel-uploaded dates in this range
+        </label>
+        <button class="btn" onclick="runOdooPull()" id="pull-btn">▶ Run pull</button>
+      </div>
+      <div id="pull-result"></div>
+    </div>
   </div>
 
   <div class="card"><h2>Alerts (fired by the watchdog)</h2><div id="t-alerts"><div class="empty">Loading…</div></div></div>
@@ -147,6 +183,49 @@
     btn.disabled = false; btn.textContent = '▶ Run checks now';
     load();
   }
+
+  async function runOdooPull() {
+    const btn = document.getElementById('pull-btn');
+    const box = document.getElementById('pull-result');
+    const pull = document.getElementById('pull-target').value;
+    const from = document.getElementById('pull-from').value;
+    const to   = document.getElementById('pull-to').value;
+    const overwriteExcelDates = document.getElementById('pull-overwrite').checked;
+
+    if (!from || !to) { box.innerHTML = '<div class="mono">Pick both a From and a To date.</div>'; return; }
+
+    btn.disabled = true; btn.textContent = 'Pulling…';
+    box.innerHTML = '<div class="mono">Requesting ' + esc(from) + ' → ' + esc(to) + ' from Odoo — a month of mining data takes around 10s, dispatch is faster…</div>';
+    try {
+      const res = await fetch(API + '/monitor/odoo/pull', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
+        body: JSON.stringify({ pull, from, to, overwriteExcelDates }),
+      });
+      const body = await res.json();
+      if (!res.ok || body.ok === false) {
+        box.innerHTML = '<div class="mono" style="color:#7F1D1D">' + esc(body.error || ('HTTP ' + res.status)) + '</div>';
+      } else {
+        box.innerHTML = '<div class="mono">' + esc(JSON.stringify(body, null, 2)) + '</div>';
+      }
+    } catch (e) {
+      box.innerHTML = '<div class="mono" style="color:#7F1D1D">Request failed: ' + esc(e.message) + '</div>';
+    }
+    btn.disabled = false; btn.textContent = '▶ Run pull';
+  }
+
+  (function () {
+    // The overwrite-Excel checkbox only means anything for the mining
+    // pull (dispatch has no Excel-source concept) — hide it otherwise so
+    // it can't be mistaken for something that also applies to dispatch.
+    const targetSel = document.getElementById('pull-target');
+    const overwriteWrap = document.getElementById('pull-overwrite-wrap');
+    function syncOverwriteVisibility() {
+      overwriteWrap.style.display = targetSel.value === 'mining' ? '' : 'none';
+    }
+    targetSel.addEventListener('change', syncOverwriteVisibility);
+    syncOverwriteVisibility();
+  })();
 
   load();
   setInterval(load, 60000);

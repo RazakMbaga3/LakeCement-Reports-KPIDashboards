@@ -8,6 +8,9 @@
                                      check a specific day (admin/md/it)
   GET  /api/monitor/odoo/test      → Odoo connectivity check — version +
                                      login, no data pulled (admin/md/it)
+  POST /api/monitor/odoo/pull      → run a historical dispatch/mining pull for
+                                     an explicit date range right now, from
+                                     the browser (admin/md/it) — see below
   POST /api/client-errors          → browser error reports (rate-limited in
                                      server.js; token optional — login page
                                      errors matter too)
@@ -24,6 +27,8 @@ const { deepHealth }  = require('../services/health');
 const { runWatchdog } = require('../services/watchdog');
 const odoo    = require('../services/odooClient');
 const metrics = require('../services/metrics');
+const { pullDispatchDailySummary } = require('../services/odooDispatchSync');
+const { pullMiningTickets }        = require('../services/odooMiningSync');
 
 const MONITOR_ROLES = ['admin', 'md', 'it'];
 
@@ -84,6 +89,53 @@ monitorRouter.get('/odoo/test', requireAuth, requireRole(...MONITOR_ROLES), asyn
     res.status(503).json({ connected: false, error: err.message });
   }
 });
+
+/* Historical dispatch/mining pull, triggered from the browser instead of
+   SSHing into the server to run scripts/odoo-{dispatch,mining}-pull.js —
+   for a deployment where the person who needs the data doesn't hold
+   droplet access, this IS the way to backfill a date range. Same
+   underlying pull functions as those scripts and as odooSync.js's daily
+   cron; this route only supplies an explicit range on demand.
+
+   Capped at 31 days per call: both endpoints have no pagination and can
+   return truncated JSON on large ranges (see odooMiningClient.js /
+   odooDashboardClient.js headers) — better to force month-sized requests
+   than let one call silently lose data mid-response. */
+const MAX_PULL_DAYS = 31;
+
+monitorRouter.post('/odoo/pull',
+  requireAuth, requireRole(...MONITOR_ROLES),
+  validate(z.object({
+    pull: z.enum(['dispatch', 'mining']),
+    from: zDate,
+    to:   zDate,
+    overwriteExcelDates: z.boolean().optional().default(false), // mining only; ignored for dispatch
+  }), 'body'),
+  async (req, res, next) => {
+    try {
+      const { pull, from, to, overwriteExcelDates } = req.validated.body;
+      if (from > to) {
+        return res.status(400).json({ error: `from (${from}) is after to (${to}).` });
+      }
+      const days = (new Date(to) - new Date(from)) / 86400000 + 1;
+      if (days > MAX_PULL_DAYS) {
+        return res.status(400).json({
+          error: `Range is ${days} days — pull ${MAX_PULL_DAYS} days (about a month) or fewer at a time, `
+               + 'to stay clear of Odoo\'s truncation limit on large ranges.',
+        });
+      }
+
+      const result = pull === 'mining'
+        ? await pullMiningTickets(from, to, { overwriteExcelDates })
+        : await pullDispatchDailySummary(from, to);
+
+      res.json({ ok: true, pull, ...result });
+    } catch (err) {
+      // Odoo unreachable/timeout/truncated — a 502 (upstream failure), not
+      // a 500: our code did its job, Odoo's response is what fell over.
+      res.status(502).json({ ok: false, error: err.message });
+    }
+  });
 
 /* ── /api/client-errors ──────────────────────────────────────── */
 const clientErrorsRouter = express.Router();
