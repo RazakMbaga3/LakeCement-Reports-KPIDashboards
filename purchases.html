@@ -18,7 +18,7 @@
     .in-bar-inner { display: flex; align-items: center; gap: 14px; padding: 10px 28px; flex-wrap: wrap; }
     .in-lbl { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); }
     .in-input {
-      padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border);
+      padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border);
       background: var(--off-white); font-family: var(--font); font-size: 12px; font-weight: 600;
       color: var(--navy); cursor: pointer;
     }
@@ -26,7 +26,7 @@
     .in-section-hdr { display: flex; align-items: center; gap: 8px; margin: 24px 0 12px; }
     .in-section-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--navy); }
     .in-section-sub { font-size: 12px; color: var(--text-muted); font-weight: 500; }
-    .in-card { background: white; border: 1.5px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 16px; }
+    .in-card { background: white; border: 1.5px solid var(--border); border-radius: 12px; padding: 16px 16px; margin-bottom: 16px; }
     .in-chart-wrap { height: 260px; }
     .in-empty { text-align: center; padding: 30px 20px; color: var(--text-muted); font-size: 12px; }
 
@@ -49,12 +49,12 @@
     /* ── Stores / Inventory ─────────────────────────────────────── */
     .st-divider {
       display: flex; align-items: center; gap: 10px;
-      margin: 34px 0 4px; padding-top: 22px; border-top: 2px solid var(--border);
+      margin: 32px 0 4px; padding-top: 20px; border-top: 2px solid var(--border);
     }
     .st-divider-title { font-size: 14px; font-weight: 800; color: var(--navy); letter-spacing: -.2px; }
     .st-chip {
       font-size: 12px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;
-      padding: 3px 9px; border-radius: 10px; background: var(--green-bg); color: var(--green-ink);
+      padding: 3px 8px; border-radius: 10px; background: var(--green-bg); color: var(--green-ink);
     }
     .st-chip.warn { background: #FFF3E0; color: var(--orange-ink); }
 
@@ -63,19 +63,19 @@
     @media (max-width: 1100px) { .st-cat-row { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width: 700px)  { .st-cat-row { grid-template-columns: repeat(2, 1fr); } }
     .st-cat {
-      border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 13px;
+      border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 12px;
       border-left-width: 4px; background: white;
     }
     .st-cat-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); }
     .st-cat-val { font-size: 20px; font-weight: 800; color: var(--navy); line-height: 1.15; margin-top: 6px; }
     .st-cat-unit { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-left: 3px; }
-    .st-cat-meta { font-size: 12px; color: var(--text-muted); margin-top: 5px; font-weight: 500; }
+    .st-cat-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
 
     /* Two-up layout for status + department tables */
     .st-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 900px) { .st-two { grid-template-columns: 1fr; } }
 
-    .st-donut-wrap { display: flex; align-items: center; gap: 18px; }
+    .st-donut-wrap { display: flex; align-items: center; gap: 16px; }
     .st-donut { width: 150px; height: 150px; flex: none; position: relative; }
     .st-donut-center {
       position: absolute; inset: 0; display: flex; flex-direction: column;
@@ -92,10 +92,10 @@
     .st-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
     .st-tbl th {
       font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px;
-      color: var(--text-muted); text-align: right; padding: 7px 10px; border-bottom: 1.5px solid var(--border);
+      color: var(--text-muted); text-align: right; padding: 8px 10px; border-bottom: 1.5px solid var(--border);
     }
     .st-tbl th:first-child, .st-tbl td:first-child { text-align: left; }
-    .st-tbl td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--border); }
+    .st-tbl td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--border); }
     .st-tbl td:first-child { font-weight: 600; color: var(--navy); }
     .st-tbl tr:last-child td { border-bottom: none; }
     .st-tbl .st-short { color: var(--red, #C62828); font-weight: 800; }
@@ -109,19 +109,19 @@
     @media (max-width: 1100px) { .st-act-row { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width: 700px)  { .st-act-row { grid-template-columns: repeat(2, 1fr); } }
     .st-act {
-      border: 1.5px solid var(--border); border-radius: 10px; padding: 11px 12px; background: white; text-align: center;
+      border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 12px; background: white; text-align: center;
     }
     .st-act.pend { border-style: dashed; background: var(--off-white); }
     .st-act-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; color: var(--text-muted); }
-    .st-act-val { font-size: 17px; font-weight: 800; color: var(--navy); margin-top: 5px; }
+    .st-act-val { font-size: 17px; font-weight: 800; color: var(--navy); margin-top: 4px; }
     .st-act.pend .st-act-val { color: var(--text-muted); }
     .st-act-unit { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-left: 2px; }
 
     /* Pending (Odoo-sourced, not wired) tiles */
     .st-pending-note {
-      display: flex; gap: 9px; align-items: flex-start;
+      display: flex; gap: 8px; align-items: flex-start;
       border: 1.5px dashed var(--border); border-radius: 10px;
-      padding: 11px 13px; background: var(--off-white); margin-bottom: 10px;
+      padding: 12px 12px; background: var(--off-white); margin-bottom: 10px;
     }
     .st-pending-note:last-child { margin-bottom: 0; }
     .st-pending-title { font-size: 12px; font-weight: 800; color: var(--navy); }
@@ -556,7 +556,7 @@
         '<span class="st-legend-name">' + p.name + '</span>' +
         '<span class="st-legend-val">' + p.val + '</span></div>';
     }).join('') +
-      '<div class="st-legend-row" style="border-top:1px solid var(--border);margin-top:5px;padding-top:6px">' +
+      '<div class="st-legend-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:6px">' +
       '<span class="st-legend-name st-muted" style="font-weight:500">No level set</span>' +
       '<span class="st-legend-val st-muted">' + st.untracked_count + '</span></div>';
 

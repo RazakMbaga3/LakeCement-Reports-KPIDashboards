@@ -26,7 +26,7 @@
     .portal-greeting {
       background: white;
       border-bottom: 1px solid var(--border, #E2E8F0);
-      padding: 18px 28px;
+      padding: 16px 28px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -51,7 +51,7 @@
       font-weight: 600;
       color: var(--text-muted, #64748B);
       white-space: nowrap;
-      padding: 5px 13px;
+      padding: 4px 12px;
       background: var(--off-white, #F8FAFC);
       border: 1px solid var(--border, #E2E8F0);
       border-radius: 20px;
@@ -67,12 +67,12 @@
     }
 
     /* ── Section ─────────────────────────────────────── */
-    .portal-section { margin-bottom: 34px; }
+    .portal-section { margin-bottom: 32px; }
     .portal-section-hdr {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 13px;
+      margin-bottom: 12px;
     }
     .psh-dot {
       width: 8px; height: 8px;
@@ -93,14 +93,14 @@
       background: var(--off-white, #F8FAFC);
       border: 1px solid var(--border, #E2E8F0);
       border-radius: 10px;
-      padding: 1px 7px;
+      padding: 1px 8px;
     }
 
     /* ── Card grid ───────────────────────────────────── */
     .portal-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 18px;
+      gap: 16px;
     }
 
     /* ── Card ─────────────────────────────────────────── */
@@ -194,7 +194,7 @@
       html { height: 100%; }
       body { min-height: 100vh; height: auto; }
       .portal-greeting { padding: 10px 28px; }
-      .portal-footer   { padding: 7px 24px;  }
+      .portal-footer   { padding: 8px 24px;  }
       .portal-main {
         flex: 1; min-height: 0; overflow-y: auto; padding: 14px 28px 0;
       }
@@ -205,12 +205,12 @@
          own height meant a one-line title and a two-line title started
          at different heights in the same row, so a grid of cards read
          as ragged even though the cards themselves were equal. */
-      .pcard { flex-direction: row; align-items: stretch; min-height: 84px; gap: 18px; padding: 18px 22px; }
+      .pcard { flex-direction: row; align-items: stretch; min-height: 84px; gap: 16px; padding: 16px 20px; }
       .pcard-icon   { padding: 0; flex-shrink: 0; }
       .pcard-body   { padding: 0; flex: 1; }
       /* Two lines reserved so the descriptions below them start on one
          line across the row too. */
-      .pcard-title  { font-size: 13.5px; margin-bottom: 5px; min-height: 37px; }
+      .pcard-title  { font-size: 13.5px; margin-bottom: 4px; min-height: 37px; }
       .pcard-sub    { font-size: 12px; line-height: 1.5; }
       .pcard-footer { padding: 0; margin-top: 0; flex-shrink: 0; gap: 10px; align-items: center; }
     }

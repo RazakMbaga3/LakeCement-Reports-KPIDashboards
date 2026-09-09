@@ -231,7 +231,13 @@ var LCL_A11Y = (function () {
       var cs = getComputedStyle(w);
       var scrolls = /(auto|scroll)/.test(cs.overflowX) || /(auto|scroll)/.test(cs.overflowY);
       if (!scrolls) return;
-      if (w.scrollWidth <= w.clientWidth + 4 && w.scrollHeight <= w.clientHeight + 4) return;
+      /* 1px, not 4. axe flags a region the moment it actually scrolls, so
+         a 4px grace band left a window — a table overflowing its wrapper
+         by two or three pixels was unreachable by keyboard and reported
+         as such, while this pass walked past it. Any padding change
+         anywhere can slide a table into that window, which is how it was
+         found. 1px absorbs sub-pixel rounding and nothing else. */
+      if (w.scrollWidth <= w.clientWidth + 1 && w.scrollHeight <= w.clientHeight + 1) return;
       /* Disabled controls are not focusable, so a wrapper holding only
          disabled inputs — every form a role does not own — is still
          unreachable. This is what axe was flagging and the first

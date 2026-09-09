@@ -24,8 +24,8 @@
       box-shadow:var(--shadow-sm);
     }
     .mis-tab {
-      display:flex; align-items:center; gap:7px;
-      padding:13px 22px; font-size:12px; font-weight:700;
+      display:flex; align-items:center; gap:8px;
+      padding:12px 20px; font-size:12px; font-weight:700;
       color:var(--text-muted); border:none; background:transparent;
       cursor:pointer; border-bottom:3px solid transparent;
       transition:all .15s; white-space:nowrap; font-family:var(--font);
@@ -55,7 +55,7 @@
     }
     .mis-sec-hdr {
       display:flex; align-items:center; gap:10px;
-      padding:14px 18px; border-bottom:1px solid var(--border);
+      padding:14px 16px; border-bottom:1px solid var(--border);
       background:linear-gradient(135deg,#F8FAFC 0%,white 100%);
     }
     .mis-sec-icon { color:var(--orange-ink); width:16px; height:16px; flex-shrink:0; }
@@ -64,7 +64,7 @@
     /* Tables */
     .mis-table { width:100%; border-collapse:collapse; font-size:12px; }
     .mis-table thead th {
-      background:#F8FAFC; padding:9px 14px;
+      background:#F8FAFC; padding:8px 14px;
       font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.6px;
       color:var(--text-muted); border-bottom:1px solid var(--border); text-align:left;
     }
@@ -81,7 +81,7 @@
 
     /* Badges */
     .mis-badge {
-      display:inline-block; padding:3px 9px; border-radius:10px;
+      display:inline-block; padding:3px 8px; border-radius:10px;
       font-size:12px; font-weight:700;
     }
     .mis-badge.valid   { background:#ECFDF5; color:#059669; border:1px solid #A7F3D0; }
@@ -107,7 +107,7 @@
     /* HR sub-tabs */
     .hr-subtabs {
       display:flex; gap:0; background:white; border:1px solid var(--border);
-      border-radius:10px; overflow:hidden; margin-bottom:18px;
+      border-radius:10px; overflow:hidden; margin-bottom:16px;
     }
     .hr-stab {
       flex:1; padding:10px 0; font-size:12px; font-weight:700;
@@ -147,7 +147,7 @@
     .tc-minor { font-weight:700; color:var(--navy); }
 
     .mis-edit-btn {
-      display:inline-flex; align-items:center; gap:5px;
+      display:inline-flex; align-items:center; gap:4px;
       padding:4px 12px; border-radius:6px; border:1.5px solid var(--border);
       background:white; font-family:var(--font); font-size:12px; font-weight:600;
       color:var(--text-muted); cursor:pointer; transition:all .15s;
@@ -311,13 +311,13 @@
         <i data-lucide="users" class="mis-sec-icon"></i>
         <h3 class="mis-sec-title">Employee Roster (277 employees)</h3>
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-          <input type="text" id="emp-search" placeholder="Search name, EmpNo, dept…" oninput="filterEmployees()" style="font-family:var(--font);font-size:12px;padding:5px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:220px" />
-          <select id="emp-filter-branch" onchange="filterEmployees()" style="font-family:var(--font);font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
+          <input type="text" id="emp-search" placeholder="Search name, EmpNo, dept…" oninput="filterEmployees()" style="font-family:var(--font);font-size:12px;padding:4px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:220px" />
+          <select id="emp-filter-branch" onchange="filterEmployees()" style="font-family:var(--font);font-size:12px;padding:4px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
             <option value="">All Locations</option>
             <option value="Kimbiji">Kimbiji</option>
             <option value="Head Office">Head Office</option>
           </select>
-          <select id="emp-filter-cat" onchange="filterEmployees()" style="font-family:var(--font);font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
+          <select id="emp-filter-cat" onchange="filterEmployees()" style="font-family:var(--font);font-size:12px;padding:4px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
             <option value="">Local &amp; Expat</option>
             <option value="LOCAL">Local Only</option>
             <option value="EXPAT">Expat Only</option>
@@ -467,7 +467,7 @@
         <h3 class="mis-sec-title">Corporate Social Responsibility — Project History (2011–2026)</h3>
         <span style="margin-left:auto;font-size:12px;color:var(--text-muted)">172 projects over 15 years</span>
       </div>
-      <div style="padding:12px 18px">
+      <div style="padding:12px 16px">
         
 <details class="csr-yr" open>
   <summary class="csr-yr-hdr">
@@ -888,7 +888,7 @@
           <i data-lucide="monitor" class="mis-sec-icon"></i>
           <h3 class="mis-sec-title">IT Equipment Summary</h3>
         </div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;padding:14px 18px">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;padding:14px 16px">
           <div class="mis-kv" style="flex:0 0 auto;min-width:110px">
             <div class="mis-kv-val" style="font-size:22px">237</div>
             <div class="mis-kv-lbl">Computers</div>
@@ -924,8 +924,8 @@
           <i data-lucide="laptop" class="mis-sec-icon"></i>
           <h3 class="mis-sec-title">Computer Register (237 devices)</h3>
           <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-            <input type="text" id="pc-search" placeholder="Search name, user, dept…" oninput="filterPCs()" style="font-family:var(--font);font-size:12px;padding:5px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:200px" />
-            <select id="pc-filter-loc" onchange="filterPCs()" style="font-family:var(--font);font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
+            <input type="text" id="pc-search" placeholder="Search name, user, dept…" oninput="filterPCs()" style="font-family:var(--font);font-size:12px;padding:4px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:200px" />
+            <select id="pc-filter-loc" onchange="filterPCs()" style="font-family:var(--font);font-size:12px;padding:4px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
               <option value="">All Locations</option>
               <option value="Head Office">Head Office</option>
               <option value="Factory / Kimbiji">Factory</option>
@@ -1087,14 +1087,14 @@
         <i data-lucide="truck" class="mis-sec-icon"></i>
         <h3 class="mis-sec-title">Fleet Register (144 vehicles)</h3>
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-          <select id="veh-filter-cat" onchange="filterVehicles()" style="font-family:var(--font);font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
+          <select id="veh-filter-cat" onchange="filterVehicles()" style="font-family:var(--font);font-size:12px;padding:4px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
             <option value="">All Categories</option>
             <option value="Passenger">Passenger</option>
             <option value="Plant">Plant</option>
             <option value="Mining">Mining</option>
             <option value="Logistics">Logistics</option>
           </select>
-          <input type="text" id="veh-search" placeholder="Search reg, make, type…" oninput="filterVehicles()" style="font-family:var(--font);font-size:12px;padding:5px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:190px" />
+          <input type="text" id="veh-search" placeholder="Search reg, make, type…" oninput="filterVehicles()" style="font-family:var(--font);font-size:12px;padding:4px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:190px" />
           <span id="veh-count-lbl" style="font-size:12px;color:var(--text-muted);white-space:nowrap"></span>
         </div>
       </div>
@@ -1434,8 +1434,8 @@
         <h3 class="mis-sec-title">Certificates &amp; Licenses Register</h3>
         <span id="cert-total-lbl" style="margin-left:6px;font-size:12px;color:var(--text-muted)">88 items</span>
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <input type="text" id="cert-search" placeholder="Search description, agency…" oninput="filterCerts()" style="font-family:var(--font);font-size:12px;padding:5px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:220px" />
-          <select id="cert-filter-status" onchange="filterCerts()" style="font-family:var(--font);font-size:12px;padding:5px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
+          <input type="text" id="cert-search" placeholder="Search description, agency…" oninput="filterCerts()" style="font-family:var(--font);font-size:12px;padding:4px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:220px" />
+          <select id="cert-filter-status" onchange="filterCerts()" style="font-family:var(--font);font-size:12px;padding:4px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
             <option value="">All Status</option>
             <option value="active">Active</option>
             <option value="expiring">Expiring</option>
@@ -2072,7 +2072,7 @@
 </div>
 
     <!-- Inventory closing values -->
-    <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:12px 18px;margin-bottom:14px;display:flex;align-items:center;gap:10px"><i data-lucide="upload" style="width:15px;height:15px;color:#3B82F6;flex-shrink:0"></i><span style="font-size:12px;color:#1E40AF"><strong>To update stock data:</strong> Replace the Excel file <code style="background:#DBEAFE;padding:1px 5px;border-radius:3px">M - 12 Stock Audit Report - Raw Materials.xlsx</code> and re-run the build script.</span></div>
+    <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px"><i data-lucide="upload" style="width:15px;height:15px;color:#3B82F6;flex-shrink:0"></i><span style="font-size:12px;color:#1E40AF"><strong>To update stock data:</strong> Replace the Excel file <code style="background:#DBEAFE;padding:1px 4px;border-radius:3px">M - 12 Stock Audit Report - Raw Materials.xlsx</code> and re-run the build script.</span></div>
 <div class="mis-section">
       <div class="mis-sec-hdr">
         <i data-lucide="database" class="mis-sec-icon"></i>
@@ -2445,18 +2445,18 @@
           <div class="mis-table-wrap" style="max-height:220px">
             <table class="mis-table">
               <thead><tr><th>Month</th><th>A-Class</th><th>B-Class</th><th>C-Class</th></tr></thead>
-              <tbody><tr><td>Oct-2025</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
-<tr><td>Nov-2025</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
-<tr><td>Dec-2025</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
-<tr style="font-weight:700;background:#F0F7FF"><td>Jan-2026</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
-<tr style="font-weight:700;background:#F0F7FF"><td>Feb-2026</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
-<tr style="font-weight:700;background:#F0F7FF"><td>Mar-2026</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/59</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/167</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/334</span></div></td></tr>
-<tr style="font-weight:700;background:#F0F7FF"><td>Apr-2026</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/167</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
-<tr style="font-weight:700;background:#F0F7FF"><td>May-2026</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/167</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
-<tr style="font-weight:700;background:#F0F7FF"><td>Jun-2026</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
-<tr style="font-weight:700;background:#F0F7FF"><td>Jul-2026</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
-<tr style="font-weight:700;background:#F0F7FF"><td>Aug-2026</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
-<tr style="font-weight:700;background:#F0F7FF"><td>Sep-2026</td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></div></td><td><div style="display:flex;align-items:center;gap:5px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
+              <tbody><tr><td>Oct-2025</td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
+<tr><td>Nov-2025</td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
+<tr><td>Dec-2025</td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Jan-2026</td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Feb-2026</td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">59/59</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">167/167</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:100%;background:#10B981"></div></div><span class="mis-bar-lbl">334/334</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Mar-2026</td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/59</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/167</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/334</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Apr-2026</td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/167</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>May-2026</td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/167</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Jun-2026</td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Jul-2026</td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Aug-2026</td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
+<tr style="font-weight:700;background:#F0F7FF"><td>Sep-2026</td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/58</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/166</span></div></td><td><div style="display:flex;align-items:center;gap:4px"><div class="mis-bar-wrap" style="width:60px"><div class="mis-bar-fill" style="width:0%;background:#E2E8F0"></div></div><span class="mis-bar-lbl">0/333</span></div></td></tr>
 </tbody>
             </table>
           </div>
@@ -2607,7 +2607,7 @@
       <div class="mis-kv"><div class="mis-kv-val" style="color:var(--amber-ink)">1</div><div class="mis-kv-lbl">Expiring Soon</div></div>
       <div class="mis-kv"><div class="mis-kv-val" style="color:var(--red-ink)">6</div><div class="mis-kv-lbl">Expired</div></div>
     </div>
-    <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:12px 18px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+    <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
       <i data-lucide="alert-triangle" style="width:16px;height:16px;color:var(--red-ink);flex-shrink:0"></i>
       <div>
         <strong style="color:var(--red-ink);font-size:12px">6 AMC contracts have expired</strong>
