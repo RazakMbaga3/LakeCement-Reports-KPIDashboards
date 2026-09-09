@@ -140,6 +140,11 @@
     .mis-bar-fill { height:100%; border-radius:3px; }
     .tc { text-align:center; }
     .tr { text-align:right; font-weight:600; }
+    /* A minority category, not a fault. The expat headcount column was
+       drawn in --red-ink on every row, which put a plant-wide alarm
+       colour on a neutral demographic fact; weight alone is enough to
+       let the column be picked out. */
+    .tc-minor { font-weight:700; color:var(--navy); }
 
     .mis-edit-btn {
       display:inline-flex; align-items:center; gap:5px;
@@ -198,8 +203,8 @@
   <!-- KV strip -->
   <div class="mis-kv-strip">
     <div class="mis-kv"><div class="mis-kv-val">277</div><div class="mis-kv-lbl">Total Employees</div><div class="mis-kv-sub">Kimbiji + Head Office</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--green-ink)">236</div><div class="mis-kv-lbl">Local</div><div class="mis-kv-sub">Tanzanian nationals</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--red-ink)">41</div><div class="mis-kv-lbl">Expat</div><div class="mis-kv-sub">International staff</div></div>
+    <div class="mis-kv"><div class="mis-kv-val">236</div><div class="mis-kv-lbl">Local</div><div class="mis-kv-sub">Tanzanian nationals</div></div>
+    <div class="mis-kv"><div class="mis-kv-val">41</div><div class="mis-kv-lbl">Expat</div><div class="mis-kv-sub">International staff</div></div>
     <div class="mis-kv"><div class="mis-kv-val">248</div><div class="mis-kv-lbl">Male</div></div>
     <div class="mis-kv"><div class="mis-kv-val">29</div><div class="mis-kv-lbl">Female</div></div>
     <div class="mis-kv"><div class="mis-kv-val">2</div><div class="mis-kv-lbl">Locations</div><div class="mis-kv-sub">Kimbiji &amp; Head Office</div></div>
@@ -231,24 +236,24 @@
             <thead>
               <tr><th>Department</th><th style="text-align:center">Total</th><th style="text-align:center">Local</th><th style="text-align:center">Expat</th><th style="text-align:center">Male</th><th style="text-align:center">Female</th><th style="text-align:center">Kimbiji</th><th style="text-align:center">Head Office</th></tr>
             </thead>
-            <tbody><tr><td>Accounts</td><td class="tc">8</td><td class="tc">6</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">2</span></td><td class="tc">5</td><td class="tc">3</td><td class="tc">4</td><td class="tc">4</td></tr>
+            <tbody><tr><td>Accounts</td><td class="tc">8</td><td class="tc">6</td><td class="tc"><span class="tc-minor">2</span></td><td class="tc">5</td><td class="tc">3</td><td class="tc">4</td><td class="tc">4</td></tr>
 <tr><td>Admin</td><td class="tc">3</td><td class="tc">3</td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc">0</td><td class="tc">3</td><td class="tc">0</td><td class="tc">3</td></tr>
-<tr><td>Captive Power Plant</td><td class="tc">33</td><td class="tc">27</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">6</span></td><td class="tc">32</td><td class="tc">1</td><td class="tc">33</td><td class="tc">0</td></tr>
+<tr><td>Captive Power Plant</td><td class="tc">33</td><td class="tc">27</td><td class="tc"><span class="tc-minor">6</span></td><td class="tc">32</td><td class="tc">1</td><td class="tc">33</td><td class="tc">0</td></tr>
 <tr><td>Civil</td><td class="tc">1</td><td class="tc">1</td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc">1</td><td class="tc">0</td><td class="tc">1</td><td class="tc">0</td></tr>
-<tr><td>Corporate</td><td class="tc">5</td><td class="tc">0</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">5</span></td><td class="tc">5</td><td class="tc">0</td><td class="tc">2</td><td class="tc">3</td></tr>
+<tr><td>Corporate</td><td class="tc">5</td><td class="tc">0</td><td class="tc"><span class="tc-minor">5</span></td><td class="tc">5</td><td class="tc">0</td><td class="tc">2</td><td class="tc">3</td></tr>
 <tr><td>Dispatch</td><td class="tc">22</td><td class="tc">22</td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc">16</td><td class="tc">6</td><td class="tc">22</td><td class="tc">0</td></tr>
-<tr><td>Electrical</td><td class="tc">15</td><td class="tc">13</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">2</span></td><td class="tc">15</td><td class="tc">0</td><td class="tc">15</td><td class="tc">0</td></tr>
+<tr><td>Electrical</td><td class="tc">15</td><td class="tc">13</td><td class="tc"><span class="tc-minor">2</span></td><td class="tc">15</td><td class="tc">0</td><td class="tc">15</td><td class="tc">0</td></tr>
 <tr><td>HR</td><td class="tc">15</td><td class="tc">15</td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc">7</td><td class="tc">8</td><td class="tc">15</td><td class="tc">0</td></tr>
-<tr><td>Instrumentation</td><td class="tc">18</td><td class="tc">14</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">4</span></td><td class="tc">18</td><td class="tc">0</td><td class="tc">18</td><td class="tc">0</td></tr>
-<tr><td>Logistic Division</td><td class="tc">29</td><td class="tc">28</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">1</span></td><td class="tc">29</td><td class="tc">0</td><td class="tc">29</td><td class="tc">0</td></tr>
-<tr><td>Mechanical</td><td class="tc">36</td><td class="tc">33</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">3</span></td><td class="tc">36</td><td class="tc">0</td><td class="tc">36</td><td class="tc">0</td></tr>
-<tr><td>Production</td><td class="tc">24</td><td class="tc">16</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">8</span></td><td class="tc">23</td><td class="tc">1</td><td class="tc">24</td><td class="tc">0</td></tr>
+<tr><td>Instrumentation</td><td class="tc">18</td><td class="tc">14</td><td class="tc"><span class="tc-minor">4</span></td><td class="tc">18</td><td class="tc">0</td><td class="tc">18</td><td class="tc">0</td></tr>
+<tr><td>Logistic Division</td><td class="tc">29</td><td class="tc">28</td><td class="tc"><span class="tc-minor">1</span></td><td class="tc">29</td><td class="tc">0</td><td class="tc">29</td><td class="tc">0</td></tr>
+<tr><td>Mechanical</td><td class="tc">36</td><td class="tc">33</td><td class="tc"><span class="tc-minor">3</span></td><td class="tc">36</td><td class="tc">0</td><td class="tc">36</td><td class="tc">0</td></tr>
+<tr><td>Production</td><td class="tc">24</td><td class="tc">16</td><td class="tc"><span class="tc-minor">8</span></td><td class="tc">23</td><td class="tc">1</td><td class="tc">24</td><td class="tc">0</td></tr>
 <tr><td>Project</td><td class="tc">1</td><td class="tc">1</td><td class="tc"><span style="color:var(--text-muted)">0</span></td><td class="tc">1</td><td class="tc">0</td><td class="tc">1</td><td class="tc">0</td></tr>
-<tr><td>Purchase</td><td class="tc">5</td><td class="tc">3</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">2</span></td><td class="tc">5</td><td class="tc">0</td><td class="tc">1</td><td class="tc">4</td></tr>
-<tr><td>Quality Control</td><td class="tc">12</td><td class="tc">11</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">1</span></td><td class="tc">10</td><td class="tc">2</td><td class="tc">12</td><td class="tc">0</td></tr>
-<tr><td>Quarrying</td><td class="tc">23</td><td class="tc">21</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">2</span></td><td class="tc">23</td><td class="tc">0</td><td class="tc">23</td><td class="tc">0</td></tr>
-<tr><td>Sales & Marketing</td><td class="tc">19</td><td class="tc">16</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">3</span></td><td class="tc">17</td><td class="tc">2</td><td class="tc">0</td><td class="tc">19</td></tr>
-<tr><td>Store</td><td class="tc">8</td><td class="tc">6</td><td class="tc"><span style="color:var(--red-ink);font-weight:700">2</span></td><td class="tc">5</td><td class="tc">3</td><td class="tc">8</td><td class="tc">0</td></tr>
+<tr><td>Purchase</td><td class="tc">5</td><td class="tc">3</td><td class="tc"><span class="tc-minor">2</span></td><td class="tc">5</td><td class="tc">0</td><td class="tc">1</td><td class="tc">4</td></tr>
+<tr><td>Quality Control</td><td class="tc">12</td><td class="tc">11</td><td class="tc"><span class="tc-minor">1</span></td><td class="tc">10</td><td class="tc">2</td><td class="tc">12</td><td class="tc">0</td></tr>
+<tr><td>Quarrying</td><td class="tc">23</td><td class="tc">21</td><td class="tc"><span class="tc-minor">2</span></td><td class="tc">23</td><td class="tc">0</td><td class="tc">23</td><td class="tc">0</td></tr>
+<tr><td>Sales & Marketing</td><td class="tc">19</td><td class="tc">16</td><td class="tc"><span class="tc-minor">3</span></td><td class="tc">17</td><td class="tc">2</td><td class="tc">0</td><td class="tc">19</td></tr>
+<tr><td>Store</td><td class="tc">8</td><td class="tc">6</td><td class="tc"><span class="tc-minor">2</span></td><td class="tc">5</td><td class="tc">3</td><td class="tc">8</td><td class="tc">0</td></tr>
 </tbody>
             <tfoot>
               <tr style="font-weight:800;background:#F8FAFC;border-top:2px solid var(--border)">
@@ -1075,7 +1080,7 @@
   <!-- â•â• VEHICLES â•â• -->
   <div class="hr-panel" id="asset-vehicles">
     <div class="mis-kv-strip" style="margin-bottom:16px">
-      <div class="mis-kv"><div class="mis-kv-val" style="color:var(--green-ink)">96</div><div class="mis-kv-lbl">Logistics</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:var(--red-ink)">7</div><div class="mis-kv-lbl">Mining</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:#3B82F6">26</div><div class="mis-kv-lbl">Passenger</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:#F59E0B">15</div><div class="mis-kv-lbl">Plant</div></div>
+      <div class="mis-kv"><div class="mis-kv-val" style="color:var(--series-1)">96</div><div class="mis-kv-lbl">Logistics</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:var(--series-2)">7</div><div class="mis-kv-lbl">Mining</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:var(--series-3)">26</div><div class="mis-kv-lbl">Passenger</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:var(--series-7)">15</div><div class="mis-kv-lbl">Plant</div></div>
     </div>
     <div class="mis-section">
       <div class="mis-sec-hdr">
@@ -1106,7 +1111,7 @@
   <div class="hr-panel" id="asset-spares">
     <div class="mis-kv-strip" style="margin-bottom:16px">
       <div class="mis-kv"><div class="mis-kv-val">TSH 6.65B</div><div class="mis-kv-lbl">Total Inventory Value</div></div>
-      <div class="mis-kv"><div class="mis-kv-val" style="color:var(--red-ink)">294</div><div class="mis-kv-lbl">Class A Items</div><div class="mis-kv-sub">TSH 3595M</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:#F59E0B">838</div><div class="mis-kv-lbl">Class B Items</div><div class="mis-kv-sub">TSH 834M</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:var(--text-muted)">1672</div><div class="mis-kv-lbl">Class C Items</div><div class="mis-kv-sub">TSH 2217M</div></div>
+      <div class="mis-kv"><div class="mis-kv-val" style="color:var(--seq-7)">294</div><div class="mis-kv-lbl">Class A Items</div><div class="mis-kv-sub">TSH 3595M</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:var(--seq-5)">838</div><div class="mis-kv-lbl">Class B Items</div><div class="mis-kv-sub">TSH 834M</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:var(--text-muted)">1672</div><div class="mis-kv-lbl">Class C Items</div><div class="mis-kv-sub">TSH 2217M</div></div>
     </div>
     <div class="mis-grid">
       <div class="mis-section">
@@ -1492,7 +1497,7 @@
     <span style="margin-left:12px;font-size:12px;color:var(--text-muted)"> &nbsp;·&nbsp;  km²</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px">
       <span style="color:var(--green-ink);font-weight:700">20 Complied</span>
-      <span style="color:var(--red-ink);font-weight:700">0 Not Complied</span>
+      <span style="color:var(--text-muted);font-weight:700">0 Not Complied</span>
       <span style="color:var(--amber-ink);font-weight:700">3 Partial</span>
       <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:87%;background:#F59E0B"></div></div>
       <span style="font-weight:700;color:#F59E0B">87%</span>
@@ -1578,7 +1583,7 @@
     <span style="margin-left:12px;font-size:12px;color:var(--text-muted)"> &nbsp;·&nbsp;  km²</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px">
       <span style="color:var(--green-ink);font-weight:700">0 Complied</span>
-      <span style="color:var(--red-ink);font-weight:700">0 Not Complied</span>
+      <span style="color:var(--text-muted);font-weight:700">0 Not Complied</span>
       <span style="color:var(--amber-ink);font-weight:700">3 Partial</span>
       <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:0%;background:#EF4444"></div></div>
       <span style="font-weight:700;color:var(--red-ink)">0%</span>
@@ -1601,7 +1606,7 @@
     <span style="margin-left:12px;font-size:12px;color:var(--text-muted)"> &nbsp;·&nbsp;  km²</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px">
       <span style="color:var(--green-ink);font-weight:700">2 Complied</span>
-      <span style="color:var(--red-ink);font-weight:700">0 Not Complied</span>
+      <span style="color:var(--text-muted);font-weight:700">0 Not Complied</span>
       <span style="color:var(--amber-ink);font-weight:700">1 Partial</span>
       <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:67%;background:#EF4444"></div></div>
       <span style="font-weight:700;color:var(--red-ink)">67%</span>

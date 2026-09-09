@@ -491,7 +491,7 @@
       var count = store[d.key] ? Object.keys(store[d.key]).length : 0;
       var pct   = Math.round(count / days * 100);
       var cls   = pct >= 70 ? 'an-cov-good' : (pct > 0 ? 'an-cov-fair' : 'an-cov-none');
-      var dotC  = pct >= 70 ? '#239557' : (pct > 0 ? '#D97706' : '#CBD5E1');
+      var dotC  = pct >= 70 ? 'var(--st-good)' : (pct > 0 ? 'var(--st-warn)' : 'var(--st-bad)');
       return '<span class="an-cov-chip ' + cls + '">' +
         '<span class="an-cov-dot" style="background:' + dotC + '"></span>' +
         d.label + ': ' + count + 'd' +

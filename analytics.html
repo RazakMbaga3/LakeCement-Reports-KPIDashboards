@@ -87,9 +87,13 @@
       border: 1px solid transparent;
     }
     .an-cov-dot { width: 6px; height: 6px; border-radius: 50%; }
-    .an-cov-good  { background: #D1FAE5; color: #065F46; border-color: #A7F3D0; }
-    .an-cov-fair  { background: #FEF3C7; color: #92400E; border-color: #FDE68A; }
-    .an-cov-none  { background: var(--section-bg); color: var(--text-muted); border-color: var(--border); }
+    .an-cov-good  { background: var(--st-good-bg); color: var(--green-ink); border-color: var(--st-good-bd); }
+    .an-cov-fair  { background: var(--st-warn-bg); color: var(--amber-ink); border-color: var(--st-warn-bd); }
+    /* No data at all is the worst reading on a coverage strip, so it can
+       no longer be the quietest chip on it. Grey put the streams that
+       reported nothing behind the streams that reported something —
+       exactly backwards for a widget whose job is finding the gaps. */
+    .an-cov-none  { background: var(--st-bad-bg); color: var(--red-ink); border-color: var(--st-bad-bd); }
 
     /* ── Main layout ────────────────────────────────────────────── */
     .an-main {

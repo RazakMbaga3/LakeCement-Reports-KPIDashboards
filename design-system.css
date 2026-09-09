@@ -366,10 +366,14 @@
     font-weight: var(--fw-bold);
     letter-spacing: .1px;
     color: #fff;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    /* Wraps, never truncates. "Dispatch & Sto…" and "KPI Dashb…" were
+       the app bar telling the reader it had run out of room rather than
+       telling them where they are — and telling them where they are is
+       the bar's entire job. It is min-height, not height, so a second
+       line costs nothing. */
+    overflow-wrap: anywhere;
     line-height: var(--lh-tight);
+    padding-block: 2px;
   }
   .ms-title small {
     display: block;
@@ -1498,3 +1502,17 @@ button.apply-btn {
 .btn-save svg, .btn-save i,
 #login-btn svg, #login-btn i,
 .btn-primary svg, .btn-primary i { color: inherit; stroke: currentColor; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   PROVENANCE LEGEND — Manual / System / Formula
+   ──────────────────────────────────────────────────────────────────────
+   Provenance says where a number came from. It is not status, and it
+   must never be mistaken for status, so it is carried by a small solid
+   swatch in one ink each — the same three inks the .kt-badge dots use.
+   These were ten copies of an inline pastel style whose green was close
+   enough to the "good" green that a formula-sourced KPI read as a
+   passing one.
+   ══════════════════════════════════════════════════════════════════════ */
+.ld-m { background: var(--amber-ink); }
+.ld-s { background: var(--series-1); }
+.ld-f { background: var(--green-ink); }

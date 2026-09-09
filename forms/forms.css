@@ -422,115 +422,135 @@ td.cf .cv { color:var(--f-fg); }
   .notes-col:last-child { border-right:none; }
 }
 
-/* ══ KPI SUMMARY STRIP ══════════════════════════════════════════ */
+/* ══ KPI SUMMARY STRIP ══════════════════════════════════════════
+   ONE DIMENSION, ONE CHANNEL.
+
+   This strip used to paint two unrelated dimensions in the same two
+   hues: RAG status (top bar + tint + border + bar fill + pct colour)
+   and data provenance (bottom bar + badge). Because provenance-formula
+   was green and status-concern was red, a failing formula KPI showed a
+   red top edge and a green bottom edge on the same card — the reader
+   could not tell which edge to believe. Six colour signals for two
+   facts is not emphasis, it is noise.
+
+   Now:  STATUS     → the left rail, the vs-line, the pct, the bar fill.
+         PROVENANCE → a neutral badge whose DOT alone carries the hue.
+   Status is the only thing that can colour the card body. Provenance
+   never touches an edge.                                              */
 .kpi-strip {
   display:grid;
   grid-template-columns:repeat(3,1fr);
-  gap:10px;
-  margin:0 0 14px;
+  gap:var(--sp-3);
+  margin:0 0 var(--sp-4);
 }
 .kt {
   background:white;
   border:1px solid var(--border);
+  border-left:3px solid var(--st-neutral-bd);
   border-radius:var(--radius);
-  padding:12px 14px 10px;
+  padding:var(--sp-3) var(--sp-4) var(--sp-3);
   position:relative;
   overflow:hidden;
   box-shadow:var(--shadow-sm);
+  display:flex;
+  flex-direction:column;
 }
-.kt::before {
-  content:'';
-  position:absolute;
-  bottom:0; left:0; right:0;
-  height:3px;
-  border-radius:0 0 var(--radius) var(--radius);
-}
-.kt-m::before { background:#B45309; }
-.kt-s::before { background:#1D4ED8; }
-.kt-f::before { background:#15803D; }
+/* Provenance: neutral pill, hue confined to the dot. Sits in the flow
+   above the label so the label no longer wraps around a floated badge —
+   that padding-right was what pushed titles to three lines and left the
+   KPI values sitting at six different heights across one row. */
 .kt-badge {
-  position:absolute;
-  top:7px; right:7px;
-  font-size:12px; font-weight:800;
-  padding:2px 6px;
-  border-radius:3px;
+  align-self:flex-start;
+  display:inline-flex; align-items:center; gap:var(--sp-1);
+  font-size:12px; font-weight:700;
+  padding:var(--sp-1) var(--sp-2);
+  margin-bottom:var(--sp-2);
+  border-radius:var(--r-sm);
   text-transform:uppercase;
   letter-spacing:.4px;
+  background:var(--st-neutral-bg);
+  color:var(--st-neutral);
+  border:1px solid var(--st-neutral-bd);
 }
-.kt-m .kt-badge { background:#FDE68A; color:#92400E; }
-.kt-s .kt-badge { background:#BFDBFE; color:#1E3A8A; }
-.kt-f .kt-badge { background:#BBF7D0; color:#14532D; }
+.kt-badge::before {
+  content:''; width:6px; height:6px; border-radius:50%;
+  background:var(--st-neutral); flex:none;
+}
+.kt-m .kt-badge::before { background:var(--amber-ink); }
+.kt-s .kt-badge::before { background:var(--series-1); }
+.kt-f .kt-badge::before { background:var(--green-ink); }
+
+/* Two lines reserved. Every value in the row then starts at the same y,
+   which is the whole point of a KPI strip: one glance, one comparison. */
 .kt-lbl {
   font-size:12px; font-weight:600;
   text-transform:uppercase; letter-spacing:.5px;
   color:var(--text-muted);
-  margin-bottom:4px;
-  padding-right:38px;
+  margin-bottom:var(--sp-1);
+  min-height:32px;
 }
 .kt-val {
   font-size:26px; font-weight:800;
   color:var(--navy);
   line-height:1;
-  margin:3px 0 2px;
+  margin:var(--sp-1) 0;
+  font-variant-numeric:tabular-nums;
 }
-.kt-unit { font-size:12px; color:var(--text-muted); margin-top:1px; }
-.kt-vs { margin-top:4px; font-size:12px; font-weight:700; }
-.vs-ok { color:#15803D; }
+.kt-unit { font-size:12px; color:var(--text-muted); }
+.kt-vs { margin-top:var(--sp-2); font-size:12px; font-weight:700; }
+.vs-ok { color:var(--green-ink); }
 .vs-ng { color:var(--red-ink); }
-.vs-wa { color:var(--orange-ink); }
+.vs-wa { color:var(--amber-ink); }
 
-/* ── Phase 3: RAG status, progress bar, achievement row ── */
-.kt { transition:box-shadow .15s ease, transform .1s ease; }
-.kt:hover { box-shadow:var(--shadow-md); transform:translateY(-1px); }
+.kt { transition:box-shadow var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease); }
+.kt:hover { box-shadow:var(--shadow-md); }
 
-/* RAG top bar  (::before = bottom data-type bar; ::after = top RAG bar) */
-.kt::after {
-  content:''; position:absolute;
-  top:0; left:0; right:0; height:3px;
-  border-radius:var(--radius) var(--radius) 0 0;
-  transition:background .25s;
-}
-.kt.on-track::after { background:var(--green); }
-.kt.watch::after    { background:var(--orange); }
-.kt.concern::after  { background:var(--red); }
-
-/* Card body RAG tint */
-.kt.on-track { background:#FAFFFE; border-color:#BBEED6; }
-.kt.watch    { background:#FFFDF5; border-color:#FDE68A; }
-.kt.concern  { background:#FFFAFA; border-color:#FFCDD2; }
+/* STATUS — the left rail is the whole signal. No top bar, no body tint,
+   no coloured outline: at six-across those read as stripes of bunting
+   rather than as meaning. */
+.kt.on-track { border-left-color:var(--st-good); }
+.kt.watch    { border-left-color:var(--st-warn); }
+.kt.concern  { border-left-color:var(--st-bad); }
 
 /* Progress bar */
 .kt-bar {
-  height:4px; background:var(--section-bg);
-  border-radius:2px; overflow:hidden; margin:7px 0 3px;
+  height:4px; background:var(--st-neutral-bg);
+  border-radius:var(--r-pill); overflow:hidden; margin:var(--sp-2) 0 var(--sp-1);
 }
 .kt-bar-fill {
-  height:100%; border-radius:2px; width:0%;
-  transition:width .45s ease;
+  height:100%; border-radius:var(--r-pill); width:0%;
+  background:var(--st-neutral);
+  transition:width var(--dur-slow) var(--ease);
 }
-.kt.on-track .kt-bar-fill { background:var(--green); }
-.kt.watch    .kt-bar-fill { background:var(--orange); }
-.kt.concern  .kt-bar-fill { background:var(--red); }
+.kt.on-track .kt-bar-fill { background:var(--st-good); }
+.kt.watch    .kt-bar-fill { background:var(--st-warn); }
+.kt.concern  .kt-bar-fill { background:var(--st-bad); }
 
 /* Target + achievement footer */
 .kt-foot {
   display:flex; justify-content:space-between; align-items:center;
-  margin-bottom:3px;
+  gap:var(--sp-2);
+  margin-bottom:var(--sp-1);
 }
 .kt-tgt { font-size:12px; color:var(--text-muted); font-weight:500; }
-.kt-pct { font-size:12px; font-weight:700; }
+.kt-pct { font-size:12px; font-weight:700; font-variant-numeric:tabular-nums; }
 .kt.on-track .kt-pct { color:var(--green-ink); }
-.kt.watch    .kt-pct { color:var(--orange-ink); }
-.kt.concern  .kt-pct { color:var(--red); }
-.vs-wa { color:var(--amber-ink); }
+.kt.watch    .kt-pct { color:var(--amber-ink); }
+.kt.concern  .kt-pct { color:var(--red-ink); }
 
 @media (min-width:1024px) {
   .kt-val { font-size:24px; }
   .kpi-strip {
     grid-template-columns:repeat(6,1fr);
-    gap:10px;
-    margin-bottom:16px;
+    gap:var(--sp-3);
+    margin-bottom:var(--sp-4);
   }
+  /* Six across on a 1440 screen leaves ~190px a card, and at that width
+     these labels run to three lines as often as two. Reserving three
+     puts every value in the row on one baseline — measured: the values
+     were landing at y=283 and y=296 depending on whether their label
+     wrapped, which is the exact thing a KPI strip exists to prevent. */
+  .kt-lbl { min-height:45px; }
 }
 @media (min-width:768px) and (max-width:1023px) {
   .kpi-strip { grid-template-columns:repeat(3,1fr); gap:8px; }

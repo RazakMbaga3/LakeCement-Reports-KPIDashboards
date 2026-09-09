@@ -646,9 +646,14 @@ function renderConcerns(results, mo, calYear) {
     .sort((a, b) => b.gap - a.gap);
 
   if (!missed.length) {
+    /* Good news in a warning-coloured strip reads as bad news. The strip
+       drops out of the alert palette entirely when there is nothing to
+       alert about. */
+    wrap.classList.add('is-clear');
     chip('No KPI missed its target in ' + MONTHS[mo] + ' ' + calYear, 'green');
     return;
   }
+  wrap.classList.remove('is-clear');
 
   missed.slice(0, CONCERN_CHIP_LIMIT).forEach(r => {
     const over = r.signage === '<' || r.signage === '<=';

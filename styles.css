@@ -54,6 +54,7 @@ body {
 img { max-width: 100%; }
 
 /* ── BRAND ACCENT BAR ────────────────────────────────────────────── */
+/* Page-foot rule. Sits on the white page ground, where navy reads. */
 .brand-accent-bar {
   height: 4px;
   background: linear-gradient(
@@ -91,11 +92,16 @@ img { max-width: 100%; }
   position: absolute;
   bottom: 0; left: 0; right: 0;
   height: 3px;
+  /* This rule sits ON the navy header, so its first segment cannot be
+     navy: --navy-light (#1E3D70) against the #173158 ground is 1.2:1,
+     which erased 55% of the device and left the orange looking like a
+     stray dash floating in from the middle of the bar. #2C5288 is the
+     same family, far enough up to read as a line. */
   background: linear-gradient(
     90deg,
-    var(--navy-light) 0%,   var(--navy-light) 55%,
-    var(--orange)     55%,  var(--orange)     78%,
-    #5B8DB8           78%,  #5B8DB8           100%
+    #2C5288       0%,   #2C5288       55%,
+    var(--orange) 55%,  var(--orange) 78%,
+    #5B8DB8       78%,  #5B8DB8       100%
   );
   pointer-events: none;
 }
@@ -492,8 +498,18 @@ img { max-width: 100%; }
   font-weight: 700;
 }
 .summary-chip.achieved  { background: var(--green-bg);  color: var(--green-ink); }
-.summary-chip.not-achieved { background: var(--red-bg); color: var(--red); }
-.summary-chip.rate      { background: #E3F0FB; color: #1565C0; }
+.summary-chip.not-achieved { background: var(--red-bg); color: var(--red-ink); }
+/* Neutral, not blue. Achievement RATE is a scale reading, not a third
+   status alongside achieved/not-achieved, and a blue chip between a
+   green and a red one invented a fourth colour family the app does not
+   otherwise use. */
+.summary-chip.rate      { background: var(--st-neutral-bg); color: var(--st-neutral); }
+/* Nothing scored yet — drop the whole row to neutral so an unentered
+   month cannot be mistaken for a failed one. */
+.filter-summary.is-empty .summary-chip {
+  background: var(--st-neutral-bg);
+  color: var(--st-neutral);
+}
 
 /* ── DEPT CONTEXT BAR ────────────────────────────────────────────── */
 .dept-context {
@@ -858,10 +874,16 @@ img { max-width: 100%; }
   border-radius: 4px; padding: 3px 10px; color: var(--text-main);
   display: flex; align-items: center; gap: 5px; white-space: nowrap;
 }
-.smry-alert-chip.red { border-color: #f5c6c6; background: #fff0f0; }
+.smry-alert-chip.red   { border-color: #f5c6c6; background: #fff0f0; }
+.smry-alert-chip.green { border-color: var(--st-good-bd); background: var(--st-good-bg); }
 .alert-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 .alert-dot.orange { background: var(--orange); }
 .alert-dot.red    { background: var(--red); }
+.alert-dot.green  { background: var(--st-good); }
+
+/* Nothing missed its target — leave the alert palette. */
+.smry-alerts.is-clear { background: var(--st-good-bg); border-bottom-color: var(--st-good-bd); }
+.smry-alerts.is-clear .smry-alert-label { color: var(--green-ink); }
 
 /* Category headers */
 .smry-cat {

@@ -287,9 +287,6 @@ function _cardHTML(c, m) {
   </div>
   <div class="pcard-footer">
     <span class="pcard-badge ${bc}">${c.badge}</span>
-    <svg class="pcard-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-    </svg>
   </div>
 </a>`;
 }

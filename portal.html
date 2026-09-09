@@ -127,10 +127,10 @@
       width: 4px;
     }
     .pcard-icon {
-      padding: 22px 20px 10px 26px;
+      padding: 16px 16px 8px 24px;
     }
     .pcard-body {
-      padding: 4px 20px 4px 26px;
+      padding: 4px 16px 4px 24px;
       flex: 1;
     }
     .pcard-title {
@@ -149,26 +149,23 @@
     .pcard-footer {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 14px 18px 18px 26px;
-      margin-top: 16px;
+      justify-content: flex-start;
+      padding: 8px 16px 16px 24px;
+      margin-top: 8px;
     }
     .pcard-badge {
       font-size: 12px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: .7px;
-      padding: 3px 9px;
-      border-radius: 10px;
+      padding: 4px 8px;
+      border-radius: var(--r-sm, 6px);
     }
-    .badge-view   { background:#DBEAFE; color:#1E40AF; border:1px solid #93C5FD; }
-    .badge-submit { background:#FEF3C7; color:#92400E; border:1px solid #FCD34D; }
-    .pcard-arrow {
-      color: var(--text-muted);
-      transition: transform .15s, color .15s;
-      flex-shrink: 0;
-    }
-    .pcard:hover .pcard-arrow { transform: translateX(3px); color: var(--navy, #173158); }
+    /* VIEW is where most cards land, so it is the quiet one: a badge on
+       every card carries no information. SUBMIT keeps the warm tone
+       because it is the only one asking the reader to do something. */
+    .badge-view   { background:var(--st-neutral-bg,#F1F3F7); color:var(--st-neutral,#5A6270); border:1px solid var(--st-neutral-bd,#DDE3EC); }
+    .badge-submit { background:var(--st-warn-bg,#FDF3E2);    color:var(--amber-ink,#B45309); border:1px solid var(--st-warn-bd,#F0CE92); }
 
     /* ── Empty state ─────────────────────────────────── */
     .portal-empty {
@@ -204,12 +201,18 @@
       .portal-section     { margin-bottom: 16px; }
       .portal-section-hdr { margin-bottom: 8px;  }
       .portal-grid { gap: 12px; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); }
-      .pcard { flex-direction: row; align-items: center; min-height: 84px; gap: 18px; padding: 18px 22px; }
+      /* stretch, not center: centring each card's contents against its
+         own height meant a one-line title and a two-line title started
+         at different heights in the same row, so a grid of cards read
+         as ragged even though the cards themselves were equal. */
+      .pcard { flex-direction: row; align-items: stretch; min-height: 84px; gap: 18px; padding: 18px 22px; }
       .pcard-icon   { padding: 0; flex-shrink: 0; }
       .pcard-body   { padding: 0; flex: 1; }
-      .pcard-title  { font-size: 13.5px; margin-bottom: 5px; }
+      /* Two lines reserved so the descriptions below them start on one
+         line across the row too. */
+      .pcard-title  { font-size: 13.5px; margin-bottom: 5px; min-height: 37px; }
       .pcard-sub    { font-size: 12px; line-height: 1.5; }
-      .pcard-footer { padding: 0; margin-top: 0; flex-shrink: 0; gap: 10px; }
+      .pcard-footer { padding: 0; margin-top: 0; flex-shrink: 0; gap: 10px; align-items: center; }
     }
     /* ── Mobile ────────────────────────────────────────────────── */
     @media (max-width: 768px) {

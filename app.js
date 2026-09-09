@@ -298,6 +298,13 @@ function updateSummary() {
   document.getElementById('sum-achieved').textContent = achieved;
   document.getElementById('sum-not').textContent = notAchieved;
   document.getElementById('sum-rate').textContent = rate;
+
+  /* No KPIs scored is not the same as every KPI missed. Left in the
+     status palette, an empty month rendered as "0 Achieved / 0 Not
+     Achieved / 0%" in green-red-blue, which reads as a plant-wide
+     failure rather than as a month nobody has entered yet. */
+  document.querySelector('.filter-summary')
+    ?.classList.toggle('is-empty', total === 0);
 }
 
 /* ─── Summary Dashboard updater ────────────────────────────── */

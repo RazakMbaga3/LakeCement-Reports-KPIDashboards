@@ -592,7 +592,10 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
       width: 30px; height: 30px;
       border-radius: 50%;
       background: var(--orange, #F49545);
-      color: white;
+      /* Navy, not white. White on Nyati orange is 2.27:1 — the avatar
+         was the last place in the app still doing it. --on-orange is
+         the paired ink token and clears AA at 5.71:1. */
+      color: var(--on-orange, #173158);
       font-size: 13px; font-weight: 800;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
