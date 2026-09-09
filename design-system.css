@@ -1036,263 +1036,364 @@ html body canvas { max-width: 100%; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   10. MOBILE ENTRY — shift forms as cards
+   10. CARD VIEW FOR ENTRY GRIDS
    ──────────────────────────────────────────────────────────────────────
-   The daily entry grids are 800–3,100px wide. That is right on a
-   control-room screen and a keyhole on a handset: you cannot see which
-   parameter you are typing a value for, because the label column has
-   scrolled off. forms/mobile-entry.js re-lays each ROW as a card and
-   MOVES the real inputs into it — see that file for why moving rather
-   than cloning is the one rule it cannot break.
+   A shift grid as one card per row. Driven by `body.me-view-cards`, NOT
+   by a media query: card view is a *view the reader chooses*, available
+   at any width, not a mobile fallback. forms/mobile-entry.js owns the
+   preference (auto | cards | table) and remembers it.
 
-   The grid is never destroyed, only hidden: every card block carries a
-   "Table view" toggle, because some checks genuinely need row-and-column
-   comparison and this must not be a one-way door.
+   The grid is only ever hidden, never destroyed — the switch in the
+   sticky strip puts it straight back.
    ══════════════════════════════════════════════════════════════════════ */
 
-.me-cards { display: none; }
+:root { --pg-top: 64px; }                    /* desktop .top-header height */
+@media (max-width: 959px) { :root { --pg-top: var(--appbar-h); } }
+
+.me-cards  { display: none; }
 .me-hidden { display: none; }
 
-@media (max-width: 959px) {
-  .me-cards {
-    display: grid;
-    gap: var(--sp-3);
-    margin: 0 0 var(--sp-5);
-  }
-  .me-cards.me-collapsed > :not(.me-toolbar) { display: none; }
+body.me-view-cards .me-cards {
+  display: grid;
+  /* Cards flow into as many columns as will hold one at a readable
+     width. One card per full row is right on a phone and wasteful on a
+     1440px screen, where it stretched every input to ~500px — the point
+     of a card is that a field sits next to its label at a comfortable
+     size, not that it fills the monitor. ~340px keeps a card's internal
+     three-up rhythm identical at every width. */
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  align-items: start;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-5);
+}
+/* The per-grid count and any section heading span the whole row rather
+   than becoming a card-shaped column of their own. */
+body.me-view-cards .me-cards > .me-toolbar,
+body.me-view-cards .me-cards > .me-group { grid-column: 1 / -1; }
 
-  /* ── Toolbar: progress for this grid + the escape hatch ─────────── */
-  .me-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--sp-3);
-    padding: var(--sp-2) var(--sp-1);
-  }
-  .me-count {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    color: var(--text-muted, #5A6270);
-    font-variant-numeric: tabular-nums;
-  }
-  .me-count.me-done { color: var(--st-good); }
-  .me-toggle {
-    min-height: var(--tap);
-    padding: var(--sp-2) var(--sp-4);
-    border: 1px solid var(--border, #DDE3EC);
-    border-radius: var(--r-md);
-    background: var(--white, #fff);
-    color: var(--navy, #173158);
-    font-family: var(--font, 'Inter', system-ui, sans-serif);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .me-toggle:active { background: var(--section-bg, #EEF2F8); }
+/* ── Per-grid count ─────────────────────────────────────────────────── */
+.me-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: var(--sp-2) var(--sp-1) 0;
+}
+.me-count {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  color: var(--text-muted, #5A6270);
+  font-variant-numeric: tabular-nums;
+}
+.me-count.me-done { color: var(--st-good); }
 
-  /* ── Group heading (a section row lifted from the grid) ─────────── */
-  .me-group {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-heavy);
-    letter-spacing: .7px;
-    text-transform: uppercase;
-    color: var(--navy, #173158);
-    background: var(--section-bg, #EEF2F8);
-    padding: var(--sp-2) var(--sp-3);
-    border-radius: var(--r-sm);
-    margin-top: var(--sp-2);
-  }
-
-  /* ── The card ───────────────────────────────────────────────────── */
-  .me-card {
-    background: var(--white, #fff);
-    border: 1px solid var(--border, #DDE3EC);
-    border-radius: var(--r-lg);
-    box-shadow: var(--el-1);
-    overflow: hidden;
-  }
-  /* A read-only row is reference, not work: it recedes. */
-  .me-card.me-readonly { background: var(--off-white, #F7F8FA); box-shadow: none; }
-
-  .me-card-hd {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--sp-2);
-    padding: var(--sp-3) var(--sp-4) var(--sp-2);
-    border-bottom: 1px solid var(--border, #DDE3EC);
-  }
-  .me-card-title {
-    margin: 0;
-    font-size: var(--fs-base);
-    font-weight: var(--fw-bold);
-    color: var(--text-main, #111827);
-    line-height: var(--lh-snug);
-    min-width: 0;
-  }
-  /* The spec range is why a value is right or wrong, so it belongs beside
-     the parameter — not repeated under each of six identical inputs. */
-  .me-card-spec {
-    flex-shrink: 0;
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-semibold);
-    color: var(--text-muted, #5A6270);
-    background: var(--section-bg, #EEF2F8);
-    border-radius: var(--r-pill);
-    padding: 2px var(--sp-2);
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* ── Entry fields ───────────────────────────────────────────────── */
-  .me-fields {
-    display: grid;
-    grid-template-columns: repeat(var(--me-cols, 3), minmax(0, 1fr));
-    gap: var(--sp-2);
-    padding: var(--sp-3) var(--sp-4);
-  }
-  .me-field { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 0; }
-  .me-field-lbl {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    color: var(--text-muted, #5A6270);
-    line-height: 1.25;
-    min-width: 0;
-    overflow-wrap: break-word;
-  }
-  /* The parent grouping ("Regular Bags / 42.5 R") is context; the leaf
-     ("On Date") is the field. Weight separates them, not size — at 12px
-     size has stopped carrying hierarchy. */
-  .me-field-lbl small {
-    display: block;
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-medium);
-    color: var(--text-muted, #5A6270);
-    opacity: .78;
-    letter-spacing: .1px;
-  }
-  .me-field input,
-  .me-field select,
-  .me-field textarea {
-    width: 100%;
-    min-height: var(--tap);
-    padding: var(--sp-2);
-    border: 1.5px solid var(--border, #DDE3EC);
-    border-radius: var(--r-md);
-    background: var(--white, #fff);
-    color: var(--text-main, #111827);
-    font-family: var(--font, 'Inter', system-ui, sans-serif);
-    font-size: 16px;          /* under 16px iOS zooms the page on focus */
-    font-weight: var(--fw-semibold);
-    font-variant-numeric: tabular-nums;
-    text-align: center;
-    transition: border-color var(--dur-fast) var(--ease),
-                box-shadow var(--dur-fast) var(--ease);
-  }
-  .me-field input:focus,
-  .me-field select:focus,
-  .me-field textarea:focus {
-    outline: none;
-    border-color: var(--orange, #F49545);
-    box-shadow: 0 0 0 3px rgba(244, 149, 69, .18);
-  }
-  /* A filled field reads as done at a glance — per-field progress. */
-  .me-field input.me-filled { border-color: var(--st-good-bd); background: #FCFEFD; }
-  .me-field input.ooc, .me-field .ooc {
-    border-color: var(--st-bad);
-    background: var(--st-bad-bg);
-    color: var(--st-bad);
-  }
-
-  /* ── Computed read-back ─────────────────────────────────────────── */
-  .me-derived {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sp-2) var(--sp-4);
-    padding: var(--sp-2) var(--sp-4) var(--sp-3);
-    background: var(--off-white, #F7F8FA);
-    border-top: 1px solid var(--border, #DDE3EC);
-  }
-  .me-d { display: flex; align-items: baseline; gap: var(--sp-2); min-width: 0; }
-  .me-d-k {
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-semibold);
-    color: var(--text-muted, #5A6270);
-    white-space: nowrap;
-  }
-  .me-d-v {
-    font-size: var(--fs-base);
-    font-weight: var(--fw-bold);
-    color: var(--text-main, #111827);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-
-  /* ── Form-wide progress, pinned under the app bar ───────────────── */
-  .me-pg {
-    position: sticky;
-    top: var(--appbar-h);
-    z-index: 90;
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
-    padding: var(--sp-2) var(--sp-3);
-    background: rgba(255, 255, 255, .97);
-    backdrop-filter: saturate(180%) blur(10px);
-    border-bottom: 1px solid var(--border, #DDE3EC);
-  }
-  .me-pg-track {
-    flex: 1;
-    height: 6px;
-    min-width: 0;
-    border-radius: var(--r-pill);
-    background: var(--section-bg, #EEF2F8);
-    overflow: hidden;
-  }
-  .me-pg-fill {
-    display: block;
-    height: 100%;
-    width: 0;
-    border-radius: var(--r-pill);
-    background: var(--orange, #F49545);
-    transition: width var(--dur-med) var(--ease);
-  }
-  .me-pg-done .me-pg-fill { background: var(--st-good); }
-  .me-pg-locked .me-pg-fill { background: var(--st-neutral-bd); }
-  .me-pg-text {
-    flex-shrink: 0;
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-bold);
-    color: var(--text-muted, #5A6270);
-    font-variant-numeric: tabular-nums;
-  }
-  .me-pg-done .me-pg-text { color: var(--st-good); }
-
-  /* Save, within thumb reach of wherever the officer has scrolled to. */
-  .me-pg-save {
-    flex-shrink: 0;
-    min-height: 34px;
-    padding: 0 var(--sp-4);
-    border: 0;
-    border-radius: var(--r-md);
-    background: var(--orange, #F49545);
-    color: #fff;
-    font-family: var(--font, 'Inter', system-ui, sans-serif);
-    font-size: var(--fs-xs);
-    font-weight: var(--fw-heavy);
-    letter-spacing: .2px;
-    cursor: pointer;
-  }
-  .me-pg-save:active { filter: brightness(.93); }
-  .me-pg-save[disabled] { opacity: .6; }
-  .me-pg-locked .me-pg-text { color: var(--text-muted, #5A6270); }
+/* ── Section heading lifted from a grid's own section row ───────────── */
+.me-group {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-heavy);
+  letter-spacing: .7px;
+  text-transform: uppercase;
+  color: var(--navy, #173158);
+  background: var(--section-bg, #EEF2F8);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-sm);
+  margin-top: var(--sp-2);
 }
 
-/* Desktop: the grid is the interface. Nothing above applies. */
-@media (min-width: 960px) {
-  .me-cards, .me-pg, .me-toolbar { display: none !important; }
-  .me-hidden, .me-hidden-off { display: block !important; }
+/* ── The card ───────────────────────────────────────────────────────── */
+.me-card {
+  background: var(--white, #fff);
+  border: 1px solid var(--border, #DDE3EC);
+  border-radius: var(--r-lg);
+  box-shadow: var(--el-1);
+  overflow: hidden;
+}
+/* A read-only row is reference, not work: it recedes. */
+.me-card.me-readonly { background: var(--off-white, #F7F8FA); box-shadow: none; }
+
+.me-card-hd {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4) var(--sp-2);
+  border-bottom: 1px solid var(--border, #DDE3EC);
+}
+/* The serial number several grids lead with. Kept, but as a quiet badge —
+   it is not what identifies the row to a human. */
+.me-card-sn {
+  flex-shrink: 0;
+  min-width: 22px;
+  padding: 1px 6px;
+  border-radius: var(--r-sm);
+  background: var(--section-bg, #EEF2F8);
+  color: var(--text-muted, #5A6270);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.me-card-title {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
+  color: var(--text-main, #111827);
+  line-height: var(--lh-snug);
+}
+/* The spec range is why a value is right or wrong — beside the parameter,
+   not repeated under each of six identical inputs. */
+.me-card-spec {
+  flex-shrink: 0;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--text-muted, #5A6270);
+  background: var(--section-bg, #EEF2F8);
+  border-radius: var(--r-pill);
+  padding: 2px var(--sp-2);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Entry fields ───────────────────────────────────────────────────── */
+.me-body { padding: var(--sp-1) 0; }
+
+/* A column group shown ONCE as a heading. "Material Consumption (MT)"
+   covering On Date / MTD / YTD was being repeated in full on all three
+   labels, which made every label three lines tall and left the inputs
+   staggered down a staircase. */
+.me-fgroup { padding: var(--sp-2) var(--sp-4) 0; }
+.me-fgroup-h {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-heavy);
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--navy, #173158);
+  margin-bottom: var(--sp-1);
+}
+/* Ungrouped fields keep the same 3-column rhythm as the groups above
+   them — a lone "Opening Stock" stretched across the whole card read as
+   a different kind of thing than the three-up rows around it. */
+.me-plain { padding: var(--sp-2) var(--sp-4) 0; }
+.me-plain .me-fields { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 430px) {
+  .me-plain .me-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.me-body > :last-child { padding-bottom: var(--sp-3); }
+
+.me-fields {
+  display: grid;
+  grid-template-columns: repeat(var(--me-cols, 3), minmax(0, 1fr));
+  gap: var(--sp-2);
+}
+/* Bottom-aligned: a two-line label must not push its input below its
+   neighbour's. The label grows upward, the inputs stay on one line. */
+.me-field {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+.me-field-lbl {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  color: var(--text-muted, #5A6270);
+  line-height: 1.25;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.me-field input,
+.me-field select,
+.me-field textarea {
+  width: 100%;
+  min-height: var(--tap);
+  padding: var(--sp-2);
+  border: 1.5px solid var(--border, #DDE3EC);
+  border-radius: var(--r-md);
+  background: var(--white, #fff);
+  color: var(--text-main, #111827);
+  font-family: var(--font, 'Inter', system-ui, sans-serif);
+  font-size: 16px;            /* under 16px iOS zooms the page on focus */
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  transition: border-color var(--dur-fast) var(--ease),
+              box-shadow var(--dur-fast) var(--ease);
+}
+.me-field input:focus,
+.me-field select:focus,
+.me-field textarea:focus {
+  outline: none;
+  border-color: var(--orange, #F49545);
+  box-shadow: 0 0 0 3px rgba(244, 149, 69, .18);
+}
+.me-field input.me-filled { border-color: var(--st-good-bd); background: #FCFEFD; }
+.me-field input.ooc, .me-field .ooc {
+  border-color: var(--st-bad);
+  background: var(--st-bad-bg);
+  color: var(--st-bad);
+}
+
+/* ── Computed read-back ─────────────────────────────────────────────
+   A grid of key-over-value pairs. As a wrapping flex run it read as one
+   long sentence — "OpeningStock 0 MTD 0 YTD 7,400 MTD 0 YTD 3,705" — in
+   which you could not tell which MTD belonged to what. */
+.me-derived {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: var(--sp-2) var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--off-white, #F7F8FA);
+  border-top: 1px solid var(--border, #DDE3EC);
+}
+/* Bottom-aligned for the same reason the entry fields are: a key that
+   wraps to two lines must not drop its value below the one beside it. */
+.me-d {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 1px;
+  min-width: 0;
+}
+.me-d-k {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--text-muted, #5A6270);
+  line-height: 1.25;
+  overflow-wrap: break-word;
+}
+.me-d-v {
+  font-size: var(--fs-base);
+  font-weight: var(--fw-bold);
+  color: var(--text-main, #111827);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Sticky strip: progress · view switch · save
+   Shown at every width, because all three are useful at every width —
+   the page's own toolbar scrolls away on a desktop too.
+   ══════════════════════════════════════════════════════════════════════ */
+.me-pg {
+  position: sticky;
+  top: var(--pg-top);
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
+  background: rgba(255, 255, 255, .97);
+  backdrop-filter: saturate(180%) blur(10px);
+  border-bottom: 1px solid var(--border, #DDE3EC);
+}
+.me-pg-track {
+  flex: 1;
+  height: 6px;
+  min-width: 40px;
+  border-radius: var(--r-pill);
+  background: var(--section-bg, #EEF2F8);
+  overflow: hidden;
+}
+.me-pg-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: var(--r-pill);
+  background: var(--orange, #F49545);
+  transition: width var(--dur-med) var(--ease);
+}
+.me-pg-done .me-pg-fill   { background: var(--st-good); }
+.me-pg-locked .me-pg-fill { background: var(--st-neutral-bd); }
+.me-pg-text {
+  flex-shrink: 0;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  color: var(--text-muted, #5A6270);
+  font-variant-numeric: tabular-nums;
+}
+.me-pg-done .me-pg-text   { color: var(--st-good); }
+.me-pg-locked .me-pg-text { color: var(--text-muted, #5A6270); }
+
+/* Segmented Cards | Table switch. */
+.me-viewsw {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 2px;
+  border: 1px solid var(--border, #DDE3EC);
+  border-radius: var(--r-md);
+  background: var(--section-bg, #EEF2F8);
+}
+.me-vs {
+  min-height: 30px;
+  padding: 0 var(--sp-3);
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--text-muted, #5A6270);
+  font-family: var(--font, 'Inter', system-ui, sans-serif);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.me-vs.active {
+  background: var(--white, #fff);
+  color: var(--navy, #173158);
+  box-shadow: var(--el-1);
+}
+
+/* Save, within thumb reach of wherever the reader has scrolled to. */
+.me-pg-save {
+  flex-shrink: 0;
+  min-height: 32px;
+  padding: 0 var(--sp-4);
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--orange, #F49545);
+  color: var(--on-orange);
+  font-family: var(--font, 'Inter', system-ui, sans-serif);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-heavy);
+  cursor: pointer;
+}
+.me-pg-save:active   { filter: brightness(.93); }
+.me-pg-save[disabled] { opacity: .6; }
+
+/* These are primary controls in their own right, not cells in a data
+   grid, so they take the full 44px target rather than the cozy one. */
+@media (pointer: coarse) {
+  .me-vs      { min-height: var(--tap); padding: 0 var(--sp-4); }
+  .me-pg-save { min-height: var(--tap); }
+}
+
+/* Narrow screens: the strip is the only place these live, so it earns a
+   little more room, and the count can go if space is tight. */
+@media (max-width: 620px) {
+  .me-pg { gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); }
+  .me-pg-text { font-size: var(--fs-xs); }
+}
+@media (max-width: 430px) {
+  .me-pg-track { display: none; }
+}
+
+/* ── Report card headers wrap gracefully ───────────────────────────
+   .rcard-hdr is a space-between flex row of title, date pill, department
+   pill and a collapse chevron. On a phone the department pill takes the
+   full width and pushed the chevron onto a line of its own, where
+   align-items:stretch made it a tall empty box. */
+@media (max-width: 959px) {
+  html body .rcard-hdr { align-items: flex-start; row-gap: var(--sp-2); }
+  html body .rcard-hdr > * { min-width: 0; }
+  html body .rcard-toggle,
+  html body .rcard-hdr > button:last-child {
+    position: absolute;
+    top: var(--sp-2);
+    right: var(--sp-2);
+    align-self: flex-start;
+  }
+  /* Reserve the chevron's corner across the whole header, not just the
+     title — the subtitle runs the full width and was passing under it. */
+  html body .rcard-hdr > :first-child { padding-right: 44px; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════

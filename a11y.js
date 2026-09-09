@@ -85,13 +85,24 @@ var LCL_A11Y = (function () {
     return cols;
   }
 
-  function headerText(th) {
-    var clone = th.cloneNode(true);
+  /* Text of a cell, with <br> read as a space.
+     textContent ignores <br> entirely, and 84 headers in this app use one
+     as a line break — which is how "Moisture<br>On Date" was being read as
+     "MoistureOn Date", and "Opening<br>Stock" as "OpeningStock", in both
+     card labels and screen-reader names. */
+  function cellText(el) {
+    if (!el) return '';
+    var clone = el.cloneNode(true);
     Array.prototype.forEach.call(clone.querySelectorAll('.spec-range, .unit'), function (n) {
       n.parentNode.removeChild(n);
     });
+    Array.prototype.forEach.call(clone.querySelectorAll('br'), function (n) {
+      n.parentNode.replaceChild(document.createTextNode(' '), n);
+    });
     return squash(clone.textContent);
   }
+
+  function headerText(th) { return cellText(th); }
 
   /* ══════════════════════════════════════════════════════════════════
      DOES IT ALREADY HAVE A NAME?
@@ -122,7 +133,7 @@ var LCL_A11Y = (function () {
 
     /* The row's own heading is its first cell — the label column. */
     var head = tr.cells[0];
-    var rowLabel = (head && head !== td) ? squash(head.textContent) : '';
+    var rowLabel = (head && head !== td) ? cellText(head) : '';
 
     /* Column index has to account for colspan on the way across. */
     var ci = 0, found = -1;
@@ -275,5 +286,5 @@ var LCL_A11Y = (function () {
     init();
   }
 
-  return { headerMatrix: headerMatrix, refresh: refresh, nameControls: nameControls };
+  return { headerMatrix: headerMatrix, cellText: cellText, refresh: refresh, nameControls: nameControls };
 })();

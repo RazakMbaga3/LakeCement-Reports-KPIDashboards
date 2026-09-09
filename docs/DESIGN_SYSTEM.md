@@ -42,7 +42,7 @@ which page you were on without scrolling past all of it.
 |---|---|
 | `design-system.css` | Tokens, legibility floor, touch floor, mobile shell CSS, containment |
 | `mobile-shell.js` | Drawer, app bar, bottom tab bar, filter disclosure, scroll affordances |
-| `forms/mobile-entry.js` | Shift grids as per-parameter cards on a phone; entry progress |
+| `forms/mobile-entry.js` | Card view for entry grids at any width; entry progress; view switch |
 | `chart-theme.js` | Chart.js defaults and the validated data palette |
 | `a11y.js` | Accessible names for form controls; keyboard reach into scroll regions |
 | `e2e/responsive-audit.js` | Layout/legibility criteria, as runnable checks |
@@ -185,17 +185,27 @@ first column, a scroll-affordance fade, and a one-time swipe hint.
 
 ---
 
-## 5. Mobile entry — `forms/mobile-entry.js`
+## 5. Card view for entry grids — `forms/mobile-entry.js`
 
 Reading a wide grid on a phone is awkward. *Typing into* one is not workable:
 the parameter you are entering a value for has scrolled off the left edge
-while you type. So below 960px each **row becomes a card** — parameter as the
-title, its spec range beside it, each entry cell a labelled field, and the
-computed cells a read-back strip underneath that updates as you type.
+while you type. So each **row becomes a card** — parameter as the title, its
+spec range beside it, each entry cell a labelled field, and the computed cells
+a read-back strip underneath that updates as you type.
 
-Every card block keeps a **Table view** toggle. This is not a one-way door:
-some checks genuinely need row-and-column comparison, and the grid is only
-hidden, never destroyed.
+**Card view is a view, not a mobile fallback.** A single `Cards | Table`
+switch in the sticky strip applies to the whole page at *any* width and is
+remembered (`localStorage.lcl_form_view` = `auto` | `cards` | `table`). `auto`
+— cards under 960px, grid above — is only the starting point; someone who
+prefers cards on a 1440px monitor, or needs the grid on a tablet, gets it.
+
+The switch is page-level on purpose. Per-table toggles produced a mixed state
+nobody could reason about ("why is this one a grid?").
+
+On a wide screen the cards flow into as many columns as will hold one at
+~340px, so a card's internal three-up rhythm is identical at every width. One
+card per full row is right on a phone and wasteful on a monitor, where it
+stretched every input to about 500px.
 
 ### The one rule this file cannot break
 
@@ -216,8 +226,35 @@ comes back after a reload still in the card; resizing to desktop returns all
 The one positional selector in the codebase, `checkCao()` in
 `pile-quality-form.html`, was hardened to tolerate the move.
 
+### Making a card readable
+
+Five rules, each of which came from a card that read badly:
+
+- **Title the card with what identifies the row, not its first cell.**
+  Materials, the pile log and the daily raw-material grid all lead with a
+  serial number, so the first version produced cards titled `3` and `4` while
+  CLAY, IRON ORE and Gypsum sat buried in the read-back strip. The serial is
+  kept as a quiet badge.
+- **Show a column group once, as a heading.** "Material Consumption (MT)"
+  covering On Date / MTD / YTD was repeated in full on all three labels, which
+  made every label three lines tall and squeezed the inputs to nothing.
+- **Bottom-align inputs and read-back values.** A label that wraps to two lines
+  must not drop its input below the one beside it — that staircase is what made
+  the cards look broken.
+- **Disambiguate read-back keys.** A card with both "Received Quantity · MTD"
+  and "Material Consumption · MTD" showed two cells both labelled `MTD`. The
+  group is added only where the leaf alone is ambiguous.
+- **Read `<br>` as a space.** `textContent` ignores it, and 84 headers use one
+  as a line break — which is how `Moisture<br>On Date` became `MoistureOn Date`
+  and `Opening<br>Stock` became `OpeningStock`, in card labels *and* in
+  screen-reader names. `LCL_A11Y.cellText()` owns the fix so both agree.
+
 ### Other things worth knowing
 
+- The progress strip carries the switch, the count and Save, and is shown at
+  every width — the page's own toolbar scrolls away on a desktop too. The
+  `progressbar` role sits on the *track*, not the strip: a progressbar may not
+  have focusable descendants.
 - **Every `.rt` grid converts**, not just ones measured as too wide. The first
   rule here tested `scrollWidth`, which reports **0** inside a collapsed
   section — that left 48 inputs stranded in table cells on `stoppage-form.html`.
