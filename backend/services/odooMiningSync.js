@@ -16,11 +16,42 @@
       vehicle_no          →  vehicle
       transfer_type       →  transfer_type
       movement_type       →  movement_type
-      input_product       →  product
+      input_product       →  product (TRANSLATED — see PRODUCT_LABEL below)
       gross_date          →  ticket_date (date part) + gross_datetime (raw)
       net_qt              →  net_qty
       uom, reader         →  dropped: constant 'MT'/'RFID' in every row
                              observed, no column for them, no consumer
+
+  ── product code translation, and the bug it fixes ───────────────────────
+  input_product arrives as an Odoo product code ('QRM001', 'QRM007', …).
+  mines-report.html's TMH_COLS classifies every ticket by an EXACT string
+  match on movement_type + product — e.g. movement 'North Mine to Stock
+  Yard' + product 'HG' — and its own GRADES table is the only place the
+  code↔label correspondence is recorded (HG=QRM001, LG1=QRM003,
+  HGHMGO=QRM005, OB=QRM007, LIMESTONE SPG=RM000005, GYPSUM=RM000003).
+
+  The first version of this file wrote the raw Odoo code straight into
+  `product` (a plain passthrough, like every other field above). That
+  matched no TMH_COLS entry — 'HG' never equals 'QRM001' — so EVERY synced
+  ticket silently failed classification: mines-report.html's rebuildIndex()
+  skips a row it can't classify exactly like it skips one from Excel with a
+  typo'd grade, so the Quarry report showed real ticket counts in the data
+  chip alongside a chart and hero cards frozen at 0.00 for every date —
+  found 2026-09-09, right after the first production backfill, from the
+  live report showing zero material moved despite "14,684 tickets" loaded.
+  PRODUCT_LABEL below is copied from mines-report.html's own GRADES object
+  (ground truth already trusted elsewhere in that file, not a fresh guess)
+  so a synced ticket classifies exactly the same way an Excel-uploaded one
+  with the label spelled out would.
+
+  A code with no entry in PRODUCT_LABEL — QRM008 has shown up in every
+  production pull so far — is left as its raw Odoo code rather than
+  guessed at. The ticket is still stored (a truck really was weighed), it
+  is simply excluded from every TMH/MIS total until someone confirms what
+  the code is — "ignored like Excel" is mines-report.html's own phrase for
+  this, already applied to any grade/movement combo it doesn't recognize.
+  Each pull's result reports rowsUnknownProduct + the distinct codes seen
+  so this is visible, not a silent gap.
 
   ── The synthetic ticket number, and its one real weakness ──────────────
   mining_report does not return a ticket number, and weighbridge_tickets
@@ -70,6 +101,19 @@ function dateOf(grossDate) {
   return m ? m[1] : null;
 }
 
+/* Copied verbatim from mines-report.html's GRADES object — the app's own
+   already-confirmed code↔label correspondence, not a guess made here.
+   pr labels match TMH_COLS exactly, including 'OB/CLAY' rather than the
+   shorter 'OB' key GRADES itself uses internally for other lookups. */
+const PRODUCT_LABEL = {
+  QRM001:   'HG',
+  QRM003:   'LG1',
+  QRM005:   'HGHMGO',
+  QRM007:   'OB/CLAY',
+  RM000005: 'LIMESTONE SPG',
+  RM000003: 'GYPSUM',
+};
+
 function surrogateTicketNo(row) {
   const parts = [
     row.vendor, row.vehicle_no, row.gross_date,
@@ -91,14 +135,17 @@ function mapRow(row) {
   if (!row.input_product) return { reject: 'no input_product' };
   if (!Number.isFinite(netQty)) return { reject: 'net_qt is not a number' };
 
+  const label = PRODUCT_LABEL[row.input_product];
+
   return {
+    unknownProductCode: label ? null : row.input_product,
     ticket: {
       ticket_no:      surrogateTicketNo(row),
       vendor:         row.vendor || '',
       vehicle:        row.vehicle_no || '',
       transfer_type:  row.transfer_type || '',
       movement_type:  row.movement_type,
-      product:        row.input_product,
+      product:        label || row.input_product, // untranslated code if unrecognized — see header note
       ticket_date:    ticketDate,
       net_qty:        netQty,
       gross_datetime: String(row.gross_date || ''),
@@ -113,11 +160,15 @@ function mapRow(row) {
 function groupByDate(rows) {
   const byDate = new Map();
   const rejects = [];
+  const unknownProductCodes = new Map(); // code -> row count, for reporting only
   let duplicatesCollapsed = 0;
 
   for (const row of rows) {
-    const { ticket, reject } = mapRow(row);
+    const { ticket, reject, unknownProductCode } = mapRow(row);
     if (reject) { rejects.push({ reason: reject, row }); continue; }
+    if (unknownProductCode) {
+      unknownProductCodes.set(unknownProductCode, (unknownProductCodes.get(unknownProductCode) || 0) + 1);
+    }
 
     if (!byDate.has(ticket.ticket_date)) byDate.set(ticket.ticket_date, new Map());
     const day = byDate.get(ticket.ticket_date);
@@ -125,7 +176,7 @@ function groupByDate(rows) {
     day.set(ticket.ticket_no, ticket);
   }
 
-  return { byDate, rejects, duplicatesCollapsed };
+  return { byDate, rejects, duplicatesCollapsed, unknownProductCodes };
 }
 
 const COLS = ['ticket_no', 'vendor', 'vehicle', 'transfer_type', 'movement_type',
@@ -213,7 +264,7 @@ async function excelDates(dates) {
    explain, so nothing is rounded away. */
 async function pullMiningTickets(from, to, { overwriteExcelDates = false } = {}) {
   const rows = await fetchMiningReport(from, to);
-  const { byDate, rejects, duplicatesCollapsed } = groupByDate(rows);
+  const { byDate, rejects, duplicatesCollapsed, unknownProductCodes } = groupByDate(rows);
 
   const dates   = [...byDate.keys()].sort();
   const blocked = overwriteExcelDates ? new Set() : await excelDates(dates);
@@ -242,6 +293,11 @@ async function pullMiningTickets(from, to, { overwriteExcelDates = false } = {})
       'odoo mining sync: dates skipped because they already hold manually uploaded (Excel) tickets — '
       + 'syncing them would double-count. Re-run with overwriteExcelDates to replace them.');
   }
+  if (unknownProductCodes.size) {
+    logger.warn({ codes: Object.fromEntries(unknownProductCodes) },
+      'odoo mining sync: tickets stored with an Odoo product code that has no known grade mapping — '
+      + 'excluded from every TMH/MIS total until PRODUCT_LABEL in odooMiningSync.js is updated for it.');
+  }
 
   return {
     from, to,
@@ -251,6 +307,9 @@ async function pullMiningTickets(from, to, { overwriteExcelDates = false } = {})
     duplicatesCollapsed,
     datesSynced:         datesSynced.length,
     datesSkippedExcel:   [...blocked].sort(),
+    // Stored but excluded from Quarry totals until the code is mapped — see PRODUCT_LABEL.
+    rowsUnknownProduct:  [...unknownProductCodes.values()].reduce((a, b) => a + b, 0),
+    unknownProductCodes: Object.fromEntries(unknownProductCodes),
     added, updated, removedStale,
   };
 }
@@ -258,5 +317,5 @@ async function pullMiningTickets(from, to, { overwriteExcelDates = false } = {})
 module.exports = {
   pullMiningTickets,
   // exported for tests / diagnostics
-  mapRow, groupByDate, surrogateTicketNo, dateOf,
+  mapRow, groupByDate, surrogateTicketNo, dateOf, PRODUCT_LABEL,
 };

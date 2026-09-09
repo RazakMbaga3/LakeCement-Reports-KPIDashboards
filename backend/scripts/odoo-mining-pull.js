@@ -54,6 +54,13 @@ if (from > to) {
         `\nNOTE: Odoo returned no mining rows for ${from}..${to}. The test instance's data stops `
         + 'on 2026-03-28 — a range after that date is expected to come back empty.');
     }
+    if (result.rowsUnknownProduct) {
+      console.log(
+        `\nNOTE: ${result.rowsUnknownProduct} ticket(s) used an Odoo product code with no known grade `
+        + `mapping (${Object.keys(result.unknownProductCodes).join(', ')}). They are stored, but excluded `
+        + 'from the Quarry report\'s totals until services/odooMiningSync.js\'s PRODUCT_LABEL is updated '
+        + 'for that code — confirm what it is with the mines/Odoo team first.');
+    }
     process.exit(0);
   } catch (err) {
     console.error('MINING_PULL_FAILED ' + err.message);
