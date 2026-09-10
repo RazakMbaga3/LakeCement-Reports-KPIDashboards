@@ -1405,6 +1405,23 @@ body.me-view-cards .me-cards > .me-group { grid-column: 1 / -1; }
   .me-pg-track { display: none; }
 }
 
+/* The collapse chevron is injected by forms/collapsible.js, which several
+   pages load WITHOUT forms/forms.css — so on daily-report the same button
+   fell back to browser defaults and rendered 19px tall with square
+   corners while every form page drew it 22px and rounded. One button, one
+   definition, stated where every page can see it. */
+.rcard-toggle {
+  width: 22px; height: 22px;
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, .12);
+  border: none; cursor: pointer; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; flex-shrink: 0;
+  transition: background var(--dur-fast) var(--ease);
+}
+.rcard-toggle:hover { background: rgba(255, 255, 255, .22); }
+.rcard-toggle svg { width: 12px; height: 12px; stroke-width: 2.5; }
+
 /* ── Report card headers wrap gracefully ───────────────────────────
    .rcard-hdr is a space-between flex row of title, date pill, department
    pill and a collapse chevron. On a phone the department pill takes the
