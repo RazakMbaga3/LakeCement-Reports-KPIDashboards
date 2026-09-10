@@ -496,6 +496,11 @@ td.cf .cv { color:var(--f-fg); }
   margin:var(--sp-1) 0;
   font-variant-numeric:tabular-nums;
 }
+/* Nothing to show. An em-dash at 26px/800 in navy is a solid bar, which
+   reads as a redacted figure rather than an absent one — the slot goes
+   quiet instead of shouting a blank. Applied by kpi-live.js on every
+   update, so a tile that receives a real value loses it again. */
+.kt-val.is-empty { font-weight:500; color:var(--text-muted); }
 .kt-unit { font-size:12px; color:var(--text-muted); }
 .kt-vs { margin-top:var(--sp-2); font-size:12px; font-weight:700; }
 .vs-ok { color:var(--green-ink); }

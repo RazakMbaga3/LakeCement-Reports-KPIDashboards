@@ -182,7 +182,17 @@ function esc(s) {
     territories = await NyatiAPI.getSalesTerritories();
   } catch (e) {
     fetchFailed = true;
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--red)">Could not load the officer roster — check your connection and reload.</td></tr>';
+    /* A refusal is not a connection fault. Told to "check your
+       connection and reload", a reader whose role does not include Sales
+       would reload forever — the roster endpoint is answering perfectly,
+       it is answering 403. Same distinction sales.html and
+       purchases.html now make. */
+    var denied = /\b403\b|forbidden|not permitted|access denied/i.test(String((e && e.message) || e));
+    tbody.innerHTML = denied
+      ? '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">' +
+        'The sales officer roster is limited to the commercial team — ask an administrator if you need it.</td></tr>'
+      : '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--red-ink)">' +
+        'Could not load the officer roster — check your connection and reload.</td></tr>';
   }
 
   if (territories.length) {

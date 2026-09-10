@@ -114,6 +114,37 @@
           });
         }
       });
+      markEmptyValues();
+    }
+
+    /* An em-dash at 26px/800 in navy is a solid bar — it reads as a
+       redacted figure rather than an absent one. Same treatment the KPI
+       dashboard's hero cards already got via .sk-value.is-empty.
+
+       Driven by a MutationObserver, not by this module's update cycle.
+       These tiles are written by several modules — report-rollup.js fills
+       the MTD roll-ups, the formula layer fills others — so a class set
+       from here alone stuck on two dispatch tiles that had since received
+       real figures, muting them. Watching the text means whoever writes
+       it, the styling follows. */
+    let _emptyObserver = null;
+    function markEmptyValues() {
+      const vals = document.querySelectorAll('.kt-val');
+      Array.prototype.forEach.call(vals, function (el) {
+        el.classList.toggle('is-empty', /^[—–-]$/.test((el.textContent || '').trim()));
+      });
+      if (_emptyObserver || !window.MutationObserver) return;
+      _emptyObserver = new MutationObserver(function (records) {
+        records.forEach(function (r) {
+          const el = r.target.nodeType === 1 ? r.target : r.target.parentElement;
+          if (el && el.classList && el.classList.contains('kt-val')) {
+            el.classList.toggle('is-empty', /^[—–-]$/.test((el.textContent || '').trim()));
+          }
+        });
+      });
+      Array.prototype.forEach.call(vals, function (el) {
+        _emptyObserver.observe(el, { childList: true, characterData: true, subtree: true });
+      });
     }
 
     /* live update on any input/change */
