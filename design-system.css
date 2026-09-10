@@ -602,6 +602,22 @@ html body canvas { max-width: 100%; }
   html body .rl-kpi-row,
   html body .kt-row { grid-template-columns: repeat(auto-fit, minmax(148px, 1fr)); }
 
+  /* The MIS stat strip is a FLEX row, so it was never in the list above
+     and the min-width:0 rule crushed it instead of wrapping it: at 820px
+     its eight tiles shrank to ~92px each and a headcount of 277 rendered
+     as "27" over "7", with "TOTAL EMPL / OYEES" beneath it. A number
+     broken across two lines is not a legibility nitpick — it is a
+     different number. Same auto-fit treatment as its grid siblings. */
+  html body .mis-kv-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  }
+  /* And a value never breaks mid-figure, whatever the container does. */
+  html body .mis-kv-val,
+  html body .kt-val,
+  html body .sk-value,
+  html body .rl-stat-val { overflow-wrap: normal; word-break: keep-all; }
+
   /* Long unbroken strings (report codes, equipment tags) must not act as
      a width floor either. */
   html body .main { overflow-wrap: break-word; }
