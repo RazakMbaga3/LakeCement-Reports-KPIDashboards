@@ -507,7 +507,7 @@
         /* footer */
         '<div style="padding:12px 18px;border-top:1px solid #EEF2F7;display:flex;gap:8px;justify-content:flex-end;flex-shrink:0">' +
           '<button id="_xi-cancel" style="padding:7px 18px;border-radius:6px;border:1.5px solid #CBD5E1;background:transparent;font-family:Inter,sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:#173158">Cancel</button>' +
-          '<button id="_xi-apply" style="padding:7px 20px;border-radius:6px;border:none;background:#F49545;font-family:Inter,sans-serif;font-size:12px;font-weight:700;cursor:pointer;color:white">Apply ' + matched.length + ' Fields →</button>' +
+          '<button id="_xi-apply" style="padding:7px 20px;border-radius:6px;border:none;background:#F49545;font-family:Inter,sans-serif;font-size:12px;font-weight:700;cursor:pointer;color:var(--on-orange)">Apply ' + matched.length + ' Fields →</button>' +
         '</div>' +
       '</div>';
 
