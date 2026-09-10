@@ -13,6 +13,15 @@
   <style>
     .adm-main { max-width: 1440px; margin: 0 auto; padding: 20px 28px 64px; }
     .adm-intro { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; max-width: 900px; line-height: 1.6; }
+    .adm-intro > summary {
+      cursor: pointer; font-weight: 700; color: var(--navy);
+      list-style: none; display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 0; min-height: 24px;
+    }
+    .adm-intro > summary::-webkit-details-marker { display: none; }
+    .adm-intro > summary::before { content: '›'; transition: transform .15s; font-size: 14px; }
+    .adm-intro[open] > summary::before { transform: rotate(90deg); }
+    .adm-intro > p { margin: 4px 0 0; }
 
     /* ── Toolbar ── */
     .adm-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
@@ -51,13 +60,19 @@
     /* ── Badges ── */
     .adm-tag { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .4px;
                padding: 2.5px 8px; border-radius: 6px; text-transform: uppercase; }
-    .tag-l1 { background: var(--st-good-bg); color: var(--green-ink); }
-    .tag-l2 { background: #DBEAFE; color: #1D4ED8; }
-    .tag-l3 { background: #F1F5F9; color: #475569; }
-    .tag-off { background: #FEE2E2; color: #B91C1C; }
-    .tag-pw  { background: var(--st-warn-bg); color: #B45309; }
-    .tag-lock{ background: #FEE2E2; color: #B91C1C; }
-    .tag-ok  { background: var(--st-good-bg); color: #047857; }
+    /* Access level is an ORDINAL scale, not a verdict. Painted green /
+       blue / grey, L1 read as "pass" and L3 as "disabled" — neither is
+       what a level means. The sequential ramp says "more, then less" and
+       leaves green and red to mean what they mean everywhere else in the
+       app. All three clear AA against --seq-7. */
+    .tag-l1 { background: var(--seq-3); color: var(--seq-7); }
+    .tag-l2 { background: var(--seq-2); color: var(--seq-7); }
+    .tag-l3 { background: var(--seq-1); color: var(--seq-7); }
+    /* These three ARE status, so they keep the status tokens. */
+    .tag-off { background: var(--st-bad-bg);  color: var(--red-ink); }
+    .tag-pw  { background: var(--st-warn-bg); color: var(--amber-ink); }
+    .tag-lock{ background: var(--st-bad-bg);  color: var(--red-ink); }
+    .tag-ok  { background: var(--st-good-bg); color: var(--green-ink); }
 
     /* ── Drawer ── */
     .adm-scrim { position: fixed; inset: 0; background: rgba(15,25,45,.45); z-index: 900; }
@@ -123,15 +138,23 @@
 <script>renderTopHeader();</script>
 
 <main class="adm-main">
-  <p class="adm-intro">
-    Create and manage MIS accounts without editing code. Changing a person's role, access level or
-    active status takes effect on their next request — their current session is revoked automatically.
-    Every change here is written to the audit trail. Accounts are never deleted, only deactivated,
-    because their id is referenced by every report, approval and KPI edit they have ever made.
-  </p>
+  <!-- A disclosure, not a wall. Set as a paragraph this ran seven lines on
+       a 390px phone — roughly 150px of prose before the first control, on
+       a page whose job is finding one account in sixty-nine. It is
+       reference material, so it opens on demand and stays out of the way
+       the rest of the time. -->
+  <details class="adm-intro">
+    <summary>About this page</summary>
+    <p>
+      Create and manage MIS accounts without editing code. Changing a person's role, access level or
+      active status takes effect on their next request — their current session is revoked automatically.
+      Every change here is written to the audit trail. Accounts are never deleted, only deactivated,
+      because their id is referenced by every report, approval and KPI edit they have ever made.
+    </p>
+  </details>
 
   <div class="adm-bar">
-    <input type="search" id="f-q" placeholder="Search name, username or email…" />
+    <input type="search" id="f-q" placeholder="Search users…" />
     <select id="f-dept"><option value="">All departments</option></select>
     <select id="f-level">
       <option value="">All levels</option>
@@ -147,7 +170,7 @@
     <span class="adm-count" id="adm-count"></span>
     <span class="adm-spacer"></span>
     <button class="adm-btn adm-btn-ghost" onclick="inviteBulk()" id="bulk-btn">
-      <i data-lucide="mail" style="width:13px;height:13px;"></i> Invite unactivated…
+      <i data-lucide="mail" style="width:13px;height:13px;"></i> Invite unactivated users…
     </button>
     <button class="adm-btn adm-btn-primary" onclick="openUserDrawer(null)">
       <i data-lucide="user-plus" style="width:13px;height:13px;"></i> Add User
@@ -528,7 +551,7 @@
         (failed.length ? `\n\nFailed:\n` + failed.map(f => `• ${f.username} (${f.email}) — ${f.reason}`).join('\n') : ''));
       await load();
     } catch (e) { alert(humanError(e)); }
-    finally { btn.disabled = false; btn.innerHTML = '<i data-lucide="mail" style="width:13px;height:13px;"></i> Invite unactivated…'; if (window.lucide) lucide.createIcons(); }
+    finally { btn.disabled = false; btn.innerHTML = '<i data-lucide="mail" style="width:13px;height:13px;"></i> Invite unactivated users…'; if (window.lucide) lucide.createIcons(); }
   };
 
   /* Only speaks up when something is wrong — a green "mail is fine" banner
