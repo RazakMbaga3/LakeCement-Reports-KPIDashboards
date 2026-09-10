@@ -613,8 +613,8 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
       max-width: 130px;
     }
     .auth-logout-btn {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 5px 11px;
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 4px 12px;
       border-radius: 6px;
       background: rgba(255,255,255,.1);
       border: 1px solid rgba(255,255,255,.2);
