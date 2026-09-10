@@ -58,14 +58,32 @@ hues on the same element.
 
 ## 3. Measured before → after
 
+`design-consistency-audit.js`, 24 pages, 1440px:
+
 | | before | after |
 |---|---|---|
-| spacing declarations off the 4px scale | 11,668 (17 distinct values) | see `consistency-final.txt` |
-| distinct corner radii | 16 | — |
-| distinct painted background colours | 73 | — |
-| elements carrying conflicting hues | 8 patterns, `.kt` at 4 signals | — |
-| text on a brand fill below 4.5:1 | 1 reported, **9 more found by probe** | — |
-| component classes with >1 geometry | 5 | — |
+| spacing declarations off the 4px scale | **11,668** (17 distinct values) | **62** (7 values) |
+| distinct corner radii | 16 | **9** |
+| text on a brand fill below 4.5:1 | 1 reported, **9 more found by probe** | **0** |
+| elements carrying conflicting hues | `.kt` at 4 signals, 8 patterns | **0** |
+| component classes with >1 geometry | 5 | **4 → 2 real** |
+| distinct painted background colours | 73 | 65 |
+
+The 62 remaining spacing values are almost entirely `margin-top: auto`
+resolving to a number on page footers — computed values, not declarations
+anyone wrote. Of the 4 remaining "drifting" component classes, two are
+artefacts of the check itself: `span.tag` differs only because longer
+text wraps to a second line, and `button.sec-tab` differs only in
+font-weight between its active and inactive states, which is the point of
+an active state.
+
+The three audits that already gated the repo, after every change:
+
+```
+audit:responsive   ✓ all 72 page/viewport checks passed
+audit:a11y         ✓ 0 serious or critical violations
+audit:perf         ✗ 1 page over budget (quarry) — see §7
+```
 
 ## 4. The headline defect
 
@@ -186,3 +204,32 @@ Kept deliberately, because each one is a rule now:
 - **Dark mode** remains out of scope, as before.
 - `form-materials` is **34,000px tall on a 360px screen** in card view —
   inherent to one-card-per-row, but worth a section-level disclosure.
+- KPI tile values still render their "no data" placeholder as an em-dash
+  at 26px/800, which is a solid bar. The hero cards on the KPI dashboard
+  were fixed (`.sk-value.is-empty`); doing the same for `.kt-val` needs a
+  JS pass on pages that do not currently run one, so it was left.
+- `.rcard-toggle` and `button.adm-btn` still differ by 2–3px between one
+  page and the rest. Real, but below the threshold worth more churn.
+
+## 8. Worth knowing before the next pass
+
+The three regressions in §6 all came from **bulk transformations run
+without a guard**. The two scripts kept in `scripts/` now carry those
+guards, and both are dry-run by default:
+
+```
+node scripts/normalize-spacing.js       # 4px scale
+node scripts/normalize-tokens.js        # radii + status tints
+node scripts/fix-on-orange.js           # text on a brand-orange fill
+```
+
+Run the visual pass with:
+
+```
+cd e2e
+node design-audit-screenshots.js --out design-audit/shots --frames 2
+node design-consistency-audit.js --json design-audit/consistency.json
+```
+
+Both need the harness accounts and a backend started with
+`AUTH_RATE_LIMIT=1000` — see `docs/DESIGN_SYSTEM.md`.
