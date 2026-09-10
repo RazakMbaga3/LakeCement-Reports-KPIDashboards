@@ -1033,7 +1033,10 @@ img { max-width: 100%; }
 .sk-card.sk-pending .sk-status-dot { background: var(--text-muted); }
 
 /* Reserve room for the corner badge (::after, ~85px wide) so longer status
-   text wraps before running into it instead of visually overlapping. */
+   text wraps before running into it instead of visually overlapping.
+   Off the 4px scale on purpose: it is measured against the badge, not
+   chosen — the same reason the KPI tile label used to reserve 74px. The
+   consistency audit reports it; this comment is the answer. */
 .sk-card.sk-illustrative .sk-status,
 .sk-card.sk-pending .sk-status { padding-right: 78px; }
 

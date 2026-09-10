@@ -316,11 +316,17 @@ const merge = (into, from, page) => {
   }
 
   const agg = { components: [], spacing: [], colors: {}, brandText: [], signals: [], radii: {}, shadows: {}, collisions: [] };
+  /* A run that collected nothing must not exit 0. This audit once passed
+     silently across all 24 pages because the in-page collector threw:
+     an empty findings list is indistinguishable from a clean sweep
+     unless the failures are counted. */
+  const collectErrors = [];
   for (const [label, url] of PAGES) {
     try { await page.goto(BASE + '/' + url, { waitUntil: 'networkidle', timeout: 30000 }); }
     catch (_) {}
     await page.waitForTimeout(1500);
-    const got = await page.evaluate(collect).catch(e => null);
+    const got = await page.evaluate(collect)
+      .catch(e => { collectErrors.push(`${label}: ${e && e.message}`); return null; });
     if (!got) { console.log(`  ! ${label} — collection failed`); continue; }
     merge(agg, got, label);
     console.log(`  · ${label.padEnd(16)} components=${String(got.components.length).padStart(4)}` +
@@ -434,6 +440,11 @@ const merge = (into, from, page) => {
   if (agg.collisions.length) findings.push(`${agg.collisions.length} in-flow elements overlap a sibling`);
 
   H('SUMMARY');
+  if (collectErrors.length) {
+    console.log(`  COLLECTION FAILED on ${collectErrors.length}/${PAGES.length} page(s) — this run proves nothing:`);
+    collectErrors.slice(0, 4).forEach(e => console.log('    ' + e));
+    process.exit(2);
+  }
   findings.forEach((f, i) => console.log(`  ${i + 1}. ${f}`));
   if (argJson) {
     const plain = o => Object.fromEntries(Object.entries(o).map(([k, v]) =>
