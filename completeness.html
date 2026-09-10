@@ -58,8 +58,8 @@
     }
     .cp-cell.wk-start { border-left: 1.5px solid var(--border); }
     .cp-dot { display: block; width: 100%; height: 100%; border-radius: 6px; cursor: default; }
-    .cp-dot.present { background: #239557; }
-    .cp-dot.missing { background: var(--st-bad-bd); }
+    .cp-dot.present { background: var(--st-good-bd); }
+    .cp-dot.missing { background: var(--st-bad); }
     .cp-dot.future  { background: #F1F5FB; }
     .cp-pct { padding: 8px 12px !important; text-align: right; font-weight: 700; }
     .cp-pct.good { color: var(--green-ink); } .cp-pct.fair { color: var(--amber-ink); } .cp-pct.poor { color: var(--red-ink); }
@@ -104,8 +104,8 @@
   <div class="stale-note" id="cp-stale" style="display:none"></div>
 
   <div class="cp-legend">
-    <span class="cp-legend-item"><span class="cp-legend-dot" style="background:#239557"></span> Entered</span>
-    <span class="cp-legend-item"><span class="cp-legend-dot" style="background:#e5395533;border:1px solid #e5395580"></span> Missed entry</span>
+    <span class="cp-legend-item"><span class="cp-legend-dot" style="background:var(--st-good-bd)"></span> Entered</span>
+    <span class="cp-legend-item"><span class="cp-legend-dot" style="background:var(--st-bad)"></span> Missed entry</span>
     <span class="cp-legend-item"><span class="cp-legend-dot" style="background:#F1F5FB"></span> Not due yet</span>
     <span style="margin-left:auto;color:var(--text-muted)" id="cp-range-lbl"></span>
   </div>

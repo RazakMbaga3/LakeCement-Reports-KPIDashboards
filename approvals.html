@@ -24,14 +24,13 @@
 
     .apv-actions { display: flex; gap: 8px; }
     .apv-btn { font-family: var(--font); font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer; }
-    .apv-btn-approve { background: #239557; color: white; }
-    .apv-btn-approve:hover { background: #1c7a46; }
+    .apv-btn-approve { background: var(--st-good); color: white; }
+    .apv-btn-approve:hover { background: #0F6039; }
     .apv-btn-reject { background: white; color: var(--red-ink); border: 1.5px solid var(--st-bad-bd); }
     .apv-btn-reject:hover { background: var(--st-bad-bg); }
     .apv-btn:disabled { opacity: .5; cursor: not-allowed; }
 
-    .apv-empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
-    .apv-error { text-align: center; padding: 20px; color: var(--red-ink); font-size: 12px; }
+    .apv-empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
   
   /* Figures column + the expandable panel behind it. An approver can now see
      the numbers on the row they are signing off, instead of only a remark. */
@@ -64,7 +63,7 @@
 <main class="apv-main">
   <p class="apv-intro">Reports submitted by Officer/Senior staff wait here for their department Head's sign-off before they count as final. Approving or rejecting is logged in the audit trail.</p>
 
-  <div class="apv-table-wrap">
+  <div class="apv-table-wrap" id="apv-table-wrap">
     <table class="apv-table" id="apv-table">
       <thead>
         <tr><th>Report</th><th>Date</th><th>Shift</th><th>Submitted By</th><th>Submitted At</th><th>Notes</th><th>Figures</th><th>Action</th></tr>
@@ -72,6 +71,11 @@
       <tbody><tr><td colspan="8" class="apv-empty">Loading…</td></tr></tbody>
     </table>
   </div>
+
+  <!-- An empty approvals queue is the GOOD state, so it gets a panel of
+       its own rather than one sentence stranded under eight column
+       headings for rows that are not there. -->
+  <div id="apv-state" hidden></div>
 </main>
 
 <footer class="dash-footer">
@@ -113,20 +117,45 @@
       d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
   }
 
+  /* isError: true = failure panel, false = empty panel, null = show the
+     table again. The table and the panel are never both on screen. */
+  function showState(isError, icon, title, body) {
+    var wrap  = document.getElementById('apv-table-wrap');
+    var panel = document.getElementById('apv-state');
+    if (!wrap || !panel) return;
+    if (isError === null) {
+      wrap.hidden = false; panel.hidden = true; panel.innerHTML = '';
+      return;
+    }
+    wrap.hidden = true;
+    panel.hidden = false;
+    panel.innerHTML =
+      '<div class="ds-state' + (isError ? ' is-error' : '') + '">' +
+        '<div class="ds-state-icon"><i data-lucide="' + icon + '"></i></div>' +
+        '<div class="ds-state-title">' + title + '</div>' +
+        '<div class="ds-state-body">' + body + '</div>' +
+      '</div>';
+    if (window.lucide) window.lucide.createIcons();
+  }
+
   async function load() {
     var tbody = document.querySelector('#apv-table tbody');
     var rows;
     try {
       rows = await NyatiAPI.getApprovals();
     } catch (e) {
-      tbody.innerHTML = '<tr><td colspan="8" class="apv-error">Could not load pending approvals — is the server reachable?</td></tr>';
+      showState(true, 'alert-octagon', 'Approvals could not be loaded',
+        humanError(e, 'The pending-approvals list could not be fetched.'));
       return;
     }
 
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="8" class="apv-empty">Nothing pending — every submitted report has been approved or rejected.</td></tr>';
+      showState(false, 'check-circle', 'Nothing waiting on you',
+        'Every submitted report has been approved or rejected. New submissions from your ' +
+        'department will appear here.');
       return;
     }
+    showState(null);
 
     tbody.innerHTML = rows.map(function (r, i) {
       var remarks = (r.data && (r.data.remarks || r.data.notes)) || '';

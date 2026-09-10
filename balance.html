@@ -42,7 +42,7 @@
 
     .bl-gap-note {
       background: var(--st-warn-bg); border: 1px solid var(--st-warn-bd); border-radius: 9px;
-      padding: 12px 16px; font-size: 12px; color: #92400E; margin-bottom: 20px; line-height: 1.5;
+      padding: 12px 16px; font-size: 12px; color: var(--amber-ink); margin-bottom: 20px; line-height: 1.5;
     }
     .bl-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 12px; }
   </style>
@@ -179,10 +179,41 @@
      the PREVIOUS date's chart on screen, captioned with the new date. */
   function destroyChart(id) { if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; } }
 
+  /* A destroyed chart used to leave a 220px empty white box under a navy
+     header — three of the four cards on this page, on any date missing
+     one of the two source forms. The page already knows WHY (the status
+     line says "missing Power Consumption for this date"); the card just
+     never said it. */
+  function markChartEmpty(id, reason) {
+    destroyChart(id);
+    var canvas = document.getElementById(id);
+    if (!canvas) return;
+    var wrap = canvas.parentNode;
+    canvas.style.display = 'none';
+    var msg = wrap.querySelector('.bl-chart-empty');
+    if (!msg) {
+      msg = document.createElement('div');
+      msg.className = 'bl-chart-empty ds-state is-compact';
+      wrap.appendChild(msg);
+    }
+    msg.hidden = false;
+    msg.innerHTML = '<div class="ds-state-body">' + reason + '</div>';
+  }
+
+  /* Undo the above when real data arrives for the same canvas. */
+  function clearChartEmpty(id) {
+    var canvas = document.getElementById(id);
+    if (!canvas) return;
+    canvas.style.display = '';
+    var msg = canvas.parentNode.querySelector('.bl-chart-empty');
+    if (msg) msg.hidden = true;
+  }
+
   /* Generic waterfall: steps = [{label, value, type:'total'|'increase'|'decrease'}].
      'total' draws a full bar from 0; 'increase'/'decrease' float from the
      running total before the step to the running total after it. */
   function renderWaterfall(canvasId, steps) {
+    clearChartEmpty(canvasId);
     var labels = [], data = [], colors = [];
     var running = 0;
     steps.forEach(function (s) {
@@ -270,7 +301,7 @@
     /* ── Clinker — own production ─────────────────────────────── */
     var ownOpen = n(prod.kiln_clinker_open), ownProd = n(prod.kiln_prod_mt), ownCons = n(prod.cm_clinker_own_cons);
     if (ownOpen === null && ownProd === null && ownCons === null) {
-      destroyChart('chart-clinker-own');
+      markChartEmpty('chart-clinker-own', 'No clinker ledger entries for this date — the Production Report has not been filled in.');
     } else {
       var ownClose = z0(ownOpen) + z0(ownProd) - z0(ownCons);
       renderWaterfall('chart-clinker-own', [
@@ -284,7 +315,7 @@
     /* ── Clinker — purchased ──────────────────────────────────── */
     var puOpen = n(prod.cm_clinker_purch_open), puRecv = n(prod.cm_clinker_purch_recv), puCons = n(prod.cm_clinker_purch_cons);
     if (puOpen === null && puRecv === null && puCons === null) {
-      destroyChart('chart-clinker-purch');
+      markChartEmpty('chart-clinker-purch', 'No purchased-clinker entries for this date — the Production Report has not been filled in.');
     } else {
       var puClose = z0(puOpen) + z0(puRecv) - z0(puCons);
       renderWaterfall('chart-clinker-purch', [
@@ -299,7 +330,7 @@
     var supplied = z0(power.pwr_tanesco_kwh) + z0(power.pwr_cpp_kwh);
     var consumed = sumOf(KWH_ALL, power);
     if (!supplied && !consumed) {
-      destroyChart('chart-power');
+      markChartEmpty('chart-power', 'No power readings for this date — the Power Consumption form has not been filled in.');
     } else {
       var loss = supplied - consumed;
       renderWaterfall('chart-power', [

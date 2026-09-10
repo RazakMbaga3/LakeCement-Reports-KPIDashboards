@@ -1627,6 +1627,16 @@ body.is-readonly .fill-monthly-btn { display: none !important; }
 }
 .ds-state-act:hover { background: #1E3D70; }
 
+/* Sized to sit inside a chart's own slot rather than beside it, so a
+   card whose chart has no data explains itself where the chart was. */
+.ds-state.is-compact {
+  height: 100%;
+  justify-content: center;
+  padding: var(--sp-4);
+  border: 1px dashed var(--st-neutral-bd);
+  background: transparent;
+}
+
 .ds-state.is-error {
   border-color: var(--st-bad-bd);
   background: var(--st-bad-bg);
