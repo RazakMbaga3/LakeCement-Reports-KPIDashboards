@@ -58,24 +58,32 @@ hues on the same element.
 
 ## 3. Measured before → after
 
-`design-consistency-audit.js`, 24 pages, 1440px:
+`design-consistency-audit.js`, 24 pages, run at **1440 and 1280** —
+identical results at both:
 
 | | before | after |
 |---|---|---|
-| spacing declarations off the 4px scale | **11,668** (17 distinct values) | **62** (7 values) |
+| spacing declarations off the 4px scale | **11,668** (17 distinct values) | **59** (6 values) |
 | distinct corner radii | 16 | **9** |
 | text on a brand fill below 4.5:1 | 1 reported, **9 more found by probe** | **0** |
 | elements carrying conflicting hues | `.kt` at 4 signals, 8 patterns | **0** |
-| component classes with >1 geometry | 5 | **4 → 2 real** |
-| distinct painted background colours | 73 | 65 |
+| in-flow elements overlapping a sibling | not measured | **0** |
+| component classes with >1 geometry | 5 | **3, all artefacts** |
+| distinct painted background colours | 73 | 64 |
 
-The 62 remaining spacing values are almost entirely `margin-top: auto`
-resolving to a number on page footers — computed values, not declarations
-anyone wrote. Of the 4 remaining "drifting" component classes, two are
-artefacts of the check itself: `span.tag` differs only because longer
-text wraps to a second line, and `button.sec-tab` differs only in
-font-weight between its active and inactive states, which is the point of
-an active state.
+Read the residue honestly rather than as a score:
+
+- Of the 59 spacing values, **48 are computed**, not written —
+  `margin-top: auto` resolving to a number on page footers, and
+  `margin-left: auto` on a status line. The remaining 11 are one
+  deliberate declaration: `.sk-status` reserves 78px to clear an ~85px
+  corner badge. It is measured against that badge, not chosen off a
+  scale, and it is commented as such at the source.
+- All **3 remaining "drifting" components are artefacts of the check**:
+  `span.tag` differs only because longer text wraps to a second line,
+  `button.sec-tab` only in font-weight between its active and inactive
+  states, and `button.adm-btn` by 2px on the one instance carrying an
+  icon. None is a design inconsistency.
 
 The three audits that already gated the repo, after every change:
 
@@ -188,6 +196,20 @@ Kept deliberately, because each one is a rule now:
    between axe's definition of "scrolls" and a 4px grace band in
    `a11y.js`. The band is now 1px — and any table overflowing its wrapper
    by two or three pixels was silently unreachable by keyboard before.
+4. **The scroll affordance unstuck what it decorated.** Widening it to
+   find scrollers by computed overflow correctly caught the stoppage
+   form's section tab bar — and `.ms-scroll-x { position: relative }`
+   overrode its `position: sticky`, turning `top: 121px` into a 121px
+   downward shift that dropped the tabs through the six KPI cards below.
+   Nothing overflowed and no contrast changed, so responsive and axe both
+   stayed green. **Check 7 was written afterwards and validated against
+   this exact defect** — reverted, it reports
+   `121px div.sec-nav over main.fm-main`; restored, zero.
+5. **The audit passed while it was broken.** One run exited 0 with an
+   empty summary because the in-page collector was throwing on all 24
+   pages. An empty findings list is indistinguishable from a clean sweep
+   unless failures are counted. It now exits 2 and says so — the worst
+   failure mode a check can have is looking like a pass.
 
 ## 7. Still open
 
