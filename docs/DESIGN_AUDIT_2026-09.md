@@ -71,27 +71,45 @@ identical results at both:
 | component classes with >1 geometry | 5 | **3, all artefacts** |
 | distinct painted background colours | 73 | 64 |
 
-Read the residue honestly rather than as a score:
+After the second pass (§7) the same audit reports, at 1440 / 820:
 
-- Of the 59 spacing values, **48 are computed**, not written —
-  `margin-top: auto` resolving to a number on page footers, and
-  `margin-left: auto` on a status line. The remaining 11 are one
-  deliberate declaration: `.sk-status` reserves 78px to clear an ~85px
-  corner badge. It is measured against that badge, not chosen off a
-  scale, and it is commented as such at the source.
-- All **3 remaining "drifting" components are artefacts of the check**:
-  `span.tag` differs only because longer text wraps to a second line,
-  `button.sec-tab` only in font-weight between its active and inactive
-  states, and `button.adm-btn` by 2px on the one instance carrying an
-  icon. None is a design inconsistency.
+| | 1440 | 820 |
+|---|---|---|
+| spacing off the 4px scale | 15 | 78 |
+| component classes with >1 geometry | 2 | 2 |
+| in-flow collisions | 0 | 0 |
+| text on a brand fill below 4.5:1 | 0 | 0 |
+| elements carrying conflicting hues | 0 | 0 |
 
-The three audits that already gated the repo, after every change:
+Read the residue honestly rather than as a score. **Every remaining
+spacing value is a deliberate constant or a computed one — none is an
+arbitrary choice:**
+
+- `44px` (×39) is `--tap`, the WCAG touch-target size.
+- `68px` (×24) is `--header-h`, the sticky header offset.
+- `78px` (×11) is `.sk-status` clearing an ~85px corner badge — measured
+  against that badge and commented as such at the source.
+- `376 / 399 / 95px` are `margin-top: auto` on page footers resolving to
+  a number. Nobody wrote them.
+
+Both remaining "drifting" components are **artefacts of the check**:
+`button.sec-tab` differs only in font-weight between its active and
+inactive states, which is the point of an active state, and
+`button.adm-btn` by 2px on the one instance whose icon differs.
+
+The three audits that already gated the repo, re-run after the final
+commit of both passes:
 
 ```
 audit:responsive   ✓ all 72 page/viewport checks passed
 audit:a11y         ✓ 0 serious or critical violations
-audit:perf         ✗ 1 page over budget (quarry) — see §7
+audit:perf         ✗ 1 page over budget (quarry, 1635KB) — see §8
 ```
+
+A note on the perf number: FCP is **noisy under machine load**. A "login
+FCP regression" during this work reproduced at 2272ms on a quiet re-run
+with byte-identical payload and request count. Re-run before believing
+one.
 
 ## 4. The headline defect
 
