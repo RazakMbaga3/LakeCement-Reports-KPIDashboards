@@ -51,8 +51,12 @@
     .ms-tbl .ms-tot { background:var(--navy) !important; color:white !important; font-weight:700; }
     .ms-tbl .ms-tot td { background:var(--navy) !important; color:white !important; border-color:#2A4A70; }
     /* Group headers in monthly table */
+    /* Two column GROUPS, so two steps of one hue — not navy against a
+       green. Green is the status language everywhere else in this app,
+       and a green group header made a percentage column read as a
+       passing one. */
     .ms-tbl .gh-qty { background:#2A4A70; }
-    .ms-tbl .gh-pct { background:#1A6040; }
+    .ms-tbl .gh-pct { background:var(--seq-5); }
     @media (min-width:768px) { .grade-grid { grid-template-columns:repeat(4,1fr); } }
   </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
