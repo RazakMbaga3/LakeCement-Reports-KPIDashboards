@@ -844,7 +844,15 @@ html body canvas { max-width: 100%; }
   overscroll-behavior-x: contain;
 }
 
-.ms-scroll-x {
+/* The fades are absolutely positioned, so the scroller needs to be a
+   containing block — but only if it is not already one. Widening the
+   affordance to every element that actually scrolls (rather than a list
+   of class names) caught .sec-nav on the stoppage form, which is
+   `position: sticky; top: 121px`. Overriding that to `relative` turned
+   its sticky offset into a 121px downward shift and dropped the section
+   tabs straight through the KPI cards below them. mobile-shell.js marks
+   anything already positioned so this rule leaves it alone. */
+.ms-scroll-x:not(.ms-positioned) {
   position: relative;
 }
 /* Right-edge fade — appears only while there is more to scroll to.

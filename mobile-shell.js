@@ -449,6 +449,10 @@
          saying nothing. */
       if (w.classList.contains('me-hidden')) return;
       w.dataset.msScroll = '1';
+      /* An element that already carries a positioning scheme (the section
+         tab bar is `position: sticky`) must keep it — the fades only need
+         SOME containing block, and a positioned element already is one. */
+      if (getComputedStyle(w).position !== 'static') w.classList.add('ms-positioned');
       w.classList.add('ms-scroll-x');
 
       const update = () => {
