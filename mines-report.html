@@ -378,7 +378,7 @@
       <!-- trend chart -->
       <div class="sc">
         <div class="sc-hdr">
-          <h3><i data-lucide="bar-chart-3" class="title-icon"></i> Daily Total Material Hauled — <span id="chart-month-lbl"></span></h3>
+          <h3><i data-lucide="bar-chart-3" class="title-icon"></i> Daily Total Material Hauled<span id="chart-month-lbl"></span></h3>
           <span class="sc-note">Click a bar to jump to that date</span>
         </div>
         <div class="chart-legend">
@@ -473,7 +473,7 @@
 
     <!-- ── SIGN-OFF (shared) ── -->
     <div class="sc" style="overflow:visible">
-      <div class="sc-hdr"><h3><i data-lucide="pen-line" class="title-icon"></i> Report Sign-Off — <span id="so-date-lbl"></span></h3></div>
+      <div class="sc-hdr"><h3><i data-lucide="pen-line" class="title-icon"></i> Report Sign-Off<span id="so-date-lbl"></span></h3></div>
       <div style="padding:2px 16px 8px;font-size:12px;color:var(--text-muted)">For the printed record only — does not replace the <a href="approvals.html" style="color:var(--orange-ink)">Approvals</a> workflow.</div>
       <div class="signoff">
         <div class="sign-slot">
@@ -823,7 +823,16 @@
       /* Seed with the April 2026 openings from the reference workbook so first
          parity check against Excel works out of the box. Fully editable. */
       store.openings['2026-04'] = { HG:44414.57, LG1:394234.20, HGHMGO:9895.62, OB:11123.38 };
-      await saveMonthConfig('2026-04');
+      /* Best-effort, and never on behalf of a reader. This POST fired on
+         every page load and 403'd for anyone without edit rights on the
+         mines report — surfacing "You do not have permission to change
+         this" as a red toast to someone who had only opened the page.
+         The seed is a convenience, not a user action: if it cannot be
+         persisted the values still stand locally and the report renders,
+         so its failure is not the reader's problem to be told about. */
+      if (!document.body.classList.contains('is-readonly')) {
+        await saveMonthConfig('2026-04').catch(function () {});
+      }
     }
   }
 
@@ -980,7 +989,7 @@
     renderSetup();
     renderMis();
     renderSignoff();
-    $('so-date-lbl').textContent = dateOf(selDate).toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+    $('so-date-lbl').textContent = ' — ' + dateOf(selDate).toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
     if (window.lucide) lucide.createIcons();
   }
 
@@ -1027,7 +1036,7 @@
   /* ── chart (stacked bars: material + waste) ── */
   function renderChart() {
     var ym = ymOf(selDate);
-    $('chart-month-lbl').textContent = monthLabel(ym);
+    $('chart-month-lbl').textContent = ' — ' + monthLabel(ym);
     var svg = $('tmh-chart');
     var days = monthDays(ym);
     var data = days.map(function (d) {
