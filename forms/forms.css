@@ -501,6 +501,13 @@ td.cf .cv { color:var(--f-fg); }
 .vs-ok { color:var(--green-ink); }
 .vs-ng { color:var(--red-ink); }
 .vs-wa { color:var(--amber-ink); }
+/* Not every line in this slot is a verdict. "Own production + purchased
+   receipts" and "42.5R · 32.5N · OPC · Jumbo" describe what the number
+   is; they were drawn in the same green as "▲ Within target range", so a
+   reader who had learned green = on target read six false reassurances
+   on one screen. A caption is grey. The arrow-prefixed lines, which are
+   the real judgements, keep the status colours. */
+.vs-note { color:var(--text-muted); font-weight:600; }
 
 .kt { transition:box-shadow var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease); }
 .kt:hover { box-shadow:var(--shadow-md); }
