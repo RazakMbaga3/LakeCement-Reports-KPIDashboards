@@ -433,13 +433,19 @@
     if (!c.total && c.locked) {
       bar.classList.add('me-pg-locked');
       bar.classList.remove('me-pg-done');
-      fill.style.width = '100%';
-      txt.textContent = 'View only';
-      if (track) track.setAttribute('aria-valuenow', '100');
+      /* Nothing to report progress ON. This used to fill the bar to 100%
+         and label it "View only" — a completed-looking progress bar for
+         a form that cannot be filled, sitting directly above the banner
+         that already says the same three words. The track and the label
+         go; the Cards/Table switch beside them stays, because choosing
+         how to read a report is still the reader's to make. */
+      if (track) track.hidden = true;
+      txt.textContent = '';
       syncSaveProxy(false);
       return;
     }
     bar.classList.remove('me-pg-locked');
+    if (track) track.hidden = false;
 
     const pct = c.total ? Math.round((c.filled / c.total) * 100) : 0;
     fill.style.width = pct + '%';
