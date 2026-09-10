@@ -40,10 +40,17 @@
     .bl-fig-val { font-size: 15px; font-weight: 800; color: var(--navy); }
     .bl-fig-lbl { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
 
+    /* Neutral, not amber. This is a scope note — it explains what the
+       page deliberately does not compute — and nothing about it is
+       wrong or needs acting on. In the warning palette it was the
+       loudest thing on the page, above the toolbar line that actually
+       does report a problem ("Partial data — missing Power Consumption
+       for this date"), which is the priority exactly inverted. */
     .bl-gap-note {
-      background: var(--st-warn-bg); border: 1px solid var(--st-warn-bd); border-radius: 9px;
-      padding: 12px 16px; font-size: 12px; color: var(--amber-ink); margin-bottom: 20px; line-height: 1.5;
+      background: var(--st-neutral-bg); border: 1px solid var(--st-neutral-bd); border-radius: 9px;
+      padding: 12px 16px; font-size: 12px; color: var(--st-neutral); margin-bottom: 20px; line-height: 1.5;
     }
+    .bl-gap-note strong { color: var(--navy); }
     .bl-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 12px; }
   </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->

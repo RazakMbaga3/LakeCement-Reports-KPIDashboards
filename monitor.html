@@ -26,7 +26,21 @@
   th { text-align:left; padding:8px 14px; background:#F7F8FA; color:#64748B; font-size:12px; text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid #EEF2F7; }
   td { padding:8px 14px; border-bottom:1px solid #F0F4F8; vertical-align:top; }
   .mono { font-family:Consolas,monospace; font-size:12px; color:#64748B; word-break:break-word; }
-  .tag { font-size:12px; font-weight:700; padding:2px 8px; border-radius:6px; }
+  /* A watchdog payload is one long JSON object. Left to wrap it filled
+     four lines of every row and buried the six one-line alerts sitting
+     between the health dumps. Two lines, with the whole value on the
+     element's title for when it is actually needed. */
+  #t-alerts .mono {
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+    overflow:hidden; max-width:640px;
+  }
+  /* A badge that wraps is not a badge. "missed-entry:power-cons" was
+     breaking after the hyphen and rendering as two stacked half-pills,
+     36px tall against its neighbours' 20px — which is what the
+     consistency audit was reporting as this class having two geometries.
+     It is one badge; it just needed to be allowed to stay on one line. */
+  .tag { font-size:12px; font-weight:700; padding:2px 8px; border-radius:6px;
+         display:inline-block; white-space:nowrap; }
   .t-ok { background:var(--st-good-bd); color:#14532D; } .t-warn { background:var(--st-warn-bg); color:#92400E; } .t-bad { background:var(--st-bad-bd); color:#7F1D1D; }
   .empty { padding:20px; text-align:center; color:var(--text-muted); font-size:12px; }
   .pull-box { padding:14px 16px; }
@@ -151,7 +165,7 @@
     table('t-alerts', ['When', 'Kind', 'Detail', 'Emailed'],
       s.alerts.map(a => [when(a.created_at),
         '<span class="tag t-bad">' + esc(a.kind) + '</span>',
-        '<span class="mono">' + esc(a.detail) + '</span>',
+        '<span class="mono" title="' + esc(a.detail) + '">' + esc(a.detail) + '</span>',
         a.emailed ? '✓' : '—']));
 
     table('t-errors', ['When', 'User', 'Page', 'Message', 'Source'],
