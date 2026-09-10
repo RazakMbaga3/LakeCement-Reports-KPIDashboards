@@ -30,7 +30,7 @@
     6. RADIUS/ELEVATION  distinct corner radii and shadows in use. A
                          design system has a handful; drift has dozens.
 
-      node design-consistency-audit.js [--json out.json] [--pages a,b]
+      node design-consistency-audit.js [--json out.json] [--pages a,b] [--width 1280]
   ══════════════════════════════════════════════════════════════════════ */
 'use strict';
 
@@ -43,6 +43,7 @@ const PASS = process.env.AUDIT_PASS || 'E2E@Harness2026!';
 
 const arg = (n, d) => { const i = process.argv.indexOf('--' + n); return i > -1 ? process.argv[i + 1] : d; };
 const argJson = arg('json');
+const WIDTH = parseInt(arg('width', '1440'), 10);
 
 const ALL_PAGES = [
   ['portal', 'portal.html'], ['kpi-dashboard', 'index.html'], ['mis', 'mis.html'],
@@ -112,7 +113,7 @@ function collect() {
 
   const out = {
     components: [], spacing: [], colors: {}, brandText: [],
-    signals: [], radii: {}, shadows: {},
+    signals: [], radii: {}, shadows: {}, collisions: [],
   };
 
   /* The Nyati brand fills. Text drawn on these must use the ink pairing. */
@@ -233,12 +234,53 @@ function collect() {
       if (out.shadows[k].where.length < 3) out.shadows[k].where.push(sig);
     }
   }
+  /* 7 — IN-FLOW COLLISIONS
+     Two block siblings that are both in normal flow must not sit on top
+     of each other. They did: widening the wide-table scroll affordance
+     put `position: relative` on the stoppage form's section tab bar,
+     which was `position: sticky; top: 121px` — turning a sticky offset
+     into a 121px downward shift that dropped the tabs through the six
+     KPI cards below them. Nothing overflowed and no contrast changed, so
+     every other check in this repo stayed green.
+
+     Only STATIC and RELATIVE siblings are compared. Absolute, fixed and
+     sticky elements overlap on purpose, and a sticky element is only
+     compared while it is resting at its natural offset. */
+  const blockish = el => {
+    const d = getComputedStyle(el).display;
+    return d === 'block' || d === 'flex' || d === 'grid' || d === 'table';
+  };
+  for (const el of all) {
+    const s = cs(el);
+    if (s.position !== 'static' && s.position !== 'relative') continue;
+    if (!blockish(el)) continue;
+    const next = el.nextElementSibling;
+    if (!next || !vis(next)) continue;
+    const ns = cs(next);
+    if (ns.position !== 'static' && ns.position !== 'relative') continue;
+    if (!blockish(next)) continue;
+    const a = el.getBoundingClientRect(), b = next.getBoundingClientRect();
+    /* Horizontal neighbours in a flex row legitimately share a band. */
+    if (a.right <= b.left + 1 || b.right <= a.left + 1) continue;
+    const overlap = Math.round(a.bottom - b.top);
+    if (overlap > 2) {
+      out.collisions.push({
+        a: el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' && el.className.trim()
+             ? '.' + el.className.trim().split(/\s+/)[0] : ''),
+        b: next.tagName.toLowerCase() + (next.className && typeof next.className === 'string' && next.className.trim()
+             ? '.' + next.className.trim().split(/\s+/)[0] : ''),
+        overlap, aPos: s.position, aTop: s.top,
+      });
+    }
+  }
+
   return out;
 }
 
 /* ── Host-side aggregation ─────────────────────────────────────────── */
 const merge = (into, from, page) => {
   for (const c of from.components) into.components.push({ ...c, page });
+  for (const x of (from.collisions || [])) into.collisions.push({ ...x, page });
   for (const s of from.spacing)    into.spacing.push({ ...s, page });
   for (const b of from.brandText)  into.brandText.push({ ...b, page });
   for (const s of from.signals)    into.signals.push({ ...s, page });
@@ -256,7 +298,10 @@ const merge = (into, from, page) => {
 
 (async () => {
   const browser = await chromium.launch();
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  /* One width is not the whole answer: the section-tab collision only
+     exists at widths where nine tabs do not fit, which 1440 happens to
+     clear. Run it at 1280 as well. */
+  const ctx = await browser.newContext({ viewport: { width: WIDTH, height: 900 } });
   const page = await ctx.newPage();
 
   await page.goto(BASE + '/login.html', { waitUntil: 'domcontentloaded' });
@@ -270,7 +315,7 @@ const merge = (into, from, page) => {
     await browser.close(); process.exit(2);
   }
 
-  const agg = { components: [], spacing: [], colors: {}, brandText: [], signals: [], radii: {}, shadows: {} };
+  const agg = { components: [], spacing: [], colors: {}, brandText: [], signals: [], radii: {}, shadows: {}, collisions: [] };
   for (const [label, url] of PAGES) {
     try { await page.goto(BASE + '/' + url, { waitUntil: 'networkidle', timeout: 30000 }); }
     catch (_) {}
@@ -281,7 +326,8 @@ const merge = (into, from, page) => {
     console.log(`  · ${label.padEnd(16)} components=${String(got.components.length).padStart(4)}` +
                 `  offScale=${String(got.spacing.length).padStart(4)}` +
                 `  brandText=${String(got.brandText.length).padStart(3)}` +
-                `  overloaded=${String(got.signals.length).padStart(3)}`);
+                `  overloaded=${String(got.signals.length).padStart(3)}` +
+                `  collide=${String(got.collisions.length).padStart(3)}`);
   }
   await browser.close();
 
@@ -373,6 +419,20 @@ const merge = (into, from, page) => {
   if (rr.length > 8)  findings.push(`${rr.length} distinct corner radii in use`);
   if (sh.length > 8)  findings.push(`${sh.length} distinct shadows in use`);
 
+  H('7 · IN-FLOW COLLISIONS — two block siblings sitting on each other');
+  const colBy = {};
+  for (const x of agg.collisions) {
+    const k = `${x.a} over ${x.b}`;
+    (colBy[k] = colBy[k] || { n: 0, pages: new Set(), overlap: 0, aPos: x.aPos, aTop: x.aTop });
+    colBy[k].n++; colBy[k].pages.add(x.page); colBy[k].overlap = Math.max(colBy[k].overlap, x.overlap);
+  }
+  for (const [k, v] of Object.entries(colBy).sort((a, b) => b[1].overlap - a[1].overlap).slice(0, 12)) {
+    console.log(`  ${String(v.overlap).padStart(4)}px  ${k}   (${v.aPos} top:${v.aTop})  [${[...v.pages].slice(0, 3).join(', ')}]`);
+  }
+  console.log(`
+  → ${agg.collisions.length} overlapping sibling pairs, ${Object.keys(colBy).length} distinct`);
+  if (agg.collisions.length) findings.push(`${agg.collisions.length} in-flow elements overlap a sibling`);
+
   H('SUMMARY');
   findings.forEach((f, i) => console.log(`  ${i + 1}. ${f}`));
   if (argJson) {
@@ -380,7 +440,8 @@ const merge = (into, from, page) => {
       [k, { ...v, where: [...(v.where || [])], pages: [...(v.pages || [])] }]));
     fs.writeFileSync(argJson, JSON.stringify({
       components: agg.components, spacing: agg.spacing, brandText: agg.brandText,
-      signals: agg.signals, colors: plain(agg.colors), radii: plain(agg.radii), shadows: plain(agg.shadows),
+      signals: agg.signals, collisions: agg.collisions,
+      colors: plain(agg.colors), radii: plain(agg.radii), shadows: plain(agg.shadows),
     }, null, 2));
     console.log(`\n  json → ${argJson}`);
   }
