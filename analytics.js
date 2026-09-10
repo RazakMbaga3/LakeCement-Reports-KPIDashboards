@@ -527,6 +527,8 @@
      so a later re-render (storage event, demo data) reflects the same
      period the user picked, not whatever was current on first load. */
   var _currentRange = { type: 'days', days: 30 };
+  /* True until bootstrap() has settled which window to show. See render(). */
+  var _resolvingPeriod = true;
   /* Set once at bootstrap from GET /api/mis/data-range when the newest entry
      predates today; null means "anchor on today" as before. */
   var _rangeEnd = null;
@@ -549,8 +551,14 @@
     var emptyEl   = document.getElementById('an-empty');
     var contentEl = document.getElementById('an-content');
     if (!hasAny) {
-      if (emptyEl)   emptyEl.style.display   = 'flex';
       if (contentEl) contentEl.style.display = 'none';
+      /* Do not assert "No trend data yet" while the period is still being
+         resolved. The first pass runs against a window ending TODAY, which
+         is empty whenever entry has lapsed — and the fallback window that
+         follows a moment later usually has data. Announcing that there is
+         none and then replacing it with fifteen charts two seconds on is
+         worse than saying nothing for those two seconds. */
+      if (emptyEl) emptyEl.style.display = _resolvingPeriod ? 'none' : 'flex';
       return;
     }
     if (emptyEl)   emptyEl.style.display   = 'none';
@@ -786,11 +794,16 @@
      end there and say so, rather than showing 15 empty charts. */
   async function bootstrap() {
     render();
-    if (!window.LatestPeriod) return;
-    var r = await LatestPeriod.defaultRange(_currentRange.days || 30, null);
-    if (!r.fellBack) return;
-    _rangeEnd = r.to;
-    LatestPeriod.showNote('an-stale', r);
+    if (window.LatestPeriod) {
+      var r = await LatestPeriod.defaultRange(_currentRange.days || 30, null);
+      if (r.fellBack) {
+        _rangeEnd = r.to;
+        LatestPeriod.showNote('an-stale', r);
+      }
+    }
+    /* The window is settled now, so an empty result is finally the truth
+       and render() is allowed to say so. */
+    _resolvingPeriod = false;
     render();
   }
 
