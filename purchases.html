@@ -46,6 +46,34 @@
     .po-state.confirmed { background: var(--green-bg); color: var(--green-ink); }
     .po-state.draft { background: var(--st-warn-bg); color: var(--orange-ink); }
 
+    /* ── PO List table (.rt) ──────────────────────────────────────
+       Never styled: this page loads only styles.css, and .rt/.grp-hdr/
+       .tl are defined in forms/forms.css, which a dashboard page has no
+       reason to load (it is ~700 lines of form-ENTRY styling — toolbars,
+       KPI tiles, section legends — for the sake of six lines of table
+       CSS). The table was rendering with the browser's own default
+       borderless, unpadded table style. Every other root-level report
+       page (daily-report.html, power-plant-report.html) hits the same
+       gap and solves it the same way: duplicate the small .rt block
+       locally rather than import the whole form-entry stylesheet. */
+    .rt { width:100%; border-collapse:collapse; font-size:12px; }
+    .rt thead th {
+      background:#F1F5FB; color:var(--navy); font-weight:700;
+      text-transform:uppercase; letter-spacing:.5px; padding:10px 12px;
+      text-align:center; white-space:nowrap;
+    }
+    .rt thead th.tl { text-align:left; padding-left:16px; }
+    .rt thead th.num { text-align:right; padding-right:16px; }
+    .rt thead .grp-hdr { background:var(--navy-light); color:rgba(255,255,255,.85); }
+    .rt tbody td {
+      padding:9px 12px; text-align:center; vertical-align:middle;
+      border-bottom:1px solid var(--border);
+    }
+    .rt tbody td.tl { text-align:left; padding-left:16px; font-weight:600; color:var(--navy); }
+    .rt tbody td.num { text-align:right; padding-right:16px; font-variant-numeric:tabular-nums; }
+    .rt tbody tr:last-child td { border-bottom:none; }
+    .rt tbody tr:hover td { background:var(--off-white); }
+
     /* ── Stores / Inventory ─────────────────────────────────────── */
     .st-divider {
       display: flex; align-items: center; gap: 10px;
@@ -206,7 +234,7 @@
             <th class="tl grp-hdr">PO Number</th>
             <th class="tl grp-hdr">Vendor</th>
             <th class="grp-hdr">Date</th>
-            <th class="grp-hdr">Amount (TZS)</th>
+            <th class="num grp-hdr">Amount (TZS)</th>
             <th class="grp-hdr">Status</th>
           </tr>
         </thead>
@@ -504,7 +532,7 @@
       var stateCls = (po.state === 'purchase' || po.state === 'done') ? 'confirmed' : 'draft';
       return '<tr><td class="tl">' + esc(po.name) + '</td><td class="tl">' + esc(po.vendor || '—') + '</td>' +
         '<td>' + esc((po.date_order || '').slice(0, 10)) + '</td>' +
-        '<td>' + fmt(po.amount_total) + '</td>' +
+        '<td class="num">' + fmt(po.amount_total) + '</td>' +
         '<td><span class="po-state ' + stateCls + '">' + esc(po.state) + '</span></td></tr>';
     }).join('');
     tbody.innerHTML = html;

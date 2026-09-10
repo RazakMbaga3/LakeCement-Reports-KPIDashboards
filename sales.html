@@ -58,6 +58,38 @@
 
     .perf-table .div-row td { background: #F1F5FB; font-weight: 700; color: var(--navy); font-size: 12px; }
     .perf-table .zone-row td:first-child { padding-left: 28px; color: var(--text-muted); }
+
+    /* ── Officer Achievement table (.rt) ────────────────────────────
+       Never styled: this page loads only styles.css, and .rt/.grp-hdr/
+       .tl are defined in forms/forms.css, which a dashboard page has no
+       reason to load (~700 lines of form-ENTRY styling for six lines of
+       table CSS). The table rendered with the browser's own default
+       borderless, unpadded style. Same gap, same local fix, as
+       purchases.html and every root-level report page that isn't under
+       forms/ (daily-report.html, power-plant-report.html). */
+    .rt { width:100%; border-collapse:collapse; font-size:12px; }
+    .rt thead th {
+      background:#F1F5FB; color:var(--navy); font-weight:700;
+      text-transform:uppercase; letter-spacing:.5px; padding:10px 12px;
+      text-align:center; white-space:nowrap;
+    }
+    .rt thead th.tl { text-align:left; padding-left:16px; }
+    .rt thead th.num { text-align:right; padding-right:16px; }
+    .rt thead .grp-hdr { background:var(--navy-light); color:rgba(255,255,255,.85); }
+    .rt tbody td {
+      padding:9px 12px; text-align:center; vertical-align:middle;
+      border-bottom:1px solid var(--border);
+    }
+    .rt tbody td.tl { text-align:left; padding-left:16px; font-weight:600; color:var(--navy); }
+    .rt tbody td.num { text-align:right; padding-right:16px; font-variant-numeric:tabular-nums; }
+    .rt tbody tr:last-child td { border-bottom:none; }
+    .rt tbody tr:hover td { background:var(--off-white); }
+    .rt tfoot td {
+      padding:10px 12px; text-align:center; font-weight:700; color:var(--navy);
+      background:var(--section-bg); border-top:2px solid var(--border);
+    }
+    .rt tfoot td.tl { text-align:left; padding-left:16px; }
+    .rt tfoot td.num { text-align:right; padding-right:16px; font-variant-numeric:tabular-nums; }
   </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="design-system.css?v=1" />
@@ -156,10 +188,10 @@
           <tr>
             <th class="tl grp-hdr">Sales Officer</th>
             <th class="tl grp-hdr">Division / Zone</th>
-            <th class="grp-hdr">Customers</th>
-            <th class="grp-hdr">Target MT</th>
-            <th class="grp-hdr">Actual MT</th>
-            <th class="grp-hdr">Achievement %</th>
+            <th class="num grp-hdr">Customers</th>
+            <th class="num grp-hdr">Target MT</th>
+            <th class="num grp-hdr">Actual MT</th>
+            <th class="num grp-hdr">Achievement %</th>
           </tr>
         </thead>
         <tbody id="sd-oa-officers"></tbody>
@@ -182,9 +214,9 @@
           <tr>
             <th class="tl grp-hdr">Division / Zone</th>
             <th class="tl grp-hdr">Sales Officer / Manager</th>
-            <th class="grp-hdr">Projected MT</th>
-            <th class="grp-hdr">Target MT</th>
-            <th class="grp-hdr">Achievement %</th>
+            <th class="num grp-hdr">Projected MT</th>
+            <th class="num grp-hdr">Target MT</th>
+            <th class="num grp-hdr">Achievement %</th>
           </tr>
         </thead>
         <tbody id="sd-performance"></tbody>
@@ -427,14 +459,22 @@
     if (!perf.divisions.length) { empty.style.display = 'block'; tbody.innerHTML = ''; return; }
     empty.style.display = 'none';
     var html = '';
+    /* Same RAG thresholds already used for this page's MTD-vs-target
+       card (line ~447), and the same already-AA-safe status tokens
+       (--st-good/--st-warn/--st-bad, not the raw brand fills). */
+    function achColor(p) {
+      return p == null ? GRAY : p >= 100 ? ST.good : p >= 80 ? ST.warning : ST.bad;
+    }
     perf.divisions.forEach(function (div) {
-      html += '<tr class="div-row"><td>' + esc(div.division) + '</td><td>' + esc(div.divisional_manager || '—') + '</td>' +
-        '<td>' + fmt(div.projected_mt) + '</td><td>' + (div.target_mt ? fmt(div.target_mt) : '—') + '</td>' +
-        '<td>' + (div.achievement_pct != null ? div.achievement_pct.toFixed(1) + '%' : '—') + '</td></tr>';
+      html += '<tr class="div-row"><td class="tl">' + esc(div.division) + '</td><td class="tl">' + esc(div.divisional_manager || '—') + '</td>' +
+        '<td class="num">' + fmt(div.projected_mt) + '</td><td class="num">' + (div.target_mt ? fmt(div.target_mt) : '—') + '</td>' +
+        '<td class="num" style="font-weight:700;color:' + achColor(div.achievement_pct) + '">' +
+          (div.achievement_pct != null ? div.achievement_pct.toFixed(1) + '%' : '—') + '</td></tr>';
       div.zones.forEach(function (z) {
-        html += '<tr class="zone-row"><td>' + esc(z.zone) + '</td><td>' + esc(z.sales_officer) + '</td>' +
-          '<td>' + fmt(z.projected_mt) + '</td><td>' + (z.target_mt ? fmt(z.target_mt) : '—') + '</td>' +
-          '<td>' + (z.achievement_pct != null ? z.achievement_pct.toFixed(1) + '%' : '—') + '</td></tr>';
+        html += '<tr class="zone-row"><td class="tl">' + esc(z.zone) + '</td><td class="tl">' + esc(z.sales_officer) + '</td>' +
+          '<td class="num">' + fmt(z.projected_mt) + '</td><td class="num">' + (z.target_mt ? fmt(z.target_mt) : '—') + '</td>' +
+          '<td class="num" style="color:' + achColor(z.achievement_pct) + '">' +
+            (z.achievement_pct != null ? z.achievement_pct.toFixed(1) + '%' : '—') + '</td></tr>';
       });
     });
     tbody.innerHTML = html;
@@ -457,25 +497,32 @@
     empty.style.display = 'none';
     sub.textContent = '— actual sales vs target, from Odoo, attributed via each customer’s assigned officer';
 
+    /* Ink tokens, not the raw brand/status hexes. --green (3.81:1) and
+       --orange (2.27:1) both fail AA for normal text — measured, not
+       assumed — which is exactly why this app keeps a separate *-ink
+       token for every colour that has to carry text: --green-ink
+       (6.15:1), --amber-ink (5.02:1), --red-ink (5.91:1). This
+       function was the one place in the app still reaching for the
+       fill colour instead of its ink pairing. */
     function pctColor(p) {
       if (p == null) return 'var(--text-muted)';
-      return p >= 90 ? 'var(--green)' : p >= 60 ? 'var(--orange)' : '#C62828';
+      return p >= 90 ? 'var(--green-ink)' : p >= 60 ? 'var(--amber-ink)' : 'var(--red-ink)';
     }
 
     tbody.innerHTML = oa.officers.map(function (o) {
       return '<tr><td class="tl">' + esc(o.salesperson || 'Unassigned') + '</td>' +
         '<td class="tl">' + esc(o.division || '—') + ' / ' + esc(o.zone || '—') + '</td>' +
-        '<td>' + fmt(o.customer_count) + '</td>' +
-        '<td>' + fmt(o.target_mt) + '</td>' +
-        '<td>' + fmt(o.actual_mt) + '</td>' +
-        '<td style="font-weight:700;color:' + pctColor(o.achievement_pct) + '">' +
+        '<td class="num">' + fmt(o.customer_count) + '</td>' +
+        '<td class="num">' + fmt(o.target_mt) + '</td>' +
+        '<td class="num">' + fmt(o.actual_mt) + '</td>' +
+        '<td class="num" style="font-weight:700;color:' + pctColor(o.achievement_pct) + '">' +
           (o.achievement_pct != null ? o.achievement_pct.toFixed(1) + '%' : '—') + '</td></tr>';
     }).join('');
 
-    tfoot.innerHTML = '<tr style="font-weight:700;border-top:2px solid var(--border)">' +
-      '<td class="tl" colspan="2">Company Total</td><td>' + fmt(oa.customer_count) + '</td>' +
-      '<td>' + fmt(oa.company_target_mt) + '</td><td>' + fmt(oa.company_actual_mt) + '</td>' +
-      '<td style="color:' + pctColor(oa.company_target_mt ? (oa.company_actual_mt / oa.company_target_mt) * 100 : null) + '">' +
+    tfoot.innerHTML = '<tr>' +
+      '<td class="tl" colspan="2">Company Total</td><td class="num">' + fmt(oa.customer_count) + '</td>' +
+      '<td class="num">' + fmt(oa.company_target_mt) + '</td><td class="num">' + fmt(oa.company_actual_mt) + '</td>' +
+      '<td class="num" style="color:' + pctColor(oa.company_target_mt ? (oa.company_actual_mt / oa.company_target_mt) * 100 : null) + '">' +
         (oa.company_target_mt ? ((oa.company_actual_mt / oa.company_target_mt) * 100).toFixed(1) + '%' : '—') +
       '</td></tr>';
 
