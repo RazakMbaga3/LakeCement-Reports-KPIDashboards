@@ -59,11 +59,19 @@
     .sb-card.draft::before     { background:#D97706; }
     .sb-card.missing::before   { background:#E2E8F0; }
 
-    .sb-card-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+    /* gap, so a title that now shrinks to fit cannot end up touching the
+       badge it was making room for. */
+    .sb-card-top { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
     .sb-card-name {
       font-size:12px; font-weight:700; color:var(--navy); text-transform:uppercase;
       letter-spacing:.5px; display:flex; align-items:center; gap:6px;
+      /* A flex item will not shrink below its content unless told to, so
+         the longest title — POWER CONSUMPTION — pushed its NOT STARTED
+         badge past the card edge, where overflow:hidden cut it to
+         "NOT S". The badge is the status; the title can give way. */
+      min-width:0;
     }
+    .sb-card-name span { overflow:hidden; text-overflow:ellipsis; }
     .sb-badge {
       font-size:12px; font-weight:800; padding:2px 8px; border-radius:14px;
       text-transform:uppercase; letter-spacing:.5px; flex-shrink:0;
@@ -77,7 +85,23 @@
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     }
     .sb-card-by strong { color:var(--navy); }
-    .sb-card-time { font-size:12px; color:var(--text-muted); }
+    /* .sb-card-open below is absolutely positioned in this card's
+       bottom-right corner, so it floats OVER this line. Without a
+       reservation the two longest owner names — "Owner: QC / Quarry
+       Chemist" and "Owner: Sales & Marketing Manager" — ran 44px
+       underneath "Open →" and the words printed on top of each other.
+       The link measures 44px; 56 clears it with a gap. Truncation is the
+       backstop, as .sb-card-by already does. */
+    .sb-card-time {
+      font-size:12px; color:var(--text-muted);
+      /* margin, not padding. overflow:hidden clips at the PADDING edge,
+         so nowrap text runs straight through a padding-right reservation
+         and prints over the link anyway — which it did, at 820px, where
+         three columns make the cards narrowest. A margin shrinks the box
+         itself, so the ellipsis lands where it should. */
+      margin-right:56px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
     .sb-card-open {
       position:absolute; bottom:10px; right:14px;
       font-size:12px; font-weight:700; color:var(--orange-ink);
