@@ -19,7 +19,10 @@
   .card p { font-size:12px; color:var(--text-muted); line-height:1.5; margin-bottom:14px; }
   .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
   input, select { border:1.5px solid #DDE3EC; border-radius:6px; padding:8px 10px; font:600 13px 'Inter',sans-serif; color:#173158; }
-  .btn { border:none; border-radius:6px; padding:8px 16px; font:700 12px 'Inter',sans-serif; cursor:pointer; }
+  .btn { border:none; border-radius:6px; padding:8px 16px; font:700 12px 'Inter',sans-serif; cursor:pointer;
+         display:inline-flex; align-items:center; gap:6px; }
+  .btn svg { width:14px; height:14px; flex:none; }
+  .row-actions { margin-top:10px; }
   .btn-orange { background:#F49545; color:var(--on-orange); }
   .btn-navy   { background:#173158; color:white; }
   .btn:disabled { background:#CBD5E1; cursor:not-allowed; }
@@ -49,10 +52,17 @@
     <h2>Daily MIS Report</h2>
     <p>All department submissions and computed KPIs for one day.
        Print view opens in a new tab — use the Print button there to save as PDF.</p>
+    <!-- Controls and actions on separate rows. Sharing one wrapping flex
+         row, the wide date input pushed Excel onto a second line here
+         while the two narrow selects below kept both buttons together —
+         so the same pair of actions laid out differently in adjacent
+         cards, at one width and not another. -->
     <div class="row">
       <input type="date" id="d-date">
-      <button class="btn btn-navy"   onclick="openHtml('daily')">🖨 Print view</button>
-      <button class="btn btn-orange" onclick="downloadXlsx('daily')">⬇ Excel</button>
+    </div>
+    <div class="row row-actions">
+      <button class="btn btn-navy"   onclick="openHtml('daily')"><i data-lucide="printer"></i> Print view</button>
+      <button class="btn btn-orange" onclick="downloadXlsx('daily')"><i data-lucide="file-down"></i> Excel</button>
     </div>
     <div class="msg" id="d-msg"></div>
   </div>
@@ -64,8 +74,10 @@
     <div class="row">
       <select id="m-month"></select>
       <select id="m-year"></select>
-      <button class="btn btn-navy"   onclick="openHtml('monthly')">🖨 Print view</button>
-      <button class="btn btn-orange" onclick="downloadXlsx('monthly')">⬇ Excel</button>
+    </div>
+    <div class="row row-actions">
+      <button class="btn btn-navy"   onclick="openHtml('monthly')"><i data-lucide="printer"></i> Print view</button>
+      <button class="btn btn-orange" onclick="downloadXlsx('monthly')"><i data-lucide="file-down"></i> Excel</button>
     </div>
     <div class="msg" id="m-msg"></div>
   </div>
@@ -75,7 +87,7 @@
     <p>Emails yesterday's headline KPIs to the configured management list.
        The scheduled send runs automatically; this button sends one now.</p>
     <div class="row">
-      <button class="btn btn-orange" onclick="sendDigest()" id="digest-btn">📧 Send digest now</button>
+      <button class="btn btn-orange" onclick="sendDigest()" id="digest-btn"><i data-lucide="mail"></i> Send digest now</button>
     </div>
     <div class="msg" id="g-msg"></div>
   </div>
@@ -107,6 +119,12 @@
     if (u && (u.role === 'admin' || u.role === 'md')) {
       document.getElementById('digest-card').style.display = '';
     }
+
+    /* This page was the only one drawing its button icons as system
+       emoji — 🖨 ⬇ 📧 — beside an app that uses the generated lucide
+       subset everywhere else. The emoji render differently on every OS
+       and the envelope came out as a grey box here. */
+    if (window.lucide) window.lucide.createIcons();
   })();
 
   function pathFor(kind) {
