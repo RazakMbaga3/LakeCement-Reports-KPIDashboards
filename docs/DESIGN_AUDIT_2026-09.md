@@ -211,18 +211,62 @@ Kept deliberately, because each one is a rule now:
    unless failures are counted. It now exits 2 and says so — the worst
    failure mode a check can have is looking like a pass.
 
-## 7. Still open
+## 7. Second pass — the pages the first pass never opened
 
-- **`quarry` is 1626KB against a 900KB transfer budget** — the one perf
+The first pass reviewed roughly a dozen pages closely and sampled the
+rest. That was the wrong call, and the evidence is that **the single
+worst defect of the whole audit was found by opening one screenshot of a
+page I had not looked at** (§6.4, the section tabs falling through the
+KPI cards at 1280px). So the second pass captured the ~19 untouched
+pages at three widths and read every one.
+
+What it found was not more polish. It was **function**:
+
+- **The Quarry page wrote to the server on load.** `POST
+  /api/reports/mines` fired on every visit to seed April 2026 openings.
+  For anyone without edit rights that 403s, and because the call was an
+  unguarded `await` inside the page's data loader, the rejection took the
+  loader down with it — the weighbridge tickets never loaded. What the
+  reader saw was a red permission toast, an empty 230px chart, and
+  "No weighbridge data loaded" on a month with 3,909 tickets. It read as
+  three design defects and was one functional bug.
+- **Sales and Purchases reported a refusal as an outage.** A well-built
+  failure panel ignored the error it was handed (Purchases was not even
+  passed one) and always blamed the Odoo connection, in alarm red, with a
+  retry button that could only fail the same way. A 403 now shows a lock
+  and no retry.
+- **The department scorecard collapsed on tablets.** `.sc-chip` is named
+  like the small chip-shaped links around it, so the mobile tap-target
+  rule had swept it into their selector and given it `inline-flex` — but
+  it is a *tile* with a name, a percentage, a bar and a status stacked
+  vertically. At six across it rendered "PROD 0 CON", all three clipped
+  mid-word. Predates this work.
+- **The one-per-browser swipe hint was being spent on tables that do not
+  scroll**, because it was decided at wire-up time before API rows
+  arrived. On Approvals it appeared above an empty state.
+
+Method note: a scan of all 27 pages for HTTP errors and writes on load is
+what caught the first two. Of 27, exactly one page wrote on load and
+three 403'd — and all three were saying the wrong thing about it.
+
+Also corrected in this pass: **twelve descriptive captions were drawn as
+passing verdicts** (`.kt-vs .vs-ok` on "Own production + purchased
+receipts", "42.5R · 32.5N · OPC · Jumbo"), six of them on one phone
+screen; **five charts used brand navy `#173158` as a series colour**,
+which design-system.css explicitly forbids because it reads as grey; and
+**two pages drew button icons as system emoji** while loading the lucide
+subset and never calling it.
+
+## 8. Still open
+
+- **`quarry` is 1634KB against a 900KB transfer budget** — the one perf
   failure. It **predates this work** (confirmed against `64691b4`) and is
   ticket-store data volume, not assets. Fixing it is a pagination change,
   not a design one.
-- **Single-series trend charts each use their own hue** (`analytics.js`
-  CHART_STYLE: teal `#0d9488`, purple `#7c3aed`, red `#e53935`) rather
-  than the validated series palette. Colour there is metric *identity*
-  used consistently across pages, which is defensible — but it is drift
-  from the validated set. This is a design-direction call, not a defect,
-  and was left alone deliberately.
+- **`scripts/validate_palette.js` does not exist**, though the palette's
+  own comment in design-system.css names it as the way to re-verify the
+  categorical set. The values are unchanged and still documented as
+  validated, but there is currently no way to re-run that check.
 - **Dark mode** remains out of scope, as before.
 - `form-materials` is **34,000px tall on a 360px screen** in card view —
   inherent to one-card-per-row, but worth a section-level disclosure.
@@ -233,11 +277,17 @@ Kept deliberately, because each one is a rule now:
 - `.rcard-toggle` and `button.adm-btn` still differ by 2–3px between one
   page and the rest. Real, but below the threshold worth more churn.
 
-## 8. Worth knowing before the next pass
+## 9. Worth knowing before the next pass
 
-The three regressions in §6 all came from **bulk transformations run
-without a guard**. The two scripts kept in `scripts/` now carry those
-guards, and both are dry-run by default:
+**Sample nothing.** The two worst findings of this audit — the section
+tabs falling through the KPI cards, and the Quarry page writing to the
+server on load — were both found by opening a screenshot of a page that
+had been skipped. Neither was visible to any automated check, before or
+after. The capture is cheap; the reading is the work.
+
+The regressions in §6 all came from **bulk transformations run without a
+guard**. The scripts kept in `scripts/` now carry those guards, and all
+are dry-run by default:
 
 ```
 node scripts/normalize-spacing.js       # 4px scale
