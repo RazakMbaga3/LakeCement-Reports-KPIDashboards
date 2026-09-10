@@ -19,7 +19,9 @@
   .chip .lbl { font-size:12px; text-transform:uppercase; letter-spacing:.6px; color:var(--text-muted); font-weight:700; }
   .chip .val { font-size:16px; font-weight:800; margin-top:3px; }
   .val.ok { color:var(--green-ink); } .val.warn { color:var(--amber-ink); } .val.bad { color:var(--red-ink); }
-  .btn { border:none; border-radius:6px; padding:8px 16px; font:700 12px 'Inter',sans-serif; cursor:pointer; background:#F49545; color:var(--on-orange); margin-left:auto; }
+  .btn { border:none; border-radius:6px; padding:8px 16px; font:700 12px 'Inter',sans-serif; cursor:pointer; background:#F49545; color:var(--on-orange); margin-left:auto;
+         display:inline-flex; align-items:center; gap:6px; }
+  .btn svg { width:14px; height:14px; flex:none; }
   .card { background:white; border:1.5px solid #DDE3EC; border-radius:14px; overflow:hidden; margin-bottom:16px; }
   .card h2 { font-size:12px; text-transform:uppercase; letter-spacing:.7px; background:#173158; color:white; padding:8px 16px; }
   table { width:100%; border-collapse:collapse; font-size:12px; }
@@ -76,7 +78,7 @@
     <div class="chip"><div class="lbl">Disk free</div><div class="val" id="c-disk">…</div></div>
     <div class="chip"><div class="lbl">Backup</div><div class="val" id="c-backup">…</div></div>
     <div class="chip"><div class="lbl">Uptime</div><div class="val" id="c-uptime">…</div></div>
-    <button class="btn" onclick="runWatchdog()" id="wd-btn">▶ Run checks now</button>
+    <button class="btn" onclick="runWatchdog()" id="wd-btn"><i data-lucide="refresh-cw"></i> Run checks now</button>
   </div>
 
   <div class="card">
@@ -100,7 +102,7 @@
           <input type="checkbox" id="pull-overwrite">
           Replace Excel-uploaded dates in this range
         </label>
-        <button class="btn" onclick="runOdooPull()" id="pull-btn">▶ Run pull</button>
+        <button class="btn" onclick="runOdooPull()" id="pull-btn"><i data-lucide="refresh-cw"></i> Run pull</button>
       </div>
       <div id="pull-result"></div>
     </div>
@@ -124,6 +126,13 @@
   })();
 
   const API = (typeof _API_BASE !== 'undefined') ? _API_BASE : 'http://localhost:5000/api';
+
+  /* The two action buttons rebuild their own label when a run finishes,
+     so the icon has to be rebuilt with it. This page was drawing them as
+     a "▶" text glyph while loading the lucide subset and never calling
+     it — the same emoji-as-icon gap Reports & Exports had. */
+  const ICON_RERUN = '<i data-lucide="refresh-cw"></i>';
+  if (window.lucide) window.lucide.createIcons();
   // esc() delegates to the shared escHtml() (forms/api-client.js) — this
   // page's own version previously missed escaping "'", unlike the others.
   const esc = s => escHtml(s);
@@ -194,7 +203,7 @@
         body: '{}',
       });
     } catch (e) { /* summary reload shows the outcome either way */ }
-    btn.disabled = false; btn.textContent = '▶ Run checks now';
+    btn.disabled = false; btn.innerHTML = ICON_RERUN + ' Run checks now'; if (window.lucide) lucide.createIcons();
     load();
   }
 
@@ -225,7 +234,7 @@
     } catch (e) {
       box.innerHTML = '<div class="mono" style="color:#7F1D1D">Request failed: ' + esc(e.message) + '</div>';
     }
-    btn.disabled = false; btn.textContent = '▶ Run pull';
+    btn.disabled = false; btn.innerHTML = ICON_RERUN + ' Run pull'; if (window.lucide) lucide.createIcons();
   }
 
   (function () {
