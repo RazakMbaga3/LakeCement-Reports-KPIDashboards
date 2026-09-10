@@ -1074,27 +1074,36 @@ function applyDailyPermissions() {
       el.style.cursor = 'not-allowed';
     });
 
-    /* Hide all action buttons (Save Draft, Submit, etc.) */
+    /* Hide all action buttons (Save Draft, Submit, etc.).
+       As a body STATE, not a one-time sweep: excel-import.js injects its
+       "Import Excel" button into the toolbar after this runs, so a
+       querySelectorAll here walked straight past it and every view-only
+       user was shown a prominent Import button on a report they cannot
+       write to. A class on <body> covers whatever arrives later too. */
+    document.body.classList.add('is-readonly');
     document.querySelectorAll(
       '.btn-save, .btn-sub, .btn-out, button[type=submit], .fill-monthly-btn'
     ).forEach(el => el.style.display = 'none');
 
     /* Add a sticky "View Only" banner below the header */
     if (!document.getElementById('dr-view-only-banner')) {
+      /* One message, not two flex columns. The old banner laid an icon,
+         a sentence and a second sentence out as three flex children with
+         no wrapping, so on a phone the two sentences became two narrow
+         columns that each wrapped internally and started at different
+         heights — it read as a layout bug on the one element whose whole
+         job is to explain calmly why the Save button is missing. */
       const banner = document.createElement('div');
       banner.id = 'dr-view-only-banner';
-      banner.style.cssText = [
-        'background:#1E3A5F','color:white','padding:9px 24px',
-        'font-size:12px','font-weight:700','letter-spacing:.3px',
-        'display:flex','align-items:center','justify-content:center','gap:10px',
-        'position:sticky','top:0','z-index:200','box-shadow:0 2px 8px rgba(0,0,0,.25)',
-      ].join(';');
+      banner.className = 'ds-viewonly';
       banner.innerHTML =
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">' +
-        '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
-        'VIEW ONLY &mdash; ' + user.dept + ' does not have edit access to this report.' +
-        '<span style="font-size:12px;font-weight:500;margin-left:8px">' +
-        'Contact the responsible department to update data.</span>';
+        '<svg class="ds-viewonly-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" ' +
+          'stroke="currentColor" stroke-width="2.2" aria-hidden="true">' +
+          '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
+        '<span class="ds-viewonly-text">' +
+          '<strong>View only &mdash; ' + user.dept + ' cannot edit this report.</strong>' +
+          '<span>Contact the department that owns it to have the data updated.</span>' +
+        '</span>';
 
       /* Insert after the <header> element */
       const header = document.querySelector('header');
@@ -1258,4 +1267,41 @@ function showPermDenied(msg) {
   div.textContent = msg || 'Access denied — insufficient permissions';
   document.body.appendChild(div);
   setTimeout(() => div.remove(), 2500);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   HUMAN ERROR TEXT
+   ──────────────────────────────────────────────────────────────────────
+   Pages were putting raw exception text in front of people. A quarry
+   manager opening the report saw
+
+     "Could not load quarry data from the server: submitForm(mines)
+      failed: HTTP 403"
+
+   which names an internal function, quotes a status code, and does not
+   say the one thing that is true and useful: they can read this report
+   but not change it. The original is still written to the console, where
+   the person who needs it is looking.
+══════════════════════════════════════════════════════════════════════ */
+function humanError(err, fallback) {
+  const raw = (err && (err.message || err.toString())) || '';
+  if (raw) console.error('[lcl]', raw, err);
+  const t = raw.toLowerCase();
+
+  if (/\b403\b|forbidden|not permitted|access denied/.test(t)) {
+    return 'You do not have permission to change this. Contact the department that owns it.';
+  }
+  if (/\b401\b|unauthor|token|session/.test(t)) {
+    return 'Your session has ended. Sign in again to continue.';
+  }
+  if (/\b404\b|not found/.test(t)) {
+    return 'That record could not be found — it may have been removed.';
+  }
+  if (/failed to fetch|networkerror|network request failed|load failed|econnrefused/.test(t)) {
+    return 'Cannot reach the server. Check the plant network connection and try again.';
+  }
+  if (/\b5\d\d\b|internal server/.test(t)) {
+    return 'The server could not complete that. Try again in a moment.';
+  }
+  return fallback || 'Something went wrong. Try again, and tell IT if it keeps happening.';
 }

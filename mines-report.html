@@ -1188,7 +1188,7 @@
         var rec = store.manual.daily[d] || (store.manual.daily[d] = {});
         rec[key] = parseFloat(inp.value) || 0;
         renderAll();
-        saveDailyManual(d).then(flashSaved).catch(function (err) { toast('Could not save: ' + err.message, true); });
+        saveDailyManual(d).then(flashSaved).catch(function (err) { toast(humanError(err, 'Could not save your changes.'), true); });
       });
     });
   }
@@ -1266,7 +1266,7 @@
         var rec = store.manual.monthly[ym] || (store.manual.monthly[ym] = {});
         rec[inp.getAttribute('data-mkey')] = parseFloat(inp.value) || 0;
         renderAll();
-        saveMonthConfig(ym).then(flashSaved).catch(function (err) { toast('Could not save: ' + err.message, true); });
+        saveMonthConfig(ym).then(flashSaved).catch(function (err) { toast(humanError(err, 'Could not save your changes.'), true); });
       });
     });
   }
@@ -1315,7 +1315,7 @@
         var rec = store.openings[ym] || (store.openings[ym] = {});
         rec[inp.getAttribute('data-og')] = parseFloat(inp.value) || 0;
         renderAll();
-        saveMonthConfig(ym).then(flashSaved).catch(function (err) { toast('Could not save: ' + err.message, true); });
+        saveMonthConfig(ym).then(flashSaved).catch(function (err) { toast(humanError(err, 'Could not save your changes.'), true); });
       });
     });
   }
@@ -1388,7 +1388,7 @@
       if (e.target.id !== id) return;
       var rec = store.manual.signoff[selDate] || (store.manual.signoff[selDate] = {});
       rec[id.slice(3)] = e.target.value;
-      saveDailyManual(selDate).then(flashSaved).catch(function (err) { toast('Could not save: ' + err.message, true); });
+      saveDailyManual(selDate).then(flashSaved).catch(function (err) { toast(humanError(err, 'Could not save your changes.'), true); });
     });
   });
 
@@ -1564,7 +1564,7 @@
     var rec = store.manual.monthly[ym] || (store.manual.monthly[ym] = {});
     rec.day1Rule = $('day1-rule').checked;
     renderAll();
-    saveMonthConfig(ym).then(flashSaved).catch(function (err) { toast('Could not save: ' + err.message, true); });
+    saveMonthConfig(ym).then(flashSaved).catch(function (err) { toast(humanError(err, 'Could not save your changes.'), true); });
   });
   $('btn-carry').addEventListener('click', function () {
     var ym = ymOf(selDate);
@@ -1580,7 +1580,7 @@
     renderAll();
     saveMonthConfig(ym)
       .then(function () { toast('Opening stock for ' + monthLabel(ym) + ' set from ' + monthLabel(prevYm) + ' closing.'); })
-      .catch(function (err) { toast('Could not save: ' + err.message, true); });
+      .catch(function (err) { toast(humanError(err, 'Could not save your changes.'), true); });
   });
   $('btn-print').addEventListener('click', function () { window.print(); });
   window.addEventListener('resize', function () { renderChart(); });
@@ -1667,7 +1667,7 @@
       renderAll();
       maybeOfferLegacyMigration();
     }).catch(function (err) {
-      toast('Could not load quarry data from the server: ' + err.message, true);
+      toast(humanError(err, 'Could not load the quarry data.'), true);
     });
   })();
   </script>

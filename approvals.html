@@ -186,7 +186,7 @@
         await NyatiAPI.rejectReport(formType, date, shift, reason);
         load();
       } catch (e) {
-        alert('Could not reject this report: ' + (e.message || e));
+        alert(humanError(e, 'Could not reject this report.'));
         row.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
       }
       return;
@@ -197,7 +197,7 @@
       await NyatiAPI.approveReport(formType, date, shift);
       load();
     } catch (e) {
-      alert('Could not approve this report: ' + (e.message || e));
+      alert(humanError(e, 'Could not approve this report.'));
       row.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
     }
   });

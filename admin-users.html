@@ -484,7 +484,7 @@
 
   window.unlockUser = async function (id) {
     try { await NyatiAPI.adminUnlockUser(id); await load(); }
-    catch (e) { alert(e.message); }
+    catch (e) { alert(humanError(e)); }
   };
 
   window.inviteUser = async function (id) {
@@ -497,7 +497,7 @@
       const r = await NyatiAPI.adminInviteUser(id);
       alert(`Invitation sent to ${r.sentTo}. The link is single-use and expires in 7 days.`);
       await load();
-    } catch (e) { alert(e.message); }
+    } catch (e) { alert(humanError(e)); }
   };
 
   /* The way out of "37 accounts on a password published in git". Scoped to
@@ -507,7 +507,7 @@
     const dept = $('f-dept').value;
     const scope = dept || 'every department';
     let ready;
-    try { ready = await NyatiAPI.adminInviteReadiness(); } catch (e) { return alert(e.message); }
+    try { ready = await NyatiAPI.adminInviteReadiness(); } catch (e) { return alert(humanError(e)); }
 
     if (!ready.mailConfigured || !ready.appUrl) {
       return alert('Mail is not configured yet, so no invitation can be delivered.\n\n' +
@@ -527,7 +527,7 @@
       alert(`Sent ${r.sent} of ${r.attempted} invitation(s).` +
         (failed.length ? `\n\nFailed:\n` + failed.map(f => `• ${f.username} (${f.email}) — ${f.reason}`).join('\n') : ''));
       await load();
-    } catch (e) { alert(e.message); }
+    } catch (e) { alert(humanError(e)); }
     finally { btn.disabled = false; btn.innerHTML = '<i data-lucide="mail" style="width:13px;height:13px;"></i> Invite unactivated…'; if (window.lucide) lucide.createIcons(); }
   };
 

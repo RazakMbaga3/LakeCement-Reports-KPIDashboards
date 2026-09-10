@@ -140,6 +140,14 @@ function switchDept(dept) {
   document.getElementById('ctx-dept-name').innerHTML = m.label;
   document.getElementById('ctx-resp').innerHTML = m.resp;
 
+  /* Every department bar carries something the section itself does not —
+     "Responsibility: Production & QC Manager". The summary is the one
+     exception: its bar said "Executive Summary Dashboard / Cross-
+     departmental KPI overview" directly above a section header reading
+     "Executive Operations Summary / Cross-departmental KPI highlights",
+     which is the same sentence twice and ~110px of the first screen. */
+  document.getElementById('dept-context').hidden = (dept === 'summary');
+
   // Counting synchronously is right for a user-initiated switch: the tables
   // already hold this period's data. On the very first call (the
   // DOMContentLoaded bootstrap, which switches before applyFilters() so the

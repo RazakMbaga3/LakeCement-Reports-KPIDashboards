@@ -534,9 +534,13 @@ async function loadHeroCards(mo, yr, view) {
     const dotSpan  = statusEl ? statusEl.querySelector('.sk-status-dot') : null;
 
     if (!r || r.value == null) {
-      if (valueEl) valueEl.textContent = '—';
+      if (valueEl) { valueEl.textContent = '—'; valueEl.classList.add('is-empty'); }
       if (barEl) barEl.style.width = '0%';
-      if (tgtEl) tgtEl.textContent = 'No data for this period';
+      /* The status line below already says "No data submitted for July
+         2026", which is the same fact with the month in it. Saying it
+         twice per card, in two type styles, is noise — this slot holds a
+         target, and there is no target to show. */
+      if (tgtEl) tgtEl.textContent = '';
       if (pctEl) pctEl.textContent = '—';
       if (statusEl) {
         statusEl.innerHTML = '';
@@ -548,7 +552,7 @@ async function loadHeroCards(mo, yr, view) {
     }
 
     const displayVal = fmtNum(r.value);
-    if (valueEl) valueEl.textContent = displayVal;
+    if (valueEl) { valueEl.textContent = displayVal; valueEl.classList.remove('is-empty'); }
 
     const note = isMonthView ? '' : ' (shown: ' + MONTHS[mo] + ' ' + calYear + ' — daily/full-year not computed)';
 
@@ -676,7 +680,7 @@ function markHeroCardUnavailable(card) {
   const valueEl = card.querySelector('.sk-value');
   const statusEl = card.querySelector('.sk-status');
   const dotSpan  = statusEl ? statusEl.querySelector('.sk-status-dot') : null;
-  if (valueEl) valueEl.textContent = '—';
+  if (valueEl) { valueEl.textContent = '—'; valueEl.classList.add('is-empty'); }
   if (statusEl) {
     statusEl.innerHTML = '';
     if (dotSpan) statusEl.appendChild(dotSpan);

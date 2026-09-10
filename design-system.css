@@ -1512,6 +1512,57 @@ button.apply-btn {
 #login-btn svg, #login-btn i,
 .btn-primary svg, .btn-primary i { color: inherit; stroke: currentColor; }
 
+/* Read-only is a state of the page, so the rule that hides write actions
+   has to be a rule and not a sweep — anything injected after auth.js has
+   run is covered by this and was not covered before. */
+body.is-readonly .btn-save,
+body.is-readonly .btn-sub,
+body.is-readonly .btn-out,
+body.is-readonly button[type="submit"],
+body.is-readonly .fill-monthly-btn { display: none !important; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   VIEW-ONLY BANNER
+   Most people on most forms are read-only, so this is one of the most
+   frequently seen elements in the app. It gets to look composed: icon,
+   then the fact, then what to do about it, stacked so it reads as one
+   message at every width instead of splitting into columns.
+   ══════════════════════════════════════════════════════════════════════ */
+.ds-viewonly {
+  position: sticky; top: 0; z-index: 200;
+  display: flex; align-items: flex-start; gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-6);
+  background: var(--navy, #173158);
+  color: #fff;
+  box-shadow: var(--el-2);
+}
+.ds-viewonly-icon { flex: none; margin-top: 2px; opacity: .8; }
+.ds-viewonly-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ds-viewonly-text strong {
+  font-size: var(--fs-sm); font-weight: var(--fw-bold); letter-spacing: .2px;
+}
+.ds-viewonly-text > span {
+  font-size: var(--fs-sm); font-weight: var(--fw-normal);
+  color: var(--on-navy);
+}
+@media (min-width: 960px) {
+  /* Room to sit on one line on a control-room screen. */
+  .ds-viewonly { align-items: center; justify-content: center; }
+  .ds-viewonly-icon { margin-top: 0; }
+  .ds-viewonly-text { flex-direction: row; align-items: baseline; gap: var(--sp-2); }
+}
+
+/* A toast pinned to `bottom: 24px` lands underneath the bottom tab bar
+   on a phone, covering three of the five destinations while it shows.
+   Lift it clear of the bar and the home-indicator inset. */
+@media (max-width: 959px) {
+  html body .toast {
+    bottom: calc(var(--bottomnav-h) + var(--safe-b) + var(--sp-3));
+    left: var(--sp-3);
+    right: var(--sp-3);
+  }
+}
+
 /* ══════════════════════════════════════════════════════════════════════
    STATE PANEL — the page could not show you what you came for
    ──────────────────────────────────────────────────────────────────────

@@ -937,6 +937,10 @@ img { max-width: 100%; }
   margin: 6px 0 2px;
 }
 .sk-value { font-size: 28px; font-weight: 800; line-height: 1; color: var(--text-main); }
+/* An em-dash at 28px/800 is a solid black bar, which reads as a redacted
+   figure rather than as an absent one. When there is nothing to show,
+   the slot goes quiet instead of shouting a blank. */
+.sk-value.is-empty { font-weight: 500; color: var(--text-muted); }
 .sk-unit  { font-size: 12px; font-weight: 400; color: var(--text-muted); }
 .sk-delta { font-size: 12px; font-weight: 600; margin-left: auto; align-self: center; }
 .sk-delta.pos  { color: var(--green-ink); }
