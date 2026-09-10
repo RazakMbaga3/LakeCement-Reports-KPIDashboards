@@ -226,12 +226,12 @@
         datasets: [
           {
             type: 'line', label: 'Kiln Output (MT)', data: outputVals, yAxisID: 'y',
-            borderColor: '#F49545', backgroundColor: 'rgba(244,149,69,0.08)',
+            borderColor: '#EB6834', backgroundColor: 'rgba(235,104,52,0.10)',
             borderWidth: 2, pointRadius: 2, fill: true, tension: 0.3, spanGaps: true,
           },
           {
             type: 'bar', label: 'Stoppage Minutes', data: downtimeVals, yAxisID: 'y1',
-            backgroundColor: 'rgba(229,57,53,0.35)', borderRadius: 2, barPercentage: 0.6,
+            backgroundColor: 'rgba(31,95,168,0.45)', borderRadius: 2, barPercentage: 0.6,
           },
         ],
       },
@@ -300,9 +300,9 @@
 
     renderOutputDowntime(dates, seriesFor('kiln-output'), await stoppageMinutes(from, to, dates));
 
-    var okPower = renderSimpleLine('chart-mult-power', dates, seriesFor('specific-power-consumption-total'), '#0d9488', 'kWh/MT');
-    var okHeat  = renderSimpleLine('chart-mult-heat', dates, seriesFor('specific-thermal-energy-consumption'), '#7c3aed', 'kcal/kg');
-    var okLime  = renderSimpleLine('chart-mult-freelime', dates, seriesFor('clinker-free-lime'), '#e53935', '%');
+    var okPower = renderSimpleLine('chart-mult-power', dates, seriesFor('specific-power-consumption-total'), '#1BAF7A', 'kWh/MT');
+    var okHeat  = renderSimpleLine('chart-mult-heat', dates, seriesFor('specific-thermal-energy-consumption'), '#4A3AA7', 'kcal/kg');
+    var okLime  = renderSimpleLine('chart-mult-freelime', dates, seriesFor('clinker-free-lime'), '#E34948', '%');
 
     var emptyM = document.getElementById('empty-multiples');
     if (!okPower && !okHeat && !okLime) {
@@ -315,9 +315,9 @@
       emptyM.style.display = 'none';
     }
 
-    var okClinkerCons = renderSimpleLine('chart-mult-clinkercons', dates, seriesFor('clinker-consumption-day'), '#173158', 'MT');
-    var okCoalCons     = renderSimpleLine('chart-mult-coalcons', dates, seriesFor('coal-kiln-consumption-day'), '#173158', 'MT');
-    var okGypsumCons   = renderSimpleLine('chart-mult-gypsumcons', dates, seriesFor('gypsum-consumption-day'), '#173158', 'MT');
+    var okClinkerCons = renderSimpleLine('chart-mult-clinkercons', dates, seriesFor('clinker-consumption-day'), '#1F5FA8', 'MT');
+    var okCoalCons     = renderSimpleLine('chart-mult-coalcons', dates, seriesFor('coal-kiln-consumption-day'), '#1F5FA8', 'MT');
+    var okGypsumCons   = renderSimpleLine('chart-mult-gypsumcons', dates, seriesFor('gypsum-consumption-day'), '#1F5FA8', 'MT');
 
     var emptyMat = document.getElementById('empty-materials');
     if (!okClinkerCons && !okCoalCons && !okGypsumCons) {
