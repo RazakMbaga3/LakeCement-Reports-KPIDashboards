@@ -782,7 +782,6 @@ html body canvas { max-width: 100%; }
      .smry-ops-chip was rendering 20px tall, well under half a fingertip. */
   html body .smry-ops-chip,
   html body .rcard-chip,
-  html body .sc-chip,
   html body .rl-pill,
   html body .sec-tab,
   html body .summary-chip {
@@ -791,6 +790,18 @@ html body canvas { max-width: 100%; }
     align-items: center;
     padding-top: var(--sp-1);
     padding-bottom: var(--sp-1);
+  }
+
+  /* .sc-chip is named like those but is not one of them: it is a
+     department scorecard TILE holding a name, a percentage, a bar and a
+     status word stacked vertically. inline-flex laid that stack out as a
+     ROW, so at six across a tablet it rendered "PROD 0 CON" — every one
+     of the three clipped mid-word. It needs the tap height without the
+     flex row. */
+  html body .sc-chip {
+    min-height: var(--tap);
+    padding-top: var(--sp-2);
+    padding-bottom: var(--sp-2);
   }
 
   /* Inside a dense data grid a 44px row would double the form's height,
@@ -1065,6 +1076,11 @@ html body canvas { max-width: 100%; }
     width: 100%;
     letter-spacing: .2px;      /* tracking costs width the label needs */
     line-height: var(--lh-snug);
+    /* Two lines reserved, so a tile whose name wraps and one whose name
+       does not still put their values on the same baseline. Measured on
+       the Energy Efficiency row: "SPECIFIC POWER — TOTAL" wraps and its
+       three neighbours do not, which left four values at two heights. */
+    min-height: calc(2 * var(--lh-snug) * var(--fs-xs));
   }
   html body .sk-dept-tag { order: 2; }
 

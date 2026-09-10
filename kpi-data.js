@@ -541,17 +541,24 @@ async function loadHeroCards(mo, yr, view) {
          twice per card, in two type styles, is noise — this slot holds a
          target, and there is no target to show. */
       if (tgtEl) tgtEl.textContent = '';
-      if (pctEl) pctEl.textContent = '—';
+      if (pctEl) pctEl.textContent = '';
       if (statusEl) {
         statusEl.innerHTML = '';
         if (dotSpan) statusEl.appendChild(dotSpan);
         statusEl.append(' No data submitted for ' + MONTHS[mo] + ' ' + calYear);
       }
+      /* Clearing the target left the achievement slot holding a lone "—"
+         at the far end of a space-between row, with nothing opposite it:
+         a dash floating in the middle of the card above an empty progress
+         bar. Neither says anything the status line below does not, so the
+         whole footer and the bar go with them. */
+      card.classList.add('sk-nodata');
       card.classList.remove('on-track', 'watch', 'concern');
       return;
     }
 
     const displayVal = fmtNum(r.value);
+    card.classList.remove('sk-nodata');
     if (valueEl) { valueEl.textContent = displayVal; valueEl.classList.remove('is-empty'); }
 
     const note = isMonthView ? '' : ' (shown: ' + MONTHS[mo] + ' ' + calYear + ' — daily/full-year not computed)';
@@ -686,6 +693,7 @@ function markHeroCardUnavailable(card) {
     if (dotSpan) statusEl.appendChild(dotSpan);
     statusEl.append(' Server unreachable');
   }
+  card.classList.add('sk-nodata');
   card.classList.remove('on-track', 'watch', 'concern');
 }
 

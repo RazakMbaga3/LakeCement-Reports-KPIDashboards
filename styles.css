@@ -963,13 +963,25 @@ img { max-width: 100%; }
 .sk-status {
   font-size: 12px; font-weight: 700;
   letter-spacing: .8px; text-transform: uppercase;
-  display: flex; align-items: center; gap: 4px;
+  /* flex-start, not center. "No data submitted for July 2026" wraps to
+     three lines in a narrow card, and centring put the status dot beside
+     the SECOND line — reading as a bullet dropped into the middle of the
+     sentence. The dot belongs to the first line; the margin optically
+     centres it on that line's box. */
+  display: flex; align-items: flex-start; gap: 4px;
   margin-top: 3px;
 }
 .on-track .sk-status { color: var(--green-ink); }
 .watch    .sk-status { color: var(--orange-ink); }
 .concern  .sk-status { color: var(--red); }
-.sk-status-dot { width: 6px; height: 6px; border-radius: 50%; }
+.sk-status-dot { width: 6px; height: 6px; border-radius: 50%; flex: none; margin-top: 4px; }
+
+/* No data for the month: the progress bar has nothing to fill and the
+   footer has nothing to say. Hidden together so the card reads as one
+   clear statement instead of a value, an empty bar, an orphan dash and
+   then the actual message. */
+.sk-card.sk-nodata .sk-bar,
+.sk-card.sk-nodata .sk-foot { display: none; }
 .on-track .sk-status-dot { background: var(--green); }
 .watch    .sk-status-dot { background: var(--orange); }
 .concern  .sk-status-dot { background: var(--red); }

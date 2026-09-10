@@ -259,6 +259,13 @@ function collect() {
     const ns = cs(next);
     if (ns.position !== 'static' && ns.position !== 'relative') continue;
     if (!blockish(next)) continue;
+    /* This check reads DOM order as visual order, and flex `order`
+       breaks exactly that. The exec-summary ops strip sets the track to
+       order:1 and the summary line to order:0 below 960px, so the two
+       swap places and the earlier sibling legitimately renders BELOW the
+       later one — reported as a 48px overlap that does not exist. Only
+       compare siblings the flex container has not re-sequenced. */
+    if (s.order !== ns.order) continue;
     const a = el.getBoundingClientRect(), b = next.getBoundingClientRect();
     /* Horizontal neighbours in a flex row legitimately share a band. */
     if (a.right <= b.left + 1 || b.right <= a.left + 1) continue;
