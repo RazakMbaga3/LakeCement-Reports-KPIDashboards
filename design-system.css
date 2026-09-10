@@ -1410,19 +1410,80 @@ body.me-view-cards .me-cards > .me-group { grid-column: 1 / -1; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   11. FORM KPI TILES — the badge must not sit on the label
+   11. KPI TILES — one dimension, one channel
    ──────────────────────────────────────────────────────────────────────
-   .kt-badge is absolutely positioned top-right and .kt-lbl reserves
-   padding-right to clear it. That reservation was 38px, sized for an 8px
-   badge. At the 12px floor "FORMULA" needs about 70px, so the label ran
-   underneath it and read "CLIN[MANUAL]R FREE LIME". Broken at every
-   width, not just on a phone.
+   forms/forms.css carries the full rationale. The short version: the tile
+   used to paint RAG status on a top bar, a body tint, a border and a bar
+   fill, and data provenance on a bottom bar and a badge — in the same two
+   hues. A failing formula KPI showed a red top edge and a green bottom
+   edge and the reader could not tell which to believe.
 
-   Desktop gets the honest reservation. Mobile drops the overlap trick
-   entirely — at 160px wide a tile has no corner to spare, so the badge
-   takes its own line and the label gets the full width.
+   This block exists because daily-report.html and power-plant-report.html
+   keep their OWN copies of the tile (they do not load forms.css), and
+   both copies were the old design. Rather than a third and fourth
+   divergent copy, the corrected treatment is stated once here, where it
+   loads last and settles all of them.
+
+   Status  → the left rail, the vs-line, the pct, the bar fill.
+   Provenance → a neutral pill whose DOT alone carries the hue.
+
+   This also retires the 74px padding reservation the label used to need
+   to clear an absolutely-positioned badge. The badge is in the flow now,
+   so the label gets its full width back — which is most of why the six
+   values in a strip stopped landing at different heights.
    ══════════════════════════════════════════════════════════════════════ */
-.kt-lbl { padding-right: 74px; }
+html body .kt {
+  border-left: 3px solid var(--st-neutral-bd);
+  display: flex;
+  flex-direction: column;
+}
+html body .kt::before,
+html body .kt::after { content: none; }
+
+html body .kt.on-track { border-left-color: var(--st-good); background: #fff; border-top-color: var(--border); border-right-color: var(--border); border-bottom-color: var(--border); }
+html body .kt.watch    { border-left-color: var(--st-warn); background: #fff; border-top-color: var(--border); border-right-color: var(--border); border-bottom-color: var(--border); }
+html body .kt.concern  { border-left-color: var(--st-bad);  background: #fff; border-top-color: var(--border); border-right-color: var(--border); border-bottom-color: var(--border); }
+
+html body .kt-badge {
+  position: static;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-2);
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--r-sm);
+  background: var(--st-neutral-bg);
+  color: var(--st-neutral);
+  border: 1px solid var(--st-neutral-bd);
+  font-weight: var(--fw-bold);
+}
+html body .kt-badge::before {
+  content: '';
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--st-neutral);
+  flex: none;
+}
+html body .kt-m .kt-badge::before { background: var(--amber-ink); }
+html body .kt-s .kt-badge::before { background: var(--series-1); }
+html body .kt-f .kt-badge::before { background: var(--green-ink); }
+
+html body .kt-lbl { padding-right: 0; min-height: 32px; }
+html body .kt-val { font-variant-numeric: tabular-nums; }
+html body .kt-pct { font-variant-numeric: tabular-nums; }
+html body .kt-bar-fill { background: var(--st-neutral); }
+html body .kt.on-track .kt-bar-fill { background: var(--st-good); }
+html body .kt.watch    .kt-bar-fill { background: var(--st-warn); }
+html body .kt.concern  .kt-bar-fill { background: var(--st-bad); }
+html body .kt.watch    .kt-pct { color: var(--amber-ink); }
+html body .kt.concern  .kt-pct { color: var(--red-ink); }
+
+/* Six across on a 1440 screen leaves ~190px a card, and these labels run
+   to three lines as often as two. Reserving three puts every value in the
+   row on one baseline. */
+@media (min-width: 1024px) {
+  html body .kt-lbl { min-height: 45px; }
+}
 
 @media (max-width: 959px) {
   html body .kpi-strip {
