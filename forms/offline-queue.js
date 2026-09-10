@@ -221,7 +221,7 @@
       'letter-spacing:.6px;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center">' +
       '<span>Offline Sync</span>' +
       '<button id="_nyq-sync" style="background:#F49545;border:none;color:white;font-size:12px;font-weight:700;' +
-      'padding:4px 10px;border-radius:5px;cursor:pointer;font-family:inherit">Sync now</button></div>';
+      'padding:4px 10px;border-radius:6px;cursor:pointer;font-family:inherit">Sync now</button></div>';
 
     l.conflicts.forEach(function (it, i) {
       html +=
@@ -231,9 +231,9 @@
         '<br>Yours queued ' + _fmtTime(it.queuedAt) +
         (it.serverSavedAt ? ' · server saved ' + _fmtTime(it.serverSavedAt) : '') + '</div>' +
         '<button data-nyq-resolve="mine:' + i + '" style="background:#F49545;border:none;color:white;font-size:12px;' +
-        'font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;margin-right:6px;font-family:inherit">Use mine</button>' +
+        'font-weight:700;padding:5px 11px;border-radius:6px;cursor:pointer;margin-right:6px;font-family:inherit">Use mine</button>' +
         '<button data-nyq-resolve="server:' + i + '" style="background:#EEF2F7;border:none;color:#173158;font-size:12px;' +
-        'font-weight:700;padding:5px 11px;border-radius:5px;cursor:pointer;font-family:inherit">Keep server</button>' +
+        'font-weight:700;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:inherit">Keep server</button>' +
         '</div>';
     });
 

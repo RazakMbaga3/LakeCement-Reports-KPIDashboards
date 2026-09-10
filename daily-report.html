@@ -14,14 +14,14 @@
     /* ══════════════════════════════════════════════════════════════
        PRODUCTION DAILY REPORT — page-specific styles
        Color legend (matches actual Excel colour coding):
-         Manual  (Red  in Excel) → Amber  #FFFBEB / #B45309
+         Manual  (Red  in Excel) → Amber  #FFFBEB / var(--amber-ink)
          System  (Yellow in Excel) → Blue   #EFF6FF / #1D4ED8
-         Formula (Blue  in Excel) → Green  #F0FDF4 / #15803D
+         Formula (Blue  in Excel) → Green  #F0FDF4 / var(--green-ink)
     ══════════════════════════════════════════════════════════════ */
     :root {
-      --m-bg:#FFFBEB; --m-fg:#B45309; --m-bd:#FDE68A;
+      --m-bg:#FFFBEB; --m-fg:var(--amber-ink); --m-bd:#FDE68A;
       --s-bg:#EFF6FF; --s-fg:#1D4ED8; --s-bd:#BFDBFE;
-      --f-bg:#F0FDF4; --f-fg:#15803D; --f-bd:#BBF7D0;
+      --f-bg:#F0FDF4; --f-fg:var(--green-ink); --f-bd:#BBF7D0;
     }
     body { display:flex; flex-direction:column; min-height:100vh; background:var(--off-white); }
 
@@ -44,11 +44,11 @@
     .tb-ctl:focus { border-color:var(--orange); background:white; }
     input[type="date"].tb-ctl { min-width:148px; cursor:text; }
     .rpt-pill {
-      display:flex; align-items:center; gap:4px; padding:4px 12px; border-radius:20px;
-      font-size:12px; font-weight:700; background:#FFF3E0; color:var(--orange-ink);
-      border:1px solid #FDE68A;
+      display:flex; align-items:center; gap:4px; padding:4px 12px; border-radius:999px;
+      font-size:12px; font-weight:700; background:var(--st-warn-bg); color:var(--orange-ink);
+      border:1px solid var(--st-warn-bd);
     }
-    .rpt-pill.is-submitted { background:#E8F5EC; color:var(--green-ink); border-color:#B7E4C7; }
+    .rpt-pill.is-submitted { background:var(--st-good-bg); color:var(--green-ink); border-color:var(--st-good-bd); }
     .rpt-pill::before { content:''; width:7px; height:7px; border-radius:50%; background:currentColor; }
     .btn { padding:6px 16px; border-radius:var(--radius); font-family:var(--font); font-size:12px; font-weight:700; cursor:pointer; border:1.5px solid transparent; transition:all .15s; }
     .btn-save   { background:var(--orange); color:white; border-color:var(--orange); }
@@ -76,7 +76,7 @@
     .leg-lbl { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--text-muted); margin-right:6px; }
     .leg-chip {
       display:inline-flex; align-items:center; gap:4px; padding:3px 12px 3px 8px;
-      border-radius:12px; font-size:12px; font-weight:600;
+      border-radius:14px; font-size:12px; font-weight:600;
     }
     .leg-chip::before { content:''; width:8px; height:8px; border-radius:2px; background:currentColor; opacity:.6; }
     .leg-m { background:var(--m-bg); color:var(--m-fg); border:1px solid var(--m-bd); }
@@ -91,7 +91,7 @@
     }
     .kt::before { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; border-radius:0 0 var(--radius) var(--radius); }
     .kt-m::before { background:var(--m-fg); } .kt-s::before { background:var(--s-fg); } .kt-f::before { background:var(--f-fg); }
-    .kt-badge { position:absolute; top:7px; right:7px; font-size:12px; font-weight:800; padding:2px 6px; border-radius:3px; text-transform:uppercase; letter-spacing:.4px; }
+    .kt-badge { position:absolute; top:7px; right:7px; font-size:12px; font-weight:800; padding:2px 6px; border-radius:6px; text-transform:uppercase; letter-spacing:.4px; }
     .kt-m .kt-badge { background:var(--m-bg); color:var(--m-fg); border:1px solid var(--m-bd); }
     .kt-s .kt-badge { background:var(--s-bg); color:var(--s-fg); border:1px solid var(--s-bd); }
     .kt-f .kt-badge { background:var(--f-bg); color:var(--f-fg); border:1px solid var(--f-bd); }
@@ -108,9 +108,9 @@
     .kt.on-track::after { background:var(--green); }
     .kt.watch::after    { background:var(--orange); }
     .kt.concern::after  { background:var(--red); }
-    .kt.on-track { background:#FAFFFE; border-color:#BBEED6; }
-    .kt.watch    { background:#FFFDF5; border-color:#FDE68A; }
-    .kt.concern  { background:#FFFAFA; border-color:#FFCDD2; }
+    .kt.on-track { background:#FAFFFE; border-color:var(--st-good-bd); }
+    .kt.watch    { background:var(--st-warn-bg); border-color:var(--st-warn-bd); }
+    .kt.concern  { background:var(--st-bad-bg); border-color:var(--st-bad-bd); }
     .kt-bar { height:4px; background:var(--section-bg); border-radius:2px; overflow:hidden; margin:8px 0 3px; }
     .kt-bar-fill { height:100%; border-radius:2px; width:0%; transition:width .45s ease; }
     .kt.on-track .kt-bar-fill { background:var(--green); }
@@ -131,7 +131,7 @@
     .rcard-title { color:white; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; }
     .rcard-sub   { color:var(--on-navy); font-size:12px; }
     .rcard-chips { display:flex; gap:6px; }
-    .rcard-chip  { padding:2px 8px; border-radius:10px; font-size:12px; font-weight:700; background:rgba(255,255,255,.15); color:white; text-transform:uppercase; }
+    .rcard-chip  { padding:2px 8px; border-radius:9px; font-size:12px; font-weight:700; background:rgba(255,255,255,.15); color:white; text-transform:uppercase; }
     .rcard-chip.orange { background:var(--orange); color:var(--on-orange); }
 
     /* ── wide scroll wrapper ── */
@@ -187,17 +187,17 @@
     td.cm .ci { color:var(--m-fg); }
     td.cs .ci { color:var(--s-fg); pointer-events:none; }
     td.cf .ci { color:var(--f-fg); pointer-events:none; }
-    td.cm .ci:focus { background:rgba(253,230,138,.45); box-shadow:inset 0 0 0 2px var(--m-bd); border-radius:3px; }
+    td.cm .ci:focus { background:rgba(253,230,138,.45); box-shadow:inset 0 0 0 2px var(--m-bd); border-radius:6px; }
 
     .cv { padding:8px 8px; text-align:center; font-weight:700; font-size:12px; }
     td.cs .cv { color:var(--s-fg); }
     td.cf .cv { color:var(--f-fg); }
 
     /* pills */
-    .pill { display:inline-block; padding:1px 8px; border-radius:8px; font-size:12px; font-weight:700; }
+    .pill { display:inline-block; padding:1px 8px; border-radius:6px; font-size:12px; font-weight:700; }
     .pg { background:var(--green-bg); color:var(--green-ink); }
     .pr { background:var(--red-bg); color:var(--red); }
-    .po { background:#FFF3E0; color:var(--orange-ink); }
+    .po { background:var(--st-warn-bg); color:var(--orange-ink); }
 
     /* notes grid — single column on mobile, 2-col on tablet+ */
     .notes-grid { display:grid; grid-template-columns:1fr; gap:0; }
@@ -207,7 +207,7 @@
     .note-row  { display:flex; align-items:center; gap:10px; padding:4px 0; border-bottom:1px dashed var(--border); font-size:12px; }
     .note-row:last-child { border-bottom:none; }
     .note-item { font-weight:600; color:var(--text-main); min-width:120px; }
-    .note-dept { padding:2px 8px; border-radius:8px; background:var(--s-bg); color:var(--s-fg); font-size:12px; font-weight:700; }
+    .note-dept { padding:2px 8px; border-radius:6px; background:var(--s-bg); color:var(--s-fg); font-size:12px; font-weight:700; }
     .note-src  { color:var(--text-muted); font-size:12px; font-style:italic; }
 
     /* sign-off — mobile-first 2 cols, expands to 4 at desktop */
@@ -315,7 +315,7 @@
     }
     .ie-edit-btn:hover { background:rgba(244,149,69,.22); }
     .ie-panel {
-      background:#FFFBEB; border-top:2px solid var(--orange);
+      background:var(--st-warn-bg); border-top:2px solid var(--orange);
       padding:16px 20px 14px;
     }
     .ie-grid {
@@ -329,14 +329,14 @@
     }
     .ie-input {
       font-family:var(--font); font-size:12.5px; font-weight:600; color:#173158;
-      border:1.5px solid #FDE68A; border-radius:6px; padding:6px 8px;
+      border:1.5px solid var(--st-warn-bd); border-radius:6px; padding:6px 8px;
       background:white; outline:none; width:100%; box-sizing:border-box;
     }
     .ie-input:focus { border-color:var(--orange); }
     .ie-section-hdr {
       font-size:12px; font-weight:800; text-transform:uppercase;
       letter-spacing:.7px; color:var(--navy); margin:12px 0 8px;
-      border-bottom:1px solid #FDE68A; padding-bottom:4px;
+      border-bottom:1px solid var(--st-warn-bd); padding-bottom:4px;
     }
     .ie-actions { display:flex; gap:8px; justify-content:flex-end; padding-top:4px; }
     .ie-save { background:var(--orange); color:white; border:none; padding:8px 20px; border-radius:6px; font-family:var(--font); font-size:12px; font-weight:700; cursor:pointer; }
@@ -1508,7 +1508,7 @@
 
     <!-- EDIT PANEL -->
     <div id="stoppages-edit" class="ie-panel" style="display:none">
-      <div style="font-size:12px;color:#92400E;background:#FEF3C7;border-radius:5px;padding:6px 10px;margin-bottom:12px;font-weight:600;">Enter stoppage minutes per section and cause category (0 if none)</div>
+      <div style="font-size:12px;color:#92400E;background:var(--st-warn-bg);border-radius:6px;padding:6px 10px;margin-bottom:12px;font-weight:600;">Enter stoppage minutes per section and cause category (0 if none)</div>
       <div class="ie-section-hdr">Crusher</div>
       <div class="ie-grid">
         <div class="ie-field"><label class="ie-label">Mechanical (min)</label><input type="number" class="ie-input" data-inline="stop_crusher_mech" placeholder="0"></div>

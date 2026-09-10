@@ -163,8 +163,8 @@
     el.style.cssText = [
       'display:inline-flex', 'align-items:center', 'gap:5px',
       'background:' + sh.bg, 'border:1px solid ' + sh.color + '40',
-      'color:' + sh.color, 'border-radius:5px',
-      'padding:3px 10px', 'font-size:12px', 'font-weight:700',
+      'color:' + sh.color, 'border-radius:6px',
+      'padding:3px 9px', 'font-size:12px', 'font-weight:700',
       'letter-spacing:.4px', 'white-space:nowrap', 'flex-shrink:0',
       'order:1',
     ].join(';');

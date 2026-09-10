@@ -14,9 +14,9 @@
   <link rel="stylesheet" href="forms.css" />
   <style>
     :root {
-      --m-bg:#FFFBEB; --m-fg:#B45309; --m-bd:#FDE68A;
+      --m-bg:#FFFBEB; --m-fg:var(--amber-ink); --m-bd:#FDE68A;
       --s-bg:#EFF6FF; --s-fg:#1D4ED8; --s-bd:#BFDBFE;
-      --f-bg:#F0FDF4; --f-fg:#15803D; --f-bd:#BBF7D0;
+      --f-bg:#F0FDF4; --f-fg:var(--green-ink); --f-bd:#BBF7D0;
     }
     /* Out-of-spec CaO cell */
     .ooc { background:#FEE2E2 !important; color:#B91C1C !important; font-weight:700 !important; }
@@ -25,10 +25,10 @@
     /* Grade summary grid */
     .grade-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:14px; }
     .grade-card { border:1.5px solid var(--border); border-radius:var(--radius); padding:12px 14px; background:var(--off-white); }
-    .grade-card.hg { border-color:#B45309; background:#FFFBEB; }
+    .grade-card.hg { border-color:#B45309; background:var(--st-warn-bg); }
     .grade-card.lg { border-color:#1D4ED8; background:#EFF6FF; }
     .grade-card.clay { border-color:#7C3AED; background:#F5F3FF; }
-    .grade-card.total { border-color:#15803D; background:#F0FDF4; }
+    .grade-card.total { border-color:var(--green-ink); background:var(--st-good-bg); }
     .gc-label { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--text-muted); margin-bottom:4px; }
     .gc-qty { font-size:22px; font-weight:800; color:var(--navy); line-height:1.1; }
     .gc-unit { font-size:12px; color:var(--text-muted); margin-top:1px; }
@@ -36,7 +36,7 @@
     .gc-pct.hg { color:#B45309; }
     .gc-pct.lg { color:#1D4ED8; }
     .gc-pct.clay { color:#7C3AED; }
-    .gc-pct.total { color:#15803D; }
+    .gc-pct.total { color:var(--green-ink); }
     /* Monthly summary table */
     .ms-tbl { border-collapse:collapse; width:100%; font-size:12px; white-space:nowrap; }
     .ms-tbl th { background:var(--navy); color:#fff; padding:6px 10px; font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; border:1px solid #3A5A80; }
@@ -44,7 +44,7 @@
     .ms-tbl td:first-child { text-align:left; font-weight:600; color:var(--navy); background:#F7F8FA; }
     .ms-tbl tbody tr:hover td { background:#EFF6FF; }
     .ms-tbl .today td { background:#FFF8F0 !important; }
-    .ms-tbl .today td:first-child { background:#FEF3C7 !important; font-weight:800; color:#92400E; }
+    .ms-tbl .today td:first-child { background:var(--st-warn-bg) !important; font-weight:800; color:#92400E; }
     .ms-tbl .ms-qty { color:var(--navy); font-weight:600; }
     .ms-tbl .ms-pct { color:var(--green-ink); font-weight:600; }
     .ms-tbl .ms-zero { color:var(--text-muted); }
@@ -698,11 +698,11 @@
             <td style="color:#fff;font-weight:700">0.00</td>
             <td style="color:#fff;font-weight:700">1,264.62</td>
             <td style="color:var(--orange-ink);font-weight:800;font-size:12px">50,635.93</td>
-            <td style="color:#BBF7D0;font-weight:700">72.59%</td>
-            <td style="color:#BBF7D0;font-weight:700">24.91%</td>
-            <td style="color:#BBF7D0">0.00%</td>
-            <td style="color:#BBF7D0">0.00%</td>
-            <td style="color:#BBF7D0;font-weight:700">2.50%</td>
+            <td style="color:var(--st-good-bd);font-weight:700">72.59%</td>
+            <td style="color:var(--st-good-bd);font-weight:700">24.91%</td>
+            <td style="color:var(--st-good-bd)">0.00%</td>
+            <td style="color:var(--st-good-bd)">0.00%</td>
+            <td style="color:var(--st-good-bd);font-weight:700">2.50%</td>
           </tr>
         </tbody>
       </table>

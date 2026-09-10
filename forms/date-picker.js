@@ -229,24 +229,24 @@
   box-shadow:var(--shadow-md,0 4px 16px rgba(0,0,0,.12));padding:16px;\
   font-family:"Inter",system-ui,sans-serif;user-select:none;}\
 .ndp-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}\
-.ndp-nav{width:36px;height:36px;border:1px solid var(--border,#DDE3EC);background:#fff;border-radius:8px;\
+.ndp-nav{width:36px;height:36px;border:1px solid var(--border,#DDE3EC);background:#fff;border-radius:6px;\
   font-size:18px;line-height:1;color:var(--navy,#173158);cursor:pointer;}\
 .ndp-nav:hover{background:var(--off-white,#F7F8FA);border-color:var(--navy,#173158);}\
 .ndp-title{border:none;background:none;font-size:16px;font-weight:800;color:var(--navy,#173158);\
-  cursor:pointer;padding:6px 10px;border-radius:8px;}\
+  cursor:pointer;padding:6px 10px;border-radius:6px;}\
 .ndp-title:hover{background:var(--off-white,#F7F8FA);}\
 .ndp-weekdays{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px;}\
 .ndp-weekdays span{text-align:center;font-size:12px;font-weight:700;letter-spacing:.4px;\
   color:var(--text-muted,#5A6270);text-transform:uppercase;padding:4px 0;}\
 .ndp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}\
-.ndp-day{aspect-ratio:1;border:none;background:none;border-radius:8px;font-size:14px;\
+.ndp-day{aspect-ratio:1;border:none;background:none;border-radius:6px;font-size:14px;\
   font-weight:600;color:var(--navy,#173158);cursor:pointer;min-height:42px;}\
 .ndp-day:hover:not(:disabled){background:var(--off-white,#F7F8FA);}\
 .ndp-day-muted{color:#C3CAD6;cursor:default;}\
 .ndp-day-today{box-shadow:inset 0 0 0 1.5px var(--orange,#F49545);}\
 .ndp-day-sel{background:var(--navy,#173158)!important;color:#fff!important;font-weight:800;}\
 .ndp-month-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:4px 0 6px;}\
-.ndp-month{padding:14px 8px;border:none;border-radius:8px;background:var(--off-white,#F7F8FA);\
+.ndp-month{padding:14px 8px;border:none;border-radius:6px;background:var(--off-white,#F7F8FA);\
   font-size:14px;font-weight:700;color:var(--navy,#173158);cursor:pointer;}\
 .ndp-month:hover{background:#E9EDF3;}\
 .ndp-ftr{display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;\

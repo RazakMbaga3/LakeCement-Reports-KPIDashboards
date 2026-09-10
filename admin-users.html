@@ -18,23 +18,23 @@
     .adm-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
     .adm-bar input[type=search], .adm-bar select {
       font-family: var(--font); font-size: 12px; padding: 8px 10px;
-      border: 1.5px solid var(--border); border-radius: 7px; background: white; color: var(--navy);
+      border: 1.5px solid var(--border); border-radius: 6px; background: white; color: var(--navy);
     }
     .adm-bar input[type=search] { min-width: 240px; }
     .adm-spacer { flex: 1; }
     .adm-btn { font-family: var(--font); font-size: 12px; font-weight: 700; padding: 8px 14px;
-               border-radius: 7px; border: none; cursor: pointer; display: inline-flex;
+               border-radius: 6px; border: none; cursor: pointer; display: inline-flex;
                align-items: center; gap: 6px; white-space: nowrap; }
     .adm-btn-primary { background: var(--navy, #173158); color: white; }
     .adm-btn-primary:hover { background: #0f2340; }
     .adm-btn-ghost { background: white; color: var(--navy); border: 1.5px solid var(--border); }
     .adm-btn-ghost:hover { background: var(--off-white); }
-    .adm-btn-warn { background: white; color: #B45309; border: 1.5px solid #FCD34D; }
-    .adm-btn-warn:hover { background: #FFFBEB; }
+    .adm-btn-warn { background: white; color: #B45309; border: 1.5px solid var(--st-warn-bd); }
+    .adm-btn-warn:hover { background: var(--st-warn-bg); }
     .adm-btn:disabled { opacity: .45; cursor: not-allowed; }
 
     /* ── Table ── */
-    .adm-wrap { overflow-x: auto; background: white; border: 1.5px solid var(--border); border-radius: 12px; }
+    .adm-wrap { overflow-x: auto; background: white; border: 1.5px solid var(--border); border-radius: 14px; }
     table.adm-table { border-collapse: collapse; font-size: 12px; width: 100%; }
     table.adm-table th, table.adm-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #F0F4F8; white-space: nowrap; }
     table.adm-table th { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
@@ -50,14 +50,14 @@
 
     /* ── Badges ── */
     .adm-tag { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .4px;
-               padding: 2.5px 8px; border-radius: 4px; text-transform: uppercase; }
-    .tag-l1 { background: #DCFCE7; color: #15803D; }
+               padding: 2.5px 8px; border-radius: 6px; text-transform: uppercase; }
+    .tag-l1 { background: var(--st-good-bg); color: var(--green-ink); }
     .tag-l2 { background: #DBEAFE; color: #1D4ED8; }
     .tag-l3 { background: #F1F5F9; color: #475569; }
     .tag-off { background: #FEE2E2; color: #B91C1C; }
-    .tag-pw  { background: #FEF3C7; color: #B45309; }
+    .tag-pw  { background: var(--st-warn-bg); color: #B45309; }
     .tag-lock{ background: #FEE2E2; color: #B91C1C; }
-    .tag-ok  { background: #ECFDF5; color: #047857; }
+    .tag-ok  { background: var(--st-good-bg); color: #047857; }
 
     /* ── Drawer ── */
     .adm-scrim { position: fixed; inset: 0; background: rgba(15,25,45,.45); z-index: 900; }
@@ -76,7 +76,7 @@
                        letter-spacing: .5px; color: var(--text-muted); margin-bottom: 4px; }
     .adm-field input, .adm-field select {
       width: 100%; font-family: var(--font); font-size: 13px; padding: 8px 10px;
-      border: 1.5px solid var(--border); border-radius: 7px; background: white; color: var(--navy); }
+      border: 1.5px solid var(--border); border-radius: 6px; background: white; color: var(--navy); }
     .adm-field input:disabled { background: #F8FAFC; color: var(--text-muted); }
     .adm-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
 
@@ -90,11 +90,11 @@
     .adm-grant .v { color: var(--navy); font-weight: 600; }
     .adm-grant .v.no { color: var(--text-muted); font-weight: 400; }
 
-    .adm-err { background: #FEF2F2; border: 1.5px solid #FCA5A5; color: #B91C1C;
-               font-size: 12px; padding: 10px 12px; border-radius: 7px; margin-bottom: 14px; line-height: 1.5; }
+    .adm-err { background: var(--st-bad-bg); border: 1.5px solid var(--st-bad-bd); color: #B91C1C;
+               font-size: 12px; padding: 10px 12px; border-radius: 6px; margin-bottom: 14px; line-height: 1.5; }
 
     /* One-time password hand-off. */
-    .adm-pw { background: #ECFDF5; border: 1.5px solid #6EE7B7; border-radius: 9px; padding: 14px; margin-bottom: 16px; }
+    .adm-pw { background: var(--st-good-bg); border: 1.5px solid #6EE7B7; border-radius: 9px; padding: 14px; margin-bottom: 16px; }
     .adm-pw h4 { font-size: 12px; color: #047857; margin: 0 0 6px; }
     .adm-pw code { display: block; font-family: ui-monospace, "SF Mono", Menlo, monospace;
                    font-size: 16px; font-weight: 700; letter-spacing: 1px; color: #065F46;

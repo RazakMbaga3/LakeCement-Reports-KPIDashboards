@@ -424,8 +424,25 @@
      for. What was missing is any sign that more columns are off-screen.
      ══════════════════════════════════════════════════════════════════ */
   function wireScrollAffordance() {
-    const wraps = document.querySelectorAll('.table-wrapper, .rt-wrap, .tbl-scroll, [data-scroll-x]');
-    wraps.forEach(w => {
+    /* Found by COMPUTED OVERFLOW, not by a list of class names — the same
+       correction a11y.js already made for the same reason. The class list
+       (.table-wrapper, .rt-wrap, .tbl-scroll, [data-scroll-x]) covered the
+       wrappers somebody remembered to name and missed .adm-wrap on the
+       user-administration table, which hides 157px of columns at 1440px
+       with nothing on screen to say so. Anything that actually scrolls
+       sideways gets the fade, whoever wrote it and whatever they called
+       the div. */
+    const named = document.querySelectorAll('.table-wrapper, .rt-wrap, .tbl-scroll, [data-scroll-x]');
+    const found = new Set(named);
+    document.querySelectorAll('div, section, main, td, li').forEach(el => {
+      if (found.has(el) || el.dataset.msScroll) return;
+      const ox = getComputedStyle(el).overflowX;
+      if (ox !== 'auto' && ox !== 'scroll') return;
+      if (el.scrollWidth - el.clientWidth <= 1) return;
+      found.add(el);
+    });
+
+    found.forEach(w => {
       if (w.dataset.msScroll) return;
       /* A grid that mobile-entry.js has replaced with cards is hidden, and
          telling someone to swipe a table they cannot see is worse than

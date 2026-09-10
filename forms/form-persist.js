@@ -346,8 +346,8 @@
           : '';
 
         const badgeStyle = status === 'submitted'
-          ? 'background:#BBF7D0;color:#14532D'
-          : 'background:#FEF3C7;color:#92400E';
+          ? 'background:var(--st-good-bd);color:#14532D'
+          : 'background:var(--st-warn-bg);color:#92400E';
 
         const row = document.createElement('div');
         row.style.cssText = 'padding:10px 14px;cursor:pointer;border-bottom:1px solid #F0F4F8;display:flex;justify-content:space-between;align-items:center;transition:background .1s';
@@ -357,7 +357,7 @@
           <span style="font-weight:600;color:#173158;font-size:12px">${date}</span>
           <div style="display:flex;align-items:center;gap:6px">
             <span style="color:var(--text-muted);font-size:12px">${time}</span>
-            <span style="font-size:12px;font-weight:700;padding:2px 7px;border-radius:3px;${badgeStyle}">${status.toUpperCase()}</span>
+            <span style="font-size:12px;font-weight:700;padding:2px 7px;border-radius:6px;${badgeStyle}">${status.toUpperCase()}</span>
           </div>`;
         row.onclick = async () => {
           const loadedMeta = await _read(formId, date);

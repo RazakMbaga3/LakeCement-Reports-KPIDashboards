@@ -41,7 +41,7 @@
     /* KV strip */
     .mis-kv-strip { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
     .mis-kv {
-      background:white; border:1px solid var(--border); border-radius:10px;
+      background:white; border:1px solid var(--border); border-radius:9px;
       padding:14px 20px; flex:1; min-width:120px;
     }
     .mis-kv-val { font-size:28px; font-weight:800; color:var(--navy); line-height:1; }
@@ -50,7 +50,7 @@
 
     /* Section card */
     .mis-section {
-      background:white; border:1px solid var(--border); border-radius:12px;
+      background:white; border:1px solid var(--border); border-radius:14px;
       overflow:hidden; box-shadow:var(--shadow-sm); margin-bottom:20px;
     }
     .mis-sec-hdr {
@@ -81,23 +81,23 @@
 
     /* Badges */
     .mis-badge {
-      display:inline-block; padding:3px 8px; border-radius:10px;
+      display:inline-block; padding:3px 8px; border-radius:9px;
       font-size:12px; font-weight:700;
     }
-    .mis-badge.valid   { background:#ECFDF5; color:#059669; border:1px solid #A7F3D0; }
-    .mis-badge.expiring { background:#FFF7ED; color:var(--amber-ink); border:1px solid #FDE68A; }
-    .mis-badge.expired  { background:#FEF2F2; color:var(--red-ink); border:1px solid #FECACA; }
+    .mis-badge.valid   { background:var(--st-good-bg); color:#059669; border:1px solid var(--st-good-bd); }
+    .mis-badge.expiring { background:#FFF7ED; color:var(--amber-ink); border:1px solid var(--st-warn-bd); }
+    .mis-badge.expired  { background:var(--st-bad-bg); color:var(--red-ink); border:1px solid var(--st-bad-bd); }
 
     /* Tags */
     .mis-tag {
-      display:inline-block; padding:2px 8px; border-radius:8px;
+      display:inline-block; padding:2px 8px; border-radius:6px;
       font-size:12px; font-weight:600; background:#EFF6FF; color:#3B82F6;
       border:1px solid #BFDBFE;
     }
 
     /* Progress bars */
-    .mis-bar-wrap { display:inline-block; width:80px; height:6px; background:#E2E8F0; border-radius:3px; overflow:hidden; vertical-align:middle; margin-right:6px; }
-    .mis-bar-fill  { height:100%; border-radius:3px; transition:width .3s; }
+    .mis-bar-wrap { display:inline-block; width:80px; height:6px; background:#E2E8F0; border-radius:6px; overflow:hidden; vertical-align:middle; margin-right:6px; }
+    .mis-bar-fill  { height:100%; border-radius:6px; transition:width .3s; }
     .mis-bar-lbl   { font-size:12px; font-weight:600; color:var(--text-muted); vertical-align:middle; }
 
     /* Dept dot (reused from stoppage) */
@@ -107,7 +107,7 @@
     /* HR sub-tabs */
     .hr-subtabs {
       display:flex; gap:0; background:white; border:1px solid var(--border);
-      border-radius:10px; overflow:hidden; margin-bottom:16px;
+      border-radius:9px; overflow:hidden; margin-bottom:16px;
     }
     .hr-stab {
       flex:1; padding:10px 0; font-size:12px; font-weight:700;
@@ -122,7 +122,7 @@
     .hr-panel.active { display:block; }
 
     /* CSR accordion */
-    .csr-yr { border:1px solid var(--border); border-radius:8px; margin-bottom:10px; overflow:hidden; }
+    .csr-yr { border:1px solid var(--border); border-radius:6px; margin-bottom:10px; overflow:hidden; }
     .csr-yr-hdr {
       display:flex; align-items:center; gap:10px;
       padding:12px 16px; cursor:pointer; list-style:none;
@@ -136,8 +136,8 @@
     .csr-chevron  { width:14px; height:14px; margin-left:auto; color:var(--text-muted); transition:transform .2s; }
     details[open] .csr-chevron { transform:rotate(180deg); }
     .csr-yr-body  { padding:0; }
-    .mis-bar-wrap { display:inline-block; width:80px; height:5px; background:#E2E8F0; border-radius:3px; overflow:hidden; vertical-align:middle; }
-    .mis-bar-fill { height:100%; border-radius:3px; }
+    .mis-bar-wrap { display:inline-block; width:80px; height:5px; background:#E2E8F0; border-radius:6px; overflow:hidden; vertical-align:middle; }
+    .mis-bar-fill { height:100%; border-radius:6px; }
     .tc { text-align:center; }
     .tr { text-align:right; font-weight:600; }
     /* A minority category, not a fault. The expat headcount column was
@@ -2072,7 +2072,7 @@
 </div>
 
     <!-- Inventory closing values -->
-    <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px"><i data-lucide="upload" style="width:15px;height:15px;color:#3B82F6;flex-shrink:0"></i><span style="font-size:12px;color:#1E40AF"><strong>To update stock data:</strong> Replace the Excel file <code style="background:#DBEAFE;padding:1px 4px;border-radius:3px">M - 12 Stock Audit Report - Raw Materials.xlsx</code> and re-run the build script.</span></div>
+    <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:6px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px"><i data-lucide="upload" style="width:15px;height:15px;color:#3B82F6;flex-shrink:0"></i><span style="font-size:12px;color:#1E40AF"><strong>To update stock data:</strong> Replace the Excel file <code style="background:#DBEAFE;padding:1px 4px;border-radius:6px">M - 12 Stock Audit Report - Raw Materials.xlsx</code> and re-run the build script.</span></div>
 <div class="mis-section">
       <div class="mis-sec-hdr">
         <i data-lucide="database" class="mis-sec-icon"></i>
@@ -2607,7 +2607,7 @@
       <div class="mis-kv"><div class="mis-kv-val" style="color:var(--amber-ink)">1</div><div class="mis-kv-lbl">Expiring Soon</div></div>
       <div class="mis-kv"><div class="mis-kv-val" style="color:var(--red-ink)">6</div><div class="mis-kv-lbl">Expired</div></div>
     </div>
-    <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+    <div style="background:var(--st-bad-bg);border:1px solid var(--st-bad-bd);border-radius:6px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
       <i data-lucide="alert-triangle" style="width:16px;height:16px;color:var(--red-ink);flex-shrink:0"></i>
       <div>
         <strong style="color:var(--red-ink);font-size:12px">6 AMC contracts have expired</strong>
@@ -2818,7 +2818,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Export CSV
         </button>
-        <button class="mis-edit-btn" onclick="clearAuditLog()" title="Clear all logs" style="border-color:#FECACA;color:var(--red-ink)">
+        <button class="mis-edit-btn" onclick="clearAuditLog()" title="Clear all logs" style="border-color:var(--st-bad-bd);color:var(--red-ink)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
           Clear Log
         </button>
@@ -2950,7 +2950,7 @@ function renderEmployees(data) {
   if (!tbody) return;
   tbody.innerHTML = data.map(e => {
     const catBadge = e.c === 'EXPAT'
-      ? '<span class="mis-badge expired" style="background:#FEF2F2;color:var(--red-ink);border-color:#FECACA">Expat</span>'
+      ? '<span class="mis-badge expired" style="background:var(--st-bad-bg);color:var(--red-ink);border-color:var(--st-bad-bd)">Expat</span>'
       : '<span class="mis-badge valid">Local</span>';
     return `<tr>
       <td style="color:var(--text-muted);font-size:12px">${e.e}</td>
@@ -3088,7 +3088,7 @@ function certBadgeHtml(s) {
   if (s === 'active')   return '<span class="mis-badge valid">Active</span>';
   if (s === 'expiring') return '<span class="mis-badge expiring">Expiring</span>';
   if (s === 'expired')  return '<span class="mis-badge expired">Expired</span>';
-  if (s === 'renewal')  return '<span class="mis-badge expiring" style="background:#FFF7ED;color:#92400E;border-color:#FDE68A">Under Renewal</span>';
+  if (s === 'renewal')  return '<span class="mis-badge expiring" style="background:#FFF7ED;color:#92400E;border-color:var(--st-warn-bd)">Under Renewal</span>';
   return '<span class="mis-badge" style="background:#F1F5F9;color:#64748B;border:1px solid #CBD5E1">Inactive</span>';
 }
 

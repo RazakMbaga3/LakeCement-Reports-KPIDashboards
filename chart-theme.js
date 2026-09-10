@@ -107,6 +107,19 @@ var LCL_CHART = (function () {
     return (i < SERIES.length) ? SERIES[i] : STATUS.neutral;
   }
 
+  /* Break a long category label across at most two lines, on a space.
+     Chart.js renders an array of strings as stacked tick lines. Returns
+     the value untouched when it is short, not a string, or a single long
+     word there is no safe place to break. */
+  var TICK_CHARS = 14;
+  function wrapTick(label) {
+    if (typeof label !== 'string' || label.length <= TICK_CHARS) return label;
+    var words = label.split(' ');
+    if (words.length < 2) return label;
+    var mid = Math.ceil(words.length / 2);
+    return [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
+  }
+
   /* ── Global defaults ───────────────────────────────────────────── */
   function apply() {
     if (typeof Chart === 'undefined' || !Chart.defaults) return false;
@@ -143,6 +156,25 @@ var LCL_CHART = (function () {
        size of a grain of rice and the finger is not. */
     d.interaction.mode      = 'index';
     d.interaction.intersect = false;
+
+    /* Category labels wrap instead of colliding.
+       The Pareto charts on reliability.html rank six causes across a
+       ~560px canvas, which leaves ~90px a slot; "Planned Maintenance"
+       and "Electrical & Instr." need ~130px and were overprinting their
+       neighbours at the 20° rotation the pages ask for. Canvas text is a
+       bitmap, so no audit in this repo can see that — it is only ever
+       caught by looking, which is how it was found.
+
+       Set as a Chart.js DEFAULT rather than in merge(): every page that
+       needs this writes its own `scales.x.ticks`, so a default is the
+       only place that reaches all of them. A page wanting different
+       behaviour still overrides `callback` and wins. */
+    if (d.scales && d.scales.category && d.scales.category.ticks) {
+      d.scales.category.ticks.callback = function (value) {
+        var label = this.getLabelForValue ? this.getLabelForValue(value) : value;
+        return wrapTick(label);
+      };
+    }
 
     /* Thin marks, visible points. */
     if (d.elements) {

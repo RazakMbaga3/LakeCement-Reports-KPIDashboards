@@ -479,20 +479,20 @@
     modal.id  = '_xi-modal';
     modal.style.cssText = 'position:fixed;inset:0;background:rgba(23,49,88,.55);z-index:9995;display:flex;align-items:center;justify-content:center;padding:16px';
     modal.innerHTML =
-      '<div style="background:white;border-radius:10px;max-width:480px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.28)">' +
+      '<div style="background:white;border-radius:9px;max-width:480px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.28)">' +
         /* header */
-        '<div style="background:#173158;border-radius:10px 10px 0 0;padding:13px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">' +
+        '<div style="background:#173158;border-radius:9px 9px 0 0;padding:13px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">' +
           '<div>' +
             '<div style="color:white;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase">Excel Import Preview</div>' +
             '<div style="color:var(--on-navy);font-size:12px;margin-top:2px">' + formId + ' · ' + matched.length + ' fields matched</div>' +
           '</div>' +
-          '<button onclick="document.getElementById(\'_xi-modal\').remove()" style="background:rgba(255,255,255,.12);border:none;color:white;width:26px;height:26px;border-radius:4px;cursor:pointer;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>' +
+          '<button onclick="document.getElementById(\'_xi-modal\').remove()" style="background:rgba(255,255,255,.12);border:none;color:white;width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>' +
         '</div>' +
         /* body */
         '<div style="padding:14px 18px;overflow-y:auto;flex:1">' +
           (data.date ? '<div style="font-size:12px;color:#5A6270;margin-bottom:10px">Report date: <strong style="color:#173158">' + data.date + '</strong></div>' : '') +
           '<div style="display:flex;gap:8px;margin-bottom:12px">' +
-            '<span style="background:#D1FAE5;color:#065F46;font-size:12px;font-weight:700;padding:3px 10px;border-radius:10px">' + matched.length + ' matched</span>' +
+            '<span style="background:var(--st-good-bg);color:#065F46;font-size:12px;font-weight:700;padding:3px 10px;border-radius:9px">' + matched.length + ' matched</span>' +
             (extra.length ? '<span style="background:#F1F5F9;color:#64748B;font-size:12px;font-weight:700;padding:3px 10px;border-radius:10px">' + extra.length + ' not in form</span>' : '') +
           '</div>' +
           '<table style="width:100%;border-collapse:collapse">' +
@@ -558,7 +558,7 @@
     overlay.id  = '_xi-drop';
     overlay.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(23,49,88,.75);z-index:9990;flex-direction:column;align-items:center;justify-content:center;color:white;pointer-events:none;transition:opacity .15s';
     overlay.innerHTML =
-      '<div style="border:3px dashed rgba(255,255,255,.55);border-radius:16px;padding:52px 80px;text-align:center">' +
+      '<div style="border:3px dashed rgba(255,255,255,.55);border-radius:14px;padding:52px 80px;text-align:center">' +
         '<div style="font-size:52px;margin-bottom:14px">📊</div>' +
         '<div style="font-size:20px;font-weight:700;letter-spacing:.3px">Drop Excel file to import</div>' +
         '<div style="font-size:12px;opacity:.85;margin-top:8px">.xlsx — ' + formId + ' report</div>' +

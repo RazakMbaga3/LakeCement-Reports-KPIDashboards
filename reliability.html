@@ -19,8 +19,8 @@
     }
     .rl-bar-inner { display: flex; align-items: center; gap: 14px; padding: 10px 28px; flex-wrap: wrap; }
     .rl-lbl { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); }
-    .rl-pills { display: flex; gap: 4px; background: var(--off-white); border: 1px solid var(--border); border-radius: 8px; padding: 3px; }
-    .rl-pill { padding: 4px 14px; border-radius: 5px; border: none; background: transparent; font-family: var(--font); font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+    .rl-pills { display: flex; gap: 4px; background: var(--off-white); border: 1px solid var(--border); border-radius: 6px; padding: 3px; }
+    .rl-pill { padding: 4px 14px; border-radius: 6px; border: none; background: transparent; font-family: var(--font); font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; }
     .rl-pill:hover  { color: var(--navy); background: rgba(23,49,88,.06); }
     .rl-pill.active { background: var(--navy); color: white; }
     .rl-input {
@@ -46,14 +46,14 @@
     .rl-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
     @media (max-width: 1000px) { .rl-kpi-row { grid-template-columns: repeat(2, 1fr); } }
     .rl-stat-tile {
-      background: white; border: 1px solid var(--border); border-radius: 10px;
+      background: white; border: 1px solid var(--border); border-radius: 9px;
       padding: 14px 16px; box-shadow: var(--shadow-sm);
     }
     .rl-stat-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
     .rl-stat-icon { color: var(--orange-ink); flex-shrink: 0; }
     .rl-stat-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); }
-    .rl-stat-val { font-size: 26px; font-weight: 800; color: var(--navy); line-height: 1; font-variant-numeric: proportional-nums; }
-    .rl-stat-target { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .rl-stat-val { font-size: 26px; font-weight: 800; color: var(--navy); line-height: 1; font-variant-numeric: tabular-nums; }
+    .rl-stat-target { font-size: 12px; color: var(--text-muted); margin-top: 4px; min-height: 32px; }
     .rl-stat-delta { font-size: 12px; font-weight: 700; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
     .rl-delta-good { color: var(--green-ink); }
     .rl-delta-bad  { color: var(--red); }
@@ -63,12 +63,17 @@
     .rl-pareto-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
     @media (max-width: 1050px) { .rl-pareto-grid { grid-template-columns: 1fr; } }
     .rl-pareto-card {
-      background: white; border: 1px solid var(--border); border-radius: 10px;
+      background: white; border: 1px solid var(--border); border-radius: 9px;
       box-shadow: var(--shadow-sm); overflow: hidden;
     }
     .rl-pareto-hdr { padding: 12px 16px 8px; border-bottom: 1px solid var(--border); }
     .rl-pareto-title { font-size: 12px; font-weight: 800; color: var(--navy); }
-    .rl-pareto-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    /* Two lines reserved. The two Pareto cards sit side by side and are
+       read against each other; one subtitle wrapping and the other not
+       pushed the whole right-hand chart, its axis and its table 15px
+       below their left-hand counterparts, which is exactly the
+       comparison the pairing exists to make easy. */
+    .rl-pareto-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; min-height: 32px; }
     .rl-pareto-chart-wrap { padding: 12px 14px 4px; height: 260px; }
     .rl-pareto-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 4px; }
     .rl-pareto-table th {
@@ -82,7 +87,7 @@
 
     /* ══ Equipment table ══ */
     .rl-equip-card {
-      background: white; border: 1px solid var(--border); border-radius: 10px;
+      background: white; border: 1px solid var(--border); border-radius: 9px;
       box-shadow: var(--shadow-sm); overflow: hidden;
     }
     .rl-equip-table { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -105,7 +110,7 @@
     /* ══ Action-required (RCFA) callout ══ */
     .rl-rcfa-list { display: flex; flex-direction: column; gap: 8px; }
     .rl-rcfa-item {
-      background: white; border: 1px solid var(--border); border-left-width: 4px; border-radius: 8px;
+      background: white; border: 1px solid var(--border); border-left-width: 4px; border-radius: 6px;
       padding: 10px 14px; display: flex; align-items: flex-start; gap: 10px; box-shadow: var(--shadow-sm);
     }
     .rl-rcfa-item.sev-critical { border-left-color: #d03b3b; }
@@ -116,13 +121,13 @@
     .rl-rcfa-body { flex: 1; }
     .rl-rcfa-tag {
       display: inline-block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
-      padding: 2px 8px; border-radius: 8px; margin-bottom: 4px;
+      padding: 2px 8px; border-radius: 6px; margin-bottom: 4px;
     }
     .rl-rcfa-item.sev-critical .rl-rcfa-tag { background: #FDEDED; color: #B71C1C; }
-    .rl-rcfa-item.sev-warning  .rl-rcfa-tag { background: #FEF3C7; color: #92400E; }
+    .rl-rcfa-item.sev-warning  .rl-rcfa-tag { background: var(--st-warn-bg); color: #92400E; }
     .rl-rcfa-msg { font-size: 12px; color: var(--text-main); line-height: 1.5; }
     .rl-rcfa-more {
-      background: white; border: 1px solid var(--border); border-radius: 10px;
+      background: white; border: 1px solid var(--border); border-radius: 9px;
       box-shadow: var(--shadow-sm); overflow: hidden; margin-top: 4px;
     }
     .rl-rcfa-more-hdr {
@@ -135,7 +140,7 @@
     .rl-rcfa-table td:first-child { white-space: nowrap; }
     .rl-rcfa-table tr:first-child td { border-top: none; }
     .rl-no-flags {
-      background: white; border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-sm);
+      background: white; border: 1px solid var(--border); border-radius: 9px; box-shadow: var(--shadow-sm);
       padding: 24px 20px; text-align: center; color: var(--text-muted); font-size: 12px; font-weight: 600;
     }
     .rl-no-flags span { font-size: 20px; display: block; margin-bottom: 6px; }

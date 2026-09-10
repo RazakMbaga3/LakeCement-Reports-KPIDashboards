@@ -27,7 +27,7 @@
     .in-section-hdr { display: flex; align-items: center; gap: 8px; margin: 24px 0 12px; }
     .in-section-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--navy); }
     .in-section-sub { font-size: 12px; color: var(--text-muted); font-weight: 500; }
-    .in-card { background: white; border: 1.5px solid var(--border); border-radius: 12px; padding: 16px 16px; margin-bottom: 16px; }
+    .in-card { background: white; border: 1.5px solid var(--border); border-radius: 14px; padding: 16px 16px; margin-bottom: 16px; }
     .in-card-title { font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
     .in-card-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
     .in-chart-wrap { height: 260px; }
@@ -41,10 +41,10 @@
     /* Grade-mix tiles — accent color per product line */
     .grade-tile { border-left: 4px solid var(--border); padding-left: 10px; }
     .grade-tile .sk-value { font-size: 22px; }
-    .grade-share-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin: 10px 0 4px; background: var(--section-bg); }
+    .grade-share-bar { display: flex; height: 8px; border-radius: 6px; overflow: hidden; margin: 10px 0 4px; background: var(--section-bg); }
 
     .cta-flash {
-      background: var(--orange); color: white; border: none; border-radius: 8px;
+      background: var(--orange); color: white; border: none; border-radius: 6px;
       padding: 8px 16px; font-family: var(--font); font-size: 12px; font-weight: 700;
       cursor: pointer; display: flex; align-items: center; gap: 6px;
     }
@@ -52,7 +52,7 @@
 
     .target-source-chip {
       font-size: 12px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase;
-      padding: 2px 8px; border-radius: 10px; background: var(--section-bg); color: var(--text-muted);
+      padding: 2px 8px; border-radius: 9px; background: var(--section-bg); color: var(--text-muted);
     }
     .target-source-chip.odoo { background: var(--green-bg); color: var(--green-ink); }
 
@@ -89,7 +89,12 @@
 
 <main class="in-main">
 
-  <div class="in-empty" id="sd-alert" style="display:none;background:#FFF3E0;border:1px solid #FDE68A;border-radius:10px;color:var(--orange-ink);font-weight:600;padding:10px 16px;text-align:left;margin-bottom:16px"></div>
+  <div class="in-empty" id="sd-alert" style="display:none;background:var(--st-warn-bg);border:1px solid var(--st-warn-bd);border-radius:9px;color:var(--orange-ink);font-weight:600;padding:10px 16px;text-align:left;margin-bottom:16px"></div>
+
+  <!-- Shown INSTEAD of the sections below when the upstream is
+       unreachable; leaving eight empty captioned boxes on screen reads
+       as a broken page rather than as absent data. -->
+  <div id="sd-failed" hidden></div>
 
   <!-- ── HERO ─────────────────────────────────────────────── -->
   <div class="sk-row" id="sd-hero"></div>
@@ -513,8 +518,37 @@
       if (window.lucide) window.lucide.createIcons();
     } catch (e) {
       document.getElementById('sd-source').textContent = '';
-      document.getElementById('sd-hero').innerHTML = '<div class="in-empty" style="grid-column:1/-1">Failed to load the Sales dashboard. Make sure the backend is running.</div>';
+      showLoadFailure(e);
     }
+  }
+
+  /* The upstream is Odoo via the API. When it cannot be reached there is
+     no partial answer worth showing, so the section scaffolding comes
+     down and one panel explains the situation and offers the retry. */
+  function showLoadFailure(err) {
+    var main = document.querySelector('.in-main');
+    var panel = document.getElementById('sd-failed');
+    if (!main || !panel) return;
+    Array.prototype.forEach.call(main.children, function (el) {
+      if (el !== panel) el.hidden = true;
+    });
+    panel.hidden = false;
+    panel.innerHTML =
+      '<div class="ds-state is-error">' +
+        '<div class="ds-state-icon"><i data-lucide="alert-octagon"></i></div>' +
+        '<div class="ds-state-title">Sales data is unavailable</div>' +
+        '<div class="ds-state-body">The dashboard could not reach the sales service, so no figures are shown ' +
+          'rather than stale or partial ones. This is usually the Odoo connection rather than anything you did.</div>' +
+        '<button type="button" class="ds-state-act" id="sd-retry">Try again</button>' +
+      '</div>';
+    panel.querySelector('#sd-retry').addEventListener('click', function () {
+      Array.prototype.forEach.call(main.children, function (el) {
+        if (el !== panel) el.hidden = false;
+      });
+      panel.hidden = true; panel.innerHTML = '';
+      load();
+    });
+    if (window.lucide) window.lucide.createIcons();
   }
 
   var _dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });

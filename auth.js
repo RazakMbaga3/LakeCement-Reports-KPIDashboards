@@ -632,7 +632,7 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
     .auth-denied-flash {
       position:fixed; top:80px; right:24px; z-index:9999;
       background:#EF4444; color:white; padding:10px 20px;
-      border-radius:8px; font-size:12px; font-weight:700;
+      border-radius:6px; font-size:12px; font-weight:700;
       box-shadow:0 4px 16px rgba(0,0,0,.2);
       animation:fadeInOut 2.5s forwards;
     }
@@ -651,7 +651,7 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
       border-color:var(--orange,#F49545);
     }
     .audit-action-badge {
-      display:inline-block; padding:2px 8px; border-radius:4px;
+      display:inline-block; padding:2px 8px; border-radius:6px;
       font-size:12px; font-weight:700;
     }
     .audit-empty {
@@ -660,7 +660,7 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
 
     /* ── Audit role badge ── */
     .audit-role-badge {
-      display:inline-block; padding:1px 7px; border-radius:4px;
+      display:inline-block; padding:1px 7px; border-radius:6px;
       font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.4px;
       background:#F1F5F9; color:#475569; border:1px solid #E2E8F0;
     }
@@ -702,7 +702,7 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
       color:#475569; text-align:center; text-transform:uppercase;
     }
     .arm-special-col, .arm-kpi-col {
-      background:#F0FDF4;
+      background:var(--st-good-bg);
     }
     .arm-role-cell {
       background:#F8FAFC; font-size:12px;
@@ -716,12 +716,12 @@ function _writeAudit(action, tab, section, field, oldVal, newVal) {
     }
     .arm-cell { text-align:center; padding:4px 6px; }
     .arm-badge {
-      display:inline-block; padding:2px 7px; border-radius:4px;
+      display:inline-block; padding:2px 7px; border-radius:6px;
       font-size:12px; font-weight:800; letter-spacing:.3px;
     }
-    .arm-edit  { background:#DCFCE7; color:#166534; border:1px solid #86EFAC; }
+    .arm-edit  { background:var(--st-good-bg); color:#166534; border:1px solid #86EFAC; }
     .arm-view  { background:#DBEAFE; color:#1E40AF; border:1px solid #93C5FD; }
-    .arm-own   { background:#FEF3C7; color:#92400E; border:1px solid #FCD34D; }
+    .arm-own   { background:var(--st-warn-bg); color:#92400E; border:1px solid var(--st-warn-bd); }
     .arm-none  { background:#F1F5F9; color:var(--text-muted); border:1px solid #E2E8F0; }
     .arm-tick  { color:#16A34A; font-weight:800; font-size:12px; }
     .arm-kpi-depts {

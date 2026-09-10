@@ -175,20 +175,51 @@ function collect() {
       }
     }
 
-    /* 5 — simultaneous status encodings on one element */
-    let load = 0; const how = [];
-    const bd = ['borderTopColor', 'borderLeftColor'].map(p => parse(s[p]));
+    /* 5 — CONFLICTING status signals on one element.
+       Not a count of coloured parts: a status chip legitimately spends a
+       background, a border and a dot on ONE reading, and counting those
+       as three faults just teaches you to ignore the check. What breaks
+       a reader is two signals in DIFFERENT hues on the same element —
+       the KPI tile whose top edge said "concern" in red while its bottom
+       edge said "formula" in green. So collect the hues actually painted
+       and report the element only when they disagree. */
+    const how = [], hues = [];
     const chroma = c => c && c.a > .05 && (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b)) > 24;
-    if (bd.some(chroma) && px(s.borderTopWidth) + px(s.borderLeftWidth) > 0) { load++; how.push('border'); }
-    if (chroma(parse(s.backgroundColor))) { load++; how.push('background'); }
+    const hueOf = c => {
+      const mx = Math.max(c.r, c.g, c.b), mn = Math.min(c.r, c.g, c.b), d = mx - mn;
+      let h = 0;
+      if (d === 0) h = 0;
+      else if (mx === c.r) h = 60 * (((c.g - c.b) / d) % 6);
+      else if (mx === c.g) h = 60 * ((c.b - c.r) / d + 2);
+      else h = 60 * ((c.r - c.g) / d + 4);
+      return (h + 360) % 360;
+    };
+    const note = (label, c) => { if (chroma(c)) { how.push(label); hues.push(hueOf(c)); } };
+
+    if (px(s.borderTopWidth) > 0)  note('border-top', parse(s.borderTopColor));
+    if (px(s.borderLeftWidth) > 0) note('border-left', parse(s.borderLeftColor));
+    note('background', parse(s.backgroundColor));
     for (const pseudo of ['::before', '::after']) {
       const ps = getComputedStyle(el, pseudo);
-      if (ps.content !== 'none' && chroma(parse(ps.backgroundColor))) { load++; how.push(pseudo); }
+      if (ps.content !== 'none') note(pseudo, parse(ps.backgroundColor));
     }
-    if (el.querySelector(':scope > [class*=badge], :scope > [class*=chip], :scope > [class*=tag]')) {
-      load++; how.push('badge');
+
+    if (hues.length >= 2) {
+      /* Circular hue distance; 40° apart is a different colour to a reader
+         (amber→green is 80°, green→red 120°). Under that it is one hue
+         family expressed at different lightness, which is fine. */
+      let worst = 0;
+      for (let i = 0; i < hues.length; i++) {
+        for (let j = i + 1; j < hues.length; j++) {
+          const d = Math.abs(hues[i] - hues[j]);
+          worst = Math.max(worst, Math.min(d, 360 - d));
+        }
+      }
+      if (worst >= 40) {
+        out.signals.push({ sig, load: how.length, how, spread: Math.round(worst),
+                           text: (el.textContent || '').trim().slice(0, 30) });
+      }
     }
-    if (load >= 3) out.signals.push({ sig, load, how, text: (el.textContent || '').trim().slice(0, 30) });
 
     /* 6 — radius + elevation inventory */
     const rad = s.borderRadius;
@@ -317,18 +348,19 @@ const merge = (into, from, page) => {
   console.log(`\n  → ${bad.length} text-on-brand-fill nodes below 4.5:1 (${seen.size} distinct)`);
   if (seen.size) findings.push(`${seen.size} distinct text-on-brand-fill treatments below 4.5:1`);
 
-  H('5 · SIGNAL OVERLOAD — one element encoding status 3+ ways');
+  H('5 · CONFLICTING SIGNALS — one element painted in two different hues');
   const sigBy = {};
   for (const s of agg.signals) {
     const k = s.sig + ' :: ' + s.how.join('+');
-    (sigBy[k] = sigBy[k] || { n: 0, pages: new Set(), sample: s.text, load: s.load });
+    (sigBy[k] = sigBy[k] || { n: 0, pages: new Set(), sample: s.text, load: s.load, spread: s.spread });
     sigBy[k].n++; sigBy[k].pages.add(s.page);
+    sigBy[k].spread = Math.max(sigBy[k].spread, s.spread);
   }
   for (const [k, v] of Object.entries(sigBy).sort((a, b) => b[1].n - a[1].n).slice(0, 14)) {
-    console.log(`  ×${String(v.n).padStart(4)}  load=${v.load}  ${k}   [${[...v.pages].slice(0, 3).join(', ')}]`);
+    console.log(`  ×${String(v.n).padStart(4)}  hue spread ${String(v.spread).padStart(3)}°  ${k}   [${[...v.pages].slice(0, 3).join(', ')}]`);
   }
-  console.log(`\n  → ${agg.signals.length} overloaded elements, ${Object.keys(sigBy).length} distinct patterns`);
-  if (agg.signals.length) findings.push(`${agg.signals.length} elements encode status three or more ways at once`);
+  console.log(`\n  → ${agg.signals.length} elements carrying conflicting hues, ${Object.keys(sigBy).length} distinct patterns`);
+  if (agg.signals.length) findings.push(`${agg.signals.length} elements are painted in two conflicting hues at once`);
 
   H('6 · RADIUS & ELEVATION INVENTORY');
   const rr = Object.entries(agg.radii).sort((a, b) => b[1].n - a[1].n);

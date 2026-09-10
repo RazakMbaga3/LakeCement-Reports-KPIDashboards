@@ -23,7 +23,7 @@
       letter-spacing:.8px; color:var(--navy); display:flex; align-items:center; gap:8px; }
     .sb-date-badge {
       font-size:12px; font-weight:700; background:var(--navy); color:white;
-      padding:4px 12px; border-radius:20px; letter-spacing:.3px;
+      padding:4px 12px; border-radius:999px; letter-spacing:.3px;
     }
     .sb-summary {
       font-size:12px; color:var(--text-muted); display:flex; gap:16px; flex-wrap:wrap;
@@ -65,11 +65,11 @@
       letter-spacing:.5px; display:flex; align-items:center; gap:6px;
     }
     .sb-badge {
-      font-size:12px; font-weight:800; padding:2px 8px; border-radius:12px;
+      font-size:12px; font-weight:800; padding:2px 8px; border-radius:14px;
       text-transform:uppercase; letter-spacing:.5px; flex-shrink:0;
     }
-    .sb-badge.submitted { background:#D1FAE5; color:#065F46; }
-    .sb-badge.draft     { background:#FEF3C7; color:#92400E; }
+    .sb-badge.submitted { background:var(--st-good-bg); color:#065F46; }
+    .sb-badge.draft     { background:var(--st-warn-bg); color:#92400E; }
     .sb-badge.missing   { background:#F1F5F9; color:var(--text-muted); }
 
     .sb-card-by {
@@ -123,7 +123,7 @@
     /* ── Refresh hint ─────────────────────────────────────────────── */
     .sb-refresh {
       font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:4px;
-      cursor:pointer; padding:3px 8px; border-radius:4px; transition:background .1s;
+      cursor:pointer; padding:3px 8px; border-radius:6px; transition:background .1s;
     }
     .sb-refresh:hover { background:var(--off-white); color:var(--navy); }
   </style>

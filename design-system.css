@@ -179,6 +179,15 @@
    2. FOUNDATION
    ══════════════════════════════════════════════════════════════════════ */
 
+/* The `hidden` attribute has to actually hide.
+   The UA sheet says `[hidden] { display: none }` at the lowest possible
+   specificity, so ANY class rule that sets a display — and this app sets
+   `display: flex` on most of its section headers, rows and strips —
+   silently beats it. Hiding a section with el.hidden left its heading on
+   screen, which is how the sales failure state ended up showing a clean
+   error panel above seven captions for content that was not coming. */
+[hidden] { display: none !important; }
+
 /* Focus — the app had no visible focus ring, which fails WCAG 2.4.7 and
    makes the whole thing keyboard-hostile. :focus-visible keeps it off for
    mouse users, so nothing looks noisier than before for existing staff. */
@@ -456,7 +465,7 @@
     transform: translateX(-50%);
     width: 26px;
     height: 3px;
-    border-radius: 0 0 3px 3px;
+    border-radius: 0 0 6px 6px;
     background: var(--orange, #F49545);
   }
   .ms-bn-item:active { color: var(--navy, #173158); }
@@ -1331,7 +1340,7 @@ body.me-view-cards .me-cards > .me-group { grid-column: 1 / -1; }
   min-height: 30px;
   padding: 0 var(--sp-3);
   border: 0;
-  border-radius: 7px;
+  border-radius: 6px;
   background: none;
   color: var(--text-muted, #5A6270);
   font-family: var(--font, 'Inter', system-ui, sans-serif);
@@ -1459,9 +1468,9 @@ body.me-view-cards .me-cards > .me-group { grid-column: 1 / -1; }
    white and against the tint each colour actually sits on in this app.
    ══════════════════════════════════════════════════════════════════════ */
 :root {
-  --orange-ink: #A85C14;   /* 4.99:1 on white · 4.55:1 on #FFF3E0        */
-  --green-ink:  #12703F;   /* 6.15:1 on white · 5.48:1 on #E8F5EE        */
-  --amber-ink:  #B45309;   /* 5.02:1 on white · 4.93:1 on #FFFDF5        */
+  --orange-ink: #A85C14;   /* 4.99:1 on white · 4.55:1 on var(--st-warn-bg)        */
+  --green-ink:  #12703F;   /* 6.15:1 on white · 5.48:1 on var(--st-good-bg)        */
+  --amber-ink:  #B45309;   /* 5.02:1 on white · 4.93:1 on var(--st-warn-bg)        */
   --blue-ink:   #2C5A9E;   /* 6.26:1 on #F1F5F9                          */
   --red-ink:    #C0271F;   /* 5.91:1 on white — red-500 as text is 3.76:1 */
 
@@ -1502,6 +1511,77 @@ button.apply-btn {
 .btn-save svg, .btn-save i,
 #login-btn svg, #login-btn i,
 .btn-primary svg, .btn-primary i { color: inherit; stroke: currentColor; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   STATE PANEL — the page could not show you what you came for
+   ──────────────────────────────────────────────────────────────────────
+   When the Sales dashboard's upstream is unreachable it used to print
+   one line of 12px grey text — "Failed to load … Make sure the backend
+   is running" — into the hero row and leave seven empty white boxes
+   below it, still captioned as though their content were coming. On a
+   1920 control-room screen that reads as an application that has broken,
+   not as data that is temporarily unavailable, and it offers the reader
+   nothing to do about it.
+
+   One panel, three parts: what happened, what it means, and the way out.
+   Used for a hard failure (.is-error) and for a legitimately empty
+   result (default), because the two look different to a reader and
+   should: an empty month is normal, an unreachable upstream is not.
+   ══════════════════════════════════════════════════════════════════════ */
+.ds-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--sp-2);
+  padding: var(--sp-10) var(--sp-6);
+  border: 1px solid var(--st-neutral-bd);
+  border-radius: var(--r-md);
+  background: #fff;
+  color: var(--st-neutral);
+}
+.ds-state-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px;
+  border-radius: var(--r-pill);
+  background: var(--st-neutral-bg);
+  color: var(--st-neutral);
+  margin-bottom: var(--sp-1);
+}
+.ds-state-icon svg { width: 20px; height: 20px; }
+.ds-state-title {
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: var(--navy, #173158);
+}
+.ds-state-body {
+  font-size: var(--fs-base);
+  font-weight: var(--fw-medium);
+  max-width: 46ch;
+  line-height: var(--lh-normal);
+}
+.ds-state-act {
+  margin-top: var(--sp-3);
+  display: inline-flex; align-items: center; gap: var(--sp-2);
+  min-height: var(--tap);
+  padding: 0 var(--sp-5);
+  border: 1px solid var(--navy, #173158);
+  border-radius: var(--r-sm);
+  background: var(--navy, #173158);
+  color: #fff;
+  font: inherit;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+.ds-state-act:hover { background: #1E3D70; }
+
+.ds-state.is-error {
+  border-color: var(--st-bad-bd);
+  background: var(--st-bad-bg);
+}
+.ds-state.is-error .ds-state-icon { background: #fff; color: var(--red-ink); }
+.ds-state.is-error .ds-state-body { color: var(--red-ink); }
 
 /* ══════════════════════════════════════════════════════════════════════
    PROVENANCE LEGEND — Manual / System / Formula

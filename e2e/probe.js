@@ -1,10 +1,12 @@
-/* Throwaway probe: answer one specific question about the live DOM.
-   node probe.js <page-url-path> */
+/* Throwaway probe: run axe on one page and print colour-contrast nodes.
+   node probe.js <page-path> [width] */
 'use strict';
+const fs = require('fs');
 const { chromium } = require('@playwright/test');
 const BASE = process.env.AUDIT_BASE || 'http://127.0.0.1:3000';
-const URL  = process.argv[2] || 'forms/dispatch-form.html';
+const URL  = process.argv[2] || 'daily-report.html';
 const W    = parseInt(process.argv[3] || '1440', 10);
+const AXE  = require.resolve('axe-core/axe.min.js');
 
 (async () => {
   const b = await chromium.launch();
@@ -15,38 +17,16 @@ const W    = parseInt(process.argv[3] || '1440', 10);
   await Promise.all([p.waitForNavigation().catch(()=>{}), p.click('button[type=submit]')]);
   await p.waitForTimeout(1000);
   await p.goto(BASE + '/' + URL, { waitUntil: 'networkidle' }).catch(()=>{});
-  await p.waitForTimeout(2000);
+  await p.waitForTimeout(2800);
+  await p.addScriptTag({ content: fs.readFileSync(AXE, 'utf8') });
 
-  const r = await p.evaluate(() => {
-    const out = {};
-    /* KPI value alignment */
-    out.ktVals = [...document.querySelectorAll('.kt')].map(k => {
-      const v = k.querySelector('.kt-val'); const l = k.querySelector('.kt-lbl');
-      return {
-        label: (l?.textContent || '').trim().slice(0, 28),
-        labelH: l ? Math.round(l.getBoundingClientRect().height) : null,
-        valY: v ? Math.round(v.getBoundingClientRect().top) : null,
-        cls: k.className,
-      };
-    });
-    /* Any element that scrolls horizontally in the top 200px */
-    out.scrollers = [...document.querySelectorAll('body *')].filter(el => {
-      const rc = el.getBoundingClientRect();
-      return rc.top < 220 && el.scrollWidth > el.clientWidth + 2 && rc.height > 0;
-    }).slice(0, 10).map(el => ({
-      sig: el.tagName.toLowerCase() + '.' + (String(el.className).split(/\s+/)[0] || ''),
-      y: Math.round(el.getBoundingClientRect().top),
-      h: Math.round(el.getBoundingClientRect().height),
-      sw: el.scrollWidth, cw: el.clientWidth,
-      overflowX: getComputedStyle(el).overflowX,
+  const res = await p.evaluate(async () => {
+    const r = await window.axe.run(document, { runOnly: ['color-contrast'] });
+    return r.violations.map(v => ({
+      id: v.id, impact: v.impact,
+      nodes: v.nodes.map(n => ({ target: n.target, msg: n.any.map(a => a.message) })),
     }));
-    /* Brand accent bar geometry */
-    const bar = document.querySelector('.brand-accent-bar');
-    if (bar) { const rc = bar.getBoundingClientRect();
-      out.bar = { x: Math.round(rc.left), w: Math.round(rc.width), y: Math.round(rc.top),
-                  h: Math.round(rc.height), bg: getComputedStyle(bar).backgroundImage.slice(0, 120) }; }
-    return out;
   });
-  console.log(JSON.stringify(r, null, 2));
+  console.log(JSON.stringify(res, null, 2));
   await b.close();
 })();

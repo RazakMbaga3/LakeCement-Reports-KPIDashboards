@@ -15,14 +15,14 @@
     /* ══════════════════════════════════════════════════════════════
        CPP POWER PLANT DAILY REPORT — page-specific styles
        Color legend (matches actual Excel colour coding):
-         Manual  (Red   in Excel) → Amber  #FFFBEB / #B45309  — On Date manual entries
+         Manual  (Red   in Excel) → Amber  #FFFBEB / var(--amber-ink)  — On Date manual entries
          System  (Yellow in Excel) → Blue   #EFF6FF / #1D4ED8  — Auto from DCS / sensors
-         Formula (Blue  in Excel) → Green  #F0FDF4 / #15803D  — Calculated & cumulative
+         Formula (Blue  in Excel) → Green  #F0FDF4 / var(--green-ink)  — Calculated & cumulative
     ══════════════════════════════════════════════════════════════ */
     :root {
-      --m-bg:#FFFBEB; --m-fg:#B45309; --m-bd:#FDE68A;
+      --m-bg:#FFFBEB; --m-fg:var(--amber-ink); --m-bd:#FDE68A;
       --s-bg:#EFF6FF; --s-fg:#1D4ED8; --s-bd:#BFDBFE;
-      --f-bg:#F0FDF4; --f-fg:#15803D; --f-bd:#BBF7D0;
+      --f-bg:#F0FDF4; --f-fg:var(--green-ink); --f-bd:#BBF7D0;
     }
     body { display:flex; flex-direction:column; min-height:100vh; background:var(--off-white); }
 
@@ -43,8 +43,8 @@
     }
     .tb-ctl:focus { border-color:var(--orange); background:white; }
     input[type="date"].tb-ctl { min-width:148px; cursor:text; }
-    .rpt-pill { display:flex; align-items:center; gap:4px; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; background:#FFF3E0; color:var(--orange-ink); border:1px solid #FDE68A; }
-    .rpt-pill.is-submitted { background:#E8F5EC; color:var(--green-ink); border-color:#B7E4C7; }
+    .rpt-pill { display:flex; align-items:center; gap:4px; padding:4px 12px; border-radius:999px; font-size:12px; font-weight:700; background:var(--st-warn-bg); color:var(--orange-ink); border:1px solid var(--st-warn-bd); }
+    .rpt-pill.is-submitted { background:var(--st-good-bg); color:var(--green-ink); border-color:var(--st-good-bd); }
     .rpt-pill::before { content:''; width:7px; height:7px; border-radius:50%; background:currentColor; }
     .btn { padding:6px 16px; border-radius:var(--radius); font-family:var(--font); font-size:12px; font-weight:700; cursor:pointer; border:1.5px solid transparent; transition:all .15s; }
     .btn-save  { background:var(--orange); color:white; border-color:var(--orange); }
@@ -68,7 +68,7 @@
       margin:14px 0 10px; flex-wrap:wrap;
     }
     .leg-lbl { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--text-muted); margin-right:6px; }
-    .leg-chip { display:inline-flex; align-items:center; gap:4px; padding:3px 12px 3px 8px; border-radius:12px; font-size:12px; font-weight:600; }
+    .leg-chip { display:inline-flex; align-items:center; gap:4px; padding:3px 12px 3px 8px; border-radius:14px; font-size:12px; font-weight:600; }
     .leg-chip::before { content:''; width:8px; height:8px; border-radius:2px; background:currentColor; opacity:.6; }
     .leg-m { background:var(--m-bg); color:var(--m-fg); border:1px solid var(--m-bd); }
     .leg-s { background:var(--s-bg); color:var(--s-fg); border:1px solid var(--s-bd); }
@@ -84,7 +84,7 @@
     .kt-m::before { background:var(--m-fg); }
     .kt-s::before { background:var(--s-fg); }
     .kt-f::before { background:var(--f-fg); }
-    .kt-badge { position:absolute; top:7px; right:7px; font-size:12px; font-weight:800; padding:2px 6px; border-radius:3px; text-transform:uppercase; letter-spacing:.4px; }
+    .kt-badge { position:absolute; top:7px; right:7px; font-size:12px; font-weight:800; padding:2px 6px; border-radius:6px; text-transform:uppercase; letter-spacing:.4px; }
     .kt-m .kt-badge { background:var(--m-bg); color:var(--m-fg); border:1px solid var(--m-bd); }
     .kt-s .kt-badge { background:var(--s-bg); color:var(--s-fg); border:1px solid var(--s-bd); }
     .kt-f .kt-badge { background:var(--f-bg); color:var(--f-fg); border:1px solid var(--f-bd); }
@@ -100,7 +100,7 @@
     .rcard-title { color:white; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; }
     .rcard-sub   { color:var(--on-navy); font-size:12px; }
     .rcard-chips { display:flex; gap:6px; }
-    .rcard-chip  { padding:2px 8px; border-radius:10px; font-size:12px; font-weight:700; background:rgba(255,255,255,.15); color:white; text-transform:uppercase; }
+    .rcard-chip  { padding:2px 8px; border-radius:9px; font-size:12px; font-weight:700; background:rgba(255,255,255,.15); color:white; text-transform:uppercase; }
     .rcard-chip.orange { background:var(--orange); }
 
     /* report table */
@@ -149,7 +149,7 @@
     td.cm .ci { color:var(--m-fg); }
     td.cs .ci { color:var(--s-fg); pointer-events:none; }
     td.cf .ci { color:var(--f-fg); pointer-events:none; }
-    td.cm .ci:focus { background:rgba(253,230,138,.4); box-shadow:inset 0 0 0 2px var(--m-bd); border-radius:3px; }
+    td.cm .ci:focus { background:rgba(253,230,138,.4); box-shadow:inset 0 0 0 2px var(--m-bd); border-radius:6px; }
 
     .cv { padding:8px 10px; text-align:center; font-weight:700; font-size:12px; }
     td.cs .cv { color:var(--s-fg); }
