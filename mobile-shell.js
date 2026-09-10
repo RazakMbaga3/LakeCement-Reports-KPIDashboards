@@ -455,6 +455,29 @@
       if (getComputedStyle(w).position !== 'static') w.classList.add('ms-positioned');
       w.classList.add('ms-scroll-x');
 
+      /* The hint is spent once per browser, so it must never be spent on a
+         table that does not scroll. Deciding at wire-up time did exactly
+         that: most of these tables are API-driven, and the wrapper is
+         briefly wider than its content before the rows arrive — on
+         Approvals, whose result was an empty state with no table at all,
+         the reader got "Swipe the table sideways to see all columns"
+         above a card saying "Nothing waiting on you", and that was the
+         only swipe hint they would ever be shown. The decision now rides
+         on the same settled re-checks the fades use, and the flag is set
+         only when a hint is really placed. */
+      const maybeHint = () => {
+        if (w.dataset.msHinted) return;
+        if (w.scrollWidth - w.clientWidth <= 40) return;
+        if (!w.querySelector('table')) return;
+        try { if (localStorage.getItem('lcl_swipe_hint_seen')) { w.dataset.msHinted = '1'; return; } } catch (_) {}
+        w.dataset.msHinted = '1';
+        const hint = document.createElement('div');
+        hint.className = 'ms-swipe-hint ms-show';
+        hint.innerHTML = svg('swipe', 15) + '<span>Swipe the table sideways to see all columns</span>';
+        w.parentNode.insertBefore(hint, w);
+        try { localStorage.setItem('lcl_swipe_hint_seen', '1'); } catch (_) {}
+      };
+
       const update = () => {
         const more = w.scrollWidth - w.clientWidth - w.scrollLeft > 4;
         const prev = w.scrollLeft > 4;
@@ -464,18 +487,12 @@
       w.addEventListener('scroll', update, { passive: true });
       window.addEventListener('resize', update);
       update();
-      /* Late-rendered tables (most of them are API-driven) need a second look. */
-      setTimeout(update, 900);
-      setTimeout(update, 2500);
-
-      /* One-time hint, shown once per browser, only where it applies. */
-      if (w.scrollWidth > w.clientWidth + 40 && !localStorage.getItem('lcl_swipe_hint_seen')) {
-        const hint = document.createElement('div');
-        hint.className = 'ms-swipe-hint ms-show';
-        hint.innerHTML = svg('swipe', 15) + '<span>Swipe the table sideways to see all columns</span>';
-        w.parentNode.insertBefore(hint, w);
-        try { localStorage.setItem('lcl_swipe_hint_seen', '1'); } catch (_) {}
-      }
+      /* Late-rendered tables (most of them are API-driven) need a second
+         look — and the hint is decided ONLY from these settled passes,
+         never from the synchronous one above, because at wire-up the
+         wrapper is routinely wider than the rows it has not received. */
+      setTimeout(() => { update(); maybeHint(); }, 900);
+      setTimeout(() => { update(); maybeHint(); }, 2500);
     });
   }
 
