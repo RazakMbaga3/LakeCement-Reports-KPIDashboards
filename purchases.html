@@ -763,13 +763,15 @@
       if (window.lucide) window.lucide.createIcons();
     } catch (e) {
       document.getElementById('pd-source').textContent = '';
-      showLoadFailure();
+      showLoadFailure(e);
     }
   }
 
   /* Same treatment as sales.html: no partial answer is worth showing, so
-     the scaffolding comes down and one panel explains and offers retry. */
-  function showLoadFailure() {
+     the scaffolding comes down and one panel explains and offers retry —
+     and, as there, a refusal is told apart from an outage. This one was
+     not even being handed the error to look at. */
+  function showLoadFailure(err) {
     var main = document.querySelector('.in-main');
     var panel = document.getElementById('pd-failed');
     if (!main || !panel) return;
@@ -777,14 +779,26 @@
       if (el !== panel) el.hidden = true;
     });
     panel.hidden = false;
-    panel.innerHTML =
-      '<div class="ds-state is-error">' +
-        '<div class="ds-state-icon"><i data-lucide="alert-octagon"></i></div>' +
-        '<div class="ds-state-title">Purchase data is unavailable</div>' +
-        '<div class="ds-state-body">The dashboard could not reach the purchasing service, so no figures are shown ' +
-          'rather than stale or partial ones. This is usually the Odoo connection rather than anything you did.</div>' +
-        '<button type="button" class="ds-state-act" id="pd-retry">Try again</button>' +
-      '</div>';
+
+    var raw = String((err && (err.message || err)) || '');
+    var denied = /\b403\b|forbidden|not permitted|access denied/i.test(raw);
+
+    panel.innerHTML = denied
+      ? '<div class="ds-state">' +
+          '<div class="ds-state-icon"><i data-lucide="lock"></i></div>' +
+          '<div class="ds-state-title">You do not have access to Purchases</div>' +
+          '<div class="ds-state-body">This dashboard is limited to the purchasing team. ' +
+            'Nothing is wrong with the connection — ask an administrator if you need it.</div>' +
+        '</div>'
+      : '<div class="ds-state is-error">' +
+          '<div class="ds-state-icon"><i data-lucide="alert-octagon"></i></div>' +
+          '<div class="ds-state-title">Purchase data is unavailable</div>' +
+          '<div class="ds-state-body">The dashboard could not reach the purchasing service, so no figures are shown ' +
+            'rather than stale or partial ones. This is usually the Odoo connection rather than anything you did.</div>' +
+          '<button type="button" class="ds-state-act" id="pd-retry">Try again</button>' +
+        '</div>';
+    if (window.lucide) window.lucide.createIcons();
+    if (denied) return;
     panel.querySelector('#pd-retry').addEventListener('click', function () {
       Array.prototype.forEach.call(main.children, function (el) {
         if (el !== panel) el.hidden = false;

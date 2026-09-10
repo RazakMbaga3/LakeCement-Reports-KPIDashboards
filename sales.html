@@ -533,14 +533,31 @@
       if (el !== panel) el.hidden = true;
     });
     panel.hidden = false;
-    panel.innerHTML =
-      '<div class="ds-state is-error">' +
-        '<div class="ds-state-icon"><i data-lucide="alert-octagon"></i></div>' +
-        '<div class="ds-state-title">Sales data is unavailable</div>' +
-        '<div class="ds-state-body">The dashboard could not reach the sales service, so no figures are shown ' +
-          'rather than stale or partial ones. This is usually the Odoo connection rather than anything you did.</div>' +
-        '<button type="button" class="ds-state-act" id="sd-retry">Try again</button>' +
-      '</div>';
+
+    /* A refusal is not an outage. This panel ignored the error it was
+       handed and always blamed the Odoo connection, so a reader whose
+       role simply does not include Sales was sent to chase an
+       infrastructure fault that did not exist — and offered a "Try
+       again" button that could only ever fail the same way. */
+    var raw = String((err && (err.message || err)) || '');
+    var denied = /\b403\b|forbidden|not permitted|access denied/i.test(raw);
+
+    panel.innerHTML = denied
+      ? '<div class="ds-state">' +
+          '<div class="ds-state-icon"><i data-lucide="lock"></i></div>' +
+          '<div class="ds-state-title">You do not have access to Sales</div>' +
+          '<div class="ds-state-body">This dashboard is limited to the commercial team. ' +
+            'Nothing is wrong with the connection — ask an administrator if you need it.</div>' +
+        '</div>'
+      : '<div class="ds-state is-error">' +
+          '<div class="ds-state-icon"><i data-lucide="alert-octagon"></i></div>' +
+          '<div class="ds-state-title">Sales data is unavailable</div>' +
+          '<div class="ds-state-body">The dashboard could not reach the sales service, so no figures are shown ' +
+            'rather than stale or partial ones. This is usually the Odoo connection rather than anything you did.</div>' +
+          '<button type="button" class="ds-state-act" id="sd-retry">Try again</button>' +
+        '</div>';
+    if (window.lucide) window.lucide.createIcons();
+    if (denied) return;
     panel.querySelector('#sd-retry').addEventListener('click', function () {
       Array.prototype.forEach.call(main.children, function (el) {
         if (el !== panel) el.hidden = false;
