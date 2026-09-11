@@ -950,7 +950,7 @@ const _DAILY_ACCESS = {
   purchase:   { edit: [],
                 nav:  [] },   // no submittable form yet — see FORM_ACCESS.purchase
   ei:         { edit: [],
-                nav:  ['daily-report.html'] },
+                nav:  ['daily-report.html','power-form.html'] },
   packing:    { edit: [],
                 nav:  ['daily-report.html'] },
 };
@@ -987,13 +987,14 @@ const _DAILY_NAV_ITEMS = [
 ══════════════════════════════════════════════════════════════════════ */
 const _FORM_TYPE_ACCESS = {
   production: ['production','quality','limestone','pile-quality'],
-  pm:         ['stoppage','power-cons'],   /* P&M owns Stoppage & Power Cons. reports (Kiln/Cement Mill folded into Production Report) */
+  pm:         ['stoppage','power-cons'],   /* P&M owns Stoppage (Kiln/Cement Mill folded into Production Report); Power Cons. shared with E&I below */
   logistics:  ['dispatch'],
   cpp:        ['cpp'],   // 'power-plant' retired 2026-08-31 — see backend/config/forms.js
   mining:     ['mines'],
   stores:     ['materials'],   /* Raw Materials report is owned by Purchase & Stores */
   sales:      ['sales-projection'],
-  hr: [], it: [], md: [], admin: [], management: [], finance: [], ei: [], packing: [], purchase: [],
+  ei:         ['power-cons'],   /* E&I owns Power Cons. readings (kWh/meters) — P&M keeps it too, see pm above */
+  hr: [], it: [], md: [], admin: [], management: [], finance: [], packing: [], purchase: [],
 };
 
 /* Standalone forms/*.html pages don't carry their formId in the URL, and

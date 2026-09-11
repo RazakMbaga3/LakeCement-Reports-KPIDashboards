@@ -31,13 +31,14 @@
 
   var FORM_ACCESS = {
     production: ['production', 'quality', 'limestone', 'pile-quality'],
-    pm:         ['stoppage', 'power-cons'],   // P&M owns Stoppage & Power Cons. reports
+    pm:         ['stoppage', 'power-cons'],   // P&M owns Stoppage; Power Cons. shared with E&I below
     logistics:  ['dispatch'],
     cpp:        ['cpp'],   // 'power-plant' retired 2026-08-31 — see config/forms.js
     mining:     ['mines'],
     stores:     ['materials'],                // Raw Materials report is owned by Purchase & Stores
     sales:      ['sales-projection'],
-    hr: [], it: [], md: [], admin: [], management: [], finance: [], ei: [], packing: [], purchase: [],
+    ei:         ['power-cons'],   // E&I owns Power Cons. readings (kWh/meters) — P&M keeps it too, see pm above
+    hr: [], it: [], md: [], admin: [], management: [], finance: [], packing: [], purchase: [],
   };
 
   /* Which departments a role may WRITE monthly KPI values for.
