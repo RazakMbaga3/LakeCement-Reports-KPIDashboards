@@ -32,6 +32,7 @@ boot, so no other item can be verified, let alone shipped.
 
 | ID | Item | Depends on | Status | Notes |
 |---|---|---|---|---|
+| WBS-UI-3 | Clear `tbody.innerHTML` in `approvals.html`'s empty state (`load()`, line ~152) | — | 🟡 Open | RAID I-12 — stale approved row left in the DOM; the one real e2e failure that isn't external |
 | WBS-UI-2 | Style `.kt-val.is-empty` on `daily-report.html` (rule exists only in unlinked `forms/forms.css`) | — | 🟡 Open | RAID I-8 — empty KPI values render as a solid navy bar |
 | WBS-UI-1 | Close remaining `DESIGN_AUDIT_2026-09.md` §8 items | WBS-CODE-2 (audits need a live backend) | 🟡 Open | Confirmed still open: Quarry page weight (1616/1634KB vs 900KB budget — `quarry.js:94` still unpaginated), missing `scripts/validate_palette.js`, no dark mode, `.adm-btn` token drift. `form-materials` 34,000px height unverifiable while backend is down |
 
@@ -49,6 +50,7 @@ boot, so no other item can be verified, let alone shipped.
 |---|---|---|---|---|
 | WBS-SEC-1 | Verify and, if still default, rotate the `openpg` Postgres superuser password | Live DB access | 🔴 Blocked (needs a live check) | RAID R-4. `crit` for go-live. Not verifiable from the repo |
 | WBS-SEC-2 | Set `DIGEST_TO`/`ALERT_TO` once Management names recipients | Management decision (D-2) | 🔴 Blocked | SMTP itself is fully configured — this is the only remaining email gap |
+| **WBS-SEC-5** | **Fix the forgot-password address oracle** — wrap `mailer.js:38`'s send in try/catch so failures return `{sent:false}` instead of throwing a 500 | — | 🔴 **Open — security, live** | RAID R-7. Small fix; the intended behaviour is already written, it just never executes |
 | WBS-SEC-3 | Silence `dotenv`'s promotional log banners (`{ quiet: true }` or pin) | — | 🟡 Open | RAID I-11 |
 
 ## DEPLOY — Deployment (`deployment-engineer`)

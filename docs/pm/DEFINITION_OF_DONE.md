@@ -5,17 +5,16 @@ Evidence-only. Status is set **only** by the `project-manager` skill's
 never from a code read, a subagent's unverified claim, or visual inspection.
 See `.claude/skills/project-manager/SKILL.md`.
 
-**Audited 2026-09-13.** Nearly every entry below reads **Blocked** for the
-same reason: the backend does not boot on current `main` (RAID I-3), so 9 of
-10 acceptance suites, `access:matrix`, and the entire e2e suite abort before
-running a single check. Historical pass counts from `docs/PROGRESS.md` are
-recorded here as *prior claims*, **not** as current evidence — under this
-system a stale green does not count.
+**Audited 2026-09-13 · re-verified after the P0 fix the same day.**
+The first audit found the backend unbootable (RAID I-3), which blocked nine
+of ten acceptance suites. After the fix (DEC-003) the gate table was re-run
+and the results below are current.
 
-> **Rule this audit proved necessary:** all 10 unit suites (45 assertions)
-> passed green while the application was completely unbootable. Unit-test
-> green is not proof of a working system — that's why every DoD entry
-> requires a boot-dependent gate, not just unit tests.
+> **Rule this audit earned:** during the outage, all ten unit suites passed
+> green — 45 assertions — while the application could not start at all. Unit
+> green is not proof of a working system. Every entry here therefore
+> requires a boot-dependent gate, not just unit tests. The missing guard is
+> now itself a test (`test:approval`).
 
 ## Template
 
@@ -33,139 +32,159 @@ system a stale green does not count.
 
 ## Backend boot & core platform  [WBS-CODE-2]
 
-**Status:** 🔴 **Missing — the server does not start**
-**Owner:** `code-architect` · **Last verified:** 2026-09-13 via `audit`
-
-**What "done" means:** `node server.js` opens its listener; `npm run smoke` passes.
+**Status:** 🟢 **Done**
+**Owner:** `code-architect` · **Last verified:** 2026-09-13 via `validate`
 
 | # | Criterion | Evidence source | Last verified | Result |
 |---|---|---|---|---|
-| 1 | Server boots | `cd backend && npm run smoke` | 2026-09-13 | ❌ `SMOKE FAIL — server exited early (code 1)` |
-| 2 | No module-load throw | `node server.js` | 2026-09-13 | ❌ throws at `middleware/approval.js:19` — `power-cons` claimed by both `pm` and `ei` |
+| 1 | Server boots | `cd backend && npm run smoke` | 2026-09-13 | ✅ `SMOKE OK — /api/health 200` |
+| 2 | Approval ownership unambiguous | `npm run test:approval` | 2026-09-13 | ✅ 5/5 — incl. proof an *undeclared* overlap still throws |
+| 3 | Approver is the intended role | `npm run access:matrix` | 2026-09-13 | ✅ `power-cons → ei APPR` |
 
-**Known gaps:** Root cause is commit `fa3d5ae`. Needs an approval-ownership decision (see RAID I-3) before it can be fixed correctly.
+## Unit / formula test layer  [WBS-CODE-1]
 
-## Unit / formula test layer  [WBS-DATA-2, WBS-CODE-1]
-
-**Status:** 🟢 **Done** (the one area genuinely verified this audit)
-**Owner:** `qa-test-engineer` · **Last verified:** 2026-09-13 via `audit`
+**Status:** 🟢 **Done**
+**Owner:** `qa-test-engineer` · **Last verified:** 2026-09-13 via `validate`
 
 | # | Criterion | Evidence source | Last verified | Result |
 |---|---|---|---|---|
-| 1 | Lint | `cd backend && npm run lint` | 2026-09-13 | ⚠ 0 errors, 2 warnings (RAID R-5) |
-| 2 | Formulas | `npm run test:formulas` | 2026-09-13 | ✅ 4/4 |
-| 3 | Facts | `npm run test:facts` | 2026-09-13 | ✅ 2/2 |
-| 4 | Access consistency | `npm run test:access` | 2026-09-13 | ✅ 8/8 |
-| 5 | Stores | `npm run test:stores` | 2026-09-13 | ✅ 5/5 |
-| 6 | KPI keys | `npm run test:kpi-keys` | 2026-09-13 | ✅ 5/5 |
-| 7 | Form↔fact coverage | `npm run test:form-facts` | 2026-09-13 | ✅ 4/4 |
-| 8 | KPI edit level | `npm run test:kpi-level` | 2026-09-13 | ✅ 8/8 |
-| 9 | Auth tokens | `npm run test:auth-tokens` | 2026-09-13 | ✅ 12/12 |
-| 10 | Auth mail | `npm run test:auth-mail` | 2026-09-13 | ✅ 6/6 |
+| 1 | Full aggregate green through smoke | `cd backend && npm test` | 2026-09-13 | ✅ all 11 suites + smoke pass |
+| 2 | Lint | `npm run lint` | 2026-09-13 | ⚠ 0 errors, 2 warnings (RAID R-5) |
 
-**Known gaps:** No test covers the single-owner invariant `approval.js` enforces — which is exactly how the outage passed all 10 suites (RAID I-5, WBS-QA-2).
+Suites: formulas 4/4 · facts 2/2 · access 8/8 · **approval 5/5 (new)** · stores 5/5 · kpi-keys 5/5 · form-facts 4/4 · kpi-level 8/8 · auth-tokens 12/12 · auth-mail 6/6.
+
+## Phase acceptance suites  [WBS-QA-3]
+
+**Status:** 🟡 **Partial** — 9 of 10 green, 1 real failure
+**Owner:** `qa-test-engineer` · **Last verified:** 2026-09-13 via `validate`
+
+| Suite | Command | Result |
+|---|---|---|
+| Phase 1 — Security & Auth | `npm run accept:phase1` | ✅ 19 passed, 0 failed |
+| Phase 2 — Data Layer | `npm run accept:phase2` | ✅ 17 passed, 0 failed |
+| Phase 3 — KPI Formula Layer | `npm run accept:phase3` | ✅ 27 passed, 0 failed |
+| Phase 5 | `npm run accept:phase5` | ✅ 10 passed, 0 failed |
+| **Phase 6 — Alerts/Email** | `npm run accept:phase6` | ❌ **13 passed, 3 failed** — all three are the tenant SMTP-AUTH block (RAID R-6), not defects in this code |
+| Phase 7 — Backup/Watchdog | `npm run accept:phase7` | ✅ 9 passed, 0 failed |
+| Phase 8 — Stoppage/Insights | `npm run accept:phase8` | ✅ 12 passed, 0 failed |
+| Quarry | `npm run accept:quarry` | ✅ 15 passed, 0 failed |
+| Sales | `npm run accept:sales` | ✅ 21 passed, 0 failed |
+| Purchases | `npm run accept:purchases` | ✅ 17 passed, 0 failed |
+
+**147 checks green, 3 failing** — the 3 are external (see R-6).
 
 ## KPI Dashboard / Formula Layer  [WBS-DATA-2]
 
 **Status:** 🟡 **Partial**
-**Owner:** `kpi-data-analyst` · **Last verified:** 2026-09-13 via `audit`
+**Owner:** `kpi-data-analyst` · **Last verified:** 2026-09-13 via `validate`
 
 **What "done" means:** every dashboard number renders only from `/api/formula` (zero page-JS math); overrides carry reason + audit trail; `docs/KPI_REFERENCE.md` matches the live registry.
 
 | # | Criterion | Evidence source | Last verified | Result |
 |---|---|---|---|---|
-| 1 | KPI reference current | `npm run docs:kpi` + `git diff docs/KPI_REFERENCE.md` | 2026-09-13 | ✅ clean diff — 20 KPIs, 149 facts, registry v1 |
-| 2 | Formula suites | the 5 `test:*` suites above | 2026-09-13 | ✅ all green |
-| 3 | Phase 3 acceptance | `npm run accept:phase3` | 2026-09-13 | 🔴 **Blocked** — server won't boot (prior claim: 25/25 green, 2026-07-06 — not current evidence) |
+| 1 | KPI reference current | `npm run docs:kpi` + `git diff` | 2026-09-13 | ✅ clean — 20 KPIs, 149 facts, registry v1 |
+| 2 | Formula suites | 5 `test:*` suites | 2026-09-13 | ✅ all green |
+| 3 | Phase 3 acceptance | `npm run accept:phase3` | 2026-09-13 | ✅ 27 passed, 0 failed |
 
-**Known gaps:** **Quality KPI** validated against only **1 day** of source data, vs. 91/91 days for production and power-cons (no `verify-quality.py` exists). The dashboard as a whole cannot read Done while one of its KPIs sits at that validation depth — RAID I-2.
+**Known gap keeping this Partial:** **Quality KPI** validated against only **1 day** of source data, vs. 91/91 days for production and power-cons (no `verify-quality.py` exists). One KPI's thin validation holds the whole entry at Partial rather than rounding up — RAID I-2.
 
 ## Stoppage / Reliability Report  [WBS-DATA-1]
 
-**Status:** 🟡 **Partial** (bar unchanged; evidence not currently obtainable)
-**Owner:** `kpi-data-analyst` → `stoppage-report-designer` · **Last verified:** 2026-09-13 via `audit`
+**Status:** 🟡 **Partial** — acceptance green, scope deferred
+**Owner:** `kpi-data-analyst` → `stoppage-report-designer` · **Last verified:** 2026-09-13 via `validate`
 
 **What "done" means:** NAI and MTBF trended over a range (never single-day); paired Pareto by hours *and* frequency; per-equipment hours/events/MTTR/MTBF/availability table; RCFA action flags.
 
 | # | Criterion | Evidence source | Last verified | Result |
 |---|---|---|---|---|
-| 1 | Phase 8 acceptance | `npm run accept:phase8` | 2026-09-13 | 🔴 **Blocked** — server won't boot (prior claim: 12/12 green) |
+| 1 | Phase 8 acceptance | `npm run accept:phase8` | 2026-09-13 | ✅ 12 passed, 0 failed |
 
 **Known gaps:** stoppage-insights UI page deferred; cost-of-stoppage blocked on a TZS/hour rate from Finance; bilingual EN/SW labels deferred.
 
 ## Security & Auth  [WBS-SEC-1]
 
 **Status:** 🟡 **Partial** — code verified, live posture not
-**Owner:** `security-performance-auditor` · **Last verified:** 2026-09-13 via `audit`
+**Owner:** `security-performance-auditor` · **Last verified:** 2026-09-13 via `validate`
 
 | # | Criterion | Evidence source | Last verified | Result |
 |---|---|---|---|---|
-| 1 | CORS `ALLOWED_ORIGIN` wired | read `server.js:51-52, 66-68` | 2026-09-13 | ✅ verified in source |
-| 2 | Rate limiting | read `server.js:95, 100, 106-109` | 2026-09-13 | ✅ scoped to auth routes only (deliberately not `/me`) |
-| 3 | Account lockout | read `routes/auth.js:27-28, 73-89` | 2026-09-13 | ✅ 5 attempts / 15 min, 423 while locked |
-| 4 | JWT `ver` revocation | read `routes/auth.js:40`, `middleware/auth.js:40-56` | 2026-09-13 | ✅ checked per-request against `users.token_version` |
-| 5 | Phase 1 acceptance | `npm run accept:phase1` | 2026-09-13 | 🔴 **Blocked** (prior claim: 19/19 green) |
+| 1 | Phase 1 acceptance | `npm run accept:phase1` | 2026-09-13 | ✅ 19 passed, 0 failed |
+| 2 | CORS `ALLOWED_ORIGIN` | read `server.js:51-52, 66-68` | 2026-09-13 | ✅ verified in source |
+| 3 | Rate limiting | read `server.js:95, 100, 106-109` | 2026-09-13 | ✅ scoped to auth routes only (deliberately not `/me`) |
+| 4 | Account lockout | read `routes/auth.js:27-28, 73-89` | 2026-09-13 | ✅ 5 attempts / 15 min, 423 while locked |
+| 5 | JWT `ver` revocation | read `middleware/auth.js:40-56` | 2026-09-13 | ✅ checked per-request against `users.token_version` |
 | 6 | `openpg` password rotated | live `psql` check | — | ⚠ **Cannot verify from code** — RAID R-4 |
+
+## Email flows (invite / reset / verify / digest / alerts)  [WBS-SEC-4]
+
+**Status:** 🔴 **Blocked — externally**
+**Owner:** Lake Cement IT · **Last verified:** 2026-09-13 via `validate`
+
+| # | Criterion | Evidence source | Last verified | Result |
+|---|---|---|---|---|
+| 1 | Mail pipeline logic | `npm run test:auth-mail` | 2026-09-13 | ✅ 6/6 (pipeline is correct) |
+| 2 | A real message actually sends | `npm run accept:phase6` | 2026-09-13 | ❌ `535 5.7.139 SmtpClientAuthentication is disabled for the Tenant` |
+| 3 | Recipients configured | `DIGEST_TO` in `.env` | 2026-09-13 | ❌ empty — RAID D-2 |
+
+**Known gaps:** two separate blockers, two separate owners — IT must enable SMTP AUTH (or move to Graph API), Management must name recipients. The application code is not implicated in either.
 
 ## Backup / DR  [WBS-DEPLOY-2]
 
-**Status:** 🔴 **Missing**
-**Owner:** `deployment-engineer` · **Last verified:** 2026-09-13 via `audit`
+**Status:** 🔴 **Missing (locally)**
+**Owner:** `deployment-engineer` · **Last verified:** 2026-09-13 via `validate`
 
 | # | Criterion | Evidence source | Last verified | Result |
 |---|---|---|---|---|
-| 1 | A backup can be taken | `npm run backup` | 2026-09-13 | ❌ `BACKUP_DIR is not configured` — no backups run here |
-| 2 | A dump restores cleanly | `npm run restore:drill` | 2026-09-13 | ❌ cannot run — no dump exists |
-| 3 | Phase 7 acceptance | `npm run accept:phase7` | 2026-09-13 | ❌ **6 passed, 3 failed** — all 3 backup-health checks fail because `/api/health` never came up |
+| 1 | Phase 7 acceptance | `npm run accept:phase7` | 2026-09-13 | ✅ 9 passed, 0 failed |
+| 2 | A backup can be taken | `npm run backup` | 2026-09-13 | ❌ `BACKUP_DIR is not configured` |
+| 3 | A dump restores cleanly | `npm run restore:drill` | 2026-09-13 | ❌ cannot run — no dump exists |
 
-**Known gaps:** This is the *local* machine's state. Whether the production droplet has its own backups configured is **unverified** and must be checked separately.
+**Known gaps:** `/api/health` independently reports `"backup":"not_configured"`. This is the *local* machine; whether the production droplet has its own backups is **unverified** and must be checked separately — RAID I-7.
 
 ## Deployment pipeline  [WBS-DEPLOY-1]
 
-**Status:** 🟢 **Done** — the CI gate itself is sound
+**Status:** 🟢 **Done** — and it proved itself this week
 **Owner:** `deployment-engineer` · **Last verified:** 2026-09-13 via `audit`
 
 | # | Criterion | Evidence source | Last verified | Result |
 |---|---|---|---|---|
-| 1 | No deploy without green tests | read `.github/workflows/deploy.yml:18, 72-91` | 2026-09-13 | ✅ `deploy` has `needs: test`; test job runs `npm test` + all 10 `accept:*`. No bypass path exists |
+| 1 | No deploy without green tests | read `.github/workflows/deploy.yml:18, 72-91` | 2026-09-13 | ✅ `deploy` has `needs: test`; test job runs `npm test` + all 10 `accept:*`. No bypass path |
 
-**Known gaps:** doc drift — `DEPLOYMENT_DIGITALOCEAN.md:267` misdescribes `deploy.sh:14` (RAID I-10); RUNBOOK/GO_LIVE banners stale (RAID I-1). Neither affects the gate's correctness.
+**Note:** this gate is the reason a server-killing commit on `main` almost certainly never reached production (assumption A-1). **Known gaps:** doc drift (RAID I-10), stale banners (RAID I-1).
 
 ## UI/UX — all pages  [WBS-UI-1, WBS-UI-2]
 
-**Status:** 🔴 **Blocked — not measurable during the outage**
-**Owner:** `ui-ux-designer` · **Last verified:** 2026-09-13 via `audit`
+**Status:** 🟡 **Not yet re-measured** — unblocked, but not re-run
+**Owner:** `ui-ux-designer` · **Last verified:** 2026-09-13 via `audit` (blocked at the time)
 
 | # | Criterion | Evidence source | Last verified | Result |
 |---|---|---|---|---|
-| 1 | Responsive | `cd e2e && npm run audit:responsive` | 2026-09-13 | 🔴 aborted at login (backend down) |
-| 2 | Accessibility | `npm run audit:a11y` | 2026-09-13 | 🔴 aborted at login |
-| 3 | Page weight | `npm run audit:perf` | 2026-09-13 | 🔴 aborted at login |
-| 4 | Cross-page consistency | `node design-consistency-audit.js` | 2026-09-13 | 🔴 aborted at login |
+| 1 | Responsive | `cd e2e && npm run audit:responsive` | — | ⏳ pending re-run |
+| 2 | Accessibility | `npm run audit:a11y` | — | ⏳ pending re-run |
+| 3 | Page weight | `npm run audit:perf` | — | ⏳ pending re-run |
+| 4 | Cross-page consistency | `node design-consistency-audit.js` | — | ⏳ pending re-run |
 
-**Known gaps (confirmed from source, not from a live run):** Quarry page weight still unaddressed — `routes/quarry.js:94` has no `LIMIT`/`OFFSET` (doc records 1616KB and 1634KB against a 900KB budget); `scripts/validate_palette.js` still absent; no dark-mode support anywhere; `.adm-btn` still a page-local class outside the shared token set; `.kt-val.is-empty` unstyled on `daily-report.html` (RAID I-8).
+All four aborted at login during the audit because the backend was down. They are runnable again now — this is the first thing `validate` should pick up next.
 
-## Cross-role behaviour (e2e)  [WBS-QA-1, WBS-QA-3]
+**Known gaps (confirmed from source, independent of a live run):** Quarry page weight unaddressed — `routes/quarry.js:94` has no `LIMIT`/`OFFSET` (recorded at 1616KB / 1634KB against a 900KB budget); `scripts/validate_palette.js` absent; no dark-mode support; `.adm-btn` outside the shared token set; `.kt-val.is-empty` unstyled on `daily-report.html` (RAID I-8).
 
-**Status:** 🔴 **Blocked**
-**Owner:** `qa-test-engineer` · **Last verified:** 2026-09-13 via `audit`
+## Cross-role behaviour (e2e)  [WBS-QA-1]
+
+**Status:** 🟡 **Partial — 117 of 119 pass**
+**Owner:** `qa-test-engineer` · **Last verified:** 2026-09-13 via `validate`
 
 | # | Criterion | Evidence source | Last verified | Result |
 |---|---|---|---|---|
-| 1 | 15 Playwright specs pass | `cd e2e && npm test` | 2026-09-13 | 🔴 **zero tests executed** — Playwright's `webServer` couldn't start the backend |
-| 2 | RBAC matches the documented model | `npm run access:matrix` vs `docs/ACCESS_MODEL.md` | 2026-09-13 | 🔴 crashed before printing anything |
+| 1 | Playwright specs pass | `cd e2e && npm test` | 2026-09-13 | 🟡 **117 passed, 2 failed** (was 0 executed during the outage) |
 
-**Known gaps:** `docs/ACCESS_MODEL.md` documents approval as "own department's form types only" — a single-owner model. Code now lets two departments submit `power-cons` with no corresponding approval rule, and the doc never records the exception. Documentation and code must be reconciled as part of WBS-CODE-2, not after it.
+**The 2 failures, both diagnosed to root cause — neither caused by the approval-ownership change:**
+1. `account-activation.spec.js:116` — forgot-password answers differently for known vs. unknown addresses. **Real security defect**, RAID R-7: `mailer.js:38` throws instead of returning `{sent:false}`, so a known address 500s while an unknown one 200s. Triggered by R-6, but the robustness gap is in this code.
+2. `daily-reports.spec.js:194` — approved row not cleared from the queue. **Real UI defect**, RAID I-12: `approvals.html:130` hides the wrapper without clearing `tbody.innerHTML`. Backend verified correct (approve → 200, queue correctly filters by status).
+| 2 | RBAC matches the documented model | `npm run access:matrix` vs `docs/ACCESS_MODEL.md` | 2026-09-13 | ✅ matches — `ACCESS_MODEL.md` updated with the shared-submit exception (DEC-003) |
 
 ## Not yet defined
 
-These have no acceptance mechanism, so they get **no invented bar** — defining one is itself a backlog item:
+No acceptance mechanism exists for these, so they get **no invented bar** — defining one is itself a backlog item:
 
-- Individual root pages without a dedicated `accept:*` script (`insights.html`, `completeness.html`, `balance.html`, `memory.html`, `monitor.html`, `reports-export.html`, `approvals.html`, `mis.html`, `analytics.html`)
+- Root pages without a dedicated `accept:*` script (`insights.html`, `completeness.html`, `balance.html`, `memory.html`, `monitor.html`, `reports-export.html`, `approvals.html`, `mis.html`, `analytics.html`)
 - The 13 `forms/*.html` entry forms individually (covered only collectively by `accept:phase2`)
-
----
-
-**Nothing in this file may move to Done until the backend boots and the
-gate table is re-run (WBS-QA-3).** Every 🔴 above is one command away from a
-real answer once that happens.

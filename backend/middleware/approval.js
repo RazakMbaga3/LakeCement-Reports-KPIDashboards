@@ -4,22 +4,37 @@
   or an admin/md override.
 
   "Owns" is derived from ROLE_FORM_ACCESS (config/formAccess.js — the same
-  FORM_ACCESS map requireFormAccess already uses to gate submission):
-  today exactly one role owns each form type, so a reverse lookup built
-  once at module load is enough. If a form type is ever shared by two
-  roles, this map's build step below will throw at startup rather than
-  silently picking one — surfacing the ambiguity instead of masking it.
+  FORM_ACCESS map requireFormAccess already uses to gate submission).
+  Submitting and approving are different questions: most form types have
+  exactly one submitting role, so the reverse lookup answers both at once.
+  Where two roles submit the same form type, FORM_APPROVAL_OWNER must name
+  which one's HOD approves — and if it doesn't, the build step below still
+  throws at startup rather than silently picking one. An overlap has to be
+  declared deliberately; it can never happen by accident.
 */
-const { ROLE_FORM_ACCESS } = require('../config/formAccess');
+const { ROLE_FORM_ACCESS, FORM_APPROVAL_OWNER } = require('../config/formAccess');
 
-const OWNING_ROLE_BY_FORM_TYPE = {};
+const SUBMITTING_ROLES_BY_FORM_TYPE = {};
 Object.entries(ROLE_FORM_ACCESS).forEach(([role, formTypes]) => {
   formTypes.forEach(formType => {
-    if (OWNING_ROLE_BY_FORM_TYPE[formType]) {
-      throw new Error(`approval.js: form type '${formType}' is claimed by both '${OWNING_ROLE_BY_FORM_TYPE[formType]}' and '${role}' in FORM_ACCESS — requireApprover needs a single owning role per form type.`);
-    }
-    OWNING_ROLE_BY_FORM_TYPE[formType] = role;
+    (SUBMITTING_ROLES_BY_FORM_TYPE[formType] ||= []).push(role);
   });
+});
+
+const OWNING_ROLE_BY_FORM_TYPE = {};
+Object.entries(SUBMITTING_ROLES_BY_FORM_TYPE).forEach(([formType, roles]) => {
+  if (roles.length === 1) {
+    OWNING_ROLE_BY_FORM_TYPE[formType] = roles[0];
+    return;
+  }
+  const declared = FORM_APPROVAL_OWNER[formType];
+  if (!declared) {
+    throw new Error(`approval.js: form type '${formType}' is claimed by ${roles.map(r => `'${r}'`).join(' and ')} in FORM_ACCESS — add it to FORM_APPROVAL_OWNER in forms/access-registry.js naming which role's HOD approves it.`);
+  }
+  if (!roles.includes(declared)) {
+    throw new Error(`approval.js: FORM_APPROVAL_OWNER names '${declared}' as approver for '${formType}', but that role cannot submit it (submitters: ${roles.join(', ')}).`);
+  }
+  OWNING_ROLE_BY_FORM_TYPE[formType] = declared;
 });
 
 function requireApprover(req, res, next) {
@@ -35,4 +50,4 @@ function requireApprover(req, res, next) {
   next();
 }
 
-module.exports = { requireApprover, OWNING_ROLE_BY_FORM_TYPE };
+module.exports = { requireApprover, OWNING_ROLE_BY_FORM_TYPE, SUBMITTING_ROLES_BY_FORM_TYPE };

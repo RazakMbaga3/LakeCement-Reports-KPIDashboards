@@ -5,36 +5,31 @@ in any session.** Maintained by the `project-manager` skill
 (`.claude/skills/project-manager/SKILL.md`).
 
 - **Last full audit:** 2026-09-13 (six specialist agents, every claim command-cited)
-- **Last validation gate:** 2026-09-13 — *failed at the first gate; see below*
-- **Overall health:** 🔴 **Red** — the backend does not boot on current `main`
+- **Last validation gate:** 2026-09-13 — 147 acceptance checks green + e2e 117/119; 5 failures, all root-caused
+- **Overall health:** 🟡 **Amber** — backend restored and verified; one live security defect found (R-7), rest owned outside this repo
 
 ---
 
-## ⚠ Current focus — one decision unblocks almost everything
+## Current focus
 
-`WBS-CODE-2` / RAID `I-3`: commit `fa3d5ae` ("Give E&I access to the Power
-Consumption Report") gave `ei` submit rights on `power-cons` while `pm` still
-owned it. [`middleware/approval.js:15-23`](../../backend/middleware/approval.js#L15-L23)
-deliberately throws at module load when two roles claim one form type, so
-`require('./server.js')` dies before the listener opens.
+The P0 that opened this audit is **closed**. Commit `fa3d5ae` had left the
+backend unbootable (`power-cons` claimed by both `pm` and `ei`, with
+`approval.js` refusing to guess an approver). Per **DEC-003**, E&I's HOD now
+approves Power Consumption, P&M keeps submit rights, and approval ownership
+is declared explicitly rather than inferred. The guard that caught it is
+still armed — and now has a test proving it still fires.
 
-**What that one line currently takes down:** `npm run smoke`, 9 of 10
-`accept:*` suites, `access:matrix`, and all 15 e2e specs (Playwright's
-`webServer` can't start). Confirmed independently by four of the six
-specialist agents.
+**Two defects the re-verification then found, both logged and neither fixed
+(they are outside the approved scope — see R-3 on scope creep):**
+**R-7 / WBS-SEC-5** is a live address-enumeration oracle on forgot-password
+— recommend fixing next, it is small and currently exploitable.
+**I-12 / WBS-UI-3** leaves a stale row in the approvals table DOM.
 
-**Production is very likely unaffected** —
-[`deploy.yml:90-91`](../../.github/workflows/deploy.yml#L90-L91) gates
-`deploy` behind `needs: test`, and the test job runs `npm test` plus all ten
-acceptance suites, so the broken commit could not have reached the droplet.
-Tracked as assumption **A-1** (unverified — no `gh` CLI here; confirm via the
-Actions run history for `fa3d5ae`).
-
-**The decision needed from you:** both P&M and E&I can *submit* power-cons,
-but `requireApprover` needs exactly one *approving* role. Who approves Power
-Consumption submissions — P&M HOD or E&I HOD? Code cannot answer this; it's
-an org question, and per [`RACI.md`](RACI.md) access/RBAC policy is
-Accountable to the Plant Head.
+**Next up:** fix R-7, then re-run the four UI audit scripts (`audit:responsive`,
+`audit:a11y`, `audit:perf`, `design-consistency-audit.js`). They aborted at
+login during the outage and have not been measured since; they are runnable
+again now. After that, `WBS-DATA-2` (Quality KPI validation) is the largest
+piece of genuine engineering left that isn't waiting on someone else.
 
 ---
 
@@ -42,51 +37,56 @@ Accountable to the Plant Head.
 
 | Workstream | Owner agent | Health | Basis |
 |---|---|---|---|
-| Code/Architecture | `code-architect` | 🔴 Red | Server unbootable (I-3); 2 audit_log gaps (I-9); 2 lint warnings (R-5) |
-| KPI/Data | `kpi-data-analyst` | 🟡 Amber | `KPI_REFERENCE.md` byte-current, all 5 formula suites green; Quality KPI still at 1-day validation (I-2); Odoo on a TEST instance (R-1) |
-| UI/UX | `ui-ux-designer` | ⬜ Unmeasurable | All 4 audit scripts aborted at login (I-4). Source-level: 5 of 6 prior "still open" items confirmed still open |
-| QA/Testing | `qa-test-engineer` | 🔴 Red | 10/10 unit suites green (45 assertions) but every boot-dependent gate blocked; no test guards the invariant that broke (I-5) |
-| Security/Performance | `security-performance-auditor` | 🟡 Amber | CORS/rate-limit/lockout/JWT-revocation all verified in source; `openpg` password unverifiable from code (R-4); perf unmeasurable |
-| Deployment | `deployment-engineer` | 🟡 Amber | CI gate verified sound; no local backups at all (I-7); RUNBOOK banners stale (I-1) |
+| Code/Architecture | `code-architect` | 🟢 Green | Boots and verified; `npm test` green through smoke. Open: 2 audit_log gaps (I-9), 2 lint warnings (R-5) |
+| KPI/Data | `kpi-data-analyst` | 🟡 Amber | `accept:phase3` 27/27, KPI reference byte-current, all formula suites green. Quality KPI still at 1-day validation (I-2); Odoo on a TEST instance (R-1) |
+| UI/UX | `ui-ux-designer` | 🟡 Amber | Unblocked but **not re-measured** since the outage. 5 of 6 prior "still open" design-audit items confirmed still open from source |
+| QA/Testing | `qa-test-engineer` | 🟢 Green | 147 acceptance checks green across 9 suites; 11 unit suites green; the invariant gap that caused the outage is now covered by `test:approval` |
+| Security/Performance | `security-performance-auditor` | 🟡 Amber | Auth internals verified in source; `accept:phase1` 19/19. `openpg` unverifiable from code (R-4); email blocked at the tenant (R-6); perf not re-measured |
+| Deployment | `deployment-engineer` | 🟡 Amber | CI gate verified sound and demonstrably effective. No local backups at all (I-7); stale runbook banners (I-1) |
 
-Legend: 🟢 on track, evidence current · 🟡 partial/at risk · 🔴 blocked/failing · ⬜ not measurable right now
+Legend: 🟢 on track, evidence current · 🟡 partial/at risk · 🔴 blocked/failing
 
 ---
 
 ## What this audit actually proved
 
-1. **All 10 unit suites passed green (45 assertions) while the application
-   was completely unbootable.** This is the strongest possible argument for
-   the rule this system now enforces: a DoD entry needs a boot-dependent
-   gate, never unit-test green alone.
-2. **The CI gate you built worked.** It is the reason a server-killing
-   commit on `main` most likely never reached production.
-3. **Two seeded assumptions were wrong and got corrected by evidence** —
-   SMTP is fully configured (the real gap is an empty `DIGEST_TO`, a
-   *business* decision), and the RUNBOOK banners are stale in a different way
-   than assumed. Both were carried in from prior context; both are now fixed
-   in [`RAID_LOG.md`](RAID_LOG.md).
-4. **Specialists disagreed once** (SMTP config state) and it was settled by
-   direct check rather than by picking the more confident agent.
+1. **All ten unit suites passed green — 45 assertions — while the
+   application was completely unbootable.** The strongest possible argument
+   for the rule this system enforces: a DoD entry needs a boot-dependent
+   gate, never unit-test green alone. That specific gap is now closed by
+   `backend/test/approval-owner.test.js`.
+2. **The CI gate you built worked.** `deploy` sits behind `needs: test`,
+   which is why a server-killing commit on `main` almost certainly never
+   reached production (assumption A-1 — worth confirming in the Actions run
+   history).
+3. **Evidence beat recall three times on one risk.** "SMTP not configured"
+   → disproved by a key check (everything *is* set) → re-scoped to an empty
+   `DIGEST_TO` → then disproved *again* by an actual send attempt, which
+   returned `535 5.7.139 SmtpClientAuthentication is disabled for the
+   Tenant`. Final state: two blockers, two different owners (R-6 IT, D-2
+   Management). None of this was visible from reading code.
+4. **Specialists disagreed once** (SMTP state) and it was settled by direct
+   check rather than by trusting the more confident agent.
 
 ## Top open risks
 
 | ID | Severity | Item | Owner |
 |---|---|---|---|
-| I-3 | **P0** | Backend does not boot — blocks all verification | You (decision) + `code-architect` |
-| I-4 | High | Every gate blocked by I-3 | `qa-test-engineer` |
-| I-5 | High | No test guards the invariant that caused I-3 | `code-architect` |
+| **R-7** | **High — security, live** | forgot-password leaks which emails have accounts (known → 500, unknown → 200) because a send failure throws instead of returning `{sent:false}` | `security-performance-auditor` |
+| R-6 | High | No email can send — tenant blocks SMTP AUTH | Lake Cement IT |
 | R-4 | High | `openpg` may still hold its default password | `security-performance-auditor` / You |
 | R-1 | High | Odoo wired to a TEST instance, not production | You → Odoo Team |
+| I-7 | Medium | No backups configured locally; droplet state unverified | `deployment-engineer` |
+| I-2 | Medium | Quality KPI validated on 1 day of data vs. 91 for others | `kpi-data-analyst` |
 
-Full log with owners and mitigations: [`RAID_LOG.md`](RAID_LOG.md) — 16 open
-items, 2 assumptions, 1 corrected.
+Full log: [`RAID_LOG.md`](RAID_LOG.md) — 14 open, 2 assumptions, 4 closed/corrected.
 
 ## Go-live blockers owned outside this repo
 
-- **Odoo Team:** production Odoo endpoint + key, Purchases field names, network path droplet↔Odoo
-- **Management/Plant Head:** who receives the daily digest (`DIGEST_TO` is empty)
-- **Whoever admins the Odoo-bundled Postgres:** `openpg` password rotation
+- **Lake Cement IT:** enable SMTP AUTH for `digital@lakecement.co.tz`, or move the sender to Graph API (R-6)
+- **Odoo Team:** production Odoo endpoint + key, Purchases field names, network path droplet↔Odoo (R-1, D-1)
+- **Management / Plant Head:** who receives the daily digest and alerts (D-2); confirm the E&I approval decision (DEC-003)
+- **Whoever admins the Odoo-bundled Postgres:** `openpg` rotation (R-4)
 
 ## Links
 
@@ -100,6 +100,5 @@ Superseded (kept as evidence): [`../PROGRESS.md`](../PROGRESS.md),
 
 ## Kanban snapshot
 
-Blocked 6 · To Do 4 · In Progress 1 (WBS-CODE-2, awaiting your decision) ·
-Backlog 5 · Done 0 — see [`KANBAN.md`](KANBAN.md). Nothing has passed a
-`validate` gate yet, by design: the gates can't run.
+Done 3 · In Progress 1 · To Do 3 · Blocked 6 · Backlog 6 — see
+[`KANBAN.md`](KANBAN.md).

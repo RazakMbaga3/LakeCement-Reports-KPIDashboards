@@ -7,6 +7,6 @@
   site is unaffected. See backend/test/access-consistency.test.js for how
   this stays in sync with auth.js's own copy.
 */
-const { FORM_ACCESS } = require('../../forms/access-registry.js');
+const { FORM_ACCESS, FORM_APPROVAL_OWNER } = require('../../forms/access-registry.js');
 
-module.exports = { ROLE_FORM_ACCESS: FORM_ACCESS };
+module.exports = { ROLE_FORM_ACCESS: FORM_ACCESS, FORM_APPROVAL_OWNER };

@@ -10,26 +10,22 @@ history lives in `DEFINITION_OF_DONE.md` and git log.
 
 ## In Progress
 
-- [ ] **[WBS-CODE-2] Restore backend boot — `power-cons` dual ownership** 🔴 **P0**
-      *Awaiting your decision: who approves power-cons, P&M HOD or E&I HOD?*
-      (RAID I-3 · blocks WBS-QA-1, QA-2, QA-3, UI-1, and all DoD verification)
+- [ ] **[WBS-UI-1] Re-run the four UI audit scripts** — unblocked by the CODE-2 fix, not measured since the outage. First thing `validate` should pick up
 
 ## To Do
 
-- [ ] [WBS-QA-2] Unit-test the single-owner invariant in `approval.js` (RAID I-5) — do this *with* the CODE-2 fix so the outage can't recur silently
 - [ ] [WBS-DEPLOY-2] Set `BACKUP_DIR`, run one backup + one `restore:drill`, record evidence (RAID I-7)
 - [ ] [WBS-CODE-3] Add `audit_log` writes to `sales.js POST /targets` + `quarry.js POST /tickets/import` (RAID I-9)
 - [ ] [WBS-DATA-5] Fix or retire `npm run odoo:test` so it reports per-connector health (RAID I-6)
 
 ## Blocked
 
-- [ ] [WBS-QA-3] Re-run the full gate table, populate DoD with real evidence — blocked by WBS-CODE-2 (RAID I-4)
-- [ ] [WBS-UI-1] Close remaining `DESIGN_AUDIT_2026-09.md` items — blocked by WBS-CODE-2 (audits need a live backend)
-- [ ] [WBS-QA-1] Wire e2e + the three audits into CI — blocked by WBS-CODE-2
+- [ ] [WBS-SEC-4] Email delivery — blocked on IT enabling SMTP AUTH for the tenant (RAID R-6)
 - [ ] [WBS-SEC-1] Verify/rotate `openpg` password — blocked on live DB access (RAID R-4)
 - [ ] [WBS-SEC-2] Set `DIGEST_TO`/`ALERT_TO` — blocked on Management naming recipients (RAID D-2)
 - [ ] [WBS-DATA-3] Odoo onto the production instance — blocked on Odoo Team (RAID R-1)
 - [ ] [WBS-DATA-4] Purchases field names, unstub `fetchCategoryGrid()` — blocked on Odoo Team (RAID D-1)
+- [ ] [WBS-QA-1] Wire e2e + the three audits into CI — do after WBS-UI-1 confirms they pass locally
 
 ## Backlog
 
@@ -42,6 +38,6 @@ history lives in `DEFINITION_OF_DONE.md` and git log.
 
 ## Done (recent)
 
-_(empty — nothing has passed a `validate` gate under this system yet. The
-gates cannot run while WBS-CODE-2 is open, and a stale historical green does
-not count as evidence.)_
+- [x] **[WBS-CODE-2] Restore backend boot — `power-cons` approval ownership** — validated 2026-09-13 (`smoke` OK, `access:matrix` shows `power-cons → ei APPR`). Decision: DEC-003
+- [x] **[WBS-QA-2] Test the single-owner invariant** — validated 2026-09-13 (`test:approval` 5/5, incl. proof the guard still throws on an undeclared overlap)
+- [x] **[WBS-QA-3] Re-run the gate table, populate DoD with real evidence** — validated 2026-09-13 (147 acceptance checks green across 9 suites; Phase 6's 3 failures traced to RAID R-6, not to this code)

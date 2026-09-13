@@ -31,14 +31,31 @@
 
   var FORM_ACCESS = {
     production: ['production', 'quality', 'limestone', 'pile-quality'],
-    pm:         ['stoppage', 'power-cons'],   // P&M owns Stoppage; Power Cons. shared with E&I below
+    pm:         ['stoppage', 'power-cons'],   // P&M owns Stoppage; Power Cons. submitted by both P&M and E&I — E&I approves, see FORM_APPROVAL_OWNER
     logistics:  ['dispatch'],
     cpp:        ['cpp'],   // 'power-plant' retired 2026-08-31 — see config/forms.js
     mining:     ['mines'],
     stores:     ['materials'],                // Raw Materials report is owned by Purchase & Stores
     sales:      ['sales-projection'],
-    ei:         ['power-cons'],   // E&I owns Power Cons. readings (kWh/meters) — P&M keeps it too, see pm above
+    ei:         ['power-cons'],   // E&I owns Power Cons. readings (kWh/meters) — P&M keeps submit rights too, see pm above
     hr: [], it: [], md: [], admin: [], management: [], finance: [], packing: [], purchase: [],
+  };
+
+  /* Which role's HOD APPROVES a form type that more than one role may submit.
+
+     FORM_ACCESS answers "who may submit"; approval is a separate question,
+     and for a shared form type the two answers differ. backend/middleware/
+     approval.js derives a single approving role per form type from
+     FORM_ACCESS and throws at startup if two roles claim one — deliberately,
+     so an accidental overlap can never silently pick an approver. An entry
+     here is the explicit, deliberate answer that satisfies that guard.
+
+     power-cons: both P&M and E&I submit readings (E&I took submit rights
+     2026-09-11 — it's their main daily report), but E&I's HOD signs them
+     off, since E&I owns the kWh/meter readings themselves. Declared
+     2026-09-13 after the un-declared overlap took the server down at boot. */
+  var FORM_APPROVAL_OWNER = {
+    'power-cons': 'ei',
   };
 
   /* Which departments a role may WRITE monthly KPI values for.
@@ -126,7 +143,7 @@
      `planthead` is not listed because it holds role 'md'. */
   var MIS_VIEW_ROLES = ['admin', 'management', 'md'];
 
-  var api = { FORM_ACCESS: FORM_ACCESS, KPI_EDIT_DEPTS: KPI_EDIT_DEPTS, KPI_DEPTS: KPI_DEPTS, COMMERCIAL_VIEW_ROLES: COMMERCIAL_VIEW_ROLES, PURCHASE_VIEW_ROLES: PURCHASE_VIEW_ROLES, RAWMAT_VIEW_ROLES: RAWMAT_VIEW_ROLES, MINES_VIEW_ROLES: MINES_VIEW_ROLES, MIS_VIEW_ROLES: MIS_VIEW_ROLES };
+  var api = { FORM_ACCESS: FORM_ACCESS, FORM_APPROVAL_OWNER: FORM_APPROVAL_OWNER, KPI_EDIT_DEPTS: KPI_EDIT_DEPTS, KPI_DEPTS: KPI_DEPTS, COMMERCIAL_VIEW_ROLES: COMMERCIAL_VIEW_ROLES, PURCHASE_VIEW_ROLES: PURCHASE_VIEW_ROLES, RAWMAT_VIEW_ROLES: RAWMAT_VIEW_ROLES, MINES_VIEW_ROLES: MINES_VIEW_ROLES, MIS_VIEW_ROLES: MIS_VIEW_ROLES };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.NyatiAccess = api;
