@@ -1,5 +1,10 @@
 # PROGRESS — Lake Cement MIS build plan tracker
 
+> ⚠ **Superseded as the live tracker.** This file's Phase 0–8 build history
+> and audit findings are preserved as evidence and as the seed data for the
+> current system. For live status, see
+> [`docs/pm/PROJECT_STATE.md`](pm/PROJECT_STATE.md).
+
 Companion to [MASTER_BUILD_PROMPT.md](MASTER_BUILD_PROMPT.md). Update as criteria pass.
 Last audit: 2026-07-05.
 
