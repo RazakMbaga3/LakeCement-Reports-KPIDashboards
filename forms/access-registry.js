@@ -127,9 +127,17 @@
      forbids. Each dashboard is now its own department plus management.
 
      `admin` is deliberately absent from both. It is the IT/system account,
-     not a commercial one, and it has never had these rights. */
+     not a commercial one, and it has never had these rights.
+
+     `stores` reads Purchases as of 2026-09-14. This is not the same shape
+     of grant as the `sales` one removed above: Stores receives the goods
+     against the very POs this dashboard lists, so the orders are one half
+     of a transaction whose other half they already own — they need to see
+     what is on order and when it lands to plan space and raise the GRN.
+     Read-only, like every other role on this list; Purchase still owns
+     the data and is still the only department that raises a PO. */
   var COMMERCIAL_VIEW_ROLES = ['management', 'md', 'sales'];
-  var PURCHASE_VIEW_ROLES   = ['management', 'md', 'purchase'];
+  var PURCHASE_VIEW_ROLES   = ['management', 'md', 'purchase', 'stores'];
 
   /* The MIS Dashboard (mis.html — the sidebar's "Management Info." group)
      is management-only as of 2026-09-03. It aggregates HR strength,

@@ -111,7 +111,7 @@ const PERMISSIONS = {
     compliance: null,
     store:      { rawmat:'edit',   spares:'edit',   amc:'edit' },
     kpi:        { depts:['summary','stores'], editDepts:['stores'], daily:true },
-    commercial: { sales:null, purchase:null },
+    commercial: { sales:null, purchase:'view' },   /* Stores receives against Purchase's POs — see PURCHASE_VIEW_ROLES in forms/access-registry.js */
     canViewAudit:  false,
     canManageUsers:false,
     canExport:     true,

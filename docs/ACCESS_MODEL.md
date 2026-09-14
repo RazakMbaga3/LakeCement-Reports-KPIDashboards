@@ -64,7 +64,7 @@ rather than pick one silently.
 | Surface | Who | Why |
 |---|---|---|
 | Sales dashboard | `sales`, `management`, `md` | Owning department + oversight |
-| Purchases dashboard | `purchase`, `management`, `md` | Owning department + oversight |
+| Purchases dashboard | `purchase`, `management`, `md`, `stores` | Owning department + oversight. `stores` added 2026-09-14: Stores receives the goods against the POs this dashboard lists, so it needs to see what is on order and when it lands — read-only; Purchase still raises every PO |
 | MIS Dashboard (`mis.html`) | `management`, `md`, `admin` | Aggregates HR, assets, compliance and stores across every department |
 | KPI dashboard *view* | Per `PERMISSIONS[role].kpi.depts` | Management and finance see all; departments see their own plus summary |
 
