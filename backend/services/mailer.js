@@ -26,8 +26,19 @@ function makeTransport() {
 }
 
 /* Send an HTML mail to a comma-separated recipient list.
-   Returns { sent, reason? , transport?, to?, message? } — never throws
-   for "not configured"; real SMTP errors do propagate to the caller. */
+   Returns { sent, reason?, transport?, to?, message? } and NEVER
+   throws — not for "not configured", and not for a transport or
+   authentication failure either. Callers all branch on `sent`, and a throw
+   skipped that branch: POST /api/auth/forgot-password was 500-ing on a
+   known address while answering 200 for an unknown one, which turned it
+   into an address-enumeration oracle (RAID R-7).
+
+   `reason` is deliberately safe to put in a response: a short phrase plus
+   the transport's error code (EAUTH, ETIMEDOUT, 535 …), because several
+   admin endpoints already relay it. The server's raw error message — which
+   can name internal hosts, mailboxes or tenant policy — is logged here and
+   goes no further, since three callers hand their whole result straight to
+   res.json(). */
 async function sendMail({ subject, html, to }) {
   const list = (to || '').split(',').map(s => s.trim()).filter(Boolean);
   if (!list.length) return { sent: false, reason: 'no recipients configured' };
@@ -35,11 +46,31 @@ async function sendMail({ subject, html, to }) {
   const transport = makeTransport();
   if (!transport) return { sent: false, reason: 'SMTP not configured' };
 
-  const info = await transport.t.sendMail({
-    from: process.env.SMTP_FROM || 'mis@lakecement.co.tz',
-    to: list.join(', '),
-    subject, html,
-  });
+  let info;
+  try {
+    info = await transport.t.sendMail({
+      from: process.env.SMTP_FROM || 'mis@lakecement.co.tz',
+      to: list.join(', '),
+      subject, html,
+    });
+  } catch (err) {
+    /* Required lazily: services/logger.js opens pino's rotating-file
+       transport on require, and mailer.js is pulled into `node --test`
+       runs and one-shot scripts that should not spin one up just to send
+       through jsonTransport. */
+    const code = err.code || err.responseCode || 'send failed';
+    try {
+      require('./logger').error(
+        { err, code, transport: transport.kind, to: list, subject },
+        'mail send failed');
+    } catch { /* logging must never be the thing that breaks a send path */ }
+    return {
+      sent: false,
+      reason: `the mail server rejected the message (${code})`,
+      transport: transport.kind,
+      to: list,
+    };
+  }
 
   return {
     sent: true, transport: transport.kind, to: list, subject,
