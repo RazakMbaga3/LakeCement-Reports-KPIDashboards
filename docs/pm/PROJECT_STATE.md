@@ -50,8 +50,9 @@ Legend: 🟢 on track, evidence current · 🟡 partial/at risk · 🔴 blocked/
 
 ## What this audit actually proved
 
-1. **All ten unit suites passed green — 45 assertions — while the
-   application was completely unbootable.** The strongest possible argument
+1. **All nine unit suites passed green — 54 assertions — while the
+   application was completely unbootable.** (Ten suites and 59 assertions
+   now, with the guard this audit showed was missing.) The strongest possible argument
    for the rule this system enforces: a DoD entry needs a boot-dependent
    gate, never unit-test green alone. That specific gap is now closed by
    `backend/test/approval-owner.test.js`.

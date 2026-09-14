@@ -10,8 +10,8 @@ The first audit found the backend unbootable (RAID I-3), which blocked nine
 of ten acceptance suites. After the fix (DEC-003) the gate table was re-run
 and the results below are current.
 
-> **Rule this audit earned:** during the outage, all ten unit suites passed
-> green — 45 assertions — while the application could not start at all. Unit
+> **Rule this audit earned:** during the outage, all nine unit suites passed
+> green — 54 assertions — while the application could not start at all. Unit
 > green is not proof of a working system. Every entry here therefore
 > requires a boot-dependent gate, not just unit tests. The missing guard is
 > now itself a test (`test:approval`).
