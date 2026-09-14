@@ -124,4 +124,7 @@ async function deepHealth() {
   };
 }
 
-module.exports = { deepHealth };
+/* checkOdoo is exported so scripts/odoo-test-connection.js reports exactly
+   the same per-connector view as GET /api/health, instead of a second copy
+   of these rules that can drift from this one. */
+module.exports = { deepHealth, checkOdoo };
