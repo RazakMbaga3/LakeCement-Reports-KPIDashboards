@@ -48,8 +48,8 @@ An HOD fills a department-month, then **submits** it. From that moment `kpi_mont
 | Submit | ✅ self-certifying (lands `approved`) | ✅ lands `pending_approval` | ✅ lands `pending_approval` |
 | Approve / reject | ✅ own department's form types only | — | — |
 
-**Submitting and approving are separate questions.** For all but one form
-type the answer is the same role, so `middleware/approval.js` derives the
+**Submitting and approving are separate questions.** For most form types
+the answer is the same role, so `middleware/approval.js` derives the
 approver from the submit map. Where two departments submit the same form
 type, the approver must be named explicitly in `FORM_APPROVAL_OWNER`
 (`forms/access-registry.js`) — and if it isn't, the server refuses to boot
@@ -58,6 +58,11 @@ rather than pick one silently.
 | Shared form type | Who may submit | Whose HOD approves | Why |
 |---|---|---|---|
 | `power-cons` | `pm`, `ei` | **`ei`** | E&I owns the kWh/meter readings being signed off; P&M kept submit rights when E&I gained them (2026-09-11). Approver declared 2026-09-13 — see `docs/pm/DECISIONS.md` DEC-003 |
+| `dispatch` | `logistics`, `packing` | **`logistics`** | Packing Plant fills the Dispatch & SO report (2026-09-14) — it's their core daily report. Logistics keeps submit rights and the sign-off it already had; author and approver then sit in different departments, per Separation of Duties. See `docs/pm/DECISIONS.md` DEC-004 |
+
+The pending-approval queue (`GET /api/approvals`) is scoped on this column —
+on who *approves*, not on who may submit — so an HOD is never shown a report
+`requireApprover` would then 403.
 
 ### Cross-department views — the complete list of exceptions
 
