@@ -32,13 +32,14 @@
   var FORM_ACCESS = {
     production: ['production', 'quality', 'limestone', 'pile-quality'],
     pm:         ['stoppage', 'power-cons'],   // P&M owns Stoppage; Power Cons. submitted by both P&M and E&I — E&I approves, see FORM_APPROVAL_OWNER
-    logistics:  ['dispatch'],
+    logistics:  ['dispatch'],   // Dispatch & SO submitted by both Logistics and Packing — Logistics approves, see FORM_APPROVAL_OWNER
     cpp:        ['cpp'],   // 'power-plant' retired 2026-08-31 — see config/forms.js
     mining:     ['mines'],
     stores:     ['materials'],                // Raw Materials report is owned by Purchase & Stores
     sales:      ['sales-projection'],
     ei:         ['power-cons'],   // E&I owns Power Cons. readings (kWh/meters) — P&M keeps submit rights too, see pm above
-    hr: [], it: [], md: [], admin: [], management: [], finance: [], packing: [], purchase: [],
+    packing:    ['dispatch'],     // Packing Plant fills the Dispatch & SO report — it's their core daily report; Logistics keeps submit rights and signs it off, see logistics above
+    hr: [], it: [], md: [], admin: [], management: [], finance: [], purchase: [],
   };
 
   /* Which role's HOD APPROVES a form type that more than one role may submit.
@@ -53,9 +54,17 @@
      power-cons: both P&M and E&I submit readings (E&I took submit rights
      2026-09-11 — it's their main daily report), but E&I's HOD signs them
      off, since E&I owns the kWh/meter readings themselves. Declared
-     2026-09-13 after the un-declared overlap took the server down at boot. */
+     2026-09-13 after the un-declared overlap took the server down at boot.
+
+     dispatch: both Logistics and Packing submit (Packing took submit rights
+     2026-09-14 — the Dispatch & SO report is their core daily report), but
+     Logistics' HOD signs them off. Logistics already approved this form
+     type and the ask was only to let Packing fill it, so nobody loses a
+     right they had; it also keeps author and approver in different
+     departments, which is the Separation-of-Duties rule stated below. */
   var FORM_APPROVAL_OWNER = {
     'power-cons': 'ei',
+    'dispatch':   'logistics',
   };
 
   /* Which departments a role may WRITE monthly KPI values for.

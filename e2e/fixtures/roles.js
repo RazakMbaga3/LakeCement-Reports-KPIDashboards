@@ -50,10 +50,16 @@ const ROLES = [
 
 /* `level` is a second, orthogonal axis to `role` (migration 009): it decides
    only who may approve. The approval workflow needs both sides of it, so the
-   harness creates an 'officer' twin for every role that owns a form type —
-   e2e_production and e2e_production_officer are the same role at the two
-   levels that matter. */
-const FORM_OWNING_ROLES = ['production', 'pm', 'logistics', 'cpp', 'mining', 'stores', 'sales'];
+   harness creates an 'officer' twin for every role that may SUBMIT a form
+   type — e2e_production and e2e_production_officer are the same role at the
+   two levels that matter.
+
+   'ei' and 'packing' submit a form type they do not approve (power-cons is
+   E&I's to fill and sign; dispatch is Packing's to fill and Logistics' to
+   sign — see FORM_APPROVAL_OWNER). Their officer twins are what let the
+   approvals tests put a report in one department's queue and assert it is
+   offered only to the HOD who may actually sign it. */
+const FORM_OWNING_ROLES = ['production', 'pm', 'logistics', 'cpp', 'mining', 'stores', 'sales', 'ei', 'packing'];
 
 const username = (role, level) =>
   'e2e_' + role + (level && level !== 'hod' ? '_' + level : '');

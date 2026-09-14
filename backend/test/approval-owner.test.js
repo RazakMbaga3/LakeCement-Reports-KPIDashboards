@@ -66,3 +66,16 @@ test("power-cons is approved by E&I's HOD, and P&M keeps submit rights", () => {
   assert.equal(OWNING_ROLE_BY_FORM_TYPE['power-cons'], 'ei');
   assert.deepEqual(SUBMITTING_ROLES_BY_FORM_TYPE['power-cons'].sort(), ['ei', 'pm']);
 });
+
+/* 2026-09-14: Packing Plant gained submit rights on the Dispatch & SO
+   report — it's the report they actually fill. Logistics keeps both submit
+   and sign-off: the ask was to let Packing fill it, not to move approval,
+   and author-in-one-department / approver-in-another is the Separation-of-
+   Duties rule the access model already states. */
+test("dispatch is approved by Logistics' HOD, and Packing may submit it", () => {
+  const { OWNING_ROLE_BY_FORM_TYPE, SUBMITTING_ROLES_BY_FORM_TYPE } =
+    require(path.join('..', 'middleware', 'approval.js'));
+
+  assert.equal(OWNING_ROLE_BY_FORM_TYPE['dispatch'], 'logistics');
+  assert.deepEqual(SUBMITTING_ROLES_BY_FORM_TYPE['dispatch'].sort(), ['logistics', 'packing']);
+});

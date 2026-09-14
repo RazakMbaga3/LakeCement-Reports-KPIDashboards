@@ -952,7 +952,7 @@ const _DAILY_ACCESS = {
   ei:         { edit: [],
                 nav:  ['daily-report.html','power-form.html'] },
   packing:    { edit: [],
-                nav:  ['daily-report.html'] },
+                nav:  ['daily-report.html','dispatch-form.html'] },
 };
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -988,13 +988,14 @@ const _DAILY_NAV_ITEMS = [
 const _FORM_TYPE_ACCESS = {
   production: ['production','quality','limestone','pile-quality'],
   pm:         ['stoppage','power-cons'],   /* P&M owns Stoppage (Kiln/Cement Mill folded into Production Report); Power Cons. shared with E&I below */
-  logistics:  ['dispatch'],
+  logistics:  ['dispatch'],   /* Dispatch & SO submitted by both Logistics and Packing — Logistics approves, see FORM_APPROVAL_OWNER */
   cpp:        ['cpp'],   // 'power-plant' retired 2026-08-31 — see backend/config/forms.js
   mining:     ['mines'],
   stores:     ['materials'],   /* Raw Materials report is owned by Purchase & Stores */
   sales:      ['sales-projection'],
   ei:         ['power-cons'],   /* E&I owns Power Cons. readings (kWh/meters) — P&M keeps it too, see pm above */
-  hr: [], it: [], md: [], admin: [], management: [], finance: [], packing: [], purchase: [],
+  packing:    ['dispatch'],     /* Packing Plant fills the Dispatch & SO report — it's their core daily report; Logistics keeps it and signs it off, see logistics above */
+  hr: [], it: [], md: [], admin: [], management: [], finance: [], purchase: [],
 };
 
 /* Standalone forms/*.html pages don't carry their formId in the URL, and

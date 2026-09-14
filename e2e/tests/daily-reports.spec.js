@@ -204,6 +204,38 @@ test.describe('approvals screen', () => {
     expect((await storedRow('production')).status).toBe('approved');
   });
 
+  /* A shared form type separates "who fills it" from "who signs it".
+     Packing fills the Dispatch & SO report (2026-09-14) and Logistics signs
+     it off, so the queue must follow the SIGNER. Listing by submit rights —
+     which it did until this test was written — would put the report in
+     Packing's HOD's queue and then 403 the approve click. */
+  test('a shared form type is queued to the HOD who signs it, not the one who filled it', async ({ page }) => {
+    await loginAs(page, 'packing_officer');
+    await page.goto('/index.html');
+    const r = await post(page, 'dispatch', { date: D, shift: 'day',
+      data: { dispatch_bag_425n: 1200, bags_pl1: 24000 } });
+    expect(r.status, JSON.stringify(r.body)).toBe(200);
+    expect((await storedRow('dispatch')).status).toBe('pending_approval');
+
+    // Packing filled it, so Packing's HOD must not be offered the signature.
+    await loginAs(page, 'packing');
+    await page.goto('/approvals.html');
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator('#apv-table tbody .apv-empty')).toHaveCount(1);
+
+    /* Logistics owns the sign-off, and the click must actually go through —
+       asserted on the stored row rather than on the row leaving the table,
+       because the approvals screen leaves a stale <tr> behind the empty
+       state (RAID I-12, a separate UI defect the test above already
+       tracks). What matters here is that requireApprover accepted it. */
+    await loginAs(page, 'logistics');
+    await page.goto('/approvals.html');
+    await page.waitForLoadState('networkidle');
+    await expect(page.locator(`#apv-table tbody tr[data-date="${D}"]`)).toHaveCount(1);
+    await page.locator(`#apv-table tbody tr[data-date="${D}"] button[data-action="approve"]`).click();
+    await expect.poll(async () => (await storedRow('dispatch')).status).toBe('approved');
+  });
+
   test('an officer sees an empty queue, and cannot approve their own report', async ({ page }) => {
     await loginAs(page, 'production_officer');
     await page.goto('/index.html');

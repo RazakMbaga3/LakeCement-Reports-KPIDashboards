@@ -60,6 +60,14 @@ citation.
 **Decision:** (b). Both departments keep submit rights; **E&I's HOD approves**, since E&I owns the kWh/meter readings being signed off. Approval ownership is now declared explicitly in `FORM_APPROVAL_OWNER` (`forms/access-registry.js`) rather than inferred from who can submit.
 **Consequences:** Submitting and approving are now separate concepts in the access model. `approval.js` still throws on an *undeclared* overlap — the guard is intact, not removed, and `backend/test/approval-owner.test.js` proves it still fires. `docs/ACCESS_MODEL.md` updated, since it previously documented a single-owner model with no exception. Closes RAID I-3, I-4, I-5.
 
+### DEC-004 — Packing Plant may submit Dispatch & SO; Logistics still approves it
+**Date:** 2026-09-14
+**Decider (RACI Accountable):** You (razakmbaga3@gmail.com), on behalf of the Plant Head — access/RBAC policy is Accountable to the Plant Head per [`RACI.md`](RACI.md), so this should be confirmed with them.
+**Context:** Packing Plant reported that the Dispatch & SO report (`forms/dispatch-form.html`) is the report they actually fill each day, but `dispatch` was owned solely by `logistics` in `FORM_ACCESS`, so the form was permanently view-only for them and never appeared in their Daily Reports nav. Same shape as DEC-003, and the second shared form type in the system.
+**Options considered:** (a) **Packing submits, Logistics keeps submit + approval**; (b) Packing submits and Packing's HOD approves, moving sign-off off Logistics; (c) transfer `dispatch` to `packing` outright, taking it from Logistics.
+**Decision:** (a). `packing` gains `dispatch` submit rights and the form in its nav; `logistics` keeps submit rights and remains the approver, declared in `FORM_APPROVAL_OWNER`. The ask was to let Packing *fill* the report, not to move sign-off, so no existing right is removed — and it leaves the author in one department and the approver in another, which is the Separation-of-Duties rule the access model already states. (b) is a one-line change to `FORM_APPROVAL_OWNER` if the Plant Head wants sign-off to follow the data.
+**Consequences:** `dispatch` is now a shared form type, so the `approval.js` boot guard required a declared approver — supplied, and covered by a new assertion in `backend/test/approval-owner.test.js` so it can't regress the way DEC-003's overlap did. `GET /api/approvals` now scopes an HOD's queue by **who approves** (`OWNING_ROLE_BY_FORM_TYPE`) rather than by who may submit; it previously listed by submit rights, which since 2026-09-11 had been showing P&M's HOD `power-cons` reports that `requireApprover` 403s, and would have done the same to Packing's HOD for `dispatch`.
+
 ---
 
 _Further decisions (RACI names confirmed, WBS priority calls, DoD criteria

@@ -13,7 +13,10 @@ const { pool } = require('../fixtures/db');
 
 const D = '1999-06-16';
 
-/* page → [formType, the role that owns it] */
+/* page → [formType, a role that may FILL it]. Two form types are shared,
+   so they appear twice — each submitting role must get the real form, not
+   the view-only shell (power-cons: pm + ei since 2026-09-11; dispatch:
+   logistics + packing since 2026-09-14). */
 const FORMS = [
   ['/daily-report.html',                 'production',       'production'],
   ['/power-plant-report.html',           'cpp',              'cpp'],
@@ -21,6 +24,7 @@ const FORMS = [
   ['/forms/stoppage-form.html',          'stoppage',         'pm'],
   ['/forms/power-form.html',             'power-cons',       'pm'],
   ['/forms/dispatch-form.html',          'dispatch',         'logistics'],
+  ['/forms/dispatch-form.html',          'dispatch',         'packing'],
   ['/forms/materials-form.html',         'materials',        'stores'],
   ['/forms/quality-form.html',           'quality',          'production'],
   ['/forms/limestone-form.html',         'limestone',        'production'],
