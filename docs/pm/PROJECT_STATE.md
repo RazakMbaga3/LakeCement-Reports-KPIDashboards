@@ -5,6 +5,7 @@ in any session.** Maintained by the `project-manager` skill
 (`.claude/skills/project-manager/SKILL.md`).
 
 - **Last full audit:** 2026-09-13 (six specialist agents, every claim command-cited)
+- **Last UI measurement:** 2026-09-15 — WBS-UI-1 delivered, first since the outage. **responsive 72/72 checks pass** (18 pages x 4 viewports: 0 overflow, 0 text below the 12px floor of 14,980 nodes, 0 tap targets under 44px of 2,101, 0 iOS-zoom triggers); **a11y 0 violations** (19 pages x phone+desktop, 0 at serious or critical); perf 2 pages over an intentionally uncompressed budget; design-consistency 4 findings, 1 of them a real defect (see I-20)
 - **Last validation gate:** 2026-09-13 — 147 acceptance checks green + e2e 117/119; 5 failures, all root-caused
 - **Overall health:** 🟡 **Amber** — backend restored and verified; one live security defect found (R-7), rest owned outside this repo
 
@@ -37,9 +38,9 @@ piece of genuine engineering left that isn't waiting on someone else.
 
 | Workstream | Owner agent | Health | Basis |
 |---|---|---|---|
-| Code/Architecture | `code-architect` | 🟢 Green | Boots and verified; `npm test` green through smoke. Open: 2 audit_log gaps (I-9), 2 lint warnings (R-5) |
+| Code/Architecture | `code-architect` | 🟢 Green | Boots and verified; `npm test` green through smoke, now 11 suites. I-9 audit_log gaps, R-5 lint warnings, I-11 dotenv, I-13 log rotation, I-15 invite rollback and I-17 all fixed in tree. Open: I-19, the unbounded quarry ticket endpoint |
 | KPI/Data | `kpi-data-analyst` | 🟡 Amber | `accept:phase3` 27/27, KPI reference byte-current, all formula suites green. Quality KPI still at 1-day validation (I-2); Odoo on a TEST instance (R-1) |
-| UI/UX | `ui-ux-designer` | 🟡 Amber | Unblocked but **not re-measured** since the outage. 5 of 6 prior "still open" design-audit items confirmed still open from source |
+| UI/UX | `ui-ux-designer` | 🟢 Green | **Re-measured 2026-09-15.** Responsive 72/72 and a11y 0 violations — the design system is holding. I-12 and I-8 fixed; `adm-btn`'s 2px misalignment fixed. Remaining design-audit findings are an inventory backlog (68 colours vs a >30 threshold) plus audit false positives (I-20), not page defects |
 | QA/Testing | `qa-test-engineer` | 🟢 Green | 147 acceptance checks green across 9 suites; 11 unit suites green; the invariant gap that caused the outage is now covered by `test:approval` |
 | Security/Performance | `security-performance-auditor` | 🟡 Amber | Auth internals verified in source; `accept:phase1` 19/19. `openpg` unverifiable from code (R-4); email blocked at the tenant (R-6); perf not re-measured |
 | Deployment | `deployment-engineer` | 🟡 Amber | CI gate verified sound and demonstrably effective. No local backups at all (I-7); stale runbook banners (I-1) |
