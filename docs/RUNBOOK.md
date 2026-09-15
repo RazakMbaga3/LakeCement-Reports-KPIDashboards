@@ -1,12 +1,19 @@
 # RUNBOOK — Lake Cement MIS (Nyati Dashboard)
 
-> **⚠ Superseded plan.** This describes the on-prem plant-LAN Windows-server
-> deployment this repo was originally built around. Per the Managing
-> Director's later direction (see `TECHNICAL_SPEC.md` §10), production
-> hosting is now planned as cloud infrastructure under the Odoo team's
-> ownership — platform/account still to be confirmed with them. The steps
-> below no longer describe the actual go-live path; kept for reference
-> until a cloud-hosting runbook replaces it.
+> **⚠ Superseded plan — kept as reference.** This describes the on-prem
+> plant-LAN Windows-server deployment this repo was originally built
+> around. Per the Managing Director's later direction (`TECHNICAL_SPEC.md`
+> §10), production hosting moved to the cloud under the Odoo team's
+> ownership, and the platform was confirmed on 2026-08-19: a **DigitalOcean
+> droplet**, set up and administered by the Odoo team (India)
+> (`TECHNICAL_SPEC.md` §12 item 6). The real deployment path — droplet
+> build, deploy user, database, pm2, Nginx/HTTPS, push-to-deploy and
+> backups — is documented in
+> [`DEPLOYMENT_DIGITALOCEAN.md`](DEPLOYMENT_DIGITALOCEAN.md), which replaces
+> this file for hosting purposes; current project status lives in
+> [`pm/PROJECT_STATE.md`](pm/PROJECT_STATE.md). The steps below (Windows
+> service, `node-windows`, PowerShell) are not the go-live path — they are
+> kept unrewritten as a record of the original plan.
 
 Operations manual for the plant server. Assumes the layout:
 repo at `C:\apps\LakeCementDashboard`, backend service `LakeCementMIS`,

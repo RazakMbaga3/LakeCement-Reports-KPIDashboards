@@ -250,21 +250,44 @@ it up.
 
 ---
 
-## 3. Ongoing updates — automatic deploy on push
+## 3. Ongoing updates — test on every push, deploy only if green
 
-This repo ships `.github/workflows/deploy.yml`. Once the two secrets
-below are set, **every push to `main` automatically deploys** — no one
-needs to SSH in manually for routine updates.
+This repo ships `.github/workflows/deploy.yml`, whose name is **"Test &
+Deploy to DigitalOcean"**. Once the three secrets below are set, **every
+push to `main` runs the backend's full test + acceptance suite and deploys
+only if that comes back green** — no one needs to SSH in manually for
+routine updates. The same workflow can also be started by hand from the
+repo's **Actions** tab (`workflow_dispatch`, `deploy.yml:15`).
 
 ### What happens on each push
 
 1. Developer pushes to `main` on GitHub.
-2. GitHub Actions runs `.github/workflows/deploy.yml`.
-3. It SSHes into the droplet (using the **CI key** from §2.3) and runs
-   `deploy/deploy.sh`, which:
+2. GitHub Actions runs `.github/workflows/deploy.yml`, which is **two jobs
+   in sequence** — `test`, then `deploy`.
+3. **`test`** (`deploy.yml:18-88`) runs on a GitHub-hosted runner against a
+   throwaway `postgres:16` service container that is created and destroyed
+   with the job — it never touches the droplet or its database. It runs
+   `npm ci`, `npm run db:init` (schema + migrations), `npm run seed`, then:
+   - `npm test` — lint + formula unit tests + smoke boot
+   - ten acceptance suites against a real API on the CI database:
+     `accept:phase1`, `phase2`, `phase3`, `phase5`, `phase6`, `phase7`,
+     `phase8`, `quarry`, `sales`, `purchases`
+
+   Scheduled jobs are switched off for the run (`WATCHDOG_CRON`,
+   `BACKUP_CRON` and `ODOO_SYNC_CRON` set to `off`) and mail goes to a JSON
+   transport, so CI never emails anyone and never calls Odoo.
+4. **`deploy`** (`deploy.yml:90-101`) is declared `needs: test`. **If any
+   step of `test` fails, `deploy` never starts and the droplet is left
+   exactly as it was.** When it does run, it SSHes into the droplet (the
+   **CI key** from §2.3, on `DO_PORT` or 22) and runs `deploy/deploy.sh`,
+   which:
    - `git fetch` + `git reset --hard origin/main` (via the **deploy key**
      from §2.3 — the droplet never needs a person's GitHub credentials)
-   - `npm ci --omit=dev` (only reinstalls if `package.json` changed)
+   - `npm ci --omit=dev` — runs on every deploy, not only when
+     `package.json` changed (`deploy/deploy.sh:14` calls it
+     unconditionally). `npm ci` wipes `node_modules` and reinstalls
+     production dependencies exactly as pinned in `package-lock.json`, so
+     a deploy can never inherit a stale or drifted tree
    - `npm run migrate` (applies any new `db/migrations/*.sql`)
    - `pm2 reload ecosystem.config.js` — reload, not restart, so pm2 starts
      the new process before killing the old one (near-zero downtime)
@@ -272,40 +295,61 @@ needs to SSH in manually for routine updates.
 `.env` is never touched by this — it's gitignored and stays local to the
 droplet, so secrets never pass through GitHub Actions or git history.
 
+> **Don't delete the `needs: test` line** (`deploy.yml:91`) to make deploys
+> faster. It is the only thing standing between a push and production: the
+> workflow's own header records that there used to be no gate at all
+> (`deploy.yml:3-5`), and the 2026-09-13 audit found a commit on `main`
+> that left the backend completely unbootable while every unit suite was
+> green — it concluded that `needs: test` is almost certainly why that
+> commit never reached production (`docs/pm/PROJECT_STATE.md`, "What this
+> audit actually proved", items 1–2). If deploys need to be *less
+> frequent*, change the trigger (see Rollback below) — not the gate.
+
 ### One-time setup (whoever administers the droplet + repo secrets)
 
-In the GitHub repo, **Settings → Secrets and variables → Actions**, add:
+In the GitHub repo, **Settings → Secrets and variables → Actions**, add
+the three required secrets — plus `DO_PORT` only if SSH isn't on 22. All
+four are read by the deploy job at `deploy.yml:97-100`:
 
-| Secret | Value |
-|---|---|
-| `DO_HOST` | the droplet's IP or domain |
-| `DO_USER` | `deploy` |
-| `DO_SSH_KEY` | the **private** half of the CI key from §2.3 |
-| `DO_PORT` | only if SSH doesn't run on 22 |
+| Secret | Required? | Value |
+|---|---|---|
+| `DO_HOST` | yes | the droplet's IP or domain |
+| `DO_USER` | yes | `deploy` |
+| `DO_SSH_KEY` | yes | the **private** half of the CI key from §2.3 |
+| `DO_PORT` | only if SSH doesn't run on 22 | the SSH port (the workflow defaults to 22) |
 
-That's it — the workflow is already written and will start firing on the
-next push to `main`.
+That's it — the workflow is already written and will start deploying on
+the next push to `main`. The `test` job itself needs no secrets, so it is
+already running on every push today; only the `deploy` job is waiting on
+the table above.
 
 ### Rollback
 
-Automatic deploy means a bad push goes live immediately — there's no
-manual gate. To roll back:
+A green push goes live immediately: the test suite gates it, but no *human*
+approves it, so a change that is wrong-but-passing still reaches production
+without review. To roll back:
 ```bash
 git revert <bad-commit>   # or: git reset --hard <last-good-commit> --
-git push                  # triggers a fresh auto-deploy of the good state
+git push                  # re-runs the suite, then auto-deploys the good state
 ```
-Or, directly on the droplet as `deploy`, for something urgent:
+That path waits for the full `test` job first. For something urgent, go
+straight to the droplet as `deploy` — this bypasses CI entirely:
 ```bash
 cd ~/lake-cement-dashboard
 git reset --hard <last-good-commit>
 cd backend && npm ci --omit=dev && npm run migrate
 pm2 reload ecosystem.config.js
 ```
+Treat that as an emergency stop only: `main` still holds the bad commit, and
+the next push will `git reset --hard origin/main` straight over your manual
+fix (`deploy/deploy.sh:11`).
 
-If you'd rather have a human gate every deploy instead (review the diff,
-then deploy on purpose), change the workflow trigger from `push` to
-`workflow_dispatch` in `.github/workflows/deploy.yml` — same script,
-just fired by clicking "Run workflow" on GitHub instead of on every push.
+If you'd rather have a human gate on top of the test gate (review the diff,
+then deploy on purpose), **remove the `push:` block** at
+`.github/workflows/deploy.yml:13-14` and leave the `workflow_dispatch: {}`
+that is already on line 15. Same jobs, same tests — just fired by clicking
+"Run workflow" on GitHub instead of on every push. The workflow's own
+header comment says the same (`deploy.yml:9-10`).
 
 ---
 

@@ -1,12 +1,20 @@
 # GO-LIVE CHECKLIST — Lake Cement MIS (Nyati Dashboard)
 
-> **⚠ Superseded plan.** Written for the on-prem plant-server cutover.
-> Production hosting is now planned as cloud infrastructure under the
-> Odoo team's ownership (see `TECHNICAL_SPEC.md` §10) — platform still
-> unconfirmed as of 2026-08-18. §1–3 (server install, security hardening)
-> will need re-authoring once that's settled; §4–8 (verification,
+> **⚠ Superseded plan — kept as reference.** Written for the on-prem
+> plant-server cutover. Production hosting moved to the cloud under the
+> Odoo team's ownership (`TECHNICAL_SPEC.md` §10), and the platform was
+> confirmed on 2026-08-19: a **DigitalOcean droplet**, set up and
+> administered by the Odoo team (India) (`TECHNICAL_SPEC.md` §12 item 6).
+> §2's Windows install steps are replaced by
+> [`DEPLOYMENT_DIGITALOCEAN.md`](DEPLOYMENT_DIGITALOCEAN.md) §2 (droplet
+> build, deploy user/SSH keys, database, pm2, Nginx/HTTPS). §1 and §3
+> (inputs to collect, security hardening) still need re-authoring for that
+> host: that doc covers the firewall and `JWT_SECRET`, but not the account,
+> password-hygiene and `METRICS_TOKEN` items below. §4–8 (verification,
 > parallel run, cutover, rollback, first-week checks) are largely
-> host-agnostic and should still apply.
+> host-agnostic and should still apply. For what is actually still open
+> before go-live, read [`pm/PROJECT_STATE.md`](pm/PROJECT_STATE.md) — this
+> checklist is not maintained as the live list.
 
 One-time cutover plan for putting the MIS into production on the plant
 server and retiring the Excel-based daily reporting. Work through it top
