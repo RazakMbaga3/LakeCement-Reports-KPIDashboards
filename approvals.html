@@ -30,7 +30,7 @@
     .apv-btn-reject:hover { background: var(--st-bad-bg); }
     .apv-btn:disabled { opacity: .5; cursor: not-allowed; }
 
-    .apv-empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .apv-empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
   
   /* Figures column + the expandable panel behind it. An approver can now see
      the numbers on the row they are signing off, instead of only a remark. */
@@ -126,6 +126,16 @@
     if (isError === null) {
       wrap.hidden = false; panel.hidden = true; panel.innerHTML = '';
       return;
+    }
+    /* The panel *replaces* the table, so the table's rows have to go with it.
+       Hiding the wrapper alone left the last render in the tbody — after the
+       final pending report was approved, its row stayed in the DOM behind the
+       empty-state panel (RAID I-12). A single placeholder row keeps the table
+       well-formed and carries the same message as the panel. */
+    var tbody = document.querySelector('#apv-table tbody');
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="8" class="apv-empty">' +
+        escHtml(title) + '</td></tr>';
     }
     wrap.hidden = true;
     panel.hidden = false;
