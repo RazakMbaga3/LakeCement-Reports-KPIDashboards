@@ -199,39 +199,58 @@ router.post('/logout', requireAuth, async (req, res, next) => {
    staff use the MIS" is exactly the list a phisher wants, and the endpoint
    is public. The audit log records the difference; the response does not.
 
+   "Identically" has to cover how long the answer takes as well as what it
+   says, which is why the reply goes out before the token and the email.
+
    Rate limiting is applied at the app level (credentialRateLimit in
    server.js) alongside login and change-password. */
 const forgotSchema = z.object({
   email: z.string().trim().toLowerCase().email('Enter a valid email address').max(120),
 });
 
+const SAME_ANSWER = {
+  message: 'If that address belongs to an MIS account, a reset link is on its way. Check your inbox, including junk mail.',
+};
+
 router.post('/forgot-password', validate(forgotSchema), async (req, res, next) => {
+  const { email } = req.validated.body;
+
+  let user;
   try {
-    const { email } = req.validated.body;
-    const SAME_ANSWER = {
-      message: 'If that address belongs to an MIS account, a reset link is on its way. Check your inbox, including junk mail.',
-    };
-
-    const { rows: [user] } = await db.query(
+    ({ rows: [user] } = await db.query(
       `SELECT id, username, full_name, email, active FROM users
-        WHERE LOWER(email) = $1 AND active = true`, [email]);
+        WHERE LOWER(email) = $1 AND active = true`, [email]));
+  } catch (err) { return next(err); }
 
+  /* Answered here, before any work that only a real account causes. Equal
+     status codes and equal bodies were half the fix: issuing the token and,
+     far more expensively, the SMTP round trip are work an unknown address
+     skips entirely. Measured from the app server, the handshake to
+     smtp.office365.com costs ~1.9s before AUTH is even attempted, against
+     ~20ms for the unknown branch — with the send inside the response, that
+     gap is the same enumeration oracle, read off a stopwatch instead of a
+     status code. Both branches now reply after the same single lookup, and
+     what is left to measure is a hit versus a miss on that one SELECT:
+     ~0.04ms, inside ~1ms of ordinary query noise. */
+  res.json(SAME_ANSWER);
+
+  /* The reply has already gone, so next(err) would be writing to a finished
+     response. From here the audit row and the server log are the only
+     places anything can be reported. */
+  try {
     if (!user) {
       // Logged so a burst of these is visible, without telling the caller.
       await audit(null, email, 'PASSWORD_RESET_REQUESTED_UNKNOWN', req.ip);
-      return res.json(SAME_ANSWER);
+      return;
     }
 
     const token = await authTokens.issue({ userId: user.id, email: user.email, purpose: 'reset' });
     const mail  = await authMail.sendReset({ to: user.email, fullName: user.full_name, token });
     await audit(user.id, user.username, mail.sent ? 'PASSWORD_RESET_SENT' : 'PASSWORD_RESET_SEND_FAILED', req.ip);
-
-    /* A send failure is logged and surfaced in the server log, but the
-       caller still gets SAME_ANSWER — "we could not send to that address"
-       would confirm the address exists just as loudly as "sent". */
     if (!mail.sent) req.log?.error({ reason: mail.reason, username: user.username }, 'password reset email not sent');
-    res.json(SAME_ANSWER);
-  } catch (err) { next(err); }
+  } catch (err) {
+    req.log?.error({ err, username: user && user.username }, 'password reset could not be issued');
+  }
 });
 
 // ── GET /api/auth/token/:purpose/:token ──────────────────────

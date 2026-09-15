@@ -17,6 +17,16 @@ function makeTransport() {
       auth: process.env.SMTP_USER
         ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
         : undefined,
+      /* Nodemailer's own defaults are two minutes to connect and ten of
+         socket silence — sized for a batch job, not for a request handler.
+         A blocked outbound port (common on a fresh host) would otherwise
+         hold a forgot-password request, or routes/admin.js's invite and the
+         Postgres transaction it keeps open across the send, for the full
+         two minutes. Fail in seconds instead and let the caller's
+         { sent: false } handling run. */
+      connectionTimeout: 10 * 1000,
+      greetingTimeout:   10 * 1000,
+      socketTimeout:     30 * 1000,
     }) };
   }
   if (process.env.DIGEST_TRANSPORT === 'json') {
