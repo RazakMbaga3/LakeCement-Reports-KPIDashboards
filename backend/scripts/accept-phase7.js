@@ -18,7 +18,7 @@
   Usage: npm run accept:phase7
 */
 
-require('dotenv').config();
+require('../config/env');
 const { spawn, spawnSync } = require('child_process');
 const path = require('path');
 const fs   = require('fs');

@@ -10,7 +10,7 @@
   Requires ODOO_DISPATCH_URL + ODOO_DISPATCH_API_KEY in .env — see
   services/odooDispatchClient.js.
 */
-require('dotenv').config();
+require('../config/env');
 const { pullDispatchDailySummary } = require('../services/odooDispatchSync');
 
 const [, , from, to] = process.argv;

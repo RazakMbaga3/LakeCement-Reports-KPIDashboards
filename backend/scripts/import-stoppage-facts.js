@@ -60,7 +60,7 @@
   importer proves its own numbers rather than asking to be trusted.
 */
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env'), quiet: true });
+require('../config/env');
 const fs   = require('fs');
 const XLSX = require('xlsx');
 const db   = require('../db');

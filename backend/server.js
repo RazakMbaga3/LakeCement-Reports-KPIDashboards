@@ -13,7 +13,7 @@
     Request → CORS check → JSON parse → Route match → Response
 */
 
-require('dotenv').config();
+require('./config/env');
 const express       = require('express');
 const cors          = require('cors');
 const helmet        = require('helmet');

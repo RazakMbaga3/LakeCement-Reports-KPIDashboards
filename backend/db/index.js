@@ -7,7 +7,7 @@
 */
 
 const { Pool, types } = require('pg');
-require('dotenv').config();
+require('../config/env');
 
 // Return SQL DATE columns as plain 'YYYY-MM-DD' strings instead of JS Date
 // objects. Without this, a record_date of 2026-07-05 serializes as

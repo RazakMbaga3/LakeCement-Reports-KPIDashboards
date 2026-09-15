@@ -13,7 +13,7 @@
 
   Usage: node scripts/export-seed-migration.js [outfile.json]
 */
-require('dotenv').config();
+require('../config/env');
 const fs = require('fs');
 const db = require('../db');
 

@@ -13,7 +13,7 @@
   Usage:
     node scripts/import-stoppage.js --file <path-to-stoppage-data.json> [--base-url http://localhost:5000/api]
 */
-require('dotenv').config();
+require('../config/env');
 const fs   = require('fs');
 const path = require('path');
 

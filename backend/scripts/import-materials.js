@@ -16,7 +16,7 @@
   Usage:
     node scripts/import-materials.js --file <path-to-materials-data.json> [--base-url http://localhost:5000/api]
 */
-require('dotenv').config();
+require('../config/env');
 const fs   = require('fs');
 const path = require('path');
 

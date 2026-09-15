@@ -31,7 +31,7 @@
   only, and any error text is scrubbed through redact() below before output.
 */
 
-require('dotenv').config();
+require('../config/env');
 const odoo = require('../services/odooClient');
 const { checkOdoo } = require('../services/health');
 

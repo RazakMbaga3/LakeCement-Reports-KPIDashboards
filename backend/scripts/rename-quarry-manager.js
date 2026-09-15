@@ -11,7 +11,7 @@
 
   Usage: node scripts/rename-quarry-manager.js
 */
-require('dotenv').config();
+require('../config/env');
 const db = require('../db');
 
 async function main() {

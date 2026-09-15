@@ -7,7 +7,7 @@
   Output: one line starting with WATCHDOG_RESULT followed by JSON.
 */
 
-require('dotenv').config();
+require('../config/env');
 const { runWatchdog } = require('../services/watchdog');
 
 (async () => {

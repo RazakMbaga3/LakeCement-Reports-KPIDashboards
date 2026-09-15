@@ -15,7 +15,7 @@
   add a new row and mark the old one inactive instead.
 */
 
-require('dotenv').config();
+require('../config/env');
 const db = require('./index');
 
 const TERRITORIES = [

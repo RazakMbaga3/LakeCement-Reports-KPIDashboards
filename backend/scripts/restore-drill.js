@@ -13,7 +13,7 @@
   Output ends with one line: RESTORE_DRILL_RESULT {json}
 */
 
-require('dotenv').config();
+require('../config/env');
 const { runRestoreDrill } = require('../services/restoreDrill');
 
 (async () => {

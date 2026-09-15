@@ -15,7 +15,7 @@
 
   Usage: node scripts/create-import-service-accounts.js
 */
-require('dotenv').config();
+require('../config/env');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const db = require('../db');

@@ -4,7 +4,7 @@
   ODOO_SYNC_RESULT followed by JSON.
 */
 
-require('dotenv').config();
+require('../config/env');
 const { runOdooSync } = require('../services/odooSync');
 
 (async () => {

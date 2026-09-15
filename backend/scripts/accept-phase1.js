@@ -18,7 +18,7 @@
   Exits 0 only if every check passes.   Usage: npm run accept:phase1
 */
 
-require('dotenv').config();
+require('../config/env');
 const { spawn } = require('child_process');
 const path      = require('path');
 const bcrypt    = require('bcryptjs');

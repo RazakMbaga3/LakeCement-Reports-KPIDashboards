@@ -13,10 +13,10 @@
 */
 const fs   = require('fs');
 const path = require('path');
-/* Resolve .env from backend/ regardless of the cwd this is invoked from — the
-   snapshot is just as likely to be regenerated from the repo root as from
-   backend/ during a rename. */
-require('dotenv').config({ path: path.join(__dirname, '..', '.env'), quiet: true });
+/* config/env.js resolves backend/.env regardless of the cwd this is invoked
+   from — the snapshot is just as likely to be regenerated from the repo root
+   as from backend/ during a rename. */
+require('../config/env');
 const db   = require('../db');
 
 const OUT = path.join(__dirname, '..', 'test', 'fixtures', 'kpi-monthly-keys.json');

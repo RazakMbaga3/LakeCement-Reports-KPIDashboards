@@ -8,7 +8,7 @@
   Usage: node scripts/restore.js <dumpfile> <new_database_name>
 */
 
-require('dotenv').config();
+require('../config/env');
 const { Client } = require('pg');
 const { spawn }  = require('child_process');
 const { findPgTool } = require('../services/backup');

@@ -19,7 +19,7 @@
     python scripts/extract-production.py         # writes scripts/_production_YYYY-MM.json
     node scripts/import-production.js [--base-url http://localhost:5000/api]
 */
-require('dotenv').config();
+require('../config/env');
 const fs   = require('fs');
 const path = require('path');
 

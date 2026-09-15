@@ -14,7 +14,7 @@
   hashes — never comparing plain text.
 */
 
-require('dotenv').config();
+require('../config/env');
 const bcrypt = require('bcryptjs');
 const db     = require('./index');
 

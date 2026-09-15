@@ -11,7 +11,7 @@
 
   Usage: node --test test/auth-tokens.test.js   (from backend/)
 */
-require('dotenv').config();
+require('../config/env');
 const test   = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('crypto');

@@ -26,7 +26,7 @@
     node scripts/provision-hod-accounts.js              # dry run, prints the diff
     node scripts/provision-hod-accounts.js --apply      # writes
 */
-require('dotenv').config();
+require('../config/env');
 const db = require('../db');
 
 /* Roster confirmed 2026-09-03. `username` is the existing account the

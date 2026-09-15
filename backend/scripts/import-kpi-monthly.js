@@ -35,7 +35,7 @@
 
   Usage: node scripts/import-kpi-monthly.js
 */
-require('dotenv').config();
+require('../config/env');
 const fs   = require('fs');
 const path = require('path');
 const db   = require('../db');

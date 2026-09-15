@@ -17,7 +17,7 @@
   Usage: npm run accept:phase3
 */
 
-require('dotenv').config();
+require('../config/env');
 const { spawn } = require('child_process');
 const path      = require('path');
 const fs        = require('fs');

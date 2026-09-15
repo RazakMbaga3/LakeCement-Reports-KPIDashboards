@@ -21,7 +21,7 @@
   Requires ODOO_MINING_URL + ODOO_MINING_API_KEY (or the ODOO_DASHBOARD_*
   pair it falls back to) — see services/odooMiningClient.js.
 */
-require('dotenv').config();
+require('../config/env');
 const { pullMiningTickets } = require('../services/odooMiningSync');
 
 const args = process.argv.slice(2);

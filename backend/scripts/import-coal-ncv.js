@@ -20,7 +20,7 @@
 
   Usage: node scripts/import-coal-ncv.js [--base-url http://localhost:5000/api]
 */
-require('dotenv').config();
+require('../config/env');
 const path = require('path');
 const ExcelJS = require('exceljs');
 

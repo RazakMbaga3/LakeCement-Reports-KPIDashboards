@@ -24,7 +24,7 @@
   Cleans up after itself. Exits 0 only if all checks pass.
   Usage: node scripts/accept-sales.js
 */
-require('dotenv').config();
+require('../config/env');
 const { spawn } = require('child_process');
 const path       = require('path');
 const bcrypt     = require('bcryptjs');

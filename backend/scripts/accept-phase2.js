@@ -19,7 +19,7 @@
   checks pass.   Usage: npm run accept:phase2
 */
 
-require('dotenv').config();
+require('../config/env');
 const { spawn } = require('child_process');
 const path      = require('path');
 const bcrypt    = require('bcryptjs');

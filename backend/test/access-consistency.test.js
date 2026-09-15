@@ -73,7 +73,13 @@ function extractBalancedObject(source, marker) {
 
 function extractObjectLiteral(source, marker) {
   const text = extractBalancedObject(source, marker);
-  // eslint-disable-next-line no-new-func
+  /* new Function rather than JSON.parse: what comes out of auth.js is a
+     JavaScript object literal — unquoted keys, single quotes, trailing
+     commas — which JSON.parse rejects. The input is a first-party file read
+     off disk by a test, never anything a user supplies. (A
+     `no-new-func` disable used to sit here; eslint.config.js enables only
+     js.configs.recommended, which doesn't carry that rule, so the directive
+     was itself reported as unused — RAID R-5.) */
   return new Function('return (' + text + ')')();
 }
 

@@ -13,7 +13,7 @@
   Usage: npm run migrate
 */
 
-require('dotenv').config();
+require('../config/env');
 const fs   = require('fs');
 const path = require('path');
 const db   = require('./index');

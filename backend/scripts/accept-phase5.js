@@ -14,7 +14,7 @@
   Usage: npm run accept:phase5
 */
 
-require('dotenv').config();
+require('../config/env');
 const { spawn } = require('child_process');
 const path      = require('path');
 const bcrypt    = require('bcryptjs');

@@ -3,7 +3,7 @@
   Usage: npm run backup          (writes to BACKUP_DIR from .env)
 */
 
-require('dotenv').config();
+require('../config/env');
 const { runBackup } = require('../services/backup');
 
 runBackup()

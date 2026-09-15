@@ -24,7 +24,7 @@
   Reads: backend/scripts/_rawmat_2026-04.json / _05.json / _06.json
          (written by extract-raw-materials.py)
 */
-require('dotenv').config();
+require('../config/env');
 const fs   = require('fs');
 const path = require('path');
 
@@ -64,7 +64,7 @@ async function main() {
   const token = loginRes.body.token;
   console.log(`Logged in as ${PROD_USER} (role ${loginRes.body.user.role}, id ${loginRes.body.user.id})`);
 
-  let written = 0, skipped = 0, failed = 0, collisions = 0;
+  let written = 0, failed = 0, collisions = 0;
   const failedDates = [];
 
   for (const file of JSON_FILES) {
@@ -96,7 +96,7 @@ async function main() {
           collision = true;
         }
       }
-      if (collision) { collisions++; skipped++; continue; }
+      if (collision) { collisions++; continue; }
 
       const merged = { ...existing, ...newFields };
 
