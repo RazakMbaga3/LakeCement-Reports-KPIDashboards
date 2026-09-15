@@ -49,6 +49,7 @@
     <div class="leg"><div class="ld ld-f"></div>Formula</div>
   </div>
   <div class="btn-grp">
+    <a class="btn btn-out" href="../dispatch.html"><i data-lucide="bar-chart-2" class="btn-icon"></i> View report</a>
     <button class="btn btn-out"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
     <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
     <button class="btn btn-sub"><i data-lucide="check-circle" class="btn-icon"></i> Submit Report</button>
@@ -59,57 +60,23 @@
 <main class="fm-main">
 
 
-  <!-- ══ KPI SUMMARY STRIP ════════════════════════════════════════ -->
-  <div class="kpi-strip">
-    <div class="kt kt-f watch">
-      <span class="kt-badge">Formula</span>
-      <div class="kt-lbl">Total Dispatch — On Date</div>
-      <div class="kt-val" data-kpi="dispatch_total">376.5</div>
-      <div class="kt-unit">MT / Today</div>
-      <div class="kt-vs vs-wa" id="dispatch-pace-vs">—</div>
-    </div>
-    <div class="kt kt-f watch">
-      <span class="kt-badge">Formula</span>
-      <div class="kt-lbl">MTD Dispatch</div>
-      <div class="kt-val" data-roll-mtd="dispatch_reg_425r,dispatch_reg_425nbm,dispatch_reg_425n,dispatch_reg_325n,dispatch_reg_opc425n,dispatch_blk_425r,dispatch_blk_425nbm,dispatch_blk_425n,dispatch_blk_325n,dispatch_blk_opc425n,dispatch_bag_425r,dispatch_bag_425nbm,dispatch_bag_425n,dispatch_clinker">—</div>
-      <div class="kt-unit">MT / Month to Date</div>
-      <div class="kt-bar"><div class="kt-bar-fill" id="dispatch-mtd-bar" style="width:0%"></div></div>
-      <div class="kt-foot"><span class="kt-tgt" id="dispatch-mtd-target-lbl">Target: — MT</span><span class="kt-pct" id="dispatch-mtd-pct-lbl">—</span></div>
-      <div class="kt-vs vs-wa" id="dispatch-mtd-vs">Set this month's target below to see pace</div>
-    </div>
-    <div class="kt kt-f watch">
-      <span class="kt-badge">Formula</span>
-      <div class="kt-lbl">MTD Target Achievement</div>
-      <div class="kt-val" data-kpi="dispatch_mtd_pct">—</div>
-      <div class="kt-unit">% vs Monthly Plan</div>
-      <div class="kt-bar"><div class="kt-bar-fill" id="dispatch-achv-bar" style="width:0%"></div></div>
-      <div class="kt-foot"><span class="kt-tgt">Threshold: ≥ 90%</span><span class="kt-pct" id="dispatch-achv-pct-lbl">—</span></div>
-      <div class="kt-vs vs-wa" id="dispatch-achv-vs">—</div>
-    </div>
-    <div class="kt kt-m">
-      <span class="kt-badge">Manual</span>
-      <div class="kt-lbl">SO Pendency</div>
-      <div class="kt-val" data-kpi="so_pendency">1,560</div>
-      <div class="kt-unit">MT — Open Sales Orders</div>
-      <div class="kt-vs vs-wa">▲ Pending fulfilment — 4.1 days at today's rate</div>
-    </div>
-    <div class="kt kt-m on-track">
-      <span class="kt-badge">Manual</span>
-      <div class="kt-lbl">Bags Packed Today</div>
-      <div class="kt-val" data-kpi="bags_packed">7,530</div>
-      <div class="kt-unit">Bags / On Date</div>
-      <div class="kt-bar"><div class="kt-bar-fill" style="width:100%"></div></div>
-      <div class="kt-foot"><span class="kt-tgt">Target: ≥ 7,000 / day</span><span class="kt-pct">107.6%</span></div>
-      <div class="kt-vs vs-ok">▲ Packing lines operational</div>
-    </div>
-    <div class="kt kt-m concern">
-      <span class="kt-badge">Manual</span>
-      <div class="kt-lbl">Burst Bag Rate</div>
-      <div class="kt-val" data-kpi="burst_rate">0.47%</div>
-      <div class="kt-unit">% of Bags Packed</div>
-      <div class="kt-bar"><div class="kt-bar-fill" style="width:100%"></div></div>
-      <div class="kt-foot"><span class="kt-tgt">Target: ≤ 0.30%</span><span class="kt-pct">156.7%</span></div>
-      <div class="kt-vs vs-ng">▲ Above 0.30% target — investigate packer</div>
+  <!-- ══ WHERE THE REVIEW LIVES ═══════════════════════════════════
+       This page used to open with a six-tile KPI strip. That strip was
+       review, not entry: it answered "how did we do", which is a question
+       for the people reading the report rather than the officer filing it,
+       and it computed those answers from whatever was currently typed into
+       the cells below — including, on a day nobody had filed yet, the
+       figures baked into this page's own markup. The review now has a page
+       of its own (dispatch.html), reading submitted reports from Postgres.
+       What is left here is the job this screen is actually for: getting
+       today's numbers in, quickly and correctly.
+  ════════════════════════════════════════════════════════════════ -->
+  <div class="fm-crosslink">
+    <i data-lucide="bar-chart-2"></i>
+    <div>
+      <strong>Entering today's dispatch figures.</strong>
+      Totals, month-to-date performance against plan and the historical view are on the
+      <a href="../dispatch.html">Dispatch &amp; Sales Orders report</a>, which reads submitted reports.
     </div>
   </div>
 
@@ -124,7 +91,7 @@
     <div class="rcard-hdr">
       <div>
         <div class="rcard-title"><i data-lucide="truck" class="title-icon"></i> Cement Dispatch — by Channel &amp; Grade</div>
-        <div class="rcard-sub">Regular Bags, Bulker &amp; Big Bags, each by grade · Date: 21-Apr-2026</div>
+        <div class="rcard-sub">Regular Bags, Bulker &amp; Big Bags, each by grade</div>
       </div>
       <div class="rcard-chips">
         <span class="rcard-chip">21-Apr-2026</span>
@@ -141,7 +108,6 @@
             <th class="grp-hdr" colspan="3">Big Bags</th>
             <th class="grp-hdr" rowspan="2">Clinker<br><small style="font-size:12px;font-weight:400;color:var(--on-navy)">(MT)</small></th>
             <th class="grp-hdr" rowspan="2">Total</th>
-            <th class="grp-hdr" rowspan="2">Avg Daily<br>Dispatch</th>
           </tr>
           <tr>
             <th>42.5 R</th><th>42.5 N B-M</th><th>42.5 N</th><th>32.5 N</th><th>OPC 42.5 N</th>
@@ -150,72 +116,32 @@
           </tr>
         </thead>
         <tbody>
-          <tr class="srow"><td colspan="17">Sales Dispatch — one row per period, one column per channel and grade</td></tr>
+          <tr class="srow"><td colspan="15">Cement dispatched today — one column per channel and grade</td></tr>
 
           <tr>
             <td class="tp">Sales On Date</td>
-            <td class="cm"><input class="ci" type="number" value="346.5" data-field="dispatch_reg_425r" /></td>
-            <td class="cm"><input class="ci" type="number" value="30" data-field="dispatch_reg_425nbm" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_reg_425n" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_reg_325n" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_reg_opc425n" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_425r" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_425nbm" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_425n" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_325n" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_blk_opc425n" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_bag_425r" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_bag_425nbm" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_bag_425n" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="dispatch_clinker" /></td>
-            <td class="cf"><div class="cv" data-kpi="dispatch_total_col">376.5</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-          </tr>
-
-          <tr class="prow prow-first">
-            <td class="tp">MTD Sales</td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_425r">—</div></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_425nbm">—</div></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_425n">—</div></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_325n">—</div></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_opc425n">—</div></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_425r">—</div></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_425nbm">—</div></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_425n">—</div></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_325n">—</div></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_blk_opc425n">—</div></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_bag_425r">—</div></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_bag_425nbm">—</div></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_bag_425n">—</div></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_clinker">—</div></td>
-            <td class="cf"><div class="cv" data-roll-mtd="dispatch_reg_425r,dispatch_reg_425nbm,dispatch_reg_425n,dispatch_reg_325n,dispatch_reg_opc425n,dispatch_blk_425r,dispatch_blk_425nbm,dispatch_blk_425n,dispatch_blk_325n,dispatch_blk_opc425n,dispatch_bag_425r,dispatch_bag_425nbm,dispatch_bag_425n,dispatch_clinker">—</div></td>
-            <td class="cf"><div class="cv">415.1</div></td>
-          </tr>
-
-          <tr class="prow">
-            <td class="tp">YTD Sales</td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_425r">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_425nbm">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_425n">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_325n">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_opc425n">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_blk_425r">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_blk_425nbm">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_blk_425n">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_blk_325n">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_blk_opc425n">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_bag_425r">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_bag_425nbm">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_bag_425n">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_clinker">—</div></td>
-            <td class="cf"><div class="cv" data-roll-ytd="dispatch_reg_425r,dispatch_reg_425nbm,dispatch_reg_425n,dispatch_reg_325n,dispatch_reg_opc425n,dispatch_blk_425r,dispatch_blk_425nbm,dispatch_blk_425n,dispatch_blk_325n,dispatch_blk_opc425n,dispatch_bag_425r,dispatch_bag_425nbm,dispatch_bag_425n,dispatch_clinker">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" data-field="dispatch_reg_425r" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="dispatch_reg_425nbm" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="dispatch_reg_425n" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="dispatch_reg_325n" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="dispatch_reg_opc425n" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="dispatch_blk_425r" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="dispatch_blk_425nbm" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="dispatch_blk_425n" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="dispatch_blk_325n" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="dispatch_blk_opc425n" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="dispatch_bag_425r" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="dispatch_bag_425nbm" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="dispatch_bag_425n" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="dispatch_clinker" /></td>
+            <td class="cf"><div class="cv" data-kpi="dispatch_total_col">—</div></td>
           </tr>
         </tbody>
       </table>
     </div>
     <div class="rcard-sub" style="padding:8px 20px 4px;font-style:italic">
-      MTD and YTD are rows, not columns — the same shape as the plant’s own spreadsheet. Both accumulate live from every day’s entries for that channel and grade; only the top row is typed.
+      Enter today’s tonnage only. Month-to-date and fiscal-year-to-date totals accumulate from submitted
+      reports and are shown on the <a href="../dispatch.html">Dispatch &amp; Sales Orders report</a>.
     </div>
   </div>
 
@@ -227,8 +153,8 @@
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="list-checks" class="title-icon"></i> Sales Orders, Pendency &amp; Monthly Target</div>
-        <div class="rcard-sub">Open sales orders and monthly dispatch plan · Date: 21-Apr-2026</div>
+        <div class="rcard-title"><i data-lucide="list-checks" class="title-icon"></i> Sales Orders, Pendency &amp; Monthly Plan</div>
+        <div class="rcard-sub">Orders still open at the close of today, and the month’s dispatch plan</div>
       </div>
       <div class="rcard-chips">
         <span class="rcard-chip orange">SALES &amp; PACKING</span>
@@ -244,41 +170,42 @@
             <th class="grp-hdr" rowspan="2">Big Bags</th>
             <th class="grp-hdr" rowspan="2">Clinker<br><small style="font-size:12px;font-weight:400;color:var(--on-navy)">(MT)</small></th>
             <th class="grp-hdr" rowspan="2">Total</th>
-            <th class="grp-hdr" rowspan="2">Avg Daily<br>Dispatch</th>
           </tr>
           <tr>
             <th>42.5 R</th><th>42.5 N B-M</th><th>42.5 N</th><th>32.5 N</th><th>OPC 42.5 N</th>
           </tr>
         </thead>
         <tbody>
-          <tr class="srow"><td colspan="11">Sales Orders &amp; Pendency</td></tr>
+          <tr class="srow"><td colspan="10">Open sales orders — the balance standing at the close of today</td></tr>
 
           <tr>
             <td class="tp">SO Pendency</td>
-            <td class="cm"><input class="ci" type="number" value="1240" data-field="so_425r" /></td>
-            <td class="cm"><input class="ci" type="number" value="315" data-field="so_425nbm" /></td>
-            <td class="cm"><input class="ci" type="number" value="320" data-field="so_425n" /></td>
-            <td class="cm"><input class="ci" type="number" value="154" data-field="so_325n" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="so_opc425n" /></td>
-            <td class="cm"><input class="ci" type="number" value="30" data-field="so_bulker" /></td>
-            <td class="cm"><input class="ci" type="number" value="60" data-field="so_bigbag" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="so_clinker" /></td>
-            <td class="cf"><div class="cv" data-kpi="so_total_col">1,879</div></td>
-            <td class="cs"><div class="cv">—</div></td>
+            <td class="cm"><input class="ci" type="number" data-field="so_425r" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="so_425nbm" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="so_425n" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="so_325n" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="so_opc425n" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="so_bulker" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="so_bigbag" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="so_clinker" /></td>
+            <td class="cf"><div class="cv" data-kpi="so_total_col">—</div></td>
           </tr>
 
+          <!-- The month's plan. This row used to carry seven more inputs, one
+               per grade, none of which had a data-field — so they looked like
+               data entry, accepted typing, and were silently discarded on
+               submit. Only the monthly total was ever stored. That one field
+               is now the whole row, and it declares itself as a standing
+               default so re-opening the form on a fresh day does not wipe the
+               plan. It is a registry fact (dispatch_mtd_target) as of
+               2026-09-15, which is what lets the review page say where every
+               MTD-achievement percentage got its denominator. -->
           <tr class="trow">
-            <td class="tp">Target (Month)</td>
-            <td class="cm"><input class="ci" type="number" value="9000" /></td>
-            <td class="cm"><input class="ci" type="number" value="900" /></td>
-            <td class="cm"><input class="ci" type="number" value="1200" /></td>
-            <td class="cm"><input class="ci" type="number" value="300" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="10200" data-field="dispatch_mtd_target" /></td>
-            <td class="cf"><div class="cv">510.0</div></td>
+            <td class="tp">Dispatch plan (month)</td>
+            <td class="cs" colspan="8"><div class="cv" style="text-align:left;padding-left:10px;font-weight:500">
+              Entered once a month, in MT. Every month-to-date achievement figure is measured against it.
+            </div></td>
+            <td class="cm"><input class="ci" type="number" data-field="dispatch_mtd_target" data-default="10200" /></td>
           </tr>
         </tbody>
       </table>
@@ -306,37 +233,32 @@
             <th class="grp-hdr">Loaded After 12 PM</th>
             <th class="grp-hdr">Inside Plant for Loading</th>
             <th class="grp-hdr">Outside Plant Waiting</th>
-            <th class="grp-hdr">Remarks</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td class="tp">Regular Trucks (Bags)</td>
-            <td class="cm"><input class="ci" type="number" value="5" data-field="veh_reg_loaded_after12" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="veh_reg_inside_waiting" /></td>
-            <td class="cm"><input class="ci" type="number" value="1" data-field="veh_reg_outside_waiting" /></td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:10px" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="veh_reg_loaded_after12" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="veh_reg_inside_waiting" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="veh_reg_outside_waiting" /></td>
           </tr>
           <tr>
             <td class="tp">Bulker Trucks</td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="veh_bulker_loaded_after12" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="veh_bulker_inside_waiting" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="veh_bulker_outside_waiting" /></td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:10px" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="veh_bulker_loaded_after12" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="veh_bulker_inside_waiting" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="veh_bulker_outside_waiting" /></td>
           </tr>
           <tr>
             <td class="tp">Big Bag Trucks</td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="veh_bigbag_loaded_after12" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="veh_bigbag_inside_waiting" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" data-field="veh_bigbag_outside_waiting" /></td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:10px" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="veh_bigbag_loaded_after12" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="veh_bigbag_inside_waiting" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="veh_bigbag_outside_waiting" /></td>
           </tr>
           <tr class="trow">
             <td class="tp">TOTAL</td>
-            <td class="cf"><div class="cv" data-kpi="veh_loaded_total">5</div></td>
-            <td class="cf"><div class="cv" data-kpi="veh_inside_total">0</div></td>
-            <td class="cf"><div class="cv" data-kpi="veh_outside_total">1</div></td>
-            <td class="cs"><div class="cv" style="text-align:left;padding-left:10px">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="veh_loaded_total">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="veh_inside_total">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="veh_outside_total">—</div></td>
           </tr>
         </tbody>
       </table>
@@ -345,60 +267,60 @@
 
   <!-- ════════════════════════════════════════════════
        SECTION 3 — PACKING PLANT PERFORMANCE
+
+       The column headers here used to read "Packing Line 1" and "Packing
+       Line 2", which is not what the fields hold. bags_pl1 sits on the
+       42.5 R row and bags_pl2 on the 42.5 N / B-M row — both in the SAME
+       column — so the "_pl1"/"_pl2" suffixes have always meant GRADE, not
+       line, and the real Packing Line 2 column had no data-field at all:
+       it accepted typing and discarded it on submit. The field names are
+       left alone (renaming them would orphan every stored row) but the
+       table now says what they actually are, and the column that never
+       saved has been removed rather than left as a trap. Per-line output
+       would need its own fields and a migration — worth doing, not
+       silently faked here.
   ════════════════════════════════════════════════ -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
         <div class="rcard-title"><i data-lucide="package" class="title-icon"></i> Packing Plant Performance</div>
-        <div class="rcard-sub">Bag production &amp; quality at packing lines</div>
+        <div class="rcard-sub">Bags packed and burst rate, by grade</div>
       </div>
       <div class="rcard-chips">
         <span class="rcard-chip orange">PACKING DEPT</span>
       </div>
     </div>
     <div class="tbl-scroll">
-      <table class="rt" style="min-width:900px">
+      <table class="rt" style="min-width:700px">
         <thead>
           <tr>
-            <th class="tl grp-hdr" style="min-width:180px">Parameter</th>
-            <th class="grp-hdr">Packing Line 1</th>
-            <th class="grp-hdr">Packing Line 2</th>
-            <th class="grp-hdr">Total On Date</th>
-            <th class="grp-hdr">MTD</th>
+            <th class="tl grp-hdr" style="min-width:180px">Grade</th>
+            <th class="grp-hdr">Bags Packed</th>
             <th class="grp-hdr">Target / Day</th>
             <th class="grp-hdr">Burst Bag %</th>
-            <th class="grp-hdr">Remarks</th>
+            <th class="tl grp-hdr" style="min-width:200px">Remarks</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td class="tp">42.5 R Bags Packed</td>
-            <td class="cm"><input class="ci" type="number" value="6930" data-field="bags_pl1" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">6,930</div></td>
-            <td class="cf"><div class="cv" data-roll-mtd="bags_pl1">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="7000" /></td>
-            <td class="cm"><input class="ci" type="number" value="0.50" data-field="burst_rate_pl1" /></td>
-            <td class="cm"><input class="ci" type="text" value="Line 2 idle – CM2 feeding" style="text-align:left;padding-left:10px" /></td>
+            <td class="tp">42.5 R</td>
+            <td class="cm"><input class="ci" type="number" data-field="bags_pl1" /></td>
+            <td class="cm"><input class="ci" type="number" data-default="7000" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="burst_rate_pl1" /></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:10px" /></td>
           </tr>
           <tr>
-            <td class="tp">42.5 N / B-M Bags</td>
-            <td class="cm"><input class="ci" type="number" value="600" data-field="bags_pl2" /></td>
-            <td class="cm"><input class="ci" type="number" value="0" /></td>
-            <td class="cf"><div class="cv">600</div></td>
-            <td class="cf"><div class="cv" data-roll-mtd="bags_pl2">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="600" /></td>
-            <td class="cm"><input class="ci" type="number" value="0.33" data-field="burst_rate_pl2" /></td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:10px" /></td>
+            <td class="tp">42.5 N / B-M</td>
+            <td class="cm"><input class="ci" type="number" data-field="bags_pl2" /></td>
+            <td class="cm"><input class="ci" type="number" data-default="600" /></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="burst_rate_pl2" /></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:10px" /></td>
           </tr>
           <tr class="trow">
             <td class="tp">TOTAL BAGS</td>
-            <td class="cf"><div class="cv">7,530</div></td>
-            <td class="cf"><div class="cv">0</div></td>
-            <td class="cf"><div class="cv">7,530</div></td>
-            <td class="cf"><div class="cv" data-roll-mtd="bags_pl1,bags_pl2">—</div></td>
-            <td class="cf"><div class="cv">7,600</div></td>
-            <td class="cf"><div class="cv">0.47%</div></td>
+            <td class="cf"><div class="cv" data-kpi="bags_packed_col">—</div></td>
+            <td class="cf"><div class="cv">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="burst_rate_col">—</div></td>
             <td class="cs"><div class="cv" style="text-align:left;padding-left:10px">—</div></td>
           </tr>
         </tbody>
@@ -407,133 +329,33 @@
   </div>
 
   <!-- ════════════════════════════════════════════════
-       SECTION 4 — STOPPAGE LOG (PACKING)
+       SECTION 4 — STOPPAGES
+
+       This was a five-row stoppage log: section, equipment, start, end,
+       duration, category and cause — thirty inputs, not one of which
+       carried a data-field. An officer could fill the whole table, press
+       Submit, and every word of it was dropped on the floor. The data was
+       not lost to the business, because stoppages have their own report
+       that P&amp;M owns and that the availability / MTBF / Pareto analysis is
+       actually built from — but this table looked exactly like somewhere
+       to record them, which made it worse than not being here at all.
+       Replaced with a pointer to where the data really goes.
   ════════════════════════════════════════════════ -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="alert-triangle" class="title-icon"></i> Packing / Dispatch Stoppage Log</div>
-        <div class="rcard-sub">Equipment / process stoppages affecting dispatch — 21-Apr-2026</div>
-      </div>
-      <div class="rcard-chips">
-        <span class="rcard-chip orange">PACKING · E&amp;I</span>
+        <div class="rcard-title"><i data-lucide="alert-triangle" class="title-icon"></i> Stoppages affecting dispatch</div>
+        <div class="rcard-sub">Recorded on the Sectional Stoppage Report, not on this one</div>
       </div>
     </div>
-    <div class="tbl-scroll">
-      <table class="rt" style="min-width:1100px">
-        <thead>
-          <tr>
-            <th class="tl grp-hdr" style="min-width:30px">SN</th>
-            <th class="tl grp-hdr" style="min-width:140px">Section</th>
-            <th class="tl grp-hdr" style="min-width:200px">Equipment / Description</th>
-            <th class="grp-hdr">Start Time</th>
-            <th class="grp-hdr">End Time</th>
-            <th class="grp-hdr">Duration<br>(min)</th>
-            <th class="grp-hdr">Category</th>
-            <th class="tl grp-hdr" style="min-width:180px">Cause / Action Taken</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="ts">1</td>
-            <td class="tp">Packing Line 2</td>
-            <td class="cm"><input class="ci" type="text" value="Rotary packer #2 jam" style="text-align:left;padding-left:8px" /></td>
-            <td class="cm"><input class="ci" type="time" value="07:15" /></td>
-            <td class="cm"><input class="ci" type="time" value="08:40" /></td>
-            <td class="cf"><div class="cv">85</div></td>
-            <td class="cm">
-              <select class="ci" style="min-width:90px;text-align:left">
-                <option>Mechanical</option>
-                <option>E&amp;I</option>
-                <option>Production</option>
-                <option>Power</option>
-                <option>Other</option>
-              </select>
-            </td>
-            <td class="cm"><input class="ci" type="text" value="Belt jam cleared; packer restarted" style="text-align:left;padding-left:8px" /></td>
-          </tr>
-          <tr>
-            <td class="ts">2</td>
-            <td class="tp">Loading Bay</td>
-            <td class="cm"><input class="ci" type="text" value="Truck weighbridge fault" style="text-align:left;padding-left:8px" /></td>
-            <td class="cm"><input class="ci" type="time" value="11:00" /></td>
-            <td class="cm"><input class="ci" type="time" value="11:45" /></td>
-            <td class="cf"><div class="cv">45</div></td>
-            <td class="cm">
-              <select class="ci" style="min-width:90px;text-align:left">
-                <option>E&amp;I</option>
-                <option>Mechanical</option>
-                <option>Production</option>
-                <option>Power</option>
-                <option>Other</option>
-              </select>
-            </td>
-            <td class="cm"><input class="ci" type="text" value="Sensor replaced; calibrated" style="text-align:left;padding-left:8px" /></td>
-          </tr>
-          <tr>
-            <td class="ts">3</td>
-            <td class="tp">—</td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
-            <td class="cm"><input class="ci" type="time" /></td>
-            <td class="cm"><input class="ci" type="time" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cm">
-              <select class="ci" style="min-width:90px;text-align:left">
-                <option></option>
-                <option>Mechanical</option>
-                <option>E&amp;I</option>
-                <option>Production</option>
-                <option>Power</option>
-                <option>Other</option>
-              </select>
-            </td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
-          </tr>
-          <tr>
-            <td class="ts">4</td>
-            <td class="tp">—</td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
-            <td class="cm"><input class="ci" type="time" /></td>
-            <td class="cm"><input class="ci" type="time" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cm">
-              <select class="ci" style="min-width:90px;text-align:left">
-                <option></option>
-                <option>Mechanical</option>
-                <option>E&amp;I</option>
-                <option>Production</option>
-                <option>Power</option>
-                <option>Other</option>
-              </select>
-            </td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
-          </tr>
-          <tr>
-            <td class="ts">5</td>
-            <td class="tp">—</td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
-            <td class="cm"><input class="ci" type="time" /></td>
-            <td class="cm"><input class="ci" type="time" /></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cm">
-              <select class="ci" style="min-width:90px;text-align:left">
-                <option></option>
-                <option>Mechanical</option>
-                <option>E&amp;I</option>
-                <option>Production</option>
-                <option>Power</option>
-                <option>Other</option>
-              </select>
-            </td>
-            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
-          </tr>
-          <tr class="trow">
-            <td class="ts" colspan="5" style="text-align:right;padding-right:12px;font-weight:700">Total Stoppage Time</td>
-            <td class="cf"><div class="cv">130 min</div></td>
-            <td colspan="2" class="cs"><div class="cv" style="text-align:left;padding-left:10px">2 hrs 10 min on 21-Apr-2026</div></td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="fm-crosslink" style="margin:0;border-radius:0;border-left:none;border-right:none;border-bottom:none">
+      <i data-lucide="corner-down-right"></i>
+      <div>
+        Packing and loading-bay downtime belongs on the
+        <a href="stoppage-form.html">Sectional Stoppage Report</a>, which is where availability, MTBF and
+        the downtime Pareto are calculated from. Recording it twice would put two different versions of the
+        same stoppage into the system.
+      </div>
     </div>
   </div>
 
@@ -567,8 +389,7 @@
     </div>
     <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
       <span style="font-size:12px;color:var(--text-muted)">
-        Status: <strong style="color:var(--orange-ink)">DRAFT</strong> &nbsp;·&nbsp;
-        Date: <strong>21 April 2026</strong>
+        The report’s status and date are shown in the toolbar at the top of this page.
       </span>
       <div style="display:flex;gap:8px">
         <button class="btn btn-out"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
@@ -581,7 +402,7 @@
 
 <footer class="dash-footer">
   <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
-  <span>Dispatch &amp; Stoppage Report &mdash; <span id="footer-date"></span></span>
+  <span>Dispatch &amp; SO Report &mdash; <span id="footer-date"></span></span>
 </footer>
 <div class="brand-accent-bar"></div>
 
@@ -608,9 +429,20 @@
 <script src="excel-import.js"></script>
 <script src="excel-export.js"></script>
 <script src="kpi-live.js"></script>
-<script src="report-rollup.js"></script>
-<script>initReportRollup({ form: 'dispatch', live: true });</script>
 <script>
+/* Live read-backs for the total cells in this form's own tables. What is
+   left here is arithmetic on what is currently typed — the officer's own
+   check that a row adds up. The six-tile KPI strip that used to sit above
+   these tables has moved to dispatch.html, because it answered a reviewer's
+   question, not an entry one, and it computed those answers from whatever
+   was in the cells rather than from anything submitted.
+
+   The targets and RAG bands that used to be typed into this block
+   (target:7000, target:0.30, ACHIEVEMENT_THRESHOLD = 90, and a 350/250 MT
+   band found nowhere else) are gone with it. Those three KPIs are now
+   declared in forms/formula-registry.js like every other one, so the review
+   page reads their targets from the single source of truth instead of this
+   page asserting its own. */
 function _dispatchTotal(f, n) {
   return n(f.dispatch_reg_425r)+n(f.dispatch_reg_425nbm)+n(f.dispatch_reg_425n)+n(f.dispatch_reg_325n)+n(f.dispatch_reg_opc425n)
         +n(f.dispatch_blk_425r)+n(f.dispatch_blk_425nbm)+n(f.dispatch_blk_425n)+n(f.dispatch_blk_325n)+n(f.dispatch_blk_opc425n)
@@ -622,89 +454,20 @@ function _soTotal(f, n) {
         +n(f.so_opc425n)+n(f.so_bulker)+n(f.so_bigbag)+n(f.so_clinker);
 }
 initKpiLive([
-  { kpi:'dispatch_total', compute: function(f,n){ return _dispatchTotal(f,n); }, fmt:'n1',
-    rag: function(v){ return v>=350 ? 'on-track' : v>=250 ? 'watch' : 'concern'; } },
   { kpi:'dispatch_total_col', compute: function(f,n){ return _dispatchTotal(f,n); }, fmt:'n1' },
-  { kpi:'so_pendency',    compute: function(f,n){ return _soTotal(f,n); }, fmt:'n0' },
-  { kpi:'so_total_col',   compute: function(f,n){ return _soTotal(f,n); }, fmt:'n0' },
-  { kpi:'bags_packed',    compute: function(f,n){ return n(f.bags_pl1)+n(f.bags_pl2); }, fmt:'n0',
-    target:7000, sign:'>=', targetLabel:'Target: ≥ 7,000 / day' },
-  { kpi:'burst_rate',     compute: function(f,n){
+  { kpi:'so_total_col',       compute: function(f,n){ return _soTotal(f,n); }, fmt:'n0' },
+  { kpi:'bags_packed_col',    compute: function(f,n){ return n(f.bags_pl1)+n(f.bags_pl2); }, fmt:'n0' },
+  /* Weighted by the bags packed in each grade — the same arithmetic the
+     'burst-bag-rate' registry formula now holds, so the number an officer
+     sees while typing and the number the review page shows cannot differ. */
+  { kpi:'burst_rate_col',     compute: function(f,n){
       var b1=n(f.bags_pl1), b2=n(f.bags_pl2), tot=b1+b2;
       return tot ? (n(f.burst_rate_pl1)*b1 + n(f.burst_rate_pl2)*b2) / tot : null;
-  }, fmt:'pct2',
-    target:0.30, sign:'<=', targetLabel:'Target: ≤ 0.30%' },
+  }, fmt:'pct2' },
   { kpi:'veh_loaded_total',  compute: function(f,n){ return n(f.veh_reg_loaded_after12)+n(f.veh_bulker_loaded_after12)+n(f.veh_bigbag_loaded_after12); }, fmt:'n0' },
   { kpi:'veh_inside_total',  compute: function(f,n){ return n(f.veh_reg_inside_waiting)+n(f.veh_bulker_inside_waiting)+n(f.veh_bigbag_inside_waiting); }, fmt:'n0' },
   { kpi:'veh_outside_total', compute: function(f,n){ return n(f.veh_reg_outside_waiting)+n(f.veh_bulker_outside_waiting)+n(f.veh_bigbag_outside_waiting); }, fmt:'n0' }
 ]);
-</script>
-<script>
-/* MTD Target Achievement % = this month's live dispatch sum (the same
-   total report-rollup.js already tracks for the KPI strip's "MTD
-   Dispatch" tile and the matrix's TOTAL/MTD cell) ÷ this month's target
-   (dispatch_mtd_target, a plain manual figure — not itself a per-day sum,
-   so report-rollup can't produce it; only reportRollupLiveSum can supply
-   the numerator). Recomputed on every keystroke so it never lags behind
-   the MTD Dispatch tile it's built from. */
-(function () {
-  var DISPATCH_FIELDS = 'dispatch_reg_425r,dispatch_reg_425nbm,dispatch_reg_425n,dispatch_reg_325n,dispatch_reg_opc425n,' +
-    'dispatch_blk_425r,dispatch_blk_425nbm,dispatch_blk_425n,dispatch_blk_325n,dispatch_blk_opc425n,' +
-    'dispatch_bag_425r,dispatch_bag_425nbm,dispatch_bag_425n,dispatch_clinker';
-  var ACHIEVEMENT_THRESHOLD = 90; // "Threshold: >= 90%" — fixed business target, not a form field
-
-  function num(v) { if (v === '' || v == null) return 0; var n = +(String(v).replace(/,/g, '')); return isNaN(n) ? 0 : n; }
-  function fmtMT(v) { return v.toLocaleString('en-US', { maximumFractionDigits: 0 }); }
-
-  function paint() {
-    if (typeof window.reportRollupLiveSum !== 'function') return;
-    var mtd = window.reportRollupLiveSum('mtd', DISPATCH_FIELDS);
-    if (mtd === null) return;   // first fetch hasn't landed yet
-
-    var targetEl = document.querySelector('[data-field="dispatch_mtd_target"]');
-    var target = targetEl ? num(targetEl.value) : 0;
-    var pct = target > 0 ? mtd / target * 100 : null;
-
-    document.querySelectorAll('[data-kpi="dispatch_mtd_pct"]').forEach(function (el) {
-      el.textContent = pct === null ? '—' : pct.toFixed(1) + '%';
-    });
-
-    var mtdBar = document.getElementById('dispatch-mtd-bar');
-    if (mtdBar) mtdBar.style.width = Math.min(pct || 0, 100).toFixed(1) + '%';
-    var mtdTgtLbl = document.getElementById('dispatch-mtd-target-lbl');
-    if (mtdTgtLbl) mtdTgtLbl.textContent = target > 0 ? 'Target: ' + fmtMT(target) + ' MT' : 'Target: — MT';
-    var mtdPctLbl = document.getElementById('dispatch-mtd-pct-lbl');
-    if (mtdPctLbl) mtdPctLbl.textContent = pct === null ? '—' : pct.toFixed(1) + '%';
-    var mtdVs = document.getElementById('dispatch-mtd-vs');
-    if (mtdVs && pct !== null) {
-      var behind = target - mtd;
-      mtdVs.textContent = behind > 0
-        ? '▼ Target ' + fmtMT(target) + ' MT — ' + fmtMT(behind) + ' MT behind'
-        : '▲ Target ' + fmtMT(target) + ' MT — met, ' + fmtMT(-behind) + ' MT ahead';
-    }
-
-    var achvBar = document.getElementById('dispatch-achv-bar');
-    var thresholdPct = pct === null ? null : Math.min(pct / ACHIEVEMENT_THRESHOLD * 100, 100);
-    if (achvBar) achvBar.style.width = (thresholdPct || 0).toFixed(1) + '%';
-    var achvPctLbl = document.getElementById('dispatch-achv-pct-lbl');
-    if (achvPctLbl) achvPctLbl.textContent = thresholdPct === null ? '—' : thresholdPct.toFixed(1) + '%';
-    var achvVs = document.getElementById('dispatch-achv-vs');
-    if (achvVs && pct !== null) {
-      achvVs.textContent = pct >= ACHIEVEMENT_THRESHOLD
-        ? '▲ At or above ' + ACHIEVEMENT_THRESHOLD + '% threshold'
-        : '▼ Below ' + ACHIEVEMENT_THRESHOLD + '% threshold';
-    }
-
-    var paceVs = document.getElementById('dispatch-pace-vs');
-    if (paceVs) paceVs.textContent = pct === null ? '—' : '▼ MTD pace: ' + pct.toFixed(1) + '% of monthly target';
-  }
-
-  document.addEventListener('input', paint);
-  document.addEventListener('change', paint);
-  document.addEventListener('nyati:restored', function () { setTimeout(paint, 260); });
-  setTimeout(paint, 260);
-  setTimeout(paint, 800);   // retry once more in case the initial history fetch was still in flight
-})();
 </script>
   </div><!-- /.main -->
 </div><!-- /.app-shell -->

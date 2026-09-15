@@ -74,6 +74,42 @@
     dispatch_legacy_bulker:  { source: 'manual', form: 'dispatch', field: 'dispatch_bulker',  unit: 'MT', legacy: true },
     dispatch_legacy_bigbag:  { source: 'manual', form: 'dispatch', field: 'dispatch_bigbag',  unit: 'MT', legacy: true },
 
+    // packing lines + open sales orders — also entered on the Dispatch & SO
+    // form, but until 2026-09-15 they were not facts at all. The Dispatch
+    // form computed Bags Packed, Burst Bag Rate and SO Pendency in its own
+    // initKpiLive() block with targets typed inline (7000, 0.30) and RAG
+    // bands typed inline (350/250 MT), so those three numbers existed only
+    // for as long as the page was open: no stored history, nothing for the
+    // KPI Tracker or the MIS pack to read, no override/audit trail, and a
+    // target that nothing could check against a source of truth because
+    // there wasn't one. Declared here so they are ordinary KPIs like the
+    // other twenty. The fields themselves are unchanged — this reads the
+    // same data-field names the form has always submitted.
+    /* The "_pl1"/"_pl2" suffixes are a misnomer inherited from the source
+       report and kept because renaming would orphan every stored row:
+       _pl1 is the 42.5 R figure, _pl2 the 42.5 N / B-M figure. Both are
+       entered in the SAME Packing Line 1 column on the form; per-line
+       output has never been captured anywhere. */
+    bags_pl1:       { source: 'manual', form: 'dispatch', field: 'bags_pl1',       unit: 'bags' },  // 42.5 R
+    bags_pl2:       { source: 'manual', form: 'dispatch', field: 'bags_pl2',       unit: 'bags' },  // 42.5 N / B-M
+    burst_rate_pl1: { source: 'manual', form: 'dispatch', field: 'burst_rate_pl1', unit: '%' },     // 42.5 R
+    burst_rate_pl2: { source: 'manual', form: 'dispatch', field: 'burst_rate_pl2', unit: '%' },     // 42.5 N / B-M
+
+    so_425r:    { source: 'manual', form: 'dispatch', field: 'so_425r',    unit: 'MT' },
+    so_425nbm:  { source: 'manual', form: 'dispatch', field: 'so_425nbm',  unit: 'MT' },
+    so_425n:    { source: 'manual', form: 'dispatch', field: 'so_425n',    unit: 'MT' },
+    so_325n:    { source: 'manual', form: 'dispatch', field: 'so_325n',    unit: 'MT' },
+    so_opc425n: { source: 'manual', form: 'dispatch', field: 'so_opc425n', unit: 'MT' },
+    so_bulker:  { source: 'manual', form: 'dispatch', field: 'so_bulker',  unit: 'MT' },
+    so_bigbag:  { source: 'manual', form: 'dispatch', field: 'so_bigbag',  unit: 'MT' },
+    so_clinker: { source: 'manual', form: 'dispatch', field: 'so_clinker', unit: 'MT' },
+
+    // The month's dispatch plan, entered once on the Dispatch & SO form's
+    // Target row. A fact rather than an anonymous input so that "what was
+    // the plan that month" is answerable later — it is the denominator of
+    // every MTD-achievement figure the dispatch pages show.
+    dispatch_mtd_target: { source: 'manual', form: 'dispatch', field: 'dispatch_mtd_target', unit: 'MT' },
+
     // kiln fields — captured on the Production Report (Plant Operations).
     // kiln_coal_cons/kiln_coal_ncv previously pointed at form fields that
     // don't exist (kiln_coal_cons/kiln_coal_ncv were never real data-field
@@ -206,6 +242,9 @@
   // CM-1 stock-ledger consumption = cement dispatched out of CM-1's grades that
   // day (matches the Production Report's TOTAL — CM-1 On Date Consumption cell).
   var CM1_DISPATCH = ['cm1_325n_cons_mt', 'cm1_425r_cons_mt', 'cm1_425n_cons_mt', 'cm1_opc_cons_mt', 'cm1_425n_bm_cons_mt'];
+  /* Open sales orders, all channels and grades — the Dispatch & SO form's
+     SO Pendency row, which is one figure per grade rather than a total. */
+  var SO_PENDENCY = ['so_425r', 'so_425nbm', 'so_425n', 'so_325n', 'so_opc425n', 'so_bulker', 'so_bigbag', 'so_clinker'];
   var CAO_HOLES     = Object.keys(FACTS).filter(function (k) { return k.indexOf('cao_h') === 0; });
 
   function sumOf(keys, f) { return keys.reduce(function (s, k) { return s + z0(f[k]); }, 0); }
@@ -466,6 +505,54 @@
         return (gross && aux !== null) ? aux / gross * 100 : null;
       },
       monthlyAgg: { type: 'weighted', weight: function (f) { return pos(f.cpp_gross_gen_kwh) || 0; } },
+    },
+
+    /* ── Packing plant & open orders ───────────────────────────────────
+       Added 2026-09-15. These three were live on the Dispatch & SO form
+       for months as page-local initKpiLive() rules, which meant the
+       figures a packing officer and a plant head read on that screen were
+       invisible to the KPI Tracker, to Trends & Analytics, to the MIS pack
+       and to the override/audit trail — and their targets were typed into
+       the page as strings that had already drifted apart between pages
+       ("Target: < 0.30%" on index.html vs "Target: ≤ 0.30%" on the form).
+       The arithmetic below is unchanged from what that page computed; only
+       its home has changed. ────────────────────────────────────────────── */
+
+    'bags-packed': {
+      label: 'Bags Packed', unit: 'bags', dp: 0, version: 1,
+      target: 7000, signage: '>=', targetLabel: 'Target ≥ 7,000 bags/day',
+      notes: 'Bags filled that day, as entered on the Dispatch & SO report: bags_pl1 (42.5 R) + bags_pl2 (42.5 N / B-M). Despite the field names these are GRADES, not packing lines — see the Burst Bag Rate notes. The 7,000/day target is the packing plant\'s standing daily plan and was previously typed into forms/dispatch-form.html rather than declared anywhere. Monthly figure is the mean of the days that reported, not a month total — the target is a per-day one, so comparing a monthly sum against it would be meaningless. Days with no dispatch report filed are excluded from that mean rather than counted as zero.',
+      inputs: ['bags_pl1', 'bags_pl2'],
+      daily: function (f) {
+        var a = pos(f.bags_pl1), b = pos(f.bags_pl2);
+        return (a === null && b === null) ? null : z0(f.bags_pl1) + z0(f.bags_pl2);
+      },
+      monthlyAgg: 'avg',
+    },
+
+    'burst-bag-rate': {
+      label: 'Burst Bag Rate', unit: '%', dp: 2, version: 1,
+      target: 0.30, signage: '<', targetLabel: 'Target < 0.30%',
+      notes: "Share of packed bags that burst, weighted by the bags actually packed. NOTE ON THE FIELD NAMES: burst_rate_pl1/bags_pl1 hold the 42.5 R figures and burst_rate_pl2/bags_pl2 the 42.5 N / B-M figures \u2014 the \"pl1\"/\"pl2\" suffixes read like packing lines but have always been GRADES, because on the Dispatch & SO report both sit in the same Packing Line 1 column. The real per-line split was never captured: that column had no field behind it at all until it was removed on 2026-09-15, so capturing output per line needs new fields and a migration. This is therefore the grade-weighted plant rate: a grade that ran 6,930 bags counts for more than one that ran 600, and a plain average of the two percentages would misstate the plant figure whenever the grades run unevenly, which is most days. Monthly figure is weighted the same way, by each day of the period's total bags. Target < 0.30% is the packing plant's standing quality limit.",
+      inputs: ['burst_rate_pl1', 'burst_rate_pl2', 'bags_pl1', 'bags_pl2'],
+      daily: function (f) {
+        var b1 = z0(f.bags_pl1), b2 = z0(f.bags_pl2), tot = b1 + b2;
+        if (!tot) return null;
+        return (z0(f.burst_rate_pl1) * b1 + z0(f.burst_rate_pl2) * b2) / tot;
+      },
+      monthlyAgg: { type: 'weighted', weight: function (f) { return z0(f.bags_pl1) + z0(f.bags_pl2); } },
+    },
+
+    'so-pendency': {
+      label: 'SO Pendency', unit: 'MT', dp: 0, version: 1,
+      target: null, signage: null, targetLabel: null,
+      notes: 'Open sales orders still to be fulfilled, summed across every channel and grade (42.5R, 42.5N B-M, 42.5N, 32.5N, OPC 42.5N, Bulker, Big Bags and Clinker) as entered on the Dispatch & SO report. This is a STOCK, not a flow: it is the balance standing open on that date, so it is never summed across days — the monthly figure is the mean of the daily balances, and a day with no report is left out of that mean rather than read as zero pendency. There is no target: pendency is a demand signal to be read against dispatch capacity, not a number to be minimised on its own.',
+      inputs: SO_PENDENCY,
+      daily: function (f) {
+        var any = SO_PENDENCY.some(function (k) { return pos(f[k]) !== null; });
+        return any ? sumOf(SO_PENDENCY, f) : null;
+      },
+      monthlyAgg: 'avg',
     },
   };
 

@@ -697,3 +697,36 @@ td.cm .ci:focus {
 .prow td.cf         { background:var(--off-white); }
 .prow td.cf .cv     { color:var(--text-main); font-weight:600; }
 .prow td.cs .cv     { color:var(--text-muted); }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   CROSS-LINK STRIP
+   ──────────────────────────────────────────────────────────────────────
+   A pointer from an entry form to where the matching review, or the
+   report that really owns a piece of data, lives. Added when Dispatch &
+   SO was split into an entry form and a read-only review page: without a
+   visible way across, a split just hides half the app from whoever knew
+   only the old screen.
+
+   Deliberately quiet. It is a signpost, not an alert — so it takes the
+   page's own off-white and a plain left rule rather than a status colour,
+   which is reserved for saying how something is doing.
+   ══════════════════════════════════════════════════════════════════════ */
+.fm-crosslink {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  background: var(--off-white);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--navy);
+  border-radius: var(--r-md);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-4);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+  color: var(--text-muted);
+}
+.fm-crosslink svg { width: 16px; height: 16px; color: var(--navy); flex: none; margin-top: 2px; }
+.fm-crosslink strong { color: var(--navy); font-weight: var(--fw-bold); }
+.fm-crosslink a { color: var(--navy); font-weight: var(--fw-semibold); }
+.fm-crosslink a:hover { color: var(--orange-ink); }

@@ -55,6 +55,7 @@ const VIEWPORTS = [
 const PAGES = [
   ['kpi-dashboard',  'index.html'],
   ['home',           'portal.html'],
+  ['dispatch',       'dispatch.html'],
   ['mis',            'mis.html'],
   ['daily-report',   'daily-report.html'],
   ['analytics',      'analytics.html'],

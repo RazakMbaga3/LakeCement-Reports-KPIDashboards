@@ -7,7 +7,7 @@
 > `npm run docs:kpi` (in `backend/`) and commit both files together.
 
 This document defines every KPI the dashboards, MIS reports, and morning
-digest display: **20 KPIs** computed from **149 raw facts**.
+digest display: **23 KPIs** computed from **162 raw facts**.
 
 ## How a number gets onto a dashboard
 
@@ -52,6 +52,9 @@ formulas do not change when that happens.
 | [Coal Consumption (Kiln)](#coal-kiln-consumption-day) | MT | — | Sum | v1 |
 | [CPP Heat Rate](#cpp-heat-rate) | kcal/kWh | Target < 3,800 kcal/kWh | Weighted average | v1 |
 | [CPP Auxiliary Power](#cpp-auxiliary-power) | % | Target < 10.0% | Weighted average | v1 |
+| [Bags Packed](#bags-packed) | bags | Target ≥ 7,000 bags/day | Average | v1 |
+| [Burst Bag Rate](#burst-bag-rate) | % | Target < 0.30% | Weighted average | v1 |
+| [SO Pendency](#so-pendency) | MT | — | Average | v1 |
 
 ---
 
@@ -618,6 +621,92 @@ function (f) {
 function (f) { return pos(f.cpp_gross_gen_kwh) || 0; }
 ```
 
+<a id="bags-packed"></a>
+### Bags Packed
+
+| | |
+|---|---|
+| Unit | bags (shown to 0 decimal places) |
+| Target | Target ≥ 7,000 bags/day — good is at or above 7000 bags |
+| Formula version | v1 |
+| Registry key | `bags-packed` |
+
+Bags filled that day, as entered on the Dispatch & SO report: bags_pl1 (42.5 R) + bags_pl2 (42.5 N / B-M). Despite the field names these are GRADES, not packing lines — see the Burst Bag Rate notes. The 7,000/day target is the packing plant's standing daily plan and was previously typed into forms/dispatch-form.html rather than declared anywhere. Monthly figure is the mean of the days that reported, not a month total — the target is a per-day one, so comparing a monthly sum against it would be meaningless. Days with no dispatch report filed are excluded from that mean rather than counted as zero.
+
+**Inputs**
+
+- **dispatch form:** bags_pl1 (bags), bags_pl2 (bags)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) {
+        var a = pos(f.bags_pl1), b = pos(f.bags_pl2);
+        return (a === null && b === null) ? null : z0(f.bags_pl1) + z0(f.bags_pl2);
+      }
+```
+
+**Monthly roll-up.** Average of the days that have a value (missing days are excluded, not counted as zero).
+
+<a id="burst-bag-rate"></a>
+### Burst Bag Rate
+
+| | |
+|---|---|
+| Unit | % (shown to 2 decimal places) |
+| Target | Target < 0.30% — good is below 0.3 % |
+| Formula version | v1 |
+| Registry key | `burst-bag-rate` |
+
+Share of packed bags that burst, weighted by the bags actually packed. NOTE ON THE FIELD NAMES: burst_rate_pl1/bags_pl1 hold the 42.5 R figures and burst_rate_pl2/bags_pl2 the 42.5 N / B-M figures — the "pl1"/"pl2" suffixes read like packing lines but have always been GRADES, because on the Dispatch & SO report both sit in the same Packing Line 1 column. The real per-line split was never captured: that column had no field behind it at all until it was removed on 2026-09-15, so capturing output per line needs new fields and a migration. This is therefore the grade-weighted plant rate: a grade that ran 6,930 bags counts for more than one that ran 600, and a plain average of the two percentages would misstate the plant figure whenever the grades run unevenly, which is most days. Monthly figure is weighted the same way, by each day of the period's total bags. Target < 0.30% is the packing plant's standing quality limit.
+
+**Inputs**
+
+- **dispatch form:** burst_rate_pl1 (%), burst_rate_pl2 (%), bags_pl1 (bags), bags_pl2 (bags)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) {
+        var b1 = z0(f.bags_pl1), b2 = z0(f.bags_pl2), tot = b1 + b2;
+        if (!tot) return null;
+        return (z0(f.burst_rate_pl1) * b1 + z0(f.burst_rate_pl2) * b2) / tot;
+      }
+```
+
+**Monthly roll-up.** Weighted average — Σ(daily value × weight) ÷ Σ(weight), where each day's weight is:
+
+```js
+function (f) { return z0(f.bags_pl1) + z0(f.bags_pl2); }
+```
+
+<a id="so-pendency"></a>
+### SO Pendency
+
+| | |
+|---|---|
+| Unit | MT (shown to 0 decimal places) |
+| Target | Tracking only — no target |
+| Formula version | v1 |
+| Registry key | `so-pendency` |
+
+Open sales orders still to be fulfilled, summed across every channel and grade (42.5R, 42.5N B-M, 42.5N, 32.5N, OPC 42.5N, Bulker, Big Bags and Clinker) as entered on the Dispatch & SO report. This is a STOCK, not a flow: it is the balance standing open on that date, so it is never summed across days — the monthly figure is the mean of the daily balances, and a day with no report is left out of that mean rather than read as zero pendency. There is no target: pendency is a demand signal to be read against dispatch capacity, not a number to be minimised on its own.
+
+**Inputs**
+
+- **dispatch form:** so_425r (MT), so_425nbm (MT), so_425n (MT), so_325n (MT), so_opc425n (MT), so_bulker (MT), so_bigbag (MT), so_clinker (MT)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) {
+        var any = SO_PENDENCY.some(function (k) { return pos(f[k]) !== null; });
+        return any ? sumOf(SO_PENDENCY, f) : null;
+      }
+```
+
+**Monthly roll-up.** Average of the days that have a value (missing days are excluded, not counted as zero).
+
 ---
 
 ## Appendix — raw facts by source form
@@ -634,7 +723,7 @@ that feed goes live).
 | `blaine_425r` | cm²/g | manual |
 | `strength_28d` | MPa | manual |
 
-### dispatch form (21 facts)
+### dispatch form (34 facts)
 
 | Fact key | Unit | Source |
 |---|---|---|
@@ -659,6 +748,19 @@ that feed goes live).
 | `dispatch_legacy_opc425n` | MT | manual |
 | `dispatch_legacy_bulker` | MT | manual |
 | `dispatch_legacy_bigbag` | MT | manual |
+| `bags_pl1` | bags | manual |
+| `bags_pl2` | bags | manual |
+| `burst_rate_pl1` | % | manual |
+| `burst_rate_pl2` | % | manual |
+| `so_425r` | MT | manual |
+| `so_425nbm` | MT | manual |
+| `so_425n` | MT | manual |
+| `so_325n` | MT | manual |
+| `so_opc425n` | MT | manual |
+| `so_bulker` | MT | manual |
+| `so_bigbag` | MT | manual |
+| `so_clinker` | MT | manual |
+| `dispatch_mtd_target` | MT | manual |
 
 ### production form (17 facts)
 

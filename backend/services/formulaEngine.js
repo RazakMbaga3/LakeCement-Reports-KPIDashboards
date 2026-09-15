@@ -90,23 +90,35 @@ function aggregate(formula, rows) {
   return null;
 }
 
-/* Registry metadata safe to serialize (no functions) */
-function formulaMeta(key) {
+/* Registry metadata safe to serialize (no functions).
+
+   `notes` — the registry's plain-English statement of method and caveats —
+   is included only when asked for. It belongs in an answer to "what IS
+   this KPI", which is what /api/formula/registry is; it does not belong on
+   every row of /api/formula/eval, which dashboards hit on every page load
+   and where the notes would add ~20KB of identical prose per request to a
+   payload that is otherwise a list of numbers. Until now it reached
+   neither: it was generated into docs/KPI_REFERENCE.md and was invisible
+   to the UI, so a KPI the registry itself flags as provisional was shown
+   against a target with no way for a reader to find out why. */
+function formulaMeta(key, opts = {}) {
   const f = FORMULAS[key];
-  return {
+  const meta = {
     key, label: f.label, unit: f.unit, dp: f.dp, version: f.version,
     target: f.target, signage: f.signage, targetLabel: f.targetLabel,
     inputs: f.inputs,
     provisional: !!f.provisional,
     provisionalNote: f.provisionalNote || null,
   };
+  if (opts.withNotes) meta.notes = f.notes || null;
+  return meta;
 }
 
 function registryMeta() {
   return {
     facts: Object.fromEntries(Object.entries(FACTS).map(([k, f]) =>
       [k, { source: f.source, form: f.form, field: f.field, unit: f.unit }])),
-    formulas: Object.keys(FORMULAS).map(formulaMeta),
+    formulas: Object.keys(FORMULAS).map(k => formulaMeta(k, { withNotes: true })),
   };
 }
 

@@ -964,7 +964,16 @@ const _DAILY_NAV_ITEMS = [
   { page:'mines-report.html',       label:'Quarry',       icon:'pickaxe',   hRoot:'mines-report.html',       hForm:'../mines-report.html' },
   { page:'stoppage-form.html',      label:'Stoppages',    icon:'alert-triangle', hRoot:'forms/stoppage-form.html', hForm:'stoppage-form.html' },
   { page:'power-form.html',         label:'Power Cons.',  icon:'activity',  hRoot:'forms/power-form.html',    hForm:'power-form.html' },
-  { page:'dispatch-form.html',      label:'Dispatch & SO', icon:'truck',    hRoot:'forms/dispatch-form.html', hForm:'dispatch-form.html' },
+  /* Dispatch & SO is the first report split into a read-only review page
+     and an entry form (2026-09-15). The nav leads to the REVIEW page, which
+     is what most people opening "Dispatch & SO" want — the review page then
+     offers "Enter today's data" to whoever has the right to file it.
+
+     `page` deliberately stays 'dispatch-form.html': it is the permission key
+     (_DAILY_ACCESS[role].nav) and the key forms/nav-status.js hangs today's
+     fill-status dot on. Only the destination moved, so access and the
+     entered/not-entered dot both keep working unchanged. */
+  { page:'dispatch-form.html',      label:'Dispatch & SO', icon:'truck',    hRoot:'dispatch.html', hForm:'../dispatch.html' },
   { page:'materials-form.html',     label:'Raw Materials', icon:'package',  hRoot:'forms/materials-form.html', hForm:'materials-form.html' },
   /* These 3 were real, submittable formTypes (see _FORM_TYPE_ACCESS /
      _STANDALONE_FORM_TYPE below) but were never in this catalogue, so

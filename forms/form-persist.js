@@ -39,11 +39,25 @@
   /* ── Clear: blank every editable input (leaves the date field alone —
      it already holds the newly-picked date). Used when switching to a
      date that has no saved snapshot, so stale values from the previously
-     loaded date don't linger and get mistaken for that date's data. ──── */
+     loaded date don't linger and get mistaken for that date's data.
+
+     `data-default` is the exception, and it exists because blanking
+     everything is also wrong. These report pages were built from an
+     April-2026 mockup (see _syncDateChips below) and ship with values
+     typed into the markup. Two different kinds of value got mixed up in
+     there: SEEDED MOCKUP FIGURES — one day's dispatch tonnages, bag
+     counts, burst rates — which must never appear again, and STANDING
+     BUSINESS DEFAULTS like the month's dispatch plan or a line's target
+     bags/day, which are the correct starting point for every new report
+     and which a blanket clear would silently throw away, leaving the
+     month's plan empty and every MTD-achievement figure unable to
+     compute. So the mockup figures have been removed from the markup at
+     source, and the values that legitimately belong there now declare
+     themselves with data-default="…" and survive a clear. ───────────── */
   function _clearForm(scope) {
     [...scope.querySelectorAll(_SEL)].forEach(el => {
       if (el.type === 'date') return;
-      el.value = '';
+      el.value = el.hasAttribute('data-default') ? el.getAttribute('data-default') : '';
     });
     scope.querySelectorAll('.cao-input').forEach(inp => {
       inp.dispatchEvent(new Event('change'));
@@ -687,9 +701,26 @@
 
     /* On page load → silently restore today's data if saved, and reflect
        the real status on the toolbar pill (was previously stuck on the
-       static "DRAFT" text baked into the HTML). */
+       static "DRAFT" text baked into the HTML).
+
+       When there is NOTHING saved for today, clear — exactly as the date
+       -change handler above already does. This path used to apply the
+       status and stop there, which meant a form opened on a day nobody had
+       filed yet still showed whatever figures were typed into its markup,
+       under a "DRAFT" pill that made them look like somebody's work in
+       progress. On the Dispatch & SO report that was a full day of April
+       2026 numbers — 346.5 MT dispatched, 7,530 bags, a burst rate, a
+       stoppage remark — and initKpiLive() then computed the KPI strip from
+       them, so the page reported 376.5 MT as the day's dispatch. Worse
+       than a blank page, because a blank page cannot be believed.
+
+       _restore() only overwrites the fields a saved payload actually
+       carries, so this matters for partial reports too: without the clear,
+       a report with three figures entered kept mockup values in every
+       other cell and the totals added the two together. ───────────────── */
     if (dateInput && dateInput.value) {
       _read(formId, dateInput.value).then(meta => {
+        if (!meta) _clearForm(body);
         _applyStatus(meta ? meta.status : 'draft', meta && meta.rejectionReason);
       });
     }

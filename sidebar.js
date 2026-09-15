@@ -200,10 +200,16 @@ function renderSidebar() {
     dailyItems.forEach(it => {
       const href  = base ? it.hForm : it.hRoot;
       const badge = `<span class="${it.fill ? 'sb-badge-fill' : 'sb-badge-view'}">${it.fill ? 'FILL' : 'VIEW'}</span>`;
+      /* A report that has been split into a review page and an entry form
+         is ONE nav row but TWO pages, so the row has to light up on both —
+         otherwise moving between "View report" and "Enter data" makes the
+         sidebar look like you left the section. `page` stays the
+         permission/fill-status key; the href is what actually navigates. */
+      const hrefPage = String(href).split('/').pop();
       html += _sbItemHTML({
         icon: it.icon, label: it.label, href, badgeHTML: badge,
         page: it.page,
-        active: it.page === currentPage,
+        active: it.page === currentPage || hrefPage === currentPage,
       });
     });
   }

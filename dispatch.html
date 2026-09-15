@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Lake Cement – Dispatch &amp; Sales Orders</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Component layer: cards, context bar, KPI cards, read-side tables.
+       Loaded after styles.css and BEFORE design-system.css, which must keep
+       the last word on legibility and touch size. -->
+  <link rel="stylesheet" href="components.css?v=1" />
+  <script src="auth.js?v=10"></script>
+  <script src="sidebar.js?v=2"></script>
+  <script src="loader.js?v=1"></script>
+  <script src="forms/date-picker.js"></script>
+  <!-- Design system — loaded last so it settles equal-specificity ties -->
+  <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="a11y.js?v=1"></script>
+  <script src="mobile-shell.js?v=1"></script>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="app-sidebar"></aside>
+  <script>renderSidebar();</script>
+
+  <div class="main">
+
+<header class="top-header" id="app-header"></header>
+<script>renderTopHeader();</script>
+
+<main class="n-page" id="dispatch-page">
+
+  <!-- ══ PAGE HEAD ══════════════════════════════════════════════════ -->
+  <div class="n-page-head">
+    <div>
+      <nav class="n-crumb" aria-label="Breadcrumb">
+        <a href="portal.html">Operations</a>
+        <span class="n-crumb-sep" aria-hidden="true">/</span>
+        <span class="n-crumb-here">Dispatch &amp; Sales Orders</span>
+      </nav>
+      <h1 class="n-title">Dispatch &amp; Sales Orders</h1>
+      <p class="n-subtitle">
+        Cement dispatched by channel and grade, open order pendency, packing output and
+        vehicle movement. Read-only — figures come from the submitted Dispatch &amp; SO report.
+      </p>
+    </div>
+    <div class="n-page-actions">
+      <button type="button" class="n-btn" id="dp-export">
+        <i data-lucide="file-down"></i> Export CSV
+      </button>
+      <button type="button" class="n-btn" id="dp-print">
+        <i data-lucide="printer"></i> Print
+      </button>
+      <a class="n-btn is-primary" id="dp-enter" href="forms/dispatch-form.html">
+        <i data-lucide="pencil"></i> Enter today's data
+      </a>
+    </div>
+  </div>
+
+  <!-- ══ REPORTING CONTEXT ══════════════════════════════════════════
+       Phase 3E: a reader must never be uncertain what period a number
+       represents. Date, period and the state of the underlying report all
+       live here, once, above everything they govern. ═══════════════════ -->
+  <div class="n-ctx">
+    <div class="n-ctx-group">
+      <label class="n-ctx-lbl" for="dp-date">Date</label>
+      <input type="date" id="dp-date" class="n-ctx-ctl" />
+    </div>
+
+    <div class="n-ctx-sep" aria-hidden="true"></div>
+
+    <div class="n-ctx-group">
+      <span class="n-ctx-lbl" id="dp-period-lbl">Period</span>
+      <div class="n-seg" id="dp-period" role="group" aria-labelledby="dp-period-lbl">
+        <button type="button" class="n-seg-btn" data-value="day" aria-pressed="true">On Date</button>
+        <button type="button" class="n-seg-btn" data-value="mtd" aria-pressed="false">MTD</button>
+        <button type="button" class="n-seg-btn" data-value="ytd" aria-pressed="false">YTD</button>
+      </div>
+    </div>
+
+    <div class="n-ctx-sep" aria-hidden="true"></div>
+
+    <div class="n-ctx-group">
+      <span class="n-ctx-lbl">Department</span>
+      <span class="n-chip is-neutral"><span class="n-chip-dot"></span>Packing &amp; Sales</span>
+    </div>
+
+    <span class="n-ctx-spacer"></span>
+
+    <!-- Report state and how much of the period it actually covers. -->
+    <div class="n-ctx-group" id="dp-status-group"></div>
+  </div>
+
+  <!-- Fallback banner: shown only when the page had to move off today
+       because nothing has been entered since an earlier date. -->
+  <div class="stale-note" id="dp-stale" style="display:none"></div>
+
+  <!-- ══ KPI SUMMARY ════════════════════════════════════════════════ -->
+  <div class="n-kpi-grid" id="dp-kpis"></div>
+
+  <!-- ══ DETAIL ═════════════════════════════════════════════════════ -->
+  <div id="dp-body"></div>
+
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span id="footer-date"></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+  </div><!-- /.main -->
+</div><!-- /.app-shell -->
+
+<script src="lucide-icons.js?v=1"></script>
+<script src="forms/api-client.js"></script>
+<script src="forms/formula-registry.js"></script>
+<script src="components.js?v=1"></script>
+<script src="forms/latest-period.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  requireAuth();
+
+  /* ── Access ───────────────────────────────────────────────────────
+     The same gate the Dispatch & SO entry form sits behind, read through
+     auth.js's accessors rather than a role list of this page's own — a
+     second list would be a second thing to forget to update. */
+  var user = getCurrentUser();
+  /* requireAuth() starts a redirect to the login page but does not stop this
+     script, so everything below would still run for one tick against a null
+     user and throw before the browser navigates. Leave quietly instead. */
+  if (!user) return;
+
+  var access = getDailyAccessFor(user.role) || { nav: [], edit: [] };
+  var canView = access.nav === 'all' || (access.nav || []).indexOf('dispatch-form.html') !== -1;
+  var canEnter = (getFormTypeAccessFor(user.role) || []).indexOf('dispatch') !== -1;
+
+  var U = window.NyatiUI;
+  var page   = document.getElementById('dispatch-page');
+  var elKpis = document.getElementById('dp-kpis');
+  var elBody = document.getElementById('dp-body');
+  var elDate = document.getElementById('dp-date');
+  var elStat = document.getElementById('dp-status-group');
+
+  if (!canView) {
+    elKpis.remove();
+    U.renderState(elBody, {
+      kind: 'denied',
+      title: 'You do not have access to Dispatch & Sales Orders',
+      body: 'This report is limited to the packing, logistics, sales and management teams. '
+          + 'Ask an administrator if you believe you should be able to see it.',
+    });
+    document.querySelector('.n-ctx').style.display = 'none';
+    document.querySelector('.n-page-actions').style.display = 'none';
+    return;
+  }
+
+  /* Entry is a different right from viewing — that is the whole point of
+     splitting this page off the form. Hide the action rather than offering
+     a button that leads to a locked screen. */
+  if (!canEnter) document.getElementById('dp-enter').style.display = 'none';
+
+  /* ══ THE DATA SHAPE ═══════════════════════════════════════════════
+     Field names are exactly those the Dispatch & SO form submits; nothing
+     is renamed on the way through. Grades run in the source report's own
+     order so a reader can lay the two side by side. ═══════════════════ */
+  var GRADES = [
+    { key: '425r',    label: '42.5 R' },
+    { key: '425nbm',  label: '42.5 N B-M' },
+    { key: '425n',    label: '42.5 N' },
+    { key: '325n',    label: '32.5 N' },
+    { key: 'opc425n', label: 'OPC 42.5 N' },
+  ];
+
+  /* Big Bags are only packed for three of the five grades. The other two
+     cells are NOT ZERO — they are not applicable, and the table says so. */
+  var CHANNELS = [
+    { prefix: 'dispatch_reg_', label: 'Regular Bags', grades: ['425r', '425nbm', '425n', '325n', 'opc425n'] },
+    { prefix: 'dispatch_blk_', label: 'Bulker',       grades: ['425r', '425nbm', '425n', '325n', 'opc425n'] },
+    { prefix: 'dispatch_bag_', label: 'Big Bags',     grades: ['425r', '425nbm', '425n'] },
+  ];
+
+  var SO_ROWS = [
+    { field: 'so_425r',    label: '42.5 R' },
+    { field: 'so_425nbm',  label: '42.5 N B-M' },
+    { field: 'so_425n',    label: '42.5 N' },
+    { field: 'so_325n',    label: '32.5 N' },
+    { field: 'so_opc425n', label: 'OPC 42.5 N' },
+    { field: 'so_bulker',  label: 'Bulker' },
+    { field: 'so_bigbag',  label: 'Big Bags' },
+    { field: 'so_clinker', label: 'Clinker' },
+  ];
+
+  var VEHICLES = [
+    { key: 'reg',    label: 'Regular Trucks (Bags)' },
+    { key: 'bulker', label: 'Bulker Trucks' },
+    { key: 'bigbag', label: 'Big Bag Trucks' },
+  ];
+
+  var DISPATCH_FIELDS = (function () {
+    var out = [];
+    CHANNELS.forEach(function (c) { c.grades.forEach(function (g) { out.push(c.prefix + g); }); });
+    out.push('dispatch_clinker');
+    return out;
+  }());
+
+  /* ══ WHICH ROWS COUNT ═════════════════════════════════════════════
+     The same rule backend/config/forms.js applies (REPORTED_STATUSES):
+     a report counts once it has been submitted, whether or not the HOD has
+     signed it off yet. Drafts do not count — but they are not ignored
+     either; the coverage line says how many were left out, because
+     "nobody filed" and "somebody is still typing" are different problems
+     with different people to chase. ═══════════════════════════════════ */
+  var REPORTED = ['approved', 'pending_approval'];
+  function isReported(r) { return REPORTED.indexOf(r.status) !== -1; }
+
+  /* ══ AGGREGATION ══════════════════════════════════════════════════
+     Flow vs stock, kept strictly apart. Dispatch tonnage and bags are
+     FLOWS and add up across days. Open orders and the vehicle queue are
+     STOCKS — a balance standing at a moment — and adding them across a
+     month would produce a number that means nothing at all. ═══════════ */
+  function val(row, field) { return U.num(row && row.data ? row.data[field] : null); }
+
+  /* null when NO row carried the field at all; a number otherwise. That
+     distinction is the whole difference between "they dispatched nothing"
+     and "nobody reported", and it survives all the way to the cell. */
+  function sumField(rows, field) {
+    var any = false, total = 0;
+    rows.forEach(function (r) {
+      var v = val(r, field);
+      if (v !== null) { any = true; total += v; }
+    });
+    return any ? total : null;
+  }
+
+  function sumFields(rows, fields) {
+    var any = false, total = 0;
+    fields.forEach(function (f) {
+      var v = sumField(rows, f);
+      if (v !== null) { any = true; total += v; }
+    });
+    return any ? total : null;
+  }
+
+  /* A stock reads from the most recent row that carried it. */
+  function latestField(rows, field) {
+    for (var i = rows.length - 1; i >= 0; i--) {
+      var v = val(rows[i], field);
+      if (v !== null) return v;
+    }
+    return null;
+  }
+  function latestFields(rows, fields) {
+    var any = false, total = 0;
+    /* Take the whole balance from ONE report — the newest that has any of
+       these fields — rather than mixing a 42.5R figure from Tuesday with a
+       Bulker figure from Friday. */
+    for (var i = rows.length - 1; i >= 0; i--) {
+      var row = rows[i], got = false, t = 0;
+      fields.forEach(function (f) {
+        var v = val(row, f);
+        if (v !== null) { got = true; t += v; }
+      });
+      if (got) { any = true; total = t; break; }
+    }
+    return any ? total : null;
+  }
+  function latestRowWith(rows, fields) {
+    for (var i = rows.length - 1; i >= 0; i--) {
+      for (var j = 0; j < fields.length; j++) {
+        if (val(rows[i], fields[j]) !== null) return rows[i];
+      }
+    }
+    return null;
+  }
+
+  /* Burst rate is a RATIO and must be weighted by the bags each line
+     actually packed — the same arithmetic the registry now holds, so the
+     page and the KPI engine cannot disagree. */
+  function burstRate(rows) {
+    var wSum = 0, vSum = 0, any = false;
+    rows.forEach(function (r) {
+      var b1 = U.num(val(r, 'bags_pl1')) || 0;
+      var b2 = U.num(val(r, 'bags_pl2')) || 0;
+      var tot = b1 + b2;
+      if (!tot) return;
+      var rate = ((U.num(val(r, 'burst_rate_pl1')) || 0) * b1 + (U.num(val(r, 'burst_rate_pl2')) || 0) * b2) / tot;
+      wSum += tot; vSum += rate * tot; any = true;
+    });
+    return any && wSum > 0 ? vSum / wSum : null;
+  }
+
+  /* ══ PERIOD ═══════════════════════════════════════════════════════ */
+  var PERIOD_LABEL = { day: 'On Date', mtd: 'Month to Date', ytd: 'Year to Date (fiscal)' };
+
+  function monthStart(iso) { return iso.slice(0, 8) + '01'; }
+  /* Fiscal year runs 1 April → 31 March, the same convention
+     forms/report-rollup.js and mines-report.html already use. */
+  function fiscalStart(iso) {
+    var d = new Date(iso + 'T00:00:00');
+    var y = d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1;
+    return y + '-04-01';
+  }
+  function fmtDate(iso) {
+    return new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  /* ══ STATE ════════════════════════════════════════════════════════ */
+  var state = { date: null, period: 'day', rows: [], allRows: [], drafts: 0, loading: true, error: null };
+
+  function rowsForPeriod() {
+    if (state.period === 'day') {
+      return state.rows.filter(function (r) { return String(r.record_date).slice(0, 10) === state.date; });
+    }
+    return state.rows;
+  }
+
+  /* ══ KPI CARDS ════════════════════════════════════════════════════
+     Every metadata value below — target, signage, target label, method
+     notes, formula version — is read from the KPI registry by
+     NyatiUI.fromRegistry. This page supplies the VALUE and the PERIOD and
+     nothing else. That is the fix for targets having been typed into
+     pages as strings: there is no longer anywhere here to type one.
+     ═══════════════════════════════════════════════════════════════════ */
+  function buildKpis(rows) {
+    var period = PERIOD_LABEL[state.period];
+    var isDay  = state.period === 'day';
+
+    /* Dispatch tonnage off THIS report's channel×grade breakdown. Note it
+       is deliberately not the 'despatch-day' registry KPI: that one was
+       re-pointed in v4 to CM-1's stock ledger on the Production Report so
+       Operations reconciles against a single figure. Both are correct
+       answers to different questions, and the drill-down says so rather
+       than letting a reader assume they should match. */
+    var dispatchTotal = sumFields(rows, DISPATCH_FIELDS);
+    var mtdRows  = state.rows;
+    var mtdTotal = sumFields(mtdRows, DISPATCH_FIELDS);
+    var planned  = latestField(mtdRows, 'dispatch_mtd_target');
+
+    var specs = [];
+
+    specs.push(U.adHoc({
+      key: 'dispatch-report-total',
+      name: 'Cement Dispatched',
+      value: dispatchTotal,
+      unit: 'MT',
+      dp: 1,
+      period: period,
+      provenance: 'manual',
+      target: null,
+      targetNote: isDay ? 'No daily target set' : null,
+      notes: 'Total tonnage leaving the plant over this period, summed across every channel and grade on '
+           + 'the Dispatch & SO report: Regular Bags, Bulker and Big Bags by grade, plus clinker. '
+           + 'This is the DISPATCH REPORT\'s own figure. It is not the same number as the "Despatch / Day" '
+           + 'KPI on the plant dashboard, which was re-pointed in 2026 to CM-1\'s stock-ledger consumption '
+           + 'column on the Production Report so that Operations reconciles against one figure. The two '
+           + 'answer different questions — what Sales loaded, and what left cement stock — and they are '
+           + 'not expected to agree exactly.',
+      detail: [{ k: 'Reports counted', v: rows.length + (rows.length === 1 ? ' day' : ' days') }],
+      href: 'forms/dispatch-form.html',
+      hrefLabel: 'Open the Dispatch & SO report',
+    }));
+
+    /* MTD against the month's plan. The plan is now a declared fact
+       (dispatch_mtd_target) rather than an anonymous input, so the drill-
+       down can say where the denominator came from. */
+    var achievement = (mtdTotal !== null && planned) ? (mtdTotal / planned * 100) : null;
+    specs.push(U.adHoc({
+      key: 'dispatch-plan-achievement',
+      name: 'MTD vs Monthly Plan',
+      value: achievement,
+      unit: '%',
+      dp: 1,
+      period: 'Month to Date',
+      provenance: 'manual',
+      target: planned ? 100 : null,
+      signage: '>=',
+      targetLabel: planned ? 'Plan ' + U.fmt(planned, 0) + ' MT' : null,
+      targetNote: planned ? null : 'No monthly plan entered on the report',
+      notes: 'Cement dispatched so far this month, as a percentage of the month\'s dispatch plan. '
+           + 'The plan is the figure entered once on the Dispatch & SO report\'s Target row '
+           + '(dispatch_mtd_target); if nobody has entered it, this card says so rather than assuming one. '
+           + 'The numerator counts submitted reports only, so it rises as the month\'s reports come in.',
+      detail: planned ? [
+        { k: 'Dispatched MTD', v: U.fmt(mtdTotal, 1) + ' MT' },
+        { k: 'Plan for month', v: U.fmt(planned, 0) + ' MT' },
+        { k: 'Still to dispatch', v: U.fmt(Math.max(planned - (mtdTotal || 0), 0), 1) + ' MT' },
+      ] : [],
+      targetNoteSource: true,
+    }));
+
+    /* Registry-backed from here down. */
+    specs.push(U.fromRegistry('so-pendency', latestFields(rows, SO_ROWS.map(function (r) { return r.field; })), {
+      period: isDay ? period : 'Latest balance in period',
+      detail: (function () {
+        var src = latestRowWith(rows, SO_ROWS.map(function (r) { return r.field; }));
+        return src ? [{ k: 'Balance as at', v: fmtDate(String(src.record_date).slice(0, 10)) }] : [];
+      }()),
+    }));
+
+    specs.push(U.fromRegistry('bags-packed', sumFields(rows, ['bags_pl1', 'bags_pl2']), {
+      period: period,
+      /* The 7,000/day target is a DAILY one. Comparing a month's total
+         against it would be nonsense, so over a period the card compares
+         the daily mean instead and says that is what it is doing. */
+      value: isDay
+        ? sumFields(rows, ['bags_pl1', 'bags_pl2'])
+        : (function () {
+            var t = sumFields(rows, ['bags_pl1', 'bags_pl2']);
+            return (t === null || !rows.length) ? null : t / rows.length;
+          }()),
+      name: isDay ? 'Bags Packed' : 'Bags Packed — daily mean',
+      detail: isDay ? [] : [
+        { k: 'Total for period', v: U.fmt(sumFields(rows, ['bags_pl1', 'bags_pl2']), 0) + ' bags' },
+        { k: 'Days reported',    v: String(rows.length) },
+      ],
+    }));
+
+    specs.push(U.fromRegistry('burst-bag-rate', burstRate(rows), {
+      period: period,
+      detail: [
+        { k: 'Line 1 bags', v: U.fmt(sumField(rows, 'bags_pl1'), 0) || '—' },
+        { k: 'Line 2 bags', v: U.fmt(sumField(rows, 'bags_pl2'), 0) || '—' },
+      ],
+    }));
+
+    /* Vehicle queue — a stock, and an operational one: trucks still waiting
+       at the close of the report. */
+    var waiting = latestFields(rows, ['veh_reg_outside_waiting', 'veh_bulker_outside_waiting', 'veh_bigbag_outside_waiting']);
+    specs.push(U.adHoc({
+      key: 'vehicles-waiting',
+      name: 'Trucks Waiting Outside',
+      value: waiting,
+      unit: 'trucks',
+      dp: 0,
+      period: isDay ? period : 'Latest balance in period',
+      provenance: 'manual',
+      target: null,
+      targetNote: 'No target set',
+      notes: 'Trucks still waiting outside the plant gate at the time the report was written, across all '
+           + 'three vehicle types. This is a balance at a moment, not a count of the day\'s traffic, so it '
+           + 'is never summed across days — over a period this shows the most recent report\'s figure.',
+    }));
+
+    return specs;
+  }
+
+  /* ══ TABLES ═══════════════════════════════════════════════════════ */
+  function dispatchTableHTML(rows) {
+    var h = '<table class="n-tbl"><thead><tr>';
+    h += '<th class="n-tl n-rowhdr">Channel</th>';
+    GRADES.forEach(function (g) { h += '<th>' + U.esc(g.label) + '</th>'; });
+    h += '<th class="n-totcol">Total (MT)</th></tr></thead><tbody>';
+
+    var colTotals = {}, grand = null;
+
+    CHANNELS.forEach(function (c) {
+      h += '<tr><td class="n-tl n-rowhdr">' + U.esc(c.label) + '</td>';
+      var rowTotal = null;
+      GRADES.forEach(function (g) {
+        if (c.grades.indexOf(g.key) === -1) {
+          /* Not applicable is not zero. */
+          h += '<td><span class="n-nodata" title="' + U.esc(c.label) + ' is not packed in ' + U.esc(g.label) + '">n/a</span></td>';
+          return;
+        }
+        var v = sumField(rows, c.prefix + g.key);
+        h += '<td>' + U.cell(v, 1) + '</td>';
+        if (v !== null) {
+          rowTotal = (rowTotal || 0) + v;
+          colTotals[g.key] = (colTotals[g.key] || 0) + v;
+          grand = (grand || 0) + v;
+        }
+      });
+      h += '<td class="n-totcol">' + U.cell(rowTotal, 1) + '</td></tr>';
+    });
+
+    /* Clinker has no grade breakdown — it spans the grade columns rather
+       than pretending to have a 42.5R variant. */
+    var clinker = sumField(rows, 'dispatch_clinker');
+    h += '<tr><td class="n-tl n-rowhdr">Clinker</td>'
+       + '<td colspan="' + GRADES.length + '" style="text-align:left;color:var(--text-muted)">Not graded — bulk clinker despatch</td>'
+       + '<td class="n-totcol">' + U.cell(clinker, 1) + '</td></tr>';
+    if (clinker !== null) grand = (grand || 0) + clinker;
+
+    h += '<tr class="n-total"><td class="n-tl n-rowhdr">Total</td>';
+    GRADES.forEach(function (g) { h += '<td>' + U.cell(colTotals[g.key] === undefined ? null : colTotals[g.key], 1) + '</td>'; });
+    h += '<td class="n-totcol">' + U.cell(grand, 1) + '</td></tr>';
+
+    h += '</tbody></table>';
+    return h;
+  }
+
+  /* The three periods side by side. This is the answer to "which number am
+     I looking at" — you can read all three at once and reconcile them,
+     instead of clicking between them and holding one in your head. */
+  function periodTableHTML() {
+    var day = state.rows.filter(function (r) { return String(r.record_date).slice(0, 10) === state.date; });
+    var sets = [
+      { tag: 'On Date', label: fmtDate(state.date),                                rows: day },
+      { tag: 'MTD',     label: fmtDate(monthStart(state.date)) + ' → ' + fmtDate(state.date),  rows: state.rows },
+      { tag: 'YTD',     label: fmtDate(fiscalStart(state.date)) + ' → ' + fmtDate(state.date), rows: state.ytdRows || [] },
+    ];
+    var h = '<table class="n-tbl"><thead><tr>'
+          + '<th class="n-tl n-rowhdr">Period</th><th class="n-tl">Covering</th>'
+          + '<th>Reports</th><th>Cement (MT)</th><th>Bags Packed</th>'
+          + '<th class="n-totcol">Avg / Day (MT)</th></tr></thead><tbody>';
+    sets.forEach(function (s) {
+      var mt   = sumFields(s.rows, DISPATCH_FIELDS);
+      var bags = sumFields(s.rows, ['bags_pl1', 'bags_pl2']);
+      var avg  = (mt !== null && s.rows.length) ? mt / s.rows.length : null;
+      h += '<tr><td class="n-tl n-rowhdr"><span class="n-period-lbl">'
+         + '<span class="n-period-tag">' + U.esc(s.tag) + '</span></span></td>'
+         + '<td class="n-tl" style="color:var(--text-muted)">' + U.esc(s.label) + '</td>'
+         + '<td>' + s.rows.length + '</td>'
+         + '<td>' + U.cell(mt, 1) + '</td>'
+         + '<td>' + U.cell(bags, 0) + '</td>'
+         + '<td class="n-totcol">' + U.cell(avg, 1) + '</td></tr>';
+    });
+    h += '</tbody></table>';
+    return h;
+  }
+
+  function soTableHTML(rows) {
+    var fields = SO_ROWS.map(function (r) { return r.field; });
+    var src = latestRowWith(rows, fields);
+    if (!src) {
+      return U.stateHTML({
+        kind: 'nodata', compact: true,
+        title: 'No open-order figures for this period',
+        body: 'Sales order pendency is entered on the Dispatch & SO report. None of the reports in this period carried it.',
+      });
+    }
+    var h = '<table class="n-tbl"><thead><tr>'
+          + '<th class="n-tl n-rowhdr">Grade / Channel</th>'
+          + '<th class="n-totcol">Open Orders (MT)</th></tr></thead><tbody>';
+    var total = null;
+    SO_ROWS.forEach(function (r) {
+      var v = U.num(src.data[r.field]);
+      h += '<tr><td class="n-tl n-rowhdr">' + U.esc(r.label) + '</td>'
+         + '<td class="n-totcol">' + U.cell(v, 0) + '</td></tr>';
+      if (v !== null) total = (total || 0) + v;
+    });
+    h += '<tr class="n-total"><td class="n-tl n-rowhdr">Total pendency</td>'
+       + '<td class="n-totcol">' + U.cell(total, 0) + '</td></tr>';
+    h += '</tbody></table>';
+    return h;
+  }
+
+  function packingTableHTML(rows) {
+    var b1 = sumField(rows, 'bags_pl1'), b2 = sumField(rows, 'bags_pl2');
+    var r1 = sumField(rows, 'bags_pl1') === null ? null : latestField(rows, 'burst_rate_pl1');
+    var r2 = sumField(rows, 'bags_pl2') === null ? null : latestField(rows, 'burst_rate_pl2');
+    var isDay = state.period === 'day';
+
+    var h = '<table class="n-tbl"><thead><tr>'
+          + '<th class="n-tl n-rowhdr">Packing Line</th>'
+          + '<th>Bags Packed</th><th>Burst Bag Rate</th>'
+          + '<th class="n-totcol">Share of Output</th></tr></thead><tbody>';
+    var tot = (b1 || 0) + (b2 || 0);
+    [
+      { label: 'Packing Line 1', bags: b1, rate: r1 },
+      { label: 'Packing Line 2', bags: b2, rate: r2 },
+    ].forEach(function (l) {
+      h += '<tr><td class="n-tl n-rowhdr">' + U.esc(l.label) + '</td>'
+         + '<td>' + U.cell(l.bags, 0) + '</td>'
+         + '<td>' + (l.rate === null ? '<span class="n-nodata">—</span>' : U.esc(U.fmt(l.rate, 2)) + '%') + '</td>'
+         + '<td class="n-totcol">' + (tot && l.bags !== null ? U.esc(U.fmt(l.bags / tot * 100, 1)) + '%' : '<span class="n-nodata">—</span>') + '</td></tr>';
+    });
+    h += '<tr class="n-total"><td class="n-tl n-rowhdr">Plant total</td>'
+       + '<td>' + U.cell(b1 === null && b2 === null ? null : tot, 0) + '</td>'
+       + '<td>' + (burstRate(rows) === null ? '<span class="n-nodata">—</span>' : U.esc(U.fmt(burstRate(rows), 2)) + '%') + '</td>'
+       + '<td class="n-totcol">' + (b1 === null && b2 === null ? '<span class="n-nodata">—</span>' : '100.0%') + '</td></tr>';
+    h += '</tbody></table>';
+
+    if (!isDay) {
+      h += '<p class="n-card-sub" style="padding:var(--sp-3) var(--sp-4) 0">'
+         + 'Bag counts are summed across the period. Each line\'s burst rate is that line\'s most recently '
+         + 'reported figure; the plant total is weighted by the bags each line actually packed, which is why '
+         + 'it need not sit between the two line figures.</p>';
+    }
+    return h;
+  }
+
+  function vehicleTableHTML(rows) {
+    var fields = [];
+    VEHICLES.forEach(function (v) {
+      fields.push('veh_' + v.key + '_loaded_after12', 'veh_' + v.key + '_inside_waiting', 'veh_' + v.key + '_outside_waiting');
+    });
+    var src = latestRowWith(rows, fields);
+    if (!src) {
+      return U.stateHTML({
+        kind: 'nodata', compact: true,
+        title: 'No vehicle movement recorded for this period',
+        body: 'Vehicle queue figures are entered on the Dispatch & SO report.',
+      });
+    }
+    var h = '<table class="n-tbl"><thead><tr>'
+          + '<th class="n-tl n-rowhdr">Vehicle Type</th>'
+          + '<th>Loaded After 12:00</th><th>Inside Plant, Loading</th><th>Outside Plant, Waiting</th>'
+          + '<th class="n-totcol">Total On Site</th></tr></thead><tbody>';
+    var t = [null, null, null];
+    VEHICLES.forEach(function (v) {
+      var a = U.num(src.data['veh_' + v.key + '_loaded_after12']);
+      var b = U.num(src.data['veh_' + v.key + '_inside_waiting']);
+      var c = U.num(src.data['veh_' + v.key + '_outside_waiting']);
+      var onsite = (b === null && c === null) ? null : (b || 0) + (c || 0);
+      h += '<tr><td class="n-tl n-rowhdr">' + U.esc(v.label) + '</td>'
+         + '<td>' + U.cell(a, 0) + '</td><td>' + U.cell(b, 0) + '</td><td>' + U.cell(c, 0) + '</td>'
+         + '<td class="n-totcol">' + U.cell(onsite, 0) + '</td></tr>';
+      [a, b, c].forEach(function (x, i) { if (x !== null) t[i] = (t[i] || 0) + x; });
+    });
+    var onsiteTot = (t[1] === null && t[2] === null) ? null : (t[1] || 0) + (t[2] || 0);
+    h += '<tr class="n-total"><td class="n-tl n-rowhdr">Total</td>'
+       + '<td>' + U.cell(t[0], 0) + '</td><td>' + U.cell(t[1], 0) + '</td><td>' + U.cell(t[2], 0) + '</td>'
+       + '<td class="n-totcol">' + U.cell(onsiteTot, 0) + '</td></tr>';
+    h += '</tbody></table>';
+    h += '<p class="n-card-sub" style="padding:var(--sp-3) var(--sp-4) 0">'
+       + 'A queue is a balance at a moment, not a daily total, so these figures are never summed across '
+       + 'days — this is the position as at ' + U.esc(fmtDate(String(src.record_date).slice(0, 10))) + '.</p>';
+    return h;
+  }
+
+  /* ══ CARD FRAME ═══════════════════════════════════════════════════ */
+  function card(opts) {
+    return '<section class="n-card">'
+      + '<div class="n-card-hdr">'
+      +   '<div><div class="n-card-title"><i data-lucide="' + opts.icon + '"></i>' + U.esc(opts.title) + '</div>'
+      +   (opts.sub ? '<div class="n-card-sub">' + U.esc(opts.sub) + '</div>' : '') + '</div>'
+      +   (opts.meta ? '<div class="n-card-meta">' + opts.meta + '</div>' : '')
+      + '</div>'
+      + '<div class="n-card-body' + (opts.flush ? ' is-flush' : '') + '">'
+      +   (opts.flush ? '<div class="n-tbl-wrap">' + opts.body + '</div>' : opts.body)
+      + '</div>'
+      + '</section>';
+  }
+
+  /* ══ RENDER ═══════════════════════════════════════════════════════ */
+  function renderStatus() {
+    if (state.loading) { elStat.innerHTML = ''; return; }
+    var rows = rowsForPeriod();
+    var html = '';
+
+    if (state.period === 'day') {
+      var rec = state.dayRecord;
+      html += U.workflowChipHTML(rec ? rec.status : 'missing');
+      if (rec && rec.submitted_by_name) {
+        html += '<span class="n-ctx-lbl">by ' + U.esc(rec.submitted_by_name) + '</span>';
+      }
+    } else {
+      var statuses = {};
+      rows.forEach(function (r) { statuses[r.status] = (statuses[r.status] || 0) + 1; });
+      var kinds = Object.keys(statuses);
+      html += U.workflowChipHTML(kinds.length === 1 ? kinds[0] : (kinds.length ? 'mixed' : 'missing'));
+      /* Coverage — the honest answer to "can I trust this total?" */
+      html += '<span class="n-ctx-lbl">' + rows.length + ' report' + (rows.length === 1 ? '' : 's') + ' counted';
+      if (state.drafts) html += ' · ' + state.drafts + ' draft' + (state.drafts === 1 ? '' : 's') + ' not counted';
+      html += '</span>';
+    }
+    elStat.innerHTML = html;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function render() {
+    if (state.loading) {
+      U.renderKpiSkeletons(elKpis, 6);
+      elBody.innerHTML = '';
+      renderStatus();
+      return;
+    }
+
+    if (state.error) {
+      elKpis.innerHTML = '';
+      U.renderState(elBody, {
+        kind: 'error',
+        title: 'Dispatch data could not be loaded',
+        body: 'The server did not answer, so no figures are shown — rather than showing figures that might '
+            + 'be out of date. ' + state.error,
+        action: 'Try again',
+        onAction: load,
+      });
+      return;
+    }
+
+    var rows = rowsForPeriod();
+
+    U.renderKpis(elKpis, buildKpis(rows));
+    renderStatus();
+
+    var h = '';
+
+    if (!rows.length) {
+      var draftOnly = state.period === 'day' && state.dayRecord && state.dayRecord.status === 'draft';
+      h += U.stateHTML({
+        kind: 'nodata',
+        title: draftOnly
+          ? 'A draft exists for ' + fmtDate(state.date) + ', but it has not been submitted'
+          : 'No Dispatch & SO report has been submitted for ' + (state.period === 'day' ? fmtDate(state.date) : 'this period'),
+        body: draftOnly
+          ? 'Draft figures are deliberately not shown here: they can still change, and this page is what '
+            + 'management reads. The report will appear as soon as it is submitted.'
+          : 'This page shows only submitted reports. Pick another date, or open the report to enter the '
+            + 'figures for this one.',
+        action: canEnter ? 'Open the Dispatch & SO report' : null,
+        actionHref: canEnter ? 'forms/dispatch-form.html' : null,
+      });
+      elBody.innerHTML = h;
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+
+    h += card({
+      icon: 'truck',
+      title: 'Cement Dispatch by Channel & Grade',
+      sub: PERIOD_LABEL[state.period] + ' · ' + (state.period === 'day' ? fmtDate(state.date)
+            : fmtDate(state.period === 'mtd' ? monthStart(state.date) : fiscalStart(state.date)) + ' → ' + fmtDate(state.date)),
+      meta: '<span class="n-prov is-manual"><span class="n-prov-sw"></span>Manual entry</span>',
+      body: dispatchTableHTML(rows),
+      flush: true,
+    });
+
+    h += card({
+      icon: 'calendar',
+      title: 'Period Comparison',
+      sub: 'The same measures over each reporting period, so the three can be reconciled against one another',
+      body: periodTableHTML(),
+      flush: true,
+    });
+
+    h += card({
+      icon: 'list-checks',
+      title: 'Sales Orders & Pendency',
+      sub: 'Open orders still to be fulfilled — a balance on the reporting date, never a total across days',
+      meta: '<span class="n-prov is-manual"><span class="n-prov-sw"></span>Manual entry</span>',
+      body: soTableHTML(rows),
+      flush: true,
+    });
+
+    h += card({
+      icon: 'package',
+      title: 'Packing Plant Performance',
+      sub: 'Bag output and burst rate by line',
+      meta: '<span class="n-prov is-manual"><span class="n-prov-sw"></span>Manual entry</span>',
+      body: packingTableHTML(rows),
+      flush: true,
+    });
+
+    h += card({
+      icon: 'truck',
+      title: 'Vehicle Queue',
+      sub: 'Trucks loaded, loading and waiting at the plant gate',
+      meta: '<span class="n-prov is-manual"><span class="n-prov-sw"></span>Manual entry</span>',
+      body: vehicleTableHTML(rows),
+      flush: true,
+    });
+
+    /* Cross-module link rather than a section this report cannot fill.
+       Stoppages affecting dispatch are entered on the Stoppages report and
+       are not part of the Dispatch & SO submission — so this points at
+       where the data actually lives instead of showing an empty table. */
+    h += card({
+      icon: 'alert-triangle',
+      title: 'Stoppages affecting dispatch',
+      sub: 'Downtime is recorded on the Stoppages report, not on this one',
+      body: '<p style="font-size:var(--fs-sm);color:var(--text-muted);line-height:var(--lh-normal);margin-bottom:var(--sp-3)">'
+          + 'Packing and loading-bay downtime for ' + U.esc(fmtDate(state.date)) + ' is captured on the Sectional '
+          + 'Stoppage Report, which is where the availability, MTBF and Pareto analysis is built from. '
+          + 'This report does not duplicate it.</p>'
+          + '<a class="n-btn" href="forms/stoppage-form.html"><i data-lucide="arrow-right"></i> Open the Stoppages report</a>',
+    });
+
+    elBody.innerHTML = h;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  /* ══ LOAD ═════════════════════════════════════════════════════════ */
+  async function load() {
+    state.loading = true; state.error = null;
+    render();
+    try {
+      var from = monthStart(state.date);
+      var fy   = fiscalStart(state.date);
+      var all  = await NyatiAPI.getFormRange('dispatch', fy, state.date);
+
+      var inMonth = all.filter(function (r) {
+        var d = String(r.record_date).slice(0, 10);
+        return d >= from && d <= state.date;
+      });
+
+      state.allRows  = all;
+      state.ytdRows  = all.filter(isReported);
+      state.rows     = inMonth.filter(isReported);
+      state.drafts   = inMonth.length - state.rows.length;
+      state.dayRecord = all.filter(function (r) {
+        return String(r.record_date).slice(0, 10) === state.date;
+      })[0] || null;
+      state.loading = false;
+    } catch (e) {
+      state.loading = false;
+      state.error = (e && e.status === 403)
+        ? 'You do not have permission to read this report.'
+        : 'Check your connection and try again.';
+    }
+    render();
+  }
+
+  /* ══ EXPORT ═══════════════════════════════════════════════════════
+     Exports what is on screen, from the DOM, so the file can never claim
+     something the page did not show. No dependency, no second code path
+     that could format a number differently. */
+  function exportCsv() {
+    var lines = [];
+    document.querySelectorAll('#dp-body .n-card').forEach(function (sec) {
+      var title = sec.querySelector('.n-card-title');
+      var table = sec.querySelector('table');
+      if (!table) return;
+      lines.push('"' + (title ? title.textContent.trim() : '') + '"');
+      table.querySelectorAll('tr').forEach(function (tr) {
+        var cells = [].map.call(tr.querySelectorAll('th,td'), function (c) {
+          return '"' + c.textContent.trim().replace(/"/g, '""') + '"';
+        });
+        if (cells.length) lines.push(cells.join(','));
+      });
+      lines.push('');
+    });
+    var header = 'Lake Cement Ltd — Dispatch & Sales Orders\n'
+               + '"Period","' + PERIOD_LABEL[state.period] + '"\n'
+               + '"Date","' + fmtDate(state.date) + '"\n'
+               + '"Exported","' + new Date().toLocaleString('en-GB') + '"\n\n';
+    var blob = new Blob([header + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'nyati-dispatch-' + state.period + '-' + state.date + '.csv';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+  }
+
+  /* ══ WIRE ═════════════════════════════════════════════════════════ */
+  U.wireSegmented(document.getElementById('dp-period'), function (v) {
+    state.period = v;
+    render();
+  });
+
+  elDate.addEventListener('change', function () {
+    if (!elDate.value) return;
+    state.date = elDate.value;
+    /* The fallback note explains why the page opened on a date other than
+       today. It stops being true the moment the reader picks a date
+       themselves — leaving it up would have the banner claim "Showing 20
+       Jun" while every figure below now answers for the 19th. */
+    LatestPeriod.showNote('dp-stale', { fellBack: false });
+    load();
+  });
+
+  document.getElementById('dp-print').addEventListener('click', function () { window.print(); });
+  document.getElementById('dp-export').addEventListener('click', exportCsv);
+
+  var fd = document.getElementById('footer-date');
+  if (fd) fd.textContent = new Date().toLocaleDateString('en-GB', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+
+  /* Open on today when today has a report, otherwise on the most recent
+     date that does — and say so, rather than opening on a blank page that
+     reads as "this is broken". */
+  (async function init() {
+    var d = await LatestPeriod.defaultDate(['dispatch']);
+    state.date = d.date;
+    elDate.value = d.date;
+    LatestPeriod.showNote('dp-stale', d);
+    if (window.lucide) lucide.createIcons();
+    load();
+  }());
+
+}());
+</script>
+</body>
+</html>
