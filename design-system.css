@@ -1527,6 +1527,15 @@ html body .kt-f .kt-badge::before { background: var(--green-ink); }
 
 html body .kt-lbl { padding-right: 0; min-height: 32px; }
 html body .kt-val { font-variant-numeric: tabular-nums; }
+/* Nothing to show. An em-dash at 26px/800 in navy is a solid bar — it reads
+   as a redacted figure rather than an absent one, so the slot goes quiet
+   instead of shouting a blank. forms/kpi-live.js toggles .is-empty on every
+   .kt-val it watches, but the rule only existed in forms/forms.css:503, which
+   daily-report.html and power-plant-report.html do not link — both link only
+   styles.css and design-system.css, so both still drew the navy bar (RAID
+   I-8). It belongs here, next to the other .kt-val rules, rather than being
+   imported with the other 698 lines of forms.css. */
+html body .kt-val.is-empty { font-weight: 500; color: var(--text-muted); }
 html body .kt-pct { font-variant-numeric: tabular-nums; }
 html body .kt-bar-fill { background: var(--st-neutral); }
 html body .kt.on-track .kt-bar-fill { background: var(--st-good); }
