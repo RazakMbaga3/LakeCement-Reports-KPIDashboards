@@ -31,8 +31,14 @@
     }
     .adm-bar input[type=search] { min-width: 240px; }
     .adm-spacer { flex: 1; }
+    /* The border is on the base class, transparent, so every variant is the
+       same height. -ghost and -warn add a visible 1.5px border; -primary has
+       none, so with `border: none` here it rendered 31px against their 33px
+       and sat 2px short of the ghost button beside it in the same toolbar
+       (design-consistency-audit.js, 2026-09-15: adm-btn, 2 geometries). */
     .adm-btn { font-family: var(--font); font-size: 12px; font-weight: 700; padding: 8px 14px;
-               border-radius: 6px; border: none; cursor: pointer; display: inline-flex;
+               border-radius: 6px; border: 1.5px solid transparent; cursor: pointer;
+               display: inline-flex;
                align-items: center; gap: 6px; white-space: nowrap; }
     .adm-btn-primary { background: var(--navy, #173158); color: white; }
     .adm-btn-primary:hover { background: #0f2340; }

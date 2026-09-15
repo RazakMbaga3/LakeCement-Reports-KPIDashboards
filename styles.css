@@ -1050,7 +1050,10 @@ img { max-width: 100%; }
    chosen — the same reason the KPI tile label used to reserve 74px. The
    consistency audit reports it; this comment is the answer. */
 .sk-card.sk-illustrative .sk-status,
-.sk-card.sk-pending .sk-status { padding-right: 78px; }
+/* 80, not 78: clearance for the pending badge, rounded up onto the 4px
+   scale. Up rather than down so the badge still clears (design-consistency
+   -audit.js, 2026-09-15). */
+.sk-card.sk-pending .sk-status { padding-right: 80px; }
 
 /* Period fallback note — see applyLatestPeriodFallback() in app.js.
    Sits between the filter bar and the department context so it reads as a
