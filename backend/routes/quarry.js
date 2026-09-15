@@ -33,9 +33,13 @@ const importBody = z.object({
 });
 
 // ── POST /api/quarry/tickets/import ──────────────────────────
-// Bulk upsert by ticket_no. One multi-row statement — atomic by nature,
-// no explicit transaction needed. `xmax = 0` is the standard Postgres
-// tell for "this row was just inserted" vs "hit the ON CONFLICT branch".
+// Bulk upsert by ticket_no. `xmax = 0` is the standard Postgres tell for
+// "this row was just inserted" vs "hit the ON CONFLICT branch".
+//
+// The upsert is one multi-row statement and so atomic on its own, but it
+// now shares a transaction with its audit_log row — same reason
+// routes/reports.js wraps a form submission: an import the uploader sees
+// as accepted must not be able to land with no entry in the trail.
 router.post('/tickets/import',
   requireAuth, requireRole('mining', 'admin'),
   validate(importBody, 'body'),
@@ -53,31 +57,81 @@ router.post('/tickets/import',
         return '(' + cols.map((_, j) => '$' + (base + j + 1)).join(',') + ')';
       });
 
-      const result = await db.query(`
-        INSERT INTO weighbridge_tickets (${cols.join(',')})
-        VALUES ${tuples.join(',')}
-        ON CONFLICT (ticket_no) DO UPDATE SET
-          vendor         = EXCLUDED.vendor,
-          vehicle        = EXCLUDED.vehicle,
-          transfer_type  = EXCLUDED.transfer_type,
-          movement_type  = EXCLUDED.movement_type,
-          product        = EXCLUDED.product,
-          ticket_date    = EXCLUDED.ticket_date,
-          net_qty        = EXCLUDED.net_qty,
-          gross_datetime = EXCLUDED.gross_datetime,
-          updated_at     = NOW()
-        RETURNING (xmax = 0) AS inserted
-      `, values);
+      const dates = rows.map(r => r.date).sort();
+      const dmin  = dates[0];
+      const dmax  = dates[dates.length - 1];
 
-      const added   = result.rows.filter(r => r.inserted).length;
-      const updated = result.rows.length - added;
-      const dates   = rows.map(r => r.date).sort();
+      const outcome = await db.withTransaction(async (client) => {
+        /* What the overwritten tickets weighed BEFORE this import. The
+           tickets whose ticket_no already exists are exactly the ones this
+           statement is about to destroy the previous values of, and
+           weighbridge_tickets keeps no history of them. One aggregate, not
+           one row per ticket — the question a reviewer asks is "did the
+           tonnage move", not "what did row 14,203 say". */
+        const { rows: [before] } = await client.query(
+          `SELECT COALESCE(SUM(net_qty), 0) AS net FROM weighbridge_tickets WHERE ticket_no = ANY($1)`,
+          [rows.map(r => r.ticketNo)]
+        );
 
-      res.json({
-        added, updated,
-        dmin: dates[0], dmax: dates[dates.length - 1],
-        total: result.rows.length,
+        const result = await client.query(`
+          INSERT INTO weighbridge_tickets (${cols.join(',')})
+          VALUES ${tuples.join(',')}
+          ON CONFLICT (ticket_no) DO UPDATE SET
+            vendor         = EXCLUDED.vendor,
+            vehicle        = EXCLUDED.vehicle,
+            transfer_type  = EXCLUDED.transfer_type,
+            movement_type  = EXCLUDED.movement_type,
+            product        = EXCLUDED.product,
+            ticket_date    = EXCLUDED.ticket_date,
+            net_qty        = EXCLUDED.net_qty,
+            gross_datetime = EXCLUDED.gross_datetime,
+            updated_at     = NOW()
+          RETURNING ticket_no, (xmax = 0) AS inserted
+        `, values);
+
+        const overwritten = result.rows.filter(r => !r.inserted).map(r => r.ticket_no);
+        const added       = result.rows.length - overwritten.length;
+
+        /* ONE audit row for the whole import, not one per ticket: a single
+           upload is one human act, and 20,000 rows of "ticket imported"
+           would bury the login and approval entries this log exists to
+           surface. So the row has to carry everything the act destroyed —
+           who, the dates covered, how many rows were new vs overwritten,
+           what the overwritten tickets summed to before and after, and which
+           tickets they were. That is what someone asking "who changed the
+           quarry numbers for June" needs; anything less sends them to a
+           table that no longer holds the answer.
+
+           The ticket list is capped because details is sliced at 4,000 chars
+           downstream of here — the count stays exact even when the names
+           don't all fit. record_date is deliberately left NULL: an import
+           spans a date range and that column holds one date, so the range
+           goes in details rather than being misrepresented by its first day. */
+        const SHOWN  = 25;
+        const sample = overwritten.slice(0, SHOWN).join(', ') +
+          (overwritten.length > SHOWN ? `, +${overwritten.length - SHOWN} more` : '');
+        // Set, not Array.includes: rows and overwritten are both up to 20,000
+        // long, and a linear scan per row makes this quadratic.
+        const hit    = new Set(overwritten);
+        const newNet = rows.reduce((sum, r) => sum + (hit.has(r.ticketNo) ? r.netQty : 0), 0);
+
+        const details =
+          `${result.rows.length} ticket(s) for ${dmin}..${dmax}: ${added} new, ${overwritten.length} overwritten` +
+          (overwritten.length
+            ? `; net_qty on those ${Number(before.net).toFixed(3)} → ${newNet.toFixed(3)} (${sample})`
+            : '');
+
+        await client.query(
+          `INSERT INTO audit_log (user_id, username, action, form_type, details, ip_address)
+           VALUES ($1,$2,$3,$4,$5,$6)`,
+          [req.user.id, req.user.username, 'QUARRY_TICKET_IMPORT', 'weighbridge_tickets',
+           details.slice(0, 4000), req.ip]
+        );
+
+        return { added, updated: overwritten.length, total: result.rows.length };
       });
+
+      res.json({ ...outcome, dmin, dmax });
     } catch (err) { next(err); }
   });
 
