@@ -106,11 +106,21 @@ async function runWatchdog(opts = {}) {
 
   let email = { sent: false, reason: 'no alerts' };
   if (fired.length) {
+    /* Deliberately no .catch. sendMail returns { sent:false, reason } for
+       everything — not configured, no recipients, a 535 from the tenant —
+       and never throws (services/mailer.js:39, covered by
+       test/mailer.test.js). The .catch that used to be here turned
+       err.message into `reason`, and routes/monitor.js:76 hands this whole
+       object to res.json(): a raw transport error names internal Exchange
+       hosts and tenant policy, and that would have gone to the browser.
+       mailer.js's own reason is written to be safe to relay. If a throw
+       ever does escape, it must surface as a 500 through the central error
+       handler, not be quietly reshaped into a leaky success-shaped object. */
     email = await sendMail({
       subject: `⚠ Nyati MIS alert: ${fired.map(a => a.kind).join(', ')}`,
       html: alertEmailHtml(fired),
       to: process.env.ALERT_TO || process.env.DIGEST_TO,
-    }).catch(err => ({ sent: false, reason: err.message }));
+    });
 
     if (dbUp) {
       for (const a of fired) {
