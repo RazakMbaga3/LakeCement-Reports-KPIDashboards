@@ -306,19 +306,71 @@ router.post('/users/:id/unlock', ...adminOnly, validate(idParam, 'params'),
    created the account.
 ══════════════════════════════════════════════════════════════════════ */
 
+/* Thrown when the token was issued but the mail did not go out. It exists
+   to force the caller's transaction to roll back — see attemptInvite. */
+class InviteNotSent extends Error {
+  constructor(reason) {
+    super(`invitation not sent: ${reason}`);
+    this.name = 'InviteNotSent';
+    this.reason = reason;
+  }
+}
+
+/* Issues the invite and sends it, both inside the caller's transaction.
+
+   The send is deliberately inside it, and a failure deliberately throws.
+   authTokens.issue() supersedes this person's previous live invite
+   (services/authTokens.js:46 — `UPDATE auth_tokens SET used_at = NOW()`),
+   so the link already sitting in their inbox is dead the instant that
+   UPDATE commits. Letting the transaction commit after a failed send would
+   destroy a working link and put nothing in its place, while the admin sees
+   only a 502 that doesn't mention it — worst of both. Rolling back restores
+   the old token untouched, so a resend that fails costs the user nothing.
+
+   That used to happen by accident: sendMail threw on a transport error and
+   the throw rolled the transaction back. Commit 1617e2f made it return
+   { sent:false } instead (rightly — the throw was an enumeration oracle on
+   forgot-password, RAID R-7), which silently switched this rollback off.
+   Hence the explicit throw.
+
+   The mail hop therefore runs with a pool connection held open. That is the
+   price of the rollback and it is bounded, not unbounded: mailer.js:27-29
+   caps connect/greeting/socket at 10/10/30s precisely because of this
+   transaction. If invites ever move to a queue, the send leaves the
+   transaction and this note goes with it. */
 async function inviteOne(client, req, user) {
   const token = await authTokens.issue(
     { userId: user.id, email: user.email, purpose: 'invite', createdBy: req.user.id }, client);
   const mail = await authMail.sendInvite({
     to: user.email, fullName: user.full_name, username: user.username, token,
   });
-  await audit(client, req, mail.sent ? 'USER_INVITED' : 'USER_INVITE_FAILED', user.username,
-    mail.sent ? `invitation sent to ${user.email}` : `invitation NOT sent: ${mail.reason}`);
+  if (!mail.sent) throw new InviteNotSent(mail.reason);
+  await audit(client, req, 'USER_INVITED', user.username, `invitation sent to ${user.email}`);
   return mail;
 }
 
+/* One invite, in its own transaction, reported as { sent, reason } rather
+   than as an exception — the shape both callers below already branch on.
+
+   USER_INVITE_FAILED is written AFTER the rollback, on the pool rather than
+   the rolled-back client: an audit row written inside that transaction
+   would be undone along with the token, leaving no trace that anyone tried.
+   Anything that isn't a send failure still propagates to the central error
+   handler. */
+async function attemptInvite(req, user) {
+  try {
+    return await db.withTransaction(client => inviteOne(client, req, user));
+  } catch (err) {
+    if (!(err instanceof InviteNotSent)) throw err;
+    await audit(db, req, 'USER_INVITE_FAILED', user.username,
+      `invitation NOT sent: ${err.reason}; token issue rolled back, any previous link still valid`);
+    return { sent: false, reason: err.reason };
+  }
+}
+
 /* Invite one person. Also the "resend" — issue() supersedes their previous
-   outstanding invite, so an older link in an inbox stops working. */
+   outstanding invite, so an older link in an inbox stops working (unless
+   the send fails, in which case the whole thing is rolled back). */
 router.post('/users/:id/invite', ...adminOnly, validate(idParam, 'params'),
   async (req, res, next) => {
     try {
@@ -329,13 +381,16 @@ router.post('/users/:id/invite', ...adminOnly, validate(idParam, 'params'),
       if (!u.email)  return res.status(400).json({ error: `${u.full_name} has no email address. Add one before sending an invitation.` });
       if (!u.active) return res.status(400).json({ error: `${u.full_name}'s account is inactive. Reactivate it before inviting them.` });
 
-      const mail = await db.withTransaction(client => inviteOne(client, req, u));
+      const mail = await attemptInvite(req, u);
       if (!mail.sent) {
-        /* 502, not 500: the request was valid and the token was issued —
-           what failed is the mail hop. The admin needs to know the invite
-           did NOT go out, because from their side the account now exists. */
+        /* 502, not 500: the request was valid and nothing about the account
+           is wrong — what failed is the mail hop. The admin needs to know
+           the invite did NOT go out, because from their side the account
+           already exists, and needs to know that any link this person was
+           already holding still works, so they don't chase a problem that
+           isn't there. */
         return res.status(502).json({
-          error: `The account is fine, but the invitation could not be sent: ${mail.reason}. Fix the mail settings and send it again.`,
+          error: `The account is fine, but the invitation could not be sent: ${mail.reason}. Any invitation link they already have still works. Fix the mail settings and send it again.`,
         });
       }
       res.json({ ok: true, sentTo: u.email });
@@ -371,7 +426,7 @@ router.post('/users/invite-bulk', ...adminOnly, validate(bulkBody, 'body'),
       const results = [];
       for (const u of targets) {
         try {
-          const mail = await db.withTransaction(client => inviteOne(client, req, u));
+          const mail = await attemptInvite(req, u);
           results.push({ username: u.username, email: u.email, sent: mail.sent, reason: mail.reason });
         } catch (e) {
           results.push({ username: u.username, email: u.email, sent: false, reason: e.message });
