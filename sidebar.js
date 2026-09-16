@@ -11,47 +11,59 @@
 ═══════════════════════════════════════════════════════════════════ */
 'use strict';
 
+/* Group order below is Daily Reports → KPI → Analytics → (utility groups),
+   per the 2026-09-15 nav redesign — see project memory. The old standalone
+   "Approvals" and "Sales & Purchases" groups are gone: Approvals now opens
+   as a tab inside Daily Reports (paired with Entry Summary), and Sales /
+   Purchases relocated into the KPI list (see _SB_KPI_ORDER below). */
 const _SB_GROUPS = {
-  kpi:        { label: 'KPI &amp; Analytics',   cls: 'group-kpi'  },
   daily:      { label: 'Daily Reports',     cls: 'group-daily' },
-  approvals:  { label: 'Approvals',         cls: 'group-daily' },
+  kpi:        { label: 'KPI',               cls: 'group-kpi'  },
+  analytics:  { label: 'Analytics',         cls: 'group-analytics' },
   mis:        { label: 'Management Info.',  cls: 'group-mis'   },
-  commercial: { label: 'Sales &amp; Purchases', cls: 'group-comm'  },
   ops:        { label: 'Reports &amp; Tools',   cls: 'group-ops'   },
   admin:      { label: 'Administration',    cls: 'group-ops'   },
 };
 
-/* Same 9 departments/order as the KPI dashboard used to show in its
-   horizontal .dept-nav bar (now retired — see index.html/app.js). */
-const _SB_KPI_DEPTS = [
-  { dept:'summary',        label:'Executive Summary', icon:'layout-dashboard' },
-  { dept:'ei',              label:'E &amp; I',              icon:'zap' },
-  { dept:'production',      label:'Production',        icon:'factory' },
-  { dept:'mines',            label:'Quarry',            icon:'layers' },
-  { dept:'mechanical',      label:'Mechanical',        icon:'wrench' },
-  { dept:'powerplant',      label:'Power Plant',       icon:'cog' },
-  { dept:'packing',          label:'Packing Plant',     icon:'package' },
-  { dept:'stores',            label:'Stores',            icon:'warehouse' },
-  { dept:'minesworkshop',    label:'Mines Workshop',    icon:'truck' },
+/* One ordered list mixing the KPI department rows (switchDept() on
+   index.html) with two standalone pages that used to live in their own
+   "Sales & Purchases" group — Purchases and Sales — so the sidebar reads
+   in the plant's manufacturing-flow order instead of "all depts, then all
+   links". `type:'link'` rows carry their own `visible` check, same pattern
+   the old _SB_COMMERCIAL_ITEMS used.
+
+   "Raw Materials & Purchases" is provisional: it's meant to eventually
+   blend the Purchases report with Raw Materials daily-report data into one
+   view, but that merge isn't built — this links straight to the existing
+   Purchases report for now (2026-09-15 nav redesign; see project memory
+   for the deferred merge). Likewise "Sales & Dispatch" here is just the
+   existing Sales dashboard relocated, not a new combined report. */
+const _SB_KPI_ORDER = [
+  { type:'dept', dept:'summary',        label:'Executive Summary', icon:'layout-dashboard' },
+  { type:'link', label:'Raw Materials &amp; Purchases', icon:'shopping-cart', page:'purchases.html', visible: canViewPurchases },
+  { type:'dept', dept:'mines',          label:'Quarrying',        icon:'layers' },
+  { type:'dept', dept:'minesworkshop',  label:'Quarry Workshop',  icon:'truck' },
+  { type:'dept', dept:'production',     label:'Production',       icon:'factory' },
+  { type:'dept', dept:'packing',        label:'Packing',          icon:'package' },
+  { type:'dept', dept:'mechanical',     label:'Mechanical',       icon:'wrench' },
+  { type:'dept', dept:'ei',             label:'E &amp; I',             icon:'zap' },
+  { type:'link', label:'Sales &amp; Dispatch', icon:'trending-up', page:'sales.html', visible: canViewSales },
+  { type:'dept', dept:'stores',         label:'Stores',           icon:'warehouse' },
+  { type:'dept', dept:'powerplant',     label:'Power Plant',      icon:'cog' },
 ];
 
-/* Standalone KPI/analysis pages — previously reachable only from
-   portal.html's card grid, with no nav grouping anywhere else. */
-const _SB_KPI_LINKS = [
-  { label:'Trends &amp; Analytics',       icon:'trending-up',    page:'analytics.html' },
-  { label:'Entry Completeness',       icon:'check-circle',   page:'completeness.html' },
-  { label:'Material &amp; Power Balance', icon:'scale',           page:'balance.html' },
-  { label:'Operational Insights',     icon:'lightbulb',      page:'insights.html' },
-  { label:'Equipment Reliability',    icon:'alert-triangle', page:'reliability.html' },
+/* Analytics — read-only dashboards, no permission of their own beyond
+   general KPI access (same `hasKPI` gate the old _SB_KPI_LINKS used).
+   "Reliability & Stoppage" clubs two existing pages under one heading, no
+   backend change (rendered as a paired row, like _SB_KPI_ORDER's siblings
+   in Daily Reports — see _sbPairHTML below). */
+const _SB_ANALYTICS_ITEMS = [
+  { label:'Operational Summary', icon:'trending-up', page:'analytics.html' },
+  { label:'Power &amp; Heat',        icon:'scale',       page:'balance.html' },
 ];
-
-/* Sales and Purchases each have their own permission check now
-   (PERMISSIONS[role].commercial.{sales,purchase} in auth.js) — Purchases
-   used to ride on Sales' canViewSales() gate for lack of a check of its
-   own; each item below is filtered independently in the render loop. */
-const _SB_COMMERCIAL_ITEMS = [
-  { label:'Sales',     icon:'trending-up',   page:'sales.html',     visible: canViewSales },
-  { label:'Purchases', icon:'shopping-cart', page:'purchases.html', visible: canViewPurchases },
+const _SB_RELIABILITY_PAIR = [
+  { label:'Equipment Reliability', icon:'alert-triangle', page:'reliability.html' },
+  { label:'Stoppage Insights',     icon:'lightbulb',      page:'insights.html' },
 ];
 
 /* Open to every authenticated role (each page calls requireAuth() only)
@@ -96,6 +108,20 @@ function _sbBuildDailyGroup() {
 function _sbGroupLabelHTML(groupKey) {
   const g = _SB_GROUPS[groupKey];
   return `<div class="sb-group-label ${g.cls}"><span class="sb-group-dot"></span>${g.label}</div>`;
+}
+
+function _sbPairLabelHTML(text) {
+  return `<div class="sb-pair-label">${text}</div>`;
+}
+
+/* Lays out 2 _sbItemHTML rows side by side in one compact strip — used for
+   Approvals/Entry Summary and for report rows clubbed under one heading
+   (Quality; Sales & Dispatch; Reliability & Stoppage). This is nav-only
+   grouping: the underlying pages/forms stay separate, there's no backend
+   merge behind it (2026-09-15 nav redesign — see project memory for the
+   deferred full merges). */
+function _sbPairHTML(itemOptsList) {
+  return `<div class="sb-pair">${itemOptsList.map(_sbItemHTML).join('')}</div>`;
 }
 
 /* opts: {icon, label, active, href, onclick, dept, badgeHTML, stub} */
@@ -164,69 +190,124 @@ function renderSidebar() {
     </div>
     <nav class="sb-nav">`;
 
-  /* ── KPI & Analytics ─────────────────────────────────────────── */
-  const deptRows = _SB_KPI_DEPTS.filter(d => isDeptVisible(d.dept));
-  if (deptRows.length || hasKPI) {
-    html += _sbGroupLabelHTML('kpi');
-    deptRows.forEach(d => {
-      if (onIndex) {
-        html += _sbItemHTML({
-          icon: d.icon, label: d.label, dept: d.dept,
-          active: d.dept === initialDept,
-          onclick: `switchDept('${d.dept}');return false;`,
-        });
-      } else {
-        html += _sbItemHTML({
-          icon: d.icon, label: d.label, dept: d.dept,
-          href: `${base}index.html?dept=${d.dept}`,
+  /* ── Daily Reports ────────────────────────────────────────────────
+     Approvals + Entry Summary sit in one line as two separate tabs at the
+     top of the group (2026-09-15 nav redesign). Entry Summary is
+     completeness.html, relocated here from the old KPI-links list — same
+     `hasKPI` gate it always had, just a new home. Approvals is visible to
+     an HOD with something to approve, or admin/md who can approve any
+     department's reports. A department with no submittable form
+     (getMyFormAccess().length === 0, e.g. hr/it/finance/purchase today)
+     correctly gets no link — nothing to approve yet — and this
+     self-extends the day such a form is added. */
+  const canSeeApprovals = user.role === 'admin' || user.role === 'md' ||
+    (user.level === 'hod' && getMyFormAccess().length > 0);
+  const showEntrySummary = hasKPI;
+  const dailyItems = _sbBuildDailyGroup();
+
+  if (dailyItems.length || canSeeApprovals || showEntrySummary) {
+    html += _sbGroupLabelHTML('daily');
+
+    if (canSeeApprovals || showEntrySummary) {
+      const topPair = [];
+      if (canSeeApprovals) {
+        topPair.push({
+          icon: 'check-square', label: 'Approvals',
+          active: currentPage === 'approvals.html', href: base + 'approvals.html',
         });
       }
-    });
-    if (hasKPI) {
-      _SB_KPI_LINKS.forEach(l => {
-        html += _sbItemHTML({
-          icon: l.icon, label: l.label,
-          active: currentPage === l.page,
-          href: base + l.page,
+      if (showEntrySummary) {
+        topPair.push({
+          icon: 'check-circle', label: 'Entry Summary',
+          active: currentPage === 'completeness.html', href: base + 'completeness.html',
         });
-      });
+      }
+      html += _sbPairHTML(topPair);
+    }
+
+    /* Manufacturing-flow order comes from _DAILY_NAV_ITEMS itself (see
+       auth.js). Adjacent rows sharing the same `club` (Quality/Lab +
+       Limestone %; Dispatch & SO + Sales Projection) render as one paired
+       strip under a shared sub-heading instead of two full-width rows —
+       if a role's access filters one half out, the survivor just falls
+       through to the normal single-row branch below. */
+    for (let i = 0; i < dailyItems.length; i++) {
+      const it = dailyItems[i];
+      const next = dailyItems[i + 1];
+      const rowOpts = x => {
+        const href     = base ? x.hForm : x.hRoot;
+        const hrefPage = String(href).split('/').pop();
+        const badge    = `<span class="${x.fill ? 'sb-badge-fill' : 'sb-badge-view'}">${x.fill ? 'FILL' : 'VIEW'}</span>`;
+        return {
+          icon: x.icon, label: x.label, href, badgeHTML: badge, page: x.page,
+          active: x.page === currentPage || hrefPage === currentPage,
+        };
+      };
+
+      if (it.club && next && next.club === it.club) {
+        html += _sbPairLabelHTML(it.club);
+        html += _sbPairHTML([rowOpts(it), rowOpts(next)]);
+        i++; // consumed the partner too
+      } else {
+        html += _sbItemHTML(rowOpts(it));
+      }
     }
   }
 
-  /* ── Daily Reports (FILL/VIEW badge replaces the old two-zone bar) ── */
-  const dailyItems = _sbBuildDailyGroup();
-  if (dailyItems.length) {
-    html += _sbGroupLabelHTML('daily');
-    dailyItems.forEach(it => {
-      const href  = base ? it.hForm : it.hRoot;
-      const badge = `<span class="${it.fill ? 'sb-badge-fill' : 'sb-badge-view'}">${it.fill ? 'FILL' : 'VIEW'}</span>`;
-      /* A report that has been split into a review page and an entry form
-         is ONE nav row but TWO pages, so the row has to light up on both —
-         otherwise moving between "View report" and "Enter data" makes the
-         sidebar look like you left the section. `page` stays the
-         permission/fill-status key; the href is what actually navigates. */
-      const hrefPage = String(href).split('/').pop();
-      html += _sbItemHTML({
-        icon: it.icon, label: it.label, href, badgeHTML: badge,
-        page: it.page,
-        active: it.page === currentPage || hrefPage === currentPage,
-      });
+  /* ── KPI ──────────────────────────────────────────────────────────
+     One ordered list mixing department rows with the two relocated
+     standalone pages (Purchases, Sales) — see _SB_KPI_ORDER above for why
+     "Raw Materials & Purchases" and "Sales & Dispatch" are provisional
+     links rather than new combined reports. */
+  const kpiRows = _SB_KPI_ORDER.filter(entry =>
+    entry.type === 'dept' ? isDeptVisible(entry.dept) : entry.visible()
+  );
+  if (kpiRows.length) {
+    html += _sbGroupLabelHTML('kpi');
+    kpiRows.forEach(entry => {
+      if (entry.type === 'dept') {
+        if (onIndex) {
+          html += _sbItemHTML({
+            icon: entry.icon, label: entry.label, dept: entry.dept,
+            active: entry.dept === initialDept,
+            onclick: `switchDept('${entry.dept}');return false;`,
+          });
+        } else {
+          html += _sbItemHTML({
+            icon: entry.icon, label: entry.label, dept: entry.dept,
+            href: `${base}index.html?dept=${entry.dept}`,
+          });
+        }
+      } else {
+        html += _sbItemHTML({
+          icon: entry.icon, label: entry.label,
+          active: currentPage === entry.page,
+          href: base + entry.page,
+        });
+      }
     });
   }
 
-  /* ── Approvals — visible to an HOD with something to approve, or
-     admin/md who can approve any department's reports. A department
-     with no submittable form (getMyFormAccess().length === 0, e.g.
-     hr/it/finance/purchase today) correctly gets no link — nothing to
-     approve yet — and this self-extends the day such a form is added. */
-  const canSeeApprovals = user.role === 'admin' || user.role === 'md' ||
-    (user.level === 'hod' && getMyFormAccess().length > 0);
-  if (canSeeApprovals) {
-    html += _sbGroupLabelHTML('approvals');
-    html += _sbItemHTML({
-      icon: 'check-square', label: 'Pending Approvals',
-      active: currentPage === 'approvals.html', href: base + 'approvals.html',
+  /* ── Analytics ────────────────────────────────────────────────────
+     Same `hasKPI` gate the old KPI-links list used. Reliability &
+     Stoppage clubs two existing pages (reliability.html, insights.html)
+     under one heading, same pairing mechanism as the Daily Reports rows
+     above. */
+  if (hasKPI) {
+    html += _sbGroupLabelHTML('analytics');
+    _SB_ANALYTICS_ITEMS.forEach(l => {
+      html += _sbItemHTML({
+        icon: l.icon, label: l.label,
+        active: currentPage === l.page,
+        href: base + l.page,
+      });
     });
+    html += _sbPairLabelHTML('Reliability &amp; Stoppage');
+    html += _sbPairHTML(_SB_RELIABILITY_PAIR.map(l => ({
+      icon: l.icon, label: l.label,
+      active: currentPage === l.page,
+      href: base + l.page,
+    })));
   }
 
   /* ── MIS ──────────────────────────────────────────────────────── */
@@ -235,27 +316,6 @@ function renderSidebar() {
     html += _sbItemHTML({
       icon: 'clipboard-list', label: 'MIS Dashboard',
       active: currentPage === 'mis.html', href: base + 'mis.html',
-    });
-  }
-
-  /* ── Sales & Purchases ────────────────────────────────────────── */
-  const commercialItems = _SB_COMMERCIAL_ITEMS.filter(it => it.visible());
-  if (commercialItems.length) {
-    html += _sbGroupLabelHTML('commercial');
-    commercialItems.forEach(it => {
-      if (it.stub) {
-        html += _sbItemHTML({
-          icon: it.icon, label: it.label, stub: true,
-          badgeHTML: '<span class="sb-stub-tag">SOON</span>',
-          onclick: `location.href='${base}${it.page}'`,
-        });
-      } else {
-        html += _sbItemHTML({
-          icon: it.icon, label: it.label,
-          active: currentPage === it.page,
-          href: base + it.page,
-        });
-      }
     });
   }
 

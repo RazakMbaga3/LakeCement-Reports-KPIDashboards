@@ -264,7 +264,7 @@ img { max-width: 100%; }
 :root {
   --sidebar-w:            210px;
   --sidebar-w-collapsed:  58px;
-  --sb-accent-commercial: #6D5DD3; /* provisional — no brand color assigned yet */
+  --sb-accent-analytics:  #2E86AB; /* provisional — no brand color assigned yet */
 }
 
 .app-shell { display: flex; min-height: 100vh; }
@@ -338,11 +338,11 @@ img { max-width: 100%; }
   color: var(--on-navy);
 }
 .sb-group-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.group-kpi   .sb-group-dot { background: #fff; opacity: .7; }
-.group-daily .sb-group-dot { background: var(--orange); }
-.group-mis   .sb-group-dot { background: var(--green); }
-.group-comm  .sb-group-dot { background: var(--sb-accent-commercial); }
-.group-ops   .sb-group-dot { background: #94A3B8; }
+.group-kpi       .sb-group-dot { background: #fff; opacity: .7; }
+.group-daily     .sb-group-dot { background: var(--orange); }
+.group-analytics .sb-group-dot { background: var(--sb-accent-analytics); }
+.group-mis       .sb-group-dot { background: var(--green); }
+.group-ops       .sb-group-dot { background: #94A3B8; }
 
 /* ── Nav rows ──────────────────────────────────────────────────── */
 .sb-item {
@@ -367,9 +367,9 @@ img { max-width: 100%; }
   min-width: 0; overflow: hidden; text-overflow: ellipsis;
   white-space: nowrap; line-height: 1.3;
 }
-.group-daily .sb-item.active { background: var(--orange); }
-.group-mis   .sb-item.active { background: var(--green); }
-.group-comm  .sb-item.active { background: var(--sb-accent-commercial); }
+.group-daily     .sb-item.active { background: var(--orange); }
+.group-analytics .sb-item.active { background: var(--sb-accent-analytics); }
+.group-mis       .sb-item.active { background: var(--green); }
 
 .sb-badge-fill, .sb-badge-view {
   font-size: 12px; font-weight: 800; letter-spacing: .3px;
@@ -377,6 +377,37 @@ img { max-width: 100%; }
 }
 .sb-badge-fill { background: rgba(244,149,69,.25); color: var(--orange-lite); }
 .sb-badge-view { background: rgba(255,255,255,.1);  color: rgba(255,255,255,.55); }
+
+/* ── Paired rows — two nav destinations sharing one compact strip:
+   Approvals/Entry Summary at the top of Daily Reports, and report rows
+   clubbed under one heading (Quality; Sales & Dispatch; Reliability &
+   Stoppage) — see sidebar.js's _sbPairHTML/_sbPairLabelHTML. Nav-only
+   grouping, no page merge behind it. */
+.sb-pair-label {
+  margin: 8px 12px 2px; padding: 0 2px;
+  font-size: 11px; font-weight: 700; letter-spacing: .3px;
+  color: rgba(255,255,255,.4);
+}
+.sb-pair { display: flex; align-items: stretch; gap: 4px; margin: 2px 6px; }
+.sb-pair .sb-item {
+  /* 3rd column stays (not just icon+label): forms/nav-status.js appends a
+     .nav-dot as a bare 3rd child of any .sb-item[data-page] row, paired or
+     not, and it needs a grid slot to land in rather than overflowing. */
+  flex: 1; min-width: 0; margin: 0; padding: 6px 4px;
+  grid-template-columns: 16px 1fr auto; align-items: start; gap: 4px; font-size: 11px;
+}
+.sb-pair .sb-item-icon { width: 18px; height: 18px; margin-top: 1px; }
+/* Half-width pills can't fit "Equipment Reliability" on one line — wrap
+   instead of the base row's ellipsis-truncate, which turned half these
+   labels into unreadable "Entry Su…" stubs. */
+.sb-pair .sb-item-label {
+  white-space: normal; overflow: visible; text-overflow: unset;
+  line-height: 1.2;
+}
+.sb-pair .sb-item-icon i, .sb-pair .sb-item-icon svg { width: 11px; height: 11px; }
+.sb-pair .sb-badge-fill, .sb-pair .sb-badge-view { display: none; }
+.app-shell.sidebar-collapsed .sb-pair-label { display: none; }
+.app-shell.sidebar-collapsed .sb-pair { flex-direction: column; }
 
 .sb-item.stub { opacity: .55; }
 .sb-item.stub:hover { opacity: .8; }

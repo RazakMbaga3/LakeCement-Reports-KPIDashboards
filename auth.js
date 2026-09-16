@@ -958,12 +958,27 @@ const _DAILY_ACCESS = {
 /* ══════════════════════════════════════════════════════════════════════
    DAILY NAV CATALOGUE — single source of truth for the reports stripe
 ══════════════════════════════════════════════════════════════════════ */
+/* Order follows the plant's manufacturing flow (quarry → pile → raw
+   materials → production → quality → stoppages → power → dispatch →
+   power plant), per the 2026-09-15 nav redesign — see project memory.
+   An optional `club` groups adjacent rows under one sidebar sub-heading
+   (sidebar.js pairs consecutive entries sharing the same `club`) without
+   merging the underlying forms — that merge is tracked as follow-up work. */
 const _DAILY_NAV_ITEMS = [
-  { page:'daily-report.html',       label:'Production',   icon:'factory',   hRoot:'daily-report.html',       hForm:'../daily-report.html' },
-  { page:'power-plant-report.html', label:'Power Plant',  icon:'zap',       hRoot:'power-plant-report.html', hForm:'../power-plant-report.html' },
-  { page:'mines-report.html',       label:'Quarry',       icon:'pickaxe',   hRoot:'mines-report.html',       hForm:'../mines-report.html' },
-  { page:'stoppage-form.html',      label:'Stoppages',    icon:'alert-triangle', hRoot:'forms/stoppage-form.html', hForm:'stoppage-form.html' },
-  { page:'power-form.html',         label:'Power Cons.',  icon:'activity',  hRoot:'forms/power-form.html',    hForm:'power-form.html' },
+  { page:'mines-report.html',       label:'Quarrying',      icon:'pickaxe',   hRoot:'mines-report.html',       hForm:'../mines-report.html' },
+  { page:'pile-quality-form.html',  label:'Pile Quality',   icon:'layers-3',  hRoot:'forms/pile-quality-form.html', hForm:'pile-quality-form.html' },
+  { page:'materials-form.html',     label:'Raw Materials',  icon:'package',   hRoot:'forms/materials-form.html', hForm:'materials-form.html' },
+  /* Production is the second report split into a read-only review page and
+     an entry form (2026-09-15, same pattern as Dispatch & SO above). The
+     nav leads to the REVIEW page (production.html); `page` stays
+     'daily-report.html' since that is the permission key
+     (_DAILY_ACCESS[role].nav) and the key forms/nav-status.js hangs
+     today's fill-status dot on — only the destination moved. */
+  { page:'daily-report.html',       label:'Production',     icon:'factory',   hRoot:'production.html',       hForm:'../production.html' },
+  { page:'quality-form.html',       label:'Quality / Lab',  icon:'flask-conical', hRoot:'forms/quality-form.html', hForm:'quality-form.html', club:'Quality' },
+  { page:'limestone-form.html',     label:'Limestone %',    icon:'mountain',      hRoot:'forms/limestone-form.html', hForm:'limestone-form.html', club:'Quality' },
+  { page:'stoppage-form.html',      label:'Stoppages',      icon:'alert-triangle', hRoot:'forms/stoppage-form.html', hForm:'stoppage-form.html' },
+  { page:'power-form.html',         label:'Power Consumption', icon:'activity', hRoot:'forms/power-form.html',    hForm:'power-form.html' },
   /* Dispatch & SO is the first report split into a read-only review page
      and an entry form (2026-09-15). The nav leads to the REVIEW page, which
      is what most people opening "Dispatch & SO" want — the review page then
@@ -973,17 +988,9 @@ const _DAILY_NAV_ITEMS = [
      (_DAILY_ACCESS[role].nav) and the key forms/nav-status.js hangs today's
      fill-status dot on. Only the destination moved, so access and the
      entered/not-entered dot both keep working unchanged. */
-  { page:'dispatch-form.html',      label:'Dispatch & SO', icon:'truck',    hRoot:'dispatch.html', hForm:'../dispatch.html' },
-  { page:'materials-form.html',     label:'Raw Materials', icon:'package',  hRoot:'forms/materials-form.html', hForm:'materials-form.html' },
-  /* These 3 were real, submittable formTypes (see _FORM_TYPE_ACCESS /
-     _STANDALONE_FORM_TYPE below) but were never in this catalogue, so
-     buildDailyNav()'s bar — and now the sidebar's Daily Reports group —
-     never linked to them. Added so the nav actually covers every
-     screen a role can reach. */
-  { page:'quality-form.html',       label:'Quality / Lab', icon:'flask-conical', hRoot:'forms/quality-form.html', hForm:'quality-form.html' },
-  { page:'limestone-form.html',     label:'Limestone %',   icon:'mountain',      hRoot:'forms/limestone-form.html', hForm:'limestone-form.html' },
-  { page:'pile-quality-form.html',  label:'Pile Quality',  icon:'layers-3',      hRoot:'forms/pile-quality-form.html', hForm:'pile-quality-form.html' },
-  { page:'sales-projection-form.html', label:'Sales Projection', icon:'trending-up', hRoot:'forms/sales-projection-form.html', hForm:'sales-projection-form.html' },
+  { page:'dispatch-form.html',      label:'Dispatch & SO',  icon:'truck',     hRoot:'dispatch.html', hForm:'../dispatch.html', club:'Sales & Dispatch' },
+  { page:'sales-projection-form.html', label:'Sales Projection', icon:'trending-up', hRoot:'forms/sales-projection-form.html', hForm:'sales-projection-form.html', club:'Sales & Dispatch' },
+  { page:'power-plant-report.html', label:'Power Plant',    icon:'zap',       hRoot:'power-plant-report.html', hForm:'../power-plant-report.html' },
 ];
 
 /* ══════════════════════════════════════════════════════════════════════

@@ -46,29 +46,29 @@
   var DEPTS = {
     summary:       ['Executive Summary', 'Pulling the plant together…'],
     production:    ['Production',        'Pulling today’s clinker…'],
-    mines:         ['Quarry',            'Counting the trucks…'],
+    mines:         ['Quarrying',         'Counting the trucks…'],
     ei:            ['E & I',             'Checking the circuits…'],
     mechanical:    ['Mechanical',        'Checking the machines…'],
     powerplant:    ['Power Plant',       'Reading the meters…'],
-    packing:       ['Packing Plant',     'Counting the bags…'],
+    packing:       ['Packing',           'Counting the bags…'],
     stores:        ['Stores',            'Walking the aisles…'],
-    minesworkshop: ['Mines Workshop',    'Checking the fleet…']
+    minesworkshop: ['Quarry Workshop',   'Checking the fleet…']
   };
 
   var PAGES = {
     'index.html':                ['Executive Summary',        'Pulling the plant together…', 'kpi'],
-    'analytics.html':            ['Trends & Analytics',       'Crunching the numbers…',      'kpi'],
-    'completeness.html':         ['Entry Completeness',       'Checking what came in…',      'kpi'],
-    'balance.html':              ['Material & Power Balance', 'Balancing the books…',        'kpi'],
-    'insights.html':             ['Operational Insights',     'Looking for patterns…',       'kpi'],
-    'reliability.html':          ['Equipment Reliability',    'Reading the downtime log…',   'kpi'],
-    'mines-report.html':         ['Quarry Report',            'Counting the trucks…',        'kpi'],
+    'analytics.html':            ['Operational Summary',      'Crunching the numbers…',      'analytics'],
+    'completeness.html':         ['Entry Summary',            'Checking what came in…',      'daily'],
+    'balance.html':              ['Power & Heat',              'Balancing the books…',        'analytics'],
+    'insights.html':             ['Stoppage Insights',        'Looking for patterns…',       'analytics'],
+    'reliability.html':          ['Equipment Reliability',    'Reading the downtime log…',   'analytics'],
+    'mines-report.html':         ['Quarrying Report',         'Counting the trucks…',        'kpi'],
     'power-plant-report.html':   ['Power Plant Report',       'Reading the meters…',         'kpi'],
     'approvals.html':            ['Approvals',                'Opening the queue…',          'daily'],
     'daily-report.html':         ['Daily Report',             'Fetching the latest data…',   'daily'],
     'mis.html':                  ['Management Info.',         'Building the report…',        'mis'],
-    'sales.html':                ['Sales',                    'Tallying the despatches…',    'comm'],
-    'purchases.html':            ['Purchases',                'Checking the POs…',           'comm'],
+    'sales.html':                ['Sales & Dispatch',         'Tallying the despatches…',    'kpi'],
+    'purchases.html':            ['Raw Materials & Purchases', 'Checking the POs…',          'kpi'],
     'memory.html':               ['Plant Memory',             'Searching the archive…',      'ops'],
     'reports-export.html':       ['Reports & Exports',        'Preparing your export…',      'ops'],
     'monitor.html':              ['System Monitor',           'Taking the pulse…',           'ops'],
@@ -90,11 +90,11 @@
   /* .group-kpi's sidebar dot is white — legible on the navy rail, invisible
      on this off-white cover — so KPI takes navy here instead. */
   var ACCENT = {
-    kpi:   'var(--navy)',
-    daily: 'var(--orange)',
-    mis:   'var(--green)',
-    comm:  'var(--sb-accent-commercial)',
-    ops:   '#64748B'
+    kpi:       'var(--navy)',
+    daily:     'var(--orange)',
+    analytics: 'var(--sb-accent-analytics)',
+    mis:       'var(--green)',
+    ops:       '#64748B'
   };
 
   /* Pipeline stage → caption. Only /api/sales and /api/purchases actually
