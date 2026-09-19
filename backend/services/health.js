@@ -49,10 +49,10 @@ function checkOdoo() {
   // report configured — see services/odooSync.js for why they're separate.
   const generic  = !!process.env.ODOO_URL;
   const dispatch = !!process.env.ODOO_DISPATCH_URL;
-  // Mining falls back to the dashboard host/key when its own vars are
-  // unset (see odooMiningClient.js), so testing ODOO_MINING_URL alone
-  // would report 'not_configured' on a server that is in fact pulling.
-  const mining   = !!(process.env.ODOO_MINING_URL || process.env.ODOO_DASHBOARD_URL);
+  // Mining can derive its config from the dispatch pair (see
+  // odooMiningClient.js), so asking the client itself is the only check
+  // that can't disagree with what a real pull would do.
+  const mining   = require('./odooMiningClient').isConfigured();
   const dashboard = !!process.env.ODOO_DASHBOARD_URL;
   if (!generic && !dispatch && !mining && !dashboard) return 'not_configured';
   return {

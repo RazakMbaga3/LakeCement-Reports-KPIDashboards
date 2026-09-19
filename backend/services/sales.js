@@ -140,7 +140,10 @@ async function getDashboard(year, month) {
   const dailyTrend = [];
   for (let d = new Date(firstOfMonth); d <= mtdEnd; d = new Date(d.getTime() + 86400000)) {
     const key = fmt(d);
-    dailyTrend.push({ date: key, projected: Math.round((projRange.byDate[key] || 0) * 10) / 10, actual: null });
+    /* A day with no orders is a real 0 when Odoo answered; null only when
+       Odoo itself could not be reached, so the chart never draws a fake zero. */
+    const actual = mtdSales.ok ? Math.round((mtdSales.value.mt_by_date[key] || 0) * 10) / 10 : null;
+    dailyTrend.push({ date: key, projected: Math.round((projRange.byDate[key] || 0) * 10) / 10, actual });
   }
 
   return {

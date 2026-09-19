@@ -13,7 +13,22 @@
       body, but the controller is declared type='http', so a JSON
       content-type fails with "Function declared as capable of handling
       request of type 'http' but called with a request of type 'json'".
-    - from_date/to_date must be strict ISO 'YYYY-MM-DD'.
+    - from_date/to_date must be strict ISO 'YYYY-MM-DD'. On the TEST server
+      other formats silently returned zero rows or the whole dataset. On
+      PRODUCTION they fail loudly instead — the Odoo team's own example
+      request ("30-07-2026") returns HTTP 400 with a Postgres "date/time
+      field value out of range ... datestyle" error — so that example is
+      wrong, and this client is right to always send ISO.
+
+  ── Two servers, 2026-09-19 ─────────────────────────────────────────────
+  These two endpoints now live on the PRODUCTION ERP (erp.lakecement.co.tz,
+  database `parallel`, its own API key), current to yesterday. The test host
+  (46.101.75.211, database lcl_test_28_3, a 28-Mar-2026 snapshot) is what the
+  earlier findings below were measured on, and it still hosts dispatch_report
+  and mining_report, which production does NOT serve (404). Production data
+  has the same shape as test — same field names, products and units — so
+  nothing here is server-specific. Defects re-measured on production the
+  same day are noted per item.
 
   Unlike the generic External API (odooClient.js), there is no model/field
   access here at all: each endpoint returns one fixed bundle of parallel
@@ -30,16 +45,25 @@
        ~4.5 MB parsed fine. There is no pagination. `parse_error` below
        exists specifically for this, so a truncated bundle can never be
        mistaken for an empty one.
+       PRODUCTION: not reproduced up to a full month (Aug 2026: 2,934
+       orders, 8.8 MB, parsed fine). Still no pagination, so keep asking
+       for a month at a time.
     2. Responses are slow — ~5 s/month for purchase, ~30 s/month for sales
        (the latter is dominated by defect 3). Hence CACHE_* below and a
        timeout far longer than the other Odoo clients use.
+       PRODUCTION: ~1 s/month purchase, ~8-15 s/month sales.
     3. sale_dashboard_report's `customer_receipts` ignores the date filter
        entirely (95% of rows came back outside the requested range).
        Consumers must filter it client-side — see salesOdoo.js.
+       PRODUCTION: STILL BROKEN — a 2-day window returned 15,826 receipts
+       dating back to 2024-04-01 (99% out of range) and that one array is
+       ~3 of the response's 3.8 MB; a month returns ~30,700.
     4. Master data and on-hand stock (`stock_quants`, `products`,
        `product_categories`, `stock_locations`) are wrongly date-filtered,
        so they are INCOMPLETE, not snapshots. Only safe for classifying
        records that are themselves inside the requested range.
+       PRODUCTION: STILL BROKEN — products 241 (Aug) vs 291 (Jul),
+       stock_quants 342 vs 521.
 */
 
 const CACHE_TTL_OPEN_MS  = 5 * 60 * 1000;        // range includes today — may still change

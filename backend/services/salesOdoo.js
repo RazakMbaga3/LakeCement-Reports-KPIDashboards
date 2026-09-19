@@ -91,9 +91,18 @@ async function fetchMtdSales(from, to) {
   if (!bundle.ok) return _fail(bundle);
 
   const { orders, lines } = _shapeOrdersAndLines(bundle.data);
+
+  /* Per-day tonnes are accumulated in the same pass as the total, from the
+     same _lineMt(), so the daily series can never drift from qty_mt. Dates
+     are the order's UTC date, matching _todayActualFromOrders() in sales.js. */
+  const dateOfOrder = new Map(orders.map(o => [o.id, String(o.date_order || '').slice(0, 10)]));
+  const mtByDate = {};
   const qtyMt = lines.reduce((s, l) => {
     const uomName = Array.isArray(l.product_uom) ? l.product_uom[1] : l.product_uom;
-    return s + _lineMt(uomName, l.product_uom_qty || 0);
+    const mt = _lineMt(uomName, l.product_uom_qty || 0);
+    const date = dateOfOrder.get(Array.isArray(l.order_id) ? l.order_id[0] : l.order_id);
+    if (date) mtByDate[date] = (mtByDate[date] || 0) + mt;
+    return s + mt;
   }, 0);
 
   return {
@@ -102,6 +111,7 @@ async function fetchMtdSales(from, to) {
       order_count: orders.length,
       qty_mt: Math.round(qtyMt * 10) / 10,
       value_tzs: Math.round(orders.reduce((s, o) => s + (o.amount_total || 0), 0)),
+      mt_by_date: mtByDate,
       orders, lines, // handed to services/sales.js for grade mix / on-date split
     },
     as_of: bundle.as_of,

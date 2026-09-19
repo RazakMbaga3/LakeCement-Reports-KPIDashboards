@@ -25,28 +25,39 @@
   it is strictly worse than the real thing — see that file's header. Adding
   ticket_no to this endpoint is an open request with the Odoo team.
 
-  Configured from ODOO_MINING_URL + ODOO_MINING_API_KEY. Those default to
-  the dispatch connector's host/key when unset, because in practice the Odoo
-  team has issued exactly one key for all four bespoke controllers — but
-  they stay separately overridable so a future production endpoint or a
-  rotated per-endpoint key needs no code change.
+  Configured from ODOO_MINING_URL + ODOO_MINING_API_KEY. When unset they are
+  derived from the DISPATCH pair (same controller, same host, same key — the
+  endpoint name is swapped), but stay separately overridable.
+
+  It deliberately does NOT fall back to the sales/purchase DASHBOARD pair.
+  An earlier version did, and that was a trap: on 2026-09-19 the dashboards
+  moved to the production ERP (erp.lakecement.co.tz), which serves only
+  sale_dashboard_report and purchase_dashboard_report — mining_report and
+  dispatch_report are still 404 there and live only on the test host. With
+  the dashboard fallback, repointing the dashboards at production would have
+  silently repointed mining at an endpoint that does not exist.
 */
 
 function config() {
   const {
     ODOO_MINING_URL, ODOO_MINING_API_KEY,
-    ODOO_DASHBOARD_URL, ODOO_DASHBOARD_API_KEY,
-    ODOO_DISPATCH_API_KEY,
+    ODOO_DISPATCH_URL, ODOO_DISPATCH_API_KEY,
   } = process.env;
 
-  const url = ODOO_MINING_URL
-    || (ODOO_DASHBOARD_URL ? ODOO_DASHBOARD_URL.replace(/\/+$/, '') + '/mining_report' : null);
-  const apiKey = ODOO_MINING_API_KEY || ODOO_DASHBOARD_API_KEY || ODOO_DISPATCH_API_KEY;
+  // Only derive when the dispatch URL really ends in /dispatch_report —
+  // otherwise the "swap" would leave the URL unchanged and mining would
+  // quietly call the dispatch endpoint.
+  const derivedUrl = ODOO_DISPATCH_URL && /\/dispatch_report\/*$/.test(ODOO_DISPATCH_URL)
+    ? ODOO_DISPATCH_URL.replace(/\/dispatch_report\/*$/, '/mining_report')
+    : null;
+
+  const url = ODOO_MINING_URL || derivedUrl;
+  const apiKey = ODOO_MINING_API_KEY || ODOO_DISPATCH_API_KEY;
 
   if (!url || !apiKey) {
     throw new Error(
       'Odoo mining report is not configured — set ODOO_MINING_URL + ODOO_MINING_API_KEY in .env '
-      + '(or ODOO_DASHBOARD_URL + ODOO_DASHBOARD_API_KEY, which it falls back to)');
+      + '(or ODOO_DISPATCH_URL ending in /dispatch_report + ODOO_DISPATCH_API_KEY, which it derives from)');
   }
   return { url, apiKey };
 }
