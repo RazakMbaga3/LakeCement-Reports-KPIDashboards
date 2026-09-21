@@ -52,15 +52,17 @@ function checkOdoo() {
   // Mining can derive its config from the dispatch pair (see
   // odooMiningClient.js), so asking the client itself is the only check
   // that can't disagree with what a real pull would do.
-  const mining   = require('./odooMiningClient').isConfigured();
-  const dashboard = !!process.env.ODOO_DASHBOARD_URL;
-  if (!generic && !dispatch && !mining && !dashboard) return 'not_configured';
+  const mining     = require('./odooMiningClient').isConfigured();
+  const dashboard  = !!process.env.ODOO_DASHBOARD_URL;
+  const production = require('./odooProductionClient').isConfigured();
+  if (!generic && !dispatch && !mining && !dashboard && !production) return 'not_configured';
   return {
     ok: true,
-    generic:   generic   ? 'configured, no pulls wired up yet' : 'not_configured',
-    dispatch:  dispatch  ? 'configured, pulling on schedule'   : 'not_configured',
-    mining:    mining    ? 'configured, pulling on schedule'   : 'not_configured',
-    dashboard: dashboard ? 'configured, read on demand'        : 'not_configured',
+    generic:    generic    ? 'configured, no pulls wired up yet' : 'not_configured',
+    dispatch:   dispatch   ? 'configured, pulling on schedule'   : 'not_configured',
+    mining:     mining     ? 'configured, pulling on schedule'   : 'not_configured',
+    dashboard:  dashboard  ? 'configured, read on demand'        : 'not_configured',
+    production: production ? 'configured, pulling on schedule'   : 'not_configured',
   };
 }
 

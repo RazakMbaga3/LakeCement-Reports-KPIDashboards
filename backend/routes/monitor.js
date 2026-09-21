@@ -8,8 +8,8 @@
                                      check a specific day (admin/md/it)
   GET  /api/monitor/odoo/test      → Odoo connectivity check — version +
                                      login, no data pulled (admin/md/it)
-  POST /api/monitor/odoo/pull      → run a historical dispatch/mining pull for
-                                     an explicit date range right now, from
+  POST /api/monitor/odoo/pull      → run a historical dispatch/mining/production
+                                     pull for an explicit date range right now, from
                                      the browser (admin/md/it) — see below
   POST /api/client-errors          → browser error reports (rate-limited in
                                      server.js; token optional — login page
@@ -29,6 +29,7 @@ const odoo    = require('../services/odooClient');
 const metrics = require('../services/metrics');
 const { pullDispatchDailySummary } = require('../services/odooDispatchSync');
 const { pullMiningTickets }        = require('../services/odooMiningSync');
+const { pullAndAutofillProduction } = require('../services/odooProductionAutofill');
 
 const MONITOR_ROLES = ['admin', 'md', 'it'];
 
@@ -106,14 +107,15 @@ const MAX_PULL_DAYS = 31;
 monitorRouter.post('/odoo/pull',
   requireAuth, requireRole(...MONITOR_ROLES),
   validate(z.object({
-    pull: z.enum(['dispatch', 'mining']),
+    pull: z.enum(['dispatch', 'mining', 'production']),
     from: zDate,
     to:   zDate,
-    overwriteExcelDates: z.boolean().optional().default(false), // mining only; ignored for dispatch
+    overwriteExcelDates: z.boolean().optional().default(false), // mining only; ignored otherwise
+    dryRun: z.boolean().optional().default(false),               // production only; ignored otherwise
   }), 'body'),
   async (req, res, next) => {
     try {
-      const { pull, from, to, overwriteExcelDates } = req.validated.body;
+      const { pull, from, to, overwriteExcelDates, dryRun } = req.validated.body;
       if (from > to) {
         return res.status(400).json({ error: `from (${from}) is after to (${to}).` });
       }
@@ -125,11 +127,14 @@ monitorRouter.post('/odoo/pull',
         });
       }
 
-      const result = pull === 'mining'
-        ? await pullMiningTickets(from, to, { overwriteExcelDates })
-        : await pullDispatchDailySummary(from, to);
+      const result = pull === 'mining'     ? await pullMiningTickets(from, to, { overwriteExcelDates })
+                   : pull === 'production' ? await pullAndAutofillProduction(from, to, { dryRun })
+                   : await pullDispatchDailySummary(from, to);
 
-      res.json({ ok: true, pull, ...result });
+      // `source`, not `pull`: production's own result carries a `pull` key
+      // (its mirror-refresh summary) that would silently clobber this one
+      // if it were spread in under the same name.
+      res.json({ ok: true, source: pull, ...result });
     } catch (err) {
       // Odoo unreachable/timeout/truncated — a 502 (upstream failure), not
       // a 500: our code did its job, Odoo's response is what fell over.

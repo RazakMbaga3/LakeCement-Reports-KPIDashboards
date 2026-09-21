@@ -33,20 +33,34 @@
        hold uploaded tickets are skipped rather than double-counted. Same
        rolling-window logic as dispatch, and idempotent for the same
        reason — see that file on why its ticket numbers are synthesised.
-    3. "Production Entry Raw Meal" — moisture-adjusted (wet→dry) raw
-       material consumption for limestone/clay/iron ore/sand. Not yet
-       confirmed with the Odoo team; no pull written.
+    3. Production entries (services/odooProductionSync.js +
+       odooProductionAutofill.js) — the production_report endpoint,
+       delivered 2026-09-20 on the PRODUCTION ERP (not the test server the
+       two above still use). Mirrored into odoo_production_entries
+       (migration 018); the daily production report's tonnages and
+       material consumption are derived from that mirror by
+       config/odooProductionMap.js and written into daily_reports
+       (form_type='production') by odooProductionAutofill.js — Phase 3,
+       wired below since 2026-09-21. New days land as 'draft' (an officer
+       still reviews and submits them); a day that already has a report
+       gets its Odoo-owned fields corrected in place if they disagree,
+       logged to production_odoo_overrides, with the report's own
+       status/approval untouched either way. It also carries the
+       moisture-corrected raw-material figures the original "Production
+       Entry Raw Meal" ask wanted (`final_qty_after_moisture`).
 
   Scheduled in server.js on ODOO_SYNC_CRON (default 05:00 daily, off if
   ODOO_SYNC_CRON=off). Manual run: `npm run odoo:sync`, or for a specific
   date range: `npm run odoo:dispatch-pull -- 2026-08-01 2026-08-05`,
-  `npm run odoo:mining-pull -- 2026-03-01 2026-03-31`.
+  `npm run odoo:mining-pull -- 2026-03-01 2026-03-31`,
+  `npm run odoo:production-sync -- 2026-09-01 2026-09-20 [--dry-run]`.
 */
 
 const logger = require('./logger');
 const { fireAlert } = require('./watchdog');
 const { pullDispatchDailySummary } = require('./odooDispatchSync');
 const { pullMiningTickets } = require('./odooMiningSync');
+const { pullAndAutofillProduction } = require('./odooProductionAutofill');
 
 // How many trailing days each scheduled run re-pulls — wide enough that a
 // skipped/failed run (server down, Odoo unreachable) self-heals within a
@@ -59,6 +73,12 @@ const DISPATCH_LOOKBACK_DAYS = 5;
 // only a few hundred rows, but it is deliberately not widened much beyond
 // that: each run re-reads and re-mirrors every date in the window.
 const MINING_LOOKBACK_DAYS = 5;
+
+// Wider than the other two: entries have arrived several days late in
+// observed pulls (Phase 1's analysis found no Raw Meal/Clinker/Fine Coal
+// entries for several consecutive days that later filled in), so a 5-day
+// window risks permanently missing a late entry once it falls out of range.
+const PRODUCTION_LOOKBACK_DAYS = 7;
 
 function isoDate(d) { return d.toISOString().slice(0, 10); }
 
@@ -91,7 +111,13 @@ const PULLS = [
       return pullMiningTickets(from, to, { overwriteExcelDates: false });
     },
   },
-  // { name: 'raw-meal-consumption', run: pullRawMealConsumption },
+  {
+    name: 'production-report-autofill',
+    run: () => {
+      const { from, to } = lookbackRange(PRODUCTION_LOOKBACK_DAYS);
+      return pullAndAutofillProduction(from, to);
+    },
+  },
 ];
 
 async function runOdooSync() {

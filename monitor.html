@@ -94,6 +94,7 @@
           <select id="pull-target">
             <option value="mining">Mining (Quarry weighbridge tickets)</option>
             <option value="dispatch">Dispatch (daily summary)</option>
+            <option value="production">Production (Kiln/Cement/Raw Meal — drafts only)</option>
           </select>
         </label>
         <label>From <input type="date" id="pull-from"></label>
@@ -101,6 +102,10 @@
         <label class="pull-check" id="pull-overwrite-wrap">
           <input type="checkbox" id="pull-overwrite">
           Replace Excel-uploaded dates in this range
+        </label>
+        <label class="pull-check" id="pull-dryrun-wrap">
+          <input type="checkbox" id="pull-dryrun">
+          Dry run — show what would change, write nothing
         </label>
         <button class="btn" onclick="runOdooPull()" id="pull-btn"><i data-lucide="refresh-cw"></i> Run pull</button>
       </div>
@@ -214,16 +219,17 @@
     const from = document.getElementById('pull-from').value;
     const to   = document.getElementById('pull-to').value;
     const overwriteExcelDates = document.getElementById('pull-overwrite').checked;
+    const dryRun = document.getElementById('pull-dryrun').checked;
 
     if (!from || !to) { box.innerHTML = '<div class="mono">Pick both a From and a To date.</div>'; return; }
 
     btn.disabled = true; btn.textContent = 'Pulling…';
-    box.innerHTML = '<div class="mono">Requesting ' + esc(from) + ' → ' + esc(to) + ' from Odoo — a month of mining data takes around 10s, dispatch is faster…</div>';
+    box.innerHTML = '<div class="mono">Requesting ' + esc(from) + ' → ' + esc(to) + ' from Odoo — a month of mining/production data takes around 10s, dispatch is faster…</div>';
     try {
       const res = await fetch(API + '/monitor/odoo/pull', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getAuthToken() },
-        body: JSON.stringify({ pull, from, to, overwriteExcelDates }),
+        body: JSON.stringify({ pull, from, to, overwriteExcelDates, dryRun }),
       });
       const body = await res.json();
       if (!res.ok || body.ok === false) {
@@ -238,16 +244,20 @@
   }
 
   (function () {
-    // The overwrite-Excel checkbox only means anything for the mining
-    // pull (dispatch has no Excel-source concept) — hide it otherwise so
-    // it can't be mistaken for something that also applies to dispatch.
+    // Each checkbox only means something for one source — the overwrite-
+    // Excel option is mining-only (dispatch/production have no Excel-source
+    // concept) and dry-run is production-only (dispatch/mining write
+    // idempotent upserts already safe to re-run, so a preview adds nothing
+    // dispatch/mining don't already give you by re-running for real).
     const targetSel = document.getElementById('pull-target');
     const overwriteWrap = document.getElementById('pull-overwrite-wrap');
-    function syncOverwriteVisibility() {
+    const dryrunWrap = document.getElementById('pull-dryrun-wrap');
+    function syncCheckboxVisibility() {
       overwriteWrap.style.display = targetSel.value === 'mining' ? '' : 'none';
+      dryrunWrap.style.display = targetSel.value === 'production' ? '' : 'none';
     }
-    targetSel.addEventListener('change', syncOverwriteVisibility);
-    syncOverwriteVisibility();
+    targetSel.addEventListener('change', syncCheckboxVisibility);
+    syncCheckboxVisibility();
   })();
 
   load();
