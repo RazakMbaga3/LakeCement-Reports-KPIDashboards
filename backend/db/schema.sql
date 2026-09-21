@@ -176,6 +176,32 @@ CREATE TABLE IF NOT EXISTS weighbridge_tickets (
 );
 CREATE INDEX IF NOT EXISTS idx_weighbridge_source_date ON weighbridge_tickets(source, ticket_date);
 
+-- ── ODOO PRODUCTION ENTRIES ─────────────────────────────────
+-- Mirror of Odoo's production_report: one row per production run, keyed by
+-- Odoo's own unique reference. The daily production report's facts are
+-- derived from these rows (services/odooProductionMapper.js). The endpoint
+-- has no approval status or timestamps, so content_hash/revision record an
+-- amended entry and withdrawn_at records one that vanished. See migration 018.
+CREATE TABLE IF NOT EXISTS odoo_production_entries (
+  entry_ref        VARCHAR(40)   PRIMARY KEY,   -- Odoo reference, e.g. CEM/2026/02168
+  production_date  DATE          NOT NULL,
+  picking_type     VARCHAR(80)   NOT NULL,      -- verbatim, e.g. 'CEMENT: Clinker Production'
+  stage            VARCHAR(12),                 -- raw_meal|clinker|fine_coal|cm1|cm2; NULL = unmapped picking type
+  product_code     VARCHAR(30),
+  product_name     TEXT,
+  uom              VARCHAR(10),
+  produced_qty     NUMERIC(14,3) NOT NULL,
+  total_input_qty  NUMERIC(14,3),
+  consumed_items   JSONB         NOT NULL DEFAULT '[]'::jsonb,
+  content_hash     CHAR(16)      NOT NULL,
+  revision         INTEGER       NOT NULL DEFAULT 1,
+  first_seen_at    TIMESTAMP     NOT NULL DEFAULT NOW(),
+  last_seen_at     TIMESTAMP     NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMP,
+  withdrawn_at     TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_odoo_prod_entries_date_stage ON odoo_production_entries(production_date, stage);
+
 -- ── KPI MONTHLY ─────────────────────────────────────────────
 -- Stores manually entered or auto-calculated monthly KPI targets and actuals
 CREATE TABLE IF NOT EXISTS kpi_monthly (

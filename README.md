@@ -18,8 +18,10 @@ PostgreSQL (`lcl_mis`). All KPI math lives in
 server-side by one engine; browsers queue writes offline and sync
 automatically when the connection returns. The backend schedules its own
 jobs: morning digest (06:00), watchdog alerts (every 15 min), nightly
-backup (02:30). Odoo is a **read-only data source** to be wired per-fact
-later (Phase 4) — the Odoo module itself is shelved.
+backup (02:30). Odoo is a **read-only data source**: Sales, Purchases and Production
+read the production ERP through bespoke endpoints, while Dispatch and the Quarry
+ticket log still read a frozen test server (see `docs/TECHNICAL_SPEC.md` §9) —
+the Odoo module itself is shelved.
 
 ## Quick start (development)
 
