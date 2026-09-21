@@ -134,6 +134,26 @@ CREATE TABLE IF NOT EXISTS stoppage_facts (
   UNIQUE (equipment, cause, fault_description, record_date)
 );
 
+-- ── STOPPAGE REASON CATALOGUE ───────────────────────────────
+-- The governed vocabulary the stoppage entry form offers instead of a free
+-- text box, so the same fault can't arrive spelled a dozen different ways.
+-- Mirrors the fixed, pre-printed fault list in the plant's own monthly
+-- "Stoppage report" workbook: one row per named fault, grouped by cause,
+-- and the shift only fills in hours against the line that happened.
+-- `label` pairs with stoppage_facts.fault_description (same VARCHAR(300)).
+-- Seeded with the workbook's 417 rows by migrations/017.
+CREATE TABLE IF NOT EXISTS stoppage_reasons (
+  id          SERIAL PRIMARY KEY,
+  equipment   VARCHAR(20)  NOT NULL,
+  cause       VARCHAR(20)  NOT NULL,
+  label       VARCHAR(300) NOT NULL,
+  sort_order  INTEGER      NOT NULL DEFAULT 0,
+  is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
+  created_by  INTEGER REFERENCES users(id),  -- NULL = seeded from the workbook
+  created_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
+  UNIQUE (equipment, cause, label)
+);
+
 -- ── WEIGHBRIDGE TICKETS (Quarry) ────────────────────────────
 -- Odoo weighbridge ticket log ("Uploaded_Data" export). Many rows per
 -- day, deduped by ticket_no — same shape as `stoppages`, so it gets its
@@ -284,6 +304,7 @@ CREATE INDEX IF NOT EXISTS idx_stoppage_facts_date        ON stoppage_facts(reco
 CREATE INDEX IF NOT EXISTS idx_stoppage_facts_equip_date  ON stoppage_facts(equipment, record_date);
 CREATE INDEX IF NOT EXISTS idx_stoppage_facts_month ON stoppage_facts(
   equipment, (EXTRACT(YEAR FROM record_date)), (EXTRACT(MONTH FROM record_date)));
+CREATE INDEX IF NOT EXISTS idx_stoppage_reasons_equip     ON stoppage_reasons(equipment, cause, sort_order);
 CREATE INDEX IF NOT EXISTS idx_weighbridge_date       ON weighbridge_tickets(ticket_date);
 CREATE INDEX IF NOT EXISTS idx_weighbridge_movement   ON weighbridge_tickets(movement_type);
 CREATE INDEX IF NOT EXISTS idx_kpi_monthly_dept_year  ON kpi_monthly(department, year, month);

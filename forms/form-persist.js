@@ -72,10 +72,20 @@
     const values = Array.isArray(payload) ? payload : (payload.inputs || []);
     const named  = Array.isArray(payload) ? {} : (payload.data || {});
 
-    // Positional restore
-    [...scope.querySelectorAll(_SEL)].forEach((el, i) => {
-      if (i < values.length && values[i] !== undefined) el.value = values[i];
-    });
+    /* Positional restore — ONLY when the form still has exactly as many
+       inputs as the snapshot was taken from. The index of an input is only
+       meaningful while the markup is unchanged; once a form gains or loses
+       fields every later value lands in the wrong box, silently, and looks
+       like real data. The stoppage form went from ~60 inputs to ~480 when
+       its free-text event rows became the reason catalogue, which would
+       have poured one report's figures across another report's rows.
+       `data` (data-field) is keyed by name and restores regardless. */
+    const els = [...scope.querySelectorAll(_SEL)];
+    if (values.length === els.length) {
+      els.forEach((el, i) => {
+        if (values[i] !== undefined) el.value = values[i];
+      });
+    }
     // Named override (more reliable, survives form edits)
     Object.entries(named).forEach(([field, value]) => {
       const el = scope.querySelector(`[data-field="${field}"]`);

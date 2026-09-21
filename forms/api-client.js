@@ -380,11 +380,31 @@
     return res.json();
   }
 
+  /* ── Stoppage reason catalogue (routes/stoppage.js) ──────────────
+     The governed vocabulary the stoppage form renders its rows from,
+     instead of asking the shift to describe a fault in its own words. */
+  async function getStoppageReasons() {
+    const res = await fetch(BASE + '/stoppage/reasons', { headers: _headers() });
+    if (!res.ok) throw _httpError('getStoppageReasons', '', res);
+    return res.json();
+  }
+
+  async function addStoppageReason(equipment, cause, label) {
+    const res = await fetch(BASE + '/stoppage/reasons', {
+      method:  'POST',
+      headers: _headers(),
+      body:    JSON.stringify({ equipment, cause, label }),
+    });
+    if (!res.ok) throw _httpError('addStoppageReason', equipment, res);
+    return res.json();
+  }
+
   global.NyatiAPI = {
     submitForm, getForm, getFormRange,
     evalFormulas, getDailySeries, setOverride, clearOverride, getOverrides,
     getBaseline, getCompleteness, getDataRange, getDailySummary,
     getStoppageInsights, getEquipmentStoppageDetail,
+    getStoppageReasons, addStoppageReason,
     quarryImportTickets, quarryGetTickets,
     getSalesTerritories, getSalesDashboard, setSalesTarget,
     getPurchasesDashboard,

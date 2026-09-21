@@ -78,46 +78,40 @@
     <div class="kt kt-f concern">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Total Stoppage — Today</div>
-      <div class="kt-val" data-kpi="stop_total">925</div>
+      <div class="kt-val" data-kpi="stop_total">0</div>
       <div class="kt-unit">Minutes / On Date</div>
-      <div class="kt-vs vs-ng">▼ 15.4 hrs downtime across all sections</div>
     </div>
-    <div class="kt kt-m on-track">
-      <span class="kt-badge">Manual</span>
+    <div class="kt kt-f on-track">
+      <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Kiln Stoppage</div>
       <div class="kt-val" data-kpi="stop_kiln">0</div>
       <div class="kt-unit">Minutes / On Date</div>
-      <div class="kt-vs vs-ok">▲ Kiln ran continuously — 24.0 hrs</div>
     </div>
-    <div class="kt kt-m">
-      <span class="kt-badge">Manual</span>
+    <div class="kt kt-f">
+      <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Planned Maintenance</div>
-      <div class="kt-val" data-kpi="stop_planned">600</div>
+      <div class="kt-val" data-kpi="stop_planned">0</div>
       <div class="kt-unit">Minutes / On Date</div>
-      <div class="kt-vs vs-wa">▲ 64.9% of total stoppage time</div>
     </div>
     <div class="kt kt-f concern">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Mechanical Breakdown</div>
-      <div class="kt-val" data-kpi="stop_mech">250</div>
+      <div class="kt-val" data-kpi="stop_mech">0</div>
       <div class="kt-unit">Minutes / On Date</div>
-      <div class="kt-vs vs-ng">▼ 27.0% of total — CM-1 vibration fault</div>
     </div>
     <div class="kt kt-f watch">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">E&amp;I Breakdown</div>
-      <div class="kt-val" data-kpi="stop_ei">75</div>
+      <div class="kt-val" data-kpi="stop_ei">0</div>
       <div class="kt-unit">Minutes / On Date</div>
-      <div class="kt-vs vs-wa">▼ 8.1% — conveyor sensor trip</div>
     </div>
     <div class="kt kt-f on-track">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Kiln Availability</div>
-      <div class="kt-val" data-kpi="kiln_avail">100%</div>
+      <div class="kt-val" data-kpi="kiln_avail">—</div>
       <div class="kt-unit">% / On Date</div>
-      <div class="kt-bar"><div class="kt-bar-fill" style="width:100%"></div></div>
-      <div class="kt-foot"><span class="kt-tgt">Target: ≥ 95%</span><span class="kt-pct">100.0%</span></div>
-      <div class="kt-vs vs-ok">▲ No kiln downtime recorded today</div>
+      <div class="kt-bar"><div class="kt-bar-fill" style="width:0%"></div></div>
+      <div class="kt-foot"><span class="kt-tgt">Target: ≥ 95%</span><span class="kt-pct">—</span></div>
     </div>
   </div>
 
@@ -129,7 +123,7 @@
       <div class="rcard-hdr">
         <div>
           <div class="rcard-title"><i data-lucide="layout-list" class="title-icon"></i> Stoppage Summary — All Sections</div>
-          <div class="rcard-sub">Consolidated stoppage minutes by section and category — 21-Apr-2026</div>
+          <div class="rcard-sub">Computed from the reasons entered on each section tab — nothing here is typed by hand</div>
         </div>
         <div class="rcard-chips">
           <span class="rcard-chip">21-Apr-2026</span>
@@ -137,7 +131,7 @@
         </div>
       </div>
       <div class="tbl-scroll">
-        <table class="rt" style="min-width:900px">
+        <table class="rt" style="min-width:820px">
           <thead>
             <tr>
               <th class="tl grp-hdr" style="min-width:140px">Section</th>
@@ -148,100 +142,95 @@
               <th class="grp-hdr">Power Rest<br>(CPP)</th>
               <th class="grp-hdr">Others</th>
               <th class="grp-hdr">TOTAL<br>(min)</th>
-              <th class="grp-hdr">MTD Total<br>(min)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td class="tp">Crusher</td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_crusher_mech" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_crusher_ei" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_crusher_prod" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_crusher_planned" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_crusher_power" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_crusher_other" /></td>
-              <td class="cf"><div class="cv">0</div></td>
-              <td class="cf"><div class="cv">240</div></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_crusher_mech" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_crusher_ei" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_crusher_prod" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_crusher_planned" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_crusher_power" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_crusher_other" /></td>
+              <td class="cf"><div class="cv" data-rsn-rowtotal="crusher">0</div></td>
             </tr>
             <tr>
               <td class="tp">Raw Mill</td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_rm_mech" /></td>
-              <td class="cm"><input class="ci" type="number" value="30" data-field="stop_rm_ei" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_rm_prod" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_rm_planned" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_rm_power" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_rm_other" /></td>
-              <td class="cf"><div class="cv">30</div></td>
-              <td class="cf"><div class="cv">410</div></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_rm_mech" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_rm_ei" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_rm_prod" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_rm_planned" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_rm_power" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_rm_other" /></td>
+              <td class="cf"><div class="cv" data-rsn-rowtotal="rm">0</div></td>
             </tr>
             <tr>
               <td class="tp">Coal Mill</td>
-              <td class="cm"><input class="ci" type="number" value="45" data-field="stop_cm_coal_mech" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm_coal_ei" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm_coal_prod" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm_coal_planned" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm_coal_power" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm_coal_other" /></td>
-              <td class="cf"><div class="cv">45</div></td>
-              <td class="cf"><div class="cv">320</div></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_cm_coal_mech" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_cm_coal_ei" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_cm_coal_prod" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_cm_coal_planned" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_cm_coal_power" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_cm_coal_other" /></td>
+              <td class="cf"><div class="cv" data-rsn-rowtotal="cm_coal">0</div></td>
             </tr>
             <tr>
               <td class="tp">Kiln</td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_kiln_mech" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_kiln_ei" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_kiln_prod" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_kiln_planned" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_kiln_power" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_kiln_other" /></td>
-              <td class="cf"><div class="cv">0</div></td>
-              <td class="cf"><div class="cv">0</div></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_kiln_mech" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_kiln_ei" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_kiln_prod" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_kiln_planned" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_kiln_power" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_kiln_other" /></td>
+              <td class="cf"><div class="cv" data-rsn-rowtotal="kiln">0</div></td>
             </tr>
             <tr>
               <td class="tp">Cement Mill-1</td>
-              <td class="cm"><input class="ci" type="number" value="120" data-field="stop_cm1_mech" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm1_ei" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm1_prod" /></td>
-              <td class="cm"><input class="ci" type="number" value="600" data-field="stop_cm1_planned" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm1_power" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm1_other" /></td>
-              <td class="cf"><div class="cv">720</div></td>
-              <td class="cf"><div class="cv">5,880</div></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_cm1_mech" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_cm1_ei" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_cm1_prod" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_cm1_planned" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_cm1_power" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_cm1_other" /></td>
+              <td class="cf"><div class="cv" data-rsn-rowtotal="cm1">0</div></td>
             </tr>
             <tr>
               <td class="tp">Cement Mill-2</td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm2_mech" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm2_ei" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm2_prod" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm2_planned" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm2_power" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_cm2_other" /></td>
-              <td class="cf"><div class="cv">0</div></td>
-              <td class="cf"><div class="cv">180</div></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_cm2_mech" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_cm2_ei" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_cm2_prod" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_cm2_planned" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_cm2_power" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_cm2_other" /></td>
+              <td class="cf"><div class="cv" data-rsn-rowtotal="cm2">0</div></td>
             </tr>
             <tr>
               <td class="tp">Packing</td>
-              <td class="cm"><input class="ci" type="number" value="85" data-field="stop_packing_mech" /></td>
-              <td class="cm"><input class="ci" type="number" value="45" data-field="stop_packing_ei" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_packing_prod" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_packing_planned" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_packing_power" /></td>
-              <td class="cm"><input class="ci" type="number" value="0" data-field="stop_packing_other" /></td>
-              <td class="cf"><div class="cv">130</div></td>
-              <td class="cf"><div class="cv">920</div></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_packing_mech" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_packing_ei" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_packing_prod" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_packing_planned" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_packing_power" /></td>
+              <td class="cf"><input class="ci" type="number" readonly data-auto-computed tabindex="-1" value="0" data-field="stop_packing_other" /></td>
+              <td class="cf"><div class="cv" data-rsn-rowtotal="packing">0</div></td>
             </tr>
             <tr class="trow">
               <td class="tp">TOTAL</td>
-              <td class="cf"><div class="cv">250</div></td>
-              <td class="cf"><div class="cv">75</div></td>
-              <td class="cf"><div class="cv">0</div></td>
-              <td class="cf"><div class="cv">600</div></td>
-              <td class="cf"><div class="cv">0</div></td>
-              <td class="cf"><div class="cv">0</div></td>
-              <td class="cf"><div class="cv">925</div></td>
-              <td class="cf"><div class="cv">7,950</div></td>
+              <td class="cf"><div class="cv" data-rsn-coltotal="mech">0</div></td>
+              <td class="cf"><div class="cv" data-rsn-coltotal="ei">0</div></td>
+              <td class="cf"><div class="cv" data-rsn-coltotal="prod">0</div></td>
+              <td class="cf"><div class="cv" data-rsn-coltotal="planned">0</div></td>
+              <td class="cf"><div class="cv" data-rsn-coltotal="power">0</div></td>
+              <td class="cf"><div class="cv" data-rsn-coltotal="other">0</div></td>
+              <td class="cf"><div class="cv" data-rsn-grandtotal>0</div></td>
             </tr>
           </tbody>
         </table>
+      </div>
+      <div class="rsn-derived-note">
+        All figures in <strong>minutes</strong>, totalled from the hours keyed against each
+        named reason on the section tabs. Enter a stoppage once, on its section.
       </div>
     </div>
   </div>
@@ -254,54 +243,11 @@
       <div class="rcard-hdr">
         <div>
           <div class="rcard-title"><i data-lucide="layers" class="title-icon"></i> Crusher — Stoppage Details</div>
-          <div class="rcard-sub">Individual stoppage events — 21-Apr-2026</div>
+          <div class="rcard-sub">Enter hours against the reason that stopped the section — the list is the plant's standard fault catalogue</div>
         </div>
         <div class="rcard-chips"><span class="rcard-chip orange">MECHANICAL · E&amp;I</span></div>
       </div>
-      <div class="tbl-scroll">
-        <table class="rt" style="min-width:1000px">
-          <thead>
-            <tr>
-              <th class="grp-hdr" style="min-width:30px">SN</th>
-              <th class="tl grp-hdr" style="min-width:200px">Equipment / Description</th>
-              <th class="grp-hdr">Start</th>
-              <th class="grp-hdr">End</th>
-              <th class="grp-hdr">On Date<br>(min)</th>
-              <th class="grp-hdr">MTD<br>(min)</th>
-              <th class="grp-hdr">Category</th>
-              <th class="tl grp-hdr" style="min-width:200px">Cause / Remarks</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="ts">1</td>
-              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" placeholder="Equipment…"/></td>
-              <td class="cm"><input class="ci" type="time" /></td>
-              <td class="cm"><input class="ci" type="time" /></td>
-              <td class="cf"><div class="cv">0</div></td>
-              <td class="cf"><div class="cv">—</div></td>
-              <td class="cm"><select class="ci" style="text-align:left"><option></option><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
-              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
-            </tr>
-            <tr>
-              <td class="ts">2</td>
-              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
-              <td class="cm"><input class="ci" type="time" /></td>
-              <td class="cm"><input class="ci" type="time" /></td>
-              <td class="cf"><div class="cv">0</div></td>
-              <td class="cf"><div class="cv">—</div></td>
-              <td class="cm"><select class="ci" style="text-align:left"><option></option><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
-              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
-            </tr>
-            <tr class="trow">
-              <td class="ts" colspan="4" style="text-align:right;padding-right:12px;font-weight:700">Crusher Total</td>
-              <td class="cf"><div class="cv">0</div></td>
-              <td class="cf"><div class="cv">240</div></td>
-              <td colspan="2"></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <div data-reasons-for="crusher"></div>
     </div>
   </div>
 
@@ -313,54 +259,11 @@
       <div class="rcard-hdr">
         <div>
           <div class="rcard-title"><i data-lucide="wind" class="title-icon"></i> Raw Mill — Stoppage Details</div>
-          <div class="rcard-sub">Individual stoppage events — 21-Apr-2026</div>
+          <div class="rcard-sub">Enter hours against the reason that stopped the section — the list is the plant's standard fault catalogue</div>
         </div>
         <div class="rcard-chips"><span class="rcard-chip orange">MECHANICAL · E&amp;I</span></div>
       </div>
-      <div class="tbl-scroll">
-        <table class="rt" style="min-width:1000px">
-          <thead>
-            <tr>
-              <th class="grp-hdr" style="min-width:30px">SN</th>
-              <th class="tl grp-hdr" style="min-width:200px">Equipment / Description</th>
-              <th class="grp-hdr">Start</th>
-              <th class="grp-hdr">End</th>
-              <th class="grp-hdr">On Date<br>(min)</th>
-              <th class="grp-hdr">MTD<br>(min)</th>
-              <th class="grp-hdr">Category</th>
-              <th class="tl grp-hdr" style="min-width:200px">Cause / Remarks</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="ts">1</td>
-              <td class="cm"><input class="ci" type="text" value="RM separator motor trip" style="text-align:left;padding-left:8px" /></td>
-              <td class="cm"><input class="ci" type="time" value="09:10" /></td>
-              <td class="cm"><input class="ci" type="time" value="09:40" /></td>
-              <td class="cf"><div class="cv">30</div></td>
-              <td class="cf"><div class="cv">—</div></td>
-              <td class="cm"><select class="ci" style="text-align:left"><option>E&amp;I</option><option>Mechanical</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
-              <td class="cm"><input class="ci" type="text" value="Overload relay reset; motor restarted" style="text-align:left;padding-left:8px" /></td>
-            </tr>
-            <tr>
-              <td class="ts">2</td>
-              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
-              <td class="cm"><input class="ci" type="time" /></td>
-              <td class="cm"><input class="ci" type="time" /></td>
-              <td class="cf"><div class="cv">0</div></td>
-              <td class="cf"><div class="cv">—</div></td>
-              <td class="cm"><select class="ci" style="text-align:left"><option></option><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
-              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
-            </tr>
-            <tr class="trow">
-              <td class="ts" colspan="4" style="text-align:right;padding-right:12px;font-weight:700">Raw Mill Total</td>
-              <td class="cf"><div class="cv">30</div></td>
-              <td class="cf"><div class="cv">410</div></td>
-              <td colspan="2"></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <div data-reasons-for="rawmill"></div>
     </div>
   </div>
 
@@ -372,54 +275,11 @@
       <div class="rcard-hdr">
         <div>
           <div class="rcard-title"><i data-lucide="flame" class="title-icon"></i> Coal Mill — Stoppage Details</div>
-          <div class="rcard-sub">Individual stoppage events — 21-Apr-2026</div>
+          <div class="rcard-sub">Enter hours against the reason that stopped the section — the list is the plant's standard fault catalogue</div>
         </div>
         <div class="rcard-chips"><span class="rcard-chip orange">MECHANICAL · E&amp;I</span></div>
       </div>
-      <div class="tbl-scroll">
-        <table class="rt" style="min-width:1000px">
-          <thead>
-            <tr>
-              <th class="grp-hdr" style="min-width:30px">SN</th>
-              <th class="tl grp-hdr" style="min-width:200px">Equipment / Description</th>
-              <th class="grp-hdr">Start</th>
-              <th class="grp-hdr">End</th>
-              <th class="grp-hdr">On Date<br>(min)</th>
-              <th class="grp-hdr">MTD<br>(min)</th>
-              <th class="grp-hdr">Category</th>
-              <th class="tl grp-hdr" style="min-width:200px">Cause / Remarks</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="ts">1</td>
-              <td class="cm"><input class="ci" type="text" value="Coal mill main gearbox oil leak" style="text-align:left;padding-left:8px" /></td>
-              <td class="cm"><input class="ci" type="time" value="14:30" /></td>
-              <td class="cm"><input class="ci" type="time" value="15:15" /></td>
-              <td class="cf"><div class="cv">45</div></td>
-              <td class="cf"><div class="cv">—</div></td>
-              <td class="cm"><select class="ci" style="text-align:left"><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
-              <td class="cm"><input class="ci" type="text" value="Seal replaced; oil topped up; restarted" style="text-align:left;padding-left:8px" /></td>
-            </tr>
-            <tr>
-              <td class="ts">2</td>
-              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
-              <td class="cm"><input class="ci" type="time" /></td>
-              <td class="cm"><input class="ci" type="time" /></td>
-              <td class="cf"><div class="cv">0</div></td>
-              <td class="cf"><div class="cv">—</div></td>
-              <td class="cm"><select class="ci" style="text-align:left"><option></option><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
-              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
-            </tr>
-            <tr class="trow">
-              <td class="ts" colspan="4" style="text-align:right;padding-right:12px;font-weight:700">Coal Mill Total</td>
-              <td class="cf"><div class="cv">45</div></td>
-              <td class="cf"><div class="cv">320</div></td>
-              <td colspan="2"></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <div data-reasons-for="coalmill"></div>
     </div>
   </div>
 
@@ -431,47 +291,13 @@
       <div class="rcard-hdr">
         <div>
           <div class="rcard-title"><i data-lucide="thermometer" class="title-icon"></i> Kiln — Stoppage Details</div>
-          <div class="rcard-sub">Kiln running 24 hrs — no stoppages on 21-Apr-2026</div>
+          <div class="rcard-sub">Enter hours against the reason that stopped the kiln — leave every line blank if it ran all day</div>
         </div>
         <div class="rcard-chips">
-          <span class="rcard-chip" style="background:var(--st-good);color:#fff">RUNNING 24 HRS</span>
           <span class="rcard-chip orange">PRODUCTION</span>
         </div>
       </div>
-      <div class="tbl-scroll">
-        <table class="rt" style="min-width:1000px">
-          <thead>
-            <tr>
-              <th class="grp-hdr" style="min-width:30px">SN</th>
-              <th class="tl grp-hdr" style="min-width:200px">Equipment / Description</th>
-              <th class="grp-hdr">Start</th>
-              <th class="grp-hdr">End</th>
-              <th class="grp-hdr">On Date<br>(min)</th>
-              <th class="grp-hdr">MTD<br>(min)</th>
-              <th class="grp-hdr">Category</th>
-              <th class="tl grp-hdr" style="min-width:200px">Cause / Remarks</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="ts">1</td>
-              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" placeholder="No stoppages today" /></td>
-              <td class="cm"><input class="ci" type="time" /></td>
-              <td class="cm"><input class="ci" type="time" /></td>
-              <td class="cf"><div class="cv">0</div></td>
-              <td class="cf"><div class="cv">—</div></td>
-              <td class="cm"><select class="ci" style="text-align:left"><option></option><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
-              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
-            </tr>
-            <tr class="trow">
-              <td class="ts" colspan="4" style="text-align:right;padding-right:12px;font-weight:700">Kiln Total</td>
-              <td class="cf"><div class="cv">0</div></td>
-              <td class="cf"><div class="cv">0</div></td>
-              <td colspan="2"></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <div data-reasons-for="kiln"></div>
     </div>
   </div>
 
@@ -483,54 +309,11 @@
       <div class="rcard-hdr">
         <div>
           <div class="rcard-title"><i data-lucide="cog" class="title-icon"></i> Cement Mill-1 — Stoppage Details</div>
-          <div class="rcard-sub">CM-1 under planned maintenance 21-Apr-2026</div>
+          <div class="rcard-sub">Enter hours against the reason that stopped CM-1 — the list is the plant's standard fault catalogue</div>
         </div>
         <div class="rcard-chips"><span class="rcard-chip orange">MECHANICAL · PRODUCTION</span></div>
       </div>
-      <div class="tbl-scroll">
-        <table class="rt" style="min-width:1000px">
-          <thead>
-            <tr>
-              <th class="grp-hdr" style="min-width:30px">SN</th>
-              <th class="tl grp-hdr" style="min-width:200px">Equipment / Description</th>
-              <th class="grp-hdr">Start</th>
-              <th class="grp-hdr">End</th>
-              <th class="grp-hdr">On Date<br>(min)</th>
-              <th class="grp-hdr">MTD<br>(min)</th>
-              <th class="grp-hdr">Category</th>
-              <th class="tl grp-hdr" style="min-width:200px">Cause / Remarks</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="ts">1</td>
-              <td class="cm"><input class="ci" type="text" value="CM-1 planned maintenance — liner change" style="text-align:left;padding-left:8px" /></td>
-              <td class="cm"><input class="ci" type="time" value="00:00" /></td>
-              <td class="cm"><input class="ci" type="time" value="10:00" /></td>
-              <td class="cf"><div class="cv">600</div></td>
-              <td class="cf"><div class="cv">—</div></td>
-              <td class="cm"><select class="ci" style="text-align:left"><option>Planned</option><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Power</option><option>Other</option></select></td>
-              <td class="cm"><input class="ci" type="text" value="Scheduled liner change; completed 10:00" style="text-align:left;padding-left:8px" /></td>
-            </tr>
-            <tr>
-              <td class="ts">2</td>
-              <td class="cm"><input class="ci" type="text" value="CM-1 girth gear alignment check" style="text-align:left;padding-left:8px" /></td>
-              <td class="cm"><input class="ci" type="time" value="10:00" /></td>
-              <td class="cm"><input class="ci" type="time" value="12:00" /></td>
-              <td class="cf"><div class="cv">120</div></td>
-              <td class="cf"><div class="cv">—</div></td>
-              <td class="cm"><select class="ci" style="text-align:left"><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
-              <td class="cm"><input class="ci" type="text" value="Alignment OK; restarted 12:00" style="text-align:left;padding-left:8px" /></td>
-            </tr>
-            <tr class="trow">
-              <td class="ts" colspan="4" style="text-align:right;padding-right:12px;font-weight:700">CM-1 Total</td>
-              <td class="cf"><div class="cv">720</div></td>
-              <td class="cf"><div class="cv">5,880</div></td>
-              <td colspan="2"></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <div data-reasons-for="cm1"></div>
     </div>
   </div>
 
@@ -542,44 +325,11 @@
       <div class="rcard-hdr">
         <div>
           <div class="rcard-title"><i data-lucide="cog" class="title-icon"></i> Cement Mill-2 — Stoppage Details</div>
-          <div class="rcard-sub">21-Apr-2026</div>
+          <div class="rcard-sub">Enter hours against the reason that stopped the section — the list is the plant's standard fault catalogue</div>
         </div>
         <div class="rcard-chips"><span class="rcard-chip orange">MECHANICAL · E&amp;I</span></div>
       </div>
-      <div class="tbl-scroll">
-        <table class="rt" style="min-width:1000px">
-          <thead>
-            <tr>
-              <th class="grp-hdr">SN</th>
-              <th class="tl grp-hdr" style="min-width:200px">Equipment / Description</th>
-              <th class="grp-hdr">Start</th>
-              <th class="grp-hdr">End</th>
-              <th class="grp-hdr">On Date<br>(min)</th>
-              <th class="grp-hdr">MTD<br>(min)</th>
-              <th class="grp-hdr">Category</th>
-              <th class="tl grp-hdr" style="min-width:200px">Cause / Remarks</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="ts">1</td>
-              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" placeholder="No stoppages" /></td>
-              <td class="cm"><input class="ci" type="time" /></td>
-              <td class="cm"><input class="ci" type="time" /></td>
-              <td class="cf"><div class="cv">0</div></td>
-              <td class="cf"><div class="cv">—</div></td>
-              <td class="cm"><select class="ci" style="text-align:left"><option></option><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
-              <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
-            </tr>
-            <tr class="trow">
-              <td class="ts" colspan="4" style="text-align:right;padding-right:12px;font-weight:700">CM-2 Total</td>
-              <td class="cf"><div class="cv">0</div></td>
-              <td class="cf"><div class="cv">180</div></td>
-              <td colspan="2"></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <div data-reasons-for="cm2"></div>
     </div>
   </div>
 
@@ -591,54 +341,11 @@
       <div class="rcard-hdr">
         <div>
           <div class="rcard-title"><i data-lucide="package" class="title-icon"></i> Packing — Stoppage Details</div>
-          <div class="rcard-sub">21-Apr-2026</div>
+          <div class="rcard-sub">Enter hours against the reason that stopped the section — the list is the plant's standard fault catalogue</div>
         </div>
         <div class="rcard-chips"><span class="rcard-chip orange">PACKING · E&amp;I</span></div>
       </div>
-      <div class="tbl-scroll">
-        <table class="rt" style="min-width:1000px">
-          <thead>
-            <tr>
-              <th class="grp-hdr">SN</th>
-              <th class="tl grp-hdr" style="min-width:200px">Equipment / Description</th>
-              <th class="grp-hdr">Start</th>
-              <th class="grp-hdr">End</th>
-              <th class="grp-hdr">On Date<br>(min)</th>
-              <th class="grp-hdr">MTD<br>(min)</th>
-              <th class="grp-hdr">Category</th>
-              <th class="tl grp-hdr" style="min-width:200px">Cause / Remarks</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="ts">1</td>
-              <td class="cm"><input class="ci" type="text" value="Rotary packer #2 jam" style="text-align:left;padding-left:8px" /></td>
-              <td class="cm"><input class="ci" type="time" value="07:15" /></td>
-              <td class="cm"><input class="ci" type="time" value="08:40" /></td>
-              <td class="cf"><div class="cv">85</div></td>
-              <td class="cf"><div class="cv">—</div></td>
-              <td class="cm"><select class="ci" style="text-align:left"><option>Mechanical</option><option>E&amp;I</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
-              <td class="cm"><input class="ci" type="text" value="Belt jam cleared; packer restarted" style="text-align:left;padding-left:8px" /></td>
-            </tr>
-            <tr>
-              <td class="ts">2</td>
-              <td class="cm"><input class="ci" type="text" value="Truck weighbridge sensor fault" style="text-align:left;padding-left:8px" /></td>
-              <td class="cm"><input class="ci" type="time" value="11:00" /></td>
-              <td class="cm"><input class="ci" type="time" value="11:45" /></td>
-              <td class="cf"><div class="cv">45</div></td>
-              <td class="cf"><div class="cv">—</div></td>
-              <td class="cm"><select class="ci" style="text-align:left"><option>E&amp;I</option><option>Mechanical</option><option>Production</option><option>Planned</option><option>Power</option><option>Other</option></select></td>
-              <td class="cm"><input class="ci" type="text" value="Sensor replaced and calibrated" style="text-align:left;padding-left:8px" /></td>
-            </tr>
-            <tr class="trow">
-              <td class="ts" colspan="4" style="text-align:right;padding-right:12px;font-weight:700">Packing Total</td>
-              <td class="cf"><div class="cv">130</div></td>
-              <td class="cf"><div class="cv">920</div></td>
-              <td colspan="2"></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <div data-reasons-for="packing"></div>
     </div>
   </div>
 
@@ -749,7 +456,13 @@
 <script src="offline-queue.js"></script>
 <script src="client-errors.js"></script>
 <script src="form-persist.js"></script>
-<script>initFormPersist('stoppage');</script>
+<script src="stoppage-reasons.js?v=1"></script>
+<script>
+  /* Render the reason catalogue BEFORE form-persist starts: its restore
+     looks up fields by data-field, so the stopr_<id> boxes have to exist
+     in the DOM by then or a saved day comes back empty. */
+  initStoppageReasons().finally(() => initFormPersist('stoppage'));
+</script>
 <script src="nav-status.js"></script>
 <script src="collapsible.js"></script>
 <script src="excel-export.js"></script>

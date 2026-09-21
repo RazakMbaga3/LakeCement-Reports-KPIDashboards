@@ -34,6 +34,22 @@
     rcard.appendChild(body);
     /* set an explicit max-height so CSS transition works */
     body.style.maxHeight = body.scrollHeight + 'px';
+
+    /* ...and keep it in sync with content that arrives AFTER init. The
+       height used to be measured exactly once, so any card filled in
+       asynchronously stayed clipped to whatever it measured while empty —
+       the stoppage form's reason catalogue is fetched, so all seven of its
+       section cards rendered as a 50px header with 2,000px of rows hidden
+       under `overflow:hidden`. Guarded against re-entry: writing
+       maxHeight resizes `body` and so re-fires the observer, which then
+       computes the same value and stops. */
+    if (typeof ResizeObserver === 'function') {
+      new ResizeObserver(function () {
+        if (rcard.classList.contains('collapsed')) return;
+        const h = body.scrollHeight + 'px';
+        if (body.style.maxHeight !== h) body.style.maxHeight = h;
+      }).observe(body);
+    }
     return body;
   }
 

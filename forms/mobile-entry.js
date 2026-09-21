@@ -379,7 +379,7 @@
      PROGRESS + VIEW SWITCH + SAVE
      ══════════════════════════════════════════════════════════════════ */
   function countFields(scope) {
-    let total = 0, filled = 0, locked = 0;
+    let total = 0, filled = 0, locked = 0, optional = 0, logged = 0;
     scope.querySelectorAll('input.ci, input[data-field], select[data-field], textarea[data-field]')
       .forEach(el => {
         if (el.type === 'hidden') return;
@@ -388,10 +388,17 @@
         /* A disabled field is not work outstanding — a form the role does
            not own disables every input. */
         if (el.disabled || el.readOnly) { locked++; return; }
+        /* Nor is an exception log, where blank is the normal and correct
+           answer for nearly every row: the stoppage form lists all 417 of
+           the plant's named faults and a good day fills in three. Counted
+           as outstanding work, a finished report would read "3 of 417
+           filled" and sit at 1% forever. These report a count, not a
+           fraction — there is no denominator to be a fraction of. */
+        if (el.hasAttribute('data-optional')) { optional++; if (has) logged++; return; }
         total++;
         if (has) filled++;
       });
-    return { total, filled, locked };
+    return { total, filled, locked, optional, logged };
   }
 
   function reportScopes() {
@@ -400,10 +407,11 @@
   }
 
   function countReport() {
-    const acc = { total: 0, filled: 0, locked: 0 };
+    const acc = { total: 0, filled: 0, locked: 0, optional: 0, logged: 0 };
     reportScopes().forEach(el => {
       const c = countFields(el);
       acc.total += c.total; acc.filled += c.filled; acc.locked += c.locked;
+      acc.optional += c.optional; acc.logged += c.logged;
     });
     return acc;
   }
@@ -415,6 +423,7 @@
       const c = countFields(host);
       if (el) {
         el.textContent = c.total ? `${c.filled} of ${c.total} filled`
+                       : c.optional ? `${c.logged} logged`
                        : (c.locked ? 'View only' : '');
         el.classList.toggle('me-done', c.total > 0 && c.filled === c.total);
       }
@@ -429,6 +438,17 @@
     const fill  = bar.querySelector('.me-pg-fill');
     const txt   = bar.querySelector('.me-pg-text');
     const track = bar.querySelector('.me-pg-track');
+
+    /* An all-optional report (an exception log) has a count but no ratio.
+       Checked before the locked branch so it is not mistaken for a form
+       the role cannot edit — it is editable, it is simply never "full". */
+    if (!c.total && c.optional) {
+      bar.classList.remove('me-pg-locked', 'me-pg-done');
+      if (track) track.hidden = true;
+      txt.textContent = c.logged ? `${c.logged} logged` : 'Nothing logged yet';
+      syncSaveProxy(true);
+      return;
+    }
 
     if (!c.total && c.locked) {
       bar.classList.add('me-pg-locked');

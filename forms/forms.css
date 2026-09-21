@@ -730,3 +730,125 @@ td.cm .ci:focus {
 .fm-crosslink strong { color: var(--navy); font-weight: var(--fw-bold); }
 .fm-crosslink a { color: var(--navy); font-weight: var(--fw-semibold); }
 .fm-crosslink a:hover { color: var(--orange-ink); }
+
+/* ══════════════════════════════════════════════════════════════════
+   STOPPAGE REASON CATALOGUE  (forms/stoppage-reasons.js)
+   The stoppage form's section tabs, rendered as the plant's own
+   workbook sheet: a fixed list of named faults grouped by cause, with
+   one hours box per fault. Replaces the free-text Cause/Remarks boxes.
+   ══════════════════════════════════════════════════════════════════ */
+.rsn-grp { border-bottom: 1px solid var(--border); }
+.rsn-grp:last-of-type { border-bottom: none; }
+
+.rsn-grp-hdr {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 10px 16px; border: none; cursor: pointer;
+  background: #F1F5FB; text-align: left; font: inherit;
+  border-top: 1px solid var(--border);
+}
+.rsn-grp-hdr:hover { background: #E8EDF5; }
+.rsn-grp-hdr:focus-visible { outline: 2px solid var(--orange-ink); outline-offset: -2px; }
+.rsn-grp-name {
+  font-size: 13px; font-weight: var(--fw-bold); color: var(--navy);
+  text-transform: uppercase; letter-spacing: .5px;
+}
+.rsn-grp-count {
+  font-size: 12px; font-weight: var(--fw-semibold); color: var(--text-muted);
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 10px; padding: 1px 8px;
+}
+.rsn-grp-total {
+  margin-left: auto; font-size: 13px; font-weight: var(--fw-bold);
+  color: var(--navy); font-variant-numeric: tabular-nums;
+}
+/* Any nonzero subtotal is the point of the report — make it findable
+   without scanning, but only the number carries the colour (the row is
+   not also tinted: one dimension, one channel). */
+.rsn-grp-total.has { color: var(--orange-ink); }
+
+.rsn-chev { width: 16px; height: 16px; color: var(--text-muted); transition: transform .15s; flex: none; }
+.rsn-grp-hdr[aria-expanded="false"] .rsn-chev { transform: rotate(-90deg); }
+.rsn-grp-hdr[aria-expanded="false"] + .rsn-grp-body { display: none; }
+
+.rsn-tbl { min-width: 0; }
+.rsn-tbl thead th { font-size: 12px; }
+.rsn-tbl .rsn-hcol { width: 120px; }
+.rsn-lbl { font-weight: 400; font-size: 13px; line-height: 1.4; }
+.rsn-hrs { text-align: center; }
+
+.rsn-new {
+  font-size: 12px; font-weight: var(--fw-semibold); color: var(--green-ink);
+  background: var(--st-good-bg); border-radius: 4px; padding: 0 5px; margin-left: 6px;
+}
+
+.rsn-add-wrap { padding: 8px 16px 12px; }
+.rsn-add {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: 1px dashed var(--border); border-radius: var(--radius);
+  color: var(--navy); font: inherit; font-size: 12px; font-weight: var(--fw-semibold);
+  padding: 6px 12px; cursor: pointer;
+}
+.rsn-add:hover { border-color: var(--orange-ink); color: var(--orange-ink); }
+.rsn-add:focus-visible { outline: 2px solid var(--orange-ink); outline-offset: 2px; }
+
+.rsn-add-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.rsn-add-in {
+  flex: 1 1 260px; min-width: 0; font: inherit; font-size: 13px;
+  padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius);
+  color: var(--text-main);
+}
+.rsn-add-in:focus { outline: 2px solid var(--orange-ink); outline-offset: -1px; border-color: var(--orange-ink); }
+
+.rsn-add-msg { font-size: 12px; margin-top: 6px; color: var(--text-muted); }
+.rsn-add-msg.ok   { color: var(--green-ink); }
+.rsn-add-msg.warn { color: var(--orange-ink); }
+.rsn-add-msg.err  { color: var(--red-ink); }
+
+.rsn-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 12px 16px; background: var(--navy); color: #fff;
+}
+.rsn-foot-lbl {
+  font-size: 12px; font-weight: var(--fw-bold);
+  text-transform: uppercase; letter-spacing: .7px;
+}
+.rsn-foot-val { font-size: 15px; font-weight: var(--fw-bold); font-variant-numeric: tabular-nums; }
+
+.rsn-offline {
+  margin: 12px 16px; padding: 10px 12px; font-size: 12px;
+  background: var(--st-warn-bg); border: 1px solid var(--st-warn-bd);
+  border-radius: var(--radius); color: #92400E;
+}
+.rsn-offline.err { background: var(--st-bad-bg); border-color: var(--st-bad-bd); color: var(--red-ink); }
+
+/* The summary matrix is computed from the catalogue now — style it as the
+   derived figure it is, so nobody tries to type into it. */
+.rt tbody td.cm input.ci[readonly] {
+  background: #F7F9FC; color: var(--navy); font-weight: var(--fw-bold); cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .rsn-grp-hdr { padding: 10px 12px; gap: 8px; }
+  .rsn-grp-count { display: none; }
+  .rsn-add-wrap { padding: 8px 12px 12px; }
+  .rsn-tbl .rsn-hcol { width: 84px; }
+}
+
+.rsn-derived-note {
+  padding: 10px 16px; font-size: 12px; color: var(--text-muted);
+  background: #F7F9FC; border-top: 1px solid var(--border);
+}
+.rsn-derived-note strong { color: var(--navy); font-weight: var(--fw-semibold); }
+
+/* Add-reason buttons. Deliberately NOT .btn-sub/.btn-out — form-persist.js
+   binds Submit Report / Load Previous to those classes page-wide. */
+.rsn-btn {
+  font: inherit; font-size: 12px; font-weight: var(--fw-semibold);
+  padding: 7px 14px; border-radius: var(--radius); cursor: pointer;
+  border: 1px solid var(--border); background: #fff; color: var(--text-main);
+}
+.rsn-btn:hover { border-color: var(--navy); color: var(--navy); }
+.rsn-btn:focus-visible { outline: 2px solid var(--orange-ink); outline-offset: 2px; }
+.rsn-btn-go { background: var(--navy); border-color: var(--navy); color: #fff; }
+.rsn-btn-go:hover { background: var(--navy-light); border-color: var(--navy-light); color: #fff; }
+.rsn-btn-go:disabled { opacity: .6; cursor: progress; }
