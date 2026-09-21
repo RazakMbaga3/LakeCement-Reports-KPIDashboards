@@ -157,8 +157,11 @@ The ones that must change from the template:
 - `DB_*` — from §2.4
 - `JWT_SECRET` — generate a real one:
   `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
-- `ALLOWED_ORIGIN` — the real public URL, e.g. `https://atlas.lakecement.co.tz`
+- `ALLOWED_ORIGIN` — the real public URL, `https://smr.lakecement.co.tz`
   (never leave this as `*` in production)
+- `APP_URL` — the same URL, `https://smr.lakecement.co.tz`. Invitation /
+  password-reset / verification emails build their links from it, and refuse
+  to send while it's empty
 - `TRUST_PROXY=1` — required, since Nginx sits in front
 - `BACKUP_DIR` — see §4
 - SMTP + `DIGEST_TO` / `ALERT_TO` if email alerts are wanted
@@ -200,44 +203,52 @@ Then:
 ```bash
 sudo cp deploy/nginx.digitalocean.conf /etc/nginx/sites-available/lake-cement
 sudo ln -s /etc/nginx/sites-available/lake-cement /etc/nginx/sites-enabled/
-sudo nano /etc/nginx/sites-available/lake-cement   # set the real server_name
+sudo nano /etc/nginx/sites-available/lake-cement   # server_name is already
+                                                   # smr.lakecement.co.tz — confirm
 sudo nginx -t && sudo systemctl reload nginx
-
-# HTTPS (only once a domain name points at this droplet's IP — certbot
-# can't issue a cert for a bare IP address)
-sudo certbot --nginx -d atlas.lakecement.co.tz
 ```
 
-**Don't have a real domain yet?** You don't have to wait for one just to stop
-serving over plain HTTP. [nip.io](https://nip.io) is a free wildcard-DNS
-service — `138.68.166.86.nip.io` (dots kept, no dashes) resolves straight to
-`138.68.166.86`, so Let's Encrypt's HTTP-01 challenge (which connects to
-whatever the domain resolves to, on port 80) succeeds exactly as it would for
-a real domain. This gets you a genuine, browser-trusted certificate today,
-for testing/interim use, with no domain purchase or approval needed:
+**HTTPS.** The production name is **`smr.lakecement.co.tz`**, agreed with
+Sajiv Sir; it is to be pointed at this droplet (`138.68.166.86`). Certbot
+can't issue a certificate for a bare IP, and Let's Encrypt validates by
+connecting to whatever the name resolves to, so the DNS record has to exist
+first — whoever manages the `lakecement.co.tz` zone adds:
 
+| Type | Name | Value |
+|---|---|---|
+| A | `smr` | `138.68.166.86` |
+
+Then, from the droplet (port 80 **and** 443 must be open in the DO firewall,
+§2.1):
 ```bash
-sudo nano /etc/nginx/sites-available/lake-cement
-# server_name 138.68.166.86.nip.io;
-
-sudo nginx -t && sudo systemctl reload nginx
-sudo certbot --nginx -d 138.68.166.86.nip.io
+dig +short smr.lakecement.co.tz        # must print 138.68.166.86 — if it's
+                                       # empty, DNS isn't live yet; wait
+sudo certbot --nginx -d smr.lakecement.co.tz \
+  --redirect --agree-tos -m <admin email> -n
 ```
+`--redirect` makes Nginx send all plain-HTTP traffic to HTTPS. Certbot
+installs a systemd timer that renews the certificate on its own; confirm
+with `sudo certbot renew --dry-run`.
 
-Then in `backend/.env`: `ALLOWED_ORIGIN=https://138.68.166.86.nip.io`, and
-share that URL (not the bare IP) — it's real HTTPS, no "Not secure" warning.
+Then set `ALLOWED_ORIGIN` and `APP_URL` in `backend/.env` to
+`https://smr.lakecement.co.tz` (§2.5) and `pm2 reload ecosystem.config.js`.
+From then on staff use that URL, not the bare IP.
 
-**Once the real domain is approved and its DNS A record points here**, swap
-over — this is a routine reconfigure, not a rebuild:
+**If the MD later picks a different name**, it's a routine reconfigure, not a
+rebuild — point the new name's A record here, then:
 ```bash
-sudo nano /etc/nginx/sites-available/lake-cement   # server_name <real-domain>
+sudo nano /etc/nginx/sites-available/lake-cement   # server_name <new-name>
 sudo nginx -t && sudo systemctl reload nginx
-sudo certbot --nginx -d <real-domain>              # issues the real-domain cert
-sudo certbot delete --cert-name 138.68.166.86.nip.io   # drop the interim one
+sudo certbot --nginx -d <new-name> --redirect
+sudo certbot delete --cert-name smr.lakecement.co.tz   # drop the old one
 ```
-Update `ALLOWED_ORIGIN` in `.env` to match, and `pm2 reload
-ecosystem.config.js` (or wait for the next auto-deploy) so the backend picks
-it up.
+Update `ALLOWED_ORIGIN` / `APP_URL` in `.env` to match and `pm2 reload`.
+
+*Stopgap if the A record is delayed and HTTPS is needed sooner:*
+`138.68.166.86.nip.io` is free wildcard DNS that resolves to that same IP, so
+`sudo certbot --nginx -d 138.68.166.86.nip.io` issues a real, browser-trusted
+certificate today. Interim only — switch to `smr.lakecement.co.tz` as above
+once its record is live.
 
 ### 2.8 Verify before calling it done
 
