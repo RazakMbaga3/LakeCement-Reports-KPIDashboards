@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="styles.css" />
   <script src="auth.js?v=10"></script>
   <script src="sidebar.js?v=2"></script>
+  <script src="report-switcher.js?v=1"></script>
   <script src="loader.js?v=1"></script>
   <script src="forms/date-picker.js"></script>
   <style>
@@ -885,6 +886,20 @@
   var fEl = document.getElementById('footer-date');
   if (fEl) fEl.textContent = _dateStr;
 }());
+</script>
+<script>
+  /* Stoppage Insights lives one switcher-tab away instead of its own
+     sidebar row — see report-switcher.js and sidebar.js (2026-09-16).
+     No `page` on the secondary entry: reliability.html and insights.html
+     are always shown together under general KPI access (hasKPI), neither
+     has its own row in _DAILY_ACCESS to check against. */
+  initReportSwitcher({
+    nativeLabel: 'Equipment Reliability', nativeIcon: 'alert-triangle',
+    nativeSelector: '.rl-bar, .rl-main',
+    secondary: [
+      { label: 'Stoppage Insights', icon: 'lightbulb', href: 'insights.html' },
+    ],
+  });
 </script>
 </body>
 </html>

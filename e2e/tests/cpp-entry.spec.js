@@ -149,9 +149,12 @@ test('derived figures recompute while typing, before anything is saved', async (
   /* Heat Rate (TG) = [300 MT x (800-150) + 10 m³ x 30] x 1000 / 240,000 kWh
      = 195,300,000 / 240,000 = 813.8 kcal/kWh */
   await expect(page.locator('input[data-field="cpp_heat_rate_tg"]')).toHaveValue('813.8');
-  /* The top summary strip reads cpp_heat_rate_plant, so it must see the same
-     freshly-computed number on this tick, not the previous keystroke's. */
-  await expect(page.locator('[data-kpi="cpp_heat_rate"]').first()).toHaveText('948');
+  /* The six-tile KPI strip that used to read cpp_heat_rate_plant on this
+     same tick moved to power-plant.html on 2026-09-16 (it read submitted
+     reports from Postgres, not the live DOM, so it has nothing to assert
+     here anymore) — the toHaveValue check above already proves
+     cpp_heat_rate_plant itself is freshly computed before anything is
+     saved, which was the point of this test. */
 
   expect(errors(), 'uncaught errors while typing').toEqual([]);
 });

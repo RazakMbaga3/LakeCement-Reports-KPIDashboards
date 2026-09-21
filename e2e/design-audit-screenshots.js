@@ -55,6 +55,12 @@ const ALL_PAGES = [
   ['kpi-production',   'index.html?dept=production'],
   ['kpi-powerplant',   'index.html?dept=powerplant'],
   ['mis',              'mis.html'],
+  /* The three split-report review pages. Their entry forms are listed
+     separately (daily-report, form-dispatch, power-plant-rpt) — both
+     halves need capturing, since each split moved content between them. */
+  ['dispatch',         'dispatch.html'],
+  ['production',       'production.html'],
+  ['power-plant',      'power-plant.html'],
   ['daily-report',     'daily-report.html'],
   ['analytics',        'analytics.html'],
   ['approvals',        'approvals.html'],

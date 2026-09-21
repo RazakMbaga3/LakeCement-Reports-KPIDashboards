@@ -231,6 +231,28 @@
     .heat-val.cf { color:var(--f-fg); }
     .heat-val.cm { color:var(--m-fg); }
 
+    /* ── cross-link banner ──
+       A pointer from this entry form to production.html, the read-only
+       review page the six-tile KPI strip used to stand in for. Copied
+       verbatim from forms/forms.css's .fm-crosslink (added for the
+       Dispatch & SO split) rather than linking that whole stylesheet here:
+       forms.css also defines its own .rcard/.rt rules that would collide
+       with this page's own (this page predates forms.css and has always
+       kept its report-table styling local). Deliberately quiet — a
+       signpost, not an alert, so it takes the page's own off-white and a
+       plain left rule rather than a status colour. */
+    .fm-crosslink {
+      display: flex; align-items: flex-start; gap: var(--sp-3);
+      background: var(--off-white); border: 1px solid var(--border);
+      border-left: 3px solid var(--navy); border-radius: var(--r-md);
+      padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-4);
+      font-size: var(--fs-sm); line-height: var(--lh-normal); color: var(--text-muted);
+    }
+    .fm-crosslink svg { width: 16px; height: 16px; color: var(--navy); flex: none; margin-top: 2px; }
+    .fm-crosslink strong { color: var(--navy); font-weight: var(--fw-bold); }
+    .fm-crosslink a { color: var(--navy); font-weight: var(--fw-semibold); }
+    .fm-crosslink a:hover { color: var(--orange-ink); }
+
     @media print {
       .toolbar, .dept-nav, .brand-accent-bar { display:none !important; }
       .top-header::after { display:none !important; }
@@ -380,7 +402,8 @@
     <div class="leg"><div class="ld ld-f"></div>Formula</div>
   </div>
   <div class="btn-grp">
-    <button class="btn btn-out"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
+    <a class="btn btn-out" href="production.html"><i data-lucide="bar-chart-2" class="btn-icon"></i> View report</a>
+    <button class="btn btn-out" data-persist="history"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
     <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
     <button class="btn btn-sub"><i data-lucide="check-circle" class="btn-icon"></i> Submit Report</button>
   </div>
@@ -390,54 +413,24 @@
 <main class="dr-main">
 
 
-  <!-- ── KPI SUMMARY STRIP ── -->
-  <div class="kpi-strip">
-    <div class="kt kt-f">
-      <span class="kt-badge">Formula</span>
-      <div class="kt-lbl">Clinker Produced Today</div>
-      <div class="kt-val" data-kpi="clinker_today">—</div>
-      <div class="kt-unit">MT / On Date</div>
-      <div class="kt-vs vs-note">Auto-loaded from Kiln form</div>
-    </div>
-    <div class="kt kt-f">
-      <span class="kt-badge">Formula</span>
-      <div class="kt-lbl">Cement Produced Today</div>
-      <div class="kt-val" data-kpi="cement_today">—</div>
-      <div class="kt-unit">MT / On Date (CM-1 + CM-2)</div>
-      <div class="kt-vs vs-note">Auto-loaded from Cement Mill form</div>
-    </div>
-    <div class="kt kt-s">
-      <span class="kt-badge">System</span>
-      <div class="kt-lbl">Total Dispatch</div>
-      <div class="kt-val" data-kpi="total_dispatch">—</div>
-      <div class="kt-unit">MT / On Date</div>
-      <div class="kt-vs vs-note">Cement dispatched today</div>
-    </div>
-    <div class="kt kt-f">
-      <span class="kt-badge">Formula</span>
-      <div class="kt-lbl">Specific Heat</div>
-      <div class="kt-val" data-kpi="specific_heat">799</div>
-      <div class="kt-unit">kcal / kg Clinker</div>
-      <div class="kt-bar"><div class="kt-bar-fill" style="width:80%"></div></div>
-      <div class="kt-foot">
-        <span class="kt-tgt">Target: &lt; 800 kcal/kg</span>
-        <span class="kt-pct">99.9%</span>
-      </div>
-      <div class="kt-vs vs-ok">▲ Within target range</div>
-    </div>
-    <div class="kt kt-f">
-      <span class="kt-badge">Formula</span>
-      <div class="kt-lbl">Specific Power</div>
-      <div class="kt-val" data-kpi="specific_power">156.7</div>
-      <div class="kt-unit">kWh / MT Eq. Cement</div>
-      <div class="kt-vs vs-note">Heat: 799 kcal/kg clinker</div>
-    </div>
-    <div class="kt kt-f">
-      <span class="kt-badge">Formula</span>
-      <div class="kt-lbl">Total Power Consumed</div>
-      <div class="kt-val" data-kpi="total_power">—</div>
-      <div class="kt-unit">kWh / On Date</div>
-      <div class="kt-vs vs-note">Auto-loaded from Power Cons form</div>
+  <!-- ── WHERE THE REVIEW LIVES ═════════════════════════════════════
+       This page used to open with a six-tile KPI strip. That strip was
+       review, not entry — it answered "how did we do", a question for the
+       people reading the report rather than the officer filing it — and
+       two of its six figures were unwired: Specific Heat hardcoded 799 as
+       a literal display value with "Target: < 800 kcal/kg" typed in as
+       text, while the real registry formula (specific-thermal-energy-
+       consumption) says target 780. The review now has a page of its own
+       (production.html), reading submitted reports and the KPI registry
+       from Postgres, the same split already made for Dispatch & SO. What
+       is left here is the job this screen is actually for: getting
+       today's numbers in. ══════════════════════════════════════════════ -->
+  <div class="fm-crosslink">
+    <i data-lucide="bar-chart-2"></i>
+    <div>
+      <strong>Entering today's production figures.</strong>
+      Clinker/cement output, specific heat &amp; power, dispatch and the full material stock ledger are on the
+      <a href="production.html">Production report</a>, which reads submitted reports.
     </div>
   </div>
 
@@ -1620,7 +1613,7 @@
   requireAuth();
   applyDailyPermissions();
 </script>
-<script src="forms/api-client.js"></script>
+<script src="forms/api-client.js?v=2"></script>
   <script src="forms/offline-queue.js"></script>
   <script src="forms/client-errors.js"></script>
 <script src="forms/date-picker.js"></script>
@@ -1638,7 +1631,7 @@
     return Number.isInteger(r) ? String(r) : r.toFixed(dp);
   };
 </script>
-<script src="forms/form-persist.js"></script>
+<script src="forms/form-persist.js?v=2"></script>
 <script>initFormPersist('production');</script>
 <script src="forms/nav-status.js"></script>
 <script src="forms/collapsible.js"></script>
@@ -1994,27 +1987,12 @@ initKpiLive([
     }
   },
 
-  /* ── KPI strip — clinker/cement now captured same-page (Plant Operations) ── */
-  { kpi:'clinker_today', fmt:'n0',
-    compute: function(f,n){ return n(f.kiln_prod_mt) || null; }
-  },
-  { kpi:'cement_today', fmt:'n0',
-    compute: function(f,n){
-      var cm1 = n(f.cm1_325n_mt)+n(f.cm1_425r_mt)+n(f.cm1_425n_mt)+n(f.cm1_opc_mt)+n(f.cm1_425n_bm_mt);
-      var cm2 = n(f.cm2_325n_mt)+n(f.cm2_425r_mt)+n(f.cm2_425n_mt)+n(f.cm2_425n_bm_mt);
-      return (cm1+cm2) > 0 ? cm1+cm2 : null;
-    }
-  },
-  /* Total Dispatch = TOTAL — CM-1 row's On Date Consumption (stock ledger:
-     opening + production − consumption = closing, so this column is cement
-     leaving CM-1's stock, i.e. dispatch). Matches despatch-day in
-     forms/formula-registry.js — same figure, same fields, kept in sync. */
-  { kpi:'total_dispatch', fmt:'n0',
-    compute: function(f,n){
-      var t = n(f.cm1_325n_cons_mt)+n(f.cm1_425r_cons_mt)+n(f.cm1_425n_cons_mt)+n(f.cm1_opc_cons_mt)+n(f.cm1_425n_bm_cons_mt);
-      return t > 0 ? t : null;
-    }
-  }
+  /* clinker_today / cement_today / total_dispatch (the old KPI strip's
+     "Formula"/"System" tiles) were removed with the strip itself —
+     production.html now reads Clinker Produced, Cement Produced and Total
+     Dispatch from the KPI registry (kiln-output, cement-produced-day,
+     despatch-day) via the server's own formula engine, not from a
+     same-page recomputation. */
 ]);
 </script>
 <script src="forms/report-rollup.js"></script>
@@ -2258,63 +2236,6 @@ initReportLoader({
     }
   ]
 });
-</script>
-<script>
-/* ── Specific Heat / Specific Power tiles: pull the authoritative
-   registry-computed value for the loaded date, rather than duplicating
-   the 3-layer clinker-factor / coal×NCV math client-side (formula math
-   lives only in forms/formula-registry.js, per project convention —
-   see accept-phase3.js Part D). Was static placeholder HTML (799 /
-   156.7) with a data-kpi attribute nothing ever wrote to, so it never
-   changed no matter what date was loaded. */
-(function () {
-  function fmt(v, dp) {
-    if (v === null || v === undefined || isNaN(v)) return '—';
-    return Number(v).toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp });
-  }
-  async function updateHeatAndPower() {
-    var dateInput = document.querySelector('input[type="date"]');
-    var date = dateInput && dateInput.value;
-    var heatEl  = document.querySelector('[data-kpi="specific_heat"]');
-    var powerEl = document.querySelector('[data-kpi="specific_power"]');
-    if (!date || typeof NyatiAPI === 'undefined' || (!heatEl && !powerEl)) return;
-    try {
-      var series = await NyatiAPI.getDailySeries(date, date);
-      var heat  = series['specific-thermal-energy-consumption'];
-      var power = series['specific-power-consumption-total'];
-      var heatVal  = heat  && heat.series[0]  && heat.series[0].value;
-      var powerVal = power && power.series[0] && power.series[0].value;
-      if (heatEl) {
-        heatEl.textContent = fmt(heatVal, heat ? heat.dp : 0);
-        // the target%/"within range" footer and progress bar were static
-        // placeholder text — clear them rather than leave a stale "99.9%
-        // within target" badge sitting next to a now-honest "—"
-        var heatCard = heatEl.closest('.kt');
-        if (heatCard) {
-          var pct = heatCard.querySelector('.kt-pct');
-          var vs  = heatCard.querySelector('.kt-vs');
-          var bar = heatCard.querySelector('.kt-bar-fill');
-          if (pct) pct.textContent = (heatVal !== null && heatVal !== undefined) ? Math.round(heatVal / 780 * 100) + '%' : '—';
-          if (vs)  vs.textContent  = (heatVal !== null && heatVal !== undefined) ? (heatVal < 780 ? '▲ Within target range' : '▼ Above target') : 'No data for this date';
-          if (bar) bar.style.width = (heatVal !== null && heatVal !== undefined) ? Math.min(100, Math.round(heatVal / 780 * 100)) + '%' : '0%';
-        }
-      }
-      if (powerEl) {
-        powerEl.textContent = fmt(powerVal, power ? power.dp : 2);
-        var powerCard = powerEl.closest('.kt');
-        var heatRef = powerCard && powerCard.querySelector('.kt-vs');
-        if (heatRef) {
-          heatRef.textContent = (heatVal !== null && heatVal !== undefined)
-            ? 'Heat: ' + fmt(heatVal, heat ? heat.dp : 0) + ' kcal/kg clinker'
-            : 'Heat: no data for this date';
-        }
-      }
-    } catch (e) { /* offline / unreachable — leave last-shown value */ }
-  }
-  document.addEventListener('nyati:restored', updateHeatAndPower);
-  document.addEventListener('DOMContentLoaded', updateHeatAndPower);
-  if (document.readyState !== 'loading') updateHeatAndPower();
-})();
 </script>
 <script>
 /* ── Sign-off footer: sync status label + date from form-persist state ── */

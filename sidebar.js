@@ -54,9 +54,10 @@ const _SB_KPI_ORDER = [
 
 /* Analytics — read-only dashboards, no permission of their own beyond
    general KPI access (same `hasKPI` gate the old _SB_KPI_LINKS used).
-   "Reliability & Stoppage" clubs two existing pages under one heading, no
-   backend change (rendered as a paired row, like _SB_KPI_ORDER's siblings
-   in Daily Reports — see _sbPairHTML below). */
+   "Reliability & Stoppage" is one row (index 0 below is the primary,
+   linked destination); index 1 (Stoppage Insights) is reached from an
+   in-page switcher on that page instead of its own row — see
+   report-switcher.js and the render code below. */
 const _SB_ANALYTICS_ITEMS = [
   { label:'Operational Summary', icon:'trending-up', page:'analytics.html' },
   { label:'Power &amp; Heat',        icon:'scale',       page:'balance.html' },
@@ -110,16 +111,11 @@ function _sbGroupLabelHTML(groupKey) {
   return `<div class="sb-group-label ${g.cls}"><span class="sb-group-dot"></span>${g.label}</div>`;
 }
 
-function _sbPairLabelHTML(text) {
-  return `<div class="sb-pair-label">${text}</div>`;
-}
-
-/* Lays out 2 _sbItemHTML rows side by side in one compact strip — used for
-   Approvals/Entry Summary and for report rows clubbed under one heading
-   (Quality; Sales & Dispatch; Reliability & Stoppage). This is nav-only
-   grouping: the underlying pages/forms stay separate, there's no backend
-   merge behind it (2026-09-15 nav redesign — see project memory for the
-   deferred full merges). */
+/* Lays out 2 _sbItemHTML rows side by side in one compact strip — used
+   for Approvals + Entry Summary at the top of Daily Reports. (Quality,
+   Sales & Dispatch and Reliability & Stoppage used to share this same
+   pairing before 2026-09-16 — each is now a single row instead, with the
+   second report reached from an in-page switcher; see report-switcher.js.) */
 function _sbPairHTML(itemOptsList) {
   return `<div class="sb-pair">${itemOptsList.map(_sbItemHTML).join('')}</div>`;
 }
@@ -146,6 +142,20 @@ function _sbItemHTML(opts) {
 function renderSidebar() {
   const mount = document.getElementById('app-sidebar');
   if (!mount) return;
+
+  /* Embed mode: this page is showing inside another page's in-page report
+     switcher (report-switcher.js) via <iframe src="...?embed=1"> — e.g.
+     limestone-form.html inside quality-form.html's "Limestone %" tab. The
+     embedded page keeps its own full app-shell/header/sidebar markup so it
+     still works completely normally at its own URL; embed mode just hides
+     that chrome here so it isn't nested inside the HOST page's chrome too
+     (see styles.css's html[data-embed="1"] rules for the header/.main
+     side of this — sidebar.js only owns the aside itself). */
+  if (new URLSearchParams(location.search).get('embed') === '1') {
+    document.documentElement.setAttribute('data-embed', '1');
+    return;
+  }
+
   const user = getCurrentUser();
   if (!user) return;
 
@@ -227,10 +237,16 @@ function renderSidebar() {
 
     /* Manufacturing-flow order comes from _DAILY_NAV_ITEMS itself (see
        auth.js). Adjacent rows sharing the same `club` (Quality/Lab +
-       Limestone %; Dispatch & SO + Sales Projection) render as one paired
-       strip under a shared sub-heading instead of two full-width rows —
-       if a role's access filters one half out, the survivor just falls
-       through to the normal single-row branch below. */
+       Limestone %; Dispatch & SO + Sales Projection) collapse into ONE row
+       — labelled with the club name, pointing at the first (primary)
+       report — instead of two full-width rows. The second report is
+       reached from an in-page switcher ON the primary page (see
+       report-switcher.js), not from its own sidebar row.
+       If a role's access filters one half out, the survivor just falls
+       through to the normal single-row branch below under its own label —
+       e.g. the `sales` role, who can reach Sales Projection but not
+       Dispatch & SO, sees a plain "Sales Projection" row, not "Sales &
+       Dispatch" with a switcher it can't use the second tab of. */
     for (let i = 0; i < dailyItems.length; i++) {
       const it = dailyItems[i];
       const next = dailyItems[i + 1];
@@ -245,9 +261,10 @@ function renderSidebar() {
       };
 
       if (it.club && next && next.club === it.club) {
-        html += _sbPairLabelHTML(it.club);
-        html += _sbPairHTML([rowOpts(it), rowOpts(next)]);
-        i++; // consumed the partner too
+        const opts = rowOpts(it);
+        opts.label = it.club;
+        html += _sbItemHTML(opts);
+        i++; // the partner is reached via the primary page's switcher, not its own row
       } else {
         html += _sbItemHTML(rowOpts(it));
       }
@@ -289,10 +306,10 @@ function renderSidebar() {
   }
 
   /* ── Analytics ────────────────────────────────────────────────────
-     Same `hasKPI` gate the old KPI-links list used. Reliability &
-     Stoppage clubs two existing pages (reliability.html, insights.html)
-     under one heading, same pairing mechanism as the Daily Reports rows
-     above. */
+     Same `hasKPI` gate the old KPI-links list used. Reliability & Stoppage
+     is one row pointing at the primary page (reliability.html); Stoppage
+     Insights (insights.html) is reached from an in-page switcher there
+     (report-switcher.js), not its own row — see _SB_RELIABILITY_PAIR. */
   if (hasKPI) {
     html += _sbGroupLabelHTML('analytics');
     _SB_ANALYTICS_ITEMS.forEach(l => {
@@ -302,12 +319,11 @@ function renderSidebar() {
         href: base + l.page,
       });
     });
-    html += _sbPairLabelHTML('Reliability &amp; Stoppage');
-    html += _sbPairHTML(_SB_RELIABILITY_PAIR.map(l => ({
-      icon: l.icon, label: l.label,
-      active: currentPage === l.page,
-      href: base + l.page,
-    })));
+    html += _sbItemHTML({
+      icon: _SB_RELIABILITY_PAIR[0].icon, label: 'Reliability &amp; Stoppage',
+      active: currentPage === _SB_RELIABILITY_PAIR[0].page,
+      href: base + _SB_RELIABILITY_PAIR[0].page,
+    });
   }
 
   /* ── MIS ──────────────────────────────────────────────────────── */

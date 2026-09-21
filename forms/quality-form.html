@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../styles.css" />
   <script src="../auth.js?v=10"></script>
   <script src="../sidebar.js?v=2"></script>
+  <script src="../report-switcher.js?v=1"></script>
   <script src="../loader.js?v=1"></script>
   <script src="date-picker.js"></script>
   <link rel="stylesheet" href="forms.css" />
@@ -49,7 +50,7 @@
     <div class="leg"><div class="ld ld-f"></div>Formula</div>
   </div>
   <div class="btn-grp">
-    <button class="btn btn-out"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
+    <button class="btn btn-out" data-persist="history"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
     <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
     <button class="btn btn-sub"><i data-lucide="check-circle" class="btn-icon"></i> Submit Report</button>
   </div>
@@ -624,7 +625,7 @@
         Date: <strong>21 April 2026</strong>
       </span>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-out"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+        <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
         <button class="btn btn-sub"><i data-lucide="lock" class="btn-icon"></i> Submit &amp; Lock</button>
       </div>
     </div>
@@ -651,10 +652,10 @@
   if (el1) el1.textContent = str;
   if (el2) el2.textContent = str;
 </script>
-<script src="api-client.js"></script>
+<script src="api-client.js?v=2"></script>
 <script src="offline-queue.js"></script>
 <script src="client-errors.js"></script>
-<script src="form-persist.js"></script>
+<script src="form-persist.js?v=2"></script>
 <script>initFormPersist('quality');</script>
 <script src="nav-status.js"></script>
 <script src="collapsible.js"></script>
@@ -779,6 +780,21 @@ initKpiLive(CHEM_ONDATE_RULES.concat([
   setTimeout(paint, 260);
   setTimeout(paint, 800);   // retry once more in case the initial history fetch was still in flight
 })();
+</script>
+<script>
+  /* Limestone % lives one switcher-tab away instead of its own sidebar row
+     — see report-switcher.js and sidebar.js (2026-09-16). */
+  initReportSwitcher({
+    nativeLabel: 'Quality / Lab', nativeIcon: 'flask-conical',
+    /* .me-pg: mobile-entry.js's own "N of M filled" progress bar — it
+       inserts itself into .main (the outer app-shell wrapper), not
+       .fm-main, so it needs listing separately or it would keep showing
+       Quality/Lab's completeness while the Limestone % tab is open. */
+    nativeSelector: '.toolbar, .fm-main, .me-pg',
+    secondary: [
+      { label: 'Limestone %', icon: 'mountain', page: 'limestone-form.html', href: 'limestone-form.html' },
+    ],
+  });
 </script>
   </div><!-- /.main -->
 </div><!-- /.app-shell -->

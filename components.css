@@ -518,8 +518,15 @@ button.n-kpi:focus-visible .n-kpi-more { opacity: 1; }
 }
 
 /* A zero that was entered and a blank that was never filled are different
-   facts. `.n-nodata` is the second one and must never render as "0". */
-.n-nodata { color: var(--accent-gray); font-weight: var(--fw-normal); }
+   facts. `.n-nodata` is the second one and must never render as "0".
+   Was var(--accent-gray) (#C8CDD5, a border colour, 1.6:1 on white) — axe
+   caught it as a serious violation the first time a page's table actually
+   rendered "n/a"/"—" cells during an audit run (2026-09-15, on both
+   dispatch.html and the new production.html; pre-existing on dispatch,
+   not something either page's own markup did wrong). --text-muted is
+   already the app's audited "quieter than body text" ink (6.1:1 on
+   white) — reused here rather than inventing a third grey. */
+.n-nodata { color: var(--text-muted); font-weight: var(--fw-normal); }
 
 /* ══════════════════════════════════════════════════════════════════════
    7. DRILL-DOWN — what this number is made of

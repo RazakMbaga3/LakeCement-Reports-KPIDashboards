@@ -47,7 +47,8 @@ const WIDTH = parseInt(arg('width', '1440'), 10);
 
 const ALL_PAGES = [
   ['portal', 'portal.html'], ['kpi-dashboard', 'index.html'], ['mis', 'mis.html'],
-  ['dispatch', 'dispatch.html'],
+  ['dispatch', 'dispatch.html'], ['production', 'production.html'],
+  ['power-plant', 'power-plant.html'], ['power-plant-rpt', 'power-plant-report.html'],
   ['daily-report', 'daily-report.html'], ['analytics', 'analytics.html'],
   ['approvals', 'approvals.html'], ['sales', 'sales.html'], ['purchases', 'purchases.html'],
   ['reliability', 'reliability.html'], ['quarry', 'mines-report.html'],

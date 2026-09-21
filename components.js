@@ -51,6 +51,15 @@
     var n = +v;
     if (isNaN(n)) return null;
     var d = (dp === undefined || dp === null) ? 0 : dp;
+    /* A value that rounds to zero at this precision must never display as
+       "-0" — found on production.html's Plant Operations table, where a
+       period sum of a consumption field landed on a small negative
+       fraction (data entry or floating-point summation residue) that
+       toLocaleString then rounds to "-0" at 0dp. That reads as a sign
+       error or a typo on an operations report, whatever produced it, so
+       snap anything within half a rounding unit of zero to a true +0
+       before formatting. Shared by every page through this one function. */
+    if (Math.abs(n) < 0.5 / Math.pow(10, d)) n = 0;
     return n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
   }
 

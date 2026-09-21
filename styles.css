@@ -295,6 +295,29 @@ img { max-width: 100%; }
   flex-direction: column;
 }
 
+/* ── Embed mode — a page showing inside another page's in-page report
+   switcher (report-switcher.js's <iframe>), e.g. limestone-form.html
+   inside quality-form.html's "Limestone %" tab. sidebar.js sets this
+   attribute and skips rendering the aside; the header still renders
+   normally (auth.js/portal.js's renderTopHeader has no embed awareness of
+   its own) so it's hidden here instead — cheaper than teaching every
+   caller of renderTopHeader about a mode it only needs in an iframe. ── */
+html[data-embed="1"] .sidebar,
+html[data-embed="1"] .top-header { display: none !important; }
+html[data-embed="1"] .main { margin-left: 0 !important; width: 100% !important; }
+/* Several bars below the header (the view-only banner, mobile-entry.js's
+   "N of M filled" strip, the form toolbar) are `position: sticky` with a
+   `top` calibrated to sit just under the header's ~68px. With the header
+   gone that offset no longer matches anything real, so at scroll position
+   0 more than one of them can already be in its "stuck" spot at once —
+   they overlap instead of stacking. Dropping sticky in favor of normal
+   flow here costs nothing embed mode needs (the panel is short/its own
+   scroll region) and removes the overlap outright rather than chasing
+   new hardcoded offsets. */
+html[data-embed="1"] .ds-viewonly,
+html[data-embed="1"] .me-pg,
+html[data-embed="1"] .toolbar { position: static !important; }
+
 /* ── Collapse (persisted via localStorage — see sidebar.js) ────────── */
 .app-shell.sidebar-collapsed .sidebar { width: var(--sidebar-w-collapsed); }
 .app-shell.sidebar-collapsed .main {
@@ -357,12 +380,23 @@ img { max-width: 100%; }
 .sb-item:hover { background: rgba(255,255,255,.08); color: #fff; }
 .sb-item.active { background: rgba(255,255,255,.16); color: #fff; font-weight: 700; }
 .sb-item-icon {
+  position: relative; /* anchors .nav-dot as a corner badge — see below */
   width: 22px; height: 22px; flex-shrink: 0;
   display: grid; place-items: center;
   border-radius: 6px; background: rgba(255,255,255,.07);
 }
 .sb-item-icon i, .sb-item-icon svg { width: 13px; height: 13px; }
 .sb-item.active .sb-item-icon { background: rgba(255,255,255,.22); }
+
+/* forms/nav-status.js's fill-status dot lands inside the icon box rather
+   than as a bare extra row child, so it costs zero extra layout space —
+   it used to wrap onto its own line under every single Daily Reports row. */
+.sb-item-icon .nav-dot {
+  position: absolute; top: -2px; right: -2px; margin: 0 !important;
+  width: 7px; height: 7px;
+  border: 1.5px solid var(--navy-mid);
+}
+.sb-pair .sb-item-icon .nav-dot { width: 6px; height: 6px; top: -1px; right: -1px; }
 .sb-item-label {
   min-width: 0; overflow: hidden; text-overflow: ellipsis;
   white-space: nowrap; line-height: 1.3;
@@ -378,23 +412,13 @@ img { max-width: 100%; }
 .sb-badge-fill { background: rgba(244,149,69,.25); color: var(--orange-lite); }
 .sb-badge-view { background: rgba(255,255,255,.1);  color: rgba(255,255,255,.55); }
 
-/* ── Paired rows — two nav destinations sharing one compact strip:
-   Approvals/Entry Summary at the top of Daily Reports, and report rows
-   clubbed under one heading (Quality; Sales & Dispatch; Reliability &
-   Stoppage) — see sidebar.js's _sbPairHTML/_sbPairLabelHTML. Nav-only
-   grouping, no page merge behind it. */
-.sb-pair-label {
-  margin: 8px 12px 2px; padding: 0 2px;
-  font-size: 11px; font-weight: 700; letter-spacing: .3px;
-  color: rgba(255,255,255,.4);
-}
+/* ── Paired row — Approvals + Entry Summary sharing one compact strip at
+   the top of Daily Reports (see sidebar.js's _sbPairHTML). Neither carries
+   a data-page/fill-status dot, so no 3rd grid column is reserved here. */
 .sb-pair { display: flex; align-items: stretch; gap: 4px; margin: 2px 6px; }
 .sb-pair .sb-item {
-  /* 3rd column stays (not just icon+label): forms/nav-status.js appends a
-     .nav-dot as a bare 3rd child of any .sb-item[data-page] row, paired or
-     not, and it needs a grid slot to land in rather than overflowing. */
   flex: 1; min-width: 0; margin: 0; padding: 6px 4px;
-  grid-template-columns: 16px 1fr auto; align-items: start; gap: 4px; font-size: 11px;
+  grid-template-columns: 16px 1fr; align-items: start; gap: 4px; font-size: 11px;
 }
 .sb-pair .sb-item-icon { width: 18px; height: 18px; margin-top: 1px; }
 /* Half-width pills can't fit "Equipment Reliability" on one line — wrap
@@ -406,7 +430,6 @@ img { max-width: 100%; }
 }
 .sb-pair .sb-item-icon i, .sb-pair .sb-item-icon svg { width: 11px; height: 11px; }
 .sb-pair .sb-badge-fill, .sb-pair .sb-badge-view { display: none; }
-.app-shell.sidebar-collapsed .sb-pair-label { display: none; }
 .app-shell.sidebar-collapsed .sb-pair { flex-direction: column; }
 
 .sb-item.stub { opacity: .55; }
@@ -1673,3 +1696,26 @@ html.lcl-loading .sk-card[data-formula-key] .sk-value {
 }
 
 @media print { .lcl-bar, .lcl-load { display: none !important; } }
+
+/* ── In-page report switcher — report-switcher.js ─────────────────────
+   Quality/Lab+Limestone %, Dispatch & SO+Sales Projection, Equipment
+   Reliability+Stoppage Insights: one sidebar row each, second report
+   reached here instead of its own row (2026-09-16). */
+.rs-tabbar {
+  display: flex; gap: 4px; padding: 10px 28px;
+  background: var(--white); border-bottom: 1px solid var(--border);
+}
+.rs-tab {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 7px; border: 1px solid var(--border);
+  background: var(--off-white); font-family: var(--font);
+  font-size: 13px; font-weight: 700; color: var(--text-muted); cursor: pointer;
+}
+.rs-tab:hover  { color: var(--navy); }
+.rs-tab.active { background: var(--navy); border-color: var(--navy); color: var(--white); }
+.rs-tab i, .rs-tab svg { width: 14px; height: 14px; }
+.rs-iframe {
+  display: block; width: 100%; border: none; background: var(--off-white);
+  min-height: calc(100vh - var(--header-h) - 110px);
+}
+@media (max-width: 640px) { .rs-tabbar { padding: 10px 16px; } }

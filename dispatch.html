@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="components.css?v=1" />
   <script src="auth.js?v=10"></script>
   <script src="sidebar.js?v=2"></script>
+  <script src="report-switcher.js?v=1"></script>
   <script src="loader.js?v=1"></script>
   <script src="forms/date-picker.js"></script>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
@@ -875,6 +876,20 @@
   }());
 
 }());
+</script>
+<script>
+  /* Sales Projection lives one switcher-tab away instead of its own
+     sidebar row — see report-switcher.js and sidebar.js (2026-09-16).
+     `page` is passed so a role without Dispatch & SO access (this page's
+     own canView gate above already handles that) still gets a correct,
+     independently-checked tab list on a direct URL visit. */
+  initReportSwitcher({
+    nativeLabel: 'Dispatch & SO', nativeIcon: 'truck',
+    nativeSelector: '#dispatch-page, footer.dash-footer, .brand-accent-bar',
+    secondary: [
+      { label: 'Sales Projection', icon: 'trending-up', page: 'sales-projection-form.html', href: 'forms/sales-projection-form.html' },
+    ],
+  });
 </script>
 </body>
 </html>

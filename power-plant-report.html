@@ -181,6 +181,29 @@
     /* two-col layout */
     .two-col { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
 
+    /* ── cross-link banner ──
+       A pointer from this entry form to power-plant.html, the read-only
+       review page the six-tile KPI strip used to stand in for. Copied
+       verbatim from forms/forms.css's .fm-crosslink (added for the
+       Dispatch & SO split, reused by daily-report.html for Production)
+       rather than linking that whole stylesheet here: forms.css also
+       defines its own .rcard/.rt rules that would collide with this page's
+       own (this page predates forms.css and has always kept its report-
+       table styling local). Deliberately quiet — a signpost, not an alert,
+       so it takes the page's own off-white and a plain left rule rather
+       than a status colour. */
+    .fm-crosslink {
+      display: flex; align-items: flex-start; gap: var(--sp-3);
+      background: var(--off-white); border: 1px solid var(--border);
+      border-left: 3px solid var(--navy); border-radius: var(--r-md);
+      padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-4);
+      font-size: var(--fs-sm); line-height: var(--lh-normal); color: var(--text-muted);
+    }
+    .fm-crosslink svg { width: 16px; height: 16px; color: var(--navy); flex: none; margin-top: 2px; }
+    .fm-crosslink strong { color: var(--navy); font-weight: var(--fw-bold); }
+    .fm-crosslink a { color: var(--navy); font-weight: var(--fw-semibold); }
+    .fm-crosslink a:hover { color: var(--orange-ink); }
+
     @media print {
       .toolbar, .dept-nav, .brand-accent-bar { display:none !important; }
       .top-header::after { display:none !important; }
@@ -275,7 +298,8 @@
     <div class="leg"><div class="ld ld-f"></div>Formula</div>
   </div>
   <div class="btn-grp">
-    <button class="btn btn-out"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
+    <a class="btn btn-out" href="power-plant.html"><i data-lucide="bar-chart-2" class="btn-icon"></i> View report</a>
+    <button class="btn btn-out" data-persist="history"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
     <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
     <button class="btn btn-sub"><i data-lucide="check-circle" class="btn-icon"></i> Submit Report</button>
   </div>
@@ -285,54 +309,25 @@
 <main class="dr-main">
 
 
-  <!-- ── SUMMARY STRIP ── -->
-  <div class="kpi-strip">
-    <div class="kt kt-f">
-      <span class="kt-badge">Formula</span>
-      <div class="kt-lbl">Gross Power Generated</div>
-      <div class="kt-val" data-kpi="cpp_gross_gen">—</div>
-      <div class="kt-unit">kWh / On Date</div>
-      <div class="kt-vs vs-note">Auto-loaded from CPP Form</div>
-    </div>
-    <div class="kt kt-f">
-      <span class="kt-badge">Formula</span>
-      <div class="kt-lbl">Net Power Exported</div>
-      <div class="kt-val" data-kpi="cpp_net_gen">—</div>
-      <div class="kt-unit">kWh (Gross − Aux)</div>
-      <div class="kt-vs vs-note">Auto-loaded from CPP Form</div>
-    </div>
-    <div class="kt kt-f">
-      <span class="kt-badge">Formula</span>
-      <div class="kt-lbl">Plant Load Factor</div>
-      <div class="kt-val" data-kpi="cpp_plf">—</div>
-      <div class="kt-unit">% PLF — Target 80%</div>
-      <div class="kt-vs vs-note">Formula: Avg Gen(MW) ÷ 10 MW installed</div>
-    </div>
-    <div class="kt kt-f">
-      <span class="kt-badge">Formula</span>
-      <div class="kt-lbl">Coal Consumed (Boiler)</div>
-      <div class="kt-val" data-kpi="cpp_coal">—</div>
-      <div class="kt-unit">MT / On Date</div>
-      <div class="kt-vs vs-note">Auto-loaded from CPP Form</div>
-    </div>
-    <div class="kt kt-f">
-      <span class="kt-badge">Formula</span>
-      <div class="kt-lbl">Heat Rate (Plant)</div>
-      <div class="kt-val" data-kpi="cpp_heat_rate">—</div>
-      <div class="kt-unit">kcal/kWh — Target &lt; 4,200</div>
-      <div class="kt-vs vs-note">Reported — 3300 @ MCR basis</div>
-    </div>
-    <div class="kt kt-f">
-      <span class="kt-badge">Formula</span>
-      <div class="kt-lbl">Specific Fuel Consumption</div>
-      <div class="kt-val" data-kpi="cpp_sfc">—</div>
-      <div class="kt-unit">kg Coal / kWh — Target &lt; 0.90</div>
-      <div class="kt-bar"><div class="kt-bar-fill" style="width:90%"></div></div>
-      <div class="kt-foot">
-        <span class="kt-tgt">Target: &lt; 0.90 kg/kWh</span>
-        <span class="kt-pct">94.7%</span>
-      </div>
-      <div class="kt-vs vs-wa">▼ Slightly above target</div>
+  <!-- ── WHERE THE REVIEW LIVES ═════════════════════════════════════
+       This page used to open with a six-tile KPI strip (Gross Generated,
+       Net Exported, PLF, Coal Consumed, Heat Rate, Specific Fuel
+       Consumption). That strip was review, not entry — it answered "how
+       did we do", a question for the people reading the report rather
+       than the officer filing it — and its Heat Rate tile carried a stale
+       inline "Target < 4,200" label that had drifted from the registry's
+       own verified cpp-heat-rate formula (target 3800, matching
+       index.html's own KPI Tracker row). The review now has a page of its
+       own (power-plant.html), reading submitted reports and the KPI
+       registry from Postgres, the same split already made for Dispatch &
+       SO and Production. What is left here is the job this screen is
+       actually for: getting today's readings in. ══════════════════════ -->
+  <div class="fm-crosslink">
+    <i data-lucide="bar-chart-2"></i>
+    <div>
+      <strong>Entering today's Power Plant (CPP) readings.</strong>
+      Gross/Net generation, PLF, heat rate, specific fuel consumption, steam parameters and WTP are on the
+      <a href="power-plant.html">Power Plant report</a>, which reads submitted reports.
     </div>
   </div>
 
@@ -808,7 +803,7 @@
         Date: <strong>06 May 2026</strong>
       </span>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-out"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+        <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
         <button class="btn btn-sub"><i data-lucide="lock" class="btn-icon"></i> Submit &amp; Lock</button>
       </div>
     </div>
@@ -836,10 +831,10 @@
   requireAuth();
   applyDailyPermissions();
 </script>
-<script src="forms/api-client.js"></script>
+<script src="forms/api-client.js?v=2"></script>
   <script src="forms/offline-queue.js"></script>
   <script src="forms/client-errors.js"></script>
-<script src="forms/form-persist.js"></script>
+<script src="forms/form-persist.js?v=2"></script>
 <script>initFormPersist('cpp');</script>
 <script src="forms/nav-status.js"></script>
 <script src="forms/collapsible.js"></script>
@@ -886,12 +881,12 @@ function computeHeatRatePlant(f, n) {
 
 var CPP_COMPUTES = [
 
-    /* ── summary strip (top) ── */
-    { kpi:'cpp_gross_gen', fmt:'n0', compute: function(d,n){ return n(d.cpp_gross_gen_kwh) || null; } },
-    { kpi:'cpp_coal', fmt:'n0', compute: function(d,n){ return n(d.cpp_coal_cons) || null; } },
-    { kpi:'cpp_heat_rate', fmt:'n0', compute: function(d,n){ return n(d.cpp_heat_rate_plant) || null; } },
-
-    /* ── derived formulas (verified against source Excel FRM-LCL-PP-06) ── */
+    /* ── derived formulas (verified against source Excel FRM-LCL-PP-06) ──
+       cpp_gross_gen/cpp_coal/cpp_heat_rate (the six-tile KPI-strip-only
+       pass-throughs) were removed 2026-09-16 when the strip moved to
+       power-plant.html — they had no other reader on this page. The six
+       rows below still feed real data-kpi cells inside SECTION 1's own
+       table (Net Exported, Aux %, Avg Gen, PLF, SSC, SFC), so they stay. */
     { kpi:'cpp_net_gen', fmt:'n0',
       compute: function(d,n){
         var g=n(d.cpp_gross_gen_kwh), a=n(d.cpp_aux_kwh);

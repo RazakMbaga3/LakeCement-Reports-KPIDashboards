@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Lake Cement – Power Plant (CPP) Report</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Component layer: cards, context bar, KPI cards, read-side tables.
+       Loaded after styles.css and BEFORE design-system.css, which must keep
+       the last word on legibility and touch size. -->
+  <link rel="stylesheet" href="components.css?v=1" />
+  <script src="auth.js?v=10"></script>
+  <script src="sidebar.js?v=2"></script>
+  <script src="loader.js?v=1"></script>
+  <script src="forms/date-picker.js"></script>
+  <!-- Design system — loaded last so it settles equal-specificity ties -->
+  <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="a11y.js?v=1"></script>
+  <script src="mobile-shell.js?v=1"></script>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="app-sidebar"></aside>
+  <script>renderSidebar();</script>
+
+  <div class="main">
+
+<header class="top-header" id="app-header"></header>
+<script>renderTopHeader();</script>
+
+<main class="n-page" id="power-plant-page">
+
+  <!-- ══ PAGE HEAD ══════════════════════════════════════════════════ -->
+  <div class="n-page-head">
+    <div>
+      <nav class="n-crumb" aria-label="Breadcrumb">
+        <a href="portal.html">Operations</a>
+        <span class="n-crumb-sep" aria-hidden="true">/</span>
+        <span class="n-crumb-here">Power Plant (CPP)</span>
+      </nav>
+      <h1 class="n-title">Power Plant (CPP) Report</h1>
+      <p class="n-subtitle">
+        Generation, PLF, heat rate, coal consumption, steam parameters &amp; WTP.
+        Read-only — figures come from the submitted Power Plant (CPP) report.
+      </p>
+    </div>
+    <div class="n-page-actions">
+      <button type="button" class="n-btn" id="pp-export">
+        <i data-lucide="file-down"></i> Export CSV
+      </button>
+      <button type="button" class="n-btn" id="pp-print">
+        <i data-lucide="printer"></i> Print
+      </button>
+      <a class="n-btn is-primary" id="pp-enter" href="power-plant-report.html">
+        <i data-lucide="pencil"></i> Enter today's data
+      </a>
+    </div>
+  </div>
+
+  <!-- ══ REPORTING CONTEXT ══════════════════════════════════════════ -->
+  <div class="n-ctx">
+    <div class="n-ctx-group">
+      <label class="n-ctx-lbl" for="pp-date">Date</label>
+      <input type="date" id="pp-date" class="n-ctx-ctl" />
+    </div>
+
+    <div class="n-ctx-sep" aria-hidden="true"></div>
+
+    <div class="n-ctx-group">
+      <span class="n-ctx-lbl" id="pp-period-lbl">Period</span>
+      <div class="n-seg" id="pp-period" role="group" aria-labelledby="pp-period-lbl">
+        <button type="button" class="n-seg-btn" data-value="day" aria-pressed="true">On Date</button>
+        <button type="button" class="n-seg-btn" data-value="mtd" aria-pressed="false">MTD</button>
+        <button type="button" class="n-seg-btn" data-value="ytd" aria-pressed="false">YTD</button>
+      </div>
+    </div>
+
+    <div class="n-ctx-sep" aria-hidden="true"></div>
+
+    <div class="n-ctx-group">
+      <span class="n-ctx-lbl">Department</span>
+      <span class="n-chip is-neutral"><span class="n-chip-dot"></span>Power Plant</span>
+    </div>
+
+    <span class="n-ctx-spacer"></span>
+
+    <!-- Report state and how much of the period it actually covers. -->
+    <div class="n-ctx-group" id="pp-status-group"></div>
+  </div>
+
+  <!-- Fallback banner: shown only when the page had to move off today
+       because nothing has been entered since an earlier date. -->
+  <div class="stale-note" id="pp-stale" style="display:none"></div>
+
+  <!-- ══ KPI SUMMARY ════════════════════════════════════════════════ -->
+  <div class="n-kpi-grid" id="pp-kpis"></div>
+
+  <!-- ══ DETAIL ═════════════════════════════════════════════════════ -->
+  <div id="pp-body"></div>
+
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span id="footer-date"></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+  </div><!-- /.main -->
+</div><!-- /.app-shell -->
+
+<script src="lucide-icons.js?v=1"></script>
+<script src="forms/api-client.js"></script>
+<script src="forms/formula-registry.js"></script>
+<script src="components.js?v=1"></script>
+<script src="forms/latest-period.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  requireAuth();
+
+  /* ── Access ───────────────────────────────────────────────────────
+     Same gate the Power Plant (CPP) entry form (power-plant-report.html)
+     sits behind — read through auth.js's accessors rather than a role list
+     of this page's own. The permission key stays 'power-plant-report.html':
+     that is what _DAILY_ACCESS and _FORM_TYPE_ACCESS already index on, and
+     this page is the same report under a new URL, not a new permission. */
+  var user = getCurrentUser();
+  if (!user) return;
+
+  var access = getDailyAccessFor(user.role) || { nav: [], edit: [] };
+  var canView = access.nav === 'all' || (access.nav || []).indexOf('power-plant-report.html') !== -1;
+  var canEnter = (getFormTypeAccessFor(user.role) || []).indexOf('cpp') !== -1;
+
+  var U = window.NyatiUI;
+  var elKpis = document.getElementById('pp-kpis');
+  var elBody = document.getElementById('pp-body');
+  var elDate = document.getElementById('pp-date');
+  var elStat = document.getElementById('pp-status-group');
+
+  if (!canView) {
+    elKpis.remove();
+    U.renderState(elBody, {
+      kind: 'denied',
+      title: 'You do not have access to the Power Plant (CPP) Report',
+      body: 'This report is limited to the CPP, plant operations and management teams. '
+          + 'Ask an administrator if you believe you should be able to see it.',
+    });
+    document.querySelector('.n-ctx').style.display = 'none';
+    document.querySelector('.n-page-actions').style.display = 'none';
+    return;
+  }
+
+  if (!canEnter) document.getElementById('pp-enter').style.display = 'none';
+
+  /* ══ WHICH ROWS COUNT ═════════════════════════════════════════════
+     Same rule as dispatch.html / production.html / backend/config/forms.js
+     (REPORTED_STATUSES): a report counts once submitted, whether or not the
+     HOD has signed it off yet. Drafts do not count, but the coverage line
+     says how many were left out. ═══════════════════════════════════════ */
+  var REPORTED = ['approved', 'pending_approval'];
+  function isReported(r) { return REPORTED.indexOf(r.status) !== -1; }
+
+  function val(row, field) { return U.num(row && row.data ? row.data[field] : null); }
+  function sumField(rows, field) {
+    var any = false, total = 0;
+    rows.forEach(function (r) {
+      var v = val(r, field);
+      if (v !== null) { any = true; total += v; }
+    });
+    return any ? total : null;
+  }
+  /* generation-weighted sum of a per-day rate field — the same shape the
+     entry form's own weightedSum() uses for Heat Rate MTD/YTD. */
+  function weightedSum(rows, valField, weightField) {
+    return rows.reduce(function (t, r) {
+      return t + (val(r, valField) || 0) * (val(r, weightField) || 0);
+    }, 0);
+  }
+
+  /* ══ PERIOD RATIOS ════════════════════════════════════════════════
+     Ported verbatim from power-plant-report.html's own computeRatios()
+     (the entry form's live MTD/YTD block) — same arithmetic, just reading
+     from fetched report rows instead of live [data-field] inputs and
+     localStorage/fetch history. Net Gen, Aux %, Avg Gen, PLF, SSC, SFC and
+     both Heat Rate figures are RATIOS: summing daily percentages or daily
+     kcal/kWh readings across a period is meaningless (the entry form's own
+     comment cites the 84,318 kcal/kWh bug that mistake produced), so each
+     is built from summed — or generation/running-hours-weighted — period
+     totals instead. This is the read side's one copy of that math; the
+     entry form keeps its own for the same reason report-rollup.js's
+     generic field-sum was never enough for these seven fields there
+     either. ═══════════════════════════════════════════════════════════ */
+  function computeRatios(rows) {
+    var gross = sumField(rows, 'cpp_gross_gen_kwh') || 0,
+        aux = sumField(rows, 'cpp_aux_kwh') || 0,
+        hrs = sumField(rows, 'cpp_run_hrs') || 0,
+        turbine = sumField(rows, 'cpp_turbine_steam_mt') || 0,
+        coal = sumField(rows, 'cpp_coal_cons') || 0,
+        hrTgW = weightedSum(rows, 'cpp_heat_rate_tg', 'cpp_gross_gen_kwh'),
+        hrPlantW = weightedSum(rows, 'cpp_heat_rate_plant', 'cpp_gross_gen_kwh');
+    return {
+      net:     gross > 0 ? gross - aux : null,
+      auxPct:  gross > 0 ? aux / gross * 100 : null,
+      avgGen:  hrs > 0 ? gross / 1000 / hrs : null,
+      plf:     hrs > 0 ? (gross / 1000 / hrs) / 10 * 100 : null,
+      ssc:     gross > 0 && turbine > 0 ? turbine * 1000 / gross : null,
+      sfc:     gross > 0 && coal > 0 ? coal * 1000 / gross : null,
+      hrTg:    gross > 0 && hrTgW > 0 ? hrTgW / gross : null,
+      hrPlant: gross > 0 && hrPlantW > 0 ? hrPlantW / gross : null,
+    };
+  }
+
+  /* ══ POWER PLANT OPERATION REPORT — SECTION 1 ═══════════════════════
+     Matches power-plant-report.html's own single table field for field:
+     Generation & Availability, Boiler & Steam Parameters, Efficiency
+     Ratios, Heat Rate and DG Set. Flow fields (Gross/Aux generation,
+     Running Hours, the six steam-parameter fields, DG Generation) are
+     summed across the period; the eight ratio rows come from
+     computeRatios() above rather than a plain per-field sum. ═══════════ */
+  var GENERATION_ROWS = [
+    { label: 'Gross Power Generation', unit: 'kWhr', field: 'cpp_gross_gen_kwh', dp: 0 },
+    { label: 'Auxiliary Power Consumption', unit: 'kWhr', field: 'cpp_aux_kwh', dp: 0 },
+    { label: 'Net Power Exported', unit: 'kWhr', dp: 0, ratio: 'net' },
+    { label: 'Auxiliary Power Consumption', unit: '%', dp: 1, ratio: 'auxPct' },
+    { label: 'Average Power Generation', unit: 'MWhr', dp: 1, ratio: 'avgGen' },
+    { label: 'Plant Running Hours', unit: 'Hrs', field: 'cpp_run_hrs', dp: 1 },
+    { label: 'PLF % (Plant Load Factor)', unit: '%', dp: 1, ratio: 'plf' },
+  ];
+  var BOILER_ROWS = [
+    { label: 'Feed Water Consumption', unit: 'MT', field: 'cpp_feed_water_mt', dp: 1 },
+    { label: 'Boiler Steam Generation', unit: 'MT', field: 'cpp_boiler_steam_mt', dp: 1 },
+    { label: 'Bleed Steam', unit: 'MT', field: 'cpp_bleed_steam_mt', dp: 1 },
+    { label: 'Turbine Steam Consumption', unit: 'MT', field: 'cpp_turbine_steam_mt', dp: 1 },
+    { label: 'Condensate Generation', unit: 'MT', field: 'cpp_condensate_mt', dp: 1 },
+    { label: 'Auxiliary Steam Consumption', unit: 'MT', field: 'cpp_aux_steam_mt', dp: 1 },
+  ];
+  var EFFICIENCY_ROWS = [
+    { label: 'Specific Steam Consumption', unit: 'kg/kWhr', dp: 1, ratio: 'ssc' },
+    { label: 'Specific Fuel Consumption', unit: 'kg/kWhr', dp: 2, ratio: 'sfc' },
+  ];
+  var HEAT_RATE_ROWS = [
+    { label: 'Heat Rate TG 2880', unit: 'kcal/kWh', dp: 0, ratio: 'hrTg' },
+    { label: 'Heat Rate Plant 3300 @ MCR', unit: 'kcal/kWh', dp: 0, ratio: 'hrPlant' },
+  ];
+  var DG_ROWS = [
+    { label: 'DG Power Generation', unit: 'kWhr', field: 'cpp_dg_gen_kwh', dp: 0 },
+  ];
+
+  function operationsTableHTML(rows) {
+    var ratios = computeRatios(rows);
+    function rowHTML(r) {
+      var v = r.ratio ? ratios[r.ratio] : sumField(rows, r.field);
+      return '<tr><td class="n-tl n-rowhdr">' + U.esc(r.label) + '</td>'
+           + '<td class="n-tl" style="color:var(--text-muted)">' + U.esc(r.unit) + '</td>'
+           + '<td class="n-totcol">' + U.cell(v, r.dp) + '</td></tr>';
+    }
+    var h = '<table class="n-tbl"><thead><tr>'
+          + '<th class="n-tl n-rowhdr">Description</th><th class="n-tl">Unit</th>'
+          + '<th class="n-totcol">Value</th></tr></thead><tbody>';
+    h += '<tr class="n-sec"><td colspan="3">GENERATION &amp; AVAILABILITY</td></tr>';
+    GENERATION_ROWS.forEach(function (r) { h += rowHTML(r); });
+    h += '<tr class="n-sec"><td colspan="3">BOILER &amp; STEAM PARAMETERS</td></tr>';
+    BOILER_ROWS.forEach(function (r) { h += rowHTML(r); });
+    h += '<tr class="n-sec"><td colspan="3">EFFICIENCY RATIOS</td></tr>';
+    EFFICIENCY_ROWS.forEach(function (r) { h += rowHTML(r); });
+    h += '<tr class="n-sec"><td colspan="3">HEAT RATE</td></tr>';
+    HEAT_RATE_ROWS.forEach(function (r) { h += rowHTML(r); });
+    h += '<tr class="n-sec"><td colspan="3">DG SET</td></tr>';
+    DG_ROWS.forEach(function (r) { h += rowHTML(r); });
+    h += '</tbody></table>';
+    return h;
+  }
+
+  /* Superheated/Feedwater/DM Water Enthalpy and Boiler Efficiency feed
+     Heat Rate (TG/Plant) above but are lab/DCS constants entered for one
+     exact date — the entry form never tracks them by month or year (its
+     own MTD/YTD columns are blank for these rows), so this reads only
+     state.dayRecord, independent of the period toggle, same treatment
+     production.html gives Specific Power & Heat and Quality Summary. */
+  function heatRateInputsHTML() {
+    var rec = state.dayRecord;
+    if (!rec || !isReported(rec)) return '';
+    var d = rec.data || {};
+    function n(f) { return U.num(d[f]); }
+    var rows = [
+      ['Superheated Steam Enthalpy (kcal/kg)', n('cpp_superheated_steam_enthalpy'), 0],
+      ['Feed Water Enthalpy (kcal/kg)', n('cpp_feedwater_enthalpy'), 0],
+      ['DM Water Enthalpy (kcal/kg)', n('cpp_dm_water_enthalpy'), 0],
+      ['Boiler Efficiency (ratio)', n('cpp_boiler_efficiency'), 2],
+    ];
+    var h = '<div style="padding:var(--sp-4);border-top:1px solid var(--border)">'
+          + '<div style="font-size:var(--fs-xs);color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:var(--sp-3)">'
+          + 'Heat Rate Inputs — On Date ' + U.esc(fmtDate(state.date)) + ' — lab / DCS readings, not tracked by month or year</div>'
+          + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--sp-3)">';
+    rows.forEach(function (row) {
+      h += '<div><div style="font-size:var(--fs-xs);color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">' + U.esc(row[0]) + '</div>'
+         + '<div style="font-size:var(--fs-lg);font-weight:var(--fw-bold);color:var(--navy)">' + (row[1] === null ? '<span class="n-nodata">—</span>' : U.esc(U.fmt(row[1], row[2]))) + '</div></div>';
+    });
+    h += '</div></div>';
+    return h;
+  }
+
+  /* ══ FUEL REPORT — COAL — SECTION 2 ═══════════════════════════════
+     Coal Consumption is a flow, summed across the period (and is also the
+     Coal Consumed (Boiler) KPI tile's own figure). GCV (ADB) is a lab
+     reading with no MTD/YTD in the source report, so it always shows the
+     exact date in the Date field, same treatment as the heat rate inputs
+     above. ═══════════════════════════════════════════════════════════ */
+  function fuelCoalHTML(rows) {
+    var coal = sumField(rows, 'cpp_coal_cons');
+    var rec = state.dayRecord;
+    var gcv = (rec && isReported(rec)) ? U.num((rec.data || {}).cpp_coal_gcv) : null;
+    var h = '<table class="n-tbl"><thead><tr>'
+          + '<th class="n-tl n-rowhdr">Description</th><th class="n-tl">Unit</th>'
+          + '<th class="n-totcol">Value</th></tr></thead><tbody>';
+    h += '<tr><td class="n-tl n-rowhdr">Coal Consumption</td><td class="n-tl" style="color:var(--text-muted)">MT</td>'
+       + '<td class="n-totcol">' + U.cell(coal, 1) + '</td></tr>';
+    h += '<tr class="n-sec"><td colspan="3">Coal Quality Parameters (Lab) — On Date ' + U.esc(fmtDate(state.date)) + '</td></tr>';
+    h += '<tr><td class="n-tl n-rowhdr">GCV (ADB)</td><td class="n-tl" style="color:var(--text-muted)">kcal/kg</td>'
+       + '<td class="n-totcol">' + (gcv === null ? '<span class="n-nodata">—</span>' : U.cell(gcv, 0)) + '</td></tr>';
+    h += '</tbody></table>';
+    return h;
+  }
+
+  /* ══ WTP REPORT — WATER TREATMENT PLANT — SECTION 3 ═══════════════════
+     Water Production & Consumption are flows, summed across the period.
+     Fly Ash Combustible % and Fly Ash GCV are lab readings with no
+     MTD/YTD in the source report — exact-date only, same as above. ═════ */
+  function wtpHTML(rows) {
+    var dmGen = sumField(rows, 'cpp_dm_water_gen_m3');
+    var dmCons = sumField(rows, 'cpp_dm_water_cons_m3');
+    var ctMakeup = sumField(rows, 'cpp_ct_makeup_m3');
+    var rec = state.dayRecord, d = (rec && isReported(rec)) ? (rec.data || {}) : {};
+    var flyCombustible = U.num(d.cpp_flyash_combustible_pct);
+    var flyGcv = U.num(d.cpp_flyash_gcv);
+    var h = '<table class="n-tbl"><thead><tr>'
+          + '<th class="n-tl n-rowhdr">Description</th><th class="n-tl">Unit</th>'
+          + '<th class="n-totcol">Value</th></tr></thead><tbody>';
+    h += '<tr class="n-sec"><td colspan="3">Water Production &amp; Consumption</td></tr>';
+    h += '<tr><td class="n-tl n-rowhdr">DM Water Generation</td><td class="n-tl" style="color:var(--text-muted)">m³</td><td class="n-totcol">' + U.cell(dmGen, 1) + '</td></tr>';
+    h += '<tr><td class="n-tl n-rowhdr">DM Water Consumption</td><td class="n-tl" style="color:var(--text-muted)">m³</td><td class="n-totcol">' + U.cell(dmCons, 1) + '</td></tr>';
+    h += '<tr><td class="n-tl n-rowhdr">CT Makeup Water Consumption</td><td class="n-tl" style="color:var(--text-muted)">m³</td><td class="n-totcol">' + U.cell(ctMakeup, 1) + '</td></tr>';
+    h += '<tr class="n-sec"><td colspan="3">Fly Ash Parameters — On Date ' + U.esc(fmtDate(state.date)) + '</td></tr>';
+    h += '<tr><td class="n-tl n-rowhdr">Fly Ash Combustible</td><td class="n-tl" style="color:var(--text-muted)">%</td><td class="n-totcol">' + (flyCombustible === null ? '<span class="n-nodata">—</span>' : U.cell(flyCombustible, 1)) + '</td></tr>';
+    h += '<tr><td class="n-tl n-rowhdr">Fly Ash GCV</td><td class="n-tl" style="color:var(--text-muted)">kcal/kg</td><td class="n-totcol">' + (flyGcv === null ? '<span class="n-nodata">—</span>' : U.cell(flyGcv, 0)) + '</td></tr>';
+    h += '</tbody></table>';
+    return h;
+  }
+
+  /* ══ FLY ASH DISPOSAL — SECTION 4 ═══════════════════════════════════
+     Daily fly ash movement — Cement Mill, Coalyard & Dumpyard. All flows,
+     summed across the period. The source report's Remarks column carries
+     no field behind it anywhere (a plain empty <td></td>, not an input),
+     so it is not reproduced here — there is no data to show. ═══════════ */
+  function flyAshDisposalHTML(rows) {
+    var toCm = sumField(rows, 'cpp_flyash_to_cm_mt');
+    var toCoalyard = sumField(rows, 'cpp_flyash_to_coalyard_nos');
+    var toDumpyard = sumField(rows, 'cpp_flyash_to_dumpyard_nos');
+    var h = '<table class="n-tbl"><thead><tr>'
+          + '<th class="n-tl n-rowhdr">Description</th><th class="n-tl">Unit</th>'
+          + '<th class="n-totcol">Value</th></tr></thead><tbody>';
+    h += '<tr><td class="n-tl n-rowhdr">Fly Ash to Cement Mill</td><td class="n-tl" style="color:var(--text-muted)">MT</td><td class="n-totcol">' + U.cell(toCm, 1) + '</td></tr>';
+    h += '<tr><td class="n-tl n-rowhdr">Fly Ash to Coalyard</td><td class="n-tl" style="color:var(--text-muted)">nos (Truck)</td><td class="n-totcol">' + U.cell(toCoalyard, 0) + '</td></tr>';
+    h += '<tr><td class="n-tl n-rowhdr">Fly Ash to Dumpyard</td><td class="n-tl" style="color:var(--text-muted)">nos (Truck)</td><td class="n-totcol">' + U.cell(toDumpyard, 0) + '</td></tr>';
+    h += '</tbody></table>';
+    return h;
+  }
+
+  /* ══ COAL SOURCE BREAKDOWN — SECTION 5 ═══════════════════════════════
+     On-Date receipt tonnage from each supplier — a flow, summed across
+     the period like the Dispatch report's channel×grade table. ════════ */
+  var COAL_SOURCES = [
+    ['cpp_coal_recv_market_insight', 'Market Insight'],
+    ['cpp_coal_recv_connect',        'Connect'],
+    ['cpp_coal_recv_stamico',        'STAMICO'],
+    ['cpp_coal_recv_ruvuma',         'Ruvuma'],
+    ['cpp_coal_recv_mchekanai',      'MCHEKANAI'],
+  ];
+  function coalSourceHTML(rows) {
+    var h = '<table class="n-tbl"><thead><tr>'
+          + '<th class="n-tl n-rowhdr">Source</th><th class="n-totcol">Received (Tons)</th></tr></thead><tbody>';
+    var total = null;
+    COAL_SOURCES.forEach(function (s) {
+      var v = sumField(rows, s[0]);
+      h += '<tr><td class="n-tl n-rowhdr">' + U.esc(s[1]) + '</td><td class="n-totcol">' + U.cell(v, 0) + '</td></tr>';
+      if (v !== null) total = (total || 0) + v;
+    });
+    h += '<tr class="n-total"><td class="n-tl n-rowhdr">Total Received</td><td class="n-totcol">' + U.cell(total, 0) + '</td></tr>';
+    h += '</tbody></table>';
+    return h;
+  }
+
+  /* ══ PERIOD ═══════════════════════════════════════════════════════ */
+  var PERIOD_LABEL = { day: 'On Date', mtd: 'Month to Date', ytd: 'Year to Date (fiscal)' };
+
+  function monthStart(iso) { return iso.slice(0, 8) + '01'; }
+  function fiscalStart(iso) {
+    var d = new Date(iso + 'T00:00:00');
+    var y = d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1;
+    return y + '-04-01';
+  }
+  function fmtDate(iso) {
+    return new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  /* ══ STATE ════════════════════════════════════════════════════════ */
+  var state = { date: null, period: 'day', rows: [], ytdRows: [], allRows: [], series: {}, drafts: 0, loading: true, error: null };
+
+  function rowsForPeriod() {
+    if (state.period === 'day') {
+      return state.rows.filter(function (r) { return String(r.record_date).slice(0, 10) === state.date; });
+    }
+    return state.period === 'mtd' ? state.rows : state.ytdRows;
+  }
+
+  /* ══ KPI CARDS ════════════════════════════════════════════════════
+     Every metadata value — target, signage, targetLabel, notes, version —
+     comes from forms/formula-registry.js via NyatiUI.fromRegistry. This
+     page supplies the VALUE (aggregated the way the registry's own
+     monthlyAgg says to) and the PERIOD, nothing else. Values come from the
+     server's own formula engine (NyatiAPI.getDailySeries →
+     backend/services/formulaEngine.js), not recomputed here — same
+     approach production.html and dispatch.html already use, so a KPI
+     tile and the table row built from computeRatios() above can never
+     silently disagree about the underlying arithmetic (both read the
+     identical formula definition, just via two different code paths for
+     two different display shapes). ═══════════════════════════════════ */
+  var KPI_TILES = [
+    { key: 'cpp-gross-generation',           name: 'Gross Power Generated' },
+    { key: 'cpp-net-generation',             name: 'Net Power Exported' },
+    { key: 'cpp-plant-load-factor',          name: 'Plant Load Factor' },
+    { key: 'cpp-coal-consumption',           name: 'Coal Consumed (Boiler)' },
+    { key: 'cpp-heat-rate',                  name: 'Heat Rate (Plant)' },
+    { key: 'cpp-specific-fuel-consumption',  name: 'Specific Fuel Consumption' },
+  ];
+
+  function seriesSlice(key, from, to) {
+    var s = (state.series[key] && state.series[key].series) || [];
+    return s.filter(function (p) { return p.date >= from && p.date <= to; });
+  }
+
+  function aggregateKpi(key, sliceArr, factRows) {
+    var valid = sliceArr.filter(function (p) { return p.value !== null && p.value !== undefined; });
+    if (!valid.length) return null;
+    var formula = (window.NyatiFormulas && window.NyatiFormulas.FORMULAS[key]) || null;
+    var agg = (formula && formula.monthlyAgg) || 'avg';
+    if (agg === 'sum') return valid.reduce(function (s, r) { return s + r.value; }, 0);
+    if (agg === 'avg') return valid.reduce(function (s, r) { return s + r.value; }, 0) / valid.length;
+    if (agg.type === 'weighted') {
+      var byDate = {};
+      factRows.forEach(function (r) { byDate[String(r.record_date).slice(0, 10)] = r.data || {}; });
+      var wSum = 0, vSum = 0;
+      valid.forEach(function (r) {
+        var w = agg.weight(byDate[r.date] || {}) || 0;
+        if (w > 0) { wSum += w; vSum += r.value * w; }
+      });
+      return wSum > 0 ? vSum / wSum : null;
+    }
+    return null;
+  }
+
+  function buildKpis() {
+    var period = PERIOD_LABEL[state.period];
+    var from = state.period === 'day' ? state.date : (state.period === 'mtd' ? monthStart(state.date) : fiscalStart(state.date));
+    var to = state.date;
+    var factRows = rowsForPeriod();
+
+    return KPI_TILES.map(function (t) {
+      var slice = seriesSlice(t.key, from, to);
+      var value = aggregateKpi(t.key, slice, factRows);
+      return U.fromRegistry(t.key, value, {
+        period: period,
+        name: t.name,
+        href: 'power-plant-report.html',
+        hrefLabel: 'Open the Power Plant (CPP) Report',
+      });
+    });
+  }
+
+  /* ══ CARD FRAME ═══════════════════════════════════════════════════ */
+  function card(opts) {
+    return '<section class="n-card">'
+      + '<div class="n-card-hdr">'
+      +   '<div><div class="n-card-title"><i data-lucide="' + opts.icon + '"></i>' + U.esc(opts.title) + '</div>'
+      +   (opts.sub ? '<div class="n-card-sub">' + U.esc(opts.sub) + '</div>' : '') + '</div>'
+      +   (opts.meta ? '<div class="n-card-meta">' + opts.meta + '</div>' : '')
+      + '</div>'
+      + '<div class="n-card-body' + (opts.flush ? ' is-flush' : '') + '">'
+      +   (opts.flush ? '<div class="n-tbl-wrap">' + opts.body + '</div>' : opts.body)
+      + '</div>'
+      + '</section>';
+  }
+
+  /* ══ RENDER ═══════════════════════════════════════════════════════ */
+  function renderStatus() {
+    if (state.loading) { elStat.innerHTML = ''; return; }
+    var rows = rowsForPeriod();
+    var html = '';
+
+    if (state.period === 'day') {
+      var rec = state.dayRecord;
+      html += U.workflowChipHTML(rec ? rec.status : 'missing');
+      if (rec && rec.submitted_by_name) {
+        html += '<span class="n-ctx-lbl">by ' + U.esc(rec.submitted_by_name) + '</span>';
+      }
+    } else {
+      var statuses = {};
+      rows.forEach(function (r) { statuses[r.status] = (statuses[r.status] || 0) + 1; });
+      var kinds = Object.keys(statuses);
+      html += U.workflowChipHTML(kinds.length === 1 ? kinds[0] : (kinds.length ? 'mixed' : 'missing'));
+      html += '<span class="n-ctx-lbl">' + rows.length + ' report' + (rows.length === 1 ? '' : 's') + ' counted';
+      if (state.drafts) html += ' · ' + state.drafts + ' draft' + (state.drafts === 1 ? '' : 's') + ' not counted';
+      html += '</span>';
+    }
+    elStat.innerHTML = html;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function render() {
+    if (state.loading) {
+      U.renderKpiSkeletons(elKpis, 6);
+      elBody.innerHTML = '';
+      renderStatus();
+      return;
+    }
+
+    if (state.error) {
+      elKpis.innerHTML = '';
+      U.renderState(elBody, {
+        kind: 'error',
+        title: 'Power Plant data could not be loaded',
+        body: 'The server did not answer, so no figures are shown — rather than showing figures that might '
+            + 'be out of date. ' + state.error,
+        action: 'Try again',
+        onAction: load,
+      });
+      return;
+    }
+
+    var rows = rowsForPeriod();
+
+    U.renderKpis(elKpis, buildKpis());
+    renderStatus();
+
+    var h = '';
+
+    if (!rows.length) {
+      var draftOnly = state.period === 'day' && state.dayRecord && state.dayRecord.status === 'draft';
+      h += U.stateHTML({
+        kind: 'nodata',
+        title: draftOnly
+          ? 'A draft exists for ' + fmtDate(state.date) + ', but it has not been submitted'
+          : 'No Power Plant (CPP) Report has been submitted for ' + (state.period === 'day' ? fmtDate(state.date) : 'this period'),
+        body: draftOnly
+          ? 'Draft figures are deliberately not shown here: they can still change, and this page is what '
+            + 'management reads. The report will appear as soon as it is submitted.'
+          : 'This page shows only submitted reports. Pick another date, or open the report to enter the '
+            + 'figures for this one.',
+        action: canEnter ? 'Open the Power Plant (CPP) Report' : null,
+        actionHref: canEnter ? 'power-plant-report.html' : null,
+      });
+      elBody.innerHTML = h;
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+
+    var periodSub = PERIOD_LABEL[state.period] + ' · ' + (state.period === 'day' ? fmtDate(state.date)
+          : fmtDate(state.period === 'mtd' ? monthStart(state.date) : fiscalStart(state.date)) + ' → ' + fmtDate(state.date));
+
+    h += card({
+      icon: 'zap',
+      title: 'Power Plant Operation Report',
+      sub: periodSub + ' · Generation, Auxiliary, Steam & Efficiency Parameters — flows are summed across the period, ratios use the generation/running-hours-weighted period figure',
+      meta: '<span class="n-prov is-manual"><span class="n-prov-sw"></span>Manual entry</span>',
+      body: operationsTableHTML(rows) + heatRateInputsHTML(),
+      flush: true,
+    });
+
+    h += card({
+      icon: 'flame',
+      title: 'Fuel Report — Coal',
+      sub: periodSub + ' · Consumption & calorific value',
+      meta: '<span class="n-prov is-manual"><span class="n-prov-sw"></span>Manual entry</span>',
+      body: fuelCoalHTML(rows),
+      flush: true,
+    });
+
+    h += card({
+      icon: 'droplets',
+      title: 'WTP Report — Water Treatment Plant',
+      sub: periodSub + ' · DM water, cooling tower & fly ash parameters',
+      meta: '<span class="n-prov is-manual"><span class="n-prov-sw"></span>Manual entry</span>',
+      body: wtpHTML(rows),
+      flush: true,
+    });
+
+    h += card({
+      icon: 'mountain',
+      title: 'Fly Ash Disposal',
+      sub: periodSub + ' · Cement Mill, Coalyard & Dumpyard movement',
+      meta: '<span class="n-prov is-manual"><span class="n-prov-sw"></span>Manual entry</span>',
+      body: flyAshDisposalHTML(rows),
+      flush: true,
+    });
+
+    h += card({
+      icon: 'pickaxe',
+      title: 'Coal Source Breakdown',
+      sub: periodSub + ' · Quantity received from each source',
+      meta: '<span class="n-prov is-manual"><span class="n-prov-sw"></span>Manual entry</span>',
+      body: coalSourceHTML(rows),
+      flush: true,
+    });
+
+    elBody.innerHTML = h;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  /* ══ LOAD ═════════════════════════════════════════════════════════ */
+  async function load() {
+    state.loading = true; state.error = null;
+    render();
+    try {
+      var from = monthStart(state.date);
+      var fy   = fiscalStart(state.date);
+      var all    = await NyatiAPI.getFormRange('cpp', fy, state.date);
+      var series = await NyatiAPI.getDailySeries(fy, state.date);
+
+      var inMonth = all.filter(function (r) {
+        var d = String(r.record_date).slice(0, 10);
+        return d >= from && d <= state.date;
+      });
+
+      state.allRows = all;
+      state.series  = series;
+      state.ytdRows = all.filter(isReported);
+      state.rows    = inMonth.filter(isReported);
+      state.drafts  = inMonth.length - state.rows.length;
+      state.dayRecord = all.filter(function (r) {
+        return String(r.record_date).slice(0, 10) === state.date;
+      })[0] || null;
+
+      state.loading = false;
+    } catch (e) {
+      state.loading = false;
+      state.error = (e && e.status === 403)
+        ? 'You do not have permission to read this report.'
+        : 'Check your connection and try again.';
+    }
+    render();
+  }
+
+  /* ══ EXPORT ═══════════════════════════════════════════════════════ */
+  function exportCsv() {
+    var lines = [];
+    document.querySelectorAll('#pp-body .n-card').forEach(function (sec) {
+      var title = sec.querySelector('.n-card-title');
+      var table = sec.querySelector('table');
+      if (!table) return;
+      lines.push('"' + (title ? title.textContent.trim() : '') + '"');
+      table.querySelectorAll('tr').forEach(function (tr) {
+        var cells = [].map.call(tr.querySelectorAll('th,td'), function (c) {
+          return '"' + c.textContent.trim().replace(/"/g, '""') + '"';
+        });
+        if (cells.length) lines.push(cells.join(','));
+      });
+      lines.push('');
+    });
+    var header = 'Lake Cement Ltd — Power Plant (CPP) Report\n'
+               + '"Period","' + PERIOD_LABEL[state.period] + '"\n'
+               + '"Date","' + fmtDate(state.date) + '"\n'
+               + '"Exported","' + new Date().toLocaleString('en-GB') + '"\n\n';
+    var blob = new Blob([header + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'nyati-power-plant-' + state.period + '-' + state.date + '.csv';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+  }
+
+  /* ══ WIRE ═════════════════════════════════════════════════════════ */
+  U.wireSegmented(document.getElementById('pp-period'), function (v) {
+    state.period = v;
+    render();
+  });
+
+  elDate.addEventListener('change', function () {
+    if (!elDate.value) return;
+    state.date = elDate.value;
+    LatestPeriod.showNote('pp-stale', { fellBack: false });
+    load();
+  });
+
+  document.getElementById('pp-print').addEventListener('click', function () { window.print(); });
+  document.getElementById('pp-export').addEventListener('click', exportCsv);
+
+  var fd = document.getElementById('footer-date');
+  if (fd) fd.textContent = new Date().toLocaleDateString('en-GB', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+
+  (async function init() {
+    var d = await LatestPeriod.defaultDate(['cpp']);
+    state.date = d.date;
+    elDate.value = d.date;
+    LatestPeriod.showNote('pp-stale', d);
+    if (window.lucide) lucide.createIcons();
+    load();
+  }());
+
+}());
+</script>
+</body>
+</html>

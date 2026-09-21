@@ -50,7 +50,7 @@
   </div>
   <div class="btn-grp">
     <a class="btn btn-out" href="../dispatch.html"><i data-lucide="bar-chart-2" class="btn-icon"></i> View report</a>
-    <button class="btn btn-out"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
+    <button class="btn btn-out" data-persist="history"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
     <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
     <button class="btn btn-sub"><i data-lucide="check-circle" class="btn-icon"></i> Submit Report</button>
   </div>
@@ -329,33 +329,128 @@
   </div>
 
   <!-- ════════════════════════════════════════════════
-       SECTION 4 — STOPPAGES
-
-       This was a five-row stoppage log: section, equipment, start, end,
-       duration, category and cause — thirty inputs, not one of which
-       carried a data-field. An officer could fill the whole table, press
-       Submit, and every word of it was dropped on the floor. The data was
-       not lost to the business, because stoppages have their own report
-       that P&amp;M owns and that the availability / MTBF / Pareto analysis is
-       actually built from — but this table looked exactly like somewhere
-       to record them, which made it worse than not being here at all.
-       Replaced with a pointer to where the data really goes.
+       SECTION 4 — STOPPAGE LOG (PACKING)
   ════════════════════════════════════════════════ -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="alert-triangle" class="title-icon"></i> Stoppages affecting dispatch</div>
-        <div class="rcard-sub">Recorded on the Sectional Stoppage Report, not on this one</div>
+        <div class="rcard-title"><i data-lucide="alert-triangle" class="title-icon"></i> Packing / Dispatch Stoppage Log</div>
+        <div class="rcard-sub">Equipment / process stoppages affecting dispatch — 21-Apr-2026</div>
+      </div>
+      <div class="rcard-chips">
+        <span class="rcard-chip orange">PACKING · E&amp;I</span>
       </div>
     </div>
-    <div class="fm-crosslink" style="margin:0;border-radius:0;border-left:none;border-right:none;border-bottom:none">
-      <i data-lucide="corner-down-right"></i>
-      <div>
-        Packing and loading-bay downtime belongs on the
-        <a href="stoppage-form.html">Sectional Stoppage Report</a>, which is where availability, MTBF and
-        the downtime Pareto are calculated from. Recording it twice would put two different versions of the
-        same stoppage into the system.
-      </div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:1100px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr" style="min-width:30px">SN</th>
+            <th class="tl grp-hdr" style="min-width:140px">Section</th>
+            <th class="tl grp-hdr" style="min-width:200px">Equipment / Description</th>
+            <th class="grp-hdr">Start Time</th>
+            <th class="grp-hdr">End Time</th>
+            <th class="grp-hdr">Duration<br>(min)</th>
+            <th class="grp-hdr">Category</th>
+            <th class="tl grp-hdr" style="min-width:180px">Cause / Action Taken</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="ts">1</td>
+            <td class="tp">Packing Line 2</td>
+            <td class="cm"><input class="ci" type="text" value="Rotary packer #2 jam" style="text-align:left;padding-left:8px" /></td>
+            <td class="cm"><input class="ci" type="time" value="07:15" /></td>
+            <td class="cm"><input class="ci" type="time" value="08:40" /></td>
+            <td class="cf"><div class="cv">85</div></td>
+            <td class="cm">
+              <select class="ci" style="min-width:90px;text-align:left">
+                <option>Mechanical</option>
+                <option>E&amp;I</option>
+                <option>Production</option>
+                <option>Power</option>
+                <option>Other</option>
+              </select>
+            </td>
+            <td class="cm"><input class="ci" type="text" value="Belt jam cleared; packer restarted" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="ts">2</td>
+            <td class="tp">Loading Bay</td>
+            <td class="cm"><input class="ci" type="text" value="Truck weighbridge fault" style="text-align:left;padding-left:8px" /></td>
+            <td class="cm"><input class="ci" type="time" value="11:00" /></td>
+            <td class="cm"><input class="ci" type="time" value="11:45" /></td>
+            <td class="cf"><div class="cv">45</div></td>
+            <td class="cm">
+              <select class="ci" style="min-width:90px;text-align:left">
+                <option>E&amp;I</option>
+                <option>Mechanical</option>
+                <option>Production</option>
+                <option>Power</option>
+                <option>Other</option>
+              </select>
+            </td>
+            <td class="cm"><input class="ci" type="text" value="Scale recalibrated; dispatch resumed" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="ts">3</td>
+            <td class="tp"></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+            <td class="cm"><input class="ci" type="time" /></td>
+            <td class="cm"><input class="ci" type="time" /></td>
+            <td class="cf"><div class="cv"></div></td>
+            <td class="cm">
+              <select class="ci" style="min-width:90px;text-align:left">
+                <option></option>
+                <option>Mechanical</option>
+                <option>E&amp;I</option>
+                <option>Production</option>
+                <option>Power</option>
+                <option>Other</option>
+              </select>
+            </td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="ts">4</td>
+            <td class="tp"></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+            <td class="cm"><input class="ci" type="time" /></td>
+            <td class="cm"><input class="ci" type="time" /></td>
+            <td class="cf"><div class="cv"></div></td>
+            <td class="cm">
+              <select class="ci" style="min-width:90px;text-align:left">
+                <option></option>
+                <option>Mechanical</option>
+                <option>E&amp;I</option>
+                <option>Production</option>
+                <option>Power</option>
+                <option>Other</option>
+              </select>
+            </td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr>
+            <td class="ts">5</td>
+            <td class="tp"></td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+            <td class="cm"><input class="ci" type="time" /></td>
+            <td class="cm"><input class="ci" type="time" /></td>
+            <td class="cf"><div class="cv"></div></td>
+            <td class="cm">
+              <select class="ci" style="min-width:90px;text-align:left">
+                <option></option>
+                <option>Mechanical</option>
+                <option>E&amp;I</option>
+                <option>Production</option>
+                <option>Power</option>
+                <option>Other</option>
+              </select>
+            </td>
+            <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
@@ -392,7 +487,7 @@
         The report’s status and date are shown in the toolbar at the top of this page.
       </span>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-out"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+        <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
         <button class="btn btn-sub"><i data-lucide="lock" class="btn-icon"></i> Submit &amp; Lock</button>
       </div>
     </div>
@@ -419,10 +514,10 @@
   if (el1) el1.textContent = str;
   if (el2) el2.textContent = str;
 </script>
-<script src="api-client.js"></script>
+<script src="api-client.js?v=2"></script>
 <script src="offline-queue.js"></script>
 <script src="client-errors.js"></script>
-<script src="form-persist.js"></script>
+<script src="form-persist.js?v=2"></script>
 <script>initFormPersist('dispatch');</script>
 <script src="nav-status.js"></script>
 <script src="collapsible.js"></script>

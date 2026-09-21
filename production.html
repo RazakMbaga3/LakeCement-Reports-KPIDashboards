@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Lake Cement – Production Report</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Component layer: cards, context bar, KPI cards, read-side tables.
+       Loaded after styles.css and BEFORE design-system.css, which must keep
+       the last word on legibility and touch size. -->
+  <link rel="stylesheet" href="components.css?v=1" />
+  <script src="auth.js?v=10"></script>
+  <script src="sidebar.js?v=2"></script>
+  <script src="loader.js?v=1"></script>
+  <script src="forms/date-picker.js"></script>
+  <!-- Design system — loaded last so it settles equal-specificity ties -->
+  <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="a11y.js?v=1"></script>
+  <script src="mobile-shell.js?v=1"></script>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="app-sidebar"></aside>
+  <script>renderSidebar();</script>
+
+  <div class="main">
+
+<header class="top-header" id="app-header"></header>
+<script>renderTopHeader();</script>
+
+<main class="n-page" id="production-page">
+
+  <!-- ══ PAGE HEAD ══════════════════════════════════════════════════ -->
+  <div class="n-page-head">
+    <div>
+      <nav class="n-crumb" aria-label="Breadcrumb">
+        <a href="portal.html">Operations</a>
+        <span class="n-crumb-sep" aria-hidden="true">/</span>
+        <span class="n-crumb-here">Production</span>
+      </nav>
+      <h1 class="n-title">Production Report</h1>
+      <p class="n-subtitle">
+        Clinker, cement, coal and dispatch figures, plant operations, specific heat and power
+        consumption, material returns, quality and equipment availability, and the raw material
+        stock ledger. Read-only — figures come from the submitted Production Report.
+      </p>
+    </div>
+    <div class="n-page-actions">
+      <button type="button" class="n-btn" id="pr-export">
+        <i data-lucide="file-down"></i> Export CSV
+      </button>
+      <button type="button" class="n-btn" id="pr-print">
+        <i data-lucide="printer"></i> Print
+      </button>
+      <a class="n-btn is-primary" id="pr-enter" href="daily-report.html">
+        <i data-lucide="pencil"></i> Enter today's data
+      </a>
+    </div>
+  </div>
+
+  <!-- ══ REPORTING CONTEXT ══════════════════════════════════════════ -->
+  <div class="n-ctx">
+    <div class="n-ctx-group">
+      <label class="n-ctx-lbl" for="pr-date">Date</label>
+      <input type="date" id="pr-date" class="n-ctx-ctl" />
+    </div>
+
+    <div class="n-ctx-sep" aria-hidden="true"></div>
+
+    <div class="n-ctx-group">
+      <span class="n-ctx-lbl" id="pr-period-lbl">Period</span>
+      <div class="n-seg" id="pr-period" role="group" aria-labelledby="pr-period-lbl">
+        <button type="button" class="n-seg-btn" data-value="day" aria-pressed="true">On Date</button>
+        <button type="button" class="n-seg-btn" data-value="mtd" aria-pressed="false">MTD</button>
+        <button type="button" class="n-seg-btn" data-value="ytd" aria-pressed="false">YTD</button>
+      </div>
+    </div>
+
+    <div class="n-ctx-sep" aria-hidden="true"></div>
+
+    <div class="n-ctx-group">
+      <span class="n-ctx-lbl">Department</span>
+      <span class="n-chip is-neutral"><span class="n-chip-dot"></span>Production</span>
+    </div>
+
+    <span class="n-ctx-spacer"></span>
+
+    <!-- Report state and how much of the period it actually covers. -->
+    <div class="n-ctx-group" id="pr-status-group"></div>
+  </div>
+
+  <!-- Fallback banner: shown only when the page had to move off today
+       because nothing has been entered since an earlier date. -->
+  <div class="stale-note" id="pr-stale" style="display:none"></div>
+
+  <!-- ══ KPI SUMMARY ════════════════════════════════════════════════ -->
+  <div class="n-kpi-grid" id="pr-kpis"></div>
+
+  <!-- ══ DETAIL ═════════════════════════════════════════════════════ -->
+  <div id="pr-body"></div>
+
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span id="footer-date"></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+  </div><!-- /.main -->
+</div><!-- /.app-shell -->
+
+<script src="lucide-icons.js?v=1"></script>
+<script src="forms/api-client.js"></script>
+<script src="forms/formula-registry.js"></script>
+<script src="components.js?v=1"></script>
+<script src="forms/latest-period.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  requireAuth();
+
+  /* ── Access ───────────────────────────────────────────────────────
+     Same gate the Production entry form (daily-report.html) sits behind —
+     read through auth.js's accessors rather than a role list of this
+     page's own. The permission key stays 'daily-report.html': that is
+     what _DAILY_ACCESS and _FORM_TYPE_ACCESS already index on, and this
+     page is the same report under a new URL, not a new permission. */
+  var user = getCurrentUser();
+  if (!user) return;
+
+  var access = getDailyAccessFor(user.role) || { nav: [], edit: [] };
+  var canView = access.nav === 'all' || (access.nav || []).indexOf('daily-report.html') !== -1;
+  var canEnter = (getFormTypeAccessFor(user.role) || []).indexOf('production') !== -1;
+
+  var U = window.NyatiUI;
+  var elKpis = document.getElementById('pr-kpis');
+  var elBody = document.getElementById('pr-body');
+  var elDate = document.getElementById('pr-date');
+  var elStat = document.getElementById('pr-status-group');
+
+  if (!canView) {
+    elKpis.remove();
+    U.renderState(elBody, {
+      kind: 'denied',
+      title: 'You do not have access to the Production Report',
+      body: 'This report is limited to plant operations, quality, maintenance and management teams. '
+          + 'Ask an administrator if you believe you should be able to see it.',
+    });
+    document.querySelector('.n-ctx').style.display = 'none';
+    document.querySelector('.n-page-actions').style.display = 'none';
+    return;
+  }
+
+  if (!canEnter) document.getElementById('pr-enter').style.display = 'none';
+
+  /* ══ WHICH ROWS COUNT ═════════════════════════════════════════════
+     Same rule as dispatch.html / backend/config/forms.js (REPORTED_STATUSES):
+     a report counts once submitted, whether or not the HOD has signed it
+     off yet. Drafts do not count, but the coverage line says how many
+     were left out. ═══════════════════════════════════════════════════ */
+  var REPORTED = ['approved', 'pending_approval'];
+  function isReported(r) { return REPORTED.indexOf(r.status) !== -1; }
+
+  function val(row, field) { return U.num(row && row.data ? row.data[field] : null); }
+  function sumField(rows, field) {
+    var any = false, total = 0;
+    rows.forEach(function (r) {
+      var v = val(r, field);
+      if (v !== null) { any = true; total += v; }
+    });
+    return any ? total : null;
+  }
+
+  /* ══ MATERIAL MOVEMENT — STOCK LEDGER ═══════════════════════════════
+     Raw Mill Material, Fuel — Coal, Clinker Stock & Movement and Cement
+     Grinding Material, matching SECTION 1 of the Production Report entry
+     form (daily-report.html) field for field. A ledger row is NOT a plain
+     flow like dispatch tonnage: Opening and Closing are balances at a
+     moment, Received and Consumption are flows across the period, and
+     mixing the two aggregation rules on the same row is the one mistake
+     that would make every figure in this table wrong.
+       Opening  = the first reported day's own opening balance
+       Received = summed across every reported day in the period
+       Consumption = summed across every reported day in the period
+       Closing  = the LAST reported day's own closing balance, computed the
+                  same way the entry form's own live ledger arithmetic does
+                  (that day's opening + received − consumed [− any cross-
+                  linked draw]) — never a running total across the whole
+                  period, which would double-count every day in between.
+     No prior art for this existed anywhere in the app: forms/report-
+     rollup.js (the entry form's own MTD/YTD helper) sums every field it is
+     pointed at with no stock/flow distinction, which is exactly wrong for
+     an Opening or Closing column; backend/services/misReport.js and
+     analytics.html carry no monthly material-balance rollup either. This
+     is therefore new logic, not a reuse of something already trusted
+     elsewhere. ══════════════════════════════════════════════════════════ */
+  var LEDGER_GROUPS = [
+    {
+      title: 'Raw Mill Material', sectionLabel: 'PYRO PROCESSING — RAW MILL MATERIAL',
+      rows: [
+        { label: 'Limestone',          loc: 'Mines / HG', open: 'rmm_limestone_open',      recv: 'rmm_limestone_recv',      cons: 'rmm_limestone_cons',      extraCons: 'cm_limestone_cons',
+          note: 'Closing also nets off the Cement Grinding section’s own Limestone draw below — same physical stockpile, drawn down from two process stages.' },
+        { label: 'Clay',                loc: 'Mines',      open: 'rmm_clay_open',           recv: 'rmm_clay_recv',           cons: 'rmm_clay_cons' },
+        { label: 'Iron Ore',            loc: 'Store',      open: 'rmm_ironore_open',        recv: 'rmm_ironore_recv',        cons: 'rmm_ironore_cons' },
+        { label: 'Industrial Clay',     loc: 'Mines',      open: 'rmm_industrialclay_open',  recv: 'rmm_industrialclay_recv',  cons: 'rmm_industrialclay_cons' },
+        { label: 'Bauxite',             loc: 'Mines',      open: 'rmm_bauxite_open',        recv: 'rmm_bauxite_recv',        cons: 'rmm_bauxite_cons',
+          note: 'Tracked by the plant only from 21 Jun 2026 onward — reads no data before that date.' },
+        { label: 'Mill Dust Iron Ore',  loc: 'Store',      open: 'rmm_milldustironore_open', recv: 'rmm_milldustironore_recv', cons: 'rmm_milldustironore_cons',
+          note: 'Tracked by the plant only from 21 Jun 2026 onward — reads no data before that date.' },
+      ],
+      totalLabel: 'Raw Mill Material — Total',
+    },
+    {
+      title: 'Fuel — Coal', sectionLabel: 'FUEL — COAL',
+      rows: [
+        { label: 'Coal — Kiln', loc: 'CPP / Store', open: 'coal_kiln_open', recv: 'coal_kiln_recv', cons: 'coal_kiln' },
+        { label: 'Coal — CPP',  loc: 'CPP',         open: 'coal_cpp_open',  recv: 'coal_cpp_recv',  cons: 'coal_cpp' },
+      ],
+      totalLabel: 'Coal — Total',
+    },
+    {
+      title: 'Clinker Stock & Movement', sectionLabel: 'CLINKER STOCK & MOVEMENT',
+      rows: [
+        { label: 'Clinker — Own (From Kiln)', loc: 'Kiln',  open: 'kiln_clinker_open',      recv: 'kiln_prod_mt',           cons: 'cm_clinker_own_cons' },
+        { label: 'Clinker — Purchased',       loc: 'Store', open: 'cm_clinker_purch_open',  recv: 'cm_clinker_purch_recv',  cons: 'cm_clinker_purch_cons' },
+        { label: 'Clinker — Despatch',        loc: '—',     open: null,                     recv: null,                     cons: 'dispatch_clinker',
+          note: 'Bulk clinker sold directly, outside the cement mills — not part of the stock ledger above, so it carries no opening/closing balance of its own.' },
+      ],
+      totalLabel: null, /* The source report does not total this section either — Own, Purchased and Despatch are three different streams, not one stock. */
+    },
+    {
+      title: 'Cement Grinding — Material', sectionLabel: 'CEMENT GRINDING — MATERIAL',
+      rows: [
+        { label: 'Gypsum',                loc: 'Store', open: 'cm_gypsum_open',    recv: 'cm_gypsum_recv',    cons: 'cm_gypsum_cons' },
+        { label: 'Limestone',             loc: 'Store', open: null,                 recv: 'cm_limestone_recv', cons: 'cm_limestone_cons',
+          note: 'Draws on the same physical stockpile as Raw Mill Limestone above — no separate opening/closing balance of its own.' },
+        { label: 'Starex',                loc: 'Store', open: 'cm_starex_open',    recv: 'cm_starex_recv',    cons: 'cm_starex_cons' },
+        { label: 'Grinding Aid (Mapie)',  loc: 'Store', open: 'cm_grind_aid_open', recv: 'cm_grind_aid_recv', cons: 'cm_grind_aid_cons' },
+        { label: 'Fly Ash',               loc: 'Store', open: 'cm_flyash_open',    recv: 'cm_flyash_recv',    cons: 'cm_flyash_cons' },
+      ],
+      totalLabel: 'Cement Grinding Material — Total',
+    },
+  ];
+
+  /* One row's Opening / Received / Consumption / Closing for whatever set
+     of reported days is in view. `rows` must be sorted oldest → newest
+     (NyatiAPI.getFormRange already returns them that way). */
+  function ledgerFigures(rowDef, rows) {
+    if (!rows.length) return { open: null, recv: null, cons: null, closing: null };
+    var first = rows[0], last = rows[rows.length - 1];
+    var open = rowDef.open ? val(first, rowDef.open) : null;
+    var recv = rowDef.recv ? sumField(rows, rowDef.recv) : null;
+    var cons = rowDef.cons ? sumField(rows, rowDef.cons) : null;
+
+    var lastOpen  = rowDef.open  ? val(last, rowDef.open)  : null;
+    var lastRecv  = rowDef.recv  ? val(last, rowDef.recv)  : null;
+    var lastCons  = rowDef.cons  ? val(last, rowDef.cons)  : null;
+    var lastExtra = rowDef.extraCons ? val(last, rowDef.extraCons) : 0;
+    var closing = (rowDef.open && lastOpen !== null)
+      ? (lastOpen || 0) + (lastRecv || 0) - (lastCons || 0) - (lastExtra || 0)
+      : null;
+
+    return { open: open, recv: recv, cons: cons, closing: closing };
+  }
+
+  function ledgerGroupTotal(group, rows) {
+    var t = { open: null, recv: null, cons: null, closing: null };
+    group.rows.forEach(function (rowDef) {
+      var fig = ledgerFigures(rowDef, rows);
+      ['open', 'recv', 'cons', 'closing'].forEach(function (k) {
+        if (fig[k] !== null) t[k] = (t[k] || 0) + fig[k];
+      });
+    });
+    return t;
+  }
+
+  function ledgerCell(rowDef, field, value) {
+    if (!rowDef[field]) return '<span class="n-nodata" title="No ' + field + ' balance for this line">n/a</span>';
+    return U.cell(value, 0);
+  }
+
+  function materialMatrixHTML(rows) {
+    var h = '<table class="n-tbl"><thead><tr>'
+          + '<th class="n-tl n-rowhdr">Material</th>'
+          + '<th class="n-tl">Section</th>'
+          + '<th>Opening</th><th>Received</th><th>Consumption</th>'
+          + '<th class="n-totcol">Closing</th></tr></thead><tbody>';
+
+    LEDGER_GROUPS.forEach(function (group) {
+      h += '<tr class="n-sec"><td colspan="6">' + U.esc(group.sectionLabel) + '</td></tr>';
+      group.rows.forEach(function (rowDef) {
+        var fig = ledgerFigures(rowDef, rows);
+        h += '<tr><td class="n-tl n-rowhdr"'
+           + (rowDef.note ? ' title="' + U.esc(rowDef.note) + '"' : '') + '>' + U.esc(rowDef.label) + '</td>'
+           + '<td class="n-tl" style="color:var(--text-muted)">' + U.esc(rowDef.loc || '—') + '</td>'
+           + '<td>' + ledgerCell(rowDef, 'open', fig.open) + '</td>'
+           + '<td>' + ledgerCell(rowDef, 'recv', fig.recv) + '</td>'
+           + '<td>' + ledgerCell(rowDef, 'cons', fig.cons) + '</td>'
+           + '<td class="n-totcol">' + ledgerCell(rowDef, 'open', fig.closing) + '</td></tr>';
+      });
+      if (group.totalLabel) {
+        var t = ledgerGroupTotal(group, rows);
+        h += '<tr class="n-total"><td class="n-tl n-rowhdr">' + U.esc(group.totalLabel) + '</td>'
+           + '<td class="n-tl">—</td>'
+           + '<td>' + U.cell(t.open, 0) + '</td><td>' + U.cell(t.recv, 0) + '</td><td>' + U.cell(t.cons, 0) + '</td>'
+           + '<td class="n-totcol">' + U.cell(t.closing, 0) + '</td></tr>';
+      }
+    });
+
+    h += '</tbody></table>';
+    return h;
+  }
+
+  /* ══ PLANT OPERATIONS ═════════════════════════════════════════════
+     SECTION 2 of the entry form: Running Hours · Production · Consumption ·
+     Closing Stock · TPH, grouped PYRO PROCESSING (LS Crusher, Raw Mill 1/2,
+     Coal Mill, Kiln) and CEMENT GRINDING — CEMENT MILL 1 / CEMENT MILL 2
+     (each mill's five grades plus a TOTAL row). Opening Balance and Closing
+     Stock are the SAME stock shape as the Material Movement ledger above —
+     ledgerFigures()/ledgerGroupTotal() are reused unchanged, only the
+     column labels differ (Production/Consumption instead of
+     Received/Consumption). Running Hours and Production/Consumption are
+     flows and are summed across the period. TPH (tons/hour) is a RATE:
+     over a period it is Σproduction ÷ Σrunning hours — the period's own
+     throughput — never an average of daily TPH figures, which a single
+     near-idle day would distort. Rated Cap is a fixed plant constant
+     copied from the entry form's own static column, not data. PYRO
+     PROCESSING has no subtotal row because the source report has none
+     either. ═══════════════════════════════════════════════════════════ */
+  var PLANT_OPS_GROUPS = [
+    {
+      sectionLabel: 'PYRO PROCESSING',
+      rows: [
+        { label: 'LS Crusher',   cap: '250', run: 'ls_crusher_run_hrs', open: 'ls_crusher_open',   recv: 'ls_crusher_prod_mt', cons: 'ls_crusher_cons_mt' },
+        { label: 'Raw Mill — 1', cap: '120', run: 'rm1_run_hrs',        open: 'rm1_open',           recv: 'rm1_prod_mt',        cons: 'rm1_cons_mt' },
+        { label: 'Raw Mill — 2', cap: '20',  run: 'rm2_run_hrs',        open: null,                  recv: 'rm2_prod_mt',        cons: null,
+          note: 'Opening balance and consumption are not tracked for Raw Mill 2 in the source report — only hours, production and TPH.' },
+        { label: 'Coal Mill',    cap: '10',  run: 'coalmill_run_hrs',   open: 'coalmill_open',      recv: 'coalmill_prod_mt',   cons: 'coalmill_cons_mt' },
+        { label: 'Kiln',         cap: '50',  run: 'kiln_run_hrs',       open: 'kiln_clinker_open',  recv: 'kiln_prod_mt',       cons: 'cm_clinker_own_cons' },
+      ],
+      totalLabel: null, /* the source report has no PYRO PROCESSING subtotal row either */
+    },
+    {
+      sectionLabel: 'CEMENT GRINDING — CEMENT MILL 1',
+      rows: [
+        { label: '32.5 N',    cap: '90', run: 'cm1_325n_run_hrs',    open: 'cm1_325n_open',    recv: 'cm1_325n_mt',    cons: 'cm1_325n_cons_mt' },
+        { label: '42.5 R',    cap: '78', run: 'cm1_425r_run_hrs',    open: 'cm1_425r_open',    recv: 'cm1_425r_mt',    cons: 'cm1_425r_cons_mt' },
+        { label: '42.5 N',    cap: '78', run: 'cm1_425n_run_hrs',    open: 'cm1_425n_open',    recv: 'cm1_425n_mt',    cons: 'cm1_425n_cons_mt' },
+        { label: 'OPC',       cap: '65', run: 'cm1_opc_run_hrs',     open: 'cm1_opc_open',     recv: 'cm1_opc_mt',     cons: 'cm1_opc_cons_mt' },
+        { label: '42.5 N BM', cap: '—',  run: 'cm1_425n_bm_run_hrs', open: 'cm1_425n_bm_open', recv: 'cm1_425n_bm_mt', cons: 'cm1_425n_bm_cons_mt' },
+      ],
+      totalLabel: 'TOTAL — CM-1', totalCap: '70',
+    },
+    {
+      sectionLabel: 'CEMENT GRINDING — CEMENT MILL 2',
+      rows: [
+        { label: '32.5 N',    cap: '75', run: 'cm2_325n_run_hrs',    open: 'cm2_325n_open',    recv: 'cm2_325n_mt',    cons: 'cm2_325n_cons_mt' },
+        { label: '42.5 R',    cap: '70', run: 'cm2_425r_run_hrs',    open: 'cm2_425r_open',    recv: 'cm2_425r_mt',    cons: 'cm2_425r_cons_mt' },
+        { label: '42.5 N',    cap: '70', run: 'cm2_425n_run_hrs',    open: 'cm2_425n_open',    recv: 'cm2_425n_mt',    cons: 'cm2_425n_cons_mt' },
+        { label: 'OPC',       cap: '60', run: 'cm2_opc_run_hrs',     open: 'cm2_opc_open',     recv: 'cm2_opc_mt',     cons: 'cm2_opc_cons_mt' },
+        { label: '42.5 N BM', cap: '—',  run: 'cm2_425n_bm_run_hrs', open: 'cm2_425n_bm_open', recv: 'cm2_425n_bm_mt', cons: 'cm2_425n_bm_cons_mt' },
+      ],
+      totalLabel: 'TOTAL — CM-2', totalCap: '70',
+    },
+  ];
+
+  function rateFigure(rows, prodField, hrsField) {
+    if (!rows.length || !prodField || !hrsField) return null;
+    var prod = sumField(rows, prodField);
+    var hrs  = sumField(rows, hrsField);
+    return (hrs && hrs > 0) ? (prod || 0) / hrs : null;
+  }
+
+  function plantOpsGroupTotal(group, rows) {
+    var t = ledgerGroupTotal(group, rows); /* open/recv/cons/closing, reused verbatim */
+    var hrsTotal = null;
+    group.rows.forEach(function (rowDef) {
+      var v = rowDef.run ? sumField(rows, rowDef.run) : null;
+      if (v !== null) hrsTotal = (hrsTotal || 0) + v;
+    });
+    var tph = (hrsTotal && hrsTotal > 0 && t.recv !== null) ? t.recv / hrsTotal : null;
+    return { open: t.open, hrs: hrsTotal, recv: t.recv, cons: t.cons, closing: t.closing, tph: tph };
+  }
+
+  function plantOpsTableHTML(rows) {
+    var h = '<table class="n-tbl"><thead><tr>'
+          + '<th class="n-tl n-rowhdr">Department</th>'
+          + '<th>Rated Cap</th><th>Running Hrs</th><th>Opening Balance</th>'
+          + '<th>Production (MT)</th><th>Consumption (MT)</th><th>Closing Stock</th>'
+          + '<th class="n-totcol">TPH</th></tr></thead><tbody>';
+
+    PLANT_OPS_GROUPS.forEach(function (group) {
+      h += '<tr class="n-sec"><td colspan="8">' + U.esc(group.sectionLabel) + '</td></tr>';
+      group.rows.forEach(function (rowDef) {
+        var fig = ledgerFigures(rowDef, rows);
+        var tph = rateFigure(rows, rowDef.recv, rowDef.run);
+        h += '<tr><td class="n-tl n-rowhdr"' + (rowDef.note ? ' title="' + U.esc(rowDef.note) + '"' : '') + '>' + U.esc(rowDef.label) + '</td>'
+           + '<td>' + U.esc(rowDef.cap) + '</td>'
+           + '<td>' + (rowDef.run ? U.cell(sumField(rows, rowDef.run), 1) : '<span class="n-nodata">n/a</span>') + '</td>'
+           + '<td>' + ledgerCell(rowDef, 'open', fig.open) + '</td>'
+           + '<td>' + ledgerCell(rowDef, 'recv', fig.recv) + '</td>'
+           + '<td>' + ledgerCell(rowDef, 'cons', fig.cons) + '</td>'
+           + '<td>' + ledgerCell(rowDef, 'open', fig.closing) + '</td>'
+           + '<td class="n-totcol">' + ((rowDef.run && rowDef.recv) ? U.cell(tph, 1) : '<span class="n-nodata">n/a</span>') + '</td></tr>';
+      });
+      if (group.totalLabel) {
+        var t = plantOpsGroupTotal(group, rows);
+        h += '<tr class="n-total"><td class="n-tl n-rowhdr">' + U.esc(group.totalLabel) + '</td>'
+           + '<td>' + U.esc(group.totalCap || '—') + '</td>'
+           + '<td>' + U.cell(t.hrs, 1) + '</td>'
+           + '<td>' + U.cell(t.open, 0) + '</td><td>' + U.cell(t.recv, 0) + '</td><td>' + U.cell(t.cons, 0) + '</td>'
+           + '<td>' + U.cell(t.closing, 0) + '</td>'
+           + '<td class="n-totcol">' + U.cell(t.tph, 1) + '</td></tr>';
+      }
+    });
+
+    h += '</tbody></table>';
+    return h;
+  }
+
+  /* ══ SPECIFIC POWER & HEAT CONSUMPTION ═══════════════════════════════
+     SECTION 3 of the entry form. Checked directly against the current
+     daily-report.html markup rather than assumed from a screenshot: unlike
+     Material Movement and Plant Operations above, NONE of this section's
+     cells carry a data-roll-mtd/data-roll-ytd attribute — the plant's own
+     report only ever shows this as a same-day snapshot. It is rendered
+     that way here too: it always reflects the exact date in the Date field
+     above, independent of the On Date/MTD/YTD toggle, rather than forcing
+     a period aggregation the source report was never built to support.
+     "Per Ton of Clinker" and "Unit / Ton Eq. Cement" are left as dashes
+     everywhere, matching the entry form's own comment that Excel's formulas
+     there chain through cross-sheet references this app does not
+     reproduce — not a gap introduced here. ═══════════════════════════════ */
+  var SPC_COLS = [
+    { label: 'Crusher',     kwh: 'spc_crusher_kwh',  prod: 'ls_crusher_prod_mt' },
+    { label: 'Raw Mill-1',  kwh: 'spc_rm1_kwh',      prod: 'rm1_prod_mt' },
+    { label: 'Raw Mill-2',  kwh: 'spc_rm2_kwh',      prod: 'rm2_prod_mt' },
+    { label: 'Pyro — Kiln', kwh: 'spc_kiln_kwh',     prod: 'kiln_prod_mt' },
+    { label: 'Coal Mill',   kwh: 'spc_coalmill_kwh', prod: 'coalmill_prod_mt' },
+    { label: 'Cem Mill',    kwh: 'spc_cemmill_kwh',  prod: null },
+    { label: 'Losses',      kwh: 'spc_losses_kwh',   prod: null },
+    { label: 'P. Plant',    kwh: 'spc_pplant_kwh',   prod: null },
+    { label: 'Others',      kwh: 'spc_others_kwh',   prod: null },
+  ];
+
+  function specificPowerHeatHTML() {
+    var rec = (state.dayRecord && isReported(state.dayRecord)) ? state.dayRecord : null;
+    if (!rec) {
+      return U.stateHTML({
+        kind: 'nodata', compact: true,
+        title: 'No Production Report for ' + fmtDate(state.date),
+        body: 'Specific power and heat consumption is entered on the Production Report for this exact date; none has been submitted.',
+      });
+    }
+
+    var h = '<table class="n-tbl"><thead><tr><th class="n-tl n-rowhdr">Description</th>';
+    SPC_COLS.forEach(function (c) { h += '<th>' + U.esc(c.label) + '</th>'; });
+    h += '<th class="n-totcol">Total</th></tr></thead><tbody>';
+
+    h += '<tr><td class="n-tl n-rowhdr">Per Ton of Material</td>';
+    SPC_COLS.forEach(function (c) {
+      if (!c.prod) { h += '<td><span class="n-nodata">—</span></td>'; return; }
+      var kwh = val(rec, c.kwh), prod = val(rec, c.prod);
+      var ratio = (prod && prod > 0) ? kwh / prod : null;
+      h += '<td>' + U.cell(ratio, 1) + '</td>';
+    });
+    h += '<td class="n-totcol"><span class="n-nodata">—</span></td></tr>';
+
+    h += '<tr><td class="n-tl n-rowhdr" title="Not captured by any form — the source report chains through cross-sheet references this app does not reproduce.">Per Ton of Clinker</td>';
+    SPC_COLS.forEach(function () { h += '<td><span class="n-nodata">—</span></td>'; });
+    h += '<td class="n-totcol"><span class="n-nodata">—</span></td></tr>';
+
+    h += '<tr><td class="n-tl n-rowhdr" title="Not captured by any form — same gap as Per Ton of Clinker above.">Unit / Ton Eq. Cement</td>';
+    SPC_COLS.forEach(function () { h += '<td><span class="n-nodata">—</span></td>'; });
+    h += '<td class="n-totcol"><span class="n-nodata">—</span></td></tr>';
+
+    var total = null;
+    h += '<tr class="n-total"><td class="n-tl n-rowhdr">Total Unit Consumed (kWh)</td>';
+    SPC_COLS.forEach(function (c) {
+      var v = val(rec, c.kwh);
+      if (v !== null) total = (total || 0) + v;
+      h += '<td>' + U.cell(v, 0) + '</td>';
+    });
+    h += '<td class="n-totcol">' + U.cell(total, 0) + '</td></tr>';
+    h += '</tbody></table>';
+
+    var kilnProd = val(rec, 'kiln_prod_mt'), coalCons = val(rec, 'coalmill_cons_mt'), ncv = val(rec, 'coal_ncv');
+    var coalPct  = (kilnProd && kilnProd > 0) ? (coalCons || 0) / kilnProd * 100 : null;
+    var heatCons = (coalPct !== null && ncv) ? ncv * coalPct / 100 : null;
+
+    h += '<div style="padding:var(--sp-4);border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--sp-3)">';
+    [
+      ['Coal Consumption, %', coalPct === null ? null : U.fmt(coalPct, 1) + '%'],
+      ['Coal NCV (kcal/kg)', ncv === null ? null : U.fmt(ncv, 0)],
+      ['Heat Consumption (kcal/kg clinker)', heatCons === null ? null : U.fmt(heatCons, 0)],
+    ].forEach(function (row) {
+      h += '<div><div style="font-size:var(--fs-xs);color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">' + U.esc(row[0]) + '</div>'
+         + '<div style="font-size:var(--fs-lg);font-weight:var(--fw-bold);color:var(--navy)">' + (row[1] === null ? '<span class="n-nodata">—</span>' : U.esc(row[1])) + '</div></div>';
+    });
+    h += '</div>';
+    return h;
+  }
+
+  /* ══ MATERIAL RETURN & INTERNAL CONSUMPTION ═══════════════════════════
+     SECTION 4 of the entry form: Internal Use — Cement, four grades. A
+     plain flow — summed across the period, no opening/closing balance
+     (the source table has none). ════════════════════════════════════════ */
+  var MATERIAL_RETURN_ROWS = [
+    { label: 'Internal Use Cement 42.5', field: 'iuc_425r' },
+    { label: '42.5 N', field: 'iuc_425n', indent: true },
+    { label: '32.5',   field: 'iuc_325n', indent: true },
+    { label: 'OPC',    field: 'iuc_opc',  indent: true },
+  ];
+
+  function materialReturnHTML(rows) {
+    var h = '<table class="n-tbl"><thead><tr>'
+          + '<th class="n-tl n-rowhdr">Material</th><th class="n-totcol">Quantity (MT)</th></tr></thead><tbody>';
+    h += '<tr class="n-sec"><td colspan="2">Internal Use — Cement</td></tr>';
+    MATERIAL_RETURN_ROWS.forEach(function (r) {
+      var v = sumField(rows, r.field);
+      h += '<tr><td class="n-tl n-rowhdr"' + (r.indent ? ' style="padding-left:calc(var(--sp-4) * 2);color:var(--text-muted);font-weight:var(--fw-normal)"' : '') + '>' + U.esc(r.label) + '</td>'
+         + '<td class="n-totcol">' + U.cell(v, 1) + '</td></tr>';
+    });
+    h += '</tbody></table>';
+    return h;
+  }
+
+  /* ══ QUALITY SUMMARY — DAY AVERAGE ════════════════════════════════════
+     SECTION 5 of the entry form, sourced from the QUALITY / LAB report
+     (form_type 'quality'), not Production — the entry form cross-loads it
+     for the same date via report-loader.js. Checked against the real
+     markup: the table has no MTD/YTD columns at all (title says "Day
+     Average"), so this card always shows the exact date in the Date field,
+     independent of the period toggle, same treatment as Specific Power &
+     Heat above. Status thresholds and labels match the entry form's own
+     compute[] logic exactly. ════════════════════════════════════════════ */
+  function qualitySummaryHTML() {
+    var rec = state.qualityRow;
+    if (!rec) {
+      return U.stateHTML({
+        kind: 'nodata', compact: true,
+        title: 'No Quality / Lab report for ' + fmtDate(state.date),
+        body: 'These figures are entered on the Quality / Lab report for this exact date; none has been submitted.',
+      });
+    }
+    var d = rec.data || {};
+    function n(f) { return U.num(d[f]); }
+    var blaine = n('blaine_425r'), freeLime = n('free_lime'), strength = n('strength_28d'), residue = n('coal_residue');
+    var lsfVals = ['lsf_rm_h1', 'lsf_rm_h2', 'lsf_rm_h3', 'lsf_rm_h4', 'lsf_rm_h5', 'lsf_rm_h6']
+      .map(function (k) { return n(k); }).filter(function (v) { return v !== null && v > 0; });
+    var lsf = lsfVals.length ? lsfVals.reduce(function (a, b) { return a + b; }, 0) / lsfVals.length : null;
+
+    var ROWS = [
+      { label: 'Blaine Fineness — 42.5R (cm²/g)', value: blaine,   dp: 0, spec: '≥ 3,500 cm²/g', ok: blaine   !== null && blaine   >= 3500, kind: 'low' },
+      { label: 'Free Lime — Clinker (%)',          value: freeLime, dp: 1, spec: '< 3.0%',        ok: freeLime !== null && freeLime <= 3.0,  kind: 'high' },
+      { label: 'LSF — Raw Mill Day Avg',           value: lsf,      dp: 1, spec: '95 – 98',       ok: lsf      !== null && lsf >= 95 && lsf <= 98, kind: 'check' },
+      { label: '28-Day Compressive Strength — 42.5R (MPa)', value: strength, dp: 1, spec: '≥ 42.5 MPa', ok: strength !== null && strength >= 42.5, kind: 'low' },
+      { label: 'Coal Residue @ 90µ (%)',            value: residue,  dp: 1, spec: '< 5.0%',        ok: residue  !== null && residue  <= 5.0,  kind: 'high' },
+    ];
+
+    var h = '<table class="n-tbl"><thead><tr>'
+          + '<th class="n-tl n-rowhdr">Parameter</th><th>On Date</th><th class="n-tl">Spec / Target</th><th class="n-totcol">Status</th></tr></thead><tbody>';
+    ROWS.forEach(function (r) {
+      var hasVal = r.value !== null && r.value !== undefined;
+      var statusText = !hasVal ? null : (r.ok ? 'OK' : (r.kind === 'check' ? 'Check' : (r.kind === 'low' ? 'Low' : 'High')));
+      var chipClass = !hasVal ? null : (r.ok ? 'is-good' : (r.kind === 'check' ? 'is-warn' : 'is-bad'));
+      h += '<tr><td class="n-tl n-rowhdr">' + U.esc(r.label) + '</td>'
+         + '<td>' + U.cell(r.value, r.dp) + '</td>'
+         + '<td class="n-tl" style="color:var(--text-muted)">' + U.esc(r.spec) + '</td>'
+         + '<td class="n-totcol">' + (statusText === null
+              ? '<span class="n-nodata">—</span>'
+              : '<span class="n-chip ' + chipClass + '"><span class="n-chip-dot"></span>' + U.esc(statusText) + '</span>') + '</td></tr>';
+    });
+    h += '</tbody></table>';
+    return h;
+  }
+
+  /* ══ EQUIPMENT AVAILABILITY — ON DATE ═════════════════════════════════
+     SECTION 6 of the entry form, computed from stoppage minutes on the
+     Sectional Stoppage Report (form_type 'stoppage') for the SAME date —
+     cross-loaded the same way Quality Summary is. Checked against the real
+     markup: no MTD/YTD columns (title says "On Date"), only 4 sections
+     (Crusher, Raw Mill, Kiln, Cement Mill-1 — CM-2 and Coal Mill are not
+     part of this table in the source either), so none are added here.
+     Always shows the exact date in the Date field, same as Quality Summary
+     and Specific Power & Heat above. Formulas match the entry form's own
+     compute[] exactly: availability % = (1440 − stoppage minutes) / 1440,
+     running hours = 24 − stoppage hours. ═══════════════════════════════ */
+  var EQUIP_AVAIL_ROWS = [
+    { label: 'Crusher',       sec: 'crusher', target: 85 },
+    { label: 'Raw Mill',      sec: 'rm',      target: 80 },
+    { label: 'Kiln (Pyro)',   sec: 'kiln',    target: 90 },
+    { label: 'Cement Mill-1', sec: 'cm1',     target: 80 },
+  ];
+  var STOP_CATS = ['mech', 'ei', 'prod', 'planned', 'power', 'other'];
+
+  function equipmentAvailabilityHTML() {
+    var rec = state.stoppageRow;
+    if (!rec) {
+      return U.stateHTML({
+        kind: 'nodata', compact: true,
+        title: 'No Stoppage Report for ' + fmtDate(state.date),
+        body: 'Availability is calculated from stoppage minutes entered on the Sectional Stoppage Report for this exact date; none has been submitted.',
+      });
+    }
+    var d = rec.data || {};
+    function n(f) { return U.num(d[f]) || 0; }
+
+    var h = '<table class="n-tbl"><thead><tr>'
+          + '<th class="n-tl n-rowhdr">Section</th><th>Total Stoppage (hrs)</th><th>Running Hours</th>'
+          + '<th>Availability %</th><th class="n-tl">Target</th><th class="n-totcol">Status</th></tr></thead><tbody>';
+    EQUIP_AVAIL_ROWS.forEach(function (r) {
+      var mins = STOP_CATS.reduce(function (s, c) { return s + n('stop_' + r.sec + '_' + c); }, 0);
+      var stopHrs = mins / 60, runHrs = 24 - stopHrs, avail = (1440 - mins) / 1440 * 100;
+      var ok = avail >= r.target;
+      h += '<tr><td class="n-tl n-rowhdr">' + U.esc(r.label) + '</td>'
+         + '<td>' + U.cell(stopHrs, 1) + '</td>'
+         + '<td>' + U.cell(runHrs, 1) + '</td>'
+         + '<td>' + U.cell(avail, 1) + '%</td>'
+         + '<td class="n-tl" style="color:var(--text-muted)">&gt; ' + r.target + '%</td>'
+         + '<td class="n-totcol"><span class="n-chip ' + (ok ? 'is-good' : 'is-warn') + '"><span class="n-chip-dot"></span>' + (ok ? 'OK' : 'Low') + '</span></td></tr>';
+    });
+    h += '</tbody></table>';
+    return h;
+  }
+
+  /* ══ PERIOD ═══════════════════════════════════════════════════════ */
+  var PERIOD_LABEL = { day: 'On Date', mtd: 'Month to Date', ytd: 'Year to Date (fiscal)' };
+
+  function monthStart(iso) { return iso.slice(0, 8) + '01'; }
+  function fiscalStart(iso) {
+    var d = new Date(iso + 'T00:00:00');
+    var y = d.getMonth() >= 3 ? d.getFullYear() : d.getFullYear() - 1;
+    return y + '-04-01';
+  }
+  function fmtDate(iso) {
+    return new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  /* ══ STATE ════════════════════════════════════════════════════════
+     qualityRow/stoppageRow hold the QUALITY / LAB and Sectional Stoppage
+     reports for the exact date in the Date field — a separate, single-day
+     fetch from the MTD/YTD-aware `rows`/`ytdRows` above, because Quality
+     Summary and Equipment Availability are on-date-only in the source
+     report and never respond to the On Date/MTD/YTD toggle. */
+  var state = { date: null, period: 'day', rows: [], ytdRows: [], allRows: [], series: {}, qualityRow: null, stoppageRow: null, drafts: 0, loading: true, error: null };
+
+  function rowsForPeriod() {
+    if (state.period === 'day') {
+      return state.rows.filter(function (r) { return String(r.record_date).slice(0, 10) === state.date; });
+    }
+    return state.period === 'mtd' ? state.rows : state.ytdRows;
+  }
+
+  /* ══ KPI CARDS ════════════════════════════════════════════════════
+     Every metadata value — target, signage, targetLabel, notes, version —
+     comes from forms/formula-registry.js via NyatiUI.fromRegistry. This
+     page supplies the VALUE (aggregated the way the registry's own
+     monthlyAgg says to) and the PERIOD, nothing else.
+
+     Values themselves come from the server's own formula engine
+     (NyatiAPI.getDailySeries → backend/services/formulaEngine.js), not
+     recomputed here: two of these six KPIs read facts from a SECOND form
+     (specific-thermal-energy-consumption needs the Limestone form's coal
+     NCV; specific-power-consumption-total needs the Power Consumption
+     form's kWh readings) that this page never fetches on its own, and the
+     engine already joins them correctly. What this page does that the
+     engine's own monthly endpoint does not is a MONTH-TO-DATE and
+     fiscal-YEAR-TO-DATE aggregate (the engine's /eval endpoint only knows
+     whole calendar months) — built by re-applying each formula's own
+     monthlyAgg rule (avg / sum / production-weighted mean) to the daily
+     series, using this page's own Production-form rows as the weight
+     source for the two weighted formulas (both weight only by Production-
+     form fields — kiln_prod_mt and the CM_GRADES cement-production sum —
+     so no second form fetch is needed for the weights either). ═════════ */
+  var KPI_TILES = [
+    { key: 'kiln-output',                            name: 'Clinker Produced' },
+    { key: 'cement-produced-day',                     name: 'Cement Produced' },
+    { key: 'despatch-day',                            name: 'Total Dispatch' },
+    { key: 'specific-thermal-energy-consumption',     name: 'Specific Heat' },
+    { key: 'specific-power-consumption-total',        name: 'Specific Power' },
+    { key: 'total-power-kwh',                         name: 'Total Power Consumed' },
+  ];
+
+  function seriesSlice(key, from, to) {
+    var s = (state.series[key] && state.series[key].series) || [];
+    return s.filter(function (p) { return p.date >= from && p.date <= to; });
+  }
+
+  function aggregateKpi(key, sliceArr, factRows) {
+    var valid = sliceArr.filter(function (p) { return p.value !== null && p.value !== undefined; });
+    if (!valid.length) return null;
+    var formula = (window.NyatiFormulas && window.NyatiFormulas.FORMULAS[key]) || null;
+    var agg = (formula && formula.monthlyAgg) || 'avg';
+    if (agg === 'sum') return valid.reduce(function (s, r) { return s + r.value; }, 0);
+    if (agg === 'avg') return valid.reduce(function (s, r) { return s + r.value; }, 0) / valid.length;
+    if (agg.type === 'weighted') {
+      var byDate = {};
+      factRows.forEach(function (r) { byDate[String(r.record_date).slice(0, 10)] = r.data || {}; });
+      var wSum = 0, vSum = 0;
+      valid.forEach(function (r) {
+        var w = agg.weight(byDate[r.date] || {}) || 0;
+        if (w > 0) { wSum += w; vSum += r.value * w; }
+      });
+      return wSum > 0 ? vSum / wSum : null;
+    }
+    return null;
+  }
+
+  function buildKpis() {
+    var period = PERIOD_LABEL[state.period];
+    var from = state.period === 'day' ? state.date : (state.period === 'mtd' ? monthStart(state.date) : fiscalStart(state.date));
+    var to = state.date;
+    var factRows = rowsForPeriod();
+
+    return KPI_TILES.map(function (t) {
+      var slice = seriesSlice(t.key, from, to);
+      var value = aggregateKpi(t.key, slice, factRows);
+      return U.fromRegistry(t.key, value, {
+        period: period,
+        name: t.name,
+        href: 'daily-report.html',
+        hrefLabel: "Open the Production Report",
+      });
+    });
+  }
+
+  /* ══ CARD FRAME ═══════════════════════════════════════════════════ */
+  function card(opts) {
+    return '<section class="n-card">'
+      + '<div class="n-card-hdr">'
+      +   '<div><div class="n-card-title"><i data-lucide="' + opts.icon + '"></i>' + U.esc(opts.title) + '</div>'
+      +   (opts.sub ? '<div class="n-card-sub">' + U.esc(opts.sub) + '</div>' : '') + '</div>'
+      +   (opts.meta ? '<div class="n-card-meta">' + opts.meta + '</div>' : '')
+      + '</div>'
+      + '<div class="n-card-body' + (opts.flush ? ' is-flush' : '') + '">'
+      +   (opts.flush ? '<div class="n-tbl-wrap">' + opts.body + '</div>' : opts.body)
+      + '</div>'
+      + '</section>';
+  }
+
+  /* ══ RENDER ═══════════════════════════════════════════════════════ */
+  function renderStatus() {
+    if (state.loading) { elStat.innerHTML = ''; return; }
+    var rows = rowsForPeriod();
+    var html = '';
+
+    if (state.period === 'day') {
+      var rec = state.dayRecord;
+      html += U.workflowChipHTML(rec ? rec.status : 'missing');
+      if (rec && rec.submitted_by_name) {
+        html += '<span class="n-ctx-lbl">by ' + U.esc(rec.submitted_by_name) + '</span>';
+      }
+    } else {
+      var statuses = {};
+      rows.forEach(function (r) { statuses[r.status] = (statuses[r.status] || 0) + 1; });
+      var kinds = Object.keys(statuses);
+      html += U.workflowChipHTML(kinds.length === 1 ? kinds[0] : (kinds.length ? 'mixed' : 'missing'));
+      html += '<span class="n-ctx-lbl">' + rows.length + ' report' + (rows.length === 1 ? '' : 's') + ' counted';
+      if (state.drafts) html += ' · ' + state.drafts + ' draft' + (state.drafts === 1 ? '' : 's') + ' not counted';
+      html += '</span>';
+    }
+    elStat.innerHTML = html;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function render() {
+    if (state.loading) {
+      U.renderKpiSkeletons(elKpis, 6);
+      elBody.innerHTML = '';
+      renderStatus();
+      return;
+    }
+
+    if (state.error) {
+      elKpis.innerHTML = '';
+      U.renderState(elBody, {
+        kind: 'error',
+        title: 'Production data could not be loaded',
+        body: 'The server did not answer, so no figures are shown — rather than showing figures that might '
+            + 'be out of date. ' + state.error,
+        action: 'Try again',
+        onAction: load,
+      });
+      return;
+    }
+
+    var rows = rowsForPeriod();
+
+    U.renderKpis(elKpis, buildKpis());
+    renderStatus();
+
+    var h = '';
+
+    if (!rows.length) {
+      var draftOnly = state.period === 'day' && state.dayRecord && state.dayRecord.status === 'draft';
+      h += U.stateHTML({
+        kind: 'nodata',
+        title: draftOnly
+          ? 'A draft exists for ' + fmtDate(state.date) + ', but it has not been submitted'
+          : 'No Production Report has been submitted for ' + (state.period === 'day' ? fmtDate(state.date) : 'this period'),
+        body: draftOnly
+          ? 'Draft figures are deliberately not shown here: they can still change, and this page is what '
+            + 'management reads. The report will appear as soon as it is submitted.'
+          : 'This page shows only submitted reports. Pick another date, or open the report to enter the '
+            + 'figures for this one.',
+        action: canEnter ? 'Open the Production Report' : null,
+        actionHref: canEnter ? 'daily-report.html' : null,
+      });
+      elBody.innerHTML = h;
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+
+    h += card({
+      icon: 'layers',
+      title: 'Material Movement — Raw Materials, Coal, Clinker & Cement',
+      sub: PERIOD_LABEL[state.period] + ' · ' + (state.period === 'day' ? fmtDate(state.date)
+            : fmtDate(state.period === 'mtd' ? monthStart(state.date) : fiscalStart(state.date)) + ' → ' + fmtDate(state.date))
+         + (state.period === 'day' ? '' : ' · Opening is the first reported day’s balance, Received/Consumption are summed across the period, Closing is the last reported day’s balance'),
+      meta: '<span class="n-prov is-manual"><span class="n-prov-sw"></span>Manual entry</span>',
+      body: materialMatrixHTML(rows),
+      flush: true,
+    });
+
+    h += card({
+      icon: 'gauge',
+      title: 'Plant Operations',
+      sub: PERIOD_LABEL[state.period] + ' · ' + (state.period === 'day' ? fmtDate(state.date)
+            : fmtDate(state.period === 'mtd' ? monthStart(state.date) : fiscalStart(state.date)) + ' → ' + fmtDate(state.date))
+         + ' · Running Hours and Production/Consumption are summed across the period; Opening Balance and Closing Stock are point-in-time balances; TPH is Σproduction ÷ Σrunning hours',
+      meta: '<span class="n-prov is-manual"><span class="n-prov-sw"></span>Manual entry</span>',
+      body: plantOpsTableHTML(rows),
+      flush: true,
+    });
+
+    h += card({
+      icon: 'zap',
+      title: 'Specific Power & Heat Consumption',
+      sub: 'On Date · ' + fmtDate(state.date) + ' — not tracked by month or year in the source report, so this card does not follow the period selector above',
+      meta: '<span class="n-prov is-manual"><span class="n-prov-sw"></span>Manual entry</span>',
+      body: specificPowerHeatHTML(),
+      flush: true,
+    });
+
+    h += card({
+      icon: 'recycle',
+      title: 'Material Return & Internal Consumption',
+      sub: PERIOD_LABEL[state.period] + ' · ' + (state.period === 'day' ? fmtDate(state.date)
+            : fmtDate(state.period === 'mtd' ? monthStart(state.date) : fiscalStart(state.date)) + ' → ' + fmtDate(state.date)),
+      meta: '<span class="n-prov is-manual"><span class="n-prov-sw"></span>Manual entry</span>',
+      body: materialReturnHTML(rows),
+      flush: true,
+    });
+
+    h += card({
+      icon: 'flask-conical',
+      title: 'Quality Summary — Day Average',
+      sub: 'On Date · ' + fmtDate(state.date) + ' — filled on the Quality / Lab report; not tracked by month or year, so this card does not follow the period selector above',
+      meta: '<span class="n-prov is-manual"><span class="n-prov-sw"></span>Manual entry</span>',
+      body: qualitySummaryHTML(),
+      flush: true,
+    });
+
+    h += card({
+      icon: 'alert-triangle',
+      title: 'Equipment Availability — On Date',
+      sub: 'On Date · ' + fmtDate(state.date) + ' — filled on the Sectional Stoppage Report; not tracked by month or year, so this card does not follow the period selector above',
+      meta: '<span class="n-prov is-manual"><span class="n-prov-sw"></span>Manual entry</span>',
+      body: equipmentAvailabilityHTML(),
+      flush: true,
+    });
+
+    elBody.innerHTML = h;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  /* ══ LOAD ═════════════════════════════════════════════════════════ */
+  async function load() {
+    state.loading = true; state.error = null;
+    render();
+    try {
+      var from = monthStart(state.date);
+      var fy   = fiscalStart(state.date);
+      var all    = await NyatiAPI.getFormRange('production', fy, state.date);
+      var series = await NyatiAPI.getDailySeries(fy, state.date);
+
+      var inMonth = all.filter(function (r) {
+        var d = String(r.record_date).slice(0, 10);
+        return d >= from && d <= state.date;
+      });
+
+      state.allRows = all;
+      state.series  = series;
+      state.ytdRows = all.filter(isReported);
+      state.rows    = inMonth.filter(isReported);
+      state.drafts  = inMonth.length - state.rows.length;
+      state.dayRecord = all.filter(function (r) {
+        return String(r.record_date).slice(0, 10) === state.date;
+      })[0] || null;
+
+      /* Quality Summary and Equipment Availability are cross-form,
+         same-day-only reads. A failure here must not blank the rest of
+         the page — each card shows its own "no data" state instead. */
+      state.qualityRow = null;
+      try {
+        var q = await NyatiAPI.getForm('quality', state.date);
+        if (q && isReported(q)) state.qualityRow = q;
+      } catch (eq) { /* card renders its own no-data state */ }
+      state.stoppageRow = null;
+      try {
+        var s = await NyatiAPI.getForm('stoppage', state.date);
+        if (s && isReported(s)) state.stoppageRow = s;
+      } catch (es) { /* card renders its own no-data state */ }
+
+      state.loading = false;
+    } catch (e) {
+      state.loading = false;
+      state.error = (e && e.status === 403)
+        ? 'You do not have permission to read this report.'
+        : 'Check your connection and try again.';
+    }
+    render();
+  }
+
+  /* ══ EXPORT ═══════════════════════════════════════════════════════ */
+  function exportCsv() {
+    var lines = [];
+    document.querySelectorAll('#pr-body .n-card').forEach(function (sec) {
+      var title = sec.querySelector('.n-card-title');
+      var table = sec.querySelector('table');
+      if (!table) return;
+      lines.push('"' + (title ? title.textContent.trim() : '') + '"');
+      table.querySelectorAll('tr').forEach(function (tr) {
+        var cells = [].map.call(tr.querySelectorAll('th,td'), function (c) {
+          return '"' + c.textContent.trim().replace(/"/g, '""') + '"';
+        });
+        if (cells.length) lines.push(cells.join(','));
+      });
+      lines.push('');
+    });
+    var header = 'Lake Cement Ltd — Production Report\n'
+               + '"Period","' + PERIOD_LABEL[state.period] + '"\n'
+               + '"Date","' + fmtDate(state.date) + '"\n'
+               + '"Exported","' + new Date().toLocaleString('en-GB') + '"\n\n';
+    var blob = new Blob([header + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'nyati-production-' + state.period + '-' + state.date + '.csv';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+  }
+
+  /* ══ WIRE ═════════════════════════════════════════════════════════ */
+  U.wireSegmented(document.getElementById('pr-period'), function (v) {
+    state.period = v;
+    render();
+  });
+
+  elDate.addEventListener('change', function () {
+    if (!elDate.value) return;
+    state.date = elDate.value;
+    LatestPeriod.showNote('pr-stale', { fellBack: false });
+    load();
+  });
+
+  document.getElementById('pr-print').addEventListener('click', function () { window.print(); });
+  document.getElementById('pr-export').addEventListener('click', exportCsv);
+
+  var fd = document.getElementById('footer-date');
+  if (fd) fd.textContent = new Date().toLocaleDateString('en-GB', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+
+  (async function init() {
+    var d = await LatestPeriod.defaultDate(['production']);
+    state.date = d.date;
+    elDate.value = d.date;
+    LatestPeriod.showNote('pr-stale', d);
+    if (window.lucide) lucide.createIcons();
+    load();
+  }());
+
+}());
+</script>
+</body>
+</html>

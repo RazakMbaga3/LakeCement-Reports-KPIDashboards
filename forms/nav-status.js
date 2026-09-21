@@ -106,7 +106,13 @@
      This targeted .nav-btn — the horizontal dept-nav bar retired in the
      sidebar migration — so from that point on it silently found nothing and
      the whole feature was dead. sidebar.js now tags each Daily Reports row
-     with data-page, which is what these attach to. */
+     with data-page, which is what these attach to.
+
+     The dot nests inside .sb-item-icon (not appended to the row) and sits
+     absolutely positioned as a small corner badge — see styles.css. It used
+     to append as a bare extra child of the row's 3-column grid, which had
+     no 4th slot to land in and wrapped onto its own line under every row,
+     costing a full line of height on every single Daily Reports item. */
   function injectDots() {
     document.querySelectorAll('.sb-item[data-page]').forEach(function (row) {
       row.querySelector('.nav-dot')?.remove();
@@ -118,7 +124,7 @@
       dot.title     = st === 'submitted' ? 'Entered today'      :
                       st === 'draft'     ? 'Draft on this device — not submitted' :
                                            'Not yet entered today';
-      row.appendChild(dot);
+      (row.querySelector('.sb-item-icon') || row).appendChild(dot);
     });
   }
 

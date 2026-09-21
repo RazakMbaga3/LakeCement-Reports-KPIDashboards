@@ -102,7 +102,16 @@
   --tap-cozy: 40px;   /* inside dense data grids only                              */
 
   /* ── Status — reserved. Never reused as a chart series colour. ──── */
-  --st-good:      #157F4B;   /* 4.9:1 on white — passes AA for text  */
+  /* Was #157F4B (4.9:1 on white) but only 4.48:1 on --st-good-bg, the
+     mint fill .n-chip.is-good and other status chips actually paint text
+     on — axe caught it as a serious violation once a KPI/report status
+     chip rendered "Approved" in real data (2026-09-15, surfaced by the
+     Production review page's own a11y run; the same .n-chip.is-good
+     component on dispatch.html had the identical pre-existing defect,
+     just not yet hit by a page whose e2e audit rendered that status).
+     #0F7A41 is 5.41:1 on white and 4.81:1 on --st-good-bg — both clear
+     of the 4.5:1 AA floor. */
+  --st-good:      #0F7A41;   /* 5.4:1 on white, 4.8:1 on --st-good-bg */
   --st-good-bg:   #E7F5ED;
   --st-good-bd:   #A8DCC1;
   --st-warn:      #9A6100;   /* 4.6:1 on white                       */

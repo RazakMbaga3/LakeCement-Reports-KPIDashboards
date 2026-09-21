@@ -47,6 +47,9 @@ const VIEWPORTS = [
 
 const PAGES = [
   ['dispatch',       'dispatch.html'],
+  ['production',     'production.html'],
+  ['power-plant',    'power-plant.html'],
+  ['power-plant-rpt', 'power-plant-report.html'],
   ['kpi-dashboard',  'index.html'],
   ['home',           'portal.html'],
   ['mis',            'mis.html'],

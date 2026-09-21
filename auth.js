@@ -990,7 +990,13 @@ const _DAILY_NAV_ITEMS = [
      entered/not-entered dot both keep working unchanged. */
   { page:'dispatch-form.html',      label:'Dispatch & SO',  icon:'truck',     hRoot:'dispatch.html', hForm:'../dispatch.html', club:'Sales & Dispatch' },
   { page:'sales-projection-form.html', label:'Sales Projection', icon:'trending-up', hRoot:'forms/sales-projection-form.html', hForm:'sales-projection-form.html', club:'Sales & Dispatch' },
-  { page:'power-plant-report.html', label:'Power Plant',    icon:'zap',       hRoot:'power-plant-report.html', hForm:'../power-plant-report.html' },
+  /* Power Plant (CPP) is the third report split into a read-only review
+     page and an entry form (2026-09-16, same pattern as Dispatch & SO and
+     Production above). `page` deliberately stays 'power-plant-report.html':
+     it is the permission key (_DAILY_ACCESS.cpp.nav) and the key
+     forms/nav-status.js hangs today's fill-status dot on. Only the
+     destination moved. */
+  { page:'power-plant-report.html', label:'Power Plant',    icon:'zap',       hRoot:'power-plant.html', hForm:'../power-plant.html' },
 ];
 
 /* ══════════════════════════════════════════════════════════════════════
