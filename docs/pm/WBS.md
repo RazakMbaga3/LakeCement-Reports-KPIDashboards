@@ -23,7 +23,7 @@ boot, so no other item can be verified, let alone shipped.
 | ID | Item | Depends on | Status | Notes |
 |---|---|---|---|---|
 | WBS-DATA-2 | Quality KPI multi-month validation — build `verify-quality.py` | Source Excel access | 🟡 Open | RAID I-2. Every other KPI got 91/91-day verification; Quality got 1 day |
-| WBS-DATA-3 | Odoo Phase 4 — move off the TEST instance onto production | Odoo Team (R-1) | 🔴 Blocked | `crit` once unblocked. Blocker is the *instance*, not the key |
+| WBS-DATA-3 | Odoo Phase 4 — move off the TEST instance onto production | Odoo Team (R-1) | 🔴 Blocked | `crit` once unblocked. Blocker is the *instance*, not the key. 2026-09-20: partly unblocked — production, sales and purchases answer on the production ERP; dispatch and mining are still test-only |
 | WBS-DATA-4 | Confirm Purchases category-grid field names, unstub `fetchCategoryGrid()` | Odoo Team (D-1) | 🔴 Blocked | |
 | WBS-DATA-5 | Fix or retire `npm run odoo:test` so it reports per-connector health | — | 🟡 Open | RAID I-6 — currently misreports the live connectors as unconfigured |
 | WBS-DATA-1 | Stoppage / Reliability report — close the deferred items | WBS-CODE-2 (to verify) | 🟡 Partial | Deferred: insights UI page, cost-of-stoppage (needs Finance TZS/hr rate), EN/SW labels |

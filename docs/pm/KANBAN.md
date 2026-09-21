@@ -43,7 +43,7 @@ landed unilaterally. Review `git status`, then commit.
 - [ ] [WBS-SEC-4] Email delivery — blocked on IT enabling SMTP AUTH for the tenant (RAID R-6)
 - [ ] [WBS-SEC-1] Verify/rotate `openpg` password — blocked on live DB access (RAID R-4)
 - [ ] [WBS-SEC-2] Set `DIGEST_TO`/`ALERT_TO` — blocked on Management naming recipients (RAID D-2)
-- [ ] [WBS-DATA-3] Odoo onto the production instance — blocked on Odoo Team (RAID R-1)
+- [ ] [WBS-DATA-3] Odoo onto the production instance — blocked on Odoo Team (RAID R-1) — partly unblocked 2026-09-20: production, sales, purchases live on production; dispatch and mining still test-only
 - [ ] [WBS-DATA-4] Purchases field names, unstub `fetchCategoryGrid()` — blocked on Odoo Team (RAID D-1)
 
 ## Backlog
