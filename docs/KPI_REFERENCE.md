@@ -7,7 +7,7 @@
 > `npm run docs:kpi` (in `backend/`) and commit both files together.
 
 This document defines every KPI the dashboards, MIS reports, and morning
-digest display: **23 KPIs** computed from **162 raw facts**.
+digest display: **29 KPIs** computed from **163 raw facts**.
 
 ## How a number gets onto a dashboard
 
@@ -35,12 +35,13 @@ formulas do not change when that happens.
 | [Clinker Free Lime](#clinker-free-lime) | % | Spec 3.0% | Average | v1 |
 | [Despatch / Day](#despatch-day) | MT | — | Average | v4 |
 | [Kiln Output](#kiln-output) | MT | Target ≥ 2,000 MT/day | Average | v1 |
+| [Cement Produced (CM-1 + CM-2)](#cement-produced-day) | MT | — | Average | v1 |
 | [Specific Thermal Energy Consumption](#specific-thermal-energy-consumption) | kcal/kg | Target < 780 kcal/kg | Weighted average | v3 |
 | [Specific Power Consumption – Total](#specific-power-consumption-total) | kWh/MT eq. cement | — | Weighted average | v4 |
 | [Specific Power Consumption – Up to Clinker](#specific-power-consumption-up-to-clinker) | kWh/MT clinker | — | Weighted average | v3 |
 | [Specific Power Consumption – Cement Grinding](#specific-power-consumption-cement-grinding) | kWh/MT | — | Weighted average | v4 |
 | [Power Distribution Loss %](#power-distribution-loss-pct) | % | Keep < 2% | Weighted average | v2 |
-| [Blaine 425R](#blaine-425r) | cm²/g | Min 3,500 | Average | v1 |
+| [Blaine 425R](#blaine-425r) | m²/kg | TBS 380–410 | Average | v2 |
 | [28-Day Strength](#strength-28d) | MPa | Min 42.5 | Average | v1 |
 | [Pile CaO Average](#pile-cao-avg) | % | Target 44% | Average | v1 |
 | [Total Power Consumption](#total-power-kwh) | kWh | — | Sum | v3 |
@@ -52,6 +53,11 @@ formulas do not change when that happens.
 | [Coal Consumption (Kiln)](#coal-kiln-consumption-day) | MT | — | Sum | v1 |
 | [CPP Heat Rate](#cpp-heat-rate) | kcal/kWh | Target < 3,800 kcal/kWh | Weighted average | v1 |
 | [CPP Auxiliary Power](#cpp-auxiliary-power) | % | Target < 10.0% | Weighted average | v1 |
+| [Gross Power Generation](#cpp-gross-generation) | kWh | — | Sum | v1 |
+| [Net Power Exported](#cpp-net-generation) | kWh | — | Sum | v1 |
+| [Plant Load Factor](#cpp-plant-load-factor) | % | Target ≥ 80% PLF | Weighted average | v1 |
+| [Coal Consumed (Boiler)](#cpp-coal-consumption) | MT | — | Sum | v1 |
+| [Specific Fuel Consumption](#cpp-specific-fuel-consumption) | kg/kWh | Target < 0.90 kg/kWh | Weighted average | v1 |
 | [Bags Packed](#bags-packed) | bags | Target ≥ 7,000 bags/day | Average | v1 |
 | [Burst Bag Rate](#burst-bag-rate) | % | Target < 0.30% | Weighted average | v1 |
 | [SO Pendency](#so-pendency) | MT | — | Average | v1 |
@@ -131,6 +137,30 @@ Clinker produced by the kiln that day, as entered on the kiln form.
 
 ```js
 function (f) { return pos(f.kiln_prod_mt); }
+```
+
+**Monthly roll-up.** Average of the days that have a value (missing days are excluded, not counted as zero).
+
+<a id="cement-produced-day"></a>
+### Cement Produced (CM-1 + CM-2)
+
+| | |
+|---|---|
+| Unit | MT (shown to 0 decimal places) |
+| Target | Tracking only — no target |
+| Formula version | v1 |
+| Registry key | `cement-produced-day` |
+
+Cement produced that day by both cement mills combined, summed across every grade on the Production Report — CM-1 (32.5N, 42.5R, 42.5N, OPC, 42.5N BM) and CM-2 (32.5N, 42.5R, 42.5N, 42.5N BM) — matching the source Excel's J42+J48 total exactly, and the same CM_GRADES sum specific-power-consumption-total already uses for its clinker-factor arithmetic. No target is declared anywhere in the plant's reporting for total cement-mill throughput, so none is invented here (contrast Kiln Output, which does have a stated 2,000 MT/day target). Monthly figure is the mean of the days that reported — a rate, matching Kiln Output's and Despatch/Day's own convention — not a period total.
+
+**Inputs**
+
+- **production form:** cm1_425r_mt (MT), cm1_425n_mt (MT), cm1_325n_mt (MT), cm1_opc_mt (MT), cm2_425r_mt (MT), cm2_425n_mt (MT), cm2_425n_bm_mt (MT), cm2_325n_mt (MT)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) { return pos(totalCementProd(f)); }
 ```
 
 **Monthly roll-up.** Average of the days that have a value (missing days are excluded, not counted as zero).
@@ -307,16 +337,16 @@ function (f) { return sumOf(KWH_ALL, f); }
 
 | | |
 |---|---|
-| Unit | cm²/g (shown to 0 decimal places) |
-| Target | Min 3,500 — good is at or above 3500 cm²/g |
-| Formula version | v1 |
+| Unit | m²/kg (shown to 0 decimal places) |
+| Target | TBS 380–410 — good is at or above 380 m²/kg |
+| Formula version | v2 |
 | Registry key | `blaine-425r` |
 
-Daily Blaine fineness of the 42.5R grade as measured by the quality lab.
+Daily Blaine fineness of the 42.5R grade ground on Cement Mill-1, as measured by the quality lab. Reported in m²/kg, the unit the QC Daily Report and the TBS requirement it prints are both written in — v1 declared cm²/g and a 3,500 floor, which is the same specification expressed ten times larger. The TBS band is 380–410; the signage is a floor because a Blaine above the band is a grinding-cost question, not a product-conformance one.
 
 **Inputs**
 
-- **quality form:** blaine_425r (cm²/g)
+- **quality form:** blaine_425r (m²/kg)
 
 **Daily calculation** (the exact code the engine runs)
 
@@ -621,6 +651,143 @@ function (f) {
 function (f) { return pos(f.cpp_gross_gen_kwh) || 0; }
 ```
 
+<a id="cpp-gross-generation"></a>
+### Gross Power Generation
+
+| | |
+|---|---|
+| Unit | kWh (shown to 0 decimal places) |
+| Target | Tracking only — no target |
+| Formula version | v1 |
+| Registry key | `cpp-gross-generation` |
+
+Total power generated by the Captive Power Plant that day, read directly off the CPP report (cpp_gross_gen_kwh) — FRM-LCL-PP-06 row 1. No target is declared for raw output anywhere in the plant's reporting; Auxiliary Power and Heat Rate carry the plant's actual efficiency targets instead. Monthly figure is the straight sum across reported days, matching the CPP report's own MTD/YTD rollup for this field (data-roll-mtd/data-roll-ytd).
+
+**Inputs**
+
+- **cpp form:** cpp_gross_gen_kwh (kWh)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) { return pos(f.cpp_gross_gen_kwh); }
+```
+
+**Monthly roll-up.** Sum across the days that have a value.
+
+<a id="cpp-net-generation"></a>
+### Net Power Exported
+
+| | |
+|---|---|
+| Unit | kWh (shown to 0 decimal places) |
+| Target | Tracking only — no target |
+| Formula version | v1 |
+| Registry key | `cpp-net-generation` |
+
+Net power exported = Gross Generation − Auxiliary Power Consumption (both on the CPP report), matching FRM-LCL-PP-06 row 3 and power-plant-report.html's own cpp_net_gen tile. No target is stated for this figure in the source report — only Auxiliary Power's own percentage is capped (see cpp-auxiliary-power). Monthly figure is Σgross − Σaux over the period, which is identical to summing each day's own net figure and matches the entry form's own weighted MTD/YTD block.
+
+**Inputs**
+
+- **cpp form:** cpp_gross_gen_kwh (kWh), cpp_aux_kwh (kWh)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) {
+        var g = pos(f.cpp_gross_gen_kwh);
+        return g ? g - z0(f.cpp_aux_kwh) : null;
+      }
+```
+
+**Monthly roll-up.** Sum across the days that have a value.
+
+<a id="cpp-plant-load-factor"></a>
+### Plant Load Factor
+
+| | |
+|---|---|
+| Unit | % (shown to 1 decimal place) |
+| Target | Target ≥ 80% PLF — good is at or above 80 % |
+| Formula version | v1 |
+| Registry key | `cpp-plant-load-factor` |
+
+Average power generation as a share of the plant's 10 MW installed capacity: (Gross Generation(kWh) ÷ 1000 ÷ Running Hours) ÷ 10 MW × 100, matching FRM-LCL-PP-06 row 7 and power-plant-report.html's own cpp_plf tile/table row. 80% is the plant's stated PLF target (the entry form's own tile label). Monthly figure is the Running-Hours-weighted mean of the daily percentage — algebraically identical to computing the ratio from period totals (Σgross ÷ 1000 ÷ Σhours ÷ 10 × 100), the same arithmetic the entry form's own MTD/YTD rollup uses, just expressed as a weighted mean so it fits the registry's monthlyAgg shape.
+
+**Inputs**
+
+- **cpp form:** cpp_gross_gen_kwh (kWh), cpp_run_hrs (Hrs)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) {
+        var g = pos(f.cpp_gross_gen_kwh), h = pos(f.cpp_run_hrs);
+        return (h > 0) ? (g / 1000 / h) / 10 * 100 : null;
+      }
+```
+
+**Monthly roll-up.** Weighted average — Σ(daily value × weight) ÷ Σ(weight), where each day's weight is:
+
+```js
+function (f) { return pos(f.cpp_run_hrs) || 0; }
+```
+
+<a id="cpp-coal-consumption"></a>
+### Coal Consumed (Boiler)
+
+| | |
+|---|---|
+| Unit | MT (shown to 1 decimal place) |
+| Target | Tracking only — no target |
+| Formula version | v1 |
+| Registry key | `cpp-coal-consumption` |
+
+Coal consumed by the CPP boiler that day, read directly off the CPP report (cpp_coal_cons) — the same fact cpp-specific-fuel-consumption divides by generation. No target is declared for raw boiler coal tonnage; the plant's actual fuel-efficiency target is on Specific Fuel Consumption instead. Monthly figure is the straight sum across reported days, matching the CPP report's own MTD/YTD rollup for this field.
+
+**Inputs**
+
+- **cpp form:** cpp_coal_cons (MT)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) { return pos(f.cpp_coal_cons); }
+```
+
+**Monthly roll-up.** Sum across the days that have a value.
+
+<a id="cpp-specific-fuel-consumption"></a>
+### Specific Fuel Consumption
+
+| | |
+|---|---|
+| Unit | kg/kWh (shown to 2 decimal places) |
+| Target | Target < 0.90 kg/kWh — good is below 0.9 kg/kWh |
+| Formula version | v1 |
+| Registry key | `cpp-specific-fuel-consumption` |
+
+Coal consumed (MT) × 1000 ÷ Gross Generation (kWh), matching FRM-LCL-PP-06's own Specific Fuel Consumption row and power-plant-report.html's own cpp_sfc tile/table row. Monthly figure is the gross-generation-weighted mean, algebraically identical to the ratio of period totals (Σcoal × 1000 ÷ Σgross) — the same arithmetic the CPP report's own MTD/YTD rollup (computeRatios) already uses.
+
+**Inputs**
+
+- **cpp form:** cpp_coal_cons (MT), cpp_gross_gen_kwh (kWh)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) {
+        var g = pos(f.cpp_gross_gen_kwh), coal = pos(f.cpp_coal_cons);
+        return (g > 0 && coal > 0) ? coal * 1000 / g : null;
+      }
+```
+
+**Monthly roll-up.** Weighted average — Σ(daily value × weight) ÷ Σ(weight), where each day's weight is:
+
+```js
+function (f) { return pos(f.cpp_gross_gen_kwh) || 0; }
+```
+
 <a id="bags-packed"></a>
 ### Bags Packed
 
@@ -720,7 +887,7 @@ that feed goes live).
 | Fact key | Unit | Source |
 |---|---|---|
 | `free_lime` | % | manual |
-| `blaine_425r` | cm²/g | manual |
+| `blaine_425r` | m²/kg | manual |
 | `strength_28d` | MPa | manual |
 
 ### dispatch form (34 facts)
@@ -817,7 +984,7 @@ that feed goes live).
 | `pwr_tanesco_colony_kwh` | kWh | manual |
 | `pwr_cpp_colony_kwh` | kWh | manual |
 
-### cpp form (5 facts)
+### cpp form (6 facts)
 
 | Fact key | Unit | Source |
 |---|---|---|
@@ -826,6 +993,7 @@ that feed goes live).
 | `cpp_coal_cons` | MT | manual |
 | `cpp_coal_gcv` | kcal/kg | manual |
 | `cpp_heat_rate_plant` | kcal/kWh | manual |
+| `cpp_run_hrs` | Hrs | manual |
 
 ### pile-quality form (18 facts)
 

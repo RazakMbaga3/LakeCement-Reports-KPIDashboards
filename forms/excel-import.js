@@ -132,62 +132,229 @@
       };
     },
 
-    /* ── Quality / Lab ────────────────────────────────────────── */
+    /* ── Quality / Lab ──────────────────────────────────────────────
+       Reads the plant's "QC DAILY REPORT" workbook (sheet DAILY SUMMARY)
+       and fills forms/quality-form.html end to end — 130-odd fields, the
+       whole daily lab sheet in one drop.
+
+       Two things about this sheet drive every choice below.
+
+       1. Its used range starts at column B, and SheetJS indexes a row
+          array from the range's first column — so index 0 is column B and
+          index 12 is column N, not L. Rather than carry that off-by-one
+          around, nothing here hard-codes a column NUMBER: every column is
+          located by its own heading inside its own section's header row.
+          That matters because the same heading appears in three different
+          tables at three different columns ("LSF" is at W in Raw Mill, P
+          in Kiln Feed, O in Clinker), and twice within one of them (Raw
+          Mill prints R90/R212 once for RM-1 and again for RM-2).
+
+       2. Raw Mill, Kiln Feed and Clinker are recorded FOUR-HOURLY — six
+          rows labelled "1 to 4" … "21 to 24". The form holds one day
+          average per parameter (2026-09-22), so the mean of those six
+          rows is taken here. The averaging moved into the importer, where
+          the four-hourly readings actually are; it did not disappear.  */
     quality: function (wb) {
       var shName = wb.SheetNames.find(function (n) { return /DAILY\s+SUMMARY/i.test(n); }) || wb.SheetNames[0];
       var ws     = wb.Sheets[shName];
       var rows   = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
 
-      /* Date: row 1 col 20, or row 2 col 4 */
-      var dateVal = anyDate(rows[1][20]) || anyDate(rows[2][4]);
+      function txt(v) { return String(v == null ? '' : v).trim(); }
+      function cell(r, c) { return (c < 0 || !rows[r]) ? null : toNum(rows[r][c]); }
 
-      /* Blaine & 28-day strength from G-42.5R row */
-      var r425R  = findRow(rows, function (r) { return /G\s*-\s*42\.5R/i.test(String(r[0])); });
-      var blaine = r425R ? toNum(r425R[1]) : null;
-      var s28d   = r425R ? toNum(r425R[12]) : null;
-
-      /* Coal residue: AVG row in coal-mill section — col 15 = 'AVG', residue at col 20 */
-      var coalAvgRow = findRow(rows, function (r) { return String(r[15]).trim().toUpperCase() === 'AVG'; });
-      var coalRes = coalAvgRow ? toNum(coalAvgRow[20]) : null;
-
-      /* Free lime: average of clinker F.CaO col across 6 four-hour periods */
-      var fcHdrIdx = findRowIdx(rows, function (r) { return r.some(function (c) { return /F\.?CaO/i.test(String(c)); }); });
-      var fcCol    = -1;
-      if (fcHdrIdx >= 0) {
-        fcCol = rows[fcHdrIdx].findIndex(function (c) { return /F\.?CaO/i.test(String(c)); });
+      /* Column index of a heading WITHIN one header row. `nth` picks
+         between repeats (Raw Mill's two R90/R212 pairs: RM-1 then RM-2). */
+      function colOf(hdr, name, nth) {
+        var want = name.toUpperCase(), seen = 0;
+        for (var i = 0; i < hdr.length; i++) {
+          if (txt(hdr[i]).toUpperCase() !== want) continue;
+          if (seen === (nth || 0)) return i;
+          seen++;
+        }
+        return -1;
       }
-      var freeLime = null;
-      if (fcHdrIdx >= 0 && fcCol >= 0) {
-        var fcVals = rows.slice(fcHdrIdx + 1, fcHdrIdx + 7)
-          .map(function (r) { return toNum(r[fcCol]); })
-          .filter(function (v) { return v !== null; });
-        if (fcVals.length) freeLime = fcVals.reduce(function (a, b) { return a + b; }, 0) / fcVals.length;
+      function colMatching(hdr, re) {
+        for (var i = 0; i < hdr.length; i++) if (re.test(txt(hdr[i]))) return i;
+        return -1;
       }
 
-      /* Raw mill LSF — 6 four-hour labels, LSF at col 21 */
-      var lsfLabels = ['1 to 4', '5 to 8', '9 to 12', '13 to 16', '17 to 20', '21 to 24'];
-      /* Find LSF column from header */
-      var rmHdrIdx = findRowIdx(rows, function (r) {
-        return String(r[0]).trim() === '' && r.some(function (c) { return String(c).trim() === 'LSF'; });
+      var out = {};
+      /* Report date — scanned out of the title block rather than read from
+         a fixed cell. The sheet's used range does not start on the same
+         row in every copy of this workbook (the April file reports
+         B2:Y83, the September one B1:Y83), so a row index taken from one
+         of them is off by one in the other; the first date-shaped value
+         near the top is the report date in both. */
+      out.date = '';
+      for (var di = 0; di < Math.min(rows.length, 6) && !out.date; di++) {
+        for (var dj = 0; dj < rows[di].length && !out.date; dj++) out.date = anyDate(rows[di][dj]);
+      }
+
+      /* ── Block 1 — PHYSICAL LAB REPORT ───────────────────────────
+         Grade labels repeat across the three mill sections ("G - 42.5R"
+         is a row in both Cement mill-1 and Cement mill-2), so a grade is
+         only ever looked up INSIDE its section — between that section's
+         banner row and the next banner (or the RAWMILL heading). Matching
+         on the label alone, as this importer used to, silently read
+         Cement mill-1's 42.5R for all three sections. */
+      var physHdrIdx = findRowIdx(rows, function (r) {
+        return r.some(function (c) { return /^Blaine/i.test(txt(c)); });
       });
-      var lsfCol = 21; // default from inspection
-      if (rmHdrIdx >= 0) {
-        var ci = rows[rmHdrIdx].findIndex(function (c) { return String(c).trim() === 'LSF'; });
-        if (ci >= 0) lsfCol = ci;
-      }
-
-      var result = {
-        date:         dateVal,
-        blaine_425r:  fmt(blaine, 0),
-        strength_28d: fmt(s28d, 2),
-        coal_residue: fmt(coalRes, 2),
-        free_lime:    fmt(freeLime, 2),
+      var physHdr = physHdrIdx >= 0 ? rows[physHdrIdx] : [];
+      var PHYS_COLS = {
+        blaine: colMatching(physHdr, /^Blaine/i),
+        r45:    colMatching(physHdr, /^R\s*45/i),
+        lce:    colMatching(physHdr, /L\s*\/\s*C\s*Expansion/i),
+        cs1:    colMatching(physHdr, /^1\s*Day/i),
+        cs2:    colMatching(physHdr, /^2\s*Days?/i),
+        cs7:    colMatching(physHdr, /^7\s*Days?/i),
+        cs28:   colMatching(physHdr, /^28\s*Days?/i)
       };
-      lsfLabels.forEach(function (lbl, i) {
-        var row = findRow(rows, function (r) { return String(r[0]).trim() === lbl; });
-        result['lsf_rm_h' + (i + 1)] = fmt(row ? toNum(row[lsfCol]) : null, 2);
+      var PHYS_SECTIONS = [
+        { id: 'cm1', banner: /^Cement\s*mill\s*-?\s*1$/i },
+        { id: 'cm2', banner: /^Cement\s*mill\s*-?\s*2$/i },
+        { id: 'ld',  banner: /^Loading$/i }
+      ];
+      var PHYS_GRADES = [
+        { key: '425r',  label: /^[GL]\s*-\s*42\.5\s*R$/i },
+        { key: '425n',  label: /^[GL]\s*-\s*42\.5\s*N$/i },
+        { key: '325n',  label: /^[GL]\s*-\s*32\.5\s*N$/i },
+        { key: 'spot',  label: /^SPOT$/i },
+        { key: 'opc',   label: /^[GL]\s*-\s*OPC$/i },
+        { key: 'bmill', label: /^B\s*\/\s*Mill$/i }
+      ];
+      /* The two cells the shared cross-dashboard KPI registry already
+         names (forms/formula-registry.js FACTS). They keep their original
+         field names — renaming them to the cem_* scheme would orphan the
+         blaine-425r and strength-28d KPIs and every row already filed. */
+      var PHYS_LEGACY = { 'cm1.425r.blaine': 'blaine_425r', 'cm1.425r.cs28': 'strength_28d' };
+
+      var physEnd = findRowIdx(rows, function (r) { return /^RAWMILL/i.test(txt(r[0])); });
+      if (physEnd < 0) physEnd = rows.length;
+      var bannerIdx = PHYS_SECTIONS.map(function (s) {
+        return findRowIdx(rows, function (r) { return s.banner.test(txt(r[0])); });
       });
-      return result;
+      PHYS_SECTIONS.forEach(function (sec, si) {
+        var from = bannerIdx[si];
+        if (from < 0) return;
+        var next = bannerIdx[si + 1];
+        var to   = (next > from) ? next : physEnd;
+        for (var i = from + 1; i < to && i < rows.length; i++) {
+          var label = txt(rows[i][0]);
+          PHYS_GRADES.forEach(function (g) {
+            if (!g.label.test(label)) return;
+            Object.keys(PHYS_COLS).forEach(function (p) {
+              var key = sec.id + '.' + g.key + '.' + p;
+              var f   = PHYS_LEGACY[key] || ('cem_' + sec.id + '_' + g.key + '_' + p);
+              out[f]  = fmt(cell(i, PHYS_COLS[p]), p === 'blaine' ? 0 : 2);
+            });
+          });
+        }
+      });
+
+      /* ── Block 2 — COAL MILL ─────────────────────────────────────
+         The hourly mill block prints MIN / MAX / AVG / STD. Only AVG is
+         a figure about the day; the other three describe its spread. */
+      var coalHdrIdx = findRowIdx(rows, function (r) {
+        return r.some(function (c) { return /^90\s*Mic/i.test(txt(c)); });
+      });
+      if (coalHdrIdx >= 0) {
+        var coalHdr = rows[coalHdrIdx];
+        var coalAvgIdx = -1;
+        for (var ci = coalHdrIdx + 1; ci < coalHdrIdx + 8 && ci < rows.length; ci++) {
+          if (rows[ci].some(function (c) { return txt(c).toUpperCase() === 'AVG'; })) { coalAvgIdx = ci; break; }
+        }
+        if (coalAvgIdx >= 0) {
+          out.coal_moisture = fmt(cell(coalAvgIdx, colMatching(coalHdr, /^M\.?\s*C\s*%?$/i)), 2);
+          out.coal_residue  = fmt(cell(coalAvgIdx, colMatching(coalHdr, /^90\s*Mic/i)), 2);
+          out.coal_r212     = fmt(cell(coalAvgIdx, colMatching(coalHdr, /^212\s*Mic/i)), 2);
+        }
+      }
+
+      /* "DAY AVERAGE FINE COAL" — a header row, a units row ("%",
+         "K.cal/Kg"), then one data row. Found by walking down from the
+         header to the first row carrying a number, so an extra units or
+         spacer row cannot shift the read. */
+      var fcHdrIdx = findRowIdx(rows, function (r) {
+        return r.some(function (c) { return /^GCV\s*-\s*ADB$/i.test(txt(c)); });
+      });
+      if (fcHdrIdx >= 0) {
+        var fcHdr = rows[fcHdrIdx];
+        var FC = {
+          coal_im:      colOf(fcHdr, 'IM'),
+          coal_vm:      colOf(fcHdr, 'VM'),
+          coal_ash:     colOf(fcHdr, 'ASH'),
+          coal_gcv_adb: colOf(fcHdr, 'GCV-ADB'),
+          coal_gcv_arb: colOf(fcHdr, 'GCV-ARB'),
+          coal_ncv_adb: colOf(fcHdr, 'NCV-ADB'),
+          coal_ncv_arb: colOf(fcHdr, 'NCV-ARB'),
+          coal_sulphur: colOf(fcHdr, 'SULPHUR')
+        };
+        var fcIdx = -1;
+        for (var fi = fcHdrIdx + 1; fi < fcHdrIdx + 6 && fi < rows.length; fi++) {
+          if (toNum(rows[fi][FC.coal_im]) !== null) { fcIdx = fi; break; }
+        }
+        if (fcIdx >= 0) {
+          Object.keys(FC).forEach(function (f) {
+            out[f] = fmt(cell(fcIdx, FC[f]), /_(gcv|ncv)_/.test(f) ? 0 : 2);
+          });
+        }
+      }
+
+      /* ── Blocks 3-5 — the three four-hourly tables ───────────────
+         Raw Mill, Kiln Feed and Clinker, in sheet order. Each is found by
+         its own header row: the only rows with a blank first column that
+         carry an "LSF" heading. Their six "N to M" rows are then averaged
+         into the single day figure the form holds. */
+      var PERIOD = /^\d{1,2}\s*to\s*\d{1,2}$/i;
+      function periodRows(hdrIdx) {
+        var got = [];
+        for (var i = hdrIdx + 1; i < rows.length && got.length < 6; i++) {
+          if (PERIOD.test(txt(rows[i][0]))) got.push(rows[i]);
+          else if (got.length) break;      /* section ended */
+        }
+        return got;
+      }
+      function meanOf(rs, col) {
+        if (col < 0) return null;
+        var v = rs.map(function (r) { return toNum(r[col]); })
+                  .filter(function (n) { return n !== null; });
+        return v.length ? v.reduce(function (a, b) { return a + b; }, 0) / v.length : null;
+      }
+
+      var chemHdrIdx = [];
+      rows.forEach(function (r, i) {
+        if (txt(r[0]) === '' && r.some(function (c) { return txt(c).toUpperCase() === 'LSF'; })) chemHdrIdx.push(i);
+      });
+      /* [field, heading, nth-occurrence] per table, in sheet order. */
+      var CHEM_MAP = [
+        { lsf_rm: ['LSF'], sm_rm: ['SM'], am_rm: ['AM'],
+          r90_rm1: ['R90', 0], r212_rm1: ['R212', 0],
+          r90_rm2: ['R90', 1], r212_rm2: ['R212', 1] },
+        { lsf_kf: ['LSF'], sm_kf: ['SM'], am_kf: ['AM'],
+          r90_kf: ['R90'], r212_kf: ['R212'] },
+        /* free_lime is the clinker's F.CaO — the same column this importer
+           always read it from. It used to be written into a "Free Lime"
+           row in the FINISHED CEMENT block, which the workbook has no
+           column for; the form now carries it in the clinker block where
+           it is measured. */
+        { ltrwt_ck: ['LTR. WT.'], free_lime: ['F.CaO'],
+          lsf_ck: ['LSF'], sm_ck: ['SM'], am_ck: ['AM'],
+          c3s_ck: ['C3S'], c2s_ck: ['C2S'], c3a_ck: ['C3A'],
+          c4af_ck: ['C4AF'], liquid_ck: ['Liquid'] }
+      ];
+      chemHdrIdx.slice(0, CHEM_MAP.length).forEach(function (hdrIdx, ti) {
+        var hdr = rows[hdrIdx], rs = periodRows(hdrIdx), map = CHEM_MAP[ti];
+        if (!rs.length) return;
+        Object.keys(map).forEach(function (f) {
+          out[f] = fmt(meanOf(rs, colOf(hdr, map[f][0], map[f][1])), f === 'ltrwt_ck' ? 1 : 2);
+        });
+      });
+
+      if (physHdrIdx < 0 && !chemHdrIdx.length) {
+        return { _error: 'No "PHYSICAL LAB REPORT" or four-hourly chemistry tables found. Is this a QC Daily Report?' };
+      }
+      return out;
     },
 
     /* ── Raw Materials ─────────────────────────────────────────────
@@ -430,6 +597,458 @@
       }
       return result;
     },
+
+    /* ── Production Report ───────────────────────────────────────
+       Unlike the fixed-cell reports above, this sheet's row COUNT
+       shifts day to day — a material row (Bauxite, Mill Dust Iron
+       Ore…) is only present when something was actually used that
+       day — and even its SPECIFIC POWER header has changed column
+       layout between samples (RAW MILL-1/RAW MILL-2 split in one
+       month's report, a single combined RAW MILL column in
+       another). Confirmed against two real reports three months
+       apart (21.04.2026, 01.07.2026): every row is found by matching
+       its label text, and the Specific Power block reads its own
+       header row to build a column→field map rather than assuming
+       fixed positions. A combined "RAW MILL" column (no -1/-2 split)
+       fills spc_rm1_kwh only — there is no way to recover the true
+       RM1/RM2 split from a single combined figure, and guessing a
+       ratio would silently invent numbers. */
+    production: function (wb) {
+      var shName = wb.SheetNames.find(function (n) { return /^\d{2}\.\d{2}\.\d{4}$/.test(n.trim()); }) || wb.SheetNames[0];
+      var ws   = wb.Sheets[shName];
+      var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      /* Section-header labels aren't in a consistent column — the sheet
+         has "RAW MATERIAL CONSUMPTION"/"PLANT OPERATIONS"/"SPECIFIC
+         POWER"/"MATERIAL RETURN…" in column B but "CEMENT GRINDING" one
+         column over, in C — so scan the row's leading cells instead of
+         trusting one fixed position. */
+      function findIdx(re) {
+        for (var i = 0; i < rows.length; i++) {
+          for (var c = 0; c < 6; c++) {
+            if (re.test(String(rows[i][c] || '').trim())) return i;
+          }
+        }
+        return -1;
+      }
+
+      /* Date: a "DATE" label cell, value in the next non-empty cell
+         to its right — same row it's found on. */
+      var dateVal = '';
+      for (var di = 0; di < Math.min(rows.length, 8) && !dateVal; di++) {
+        var drow = rows[di];
+        for (var dj = 0; dj < drow.length; dj++) {
+          if (/^DATE$/i.test(String(drow[dj] || '').trim())) {
+            for (var dk = dj + 1; dk < drow.length; dk++) {
+              dateVal = anyDate(drow[dk]);
+              if (dateVal) break;
+            }
+            break;
+          }
+        }
+      }
+
+      var rawIdx   = findIdx(/^RAW MATERIAL CONSUMPTION/i);
+      var cementIdx = findIdx(/^CEMENT GRINDING/i);
+      var plantIdx = findIdx(/^PLANT OPERATIONS/i);
+      var specIdx  = findIdx(/^SPECIFIC POWER/i);
+      var iucIdx   = findIdx(/^MATERIAL RETURN/i);
+
+      if (rawIdx < 0 && plantIdx < 0) {
+        return { _error: 'Could not find "RAW MATERIAL CONSUMPTION" or "PLANT OPERATIONS" section. Is this a Production report?' };
+      }
+
+      /* Every real sample (Apr + Jul 2026, plus the June master report's
+         other sheets) leaves column A blank, so SheetJS's used-range
+         starts at column B and every field lands one column left of
+         where its letter would suggest — column C ("DESCRIPTION") is
+         array index 1, not 2. Detected at runtime off the header itself
+         rather than hardcoded, so a file that ever did start at column A
+         still lines up instead of quietly reading the wrong cell. */
+      var descCol = -1;
+      for (var hi = 0; hi < rows.length && descCol < 0; hi++) {
+        for (var hc = 0; hc < 8; hc++) {
+          if (String(rows[hi][hc] || '').trim().toUpperCase() === 'DESCRIPTION') { descCol = hc; break; }
+        }
+      }
+      var OFF = descCol >= 0 ? (descCol - 1) : 0;
+
+      var out = { date: dateVal };
+
+      /* ── Raw Material Consumption + Cement Grinding ──────────
+         Column layout is the same for both tables (open, recv on-date,
+         cons on-date), so one pass covers both; `inCement` flips once
+         the CEMENT GRINDING header is crossed, which matters only
+         because "LIMESTONE" is a material in both tables (raw feed vs.
+         a grinding additive) and needs a different field prefix in
+         each. */
+      var DESC = 1 + OFF, SEC = 2 + OFF, OPEN_C = 3 + OFF, RECV_C = 4 + OFF, CONS_C = 7 + OFF;
+      var matStart = rawIdx >= 0 ? rawIdx : 0;
+      var matEnd   = plantIdx >= 0 ? plantIdx : rows.length;
+      var inCement = false;
+      var category = '';
+      for (var mi = matStart; mi < matEnd; mi++) {
+        var mr = rows[mi];
+        var c2 = String(mr[DESC] || '').trim();
+        var c3 = String(mr[SEC] || '').trim();
+        if (/^CEMENT GRINDING/i.test(c2)) { inCement = true; category = ''; continue; }
+        if (c2) category = c2.toUpperCase();
+        var CAT  = category;
+        var SUB  = c3.toUpperCase();
+        var open = fmt(toNum(mr[OPEN_C]), 2);
+        var recv = fmt(toNum(mr[RECV_C]), 2);
+        var cons = fmt(toNum(mr[CONS_C]), 2);
+
+        if (!inCement) {
+          if (c2 === 'LIMESTONE') { out.rmm_limestone_open = open; out.rmm_limestone_recv = recv; out.rmm_limestone_cons = cons; }
+          else if (c2 === 'CLAY') { out.rmm_clay_open = open; out.rmm_clay_recv = recv; out.rmm_clay_cons = cons; }
+          else if (c2 === 'IRON ORE') { out.rmm_ironore_open = open; out.rmm_ironore_recv = recv; out.rmm_ironore_cons = cons; }
+          else if (c2 === 'INDUSTRIAL CLAY') { out.rmm_industrialclay_open = open; out.rmm_industrialclay_recv = recv; out.rmm_industrialclay_cons = cons; }
+          else if (c2 === 'BAUXITE') { out.rmm_bauxite_open = open; out.rmm_bauxite_recv = recv; out.rmm_bauxite_cons = cons; }
+          else if (/MILL.*DUST.*IRON.*ORE/i.test(c2)) { out.rmm_milldustironore_open = open; out.rmm_milldustironore_recv = recv; out.rmm_milldustironore_cons = cons; }
+          else if (CAT === 'COAL' && SUB === 'KILN') { out.coal_kiln_open = open; out.coal_kiln_recv = recv; out.coal_kiln = cons; }
+          else if (CAT === 'COAL' && SUB === 'CPP') { out.coal_cpp_open = open; out.coal_cpp_recv = recv; out.coal_cpp = cons; }
+        } else {
+          if (CAT === 'CLINKER' && SUB === 'OWN') { out.cm_clinker_own_cons = cons; }
+          else if (SUB === 'CLINKER PURCHASED') { out.cm_clinker_purch_open = open; out.cm_clinker_purch_recv = recv; out.cm_clinker_purch_cons = cons; }
+          else if (c2 === 'LIMESTONE') { out.cm_limestone_recv = recv; out.cm_limestone_cons = cons; }
+          else if (c2 === 'GYPSUM') { out.cm_gypsum_open = open; out.cm_gypsum_recv = recv; out.cm_gypsum_cons = cons; }
+          else if (SUB === 'STAREX') { out.cm_starex_open = open; out.cm_starex_recv = recv; out.cm_starex_cons = cons; }
+          else if (SUB === 'MAPIE') { out.cm_grind_aid_open = open; out.cm_grind_aid_recv = recv; out.cm_grind_aid_cons = cons; }
+          else if (/FLY\s*ASH/i.test(SUB) || /FLY\s*ASH/i.test(c2)) { out.cm_flyash_open = open; out.cm_flyash_recv = recv; out.cm_flyash_cons = cons; }
+        }
+      }
+
+      /* ── Plant Operations ─────────────────────────────────────
+         Rated cap / running hours / opening / production / consumption,
+         left to right. SKU sub-rows (Cement Mill / Cement Mill-2) carry
+         their grade in the same column as the section sub-label above
+         (SEC) once the department itself is set in the DESC column. */
+      var plantStart = plantIdx >= 0 ? plantIdx : rows.length;
+      var plantEnd   = specIdx >= 0 ? specIdx : rows.length;
+      var dept = '';
+      var RUNHRS_C = 4 + OFF, OPENBAL_C = 7 + OFF, PROD_C = 8 + OFF, PCONS_C = 11 + OFF;
+      var CM1_SKU = { '32.5N': 'cm1_325n', '42.5R': 'cm1_425r', '42.5N': 'cm1_425n', 'OPC': 'cm1_opc', '42.5NBM': 'cm1_425n_bm' };
+      var CM2_SKU = { '32.5N': 'cm2_325n', '42.5R': 'cm2_425r', '42.5N': 'cm2_425n', 'OPC': 'cm2_opc', '42.5NBM': 'cm2_425n_bm' };
+      for (var pi = plantStart; pi < plantEnd; pi++) {
+        var pr = rows[pi];
+        var pc2 = String(pr[DESC] || '').trim();
+        var pc3 = String(pr[SEC] || '').trim();
+        if (pc2) dept = pc2.toUpperCase().replace(/\s+/g, ' ').trim();
+        var pRunHrs = fmt(toNum(pr[RUNHRS_C]), 2);
+        var pOpen   = fmt(toNum(pr[OPENBAL_C]), 2);
+        var pProd   = fmt(toNum(pr[PROD_C]), 2);
+        var pCons   = fmt(toNum(pr[PCONS_C]), 2);
+        var isRM  = /^RAW\s*MILL/.test(dept);
+        var isCM1 = /^CEMENT\s*MILL/.test(dept) && !/2/.test(dept);
+        var isCM2 = /^CEMENT\s*MILL/.test(dept) && /2/.test(dept);
+
+        if (dept === 'LS CRUSHER') { out.ls_crusher_run_hrs = pRunHrs; out.ls_crusher_open = pOpen; out.ls_crusher_prod_mt = pProd; out.ls_crusher_cons_mt = pCons; }
+        else if (isRM && !/2/.test(dept)) { out.rm1_run_hrs = pRunHrs; out.rm1_open = pOpen; out.rm1_prod_mt = pProd; out.rm1_cons_mt = pCons; }
+        else if (isRM && /2/.test(dept)) { out.rm2_run_hrs = pRunHrs; out.rm2_prod_mt = pProd; out.rm2_cons_mt = pCons; }
+        else if (dept === 'COAL MILL') { out.coalmill_run_hrs = pRunHrs; out.coalmill_open = pOpen; out.coalmill_prod_mt = pProd; out.coalmill_cons_mt = pCons; }
+        else if (dept === 'KILN') { out.kiln_run_hrs = pRunHrs; out.kiln_clinker_open = pOpen; out.kiln_prod_mt = pProd; }
+        else if (isCM1 || isCM2) {
+          var skuKey = pc3.toUpperCase().replace(/\s+/g, '');
+          var map = isCM1 ? CM1_SKU : CM2_SKU;
+          var pfx = map[skuKey];
+          if (pfx) { out[pfx + '_run_hrs'] = pRunHrs; out[pfx + '_open'] = pOpen; out[pfx + '_mt'] = pProd; out[pfx + '_cons_mt'] = pCons; }
+        }
+      }
+
+      /* ── Specific Power (kWh) — header-driven, see note above ── */
+      if (specIdx >= 0) {
+        var specEnd = iucIdx >= 0 ? iucIdx : rows.length;
+        var hdrRow = null, hdrRowIdx = -1;
+        for (var si = specIdx; si < specEnd; si++) {
+          if (rows[si].some(function (v) { return /^CRUSHER$/i.test(String(v || '').trim()); })) { hdrRow = rows[si]; hdrRowIdx = si; break; }
+        }
+        if (hdrRow) {
+          var colMap = {};
+          for (var ci = 0; ci < hdrRow.length; ci++) {
+            var h = String(hdrRow[ci] || '').trim();
+            if (!h) continue;
+            if (/^CRUSHER$/i.test(h)) colMap[ci] = 'spc_crusher_kwh';
+            else if (/RAW\s*MILL/i.test(h)) colMap[ci] = /2/.test(h) ? 'spc_rm2_kwh' : 'spc_rm1_kwh';
+            else if (/PYRO/i.test(h)) colMap[ci] = 'spc_kiln_kwh';
+            else if (/COAL\s*MILL/i.test(h)) colMap[ci] = 'spc_coalmill_kwh';
+            else if (/CEM\s*MILL/i.test(h)) colMap[ci] = 'spc_cemmill_kwh';
+            else if (/LOSSES/i.test(h)) colMap[ci] = 'spc_losses_kwh';
+            else if (/P\.?\s*PLANT/i.test(h)) colMap[ci] = 'spc_pplant_kwh';
+            else if (/OTHERS/i.test(h)) colMap[ci] = 'spc_others_kwh';
+          }
+          var totRow = null;
+          for (var ti = hdrRowIdx; ti < specEnd; ti++) {
+            if (/TOTAL\s*UNIT\s*CONSUMED/i.test(String(rows[ti][DESC] || ''))) { totRow = rows[ti]; break; }
+          }
+          if (totRow) {
+            Object.keys(colMap).forEach(function (ci) { out[colMap[ci]] = fmt(toNum(totRow[ci]), 0); });
+          }
+        }
+        /* Coal NCV: label cell, value is the first numeric cell after it */
+        for (var ni = specIdx; ni < specEnd && out.coal_ncv == null; ni++) {
+          var nrow = rows[ni];
+          for (var nci = 0; nci < nrow.length; nci++) {
+            if (/COAL\s*NCV/i.test(String(nrow[nci] || ''))) {
+              for (var nvj = nci + 1; nvj < nrow.length; nvj++) {
+                var nval = toNum(nrow[nvj]);
+                if (nval !== null) { out.coal_ncv = fmt(nval, 0); break; }
+              }
+              break;
+            }
+          }
+        }
+      }
+
+      /* ── Internal Use Cement — fixed order after its anchor row,
+         since the grade label itself is inconsistently typed (a bare
+         number for "42.5", a string for "42.5N") and unsafe to parse. */
+      if (iucIdx >= 0) {
+        var iucAnchor = -1;
+        for (var ii = iucIdx; ii < rows.length; ii++) {
+          if (/INTERNAL USE CEMENT/i.test(String(rows[ii][DESC] || ''))) { iucAnchor = ii; break; }
+        }
+        if (iucAnchor >= 0) {
+          var IUC_DAY_C = 4 + OFF;
+          ['iuc_425r', 'iuc_425n', 'iuc_325n', 'iuc_opc'].forEach(function (f, k) {
+            if (rows[iucAnchor + k]) out[f] = fmt(toNum(rows[iucAnchor + k][IUC_DAY_C]), 2);
+          });
+        }
+      }
+
+      return out;
+    },
+
+    /* ── CPP / Power Plant Report ──────────────────────────────────
+       Flat "Description | Unit | On Date | MTD | YTD" table — most of
+       the form's cpp_* fields map 1:1 to a labelled row, matched by
+       text rather than a fixed row number (this sheet keeps a stable
+       row order across samples, but text-matching costs nothing and
+       survives a row being added/removed). Net Exported, Aux %,
+       Average Gen, PLF, Specific Steam/Fuel Consumption and both Heat
+       Rate rows are NOT extracted — power-plant-report.html computes
+       all seven from the fields this pulls in (see its data-kpi cells
+       and the "Auto-calculated" title on the heat-rate inputs), so
+       importing them too would just be overwritten on the next
+       recalc. Confirmed against the one real sample this app has
+       (21.04.2026). */
+    cpp: function (wb) {
+      var ws   = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      var descCol = -1;
+      for (var hi = 0; hi < rows.length && descCol < 0; hi++) {
+        for (var hc = 0; hc < 6; hc++) {
+          if (/^description$/i.test(String(rows[hi][hc] || '').trim())) { descCol = hc; break; }
+        }
+      }
+      var OFF = descCol >= 0 ? (descCol - 1) : 0;
+      var DESC = 1 + OFF, ONDATE = 3 + OFF;
+
+      /* Date: a "DATE" label cell, value in the next non-empty cell —
+         this sheet stores it as a real Excel date, not "DD.MM.YYYY"
+         text, so it arrives as a serial number that anyDate() already
+         converts. */
+      var dateVal = '';
+      for (var di = 0; di < Math.min(rows.length, 6) && !dateVal; di++) {
+        var drow = rows[di];
+        for (var dj = 0; dj < drow.length; dj++) {
+          if (/^DATE$/i.test(String(drow[dj] || '').trim())) {
+            for (var dk = dj + 1; dk < drow.length; dk++) {
+              dateVal = anyDate(drow[dk]);
+              if (dateVal) break;
+            }
+            break;
+          }
+        }
+      }
+
+      var LABELS = [
+        [/^Gross Power Generation$/i,       'cpp_gross_gen_kwh'],
+        [/^Auxiliary Power Consumption$/i,  'cpp_aux_kwh'],   /* the kWhr row — the "( % )" row below shares this text and is skipped by the unit check */
+        [/^Plant Running Hours$/i,          'cpp_run_hrs'],
+        [/^Feed Water Consumption$/i,       'cpp_feed_water_mt'],
+        [/^Boiler Steam Generation$/i,      'cpp_boiler_steam_mt'],
+        [/^Bleed Steam$/i,                  'cpp_bleed_steam_mt'],
+        [/^Turbine Steam Consumption$/i,    'cpp_turbine_steam_mt'],
+        [/^Condensate Generation$/i,        'cpp_condensate_mt'],
+        [/^Auxilairy Steam Consumption$/i,  'cpp_aux_steam_mt'],  /* sic — matches the sheet's own misspelling */
+        [/^Auxiliary Steam Consumption$/i,  'cpp_aux_steam_mt'],  /* the correctly-spelled variant, in case a future export fixes the typo */
+        [/^DG Power Generation$/i,          'cpp_dg_gen_kwh'],
+        [/^Coal Consumption$/i,             'cpp_coal_cons'],
+        [/^GCV\s*\(\s*ADB\s*\)$/i,          'cpp_coal_gcv'],
+        [/^DM Water Generation$/i,          'cpp_dm_water_gen_m3'],
+        [/^DM Water Consumption$/i,         'cpp_dm_water_cons_m3'],
+        [/^CT Makeup Water Consumption$/i,  'cpp_ct_makeup_m3'],
+        [/^Fly Ash to Cement ?mill$/i,      'cpp_flyash_to_cm_mt'],
+        [/^Fly Ash to Coalyard/i,           'cpp_flyash_to_coalyard_nos'],
+        [/^Fly Ash to Dumpyard/i,           'cpp_flyash_to_dumpyard_nos'],
+      ];
+
+      var out = { date: dateVal };
+      var unitCol = 2 + OFF;
+      rows.forEach(function (r) {
+        var label = String(r[DESC] || '').trim();
+        if (!label) return;
+        var unit = String(r[unitCol] || '').trim();
+        /* "Auxiliary Power Consumption" appears twice — once in kWhr,
+           once a few rows down in "( % )". Only the kWhr row is a raw
+           input; the percentage is computed (cpp_aux_pct). */
+        if (/^Auxiliary Power Consumption$/i.test(label) && /%/.test(unit)) return;
+        for (var i = 0; i < LABELS.length; i++) {
+          if (LABELS[i][0].test(label)) { out[LABELS[i][1]] = fmt(toNum(r[ONDATE]), 2); break; }
+        }
+      });
+
+      /* "Fly Ash Combustible / GCV" packs two different units into one
+         row — only the combustible % (On Date column) is unambiguous;
+         its neighbour cell's meaning isn't clear enough in the one
+         sample seen to risk assigning it to cpp_flyash_gcv. */
+      var flyRow = rows.find(function (r) { return /Fly Ash Combustible/i.test(String(r[DESC] || '')); });
+      if (flyRow) out.cpp_flyash_combustible_pct = fmt(toNum(flyRow[ONDATE]), 2);
+
+      /* Coal receipt-by-source lines are free text ("STAMICO:- 66TON"),
+         not a labelled table — first number in the matching line. */
+      var SOURCES = [
+        [/MARKET\s*INSIGHT/i, 'cpp_coal_recv_market_insight'],
+        [/^CONNECT/i,         'cpp_coal_recv_connect'],
+        [/STAMICO/i,          'cpp_coal_recv_stamico'],
+        [/RUVUMA/i,           'cpp_coal_recv_ruvuma'],
+        [/MCHEKANAI/i,        'cpp_coal_recv_mchekanai'],
+      ];
+      rows.forEach(function (r) {
+        var text = String(r[DESC] || '').trim();
+        if (!text) return;
+        for (var i = 0; i < SOURCES.length; i++) {
+          if (SOURCES[i][0].test(text)) {
+            var m = text.match(/(\d+(?:\.\d+)?)/);
+            if (m) out[SOURCES[i][1]] = fmt(parseFloat(m[1]), 2);
+            break;
+          }
+        }
+      });
+
+      var hasData = Object.keys(out).some(function (k) { return k !== 'date' && out[k] !== ''; });
+      if (!hasData) {
+        return { _error: 'Could not find "Gross Power Generation" or any other CPP row. Is this a Power Plant report?' };
+      }
+      return out;
+    },
+
+    /* ── Stoppage Report ────────────────────────────────────────────
+       Nothing like the others: this workbook is a MONTHLY matrix (one
+       sheet per equipment section, one row per named fault, one column
+       per day of the month), not a single day's snapshot — so a column
+       matching the report's own date has to be picked out of each
+       sheet first. And the target fields aren't fixed column names —
+       every hours box on the page is data-field="stopr_<reasonId>",
+       one per row of the governed reason catalogue (see
+       forms/stoppage-reasons.js and migration 017), rendered from
+       whatever forms/stoppage-reasons.js already cached in
+       localStorage on page load. So the match is by (equipment, cause,
+       label) against that catalogue, not a hardcoded field map — this
+       workbook is in fact the exact source the catalogue was seeded
+       from (417 rows, "verbatim"), so an exact label match is expected
+       to work rather than needing fuzzy text matching.
+
+       Section → cause is read off the sheet's own row structure: a
+       header row (e.g. "Mechanical", "Common") has no value in the
+       date column, while every real reason row does (0 counts as a
+       value) — that difference is what tells the two apart, since a
+       per-section catch-all reason is also just named "Others" and
+       would otherwise be indistinguishable from the "Others" section
+       header itself. "Common" bundles Planned Maintenance and Power
+       Restriction under one heading; split by keyword, same doctrine
+       migration 017's own comment describes using to seed the table. */
+    stoppage: function (wb) {
+      var CACHE_KEY = 'nyati-stoppage-reasons';
+      var reasons = null;
+      try { reasons = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch (e) { /* ignore */ }
+      if (!Array.isArray(reasons) || !reasons.length) {
+        return { _error: 'The stoppage reason list has not loaded on this page yet. Reload the page (so the reason boxes render), then try Import Excel again.' };
+      }
+      function norm(s) { return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+      var byKey = {};
+      reasons.forEach(function (r) { byKey[r.equipment + '|' + r.cause + '|' + norm(r.label)] = r.id; });
+
+      var dateEl = document.querySelector('[data-field="date"]');
+      var targetDate = (dateEl && dateEl.value) ? dateEl.value : (function () {
+        var d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      }());
+
+      var SHEET_EQUIP = [
+        [/^crusher/i, 'crusher'], [/raw\s*mill/i, 'rm'], [/coal\s*mill/i, 'cm_coal'],
+        [/cement\s*mill\s*-?\s*1/i, 'cm1'], [/cement\s*mill\s*-?\s*2/i, 'cm2'],
+        [/^kiln/i, 'kiln'], [/packing/i, 'packing'],
+      ];
+
+      var out = { date: targetDate };
+      var anySheetMatched = false;
+
+      wb.SheetNames.forEach(function (shName) {
+        var equip = null;
+        for (var si = 0; si < SHEET_EQUIP.length; si++) {
+          if (SHEET_EQUIP[si][0].test(shName)) { equip = SHEET_EQUIP[si][1]; break; }
+        }
+        if (!equip) return; /* e.g. the derived "Summary" sheet */
+
+        var ws   = wb.Sheets[shName];
+        var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+        var hdrIdx = -1;
+        for (var hi = 0; hi < Math.min(rows.length, 10); hi++) {
+          if (anyDate(rows[hi][1])) { hdrIdx = hi; break; }
+        }
+        if (hdrIdx < 0) return;
+        var hdr = rows[hdrIdx];
+        var dateCol = -1;
+        for (var ci = 1; ci < hdr.length; ci++) {
+          if (anyDate(hdr[ci]) === targetDate) { dateCol = ci; break; }
+        }
+        if (dateCol < 0) return; /* this workbook doesn't cover the report's date */
+        anySheetMatched = true;
+
+        /* Section order is POSITIONAL, not text-matched — every sheet
+           carries exactly 5 section headers in this fixed order, but
+           the header TEXT isn't reliable (Cement Mill -1's 5th header
+           is literally the number 3, not the word "Others"; matches
+           migration 017's own note about this). A header row is any
+           row with a label but no value in the date column; three more
+           header-shaped rows follow the real 5 (CRITICAL/MEDIUM/Under
+           Control severity bands) and are excluded rather than treated
+           as a 6th section. */
+        var SECTION_ORDER = ['mech', 'ei', 'prod', 'COMMON', 'other'];
+        var sectionIdx = -1;
+        for (var ri = hdrIdx + 1; ri < rows.length; ri++) {
+          var label = String(rows[ri][0] || '').trim();
+          if (!label) continue;
+          var cellVal = rows[ri][dateCol];
+          if (cellVal === '' || cellVal == null) {
+            if (/CRITICAL|MEDIUM|Under\s*Control/i.test(label)) continue;
+            if (sectionIdx < SECTION_ORDER.length - 1) sectionIdx++;
+            continue;
+          }
+          if (sectionIdx < 0) continue;
+          var section = SECTION_ORDER[sectionIdx];
+          var cause = section;
+          if (section === 'COMMON') {
+            if (/planned/i.test(label)) cause = 'planned';
+            else if (/power|restrict/i.test(label)) cause = 'power';
+            else continue;
+          }
+          var reasonId = byKey[equip + '|' + cause + '|' + norm(label)];
+          if (reasonId == null) continue;
+          var hrs = toNum(cellVal);
+          if (hrs !== null) out['stopr_' + reasonId] = fmt(hrs, 2);
+        }
+      });
+
+      if (!anySheetMatched) {
+        return { _error: 'Could not find ' + targetDate + ' as a day column in any equipment sheet. Set the report date in the toolbar first, or check this workbook covers that month.' };
+      }
+      return out;
+    },
   };
 
   /* ── Apply extracted data to form inputs ──────────────────────── */
@@ -518,6 +1137,10 @@
       modal.remove();
       /* Trigger kpi-live recalc */
       document.dispatchEvent(new CustomEvent('nyati:restored'));
+      /* Imported figures ARE the person's work, but they arrive by script and
+         so do not look like typing to form-persist.js — tell it, or they would
+         only be saved if the user remembered to press Save Draft. */
+      if (window.NyatiPersist && typeof window.NyatiPersist.markDirty === 'function') window.NyatiPersist.markDirty();
       /* Success toast */
       var t = document.createElement('div');
       t.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;background:#239557;color:white;padding:11px 20px;border-radius:9px;font-family:Inter,sans-serif;font-size:13px;font-weight:600;box-shadow:0 4px 24px rgba(0,0,0,.22);display:flex;align-items:center;gap:10px;animation:_nytIn .2s ease';

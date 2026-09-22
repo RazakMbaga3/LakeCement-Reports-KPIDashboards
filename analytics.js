@@ -651,14 +651,19 @@
         _demoKeys.push(key);
       }
 
+      /* Ranges follow the plant's real QC Daily Report, not round numbers:
+         Blaine is m²/kg (a 358-383 band, TBS 380-410), free lime is the
+         clinker F.CaO around 3%, fine-coal residue at 90µ runs 13-15%, and
+         raw-mill LSF sits well above 100 on this kiln. Raw mill is one day
+         average (lsf_rm) since 2026-09-22 — it was six four-hourly samples
+         before, and demo data that still wrote lsf_rm_h1..h6 would fill the
+         charts with a field no form can produce any more. */
       var qualityData = {
-        free_lime:    rnd(stressed ? 3.6 : 2.5, 0.35).toFixed(2),
-        blaine_425r:  Math.round(rnd(stressed ? 3280 : 3580, 95)),
-        strength_28d: rnd(stressed ? 44.1 : 47.8, 1.4).toFixed(1),
-        coal_residue: rnd(4.2, 0.4).toFixed(2),
-        lsf_rm_h1: rnd(96.2, 0.8).toFixed(1), lsf_rm_h2: rnd(96.5, 0.8).toFixed(1),
-        lsf_rm_h3: rnd(96.8, 0.7).toFixed(1), lsf_rm_h4: rnd(96.3, 0.9).toFixed(1),
-        lsf_rm_h5: rnd(97.0, 0.7).toFixed(1), lsf_rm_h6: rnd(96.7, 0.8).toFixed(1),
+        free_lime:    rnd(stressed ? 3.9 : 3.1, 0.30).toFixed(2),
+        blaine_425r:  Math.round(rnd(stressed ? 352 : 372, 9)),
+        strength_28d: rnd(stressed ? 44.1 : 47.8, 1.4).toFixed(2),
+        coal_residue: rnd(14.2, 1.1).toFixed(2),
+        lsf_rm:       rnd(stressed ? 96.4 : 104.6, 4.0).toFixed(2),
       };
       setDemo('nyati-quality-' + iso, {
         _m: { formId: 'quality', date: iso, status: 'submitted', savedAt: iso + 'T08:30:00Z' },

@@ -100,7 +100,7 @@
     <div class="leg"><div class="ld ld-f"></div>Formula</div>
   </div>
   <div class="btn-grp">
-    <button class="btn btn-out"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
+    <button class="btn btn-out" data-persist="history"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
     <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
     <button class="btn btn-sub"><i data-lucide="check-circle" class="btn-icon"></i> Submit Report</button>
   </div>
@@ -811,16 +811,41 @@
   requireAuth();
   applyDailyPermissions();
   }
+
+  /* A saved pile log can have more rows than the page starts with — every
+     "Add Row" click is a row a report may have used. form-persist.js names
+     each cell by its table row (_a_pile-log-tbl_r<row>_c<cell>) and asks the
+     page to grow the table BEFORE it restores values, so a log with 22
+     samples comes back as 22 rows, not the first 18 plus values with
+     nowhere to land. */
+  document.addEventListener('nyati:before-restore', function (e) {
+    var tbl = document.getElementById('pile-log-tbl');
+    if (!tbl) return;
+    var want = 0;
+    Object.keys((e.detail && e.detail.data) || {}).forEach(function (k) {
+      var m = /^_a_pile-log-tbl_r(\d+)_c/.exec(k);
+      if (m && +m[1] > want) want = +m[1];
+    });
+    function lastEntryRow() {
+      var last = 0;
+      tbl.querySelectorAll('tr').forEach(function (tr) {
+        if (tr.querySelector('input') && tr.rowIndex > last) last = tr.rowIndex;
+      });
+      return last;
+    }
+    var guard = 200;   // a corrupt record must never loop forever
+    while (lastEntryRow() < want && guard-- > 0) addPileRow();
+  });
 </script>
-<script src="api-client.js"></script>
-<script src="offline-queue.js"></script>
+<script src="api-client.js?v=4"></script>
+<script src="offline-queue.js?v=2"></script>
 <script src="client-errors.js"></script>
-<script src="form-persist.js"></script>
+<script src="form-persist.js?v=4"></script>
 <script>initFormPersist('pile-quality');</script>
-<script src="nav-status.js"></script>
+<script src="nav-status.js?v=2"></script>
 <script src="collapsible.js"></script>
-<script src="excel-import.js"></script>
-<script src="excel-export.js"></script>
+<script src="excel-import.js?v=3"></script>
+<script src="excel-export.js?v=2"></script>
 <script src="kpi-live.js"></script>
 <script>
 initKpiLive([

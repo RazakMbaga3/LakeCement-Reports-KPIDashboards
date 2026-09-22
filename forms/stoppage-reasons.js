@@ -108,18 +108,20 @@
             </tr></thead>
             <tbody>${body}</tbody>
           </table>
-          <!-- NB: these buttons must NOT carry .btn-sub / .btn-out / .btn-save.
-               form-persist.js binds Submit Report / Load Previous / Save Draft
-               to every element with those classes on the page, so an "Add"
-               button wearing .btn-sub silently submits the whole day's report
-               (and preventDefault()s this form) instead of adding a reason. -->
+          <!-- NB: these buttons must NOT carry .btn-sub / .btn-save.
+               form-persist.js binds Submit Report / Save Draft to every
+               element with those classes on the page, so an "Add" button
+               wearing .btn-sub silently submits the whole day's report
+               (and preventDefault()s this form) instead of adding a reason.
+               (Load Previous is bound by data-persist="history", not by
+               .btn-out, which is only a style.) -->
           <div class="rsn-add-wrap">
             <button type="button" class="rsn-add" data-rsn-add="${equip}:${cause}"
                     aria-label="Add a ${CAUSE_LABEL[cause]} reason">
               <i data-lucide="plus-circle" class="btn-icon"></i> Add a reason
             </button>
             <form class="rsn-add-form" hidden>
-              <input type="text" class="rsn-add-in" maxlength="300" required minlength="3"
+              <input type="text" class="rsn-add-in" data-nopersist maxlength="300" required minlength="3"
                      placeholder="Name the fault as the plant would say it…" />
               <button type="submit" class="rsn-btn rsn-btn-go rsn-add-save">Add</button>
               <button type="button" class="rsn-btn rsn-add-cancel">Cancel</button>

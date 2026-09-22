@@ -47,15 +47,22 @@
      approval state from it: a draft never enters an HOD's queue and is never
      self-certified as approved.
      `opts.replace` — overwrite the stored fields instead of merging into
-     them. Only for callers that own the whole record (importers, syncs). */
+     them. Only for callers that own the whole record (importers, syncs).
+     `opts.autosave` — the form's unattended background save: merges into a
+     report that is still editable, never changes its status, never touches a
+     submitted/approved one (409) and leaves no audit row.
+     `opts.keepalive` — let the request outlive the page (a save fired as the
+     tab is closing). Browsers cap such a body at 64 KB. */
   async function submitForm(formType, date, shift, data, opts) {
     const body = { date, shift: shift || 'day', data };
-    if (opts && opts.status)  body.status  = opts.status;
-    if (opts && opts.replace) body.replace = true;
+    if (opts && opts.status)   body.status   = opts.status;
+    if (opts && opts.replace)  body.replace  = true;
+    if (opts && opts.autosave) body.autosave = true;
     const res = await fetch(BASE + '/reports/' + encodeURIComponent(formType), {
       method:  'POST',
       headers: _headers(),
       body:    JSON.stringify(body),
+      keepalive: !!(opts && opts.keepalive),
     });
     if (!res.ok) throw _httpError('submitForm', formType, res);
     return res.json();
@@ -79,6 +86,31 @@
       headers: _headers(),
     });
     if (!res.ok) throw _httpError('getFormRange', formType, res);
+    return res.json();
+  }
+
+  /* GET /api/reports/:formType/history — which days have a record, newest
+     first, as [{ record_date, status, updated_at, … }]. Dates and statuses
+     only, no field data. Feeds form-persist's "Load Previous" so a draft
+     saved on another device is listed, not just this browser's own. A
+     result shorter than `limit` is the complete list. */
+  async function getFormHistory(formType, limit) {
+    const qs = limit ? ('?limit=' + encodeURIComponent(limit)) : '';
+    const res = await fetch(BASE + '/reports/' + encodeURIComponent(formType) + '/history' + qs, {
+      headers: _headers(),
+    });
+    if (!res.ok) throw _httpError('getFormHistory', formType, res);
+    return res.json();
+  }
+
+  /* GET /api/reports/unfinished — my drafts and rejected reports across every
+     form this role may submit, over the last `days` days, newest first:
+     [{ form_type, record_date, status, updated_at, rejection_reason }].
+     Feeds the "unfinished report" banner on the forms and the sidebar dots. */
+  async function getUnfinished(days) {
+    const qs = days ? ('?days=' + encodeURIComponent(days)) : '';
+    const res = await fetch(BASE + '/reports/unfinished' + qs, { headers: _headers() });
+    if (!res.ok) throw _httpError('getUnfinished', '', res);
     return res.json();
   }
 
@@ -400,7 +432,7 @@
   }
 
   global.NyatiAPI = {
-    submitForm, getForm, getFormRange,
+    submitForm, getForm, getFormRange, getFormHistory, getUnfinished,
     evalFormulas, getDailySeries, setOverride, clearOverride, getOverrides,
     getBaseline, getCompleteness, getDataRange, getDailySummary,
     getStoppageInsights, getEquipmentStoppageDetail,

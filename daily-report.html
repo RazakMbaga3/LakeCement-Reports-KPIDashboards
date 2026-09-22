@@ -1427,11 +1427,11 @@
             <th class="grp-hdr">Status</th>
           </tr></thead>
           <tbody>
-            <tr><td class="tp">Blaine Fineness — 42.5R (cm²/g)</td><td class="cs"><div class="cv" data-kpi="q_blaine_425r">—</div></td><td class="ts">≥ 3,500 cm²/g</td><td class="cf"><div class="cv" data-kpi="q_blaine_status">—</div></td></tr>
+            <tr><td class="tp">Blaine Fineness — CM-1 42.5R (m²/kg)</td><td class="cs"><div class="cv" data-kpi="q_blaine_425r">—</div></td><td class="ts">TBS 380 – 410</td><td class="cf"><div class="cv" data-kpi="q_blaine_status">—</div></td></tr>
             <tr><td class="tp">Free Lime — Clinker (%)</td><td class="cs"><div class="cv" data-kpi="q_free_lime">—</div></td><td class="ts">&lt; 3.0%</td><td class="cf"><div class="cv" data-kpi="q_free_lime_status">—</div></td></tr>
             <tr><td class="tp">LSF — Raw Mill Day Avg</td><td class="cs"><div class="cv" data-kpi="q_lsf_avg">—</div></td><td class="ts">95 – 98</td><td class="cf"><div class="cv" data-kpi="q_lsf_status">—</div></td></tr>
-            <tr><td class="tp">28-Day Compressive Strength — 42.5R (MPa)</td><td class="cs"><div class="cv" data-kpi="q_strength_28d">—</div></td><td class="ts">≥ 42.5 MPa</td><td class="cf"><div class="cv" data-kpi="q_strength_status">—</div></td></tr>
-            <tr><td class="tp">Coal Residue @ 90µ (%)</td><td class="cs"><div class="cv" data-kpi="q_coal_residue">—</div></td><td class="ts">&lt; 5.0%</td><td class="cf"><div class="cv" data-kpi="q_coal_residue_status">—</div></td></tr>
+            <tr><td class="tp">28-Day Compressive Strength — CM-1 42.5R (MPa)</td><td class="cs"><div class="cv" data-kpi="q_strength_28d">—</div></td><td class="ts">≥ 42.5 MPa</td><td class="cf"><div class="cv" data-kpi="q_strength_status">—</div></td></tr>
+            <tr><td class="tp">Fine Coal Residue @ 90µ (%)</td><td class="cs"><div class="cv" data-kpi="q_coal_residue">—</div></td><td class="ts">—</td><td class="cf"><div class="cv" data-kpi="q_coal_residue_status">—</div></td></tr>
           </tbody>
         </table>
       </div>
@@ -1440,19 +1440,16 @@
     <!-- EDIT PANEL -->
     <div id="quality-edit" class="ie-panel" style="display:none">
       <div class="ie-grid">
-        <div class="ie-field"><label class="ie-label">Blaine Fineness 42.5R (cm²/g)</label><input type="number" class="ie-input" data-inline="blaine_425r" placeholder="e.g. 3680"></div>
-        <div class="ie-field"><label class="ie-label">Free Lime — Clinker (%)</label><input type="number" step="0.1" class="ie-input" data-inline="free_lime" placeholder="e.g. 2.8"></div>
-        <div class="ie-field"><label class="ie-label">28-Day Strength 42.5R (MPa)</label><input type="number" step="0.1" class="ie-input" data-inline="strength_28d" placeholder="e.g. 52.4"></div>
-        <div class="ie-field"><label class="ie-label">Coal Residue @ 90µ (%)</label><input type="number" step="0.1" class="ie-input" data-inline="coal_residue" placeholder="e.g. 4.2"></div>
-      </div>
-      <div class="ie-section-hdr">LSF Raw Mill — Hourly Readings</div>
-      <div class="ie-grid">
-        <div class="ie-field"><label class="ie-label">LSF H1</label><input type="number" step="0.1" class="ie-input" data-inline="lsf_rm_h1" placeholder="95–98"></div>
-        <div class="ie-field"><label class="ie-label">LSF H2</label><input type="number" step="0.1" class="ie-input" data-inline="lsf_rm_h2" placeholder="95–98"></div>
-        <div class="ie-field"><label class="ie-label">LSF H3</label><input type="number" step="0.1" class="ie-input" data-inline="lsf_rm_h3" placeholder="95–98"></div>
-        <div class="ie-field"><label class="ie-label">LSF H4</label><input type="number" step="0.1" class="ie-input" data-inline="lsf_rm_h4" placeholder="95–98"></div>
-        <div class="ie-field"><label class="ie-label">LSF H5</label><input type="number" step="0.1" class="ie-input" data-inline="lsf_rm_h5" placeholder="95–98"></div>
-        <div class="ie-field"><label class="ie-label">LSF H6</label><input type="number" step="0.1" class="ie-input" data-inline="lsf_rm_h6" placeholder="95–98"></div>
+        <div class="ie-field"><label class="ie-label">Blaine Fineness CM-1 42.5R (m²/kg)</label><input type="number" class="ie-input" data-inline="blaine_425r" placeholder="e.g. 365"></div>
+        <div class="ie-field"><label class="ie-label">Free Lime — Clinker (%)</label><input type="number" step="0.01" class="ie-input" data-inline="free_lime" placeholder="e.g. 3.15"></div>
+        <div class="ie-field"><label class="ie-label">28-Day Strength CM-1 42.5R (MPa)</label><input type="number" step="0.01" class="ie-input" data-inline="strength_28d" placeholder="e.g. 48.02"></div>
+        <div class="ie-field"><label class="ie-label">Fine Coal Residue @ 90µ (%)</label><input type="number" step="0.01" class="ie-input" data-inline="coal_residue" placeholder="e.g. 15.00"></div>
+        <!-- One day average, not six hourly boxes. forms/quality-form.html
+             stopped holding four-hourly raw-mill samples on 2026-09-22 —
+             the QC workbook still records them and the Excel importer
+             averages them down, so this panel takes the same single
+             figure the full form does. -->
+        <div class="ie-field"><label class="ie-label">LSF — Raw Mill Day Avg</label><input type="number" step="0.01" class="ie-input" data-inline="lsf_rm" placeholder="95–98"></div>
       </div>
       <div class="ie-actions">
         <button class="ie-cancel" onclick="InlineEdit.close('quality')">Cancel</button>
@@ -1613,8 +1610,8 @@
   requireAuth();
   applyDailyPermissions();
 </script>
-<script src="forms/api-client.js?v=2"></script>
-  <script src="forms/offline-queue.js"></script>
+<script src="forms/api-client.js?v=4"></script>
+  <script src="forms/offline-queue.js?v=2"></script>
   <script src="forms/client-errors.js"></script>
 <script src="forms/date-picker.js"></script>
 <script>
@@ -1631,9 +1628,10 @@
     return Number.isInteger(r) ? String(r) : r.toFixed(dp);
   };
 </script>
-<script src="forms/form-persist.js?v=2"></script>
+<script src="forms/form-persist.js?v=4"></script>
 <script>initFormPersist('production');</script>
-<script src="forms/nav-status.js"></script>
+<script src="forms/excel-import.js?v=3"></script>
+<script src="forms/nav-status.js?v=2"></script>
 <script src="forms/collapsible.js"></script>
 <script src="forms/kpi-live.js"></script>
 <script>
@@ -2036,36 +2034,36 @@ initReportLoader({
       compute: function(d, n) { return n(d.coal_residue) || null; }
     },
 
-    /* ── LSF average ─────────────────────────────────────────────── */
+    /* ── LSF — raw mill day average ────────────────────────
+       Read straight off `lsf_rm`. Until 2026-09-22 the quality form held
+       six four-hourly samples and this rule averaged them; the form now
+       stores the day average itself, and forms/excel-import.js does the
+       averaging when the QC workbook is imported. */
     { kpi: 'q_lsf_avg', fmt: 'n1',
-      compute: function(d, n) {
-        var vals = ['lsf_rm_h1','lsf_rm_h2','lsf_rm_h3','lsf_rm_h4','lsf_rm_h5','lsf_rm_h6']
-                   .map(function(k){ return n(d[k]); }).filter(function(v){ return v > 0; });
-        return vals.length ? vals.reduce(function(a,b){ return a+b; }, 0) / vals.length : null;
-      }
+      compute: function(d, n) { return n(d.lsf_rm) || null; }
     },
 
     /* ── Quality status labels ────────────────────────────────────── */
     { kpi: 'q_blaine_status',
-      compute: function(d, n) { var v=n(d.blaine_425r); return v>0 ? (v>=3500?'✓ OK':'✗ LOW') : null; }
+      compute: function(d, n) { var v=n(d.blaine_425r); return v>0 ? (v>=380?'✓ OK':'✗ LOW') : null; }
     },
     { kpi: 'q_free_lime_status',
       compute: function(d, n) { var v=n(d.free_lime); return v>0 ? (v<=3.0?'✓ OK':'✗ HIGH') : null; }
     },
     { kpi: 'q_lsf_status',
       compute: function(d, n) {
-        var vals = ['lsf_rm_h1','lsf_rm_h2','lsf_rm_h3','lsf_rm_h4','lsf_rm_h5','lsf_rm_h6']
-                   .map(function(k){ return n(d[k]); }).filter(function(v){ return v > 0; });
-        if (!vals.length) return null;
-        var avg = vals.reduce(function(a,b){ return a+b; }, 0) / vals.length;
-        return (avg>=95&&avg<=98) ? '✓ OK' : '⚠ CHECK';
+        var v = n(d.lsf_rm);
+        return v > 0 ? ((v >= 95 && v <= 98) ? '✓ OK' : '⚠ CHECK') : null;
       }
     },
     { kpi: 'q_strength_status',
       compute: function(d, n) { var v=n(d.strength_28d); return v>0 ? (v>=42.5?'✓ OK':'✗ LOW') : null; }
     },
+    /* No pass/fail: the QC Daily Report states no TBS limit for fine-coal
+       residue at 90µ, and the 5.0% this row used to judge against was
+       invented — real day averages run 13-15%, so every day read HIGH. */
     { kpi: 'q_coal_residue_status',
-      compute: function(d, n) { var v=n(d.coal_residue); return v>0 ? (v<=5.0?'✓ OK':'✗ HIGH') : null; }
+      compute: function(d, n) { return n(d.coal_residue) > 0 ? '—' : null; }
     },
 
     /* ── Stoppages — availability % per section (1440 min = 24 hrs) ─ */

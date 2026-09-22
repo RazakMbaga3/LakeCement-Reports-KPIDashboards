@@ -60,6 +60,18 @@
       _save(QKEY, q);
     }
 
+    /* Drop a queued entry once something newer has reached the server for the
+       same day — a form's autosave or a later Save Draft. Left in place it
+       would be replayed after that write, find the server's copy NEWER than
+       itself, and be flagged as a conflict the user has to resolve by hand. */
+    function discard(formType, date, shift) {
+      var before = _load(QKEY);
+      var after = before.filter(function (it) {
+        return !(it.formType === formType && it.date === date && it.shift === (shift || 'day'));
+      });
+      if (after.length !== before.length) _save(QKEY, after);
+    }
+
     function _toConflict(item, reason, serverSavedAt) {
       var c = _load(CKEY).filter(function (it) {
         return !(it.formType === item.formType && it.date === item.date && it.shift === item.shift);
@@ -142,7 +154,7 @@
       return { ok: true };
     }
 
-    return { enqueue: enqueue, flush: flush, counts: counts, list: list, resolveConflict: resolveConflict };
+    return { enqueue: enqueue, discard: discard, flush: flush, counts: counts, list: list, resolveConflict: resolveConflict };
   }
 
   /* Node (acceptance tests) — export the factory and stop here */

@@ -67,6 +67,15 @@ const USERS = [
   { username: 'production_senior',  password: 'ProdS@LCL2026', name: 'Production & QC Senior Officer', role: 'production', dept: 'PRODUCTION & QC', level: 'senior' },
   { username: 'production', password: 'Prod@LCL2026',   name: 'Production & QC Manager',   role: 'production', dept: 'PRODUCTION & QC',   level: 'hod' },
 
+  // Quality Control, added 2026-09-22. Separate from 'production' because
+  // the lab measures the figures the QC Daily Report carries, and until now
+  // only Production could file them. Production keeps its submit rights and
+  // still approves all three lab reports — see FORM_APPROVAL_OWNER in
+  // forms/access-registry.js.
+  { username: 'quality_officer', password: 'QCO@LCL2026',  name: 'Quality Lab Officer',        role: 'quality',    dept: 'QUALITY CONTROL',   level: 'officer' },
+  { username: 'quality_senior',  password: 'QCS@LCL2026',  name: 'Quality Senior Lab Officer', role: 'quality',    dept: 'QUALITY CONTROL',   level: 'senior' },
+  { username: 'quality',         password: 'QC@LCL2026',   name: 'QC Manager',                 role: 'quality',    dept: 'QUALITY CONTROL',   level: 'hod' },
+
   { username: 'sales_officer', password: 'SalesO@LCL2026', name: 'Sales & Marketing Officer', role: 'sales',    dept: 'SALES & MARKETING', level: 'officer' },
   { username: 'sales_senior',  password: 'SalesS@LCL2026', name: 'Sales & Marketing Senior Officer', role: 'sales', dept: 'SALES & MARKETING', level: 'senior' },
   { username: 'sales',      password: 'Sales@LCL2026',  name: 'Sales & Marketing Manager',  role: 'sales',      dept: 'SALES & MARKETING', level: 'hod' },

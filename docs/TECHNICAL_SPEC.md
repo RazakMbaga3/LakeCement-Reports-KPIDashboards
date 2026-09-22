@@ -124,7 +124,7 @@ Base path `/api`. All routes except `/api/health` require a `Bearer <JWT>` heade
 | Route group | Endpoints | Purpose |
 |---|---|---|
 | `/api/auth` | `POST /login`, `POST /change-password`, `POST /logout`, `GET /me` | Authentication, session management |
-| `/api/reports` | `POST /:formType`, `GET /:formType/:date`, `GET /:formType` (range) | Generic daily-form submit/read (backs the JSONB `daily_reports` table) |
+| `/api/reports` | `POST /:formType` (`autosave:true` = the form's background draft save), `GET /unfinished`, `GET /:formType/history`, `GET /:formType/:date`, `GET /:formType` (range) | Generic daily-form submit/read (backs the JSONB `daily_reports` table); `history` lists which days have a record (date + status only) for the forms' Load Previous panel; `unfinished` lists the caller's own drafts and rejected reports across the forms their role may submit (banner + sidebar dots) |
 | `/api/kpi` | `GET /summary/:year/:month`, `GET /ytd/:dept/:year`, `GET /fiscal/:dept/:fyStartYear`, `GET|PUT /:dept/:year/:month` | Monthly KPI targets/actuals |
 | `/api/formula` | `GET /registry`, `GET /eval/:year/:month`, `GET /daily`, `POST /override`, `DELETE /override/:id`, `GET /overrides/:year/:month` | Server-evaluated formula engine — this is what every dashboard renders |
 | `/api/mis` | `GET /daily/:date[/html\|/xlsx]`, `GET /monthly/:year/:month[/html\|/xlsx]`, `GET /completeness`, `POST /digest/send` | Rendered MIS reports (print/PDF-ready HTML and Excel export) + manual digest trigger |

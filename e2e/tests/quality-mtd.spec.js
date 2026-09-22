@@ -1,6 +1,6 @@
 /*
-  forms/quality-form.html — Block 1 (Cement Quality by Grade) "MTD Avg"
-  columns.
+  forms/quality-form.html — Block 1 (Finished Cement — Physical Tests)
+  and its running MTD figures.
 
   Lab quality readings are intensive quantities (a % or an MPa figure),
   not stocks or flows — their MTD figure is a plain arithmetic mean of
@@ -9,10 +9,27 @@
   free_lime/blaine_425r/strength_28d, the three of these facts already
   promoted to the shared cross-dashboard KPI registry.
 
-  Before this change, 13 of the 16 fields in this table (both grade
-  columns for every parameter except Blaine/Strength-28d/Free-Lime's
-  42.5R column) weren't captured as data at all, and all 16 "MTD Avg"
-  cells were hardcoded regardless.
+  2026-09-22 rebuilt this block around the plant's own QC DAILY REPORT
+  workbook: a grade × parameter matrix over three mill sections (Cement
+  Mill-1, Cement Mill-2, Loading) with the sheet's own seven columns —
+  Blaine, R45, L/C expansion and compressive strength at 1, 2, 7 and 28
+  days. Three things moved and are asserted here because a silent
+  regression in any of them is invisible on screen:
+
+    • Blaine is in m²/kg, the unit the workbook and the TBS requirement
+      it prints ("380 to 410") are both written in. It was declared
+      cm²/g while the only figure ever filed under it was a mockup.
+    • `blaine_425r` and `strength_28d` keep their names, on Cement
+      Mill-1's 42.5R row — they are the shared KPI registry's facts, and
+      renaming them into the cem_* scheme would orphan two KPIs.
+    • `free_lime` left this block entirely. The workbook has no free-lime
+      column in the physical lab table; the importer was filling that
+      cement row from the CLINKER F.CaO average. It now sits in the
+      clinker block, where it is measured (see quality-chemistry-mtd).
+
+  MTD rides UNDER each input rather than in its own column: at seven
+  parameters wide, a parallel MTD column per parameter would double the
+  table and push the 28-day result off-screen on a laptop.
 */
 const { test, expect } = require('@playwright/test');
 const { loginAs, collectErrors } = require('../fixtures/auth');
@@ -67,28 +84,66 @@ test('Free Lime MTD Avg is a plain mean of days with a reading, live, not a sum 
 });
 
 test('a day with no reading is excluded from the average, not treated as zero', async ({ page }) => {
-  /* Seed day: Blaine 425N = 3500. Live day: Blaine 425N left blank. If the
-     blank day were zero-filled, the MTD average would collapse toward 0;
-     the correct behaviour is to just show the one real reading, 3500. */
-  await seedMtdHistory({ blaine_425n: 3500 });
+  /* Seed day: Cement Mill-1 42.5N Blaine = 385 m²/kg. Live day: left
+     blank. If the blank day were zero-filled the MTD average would
+     collapse toward 0; the correct behaviour is to show the one real
+     reading, 385. */
+  await seedMtdHistory({ cem_cm1_425n_blaine: 385 });
   await openForm(page);
 
-  await page.fill('input[data-field="blaine_425r"]', '3700'); // touch an unrelated field to trigger a repaint
+  await page.fill('input[data-field="blaine_425r"]', '370'); // touch an unrelated field to trigger a repaint
   await page.locator('input[data-field="blaine_425r"]').blur();
   await page.waitForTimeout(300);
 
-  await expect(page.locator('[data-kpi="blaine_425n_mtd"]').first()).toHaveText('3,500.0');
+  await expect(page.locator('[data-kpi="cem_cm1_425n_blaine_mtd"]').first()).toHaveText('385.0');
 });
 
-test('every Block 1 parameter is now a real, editable input for both grades', async ({ page }) => {
+/* The two names the shared KPI registry depends on. If either is ever
+   renamed into the cem_* scheme, forms/formula-registry.js's blaine-425r
+   and strength-28d KPIs silently stop resolving — the dashboard keeps
+   rendering, it just shows nothing. */
+test('the registry facts keep their names, on Cement Mill-1 42.5R', async ({ page }) => {
   await openForm(page);
-  const fields = [
-    'blaine_425r', 'blaine_425n', 'residue_425r', 'residue_425n',
-    'setting_initial_425r', 'setting_initial_425n', 'setting_final_425r', 'setting_final_425n',
-    'strength_3d_425r', 'strength_3d_425n', 'strength_28d', 'strength_28d_425n',
-    'free_lime', 'free_lime_425n', 'soundness_425r', 'soundness_425n',
-  ];
-  for (const field of fields) {
-    await expect(page.locator(`input[data-field="${field}"]`), `${field} must be editable`).toBeEditable();
+  await expect(page.locator('input[data-field="blaine_425r"]')).toHaveCount(1);
+  await expect(page.locator('input[data-field="strength_28d"]')).toHaveCount(1);
+  await expect(page.locator('input[data-field="cem_cm1_425r_blaine"]')).toHaveCount(0);
+  await expect(page.locator('input[data-field="cem_cm1_425r_cs28"]')).toHaveCount(0);
+});
+
+test('every grade of every mill section is a real, editable input across all seven parameters', async ({ page }) => {
+  await openForm(page);
+  const SECTIONS = {
+    cm1: ['425r', '425n', '325n', 'spot', 'opc', 'bmill'],   // Cement Mill-1 also runs SPOT and B/Mill
+    cm2: ['425r', '425n', '325n', 'opc'],
+    ld:  ['425r', '425n', '325n', 'opc'],                    // Loading
+  };
+  const PARAMS = ['blaine', 'r45', 'lce', 'cs1', 'cs2', 'cs7', 'cs28'];
+  const LEGACY = { 'cm1.425r.blaine': 'blaine_425r', 'cm1.425r.cs28': 'strength_28d' };
+
+  for (const [sec, grades] of Object.entries(SECTIONS)) {
+    for (const grade of grades) {
+      for (const param of PARAMS) {
+        const field = LEGACY[`${sec}.${grade}.${param}`] || `cem_${sec}_${grade}_${param}`;
+        await expect(page.locator(`input[data-field="${field}"]`),
+          `${field} must be editable`).toBeEditable();
+      }
+    }
+  }
+});
+
+/* Deleted deliberately, not renamed. Setting Time (initial and final),
+   3-day strength, soundness and a per-grade free-lime column have no
+   column in the QC DAILY REPORT workbook — they came from the mockup the
+   page was first built from, and nothing could ever fill them. */
+test('the mockup-only Block 1 fields are gone', async ({ page }) => {
+  await openForm(page);
+  for (const field of ['setting_initial_425r', 'setting_initial_425n',
+                       'setting_final_425r', 'setting_final_425n',
+                       'strength_3d_425r', 'strength_3d_425n',
+                       'free_lime_425n', 'soundness_425r', 'soundness_425n',
+                       'residue_425r', 'residue_425n',
+                       'blaine_425n', 'strength_28d_425n']) {
+    await expect(page.locator(`input[data-field="${field}"]`),
+      `${field} has no column in the QC workbook and should be gone`).toHaveCount(0);
   }
 });

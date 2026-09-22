@@ -70,6 +70,22 @@
      does, offline). */
   let _serverToday = null;
 
+  /* The caller's own unfinished work on the SERVER — drafts and rejected
+     reports, any recent day, as { formId: [{ date, status }] }. A draft used
+     to be visible only as "a draft on THIS device, TODAY", so a draft saved
+     for yesterday, or from another PC, lit nothing. */
+  let _unfinished = {};
+  function setUnfinished(rows) {
+    _unfinished = {};
+    (rows || []).forEach(function (r) {
+      (_unfinished[r.form_type] = _unfinished[r.form_type] || []).push({ date: r.record_date, status: r.status });
+    });
+  }
+  function niceDate(d) {
+    const dt = new Date(d + 'T00:00:00');
+    return isNaN(dt) ? d : dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+
   /* A draft typed on THIS device and not yet sent anywhere — the one thing
      the server cannot know. */
   function localDraft(formId) {
@@ -119,11 +135,29 @@
       const formId = resolveFormId(row.dataset.page);
       if (!formId) return;
       const st  = formStatus(formId);
+      /* The row's own form as well as the role-specific one above: the
+         production role's Production row reports on 'quality' for today's
+         fill, but a draft of the Production report itself is still theirs. */
+      const forms = [formId, PAGE_DEFAULT_FORM[row.dataset.page]].filter(function (f, i, a) { return f && a.indexOf(f) === i; });
+      const open  = [];
+      forms.forEach(function (f) { (_unfinished[f] || []).forEach(function (x) { open.push(x); }); });
+      const rejected = open.filter(function (x) { return x.status === 'rejected'; });
+      const drafts   = open.filter(function (x) { return x.status === 'draft'; });
+
+      let cls = st;
+      let title = st === 'submitted' ? 'Entered today'      :
+                  st === 'draft'     ? 'Draft on this device — not submitted' :
+                                       'Not yet entered today';
+      if (rejected.length) {
+        cls   = 'rejected';
+        title = 'Rejected — needs correction: ' + rejected.map(function (x) { return niceDate(x.date); }).join(', ');
+      } else if (drafts.length) {
+        cls   = 'draft';
+        title = 'Unfinished draft: ' + drafts.map(function (x) { return niceDate(x.date); }).join(', ');
+      }
       const dot = document.createElement('span');
-      dot.className = 'nav-dot nav-dot-' + st;
-      dot.title     = st === 'submitted' ? 'Entered today'      :
-                      st === 'draft'     ? 'Draft on this device — not submitted' :
-                                           'Not yet entered today';
+      dot.className = 'nav-dot nav-dot-' + cls;
+      dot.title     = title;
       (row.querySelector('.sb-item-icon') || row).appendChild(dot);
     });
   }
@@ -138,6 +172,10 @@
         const day = (payload.days || []).find(x => x.date === d);
         _serverToday = new Set((day ? day.forms : []).filter(f => f.present).map(f => f.formType));
       } catch (e) { /* offline — local drafts are all we can show */ }
+    }
+    if (window.NyatiAPI && NyatiAPI.getUnfinished) {
+      try { setUnfinished(await NyatiAPI.getUnfinished(14)); }
+      catch (e) { /* keep the last answer */ }
     }
     injectDots();
   }
@@ -197,6 +235,8 @@
       /* draft = amber pulsing */
       '.nav-dot-draft{background:#D97706;box-shadow:0 0 0 2px rgba(217,119,6,.25);' +
         'animation:_ns-pulse 2.4s ease-in-out infinite}' +
+      /* rejected = solid red, not pulsing: it is waiting on a person, not on time */
+      '.nav-dot-rejected{background:#C0271F;box-shadow:0 0 0 2px rgba(192,39,31,.25)}' +
       /* empty = muted grey */
       '.nav-dot-empty{background:rgba(148,163,184,.4)}';
     document.head.appendChild(s);
@@ -223,6 +263,15 @@
   document.addEventListener('nyati:submitted',    refresh);
   document.addEventListener('nyati:inline-saved', refresh);
   document.addEventListener('nyati:saved',        injectDots);
+  /* A form saved or submitted a day: adjust the unfinished list in place. */
+  document.addEventListener('nyati:draft-state', function (e) {
+    const d = e.detail || {};
+    if (!d.formId || !d.date) return;
+    const list = (_unfinished[d.formId] || []).filter(function (x) { return x.date !== d.date; });
+    if (d.status === 'draft' || d.status === 'rejected') list.push({ date: d.date, status: d.status });
+    _unfinished[d.formId] = list;
+    injectDots();
+  });
   window.addEventListener('storage',              injectDots);
 
   setInterval(function () { injectShift(); }, 60000);

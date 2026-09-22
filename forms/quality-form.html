@@ -59,207 +59,250 @@
 <!-- ══════════════════ MAIN ══════════════════ -->
 <main class="fm-main">
 
-
-  <!-- ══ KPI SUMMARY STRIP ════════════════════════════════════════ -->
+  <!-- ══ KPI SUMMARY STRIP ════════════════════════════════════════
+       Every tile starts at an em-dash and is painted by kpi-live.js from
+       the fields actually on this page. Nothing here carries a baked-in
+       figure: this page used to open showing 3.0% / 51.1% / 3,680 / 52.4
+       before a single byte of the day's data had loaded, which read as a
+       filed report rather than an empty form.
+  ════════════════════════════════════════════════════════════════ -->
   <div class="kpi-strip">
-    <div class="kt kt-m watch">
+    <div class="kt kt-m">
       <span class="kt-badge">Manual</span>
       <div class="kt-lbl">Clinker Free Lime</div>
-      <div class="kt-val" data-kpi="free_lime">3.0%</div>
-      <div class="kt-unit">Day Avg — Spec &lt; 3.0%</div>
-      <div class="kt-bar"><div class="kt-bar-fill" style="width:100%"></div></div>
-      <div class="kt-foot"><span class="kt-tgt">Spec: &lt; 3.0%</span><span class="kt-pct">100.0%</span></div>
-      <div class="kt-vs vs-wa">▲ At limit — kiln temp adjustment required</div>
+      <div class="kt-val" data-kpi="free_lime">&mdash;</div>
+      <div class="kt-unit">Day Avg &mdash; Spec &lt; 3.0%</div>
+      <div class="kt-bar"><div class="kt-bar-fill" style="width:0%"></div></div>
+      <div class="kt-foot"><span class="kt-tgt">Spec: &lt; 3.0%</span><span class="kt-pct">&mdash;</span></div>
     </div>
-    <div class="kt kt-m on-track">
+    <div class="kt kt-m">
       <span class="kt-badge">Manual</span>
-      <div class="kt-lbl">C3S — Clinker</div>
-      <div class="kt-val">51.1%</div>
-      <div class="kt-unit">Day Avg — Target &gt; 50%</div>
-      <div class="kt-bar"><div class="kt-bar-fill" style="width:100%"></div></div>
-      <div class="kt-foot"><span class="kt-tgt">Target: &gt; 50%</span><span class="kt-pct">102.2%</span></div>
-      <div class="kt-vs vs-ok">▲ Satisfactory clinker mineral composition</div>
+      <div class="kt-lbl">C&#8323;S &mdash; Clinker</div>
+      <div class="kt-val" data-kpi="c3s_ck">&mdash;</div>
+      <div class="kt-unit">Day Avg &mdash; Target &gt; 50%</div>
+      <div class="kt-bar"><div class="kt-bar-fill" style="width:0%"></div></div>
+      <div class="kt-foot"><span class="kt-tgt">Target: &gt; 50%</span><span class="kt-pct">&mdash;</span></div>
     </div>
-    <div class="kt kt-m on-track">
+    <div class="kt kt-m">
       <span class="kt-badge">Manual</span>
-      <div class="kt-lbl">Cement Blaine — 42.5R</div>
-      <div class="kt-val" data-kpi="blaine_425r">3,680</div>
-      <div class="kt-unit">cm²/g — Spec 3,500–4,200</div>
-      <div class="kt-bar"><div class="kt-bar-fill" style="width:100%"></div></div>
-      <div class="kt-foot"><span class="kt-tgt">Spec: ≥ 3,500 cm²/g</span><span class="kt-pct">105.1%</span></div>
-      <div class="kt-vs vs-ok">▲ Within specification band</div>
+      <div class="kt-lbl">Blaine &mdash; CM-1 42.5R</div>
+      <div class="kt-val" data-kpi="blaine_425r">&mdash;</div>
+      <div class="kt-unit">m&sup2;/kg &mdash; TBS 380&ndash;410</div>
+      <div class="kt-bar"><div class="kt-bar-fill" style="width:0%"></div></div>
+      <div class="kt-foot"><span class="kt-tgt">TBS: 380&ndash;410 m&sup2;/kg</span><span class="kt-pct">&mdash;</span></div>
     </div>
-    <div class="kt kt-m on-track">
+    <div class="kt kt-m">
       <span class="kt-badge">Manual</span>
-      <div class="kt-lbl">28-Day Strength — 42.5R</div>
-      <div class="kt-val" data-kpi="strength_28d">52.4</div>
-      <div class="kt-unit">MPa — Min 42.5 MPa</div>
-      <div class="kt-bar"><div class="kt-bar-fill" style="width:100%"></div></div>
-      <div class="kt-foot"><span class="kt-tgt">Min: 42.5 MPa</span><span class="kt-pct">123.3%</span></div>
-      <div class="kt-vs vs-ok">▲ 23.3% above minimum requirement</div>
+      <div class="kt-lbl">28-Day Strength &mdash; CM-1 42.5R</div>
+      <div class="kt-val" data-kpi="strength_28d">&mdash;</div>
+      <div class="kt-unit">MPa &mdash; TBS &gt; 42.5 MPa</div>
+      <div class="kt-bar"><div class="kt-bar-fill" style="width:0%"></div></div>
+      <div class="kt-foot"><span class="kt-tgt">TBS: &gt; 42.5 MPa</span><span class="kt-pct">&mdash;</span></div>
     </div>
-    <div class="kt kt-f on-track">
-      <span class="kt-badge">Formula</span>
-      <div class="kt-lbl">LSF — Raw Mill Day Avg</div>
-      <div class="kt-val" data-kpi="lsf_avg">96.8</div>
-      <div class="kt-unit">LSF — Target 95–98</div>
-      <div class="kt-vs vs-ok">▲ Within target range</div>
-    </div>
-    <div class="kt kt-m on-track">
+    <div class="kt kt-m">
       <span class="kt-badge">Manual</span>
-      <div class="kt-lbl">Coal Residue @ 90µ</div>
-      <div class="kt-val" data-kpi="coal_residue">4.5%</div>
-      <div class="kt-unit">% — Spec &lt; 5.0%</div>
-      <div class="kt-bar"><div class="kt-bar-fill" style="width:90%"></div></div>
-      <div class="kt-foot"><span class="kt-tgt">Spec: &lt; 5.0%</span><span class="kt-pct">90.0%</span></div>
-      <div class="kt-vs vs-ok">▲ Coal fineness acceptable</div>
+      <div class="kt-lbl">LSF &mdash; Raw Mill Day Avg</div>
+      <div class="kt-val" data-kpi="lsf_rm">&mdash;</div>
+      <div class="kt-unit">LSF &mdash; Target 95&ndash;98</div>
+    </div>
+    <div class="kt kt-m">
+      <span class="kt-badge">Manual</span>
+      <div class="kt-lbl">Fine Coal Residue @ 90&micro;</div>
+      <div class="kt-val" data-kpi="coal_residue">&mdash;</div>
+      <div class="kt-unit">% &mdash; mill outlet day average</div>
     </div>
   </div>
 
   <!-- ════════════════════════════════════════════════
-       BLOCK 1 — CEMENT PHYSICAL TESTS
+       BLOCK 1 — FINISHED CEMENT: PHYSICAL LAB REPORT
+       Grade × parameter matrix, transcribed 1:1 from the QC DAILY REPORT
+       workbook's "PHYSICAL LAB REPORT" table (sheet DAILY SUMMARY, rows
+       5-23) — same three mill sections, same grade rows, same seven
+       columns, same TBS requirement wording. Matching the sheet's own
+       shape is what lets Import Excel fill the whole block in one go.
+
+       MTD sits UNDER each input rather than in its own column: at seven
+       parameters wide, a parallel MTD column per parameter would double
+       the table and push the 28-day result off-screen on a laptop.
   ════════════════════════════════════════════════ -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="flask-conical" class="title-icon"></i> Finished Cement — Physical Tests</div>
-        <div class="rcard-sub">Daily average from dispatch silos — 21-Apr-2026</div>
+        <div class="rcard-title"><i data-lucide="flask-conical" class="title-icon"></i> Finished Cement &mdash; Physical Tests</div>
+        <div class="rcard-sub">Blaine, R45, expansion and compressive strength by grade &mdash; Cement Mill-1, Cement Mill-2 and Loading</div>
       </div>
       <div class="rcard-chips">
-        <span class="rcard-chip">21-Apr-2026</span>
+        <span class="rcard-chip" data-report-date>&mdash;</span>
         <span class="rcard-chip orange">QUALITY / LAB</span>
       </div>
     </div>
     <div class="tbl-scroll">
-      <table class="rt" style="min-width:1000px">
+      <table class="rt" style="min-width:1180px">
         <thead>
           <tr>
-            <th class="tl grp-hdr" style="min-width:220px">Parameter</th>
-            <th class="grp-hdr">
-              42.5 R Day Avg
-              <span class="spec-range">Spec / target</span>
-            </th>
-            <th class="grp-hdr">
-              42.5 N Day Avg
-              <span class="spec-range">Spec / target</span>
-            </th>
-            <th class="grp-hdr">MTD Avg (42.5R)</th>
-            <th class="grp-hdr">MTD Avg (42.5N)</th>
-            <th class="grp-hdr">Status</th>
+            <th class="tl grp-hdr" style="min-width:150px">Grade</th>
+            <th class="grp-hdr">Blaine<br><span class="spec-range">m&sup2;/kg</span></th>
+            <th class="grp-hdr">R45<br><span class="spec-range">micron</span></th>
+            <th class="grp-hdr">L/C Expansion<br><span class="spec-range">mm</span></th>
+            <th class="grp-hdr">1 Day<br><span class="spec-range">MPa</span></th>
+            <th class="grp-hdr">2 Days<br><span class="spec-range">MPa</span></th>
+            <th class="grp-hdr">7 Days<br><span class="spec-range">MPa</span></th>
+            <th class="grp-hdr">28 Days<br><span class="spec-range">MPa</span></th>
           </tr>
         </thead>
         <tbody>
+          <tr class="tbs-row">
+            <td class="tp">TBS requirement</td>
+            <td>380 to 410</td>
+            <td>&lt;16% for 42.5R &amp; N<br>&lt;20% for 32.5N</td>
+            <td>&lt;10</td>
+            <td>No limit</td>
+            <td>&gt;20 for 42.5R<br>&gt;10 for 42.5N</td>
+            <td>&gt;16 for 32.5N</td>
+            <td>&gt;42.5 for 42.5R &amp; N<br>&gt;32.5 for 32.5N</td>
+          </tr>
+          <tr class="srow"><td colspan="8">Cement Mill-1</td></tr>
           <tr>
-            <td class="tp">Blaine (Fineness)</td>
-            <td class="cm">
-              <input class="ci" type="number" data-field="blaine_425r" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥3,600 cm²/g</div>
-            </td>
-            <td class="cm">
-              <input class="ci" type="number" data-field="blaine_425n" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥3,500 cm²/g</div>
-            </td>
-            <td class="cf"><div class="cv" data-kpi="blaine_425r_mtd">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="blaine_425n_mtd">—</div></td>
-            <td class="cf"><div class="cv" style="color:var(--f-fg)">OK</div></td>
+            <td class="tp">G - 42.5R</td>
+            <td class="cm"><input class="ci" type="number" step="1" data-field="blaine_425r" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="blaine_425r_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_425r_r45" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_425r_r45_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.1" data-field="cem_cm1_425r_lce" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_425r_lce_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_425r_cs1" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_425r_cs1_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_425r_cs2" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_425r_cs2_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_425r_cs7" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_425r_cs7_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="strength_28d" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="strength_28d_mtd">&mdash;</span></div></td>
           </tr>
           <tr>
-            <td class="tp">Residue @ 45µ</td>
-            <td class="cm">
-              <input class="ci" type="number" step="0.1" data-field="residue_425r" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;5.0%</div>
-            </td>
-            <td class="cm">
-              <input class="ci" type="number" step="0.1" data-field="residue_425n" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;6.0%</div>
-            </td>
-            <td class="cf"><div class="cv" data-kpi="residue_425r_mtd">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="residue_425n_mtd">—</div></td>
-            <td class="cf"><div class="cv" style="color:var(--f-fg)">OK</div></td>
+            <td class="tp">G - 42.5N</td>
+            <td class="cm"><input class="ci" type="number" step="1" data-field="cem_cm1_425n_blaine" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_425n_blaine_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_425n_r45" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_425n_r45_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.1" data-field="cem_cm1_425n_lce" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_425n_lce_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_425n_cs1" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_425n_cs1_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_425n_cs2" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_425n_cs2_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_425n_cs7" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_425n_cs7_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_425n_cs28" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_425n_cs28_mtd">&mdash;</span></div></td>
           </tr>
           <tr>
-            <td class="tp">Setting Time — Initial</td>
-            <td class="cm">
-              <input class="ci" type="number" data-field="setting_initial_425r" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥60 min</div>
-            </td>
-            <td class="cm">
-              <input class="ci" type="number" data-field="setting_initial_425n" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥60 min</div>
-            </td>
-            <td class="cf"><div class="cv" data-kpi="setting_initial_425r_mtd">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="setting_initial_425n_mtd">—</div></td>
-            <td class="cf"><div class="cv" style="color:var(--f-fg)">OK</div></td>
+            <td class="tp">G - 32.5N</td>
+            <td class="cm"><input class="ci" type="number" step="1" data-field="cem_cm1_325n_blaine" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_325n_blaine_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_325n_r45" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_325n_r45_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.1" data-field="cem_cm1_325n_lce" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_325n_lce_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_325n_cs1" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_325n_cs1_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_325n_cs2" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_325n_cs2_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_325n_cs7" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_325n_cs7_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_325n_cs28" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_325n_cs28_mtd">&mdash;</span></div></td>
           </tr>
           <tr>
-            <td class="tp">Setting Time — Final</td>
-            <td class="cm">
-              <input class="ci" type="number" data-field="setting_final_425r" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;600 min</div>
-            </td>
-            <td class="cm">
-              <input class="ci" type="number" data-field="setting_final_425n" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;600 min</div>
-            </td>
-            <td class="cf"><div class="cv" data-kpi="setting_final_425r_mtd">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="setting_final_425n_mtd">—</div></td>
-            <td class="cf"><div class="cv" style="color:var(--f-fg)">OK</div></td>
+            <td class="tp">SPOT</td>
+            <td class="cm"><input class="ci" type="number" step="1" data-field="cem_cm1_spot_blaine" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_spot_blaine_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_spot_r45" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_spot_r45_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.1" data-field="cem_cm1_spot_lce" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_spot_lce_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_spot_cs1" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_spot_cs1_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_spot_cs2" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_spot_cs2_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_spot_cs7" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_spot_cs7_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_spot_cs28" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_spot_cs28_mtd">&mdash;</span></div></td>
           </tr>
           <tr>
-            <td class="tp">Compressive Strength 3-day</td>
-            <td class="cm">
-              <input class="ci" type="number" step="0.1" data-field="strength_3d_425r" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥20 MPa</div>
-            </td>
-            <td class="cm">
-              <input class="ci" type="number" step="0.1" data-field="strength_3d_425n" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥20 MPa</div>
-            </td>
-            <td class="cf"><div class="cv" data-kpi="strength_3d_425r_mtd">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="strength_3d_425n_mtd">—</div></td>
-            <td class="cf"><div class="cv" style="color:var(--f-fg)">OK</div></td>
+            <td class="tp">G - OPC</td>
+            <td class="cm"><input class="ci" type="number" step="1" data-field="cem_cm1_opc_blaine" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_opc_blaine_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_opc_r45" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_opc_r45_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.1" data-field="cem_cm1_opc_lce" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_opc_lce_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_opc_cs1" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_opc_cs1_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_opc_cs2" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_opc_cs2_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_opc_cs7" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_opc_cs7_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_opc_cs28" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_opc_cs28_mtd">&mdash;</span></div></td>
           </tr>
           <tr>
-            <td class="tp">Compressive Strength 28-day</td>
-            <td class="cm">
-              <input class="ci" type="number" step="0.1" data-field="strength_28d" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥42.5 MPa</div>
-            </td>
-            <td class="cm">
-              <input class="ci" type="number" step="0.1" data-field="strength_28d_425n" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">≥42.5 MPa</div>
-            </td>
-            <td class="cf"><div class="cv" data-kpi="strength_28d_mtd">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="strength_28d_425n_mtd">—</div></td>
-            <td class="cf"><div class="cv" style="color:var(--f-fg)">OK</div></td>
+            <td class="tp">B/Mill</td>
+            <td class="cm"><input class="ci" type="number" step="1" data-field="cem_cm1_bmill_blaine" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_bmill_blaine_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_bmill_r45" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_bmill_r45_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.1" data-field="cem_cm1_bmill_lce" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_bmill_lce_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_bmill_cs1" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_bmill_cs1_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_bmill_cs2" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_bmill_cs2_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_bmill_cs7" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_bmill_cs7_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm1_bmill_cs28" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm1_bmill_cs28_mtd">&mdash;</span></div></td>
+          </tr>
+          <tr class="srow"><td colspan="8">Cement Mill-2</td></tr>
+          <tr>
+            <td class="tp">G - 42.5R</td>
+            <td class="cm"><input class="ci" type="number" step="1" data-field="cem_cm2_425r_blaine" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_425r_blaine_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_425r_r45" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_425r_r45_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.1" data-field="cem_cm2_425r_lce" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_425r_lce_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_425r_cs1" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_425r_cs1_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_425r_cs2" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_425r_cs2_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_425r_cs7" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_425r_cs7_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_425r_cs28" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_425r_cs28_mtd">&mdash;</span></div></td>
           </tr>
           <tr>
-            <td class="tp">Free Lime</td>
-            <td class="cm">
-              <input class="ci" type="number" step="0.1" data-field="free_lime" />
-              <div style="font-size:12px;color:var(--m-fg);text-align:center;padding-bottom:3px">&lt;3.0%</div>
-            </td>
-            <td class="cm">
-              <input class="ci" type="number" step="0.1" data-field="free_lime_425n" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;3.0%</div>
-            </td>
-            <td class="cf"><div class="cv" data-kpi="free_lime_mtd">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="free_lime_425n_mtd">—</div></td>
-            <td class="cf"><div class="cv" style="color:var(--m-fg)">AT LIMIT</div></td>
+            <td class="tp">G - 42.5N</td>
+            <td class="cm"><input class="ci" type="number" step="1" data-field="cem_cm2_425n_blaine" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_425n_blaine_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_425n_r45" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_425n_r45_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.1" data-field="cem_cm2_425n_lce" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_425n_lce_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_425n_cs1" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_425n_cs1_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_425n_cs2" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_425n_cs2_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_425n_cs7" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_425n_cs7_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_425n_cs28" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_425n_cs28_mtd">&mdash;</span></div></td>
           </tr>
           <tr>
-            <td class="tp">Soundness (Le-Chatelier)</td>
-            <td class="cm">
-              <input class="ci" type="number" step="0.5" data-field="soundness_425r" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;10 mm</div>
-            </td>
-            <td class="cm">
-              <input class="ci" type="number" step="0.5" data-field="soundness_425n" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;10 mm</div>
-            </td>
-            <td class="cf"><div class="cv" data-kpi="soundness_425r_mtd">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="soundness_425n_mtd">—</div></td>
-            <td class="cf"><div class="cv" style="color:var(--f-fg)">OK</div></td>
+            <td class="tp">G - 32.5N</td>
+            <td class="cm"><input class="ci" type="number" step="1" data-field="cem_cm2_325n_blaine" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_325n_blaine_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_325n_r45" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_325n_r45_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.1" data-field="cem_cm2_325n_lce" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_325n_lce_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_325n_cs1" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_325n_cs1_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_325n_cs2" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_325n_cs2_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_325n_cs7" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_325n_cs7_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_325n_cs28" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_325n_cs28_mtd">&mdash;</span></div></td>
+          </tr>
+          <tr>
+            <td class="tp">G - OPC</td>
+            <td class="cm"><input class="ci" type="number" step="1" data-field="cem_cm2_opc_blaine" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_opc_blaine_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_opc_r45" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_opc_r45_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.1" data-field="cem_cm2_opc_lce" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_opc_lce_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_opc_cs1" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_opc_cs1_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_opc_cs2" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_opc_cs2_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_opc_cs7" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_opc_cs7_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_cm2_opc_cs28" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_cm2_opc_cs28_mtd">&mdash;</span></div></td>
+          </tr>
+          <tr class="srow"><td colspan="8">Loading</td></tr>
+          <tr>
+            <td class="tp">L - 42.5R</td>
+            <td class="cm"><input class="ci" type="number" step="1" data-field="cem_ld_425r_blaine" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_425r_blaine_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_425r_r45" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_425r_r45_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.1" data-field="cem_ld_425r_lce" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_425r_lce_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_425r_cs1" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_425r_cs1_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_425r_cs2" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_425r_cs2_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_425r_cs7" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_425r_cs7_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_425r_cs28" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_425r_cs28_mtd">&mdash;</span></div></td>
+          </tr>
+          <tr>
+            <td class="tp">L - 42.5N</td>
+            <td class="cm"><input class="ci" type="number" step="1" data-field="cem_ld_425n_blaine" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_425n_blaine_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_425n_r45" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_425n_r45_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.1" data-field="cem_ld_425n_lce" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_425n_lce_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_425n_cs1" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_425n_cs1_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_425n_cs2" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_425n_cs2_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_425n_cs7" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_425n_cs7_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_425n_cs28" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_425n_cs28_mtd">&mdash;</span></div></td>
+          </tr>
+          <tr>
+            <td class="tp">L - 32.5N</td>
+            <td class="cm"><input class="ci" type="number" step="1" data-field="cem_ld_325n_blaine" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_325n_blaine_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_325n_r45" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_325n_r45_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.1" data-field="cem_ld_325n_lce" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_325n_lce_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_325n_cs1" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_325n_cs1_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_325n_cs2" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_325n_cs2_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_325n_cs7" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_325n_cs7_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_325n_cs28" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_325n_cs28_mtd">&mdash;</span></div></td>
+          </tr>
+          <tr>
+            <td class="tp">L - OPC</td>
+            <td class="cm"><input class="ci" type="number" step="1" data-field="cem_ld_opc_blaine" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_opc_blaine_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_opc_r45" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_opc_r45_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.1" data-field="cem_ld_opc_lce" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_opc_lce_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_opc_cs1" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_opc_cs1_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_opc_cs2" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_opc_cs2_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_opc_cs7" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_opc_cs7_mtd">&mdash;</span></div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="cem_ld_opc_cs28" /><div class="cell-mtd is-blank"><span class="mtd-lbl">MTD</span> <span data-kpi="cem_ld_opc_cs28_mtd">&mdash;</span></div></td>
           </tr>
         </tbody>
       </table>
@@ -268,48 +311,103 @@
 
   <!-- ════════════════════════════════════════════════
        BLOCK 2 — COAL MILL DAY AVERAGE
+       Two different measurements sit in the workbook's coal block and are
+       kept apart here on purpose. "Fine coal" is the lab's own day-average
+       proximate/calorific analysis (row 15). "Mill outlet residue" and
+       "mill inlet moisture" are the AVG line of the hourly mill readings
+       (rows 7-10) — the MIN/MAX/STD lines around it are process spread,
+       not a daily figure, so only AVG is carried across.
   ════════════════════════════════════════════════ -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="flame" class="title-icon"></i> Coal Mill — Quality Day Average</div>
-        <div class="rcard-sub">Coal fineness &amp; moisture — daily average</div>
+        <div class="rcard-title"><i data-lucide="flame" class="title-icon"></i> Coal Mill &mdash; Quality Day Average</div>
+        <div class="rcard-sub">Fine coal proximate &amp; calorific analysis, mill residue and inlet moisture</div>
       </div>
       <div class="rcard-chips">
+        <span class="rcard-chip" data-report-date>&mdash;</span>
         <span class="rcard-chip orange">QUALITY / LAB</span>
       </div>
     </div>
     <div class="tbl-scroll">
-      <table class="rt" style="min-width:800px">
+      <table class="rt" style="min-width:760px">
         <thead>
           <tr>
-            <th class="tl grp-hdr" style="min-width:200px">Parameter</th>
-            <th class="grp-hdr">Day Avg<br><span class="spec-range">Spec / target</span></th>
+            <th class="tl grp-hdr" style="min-width:230px">Parameter</th>
+            <th class="grp-hdr">Day Avg<br><span class="spec-range">spec / target</span></th>
             <th class="grp-hdr">MTD Avg</th>
             <th class="grp-hdr">YTD Avg</th>
-            <th class="grp-hdr">Status</th>
           </tr>
         </thead>
         <tbody>
+          <tr class="srow"><td colspan="4">Fine coal &mdash; day average (lab)</td></tr>
           <tr>
-            <td class="tp">Coal Residue @ 90µ (Kiln)</td>
-            <td class="cm">
-              <input class="ci" type="number" step="0.1" data-field="coal_residue" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;5.0%</div>
-            </td>
-            <td class="cf"><div class="cv" data-kpi="coal_residue_mtd">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="coal_residue_ytd">—</div></td>
-            <td class="cf"><div class="cv" style="color:var(--f-fg)">OK</div></td>
+            <td class="tp">Inherent Moisture (IM) (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="coal_im" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_im_mtd">&mdash;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_im_ytd">&mdash;</div></td>
           </tr>
           <tr>
-            <td class="tp">Coal Moisture (as ground)</td>
-            <td class="cm">
-              <input class="ci" type="number" step="0.1" data-field="coal_moisture" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:3px">&lt;2.0%</div>
-            </td>
-            <td class="cf"><div class="cv" data-kpi="coal_moisture_mtd">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="coal_moisture_ytd">—</div></td>
-            <td class="cf"><div class="cv" style="color:var(--f-fg)">OK</div></td>
+            <td class="tp">Volatile Matter (VM) (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="coal_vm" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_vm_mtd">&mdash;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_vm_ytd">&mdash;</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Ash (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="coal_ash" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_ash_mtd">&mdash;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_ash_ytd">&mdash;</div></td>
+          </tr>
+          <tr>
+            <td class="tp">GCV-ADB (kcal/kg)</td>
+            <td class="cm"><input class="ci" type="number" step="1" data-field="coal_gcv_adb" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_gcv_adb_mtd">&mdash;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_gcv_adb_ytd">&mdash;</div></td>
+          </tr>
+          <tr>
+            <td class="tp">GCV-ARB (kcal/kg)</td>
+            <td class="cm"><input class="ci" type="number" step="1" data-field="coal_gcv_arb" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_gcv_arb_mtd">&mdash;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_gcv_arb_ytd">&mdash;</div></td>
+          </tr>
+          <tr>
+            <td class="tp">NCV-ADB (kcal/kg)</td>
+            <td class="cm"><input class="ci" type="number" step="1" data-field="coal_ncv_adb" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_ncv_adb_mtd">&mdash;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_ncv_adb_ytd">&mdash;</div></td>
+          </tr>
+          <tr>
+            <td class="tp">NCV-ARB (kcal/kg)</td>
+            <td class="cm"><input class="ci" type="number" step="1" data-field="coal_ncv_arb" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_ncv_arb_mtd">&mdash;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_ncv_arb_ytd">&mdash;</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Sulphur (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="coal_sulphur" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_sulphur_mtd">&mdash;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_sulphur_ytd">&mdash;</div></td>
+          </tr>
+          <tr class="srow"><td colspan="4">Mill outlet residue &mdash; day average</td></tr>
+          <tr>
+            <td class="tp">Residue @ 90&micro; (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="coal_residue" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_residue_mtd">&mdash;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_residue_ytd">&mdash;</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Residue @ 212&micro; (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="coal_r212" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_r212_mtd">&mdash;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_r212_ytd">&mdash;</div></td>
+          </tr>
+          <tr class="srow"><td colspan="4">Mill inlet &mdash; day average</td></tr>
+          <tr>
+            <td class="tp">Moisture (M.C) (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="coal_moisture" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_moisture_mtd">&mdash;</div></td>
+            <td class="cf"><div class="cv" data-kpi="coal_moisture_ytd">&mdash;</div></td>
           </tr>
         </tbody>
       </table>
@@ -317,135 +415,82 @@
   </div>
 
   <!-- ════════════════════════════════════════════════
-       BLOCK 3 — RAW MILL 4-HR CHEMISTRY
+       BLOCK 3 — RAW MILL DAY AVERAGE
+       Was six 4-hour sample columns; now one day-average figure per
+       parameter (2026-09-22, at the QC manager's request). The workbook
+       still records four-hourly, so Import Excel averages the six sample
+       rows down to the single figure held here — the arithmetic moved out
+       of the screen and into the importer, it did not disappear.
   ════════════════════════════════════════════════ -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="wind" class="title-icon"></i> Raw Mill Feed — 4-Hour Chemistry Samples</div>
-        <div class="rcard-sub">6 samples × 4 hrs — composite analysis — 21-Apr-2026</div>
+        <div class="rcard-title"><i data-lucide="wind" class="title-icon"></i> Raw Mill &mdash; Day Average</div>
+        <div class="rcard-sub">Moduli and fineness for RM-1 and RM-2 &mdash; mean of the day's four-hourly samples</div>
       </div>
       <div class="rcard-chips">
+        <span class="rcard-chip" data-report-date>&mdash;</span>
         <span class="rcard-chip orange">QUALITY / LAB</span>
       </div>
     </div>
     <div class="tbl-scroll">
-      <table class="rt" style="min-width:1200px">
+      <table class="rt" style="min-width:620px">
         <thead>
           <tr>
-            <th class="tl grp-hdr" style="min-width:160px">Parameter</th>
-            <th class="grp-hdr">00:00–04:00<br><span class="spec-range">target</span></th>
-            <th class="grp-hdr">04:00–08:00<br><span class="spec-range">target</span></th>
-            <th class="grp-hdr">08:00–12:00<br><span class="spec-range">target</span></th>
-            <th class="grp-hdr">12:00–16:00<br><span class="spec-range">target</span></th>
-            <th class="grp-hdr">16:00–20:00<br><span class="spec-range">target</span></th>
-            <th class="grp-hdr">20:00–24:00<br><span class="spec-range">target</span></th>
-            <th class="grp-hdr">Day Avg</th>
+            <th class="tl grp-hdr" style="min-width:230px">Parameter</th>
+            <th class="grp-hdr">Day Avg<br><span class="spec-range">spec / target</span></th>
             <th class="grp-hdr">MTD Avg</th>
           </tr>
         </thead>
         <tbody>
+          <tr class="srow"><td colspan="3">Moduli &mdash; day average</td></tr>
           <tr>
             <td class="tp">LSF</td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_rm_h1" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_rm_h2" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_rm_h3" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_rm_h4" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_rm_h5" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_rm_h6" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">95–98</div></td>
-            <td class="cf"><div class="cv" data-kpi="lsf_rm_avg">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="lsf_rm_avg_mtd">—</div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="lsf_rm" /><div class="cell-mtd">95&ndash;98</div></td>
+            <td class="cf"><div class="cv" data-kpi="lsf_rm_mtd">&mdash;</div></td>
           </tr>
           <tr>
             <td class="tp">SM (Silica Modulus)</td>
-            <td class="cm"><input class="ci" type="number" step="0.01" data-field="sm_rm_h1" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">2.35–2.50</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.01" data-field="sm_rm_h2" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">2.35–2.50</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.01" data-field="sm_rm_h3" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">2.35–2.50</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.01" data-field="sm_rm_h4" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">2.35–2.50</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.01" data-field="sm_rm_h5" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">2.35–2.50</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.01" data-field="sm_rm_h6" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">2.35–2.50</div></td>
-            <td class="cf"><div class="cv" data-kpi="sm_rm_avg">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="sm_rm_avg_mtd">—</div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="sm_rm" /><div class="cell-mtd">2.35&ndash;2.50</div></td>
+            <td class="cf"><div class="cv" data-kpi="sm_rm_mtd">&mdash;</div></td>
           </tr>
           <tr>
             <td class="tp">AM (Alumina Modulus)</td>
-            <td class="cm"><input class="ci" type="number" step="0.01" data-field="am_rm_h1" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">1.30–1.50</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.01" data-field="am_rm_h2" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">1.30–1.50</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.01" data-field="am_rm_h3" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">1.30–1.50</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.01" data-field="am_rm_h4" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">1.30–1.50</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.01" data-field="am_rm_h5" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">1.30–1.50</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.01" data-field="am_rm_h6" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">1.30–1.50</div></td>
-            <td class="cf"><div class="cv" data-kpi="am_rm_avg">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="am_rm_avg_mtd">—</div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="am_rm" /><div class="cell-mtd">1.30&ndash;1.50</div></td>
+            <td class="cf"><div class="cv" data-kpi="am_rm_mtd">&mdash;</div></td>
+          </tr>
+          <tr class="srow"><td colspan="3">Fineness &mdash; RM-1 &mdash; day average</td></tr>
+          <tr>
+            <td class="tp">R90 (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="r90_rm1" /><div class="cell-mtd">&lt;16%</div></td>
+            <td class="cf"><div class="cv" data-kpi="r90_rm1_mtd">&mdash;</div></td>
           </tr>
           <tr>
-            <td class="tp">R90 (Residue at 90µ)</td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="r90_rm_h1" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;16%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="r90_rm_h2" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;16%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="r90_rm_h3" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;16%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="r90_rm_h4" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;16%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="r90_rm_h5" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;16%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="r90_rm_h6" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;16%</div></td>
-            <td class="cf"><div class="cv" data-kpi="r90_rm_avg">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="r90_rm_avg_mtd">—</div></td>
+            <td class="tp">R212 (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="r212_rm1" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="r212_rm1_mtd">&mdash;</div></td>
+          </tr>
+          <tr class="srow"><td colspan="3">Fineness &mdash; RM-2 &mdash; day average</td></tr>
+          <tr>
+            <td class="tp">R90 (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="r90_rm2" /><div class="cell-mtd">&lt;16%</div></td>
+            <td class="cf"><div class="cv" data-kpi="r90_rm2_mtd">&mdash;</div></td>
           </tr>
           <tr>
-            <td class="tp">Moisture</td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="moisture_rm_h1" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">—</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="moisture_rm_h2" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">—</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="moisture_rm_h3" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">—</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="moisture_rm_h4" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">—</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="moisture_rm_h5" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">—</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="moisture_rm_h6" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="moisture_rm_avg">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="moisture_rm_avg_mtd">—</div></td>
+            <td class="tp">R212 (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="r212_rm2" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="r212_rm2_mtd">&mdash;</div></td>
+          </tr>
+          <tr class="srow"><td colspan="3">Not in the QC workbook &mdash; enter by hand</td></tr>
+          <tr>
+            <td class="tp">Moisture (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.1" data-field="moisture_rm" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="moisture_rm_mtd">&mdash;</div></td>
           </tr>
           <tr>
-            <td class="tp">CaCO₃ Equivalent</td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="caco3_rm_h1" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">75–78%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="caco3_rm_h2" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">75–78%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="caco3_rm_h3" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">75–78%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="caco3_rm_h4" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">75–78%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="caco3_rm_h5" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">75–78%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="caco3_rm_h6" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">75–78%</div></td>
-            <td class="cf"><div class="cv" data-kpi="caco3_rm_avg">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="caco3_rm_avg_mtd">—</div></td>
+            <td class="tp">CaCO&#8323; Equivalent (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.1" data-field="caco3_rm" /><div class="cell-mtd">75&ndash;78%</div></td>
+            <td class="cf"><div class="cv" data-kpi="caco3_rm_mtd">&mdash;</div></td>
           </tr>
         </tbody>
       </table>
@@ -453,55 +498,61 @@
   </div>
 
   <!-- ════════════════════════════════════════════════
-       BLOCK 4 — KILN FEED 4-HR CHEMISTRY
+       BLOCK 4 — KILN FEED DAY AVERAGE
   ════════════════════════════════════════════════ -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="thermometer" class="title-icon"></i> Kiln Feed — 4-Hour Chemistry Samples</div>
-        <div class="rcard-sub">Kiln feed to preheater — 6 samples — 21-Apr-2026</div>
+        <div class="rcard-title"><i data-lucide="thermometer" class="title-icon"></i> Kiln Feed &mdash; Day Average</div>
+        <div class="rcard-sub">Kiln feed to preheater &mdash; mean of the day's four-hourly samples</div>
       </div>
       <div class="rcard-chips">
+        <span class="rcard-chip" data-report-date>&mdash;</span>
         <span class="rcard-chip orange">QUALITY / LAB</span>
       </div>
     </div>
     <div class="tbl-scroll">
-      <table class="rt" style="min-width:1200px">
+      <table class="rt" style="min-width:620px">
         <thead>
           <tr>
-            <th class="tl grp-hdr" style="min-width:160px">Parameter</th>
-            <th class="grp-hdr">00:00–04:00</th>
-            <th class="grp-hdr">04:00–08:00</th>
-            <th class="grp-hdr">08:00–12:00</th>
-            <th class="grp-hdr">12:00–16:00</th>
-            <th class="grp-hdr">16:00–20:00</th>
-            <th class="grp-hdr">20:00–24:00</th>
-            <th class="grp-hdr">Day Avg</th>
+            <th class="tl grp-hdr" style="min-width:230px">Parameter</th>
+            <th class="grp-hdr">Day Avg<br><span class="spec-range">spec / target</span></th>
             <th class="grp-hdr">MTD Avg</th>
           </tr>
         </thead>
         <tbody>
+          <tr class="srow"><td colspan="3">Moduli &mdash; day average</td></tr>
           <tr>
             <td class="tp">LSF</td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_kf_h1" /></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_kf_h2" /></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_kf_h3" /></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_kf_h4" /></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_kf_h5" /></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_kf_h6" /></td>
-            <td class="cf"><div class="cv" data-kpi="lsf_kf_avg">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="lsf_kf_avg_mtd">—</div></td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="lsf_kf" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="lsf_kf_mtd">&mdash;</div></td>
           </tr>
           <tr>
-            <td class="tp">Free CaO</td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="freecao_kf_h1" /></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="freecao_kf_h2" /></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="freecao_kf_h3" /></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="freecao_kf_h4" /></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="freecao_kf_h5" /></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="freecao_kf_h6" /></td>
-            <td class="cf"><div class="cv" data-kpi="freecao_kf_avg">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="freecao_kf_avg_mtd">—</div></td>
+            <td class="tp">SM (Silica Modulus)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="sm_kf" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="sm_kf_mtd">&mdash;</div></td>
+          </tr>
+          <tr>
+            <td class="tp">AM (Alumina Modulus)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="am_kf" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="am_kf_mtd">&mdash;</div></td>
+          </tr>
+          <tr class="srow"><td colspan="3">Fineness &mdash; day average</td></tr>
+          <tr>
+            <td class="tp">R90 (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="r90_kf" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="r90_kf_mtd">&mdash;</div></td>
+          </tr>
+          <tr>
+            <td class="tp">R212 (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="r212_kf" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="r212_kf_mtd">&mdash;</div></td>
+          </tr>
+          <tr class="srow"><td colspan="3">Not in the QC workbook &mdash; enter by hand</td></tr>
+          <tr>
+            <td class="tp">Free CaO (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="freecao_kf" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="freecao_kf_mtd">&mdash;</div></td>
           </tr>
         </tbody>
       </table>
@@ -509,84 +560,87 @@
   </div>
 
   <!-- ════════════════════════════════════════════════
-       BLOCK 5 — CLINKER 4-HR CHEMISTRY
+       BLOCK 5 — CLINKER DAY AVERAGE
+       Free CaO lives here and nowhere else. It used to appear as a "Free
+       Lime" row in the finished-cement block as well, where the source
+       workbook has no such column — the importer was quietly filling that
+       cement row from the CLINKER F.CaO average. Same number, wrong
+       section. `free_lime` (the cross-dashboard fact behind the
+       clinker-free-lime KPI) is now the clinker row it always measured.
   ════════════════════════════════════════════════ -->
   <div class="rcard">
     <div class="rcard-hdr">
       <div>
-        <div class="rcard-title"><i data-lucide="box" class="title-icon"></i> Clinker — 4-Hour Chemistry Samples</div>
-        <div class="rcard-sub">Clinker from cooler — 6 samples — 21-Apr-2026</div>
+        <div class="rcard-title"><i data-lucide="box" class="title-icon"></i> Clinker &mdash; Day Average</div>
+        <div class="rcard-sub">Litre weight, free lime, moduli and Bogue phases &mdash; mean of the day's four-hourly samples</div>
       </div>
       <div class="rcard-chips">
+        <span class="rcard-chip" data-report-date>&mdash;</span>
         <span class="rcard-chip orange">QUALITY / LAB</span>
       </div>
     </div>
     <div class="tbl-scroll">
-      <table class="rt" style="min-width:1200px">
+      <table class="rt" style="min-width:620px">
         <thead>
           <tr>
-            <th class="tl grp-hdr" style="min-width:160px">Parameter</th>
-            <th class="grp-hdr">00:00–04:00<br><span class="spec-range">target</span></th>
-            <th class="grp-hdr">04:00–08:00<br><span class="spec-range">target</span></th>
-            <th class="grp-hdr">08:00–12:00<br><span class="spec-range">target</span></th>
-            <th class="grp-hdr">12:00–16:00<br><span class="spec-range">target</span></th>
-            <th class="grp-hdr">16:00–20:00<br><span class="spec-range">target</span></th>
-            <th class="grp-hdr">20:00–24:00<br><span class="spec-range">target</span></th>
-            <th class="grp-hdr">Day Avg</th>
+            <th class="tl grp-hdr" style="min-width:230px">Parameter</th>
+            <th class="grp-hdr">Day Avg<br><span class="spec-range">spec / target</span></th>
             <th class="grp-hdr">MTD Avg</th>
           </tr>
         </thead>
         <tbody>
+          <tr class="srow"><td colspan="3">Physical &mdash; day average</td></tr>
           <tr>
-            <td class="tp">C₃S</td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="c3s_ck_h1" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&gt;50%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="c3s_ck_h2" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&gt;50%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="c3s_ck_h3" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&gt;50%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="c3s_ck_h4" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&gt;50%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="c3s_ck_h5" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&gt;50%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="c3s_ck_h6" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&gt;50%</div></td>
-            <td class="cf"><div class="cv" data-kpi="c3s_ck_avg">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="c3s_ck_avg_mtd">—</div></td>
+            <td class="tp">Litre Weight (g/l)</td>
+            <td class="cm"><input class="ci" type="number" step="0.1" data-field="ltrwt_ck" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="ltrwt_ck_mtd">&mdash;</div></td>
           </tr>
           <tr>
-            <td class="tp">Free Lime (Clinker)</td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="freelime_ck_h1" />
-              <div style="font-size:12px;color:var(--m-fg);text-align:center;padding-bottom:2px">&lt;3.0%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="freelime_ck_h2" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;3.0%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="freelime_ck_h3" />
-              <div style="font-size:12px;color:var(--m-fg);text-align:center;padding-bottom:2px">&lt;3.0%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="freelime_ck_h4" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;3.0%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="freelime_ck_h5" />
-              <div style="font-size:12px;color:var(--m-fg);text-align:center;padding-bottom:2px">&lt;3.0%</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="freelime_ck_h6" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">&lt;3.0%</div></td>
-            <td class="cf"><div class="cv" data-kpi="freelime_ck_avg">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="freelime_ck_avg_mtd">—</div></td>
+            <td class="tp">Free CaO (F.CaO) (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="free_lime" /><div class="cell-mtd">&lt;3.0%</div></td>
+            <td class="cf"><div class="cv" data-kpi="free_lime_mtd">&mdash;</div></td>
+          </tr>
+          <tr class="srow"><td colspan="3">Moduli &mdash; day average</td></tr>
+          <tr>
+            <td class="tp">LSF</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="lsf_ck" /><div class="cell-mtd">94&ndash;98</div></td>
+            <td class="cf"><div class="cv" data-kpi="lsf_ck_mtd">&mdash;</div></td>
           </tr>
           <tr>
-            <td class="tp">LSF (Clinker)</td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_ck_h1" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">94–98</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_ck_h2" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">94–98</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_ck_h3" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">94–98</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_ck_h4" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">94–98</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_ck_h5" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">94–98</div></td>
-            <td class="cm"><input class="ci" type="number" step="0.1" data-field="lsf_ck_h6" />
-              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding-bottom:2px">94–98</div></td>
-            <td class="cf"><div class="cv" data-kpi="lsf_ck_avg">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="lsf_ck_avg_mtd">—</div></td>
+            <td class="tp">SM (Silica Modulus)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="sm_ck" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="sm_ck_mtd">&mdash;</div></td>
+          </tr>
+          <tr>
+            <td class="tp">AM (Alumina Modulus)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="am_ck" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="am_ck_mtd">&mdash;</div></td>
+          </tr>
+          <tr class="srow"><td colspan="3">Bogue phase composition &mdash; day average</td></tr>
+          <tr>
+            <td class="tp">C&#8323;S (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="c3s_ck" /><div class="cell-mtd">&gt;50%</div></td>
+            <td class="cf"><div class="cv" data-kpi="c3s_ck_mtd">&mdash;</div></td>
+          </tr>
+          <tr>
+            <td class="tp">C&#8322;S (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="c2s_ck" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="c2s_ck_mtd">&mdash;</div></td>
+          </tr>
+          <tr>
+            <td class="tp">C&#8323;A (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="c3a_ck" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="c3a_ck_mtd">&mdash;</div></td>
+          </tr>
+          <tr>
+            <td class="tp">C&#8324;AF (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="c4af_ck" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="c4af_ck_mtd">&mdash;</div></td>
+          </tr>
+          <tr>
+            <td class="tp">Liquid (%)</td>
+            <td class="cm"><input class="ci" type="number" step="0.01" data-field="liquid_ck" /><div class="cell-mtd">&nbsp;</div></td>
+            <td class="cf"><div class="cv" data-kpi="liquid_ck_mtd">&mdash;</div></td>
           </tr>
         </tbody>
       </table>
@@ -621,8 +675,8 @@
     </div>
     <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
       <span style="font-size:12px;color:var(--text-muted)">
-        Status: <strong style="color:var(--orange-ink)">DRAFT</strong> &nbsp;·&nbsp;
-        Date: <strong>21 April 2026</strong>
+        Status: <strong style="color:var(--orange-ink)" data-report-status>DRAFT</strong> &nbsp;·&nbsp;
+        Date: <strong data-report-date>&mdash;</strong>
       </span>
       <div style="display:flex;gap:8px">
         <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
@@ -652,97 +706,116 @@
   if (el1) el1.textContent = str;
   if (el2) el2.textContent = str;
 </script>
-<script src="api-client.js?v=2"></script>
-<script src="offline-queue.js"></script>
+<script src="api-client.js?v=4"></script>
+<script src="offline-queue.js?v=2"></script>
 <script src="client-errors.js"></script>
-<script src="form-persist.js?v=2"></script>
+<script src="form-persist.js?v=4"></script>
 <script>initFormPersist('quality');</script>
-<script src="nav-status.js"></script>
+<script src="nav-status.js?v=2"></script>
 <script src="collapsible.js"></script>
-<script src="excel-import.js"></script>
-<script src="excel-export.js"></script>
+<script src="excel-import.js?v=3"></script>
+<script src="excel-export.js?v=2"></script>
 <script src="report-rollup.js"></script>
 <script>initReportRollup({ form: 'quality', live: true });</script>
 <script src="kpi-live.js"></script>
 <script>
-/* Blocks 3-5 (Raw Mill / Kiln Feed / Clinker 4-hour chemistry) — each
-   parameter is 6 hourly samples (h1..h6) that need averaging into a
-   live "Day Avg" before an MTD Avg on top of that is meaningful. One
-   table drives both this page's on-date rule (below, via kpi-live) and
-   the MTD rule (next script block, via reportRollupLiveCompute), so the
-   two can't disagree about which parameter's samples pair up. */
-var CHEM_PARAMS = [
-  { prefix: 'lsf_rm',      avgKpi: 'lsf_rm_avg' },
-  { prefix: 'sm_rm',       avgKpi: 'sm_rm_avg' },
-  { prefix: 'am_rm',       avgKpi: 'am_rm_avg' },
-  { prefix: 'r90_rm',      avgKpi: 'r90_rm_avg' },
-  { prefix: 'moisture_rm', avgKpi: 'moisture_rm_avg' },
-  { prefix: 'caco3_rm',    avgKpi: 'caco3_rm_avg' },
-  { prefix: 'lsf_kf',      avgKpi: 'lsf_kf_avg' },
-  { prefix: 'freecao_kf',  avgKpi: 'freecao_kf_avg' },
-  { prefix: 'c3s_ck',      avgKpi: 'c3s_ck_avg' },
-  { prefix: 'freelime_ck', avgKpi: 'freelime_ck_avg' },
-  { prefix: 'lsf_ck',      avgKpi: 'lsf_ck_avg' }
-];
-function chemSampleAvg(prefix, data) {
-  var vals = [1, 2, 3, 4, 5, 6].map(function (i) { return data[prefix + '_h' + i]; })
-    .filter(function (v) { return v !== '' && v !== null && v !== undefined && !isNaN(+v); })
-    .map(Number);
-  return vals.length ? vals.reduce(function (a, b) { return a + b; }, 0) / vals.length : null;
-}
-var CHEM_ONDATE_RULES = CHEM_PARAMS.map(function (p) {
-  return { kpi: p.avgKpi, fmt: 'n1', compute: function (f) { return chemSampleAvg(p.prefix, f); } };
-});
-
-initKpiLive(CHEM_ONDATE_RULES.concat([
-  { kpi:'free_lime',    field:'free_lime',    fmt:'pct1',
+/* Every figure on this page is now a single day-average number per
+   parameter — the six 4-hour sample columns that Raw Mill, Kiln Feed and
+   Clinker used to carry were replaced on 2026-09-22 with one Day Avg
+   input each. Averaging the four-hourly readings is now the Excel
+   importer's job (see forms/excel-import.js), which is where the raw
+   four-hourly data actually lives; nothing on screen has to average
+   sibling inputs any more, so the CHEM_PARAMS / chemSampleAvg layer that
+   did that went with them. */
+initKpiLive([
+  { kpi:'free_lime',    field:'free_lime',    fmt:'n2',
     target:3.0,  sign:'<=', targetLabel:'Spec: < 3.0%' },
+  { kpi:'c3s_ck',       field:'c3s_ck',       fmt:'n1',
+    target:50,   sign:'>=', targetLabel:'Target: > 50%' },
   { kpi:'blaine_425r',  field:'blaine_425r',  fmt:'n0',
-    target:3500, sign:'>=', targetLabel:'Spec: ≥ 3,500' },
+    target:380,  sign:'>=', targetLabel:'TBS: 380\u2013410 m\u00b2/kg' },
   { kpi:'strength_28d', field:'strength_28d', fmt:'n1',
-    target:42.5, sign:'>=', targetLabel:'Min: 42.5 MPa' },
-  { kpi:'coal_residue', field:'coal_residue', fmt:'pct1',
-    target:5.0,  sign:'<=', targetLabel:'Spec: < 5.0%' }
-]));
+    target:42.5, sign:'>=', targetLabel:'TBS: > 42.5 MPa' },
+  /* LSF and coal residue are read WITHOUT a target on purpose. LSF is a
+     band (95-98), not a floor, so a >= bar would paint 99.5 green and
+     94.9 red at the same distance from spec; and the QC workbook states
+     no TBS limit for fine-coal residue at all — the 5.0% "spec" this
+     tile used to show was invented, and the real day averages (13-15%)
+     sat permanently in the red against it. */
+  { kpi:'lsf_rm',       field:'lsf_rm',       fmt:'n1' },
+  { kpi:'coal_residue', field:'coal_residue', fmt:'n2' }
+]);
 </script>
 <script>
-/* Block 1 (Cement Quality by Grade) "MTD Avg" columns — a plain
-   arithmetic mean of days that actually carry a reading, matching
-   forms/formula-registry.js's monthlyAgg:'avg' convention for the three
-   of these facts (free_lime, blaine_425r, strength_28d) already promoted
-   to the shared cross-dashboard KPI registry — NOT weighted by
-   production, NOT a naive average of empty days as zero. Every field
-   here maps to its own data-kpi="<field>_mtd" cell (see the table
-   markup), so one loop drives all 16.
-   Blocks 2-5 (Coal Mill / Raw Mill / Kiln Feed / Clinker 4-hour
-   chemistry) are NOT covered yet — those need an additional live
-   "6 hourly samples -> Day Avg" layer before an MTD Avg on top of that
-   is meaningful, and only one row (Raw Mill LSF) currently has that
-   on-date layer built (see lsf_avg above). */
+/* MTD / YTD averages — a plain arithmetic mean over the days that
+   actually carry a reading, matching forms/formula-registry.js's
+   monthlyAgg:'avg' convention for the facts already promoted to the
+   shared cross-dashboard KPI registry (free_lime, blaine_425r,
+   strength_28d). NOT weighted by production, NOT a mean that counts an
+   empty day as zero.
+
+   Every field below maps to its own data-kpi="<field>_mtd" cell, and the
+   coal block additionally has "_ytd" cells. Painting both suffixes for
+   every field is harmless: a field with no matching element on the page
+   just means querySelectorAll finds nothing to paint. */
 (function () {
-  /* Block 1 has MTD only (no YTD column); Block 2 has both. Painting
-     both suffixes for every field is harmless either way — a field
-     with no matching [data-kpi="..._ytd"] element on the page just
-     means querySelectorAll finds nothing to paint. */
   var QUALITY_AVG_FIELDS = [
-    'blaine_425r', 'blaine_425n',
-    'residue_425r', 'residue_425n',
-    'setting_initial_425r', 'setting_initial_425n',
-    'setting_final_425r', 'setting_final_425n',
-    'strength_3d_425r', 'strength_3d_425n',
-    'strength_28d', 'strength_28d_425n',
-    'free_lime', 'free_lime_425n',
-    'soundness_425r', 'soundness_425n',
-    'coal_residue', 'coal_moisture'
+    'blaine_425r', 'cem_cm1_425r_r45', 'cem_cm1_425r_lce', 'cem_cm1_425r_cs1',
+    'cem_cm1_425r_cs2', 'cem_cm1_425r_cs7', 'strength_28d', 'cem_cm1_425n_blaine',
+    'cem_cm1_425n_r45', 'cem_cm1_425n_lce', 'cem_cm1_425n_cs1', 'cem_cm1_425n_cs2',
+    'cem_cm1_425n_cs7', 'cem_cm1_425n_cs28', 'cem_cm1_325n_blaine', 'cem_cm1_325n_r45',
+    'cem_cm1_325n_lce', 'cem_cm1_325n_cs1', 'cem_cm1_325n_cs2', 'cem_cm1_325n_cs7',
+    'cem_cm1_325n_cs28', 'cem_cm1_spot_blaine', 'cem_cm1_spot_r45', 'cem_cm1_spot_lce',
+    'cem_cm1_spot_cs1', 'cem_cm1_spot_cs2', 'cem_cm1_spot_cs7', 'cem_cm1_spot_cs28',
+    'cem_cm1_opc_blaine', 'cem_cm1_opc_r45', 'cem_cm1_opc_lce', 'cem_cm1_opc_cs1',
+    'cem_cm1_opc_cs2', 'cem_cm1_opc_cs7', 'cem_cm1_opc_cs28', 'cem_cm1_bmill_blaine',
+    'cem_cm1_bmill_r45', 'cem_cm1_bmill_lce', 'cem_cm1_bmill_cs1', 'cem_cm1_bmill_cs2',
+    'cem_cm1_bmill_cs7', 'cem_cm1_bmill_cs28', 'cem_cm2_425r_blaine', 'cem_cm2_425r_r45',
+    'cem_cm2_425r_lce', 'cem_cm2_425r_cs1', 'cem_cm2_425r_cs2', 'cem_cm2_425r_cs7',
+    'cem_cm2_425r_cs28', 'cem_cm2_425n_blaine', 'cem_cm2_425n_r45', 'cem_cm2_425n_lce',
+    'cem_cm2_425n_cs1', 'cem_cm2_425n_cs2', 'cem_cm2_425n_cs7', 'cem_cm2_425n_cs28',
+    'cem_cm2_325n_blaine', 'cem_cm2_325n_r45', 'cem_cm2_325n_lce', 'cem_cm2_325n_cs1',
+    'cem_cm2_325n_cs2', 'cem_cm2_325n_cs7', 'cem_cm2_325n_cs28', 'cem_cm2_opc_blaine',
+    'cem_cm2_opc_r45', 'cem_cm2_opc_lce', 'cem_cm2_opc_cs1', 'cem_cm2_opc_cs2',
+    'cem_cm2_opc_cs7', 'cem_cm2_opc_cs28', 'cem_ld_425r_blaine', 'cem_ld_425r_r45',
+    'cem_ld_425r_lce', 'cem_ld_425r_cs1', 'cem_ld_425r_cs2', 'cem_ld_425r_cs7',
+    'cem_ld_425r_cs28', 'cem_ld_425n_blaine', 'cem_ld_425n_r45', 'cem_ld_425n_lce',
+    'cem_ld_425n_cs1', 'cem_ld_425n_cs2', 'cem_ld_425n_cs7', 'cem_ld_425n_cs28',
+    'cem_ld_325n_blaine', 'cem_ld_325n_r45', 'cem_ld_325n_lce', 'cem_ld_325n_cs1',
+    'cem_ld_325n_cs2', 'cem_ld_325n_cs7', 'cem_ld_325n_cs28', 'cem_ld_opc_blaine',
+    'cem_ld_opc_r45', 'cem_ld_opc_lce', 'cem_ld_opc_cs1', 'cem_ld_opc_cs2',
+    'cem_ld_opc_cs7', 'cem_ld_opc_cs28', 'coal_im', 'coal_vm',
+    'coal_ash', 'coal_gcv_adb', 'coal_gcv_arb', 'coal_ncv_adb',
+    'coal_ncv_arb', 'coal_sulphur', 'coal_residue', 'coal_r212',
+    'coal_moisture', 'lsf_rm', 'sm_rm', 'am_rm',
+    'r90_rm1', 'r212_rm1', 'r90_rm2', 'r212_rm2',
+    'moisture_rm', 'caco3_rm', 'lsf_kf', 'sm_kf',
+    'am_kf', 'r90_kf', 'r212_kf', 'freecao_kf',
+    'ltrwt_ck', 'free_lime', 'lsf_ck', 'sm_ck',
+    'am_ck', 'c3s_ck', 'c2s_ck', 'c3a_ck',
+    'c4af_ck', 'liquid_ck'
   ];
-  function fmtVal(v) { return v.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
+  function fmtVal(v) {
+    /* Blaine and the calorific values are whole numbers in the workbook;
+       everything else is a lab reading to 1-2 decimals. One decimal reads
+       the same either way without inventing precision the sheet lacks. */
+    return v.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  }
   function paint() {
     if (typeof window.reportRollupLiveAvg !== 'function') return;
     QUALITY_AVG_FIELDS.forEach(function (field) {
       ['mtd', 'ytd'].forEach(function (period) {
+        var cells = document.querySelectorAll('[data-kpi="' + field + '_' + period + '"]');
+        if (!cells.length) return;          /* no YTD column on most blocks */
         var avg = window.reportRollupLiveAvg(period, field);
-        document.querySelectorAll('[data-kpi="' + field + '_' + period + '"]').forEach(function (el) {
-          el.textContent = avg === null ? '—' : fmtVal(avg);
+        cells.forEach(function (el) {
+          el.textContent = avg === null ? '\u2014' : fmtVal(avg);
+          /* Block 1's echo rides under its own input instead of sitting in a
+             column with a heading, so it carries the word "MTD" itself — but
+             only once there is a figure for that word to label. Otherwise an
+             empty form reads "MTD \u2014" ninety-eight times. */
+          var wrap = el.parentElement;
+          if (wrap && wrap.classList.contains('cell-mtd')) wrap.classList.toggle('is-blank', avg === null);
         });
       });
     });
@@ -751,35 +824,8 @@ initKpiLive(CHEM_ONDATE_RULES.concat([
   document.addEventListener('change', paint);
   document.addEventListener('nyati:restored', function () { setTimeout(paint, 260); });
   setTimeout(paint, 260);
-  setTimeout(paint, 800);   // retry once more in case the initial history fetch was still in flight
-})();
-</script>
-<script>
-/* Blocks 3-5's MTD Avg = the mean of each day's OWN Day Avg (itself the
-   mean of that day's 6 hourly samples) across days that have at least
-   one sample — NOT a flat mean of every individual hourly reading in the
-   period, which would let a day with more completed samples outweigh a
-   day with fewer. reportRollupLiveCompute() runs chemSampleAvg() once per
-   day (history + the live open day) and averages the non-null results;
-   chemSampleAvg/CHEM_PARAMS are the exact same ones the On Date rules
-   above use, so the two layers can't drift apart. */
-(function () {
-  function fmtVal(v) { return v.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
-  function paint() {
-    if (typeof window.reportRollupLiveCompute !== 'function') return;
-    CHEM_PARAMS.forEach(function (p) {
-      var mtdAvg = window.reportRollupLiveCompute('mtd', function (data) { return chemSampleAvg(p.prefix, data); });
-      document.querySelectorAll('[data-kpi="' + p.avgKpi + '_mtd"]').forEach(function (el) {
-        el.textContent = mtdAvg === null ? '—' : fmtVal(mtdAvg);
-      });
-    });
-  }
-  document.addEventListener('input', paint);
-  document.addEventListener('change', paint);
-  document.addEventListener('nyati:restored', function () { setTimeout(paint, 260); });
-  setTimeout(paint, 260);
-  setTimeout(paint, 800);   // retry once more in case the initial history fetch was still in flight
-})();
+  setTimeout(paint, 800);   /* retry once in case the initial history fetch was still in flight */
+}());
 </script>
 <script>
   /* Limestone % lives one switcher-tab away instead of its own sidebar row

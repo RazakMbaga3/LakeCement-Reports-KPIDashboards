@@ -6,9 +6,13 @@
   POST /api/reports/:formType                  → submit/update a daily form
                                                  (body.status 'draft'|'submitted';
                                                   body.replace to overwrite rather
-                                                  than merge the stored fields)
+                                                  than merge the stored fields;
+                                                  body.autosave for the form's
+                                                  unattended background save)
+  GET  /api/reports/unfinished                 → my drafts + rejected reports, all my forms
   POST /api/reports/:formType/:date/approve    → HOD approves a pending report
   POST /api/reports/:formType/:date/reject     → HOD rejects a pending report
+  GET  /api/reports/:formType/history          → which days have a record (date + status only)
   GET  /api/reports/:formType/:date            → get one day's data
   GET  /api/reports/:formType?from=&to=        → get a date range (for monthly/YTD views)
 
@@ -35,6 +39,7 @@ const { FACTS } = require('../../forms/formula-registry.js');
 const router = express.Router();
 
 const { VALID_FORMS } = require('../config/forms');
+const { ROLE_FORM_ACCESS } = require('../config/formAccess');
 
 const formTypeParams = z.object({ formType: z.enum(VALID_FORMS) });
 const formDateParams = formTypeParams.extend({ date: zDate });
@@ -54,7 +59,13 @@ const submitBody = z.object({
      for callers that own the entire row (importers, the Odoo sync). See
      the merge note on the handler below. */
   replace: z.boolean().default(false),
-});
+  /* An UNATTENDED save: the form's own background autosave, not a person
+     pressing Save Draft. It keeps a half-typed report safe on the server
+     without deciding anything on the author's behalf — see the autosave
+     branch of the handler for exactly what that rules out. */
+  autosave: z.boolean().default(false),
+}).refine(b => !b.autosave || (b.status === 'draft' && !b.replace),
+  'an autosave must be a draft and cannot replace the record');
 
 /* Every fact in forms/formula-registry.js declares exactly which form
    field it reads and is always a numeric measurement (verified: every
@@ -90,11 +101,52 @@ router.post('/:formType',
   async (req, res, next) => {
     try {
       const { formType } = req.validated.params;
-      const { date, shift, data, replace } = req.validated.body;
+      const { date, shift, data, replace, autosave } = req.validated.body;
       const intent = req.validated.body.status;   // 'draft' | 'submitted'
 
       const factError = findFactTypeError(formType, data);
       if (factError) return res.status(400).json({ error: factError });
+
+      /* AUTOSAVE — only ever merges typed values into a report that is
+         still the author's to edit. Three things a background write must
+         never do, all of which an explicit Save Draft may:
+           • touch a report that has been SUBMITTED or APPROVED. A stale tab
+             left open overnight would otherwise flip a signed-off report back
+             to 'draft' and merge yesterday's figures into it. → 409.
+           • change the status of a REJECTED report. The author is mid-fix
+             and the HOD's reason must survive until they resubmit; only a
+             deliberate Save Draft or Submit may move it.
+           • write an audit_log row. The trail records what people decided,
+             not a heartbeat every twenty seconds.
+         A day with no report yet is created as a plain 'draft'. */
+      if (autosave) {
+        /* One atomic statement, so two tabs autosaving the same new day
+           cannot both INSERT, and a submit landing between "look" and
+           "write" cannot be overwritten: the DO UPDATE's WHERE refuses a
+           locked row and RETURNING then yields nothing. `status` and the
+           rejection columns are deliberately absent from the SET. */
+        const result = await db.query(`
+          INSERT INTO daily_reports (form_type, record_date, shift, data, submitted_by, submitted_at, status)
+          VALUES ($1, $2, $3, $4::jsonb, $5, NOW(), 'draft')
+          ON CONFLICT (form_type, record_date, shift)
+          DO UPDATE SET data = daily_reports.data || EXCLUDED.data,
+                        updated_by = $5, updated_at = NOW()
+          WHERE daily_reports.status NOT IN ('pending_approval', 'approved')
+          RETURNING *
+        `, [formType, date, shift, JSON.stringify(data), req.user.id]);
+
+        if (!result.rows[0]) {
+          const cur = await db.query(
+            'SELECT status FROM daily_reports WHERE form_type = $1 AND record_date = $2 AND shift = $3',
+            [formType, date, shift]);
+          const locked = cur.rows[0] ? cur.rows[0].status : 'submitted';
+          return res.status(409).json({
+            error: `This report was already submitted (${locked}) — reload the page to see it.`,
+            status: locked,
+          });
+        }
+        return res.json({ success: true, record: result.rows[0] });
+      }
 
       /* A DRAFT is not a submission. Both used to come through here with no
          way to tell them apart, so the status was derived from the caller's
@@ -235,6 +287,73 @@ router.post('/:formType/:date/reject',
 
       if (!record) return res.status(409).json({ error: 'No pending_approval report found for this form/date/shift.' });
       res.json({ success: true, record });
+    } catch (err) { next(err); }
+  });
+
+// ── GET /api/reports/unfinished ─────────────────────────────
+// The caller's own unfinished work: every draft, and every report an HOD
+// rejected, on any form this role may submit, over the last `days` days —
+// newest first. It is what lets the forms and the sidebar say "you have a
+// draft for 19 Sept" instead of waiting for someone to go looking through
+// Load Previous. Only forms the role can SUBMIT are listed (a reader has
+// nothing to finish), and only dates and statuses leave — never field data.
+// Must stay registered before /:formType, which would take "unfinished" for
+// a form type and 400.
+router.get('/unfinished',
+  requireAuth,
+  validate(z.object({ days: z.coerce.number().int().min(1).max(90).default(14) }), 'query'),
+  async (req, res, next) => {
+    try {
+      const forms = ROLE_FORM_ACCESS[req.user.role] || [];
+      if (!forms.length) return res.json([]);
+
+      const result = await db.query(`
+        SELECT form_type, record_date, status, updated_at, submitted_at, rejection_reason
+        FROM daily_reports
+        WHERE form_type = ANY($1) AND shift = 'day'
+          AND status IN ('draft', 'rejected')
+          AND record_date >= CURRENT_DATE - $2::int
+        ORDER BY record_date DESC, form_type
+        LIMIT 100
+      `, [forms, req.validated.query.days]);
+
+      res.json(result.rows);
+    } catch (err) { next(err); }
+  });
+
+// ── GET /api/reports/:formType/history ──────────────────────
+// Which days have a saved record for this form, newest first: date, status
+// and who/when last touched it — never the field data.
+//
+// This is what "Load Previous" lists. It used to list only what THIS
+// BROWSER had in localStorage, so a draft saved from another PC, a phone, a
+// cleared browser or the other address of the app (http vs https, IP vs
+// domain) read "No drafts saved yet" while sitting on the server the whole
+// time. Must stay registered before /:formType/:date below, which would
+// otherwise take "history" for a malformed date and 400.
+router.get('/:formType/history',
+  requireAuth,
+  validate(formTypeParams, 'params'),
+  validate(z.object({
+    shift: zShift.default('day'),
+    limit: z.coerce.number().int().min(1).max(365).default(120),
+  }), 'query'),
+  async (req, res, next) => {
+    try {
+      const { formType }     = req.validated.params;
+      const { shift, limit } = req.validated.query;
+
+      const result = await db.query(`
+        SELECT r.record_date, r.shift, r.status, r.submitted_at, r.updated_at,
+               r.rejection_reason, u.full_name AS saved_by_name
+        FROM daily_reports r
+        LEFT JOIN users u ON u.id = COALESCE(r.updated_by, r.submitted_by)
+        WHERE r.form_type = $1 AND r.shift = $2
+        ORDER BY r.record_date DESC
+        LIMIT $3
+      `, [formType, shift, limit]);
+
+      res.json(result.rows);
     } catch (err) { next(err); }
   });
 

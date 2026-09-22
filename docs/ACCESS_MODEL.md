@@ -23,7 +23,7 @@
 | Role | L1 HOD | L2 Senior | L3 Officer |
 |---|:--:|:--:|:--:|
 | production, cpp, pm, mining, stores, ei, packing | **Edit own department** | — | — |
-| management, md, finance, hr, logistics, it, sales, purchase | — | — | — |
+| management, md, finance, hr, logistics, it, sales, purchase, quality | — | — | — |
 | admin *(break-glass system account)* | Edit all | Edit all | Edit all |
 
 Two gates, both required: `role` decides **which** department (`KPI_EDIT_DEPTS`), `level` decides **who** within it. See [backend/middleware/kpiAccess.js](../backend/middleware/kpiAccess.js).
@@ -59,6 +59,7 @@ rather than pick one silently.
 |---|---|---|---|
 | `power-cons` | `pm`, `ei` | **`ei`** | E&I owns the kWh/meter readings being signed off; P&M kept submit rights when E&I gained them (2026-09-11). Approver declared 2026-09-13 — see `docs/pm/DECISIONS.md` DEC-003 |
 | `dispatch` | `logistics`, `packing` | **`logistics`** | Packing Plant fills the Dispatch & SO report (2026-09-14) — it's their core daily report. Logistics keeps submit rights and the sign-off it already had; author and approver then sit in different departments, per Separation of Duties. See `docs/pm/DECISIONS.md` DEC-004 |
+| `quality`, `limestone`, `pile-quality` | `production`, `quality` | **`production`** | The lab measures every figure on these three reports, but until 2026-09-22 only Production — who receive those figures — could file them. The new `quality` role (QC Manager + lab officers) gains submit; Production keeps submit and the sign-off it already had. This is the paper trail the plant already runs: the printed sign-off strip on `forms/quality-form.html` reads Lab Analyst → QC Manager → Production Head. See `docs/pm/DECISIONS.md` DEC-005 |
 
 The pending-approval queue (`GET /api/approvals`) is scoped on this column —
 on who *approves*, not on who may submit — so an HOD is never shown a report
@@ -72,6 +73,7 @@ on who *approves*, not on who may submit — so an HOD is never shown a report
 | Purchases dashboard | `purchase`, `management`, `md`, `stores` | Owning department + oversight. `stores` added 2026-09-14: Stores receives the goods against the POs this dashboard lists, so it needs to see what is on order and when it lands — read-only; Purchase still raises every PO |
 | MIS Dashboard (`mis.html`) | `management`, `md`, `admin` | Aggregates HR, assets, compliance and stores across every department |
 | KPI dashboard *view* | Per `PERMISSIONS[role].kpi.depts` | Management and finance see all; departments see their own plus summary |
+| Production's KPI section | `quality` (view only) | Added 2026-09-22 with the QC Manager role. The lab's readings roll up into Production's KPIs, so QC can see what its own figures become — but `KPI_EDIT_DEPTS.quality` is `[]`: the lab owns no department section of its own, and inventing one would create a KPI department with no targets, no history and nobody accountable for it |
 
 Two exceptions were **removed** on 2026-09-03:
 

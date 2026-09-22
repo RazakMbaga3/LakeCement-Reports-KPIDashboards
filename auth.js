@@ -246,6 +246,33 @@ const PERMISSIONS = {
     canManageUsers:false,
     canExport:     false,
   },
+
+  /* Quality Control — the QC Manager and the lab officers under them,
+     added 2026-09-22. The three lab reports (Quality/Lab, Limestone %,
+     Pile Quality) are their own measurements; until now the only people
+     who could file them were Production, who receive those figures rather
+     than produce them. See FORM_ACCESS and FORM_APPROVAL_OWNER in
+     forms/access-registry.js — Production keeps both the submit right and
+     the sign-off, so nobody loses anything and author and approver stay in
+     different departments.
+
+     editDepts is empty on purpose: the lab feeds Production's KPIs and
+     owns no department section of its own on index.html. `depts` includes
+     'production' as VIEW so the QC Manager can see what their own readings
+     roll up into. canExport is true — lab results are routinely shared
+     with customers and TBS. */
+  quality: {
+    mis_tabs: [],
+    hr:         null,
+    assets:     null,
+    compliance: null,
+    store:      null,
+    kpi:        { depts:['summary','production'], editDepts:[], daily:true },
+    commercial: { sales:null, purchase:null },
+    canViewAudit:  false,
+    canManageUsers:false,
+    canExport:     true,
+  },
 };
 
 /* Roles that may open the MIS Dashboard (mis.html — the sidebar's
@@ -964,6 +991,14 @@ const _DAILY_ACCESS = {
                 nav:  ['daily-report.html','power-form.html'] },
   packing:    { edit: [],
                 nav:  ['daily-report.html','dispatch-form.html'] },
+  /* The three lab reports plus Daily Reports itself, so the QC Manager
+     lands somewhere with their own work on it rather than an empty hub.
+     `edit` stays empty: it keys the 3 HUB pages, and none of these three
+     is one — the standalone forms/*.html pages are gated by form type via
+     _FORM_TYPE_ACCESS below, which is where `quality` gets its edit
+     rights. */
+  quality:    { edit: [],
+                nav:  ['daily-report.html','quality-form.html','limestone-form.html','pile-quality-form.html'] },
 };
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -1020,6 +1055,7 @@ const _DAILY_NAV_ITEMS = [
 ══════════════════════════════════════════════════════════════════════ */
 const _FORM_TYPE_ACCESS = {
   production: ['production','quality','limestone','pile-quality','stoppage'],   /* Stoppage transferred from P&M 2026-09-22 — Production now fills it (and, as sole submitter, its own HOD approves it) */
+  quality:    ['quality','limestone','pile-quality'],   /* QC Manager, 2026-09-22 — the lab files its own three reports; Production keeps them too and signs them off, see FORM_APPROVAL_OWNER */
   pm:         ['power-cons'],   /* Stoppage moved to Production 2026-09-22 — P&M keeps read/view access to stoppage-form.html and reliability.html but no submit right. Power Cons. still shared with E&I below */
   logistics:  ['dispatch'],   /* Dispatch & SO submitted by both Logistics and Packing — Logistics approves, see FORM_APPROVAL_OWNER */
   cpp:        ['cpp'],   // 'power-plant' retired 2026-08-31 — see backend/config/forms.js

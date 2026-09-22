@@ -1,16 +1,21 @@
 /*
-  forms/quality-form.html — Blocks 3-5 (Raw Mill / Kiln Feed / Clinker
-  4-hour chemistry). Each parameter is 6 hourly samples that need
-  averaging into a Day Avg before an MTD Avg on top of that means
-  anything. Before this change none of these fields (beyond Raw Mill
-  LSF's 6 samples, which fed a dead `lsf_avg` kpi-live rule painted
-  nowhere) were captured, and every Day Avg / MTD Avg cell was static.
+  forms/quality-form.html — Blocks 3-5 (Raw Mill / Kiln Feed / Clinker).
 
-  The key correctness property this suite exists to catch: MTD Avg must
-  be the mean of each day's OWN Day Avg (itself a mean of that day's
-  samples), not a flat mean of every individual hourly reading in the
-  period — a day with more completed samples must not outweigh a day
-  with fewer.
+  These three blocks held six 4-hour sample columns per parameter until
+  2026-09-22 and now hold ONE day-average figure each, at the QC
+  manager's request. The plant's QC DAILY REPORT workbook still records
+  four-hourly; averaging those six rows moved into forms/excel-import.js,
+  which is where the four-hourly data actually is. So the property this
+  suite used to guard — "MTD must average each day's own Day Avg, not
+  every individual hourly reading" — is now structurally impossible to
+  get wrong on this page, because a day only ever has one reading.
+
+  What remains worth guarding, and what this suite now covers:
+
+    • the day-average fields are real, editable, persisted inputs;
+    • MTD Avg is a plain mean of the days that HAVE a reading — not a
+      mean that counts an empty day as zero, and not a sum;
+    • it updates live from a typed, unsaved value.
 */
 const { test, expect } = require('@playwright/test');
 const { loginAs, collectErrors } = require('../fixtures/auth');
@@ -43,38 +48,60 @@ async function openForm(page) {
 test.beforeEach(cleanup);
 test.afterAll(cleanup);
 
-test('Raw Mill LSF Day Avg and MTD Avg update live from hourly samples, unsaved', async ({ page }) => {
+test('Raw Mill LSF MTD Avg is a live mean of the days that have a reading, unsaved', async ({ page }) => {
   const errors = collectErrors(page);
-  /* Seed day: only 2 of 6 samples entered (90, 90) -> Day Avg 90.
-     Live day (typed, unsaved): all 6 samples = 99 -> Day Avg 99.
-     Averaging every individual sample (2 + 6 = 8 values: 90,90,99x6)
-     gives 96.75 — the correct day-weighted MTD figure is (90+99)/2 = 94.5. */
-  await seedMtdHistory({ lsf_rm_h1: 90, lsf_rm_h2: 90 });
+  /* Seed day: 90. Live day (typed, unsaved): 99. A sum would read 189;
+     counting the month's other empty days as zero would drag it far
+     below 90; the correct figure is (90 + 99) / 2 = 94.5. */
+  await seedMtdHistory({ lsf_rm: 90 });
   await openForm(page);
 
-  for (let i = 1; i <= 6; i++) {
-    await page.fill(`input[data-field="lsf_rm_h${i}"]`, '99');
-  }
-  await page.locator('input[data-field="lsf_rm_h6"]').blur();
+  await expect(page.locator('[data-kpi="lsf_rm_mtd"]').first()).toHaveText('90.0');
+
+  await page.fill('input[data-field="lsf_rm"]', '99');
+  await page.locator('input[data-field="lsf_rm"]').blur();
   await page.waitForTimeout(300);
 
   const rows = await pool.query(
     "SELECT 1 FROM daily_reports WHERE form_type = 'quality' AND record_date = $1", [D]);
   expect(rows.rowCount, 'nothing should be persisted yet').toBe(0);
 
-  await expect(page.locator('[data-kpi="lsf_rm_avg"]').first()).toHaveText('99.0');
-  await expect(page.locator('[data-kpi="lsf_rm_avg_mtd"]').first()).toHaveText('94.5');
+  await expect(page.locator('[data-kpi="lsf_rm_mtd"]').first()).toHaveText('94.5');
 
   expect(errors(), 'uncaught errors while typing').toEqual([]);
 });
 
-test('Clinker C3S and Kiln Feed Free CaO hourly samples are real, editable inputs', async ({ page }) => {
+test('every Raw Mill / Kiln Feed / Clinker day-average field is a real, editable input', async ({ page }) => {
   await openForm(page);
   const fields = [
-    'c3s_ck_h1', 'c3s_ck_h6', 'freelime_ck_h1', 'lsf_ck_h1',
-    'lsf_kf_h1', 'freecao_kf_h1', 'sm_rm_h1', 'am_rm_h1', 'r90_rm_h1', 'moisture_rm_h1', 'caco3_rm_h1',
+    /* Raw Mill — moduli, plus fineness split by mill (RM-1 / RM-2), which
+       the workbook reports separately and the form did not carry at all
+       before 2026-09-22. */
+    'lsf_rm', 'sm_rm', 'am_rm', 'r90_rm1', 'r212_rm1', 'r90_rm2', 'r212_rm2',
+    'moisture_rm', 'caco3_rm',
+    /* Kiln Feed */
+    'lsf_kf', 'sm_kf', 'am_kf', 'r90_kf', 'r212_kf', 'freecao_kf',
+    /* Clinker — litre weight, F.CaO (the `free_lime` registry fact, which
+       lives here and nowhere else now), moduli and all five Bogue phases. */
+    'ltrwt_ck', 'free_lime', 'lsf_ck', 'sm_ck', 'am_ck',
+    'c3s_ck', 'c2s_ck', 'c3a_ck', 'c4af_ck', 'liquid_ck',
   ];
   for (const field of fields) {
     await expect(page.locator(`input[data-field="${field}"]`), `${field} must be editable`).toBeEditable();
+  }
+});
+
+/* The four-hourly fields are gone, not renamed. A page that still shipped
+   any of them would mean the rebuild was applied on top of the old table
+   instead of replacing it — which would leave two inputs writing the same
+   measurement and only one of them feeding the KPIs. */
+test('the six 4-hour sample inputs no longer exist anywhere on the page', async ({ page }) => {
+  await openForm(page);
+  for (const prefix of ['lsf_rm', 'sm_rm', 'am_rm', 'r90_rm', 'lsf_kf', 'freecao_kf',
+                        'c3s_ck', 'freelime_ck', 'lsf_ck']) {
+    for (let i = 1; i <= 6; i++) {
+      await expect(page.locator(`input[data-field="${prefix}_h${i}"]`),
+        `${prefix}_h${i} should have been replaced by a day average`).toHaveCount(0);
+    }
   }
 });

@@ -36,8 +36,19 @@
   /* ── FACTS ─────────────────────────────────────────────────────── */
   var FACTS = {
     // quality form
+    /* free_lime is the CLINKER free lime (F.CaO), the day average of the
+       QC workbook's six four-hourly clinker readings. It sat in the
+       quality form's finished-cement block until 2026-09-22, where the
+       workbook has no such column — the importer was filling that cement
+       row from the clinker average all along. Same measurement, correct
+       section now; no change to the fact or to any filed row.
+
+       blaine_425r is in m²/kg — the unit the QC workbook and the TBS
+       requirement it prints ("380 to 410") are both written in. It was
+       declared as cm²/g here until 2026-09-22 while the only figure ever
+       filed under it came from a mockup, not a lab sheet. */
     free_lime:    { source: 'manual', form: 'quality', field: 'free_lime',    unit: '%' },
-    blaine_425r:  { source: 'manual', form: 'quality', field: 'blaine_425r',  unit: 'cm²/g' },
+    blaine_425r:  { source: 'manual', form: 'quality', field: 'blaine_425r',  unit: 'm²/kg' },
     strength_28d: { source: 'manual', form: 'quality', field: 'strength_28d', unit: 'MPa' },
 
     // dispatch form — three independently loaded channels (Regular Bags, Bulker,
@@ -408,9 +419,9 @@
     },
 
     'blaine-425r': {
-      label: 'Blaine 425R', unit: 'cm²/g', dp: 0, version: 1,
-      target: 3500, signage: '>=', targetLabel: 'Min 3,500',
-      notes: 'Daily Blaine fineness of the 42.5R grade as measured by the quality lab.',
+      label: 'Blaine 425R', unit: 'm²/kg', dp: 0, version: 2,
+      target: 380, signage: '>=', targetLabel: 'TBS 380–410',
+      notes: 'Daily Blaine fineness of the 42.5R grade ground on Cement Mill-1, as measured by the quality lab. Reported in m²/kg, the unit the QC Daily Report and the TBS requirement it prints are both written in — v1 declared cm²/g and a 3,500 floor, which is the same specification expressed ten times larger. The TBS band is 380–410; the signage is a floor because a Blaine above the band is a grinding-cost question, not a product-conformance one.',
       inputs: ['blaine_425r'],
       daily: function (f) { return pos(f.blaine_425r); },
       monthlyAgg: 'avg',

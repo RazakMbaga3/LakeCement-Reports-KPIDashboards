@@ -141,7 +141,7 @@
     var seen = {};
     document.querySelectorAll('[data-field]').forEach(function (inp) {
       var key = inp.dataset.field;
-      if (!key || key === 'date' || seen[key]) return;
+      if (!key || key === 'date' || key.charAt(0) === '_' || seen[key]) return;   // '_' = internal (auto-named cells)
       seen[key] = true;
       var val = (data[key] !== undefined && data[key] !== '') ? data[key] : inp.value;
       if (val !== '') lines.push(key.replace(/_/g, ' ') + ': ' + val);
@@ -202,7 +202,7 @@
       '  <div class="exp-divider"></div>' +
       '  <div class="exp-mail-row">' +
       '    <i data-lucide="mail" class="exp-item-icon"></i>' +
-      '    <input type="email" class="exp-email-in" id="exp-email-in"' +
+      '    <input type="email" class="exp-email-in" id="exp-email-in" data-nopersist' +
       '      placeholder="recipient@example.com" autocomplete="email" />' +
       '    <button class="btn exp-send" id="exp-send">Send</button>' +
       '  </div>' +

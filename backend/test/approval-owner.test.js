@@ -51,7 +51,14 @@ test('an undeclared overlap still throws — the guard was not just removed', ()
   cfg.FORM_APPROVAL_OWNER = {};
   delete require.cache[approvalPath];
   try {
-    assert.throws(() => require(approvalPath), /power-cons/,
+    /* Matched on the guard's own instruction, not on a form-type name.
+       The message names whichever shared type the iteration reaches
+       first, which is an artefact of key order in FORM_ACCESS: it was
+       'power-cons' until the QC Manager role made 'quality' shared too
+       (2026-09-22), and would move again the next time a form type is
+       shared. What this test is actually about is that the guard still
+       fires and still tells the reader what to do about it. */
+    assert.throws(() => require(approvalPath), /add it to FORM_APPROVAL_OWNER/,
       'approval.js must still refuse to load when a shared form type has no declared approver.');
   } finally {
     cfg.FORM_APPROVAL_OWNER = declared;
@@ -78,4 +85,22 @@ test("dispatch is approved by Logistics' HOD, and Packing may submit it", () => 
 
   assert.equal(OWNING_ROLE_BY_FORM_TYPE['dispatch'], 'logistics');
   assert.deepEqual(SUBMITTING_ROLES_BY_FORM_TYPE['dispatch'].sort(), ['logistics', 'packing']);
+});
+
+/* 2026-09-22: the QC Manager role gained submit rights on the three lab
+   reports — Quality/Lab, Limestone % and Pile Quality — which the lab
+   measures and which only Production could file until now. Production
+   keeps submit AND sign-off on all three, the same shape as the Packing /
+   dispatch grant above: nobody loses a right they had, and author and
+   approver stay in different departments. */
+test("the three lab reports are approved by Production's HOD, and QC may submit them", () => {
+  const { OWNING_ROLE_BY_FORM_TYPE, SUBMITTING_ROLES_BY_FORM_TYPE } =
+    require(path.join('..', 'middleware', 'approval.js'));
+
+  for (const formType of ['quality', 'limestone', 'pile-quality']) {
+    assert.equal(OWNING_ROLE_BY_FORM_TYPE[formType], 'production',
+      `${formType} must still be signed off by Production's HOD`);
+    assert.deepEqual(SUBMITTING_ROLES_BY_FORM_TYPE[formType].sort(), ['production', 'quality'],
+      `${formType} must be submittable by both Production and QC`);
+  }
 });

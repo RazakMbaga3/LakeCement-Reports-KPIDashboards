@@ -48,7 +48,7 @@
     <div class="leg"><div class="ld ld-f"></div>Formula</div>
   </div>
   <div class="btn-grp">
-    <button class="btn btn-out"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
+    <button class="btn btn-out" data-persist="history"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
     <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
     <button class="btn btn-sub"><i data-lucide="check-circle" class="btn-icon"></i> Submit Report</button>
   </div>
@@ -383,7 +383,7 @@
         Date: <strong>21 April 2026</strong>
       </span>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-out"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
+        <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
         <button class="btn btn-sub"><i data-lucide="lock" class="btn-icon"></i> Submit &amp; Lock</button>
       </div>
     </div>
@@ -452,20 +452,21 @@
     event.currentTarget.classList.add('active');
   }
 </script>
-<script src="api-client.js"></script>
-<script src="offline-queue.js"></script>
+<script src="api-client.js?v=4"></script>
+<script src="offline-queue.js?v=2"></script>
 <script src="client-errors.js"></script>
-<script src="form-persist.js"></script>
-<script src="stoppage-reasons.js?v=1"></script>
+<script src="form-persist.js?v=4"></script>
+<script src="stoppage-reasons.js?v=2"></script>
 <script>
   /* Render the reason catalogue BEFORE form-persist starts: its restore
      looks up fields by data-field, so the stopr_<id> boxes have to exist
      in the DOM by then or a saved day comes back empty. */
   initStoppageReasons().finally(() => initFormPersist('stoppage'));
 </script>
-<script src="nav-status.js"></script>
+<script src="excel-import.js?v=3"></script>
+<script src="nav-status.js?v=2"></script>
 <script src="collapsible.js"></script>
-<script src="excel-export.js"></script>
+<script src="excel-export.js?v=2"></script>
 <script src="kpi-live.js"></script>
 <script>
 var _SECS = ['crusher','rm','cm_coal','kiln','cm1','cm2','packing'];

@@ -46,6 +46,11 @@ const ROLES = [
   { role: 'ei',         view: ['summary', 'ei'],                              edit: ['ei'] },
   { role: 'packing',    view: ['summary', 'packing'],                         edit: ['packing'] },
   { role: 'logistics',  view: ['summary', 'packing', 'minesworkshop'],        edit: [] },
+  /* QC Manager and the lab officers under them, added 2026-09-22. They
+     file the three lab reports but edit no KPI department: the lab's
+     readings roll up into Production's KPIs, which is why 'production' is
+     on the VIEW side and nothing is on the edit side. */
+  { role: 'quality',    view: ['summary', 'production'],                      edit: [] },
 ];
 
 /* `level` is a second, orthogonal axis to `role` (migration 009): it decides
@@ -54,12 +59,13 @@ const ROLES = [
    type — e2e_production and e2e_production_officer are the same role at the
    two levels that matter.
 
-   'ei' and 'packing' submit a form type they do not approve (power-cons is
-   E&I's to fill and sign; dispatch is Packing's to fill and Logistics' to
-   sign — see FORM_APPROVAL_OWNER). Their officer twins are what let the
-   approvals tests put a report in one department's queue and assert it is
-   offered only to the HOD who may actually sign it. */
-const FORM_OWNING_ROLES = ['production', 'pm', 'logistics', 'cpp', 'mining', 'stores', 'sales', 'ei', 'packing'];
+   'ei', 'packing' and 'quality' submit a form type they do not approve
+   (power-cons is E&I's to fill and sign; dispatch is Packing's to fill and
+   Logistics' to sign; the three lab reports are QC's to fill and
+   Production's to sign — see FORM_APPROVAL_OWNER). Their officer twins are
+   what let the approvals tests put a report in one department's queue and
+   assert it is offered only to the HOD who may actually sign it. */
+const FORM_OWNING_ROLES = ['production', 'pm', 'logistics', 'cpp', 'mining', 'stores', 'sales', 'ei', 'packing', 'quality'];
 
 const username = (role, level) =>
   'e2e_' + role + (level && level !== 'hod' ? '_' + level : '');

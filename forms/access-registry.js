@@ -31,6 +31,7 @@
 
   var FORM_ACCESS = {
     production: ['production', 'quality', 'limestone', 'pile-quality', 'stoppage'],   // Stoppage transferred from P&M 2026-09-22 — Production now fills AND (via approval.js's single-submitter rule) its own HOD approves it
+    quality:    ['quality', 'limestone', 'pile-quality'],   // QC Manager — added 2026-09-22, see the note under FORM_APPROVAL_OWNER. Production keeps all three and still approves them.
     pm:         ['power-cons'],   // Stoppage moved to Production 2026-09-22 — P&M keeps read-only access to stoppage-form.html/reliability.html but no submit right, see forms/stoppage-form.html's view-only mode. Power Cons. still submitted by both P&M and E&I — E&I approves, see FORM_APPROVAL_OWNER
     logistics:  ['dispatch'],   // Dispatch & SO submitted by both Logistics and Packing — Logistics approves, see FORM_APPROVAL_OWNER
     cpp:        ['cpp'],   // 'power-plant' retired 2026-08-31 — see config/forms.js
@@ -65,6 +66,23 @@
   var FORM_APPROVAL_OWNER = {
     'power-cons': 'ei',
     'dispatch':   'logistics',
+    /* The three lab reports, 2026-09-22. `quality` (the QC Manager and the
+       lab officers under them) was added as a submitter because the QC
+       Daily Report is their own sheet — they measure every figure on it —
+       and until now the only people who could file it were Production,
+       who receive those figures rather than produce them.
+
+       Production keeps the submit right and keeps the sign-off. That is
+       deliberate on two counts. Nobody loses a right they already had,
+       which is the same standard applied when Packing was added to
+       dispatch. And it puts author and approver in different departments,
+       which is the Separation-of-Duties rule stated below — the printed
+       sign-off strip on forms/quality-form.html already reads Lab Analyst
+       → QC Manager → Production Head, so this is the paper trail the
+       plant already runs, expressed in the access model. */
+    'quality':      'production',
+    'limestone':    'production',
+    'pile-quality': 'production',
   };
 
   /* Which departments a role may WRITE monthly KPI values for.
@@ -92,6 +110,11 @@
     production: ['production'],
     ei:         ['ei'],
     packing:    ['packing'],
+    /* `quality` edits no KPI department. The lab reports figures into
+       Production's KPIs; it does not own a department section of its own
+       on index.html, and inventing one would create a KPI department with
+       no targets, no history and nobody accountable for it. */
+    quality:    [],
     md: [], hr: [], finance: [], it: [], logistics: [], sales: [], purchase: [],
   };
 
