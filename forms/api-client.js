@@ -265,13 +265,23 @@
   /* ── Purchase dashboard (backend/routes/purchases.js) ───────────── */
 
   /* GET /api/purchases/dashboard?year=&month= */
-  async function getPurchasesDashboard(year, month) {
+  /* Takes the resolved period as an object — { mode, year, month,
+     quarter, from, to } — since 2026-09-22, when the dashboard gained
+     quarter / year-to-date / custom-range filters. The old positional
+     (year, month) call is still accepted so any other caller keeps
+     working; backend/services/purchases.js resolvePeriod() defaults every
+     omitted part, so an empty object is a valid "current month". */
+  async function getPurchasesDashboard(period, monthArg) {
+    const spec = (period && typeof period === 'object')
+      ? period
+      : { year: period, month: monthArg };
     const params = new URLSearchParams();
-    if (year)  params.set('year', year);
-    if (month) params.set('month', month);
+    ['mode', 'year', 'month', 'quarter', 'from', 'to'].forEach(k => {
+      if (spec[k] !== undefined && spec[k] !== null && spec[k] !== '') params.set(k, spec[k]);
+    });
     const qs = params.toString();
     const res = await fetch(BASE + '/purchases/dashboard' + (qs ? '?' + qs : ''), { headers: _headers() });
-    if (!res.ok) throw _httpError('getPurchasesDashboard', year + '-' + month, res);
+    if (!res.ok) throw _httpError('getPurchasesDashboard', qs || 'current month', res);
     return res.json();
   }
 

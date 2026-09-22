@@ -57,6 +57,111 @@ function _monthRange(year, monthIndex) {
   return [`${year}-${m}-01`, `${year}-${m}-${String(last).padStart(2, '0')}`];
 }
 
+/* ── Arbitrary date ranges ─────────────────────────────────────────────
+   Added 2026-09-22 for the quarter / year-to-date / custom-range filters.
+
+   The endpoint has no pagination and truncates large ranges (defect 1 in
+   odooDashboardClient.js), so a range longer than a month is fetched one
+   CALENDAR month at a time and merged here. Whole months are requested
+   even when the range starts or ends mid-month, for two reasons: the
+   client caches a closed month for 12 h and only identical from/to hit
+   that cache, and a quarter then costs three cached calls rather than one
+   uncacheable bespoke one. The records are filtered back down to the
+   requested range afterwards, so the extra days never reach a caller. */
+const MAX_SLICES = 36; // 3 years — a guard against a runaway custom range
+
+function _monthSlices(from, to) {
+  const slices = [];
+  let year = Number(from.slice(0, 4));
+  let month = Number(from.slice(5, 7));
+  while (slices.length < MAX_SLICES) {
+    const mm = String(month).padStart(2, '0');
+    const last = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    const sliceTo = `${year}-${mm}-${String(last).padStart(2, '0')}`;
+    slices.push([`${year}-${mm}-01`, sliceTo]);
+    if (sliceTo >= to) break;
+    month++;
+    if (month > 12) { month = 1; year++; }
+  }
+  return slices;
+}
+
+/* One merged bundle for [from..to]. Never throws; returns the same
+   {ok:false,status,message} shape as the client.
+
+   `partial_months` names slices that failed while others succeeded. A
+   caller must surface that rather than present a short total as complete
+   — the same rule fetchPoValueTrend already follows by rendering a failed
+   month as a gap instead of a zero. */
+async function fetchPurchaseRange(from, to) {
+  if (!client.isConfigured()) {
+    return { ok: false, status: 'not_configured', message: 'The Odoo dashboard API is not configured on this server yet.' };
+  }
+
+  const slices = _monthSlices(from, to);
+  const bundles = new Array(slices.length).fill(null);
+  const queue = slices.map((sl, i) => ({ i, from: sl[0], to: sl[1] }));
+  const CONCURRENCY = 3;
+
+  async function worker() {
+    for (;;) {
+      const job = queue.shift();
+      if (!job) return;
+      bundles[job.i] = await client.fetchPurchaseBundle(job.from, job.to);
+    }
+  }
+  await Promise.all(Array.from({ length: CONCURRENCY }, worker));
+
+  const okBundles = bundles.filter(b => b && b.ok);
+  if (!okBundles.length) {
+    // Every slice failed — pass the first real reason through unchanged.
+    const firstBad = bundles.find(b => b && !b.ok);
+    return firstBad || { ok: false, status: 'unreachable', message: `Odoo returned nothing for ${from}..${to}.` };
+  }
+
+  const partial_months = slices
+    .map((sl, i) => (bundles[i] && bundles[i].ok ? null : sl[0].slice(0, 7)))
+    .filter(Boolean);
+
+  /* Orders and their lines are disjoint across calendar months, so they
+     concatenate. `products` and `product_categories` are NOT — the server
+     re-sends (an incomplete slice of) them per range, defect 4 — so they
+     are deduped by id, which as a side effect gives a range wider coverage
+     of the catalogue than any single month has. */
+  const orders = [];
+  const lines = [];
+  const productById = new Map();
+  const categoryById = new Map();
+  for (const b of okBundles) {
+    for (const o of b.data.purchase_orders || []) orders.push(o);
+    for (const l of b.data.purchase_order_lines || []) lines.push(l);
+    for (const pr of b.data.products || []) if (!productById.has(pr.product_id)) productById.set(pr.product_id, pr);
+    for (const c of b.data.product_categories || []) if (!categoryById.has(c.category_id)) categoryById.set(c.category_id, c);
+  }
+
+  /* Whole months were fetched, so trim back to what was asked for. An
+     order with no order_date is kept: dropping it would under-report, and
+     it is inside one of the fetched months by construction. */
+  const inRange = orders.filter(o => {
+    const d = (o.order_date || '').slice(0, 10);
+    return !d || (d >= from && d <= to);
+  });
+  const keptIds = new Set(inRange.map(o => o.purchase_order_id));
+
+  return {
+    ok: true,
+    data: {
+      purchase_orders: inRange,
+      purchase_order_lines: lines.filter(l => keptIds.has(l.purchase_order_id)),
+      products: Array.from(productById.values()),
+      product_categories: Array.from(categoryById.values()),
+    },
+    partial_months,
+    as_of: new Date().toISOString(),
+    source: 'odoo:purchase_dashboard_report',
+  };
+}
+
 /* PO value by month for a year.
 
    The endpoint has no pagination and truncates on large ranges, so a
@@ -110,48 +215,37 @@ async function fetchPoValueTrend(year) {
   return { ok: true, value, as_of: new Date().toISOString(), source: 'odoo:purchase_dashboard_report' };
 }
 
-/* PO list for a period — one call, straight mapping. */
-async function fetchPoList(from, to) {
-  const bundle = await client.fetchPurchaseBundle(from, to);
-  if (!bundle.ok) return _fail(bundle);
+/* Open PR / Open PO by category (Service · Local · Import · Raw Material),
+   each reported on four measures (2026-09-22, asked for by the business):
 
-  const orders = (bundle.data.purchase_orders || []).map(o => ({
-    name: o.purchase_order,
-    vendor: o.vendor,
-    date_order: o.order_date,
-    amount_total: o.total_amount,
-    currency: o.currency,
-    state: o.status,
-    approval_status: o.approval_status,
-    purchase_type: o.purchase_type,
-    po_for: o.po_for,
-    incoming_status: o.incoming_status,
-  }));
+     No. of PR / PO   distinct documents with something still open
+     No. of items     open order LINES — one PO of 12 materials is 12 items
+     Quantity         sum of the still-pending quantity
+     Value (TZS)      value of the pending quantity only, not the whole PO
 
-  return {
-    ok: true,
-    value: {
-      count: orders.length,
-      total_value_tzs: Math.round(orders.reduce((s, o) => s + (o.amount_total || 0), 0)),
-      orders: orders.slice(0, 200), // the page renders a table, not the whole period
-      truncated: orders.length > 200,
-    },
-    as_of: bundle.as_of,
-    source: bundle.source,
-  };
-}
+   Quantity is deliberately NOT totalled across categories anywhere: the
+   lines mix tonnes, litres, bags and pieces, so a combined figure would be
+   a number with no unit. The page says so next to the row.
 
-/* Open PR / Open PO by category (Service · Local · Import · Raw Material).
+   Definitions confirmed by the business:
+     Open PR — requisition approved, PO not yet created.
+     Open PO — PO approved, GRN not yet made.
 
-   Open PO is now real for every column INCLUDING Service: a line is open
-   when pending_quantity > 0, which the endpoint computes for goods and
-   service lines alike. The columns are deliberately NOT mutually
-   exclusive — a Raw Material PO is also Local or Import — so these are
-   four independent filters over the same orders, not a partition.
+   Open PO is measured here as lines with pending_quantity > 0, which is
+   "ordered and not yet fully received". That is the closest the current
+   endpoint allows and it is NOT the same as the definition above: it also
+   counts partially-received POs, and it cannot see whether the approval
+   step was actually completed. Closing that gap needs `approval_status`
+   and the GRN/receipt fields — see docs/ODOO_PURCHASE_API_REQUIREMENTS.md.
 
-   Open PR stays not_mapped: the endpoint carries no requisition data. */
+   The four columns are deliberately NOT mutually exclusive — a Raw
+   Material PO is also Local or Import — so these are four independent
+   filters over the same lines, not a partition.
+
+   Open PR stays not_mapped on every measure: the endpoint carries no
+   requisition data at all. */
 async function fetchCategoryGrid(from, to) {
-  const bundle = await client.fetchPurchaseBundle(from, to);
+  const bundle = await fetchPurchaseRange(from, to);
   if (!bundle.ok) return _fail(bundle);
 
   const orders = bundle.data.purchase_orders || [];
@@ -169,37 +263,42 @@ async function fetchCategoryGrid(from, to) {
 
   const orderById = new Map(orders.map(o => [o.purchase_order_id, o]));
 
-  /* An order is "open" for a column when it has at least one still-pending
-     line matching that column; its contribution is the value of those
-     pending lines only, not the whole PO. */
-  const openByOrder = new Map();
+  /* Line-level, not order-level. The previous version counted a whole
+     order into the Raw Material column if any one of its lines was a raw
+     material, and then added that order's entire open value. Measuring per
+     line keeps each column's value to the lines that actually belong to
+     it. Order-level columns (local / import / service) are unaffected —
+     their predicate reads the parent order either way. */
+  const openLines = [];
   for (const l of lines) {
     if (!(l.pending_quantity > 0)) continue;
-    const o = orderById.get(l.purchase_order_id);
-    if (!o) continue;
-    if (!openByOrder.has(o.purchase_order_id)) {
-      openByOrder.set(o.purchase_order_id, { order: o, value: 0, rawMaterial: false });
-    }
-    const entry = openByOrder.get(o.purchase_order_id);
+    const order = orderById.get(l.purchase_order_id);
+    if (!order) continue;
     const qty = l.quantity || 0;
     const unitValue = qty > 0 ? (l.line_amount || 0) / qty : 0;
-    entry.value += unitValue * l.pending_quantity;
-    if (rawMaterialProductIds.has(l.product_id)) entry.rawMaterial = true;
+    openLines.push({
+      order,
+      pending: l.pending_quantity,
+      value: unitValue * l.pending_quantity,
+      rawMaterial: rawMaterialProductIds.has(l.product_id),
+    });
   }
 
-  const open = Array.from(openByOrder.values());
   const cell = (predicate) => {
-    const matched = open.filter(predicate);
+    const matched = openLines.filter(predicate);
     return {
       ok: true,
-      count: matched.length,
+      documents: new Set(matched.map(e => e.order.purchase_order_id)).size,
+      items: matched.length,
+      quantity: Math.round(matched.reduce((s, e) => s + e.pending, 0) * 100) / 100,
       value_tzs: Math.round(matched.reduce((s, e) => s + e.value, 0)),
     };
   };
 
   const prPending = _notMapped(
     'Purchase Requisition data is not included in the Odoo dashboard endpoint — ' +
-    'no PR number or requisition record is returned. Requested from the Odoo team.');
+    'no PR number, requisition record, line count or quantity is returned. ' +
+    'Requested from the Odoo team — see docs/ODOO_PURCHASE_API_REQUIREMENTS.md.');
 
   return {
     ok: true,
@@ -209,9 +308,10 @@ async function fetchCategoryGrid(from, to) {
       import:       { open_pr: prPending, open_po: cell(e => e.order.purchase_type === 'import') },
       raw_material: { open_pr: prPending, open_po: cell(e => e.rawMaterial) },
     },
+    partial_months: bundle.partial_months,
     as_of: bundle.as_of,
     source: bundle.source,
   };
 }
 
-module.exports = { fetchPoValueTrend, fetchPoList, fetchCategoryGrid };
+module.exports = { fetchPoValueTrend, fetchCategoryGrid, fetchPurchaseRange, _monthSlices };

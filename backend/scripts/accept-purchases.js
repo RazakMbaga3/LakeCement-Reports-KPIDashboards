@@ -19,8 +19,10 @@
     2. a non-commercial role (production) is rejected (403) — reading this
        data used to be open to ANY authenticated role with no server-side
        check at all; this is the regression test for that gap
-    3. po_value_trend / po_list report ok:false status:not_configured
-       (never a fabricated number) when ODOO_URL is unset
+    3. po_value_trend reports ok:false status:not_configured (never a
+       fabricated number) when ODOO_URL is unset. The PO List section and
+       its `po_list` payload key were removed 2026-09-22 — the same list is
+       read in Odoo itself — so its absence is asserted instead.
     4. category_grid behaves like the other Odoo metrics — not_configured
        when ODOO_URL is unset, never a fabricated number. (It used to be a
        permanent unconditional not_mapped stub; since the live-Odoo field
@@ -28,8 +30,11 @@
        cells carry their own per-cell not_mapped, so the old "permanent
        stub" assertion no longer describes it — see purchasesOdoo.js's
        fetchCategoryGrid doc comment.)
-    5. sources.{po_value_trend,po_list} propagate the real status string,
-       and sources has no category_grid key (matches services/purchases.js)
+    5. sources.{po_value_trend,category_grid} propagate the real status
+       string (matches services/purchases.js)
+    6. the period modes resolve: quarter, year-to-date and a custom range
+       each echo the from/to they imply, and a reversed custom range is
+       swapped rather than rejected
 
   Cleans up after itself. Exits 0 only if all checks pass.
   Usage: node scripts/accept-purchases.js
@@ -134,7 +139,7 @@ async function main() {
     check('period.year/month echo the request', d.period && d.period.year === YEAR && d.period.month === MONTH, JSON.stringify(d.period));
 
     check('po_value_trend reports not_configured, not a fabricated number', d.po_value_trend && d.po_value_trend.ok === false && d.po_value_trend.status === 'not_configured', JSON.stringify(d.po_value_trend));
-    check('po_list reports not_configured, not a fabricated number', d.po_list && d.po_list.ok === false && d.po_list.status === 'not_configured', JSON.stringify(d.po_list));
+    check('po_list is gone from the payload (section removed 2026-09-22)', !('po_list' in d), Object.keys(d).join(','));
 
     // category_grid is a real implementation now, so with ODOO_URL unset it
     // reports not_configured like the other Odoo metrics. Its per-cell
@@ -143,8 +148,35 @@ async function main() {
     check('category_grid reports not_configured, not a fabricated number', d.category_grid && d.category_grid.ok === false && d.category_grid.status === 'not_configured', JSON.stringify(d.category_grid));
 
     check('sources.po_value_trend propagates the real status', d.sources && d.sources.po_value_trend === 'not_configured', JSON.stringify(d.sources));
-    check('sources.po_list propagates the real status', d.sources && d.sources.po_list === 'not_configured', JSON.stringify(d.sources));
-    check('sources has no category_grid key (matches services/purchases.js shape)', d.sources && !('category_grid' in d.sources), JSON.stringify(d.sources));
+    check('sources.category_grid propagates the real status', d.sources && d.sources.category_grid === 'not_configured', JSON.stringify(d.sources));
+    check('sources has no po_list key', d.sources && !('po_list' in d.sources), JSON.stringify(d.sources));
+
+    /* ── 6. Period modes ────────────────────────────────────────────────
+       These assert the RESOLVED range, not Odoo data, so they pass with
+       the connection unset — which is the point: the period arithmetic is
+       ours and must be right before any number hangs off it. */
+    const q3 = await api('GET', `/purchases/dashboard?mode=quarter&year=${YEAR}&quarter=3`, { token: viewerTok });
+    check('quarter mode resolves Jul 1 – Sep 30',
+      q3.status === 200 && q3.body.period.from === `${YEAR}-07-01` && q3.body.period.to === `${YEAR}-09-30`,
+      JSON.stringify(q3.body && q3.body.period));
+
+    const ytd = await api('GET', `/purchases/dashboard?mode=ytd&year=${YEAR - 1}`, { token: viewerTok });
+    check('year-to-date on a past year runs Jan 1 – Dec 31',
+      ytd.status === 200 && ytd.body.period.from === `${YEAR - 1}-01-01` && ytd.body.period.to === `${YEAR - 1}-12-31`,
+      JSON.stringify(ytd.body && ytd.body.period));
+
+    const custom = await api('GET', `/purchases/dashboard?mode=custom&from=${YEAR}-03-10&to=${YEAR}-05-04`, { token: viewerTok });
+    check('custom range echoes its own from/to',
+      custom.status === 200 && custom.body.period.from === `${YEAR}-03-10` && custom.body.period.to === `${YEAR}-05-04`,
+      JSON.stringify(custom.body && custom.body.period));
+
+    const reversed = await api('GET', `/purchases/dashboard?mode=custom&from=${YEAR}-05-04&to=${YEAR}-03-10`, { token: viewerTok });
+    check('a reversed custom range is swapped, not rejected',
+      reversed.status === 200 && reversed.body.period.from === `${YEAR}-03-10` && reversed.body.period.to === `${YEAR}-05-04`,
+      JSON.stringify(reversed.body && reversed.body.period));
+
+    const bad = await api('GET', '/purchases/dashboard?mode=custom&from=10-03-2026&to=2026-05-04', { token: viewerTok });
+    check('a non-ISO date is rejected with 400, not passed through to Odoo', bad.status === 400, `got ${bad.status}`);
 
     /* Stores reads the MIS materials report, not Odoo — the whole point is
        that it still works with every Odoo variable unset above. If the plant
