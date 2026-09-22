@@ -486,38 +486,38 @@
           <td class="cf"><div class="cv" data-kpi="cpp_sfc_mtd">—</div></td>
           <td class="cf"><div class="cv" data-kpi="cpp_sfc_ytd">—</div></td>
         </tr>
-        <tr class="srow"><td colspan="6">Heat Rate Constants (Lab / DCS — enter daily)</td></tr>
+        <tr class="srow"><td colspan="6">Heat Rate Constants (Lab / DCS — enter for Day, MTD and YTD)</td></tr>
         <tr>
           <td class="ts"></td>
           <td class="tp">Superheated Steam Enthalpy</td>
           <td class="tu">kcal / kg</td>
           <td class="cm"><input class="ci" type="number" step="any" data-field="cpp_superheated_steam_enthalpy" placeholder="e.g. 803" /></td>
-          <td class="cf"></td>
-          <td class="cf"></td>
+          <td class="cm"><input class="ci" type="number" step="any" data-field="cpp_superheated_steam_enthalpy_mtd" aria-label="Superheated Steam Enthalpy — Month to Date" placeholder="e.g. 803" /></td>
+          <td class="cm"><input class="ci" type="number" step="any" data-field="cpp_superheated_steam_enthalpy_ytd" aria-label="Superheated Steam Enthalpy — Year to Date" placeholder="e.g. 803" /></td>
         </tr>
         <tr>
           <td class="ts"></td>
           <td class="tp">Feed Water Enthalpy</td>
           <td class="tu">kcal / kg</td>
           <td class="cm"><input class="ci" type="number" step="any" data-field="cpp_feedwater_enthalpy" placeholder="e.g. 130" /></td>
-          <td class="cf"></td>
-          <td class="cf"></td>
+          <td class="cm"><input class="ci" type="number" step="any" data-field="cpp_feedwater_enthalpy_mtd" aria-label="Feed Water Enthalpy — Month to Date" placeholder="e.g. 130" /></td>
+          <td class="cm"><input class="ci" type="number" step="any" data-field="cpp_feedwater_enthalpy_ytd" aria-label="Feed Water Enthalpy — Year to Date" placeholder="e.g. 130" /></td>
         </tr>
         <tr>
           <td class="ts"></td>
           <td class="tp">DM Water Enthalpy</td>
           <td class="tu">kcal / kg</td>
           <td class="cm"><input class="ci" type="number" step="any" data-field="cpp_dm_water_enthalpy" placeholder="e.g. 30" /></td>
-          <td class="cf"></td>
-          <td class="cf"></td>
+          <td class="cm"><input class="ci" type="number" step="any" data-field="cpp_dm_water_enthalpy_mtd" aria-label="DM Water Enthalpy — Month to Date" placeholder="e.g. 30" /></td>
+          <td class="cm"><input class="ci" type="number" step="any" data-field="cpp_dm_water_enthalpy_ytd" aria-label="DM Water Enthalpy — Year to Date" placeholder="e.g. 30" /></td>
         </tr>
         <tr>
           <td class="ts"></td>
           <td class="tp">Boiler Efficiency</td>
           <td class="tu">ratio</td>
           <td class="cm"><input class="ci" type="number" step="any" min="0" max="1" data-field="cpp_boiler_efficiency" placeholder="e.g. 0.78" /></td>
-          <td class="cf"></td>
-          <td class="cf"></td>
+          <td class="cm"><input class="ci" type="number" step="any" min="0" max="1" data-field="cpp_boiler_efficiency_mtd" aria-label="Boiler Efficiency — Month to Date" placeholder="e.g. 0.78" /></td>
+          <td class="cm"><input class="ci" type="number" step="any" min="0" max="1" data-field="cpp_boiler_efficiency_ytd" aria-label="Boiler Efficiency — Year to Date" placeholder="e.g. 0.78" /></td>
         </tr>
 
         <tr class="srow"><td colspan="6">HEAT RATE</td></tr>
@@ -1007,30 +1007,70 @@ initKpiLive(CPP_COMPUTES);
   function weightedSum(rows, valField, weightField) {
     return rows.reduce(function (t, r) { return t + num(r.data[valField]) * num(r.data[weightField]); }, 0);
   }
+  function noteBasis(id, basis) {
+    var el = document.querySelector('[data-kpi="' + id + '"]');
+    if (!el) return;
+    el.title = basis === 'constants'
+      ? 'Computed from this column’s own enthalpy / efficiency constants and the period totals — the same formula as FRM-LCL-PP-06.'
+      : 'No constants entered for this column — shown as the generation-weighted mean of the daily readings.';
+  }
   function paint(id, val, fmt) {
     var el = document.querySelector('[data-kpi="' + id + '"]');
     if (!el || val === null || val === undefined || isNaN(val)) return;
     el.textContent = fmt === 'pct' ? val.toFixed(2) + '%' : val.toLocaleString('en-US', { maximumFractionDigits: 2 });
   }
-  function computeRatios(rows) {
+  /* The four lab/DCS constants for ONE column, read live from that column's
+     own inputs. The CPP department asked (2026-09-22) to enter them three
+     times a day — Day, MTD and YTD — because that is how FRM-LCL-PP-06
+     itself works: every sheet hardcodes its own constants separately into
+     the daily, MTD and YTD heat-rate formulas, and a month whose boiler
+     efficiency moved from 0.78 to 0.77 has no way to say so otherwise.
+     Returns null when the column has not been filled in. */
+  function columnConstants(suffix) {
+    function f(name) {
+      var el = document.querySelector('[data-field="' + name + suffix + '"]');
+      return el ? num(el.value) : 0;
+    }
+    var sh = f('cpp_superheated_steam_enthalpy'), fw = f('cpp_feedwater_enthalpy'),
+        dm = f('cpp_dm_water_enthalpy'), eff = f('cpp_boiler_efficiency');
+    if (!(sh > 0)) return null;
+    return { sh: sh, fw: fw, dm: dm, eff: eff };
+  }
+
+  /* `suffix` picks which column's constants to honour ('_mtd' | '_ytd').
+     With them, the two heat rates are computed from the period's own totals
+     — the identical arithmetic to the workbook's F22/F23 and G22/G23 cells.
+     Without them, it falls back to the generation-weighted mean of the
+     stored daily readings (formula-registry.js's monthlyAgg rule), which is
+     what the 153 imported Apr-Aug days and any day whose officer has not
+     filled the constants in still rely on. The two agree exactly while the
+     constants never change; they are meant to diverge when they do. */
+  function computeRatios(rows, suffix) {
     var gross = sum(rows, 'cpp_gross_gen_kwh'), aux = sum(rows, 'cpp_aux_kwh'),
         hrs = sum(rows, 'cpp_run_hrs'), turbine = sum(rows, 'cpp_turbine_steam_mt'),
         coal = sum(rows, 'cpp_coal_cons'),
+        boiler = sum(rows, 'cpp_boiler_steam_mt'), dmCons = sum(rows, 'cpp_dm_water_cons_m3'),
         hrTgW = weightedSum(rows, 'cpp_heat_rate_tg', 'cpp_gross_gen_kwh'),
-        hrPlantW = weightedSum(rows, 'cpp_heat_rate_plant', 'cpp_gross_gen_kwh');
+        hrPlantW = weightedSum(rows, 'cpp_heat_rate_plant', 'cpp_gross_gen_kwh'),
+        k = suffix ? columnConstants(suffix) : null,
+        hrTg = null, hrPlant = null, basis = 'weighted';
+    if (k && gross > 0) {
+      basis = 'constants';
+      hrTg = ((turbine * (k.sh - k.fw)) + (dmCons * k.dm)) * 1000 / gross;
+      hrPlant = k.eff > 0 ? (boiler * (k.sh - k.fw)) * 1000 / (gross * k.eff) : null;
+    }
+    if (hrTg === null) hrTg = gross > 0 && hrTgW > 0 ? hrTgW / gross : null;
+    if (hrPlant === null) hrPlant = gross > 0 && hrPlantW > 0 ? hrPlantW / gross : null;
     return {
+      basis: basis,
       net:  gross > 0 ? gross - aux : null,
       aux:  gross > 0 ? aux / gross * 100 : null,
       avg:  hrs > 0 ? gross / 1000 / hrs : null,
       plf:  hrs > 0 ? (gross / 1000 / hrs) / 10 * 100 : null,
       ssc:  gross > 0 && turbine > 0 ? turbine * 1000 / gross : null,
       sfc:  gross > 0 && coal > 0 ? coal * 1000 / gross : null,
-      /* Heat Rate MTD/YTD = generation-weighted mean, per formula-registry.js's
-         documented monthlyAgg rule for cpp_heat_rate_plant — NOT a sum of daily
-         readings (report-rollup.js's default) and NOT a plain day-count average,
-         since days with more generation should dominate the period figure. */
-      hrTg:    gross > 0 && hrTgW > 0 ? hrTgW / gross : null,
-      hrPlant: gross > 0 && hrPlantW > 0 ? hrPlantW / gross : null
+      hrTg: hrTg,
+      hrPlant: hrPlant
     };
   }
 
@@ -1054,7 +1094,8 @@ initKpiLive(CPP_COMPUTES);
   function paintFromCache() {
     if (!cache) return;
     var live = liveRow(cache.date);
-    var mtd = computeRatios(cache.mtdHistory.concat([live])), ytd = computeRatios(cache.ytdHistory.concat([live]));
+    var mtd = computeRatios(cache.mtdHistory.concat([live]), '_mtd'),
+        ytd = computeRatios(cache.ytdHistory.concat([live]), '_ytd');
     paint('cpp_net_gen_mtd', mtd.net); paint('cpp_net_gen_ytd', ytd.net);
     paint('cpp_aux_pct_mtd', mtd.aux, 'pct'); paint('cpp_aux_pct_ytd', ytd.aux, 'pct');
     paint('cpp_avg_gen_mtd', mtd.avg); paint('cpp_avg_gen_ytd', ytd.avg);
@@ -1063,6 +1104,10 @@ initKpiLive(CPP_COMPUTES);
     paint('cpp_sfc_mtd', mtd.sfc); paint('cpp_sfc_ytd', ytd.sfc);
     paint('cpp_heat_rate_tg_mtd', mtd.hrTg); paint('cpp_heat_rate_tg_ytd', ytd.hrTg);
     paint('cpp_heat_rate_plant_mtd', mtd.hrPlant); paint('cpp_heat_rate_plant_ytd', ytd.hrPlant);
+    /* Say which basis produced each heat-rate figure, so nobody has to guess
+       whether the column's own constants were used or the daily fallback. */
+    noteBasis('cpp_heat_rate_tg_mtd', mtd.basis);    noteBasis('cpp_heat_rate_tg_ytd', ytd.basis);
+    noteBasis('cpp_heat_rate_plant_mtd', mtd.basis); noteBasis('cpp_heat_rate_plant_ytd', ytd.basis);
   }
 
   async function run() {
