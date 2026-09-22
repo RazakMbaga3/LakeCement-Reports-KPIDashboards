@@ -25,7 +25,7 @@ const db        = require('../db');
 const PORT  = process.env.ACCEPT_PORT || 5910;
 const BASE  = `http://localhost:${PORT}/api`;
 const PW    = 'Accept@89012';
-const USERS = { production: 'p8_production', pm: 'p8_pm', admin: 'p8_admin' };
+const USERS = { production: 'p8_production', admin: 'p8_admin' };
 
 let passCount = 0, failCount = 0;
 function check(name, cond, extra) {
@@ -111,7 +111,6 @@ async function main() {
     }
 
     const prod  = await loginToken(USERS.production);
-    const pm    = await loginToken(USERS.pm);   // stoppage is P&M-owned
     const admin = await loginToken(USERS.admin);
     const submit = (token, form, date, data) =>
       api('POST', `/reports/${form}`, { token, body: { date, data } });
@@ -168,10 +167,17 @@ async function main() {
     // stoppage-form.html — each field is a per-day minute ledger, up to
     // 1440). Values below are hours × 60 so the expected totals further
     // down (in hours) come out to round numbers.
+    // Stoppage submit rights transferred from P&M to Production on
+    // 2026-09-22 (Production now fills AND, as sole submitter, its own
+    // HOD approves it — see forms/access-registry.js FORM_ACCESS).
+    // submit() below doesn't check the HTTP status, so a stale submitter
+    // here would 403 silently and leave this whole section seeded with
+    // nothing rather than failing loudly at the point of the mistake —
+    // exactly what happened when this still said `pm`.
     console.log('Part C — stoppage intelligence:');
-    await submit(pm, 'stoppage', '1999-07-01',
+    await submit(prod, 'stoppage', '1999-07-01',
       { stop_kiln_mech: 5 * 60, stop_kiln_ei: 2 * 60, stop_crusher_other: 1 * 60 });
-    await submit(pm, 'stoppage', '1999-07-02', { stop_kiln_mech: 3 * 60 });
+    await submit(prod, 'stoppage', '1999-07-02', { stop_kiln_mech: 3 * 60 });
 
     const st = await api('GET', '/insights/stoppages?from=1999-07-01&to=1999-07-31', { token: prod });
     const s = st.body;
