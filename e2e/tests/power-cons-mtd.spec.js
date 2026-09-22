@@ -72,9 +72,12 @@ test('Kiln Specific Power (On Date and MTD) update live from unsaved input', asy
 
 test('previously-unbound equipment Production (MT) fields are now real inputs', async ({ page }) => {
   await openForm(page);
+  /* pwr_rawmill2_prod_mt and pwr_packing2_prod_mt no longer exist — RM-2
+     and Packing Plant-2 share their group's one Production box now (see
+     the next test), not a field of their own. */
   const fields = [
-    'pwr_crusher_prod_mt', 'pwr_rawmill_prod_mt', 'pwr_rawmill2_prod_mt',
-    'pwr_coalmill_prod_mt', 'pwr_packing_prod_mt', 'pwr_packing2_prod_mt',
+    'pwr_crusher_prod_mt', 'pwr_rawmill_prod_mt',
+    'pwr_coalmill_prod_mt', 'pwr_packing_prod_mt', 'pwr_utilities_prod_mt',
   ];
   for (const field of fields) {
     await expect(page.locator(`input[data-field="${field}"]`), `${field} must be editable`).toBeEditable();
@@ -90,4 +93,24 @@ test('Crusher Specific Power computes once both kWh and the newly-bound Producti
   await page.waitForTimeout(150);
 
   await expect(page.locator('[data-kpi="pwr_spc_crusher"]').first()).toHaveText('0.50');
+});
+
+test('Raw Mill Specific Power divides RM-1 + RM-2 combined kWh by one shared Production value', async ({ page }) => {
+  /* 2026-09-22: RM-1 and RM-2 used to be two independent rows, each with
+     its own Production box and its own Specific Power — but the real
+     report (20.09.2026.xlsx) gives Raw Mill exactly one Production
+     figure for both mills combined. Confirms the merge computes
+     (RM-1 kWh + RM-2 kWh) / one Production, not RM-1 kWh / Production
+     alone. */
+  await openForm(page);
+
+  await page.fill('input[data-field="pwr_rawmill_kwh"]', '15000');
+  await page.fill('input[data-field="pwr_rawmill2_kwh"]', '5000');
+  await page.fill('input[data-field="pwr_rawmill_prod_mt"]', '1000');
+  await page.locator('input[data-field="pwr_rawmill_prod_mt"]').blur();
+  await page.waitForTimeout(150);
+
+  // (15000 + 5000) / 1000 = 20.00, not 15000/1000 = 15.00
+  await expect(page.locator('[data-kpi="pwr_spc_rawmill"]').first()).toHaveText('20.00');
+  await expect(page.locator('[data-kpi="pwr_rawmill_total_kwh"]').first()).toHaveText('20,000');
 });

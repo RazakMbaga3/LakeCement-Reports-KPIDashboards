@@ -150,29 +150,34 @@
             <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
           </tr>
 
-          <!-- RAW MILL -->
+          <!-- RAW MILL — RM-1 and RM-2 share one Production value and one
+               Specific Power figure (confirmed against 20.09.2026.xlsx:
+               the source report gives Raw Mill exactly one Production(MT)
+               entry, and both mills' kWh divide into it). Production /
+               Specific Power / Target / Variance / MTD SPC are entered
+               once and rowspan down through the Total row. -->
           <tr class="srow"><td colspan="9">Raw Mill</td></tr>
           <tr>
             <td class="ts">2</td>
             <td class="tp">Raw Mill (RM-1)</td>
             <td class="cm"><input class="ci" type="number" data-field="pwr_rawmill_kwh" /></td>
-            <td class="cm"><input class="ci" type="number" data-field="pwr_rawmill_prod_mt" /></td>
-            <td class="cf"><div class="cv" data-kpi="pwr_spc_rawmill">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="19.00" step="0.01" /></td>
-            <td class="cs"><div class="cv"><span class="var-chip var-g">▼ 0.21</span></div></td>
-            <td class="cf"><div class="cv" data-kpi="pwr_spc_rawmill_mtd">—</div></td>
+            <td class="cm" rowspan="3"><input class="ci" type="number" data-field="pwr_rawmill_prod_mt" /></td>
+            <td class="cf" rowspan="3"><div class="cv" data-kpi="pwr_spc_rawmill">—</div></td>
+            <td class="cm" rowspan="3"><input class="ci" type="number" data-field="pwr_rawmill_target" value="17.00" step="0.01" /></td>
+            <td class="cs" rowspan="3"><div class="cv" data-var="pwr_rawmill">—</div></td>
+            <td class="cf" rowspan="3"><div class="cv" data-kpi="pwr_spc_rawmill_mtd">—</div></td>
             <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
             <td class="ts">3</td>
             <td class="tp">Raw Mill (RM-2)</td>
             <td class="cm"><input class="ci" type="number" data-field="pwr_rawmill2_kwh" /></td>
-            <td class="cm"><input class="ci" type="number" data-field="pwr_rawmill2_prod_mt" /></td>
-            <td class="cf"><div class="cv" data-kpi="pwr_spc_rawmill2">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="19.00" step="0.01" /></td>
-            <td class="cs"><div class="cv"><span class="var-chip var-na">Idle</span></div></td>
-            <td class="cf"><div class="cv" data-kpi="pwr_spc_rawmill2_mtd">—</div></td>
             <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr class="trow">
+            <td class="ts" colspan="2" style="text-align:right;padding-right:12px;font-weight:700">Raw Mill Total</td>
+            <td class="cf"><div class="cv" data-kpi="pwr_rawmill_total_kwh">—</div></td>
+            <td class="cm"><div class="cv">—</div></td>
           </tr>
 
           <!-- COAL MILL -->
@@ -183,7 +188,7 @@
             <td class="cm"><input class="ci" type="number" data-field="pwr_coalmill_kwh" /></td>
             <td class="cm"><input class="ci" type="number" data-field="pwr_coalmill_prod_mt" /></td>
             <td class="cf"><div class="cv" data-kpi="pwr_spc_coalmill">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="20.00" step="0.01" /></td>
+            <td class="cm"><input class="ci" type="number" value="32.00" step="0.01" /></td>
             <td class="cs"><div class="cv"><span class="var-chip var-a">▲ 0.25</span></div></td>
             <td class="cf"><div class="cv" data-kpi="pwr_spc_coalmill_mtd">—</div></td>
             <td class="cm"><input class="ci" type="text" value="Slightly above — coal grinding harder" style="text-align:left;padding-left:8px" /></td>
@@ -197,7 +202,7 @@
             <td class="cm"><input class="ci" type="number" data-field="pwr_kiln_kwh" /></td>
             <td class="cm"><input class="ci" type="number" data-field="pwr_kiln_prod_mt" /></td>
             <td class="cf"><div class="cv" data-kpi="pwr_spc_kiln">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="32.00" step="0.01" /></td>
+            <td class="cm"><input class="ci" type="number" value="24.00" step="0.01" /></td>
             <td class="cs"><div class="cv"><span class="var-chip var-a">▲ 0.58</span></div></td>
             <td class="cf"><div class="cv" data-kpi="pwr_spc_kiln_mtd">—</div></td>
             <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
@@ -211,7 +216,7 @@
             <td class="cm"><input class="ci" type="number" data-field="pwr_cm1_kwh" /></td>
             <td class="cm"><input class="ci" type="number" data-field="pwr_cm1_prod_mt" /></td>
             <td class="cf"><div class="cv" data-kpi="pwr_spc_cm1">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="27.00" step="0.01" /></td>
+            <td class="cm"><input class="ci" type="number" value="35.00" step="0.01" /></td>
             <td class="cs"><div class="cv"><span class="var-chip var-na">Idle</span></div></td>
             <td class="cf"><div class="cv" data-kpi="pwr_spc_cm1_mtd">—</div></td>
             <td class="cm"><input class="ci" type="text" value="Under planned maintenance" style="text-align:left;padding-left:8px" /></td>
@@ -225,60 +230,69 @@
             <td class="cm"><input class="ci" type="number" data-field="pwr_cm2_kwh" /></td>
             <td class="cm"><input class="ci" type="number" data-field="pwr_cm2_prod_mt" /></td>
             <td class="cf"><div class="cv" data-kpi="pwr_spc_cm2">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="27.00" step="0.01" /></td>
+            <td class="cm"><input class="ci" type="number" value="35.00" step="0.01" /></td>
             <td class="cs"><div class="cv"><span class="var-chip var-r">▲ 2.12</span></div></td>
             <td class="cf"><div class="cv" data-kpi="pwr_spc_cm2_mtd">—</div></td>
             <td class="cm"><input class="ci" type="text" value="High — separator efficiency review needed" style="text-align:left;padding-left:8px" /></td>
           </tr>
 
-          <!-- PACKING -->
+          <!-- PACKING — Plant-1 and Plant-2 share one Production value and
+               one Specific Power figure (20.09.2026.xlsx: "Packing
+               Section" gives one Production(MT) entry for both lines). -->
           <tr class="srow"><td colspan="9">Packing</td></tr>
           <tr>
             <td class="ts">8</td>
             <td class="tp">Packing Plant-1</td>
             <td class="cm"><input class="ci" type="number" data-field="pwr_packing_kwh" /></td>
-            <td class="cm"><input class="ci" type="number" data-field="pwr_packing_prod_mt" /></td>
-            <td class="cf"><div class="cv" data-kpi="pwr_spc_packing">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="6.00" step="0.01" /></td>
-            <td class="cs"><div class="cv"><span class="var-chip var-g">▼ 0.12</span></div></td>
-            <td class="cf"><div class="cv" data-kpi="pwr_spc_packing_mtd">—</div></td>
+            <td class="cm" rowspan="3"><input class="ci" type="number" data-field="pwr_packing_prod_mt" /></td>
+            <td class="cf" rowspan="3"><div class="cv" data-kpi="pwr_spc_packing">—</div></td>
+            <td class="cm" rowspan="3"><input class="ci" type="number" data-field="pwr_packing_target" value="0.90" step="0.01" /></td>
+            <td class="cs" rowspan="3"><div class="cv" data-var="pwr_packing">—</div></td>
+            <td class="cf" rowspan="3"><div class="cv" data-kpi="pwr_spc_packing_mtd">—</div></td>
             <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
             <td class="ts">9</td>
             <td class="tp">Packing Plant-2</td>
             <td class="cm"><input class="ci" type="number" data-field="pwr_packing2_kwh" /></td>
-            <td class="cm"><input class="ci" type="number" data-field="pwr_packing2_prod_mt" /></td>
-            <td class="cf"><div class="cv" data-kpi="pwr_spc_packing2">—</div></td>
-            <td class="cm"><input class="ci" type="number" value="6.00" step="0.01" /></td>
-            <td class="cs"><div class="cv"><span class="var-chip var-na">Idle</span></div></td>
-            <td class="cf"><div class="cv" data-kpi="pwr_spc_packing2_mtd">—</div></td>
-            <td class="cm"><input class="ci" type="text" value="Idle — CM-1 down" style="text-align:left;padding-left:8px" /></td>
+            <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr class="trow">
+            <td class="ts" colspan="2" style="text-align:right;padding-right:12px;font-weight:700">Packing Total</td>
+            <td class="cf"><div class="cv" data-kpi="pwr_packing_total_kwh">—</div></td>
+            <td class="cm"><div class="cv">—</div></td>
           </tr>
 
-          <!-- MISC / IMPORTS -->
-          <tr class="srow"><td colspan="9">Utilities, Colony &amp; Miscellaneous</td></tr>
+          <!-- UTILITIES — "UTILITIES" (ex "Lighting & General Services")
+               and Colony share one Production value and one Specific
+               Power figure (20.09.2026.xlsx: "Utility" section's Total
+               row — Plant Lighting/Welding/CCR + Colony Supply — divides
+               into one Production(MT) entry). Distribution losses, the
+               source report's third line in this section, isn't on this
+               form (nothing metered feeds it here) and is left out of
+               the combined total rather than guessed. -->
+          <tr class="srow"><td colspan="9">Utilities &amp; Colony</td></tr>
           <tr>
             <td class="ts">10</td>
-            <td class="tp">Lighting &amp; General Services</td>
+            <td class="tp">UTILITIES</td>
             <td class="cm"><input class="ci" type="number" data-field="pwr_lighting_kwh" /></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv"><span class="var-chip var-na">—</span></div></td>
-            <td class="cf"><div class="cv">—</div></td>
+            <td class="cm" rowspan="3"><input class="ci" type="number" data-field="pwr_utilities_prod_mt" /></td>
+            <td class="cf" rowspan="3"><div class="cv" data-kpi="pwr_spc_utilities">—</div></td>
+            <td class="cm" rowspan="3"><input class="ci" type="number" data-field="pwr_utilities_target" value="1.90" step="0.01" /></td>
+            <td class="cs" rowspan="3"><div class="cv" data-var="pwr_utilities">—</div></td>
+            <td class="cf" rowspan="3"><div class="cv" data-kpi="pwr_spc_utilities_mtd">—</div></td>
             <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
           </tr>
           <tr>
             <td class="ts">11</td>
             <td class="tp">Colony</td>
             <td class="cm"><input class="ci" type="number" data-field="pwr_colony_kwh" /></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cf"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv">—</div></td>
-            <td class="cs"><div class="cv"><span class="var-chip var-na">—</span></div></td>
-            <td class="cf"><div class="cv">—</div></td>
             <td class="cm"><input class="ci" type="text" value="" style="text-align:left;padding-left:8px" /></td>
+          </tr>
+          <tr class="trow">
+            <td class="ts" colspan="2" style="text-align:right;padding-right:12px;font-weight:700">Utilities Total</td>
+            <td class="cf"><div class="cv" data-kpi="pwr_utilities_total_kwh">—</div></td>
+            <td class="cm"><div class="cv">—</div></td>
           </tr>
 
           <!-- TOTAL -->
@@ -520,7 +534,7 @@
 <script>initFormPersist('power-cons');</script>
 <script src="nav-status.js?v=2"></script>
 <script src="collapsible.js"></script>
-<script src="excel-import.js?v=3"></script>
+<script src="excel-import.js?v=4"></script>
 <script src="excel-export.js?v=2"></script>
 <script src="kpi-live.js"></script>
 <script src="report-rollup.js"></script>
@@ -539,29 +553,51 @@ function _sectionKwh(f, n) {
    history + the still-unsaved open day), via reportRollupLiveSum(), since
    a ratio can't be produced by report-rollup's own [data-roll-mtd]
    painting (that only sums, it never divides by a second field). One
-   table drives both, so the nine rows can't drift out of sync with each
-   other. Kiln/CM-1/CM-2's kWh+MT were already real, wired inputs (they
-   feed the registry's Specific Power Consumption KPIs); Crusher, RM-1,
-   RM-2, Coal Mill and both Packing lines had a visible Production (MT)
-   box that was never bound to a data-field — added here, matching the
-   naming the wired three already use (pwr_<equip>_prod_mt). */
+   table drives both, so the rows can't drift out of sync with each other.
+
+   Two shapes: EQUIPMENT is one meter → one Production value → one
+   Specific Power. GROUPS is several meters sharing ONE Production value
+   and ONE Specific Power (Raw Mill's RM-1+RM-2, Packing's Plant-1+2,
+   Utilities' UTILITIES+Colony) — confirmed against 20.09.2026.xlsx,
+   whose "Raw Mill"/"Packing Section"/"Utility" sections each give exactly
+   one Production(MT) figure that every listed meter's kWh divides into,
+   not one each. Targets corrected against the same file's own Target
+   rows on 2026-09-22 (old values in comments were the prior placeholders):
+   Crusher 1.20 (already matched), Raw Mill 17.00 (was 19.00 ×2), Coal
+   Mill 32.00 (was 20.00), Kiln 24.00 (was 32.00), CM-1/CM-2 35.00 (was
+   27.00), Packing 0.90 (was 6.00 ×2), Utilities 1.90 (had none). */
 var EQUIPMENT = [
   { kwh: 'pwr_crusher_kwh',  mt: 'pwr_crusher_prod_mt',  onDate: 'pwr_spc_crusher',  mtd: 'pwr_spc_crusher_mtd' },
-  { kwh: 'pwr_rawmill_kwh',  mt: 'pwr_rawmill_prod_mt',  onDate: 'pwr_spc_rawmill',  mtd: 'pwr_spc_rawmill_mtd' },
-  { kwh: 'pwr_rawmill2_kwh', mt: 'pwr_rawmill2_prod_mt', onDate: 'pwr_spc_rawmill2', mtd: 'pwr_spc_rawmill2_mtd' },
   { kwh: 'pwr_coalmill_kwh', mt: 'pwr_coalmill_prod_mt', onDate: 'pwr_spc_coalmill', mtd: 'pwr_spc_coalmill_mtd' },
   { kwh: 'pwr_kiln_kwh',     mt: 'pwr_kiln_prod_mt',     onDate: 'pwr_spc_kiln',     mtd: 'pwr_spc_kiln_mtd' },
   { kwh: 'pwr_cm1_kwh',      mt: 'pwr_cm1_prod_mt',      onDate: 'pwr_spc_cm1',      mtd: 'pwr_spc_cm1_mtd' },
-  { kwh: 'pwr_cm2_kwh',      mt: 'pwr_cm2_prod_mt',      onDate: 'pwr_spc_cm2',      mtd: 'pwr_spc_cm2_mtd' },
-  { kwh: 'pwr_packing_kwh',  mt: 'pwr_packing_prod_mt',  onDate: 'pwr_spc_packing',  mtd: 'pwr_spc_packing_mtd' },
-  { kwh: 'pwr_packing2_kwh', mt: 'pwr_packing2_prod_mt', onDate: 'pwr_spc_packing2', mtd: 'pwr_spc_packing2_mtd' }
+  { kwh: 'pwr_cm2_kwh',      mt: 'pwr_cm2_prod_mt',      onDate: 'pwr_spc_cm2',      mtd: 'pwr_spc_cm2_mtd' }
 ];
+var GROUPS = [
+  { kwh: ['pwr_rawmill_kwh', 'pwr_rawmill2_kwh'], mt: 'pwr_rawmill_prod_mt',
+    onDate: 'pwr_spc_rawmill',  mtd: 'pwr_spc_rawmill_mtd',  total: 'pwr_rawmill_total_kwh',
+    target: 'pwr_rawmill_target',  varKey: 'pwr_rawmill' },
+  { kwh: ['pwr_packing_kwh', 'pwr_packing2_kwh'], mt: 'pwr_packing_prod_mt',
+    onDate: 'pwr_spc_packing',  mtd: 'pwr_spc_packing_mtd',  total: 'pwr_packing_total_kwh',
+    target: 'pwr_packing_target',  varKey: 'pwr_packing' },
+  { kwh: ['pwr_lighting_kwh', 'pwr_colony_kwh'], mt: 'pwr_utilities_prod_mt',
+    onDate: 'pwr_spc_utilities', mtd: 'pwr_spc_utilities_mtd', total: 'pwr_utilities_total_kwh',
+    target: 'pwr_utilities_target', varKey: 'pwr_utilities' },
+];
+function _groupKwh(f, n, g) { return g.kwh.reduce(function (s, k) { return s + n(f[k]); }, 0); }
 var EQUIPMENT_SPC_RULES = EQUIPMENT.map(function (eq) {
   return { kpi: eq.onDate, fmt: 'n2', compute: function (f, n) {
     var kwh = n(f[eq.kwh]), mt = n(f[eq.mt]);
     return mt > 0 ? kwh / mt : null;
   } };
-});
+}).concat(GROUPS.map(function (g) {
+  return { kpi: g.onDate, fmt: 'n2', compute: function (f, n) {
+    var mt = n(f[g.mt]);
+    return mt > 0 ? _groupKwh(f, n, g) / mt : null;
+  } };
+})).concat(GROUPS.map(function (g) {
+  return { kpi: g.total, fmt: 'n0', compute: function (f, n) { return _groupKwh(f, n, g); } };
+}));
 initKpiLive(EQUIPMENT_SPC_RULES.concat([
   { kpi:'total_power', fmt:'n0', compute: function(f,n){ return _sectionKwh(f,n); } },
   /* spc_total/spc_clinker/spc_grinding/cpp_aux_pct_xform are painted by
@@ -604,12 +640,60 @@ initKpiLive(EQUIPMENT_SPC_RULES.concat([
         el.textContent = val === null ? '—' : val.toFixed(2);
       });
     });
+    GROUPS.forEach(function (g) {
+      var kwh = g.kwh.reduce(function (sum, k) {
+        var v = window.reportRollupLiveSum('mtd', k);
+        return v === null ? sum : sum + v;
+      }, 0);
+      var mt = window.reportRollupLiveSum('mtd', g.mt);
+      if (mt === null) return;   // history hasn't loaded yet
+      var val = mt > 0 ? kwh / mt : null;
+      document.querySelectorAll('[data-kpi="' + g.mtd + '"]').forEach(function (el) {
+        el.textContent = val === null ? '—' : val.toFixed(2);
+      });
+    });
   }
   document.addEventListener('input', paint);
   document.addEventListener('change', paint);
   document.addEventListener('nyati:restored', function () { setTimeout(paint, 260); });
   setTimeout(paint, 260);
   setTimeout(paint, 800);   // retry once more in case the initial history fetch was still in flight
+})();
+</script>
+<script>
+/* Live Variance chips for the 3 combined groups (Raw Mill / Packing /
+   Utilities) — actual On Date Specific Power vs. the Target box beside
+   it, both now real data-fields (see GROUPS above), so this is the one
+   part of Section 1 no longer a static mockup value. The other five
+   rows (Crusher, Coal Mill, Kiln, CM-1, CM-2) keep their existing
+   hand-set chips — out of scope here; their Target inputs aren't wired
+   to a data-field either, so painting them live is a separate change. */
+(function () {
+  function n(v) { var x = parseFloat(v); return isNaN(x) ? 0 : x; }
+  function paint() {
+    GROUPS.forEach(function (g) {
+      var el = document.querySelector('[data-var="' + g.varKey + '"]');
+      if (!el) return;
+      var mtEl = document.querySelector('[data-field="' + g.mt + '"]');
+      var mt = n(mtEl && mtEl.value);
+      if (mt <= 0) { el.innerHTML = '<span class="var-chip var-na">Idle</span>'; return; }
+      var kwh = g.kwh.reduce(function (s, k) {
+        var kEl = document.querySelector('[data-field="' + k + '"]');
+        return s + n(kEl && kEl.value);
+      }, 0);
+      var tEl = document.querySelector('[data-field="' + g.target + '"]');
+      var target = n(tEl && tEl.value);
+      var actual = kwh / mt;
+      var diff = actual - target;
+      var cls = diff <= 0 ? 'var-g' : 'var-a';
+      var arrow = diff <= 0 ? '▼' : '▲';
+      el.innerHTML = '<span class="var-chip ' + cls + '">' + arrow + ' ' + Math.abs(diff).toFixed(2) + '</span>';
+    });
+  }
+  document.addEventListener('input', paint);
+  document.addEventListener('change', paint);
+  document.addEventListener('nyati:restored', function () { setTimeout(paint, 50); });
+  setTimeout(paint, 50);
 })();
 </script>
 <script>

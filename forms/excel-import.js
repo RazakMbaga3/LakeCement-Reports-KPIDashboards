@@ -433,34 +433,128 @@
     },
 
     /* ── Power Consumption ────────────────────────────────────── */
+    /* ── Power Consumption Report ────────────────────────────────────
+       Rebuilt 2026-09-22 against a real report (20.09.2026.xlsx) — the
+       old version only matched sections by a number in column A, so it
+       silently skipped Raw Mill-2, Cement Mill-1, Packing Plant-2 and
+       all of Utilities/Colony (there is no section 3 or 6 in the col-A
+       numbering; it isn't sequential) and never touched any Production
+       (MT) field at all.
+
+       Layout: column B ("Sections") names a section on its FIRST row
+       only; column C ("Description") names each equipment/meter line
+       under it; column F is that line's On-Date kWh; column G is the
+       section's On-Date Production (MT) — entered once, on the section's
+       first row, same convention forms/power-form.html's own Section 1
+       table now uses (one Production value per section, not per meter).
+       A section's own "Total" row (column C) is trusted for its combined
+       kWh rather than re-summed here, except where the form still wants
+       a sub-split (Raw Mill-1 vs -2), which this sheet's row labels do
+       carry.
+
+       Packing Plant-1 vs Plant-2: NOT separable in this sheet — its
+       "Packing Section" lists MCCs (IMCC-6, IMCC-6A…), not per-plant
+       lines. The section Total goes into pwr_packing_kwh only; the
+       combined Specific Power comes out correct either way since the
+       form now sums both boxes, but pwr_packing2_kwh is left for manual
+       entry if the officer knows the true per-plant split. */
     'power-cons': function (wb) {
       var shName = wb.SheetNames.find(function (n) { return /power.?report/i.test(n) && !/backup/i.test(n); }) || wb.SheetNames[0];
-      var ws     = wb.Sheets[shName];
-      var rows   = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+      var ws   = wb.Sheets[shName];
+      var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
 
-      /* Date: row 1 col 11 */
-      var dateVal = anyDate(rows[1][11]) || anyDate(rows[0][11]);
+      var SEC = 1, DESC = 2, KWH = 5, PROD = 6;
 
-      /* Find section-total kWh by section number in col 0 */
-      function secTotal(secNum) {
-        var active = false;
-        for (var i = 0; i < rows.length; i++) {
-          var r = rows[i];
-          if (r[0] === secNum) active = true;
-          if (active && String(r[2]).trim() === 'Total') return toNum(r[5]);
+      var dateVal = '';
+      for (var di = 0; di < Math.min(rows.length, 6) && !dateVal; di++) {
+        for (var dj = 0; dj < rows[di].length; dj++) {
+          dateVal = anyDate(rows[di][dj]);
+          if (dateVal) break;
+        }
+      }
+
+      function findIdx(re, from) {
+        for (var i = from || 0; i < rows.length; i++) {
+          if (re.test(String(rows[i][SEC] || '').trim())) return i;
+        }
+        return -1;
+      }
+      /* First "Total" row (Description column) between [from, end) */
+      function totalKwh(from, end) {
+        for (var i = from; i < end; i++) {
+          if (/^Total$/i.test(String(rows[i][DESC] || '').trim())) return toNum(rows[i][KWH]);
+        }
+        return null;
+      }
+      function rowByDesc(re, from, end) {
+        for (var i = from; i < end; i++) {
+          if (re.test(String(rows[i][DESC] || '').trim())) return rows[i];
         }
         return null;
       }
 
-      return {
-        date:             dateVal,
-        pwr_crusher_kwh:  fmt(secTotal(1), 0),
-        pwr_rawmill_kwh:  fmt(secTotal(2), 0),
-        pwr_coalmill_kwh: fmt(secTotal(4), 0),
-        pwr_kiln_kwh:     fmt(secTotal(5), 0),
-        pwr_cm2_kwh:      fmt(secTotal(7), 0),
-        pwr_packing_kwh:  fmt(secTotal(8), 0),
-      };
+      var SECTIONS = [
+        { re: /Lime\s*Stone\s*Crusher|^Crusher/i,        prod: 'pwr_crusher_prod_mt' },
+        { re: /Raw\s*mill\s*Section/i,                   prod: 'pwr_rawmill_prod_mt',   rawmill: true },
+        { re: /Coal\s*mill\s*Section/i,                  prod: 'pwr_coalmill_prod_mt',  kwh: 'pwr_coalmill_kwh' },
+        { re: /^Kiln\s*Section/i,                        prod: 'pwr_kiln_prod_mt',      kwh: 'pwr_kiln_kwh' },
+        { re: /Cement\s*mill\s*-?\s*1\s*Section/i,       prod: 'pwr_cm1_prod_mt',       kwh: 'pwr_cm1_kwh' },
+        { re: /Cement\s*mill\s*-?\s*2\s*Section/i,       prod: 'pwr_cm2_prod_mt',       kwh: 'pwr_cm2_kwh' },
+        { re: /Packing\s*Section/i,                      prod: 'pwr_packing_prod_mt',   kwh: 'pwr_packing_kwh' },
+        { re: /^Utilit(y|ies)/i,                          prod: 'pwr_utilities_prod_mt', utility: true },
+      ];
+      /* Crusher's own field is 'pwr_crusher_kwh' — added after the map
+         above so its key literal doesn't collide with the regex column. */
+      SECTIONS[0].kwh = 'pwr_crusher_kwh';
+
+      var starts = SECTIONS.map(function (s) { return findIdx(s.re); });
+      var out = { date: dateVal };
+      var anyFound = false;
+
+      SECTIONS.forEach(function (s, i) {
+        var start = starts[i];
+        if (start < 0) return;
+        anyFound = true;
+        var end = rows.length;
+        for (var j = i + 1; j < starts.length; j++) { if (starts[j] >= 0) { end = starts[j]; break; } }
+
+        out[s.prod] = fmt(toNum(rows[start][PROD]), 2);
+
+        if (s.rawmill) {
+          var splitIdx = -1;
+          for (var k = start; k < end; k++) {
+            if (/Raw\s*mill\s*-?\s*2/i.test(String(rows[k][DESC] || ''))) { splitIdx = k; break; }
+          }
+          var totalIdx = -1;
+          for (var t = start; t < end; t++) { if (/^Total$/i.test(String(rows[t][DESC] || '').trim())) { totalIdx = t; break; } }
+          if (totalIdx < 0) totalIdx = end;
+          function sumKwh(from, to) {
+            var sum = 0, found = false;
+            for (var r = from; r < to; r++) {
+              var lbl = String(rows[r][DESC] || '').trim();
+              if (!lbl || /^Total$/i.test(lbl) || /^Target$/i.test(lbl)) continue;
+              var v = toNum(rows[r][KWH]);
+              if (v !== null) { sum += v; found = true; }
+            }
+            return found ? sum : null;
+          }
+          var rm1 = sumKwh(start, splitIdx >= 0 ? splitIdx : totalIdx);
+          out.pwr_rawmill_kwh = fmt(rm1, 2);
+          if (splitIdx >= 0) out.pwr_rawmill2_kwh = fmt(sumKwh(splitIdx, totalIdx), 2);
+        } else if (s.utility) {
+          var lightRow = rowByDesc(/Plant\s*Lighting/i, start, end);
+          if (lightRow) out.pwr_lighting_kwh = fmt(toNum(lightRow[KWH]), 2);
+          var colonyRow = rowByDesc(/Colony\s*Supply/i, start, end);
+          if (colonyRow) out.pwr_colony_kwh = fmt(toNum(colonyRow[KWH]), 2);
+        } else {
+          out[s.kwh] = fmt(totalKwh(start, end), 2);
+        }
+      });
+
+      if (!anyFound) {
+        return { _error: 'Could not find any recognised section ("Lime Stone Crusher", "Rawmill Section", "Packing Section"…). Is this a Power Consumption report?' };
+      }
+      return out;
     },
 
     /* ── Pile Quality (CaO) ───────────────────────────────────── */
