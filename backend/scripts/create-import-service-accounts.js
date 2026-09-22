@@ -13,7 +13,12 @@
   and a random password generated fresh each run, printed once to the
   console — store it, it is not recoverable afterward (bcrypt is one-way).
 
-  Usage: node scripts/create-import-service-accounts.js
+  Each run generates a FRESH password for every account it touches, so a
+  run rotates whatever was stored for it last time. Name the accounts you
+  want as arguments to touch only those and leave the rest' passwords
+  alone; with no arguments it does all of them, as it always has.
+
+  Usage: node scripts/create-import-service-accounts.js [username ...]
 */
 require('../config/env');
 const crypto = require('crypto');
@@ -25,6 +30,13 @@ const SALT_ROUNDS = 12;
 const ACCOUNTS = [
   { username: 'import-production', role: 'production', name: 'Data Import Service (Production)' },
   { username: 'import-pm',         role: 'pm',          name: 'Data Import Service (P&M/Power)' },
+  /* Added 2026-09-22 for the Jul-Aug 2026 CPP backfill (scripts/import-cpp.js).
+     role='cpp' is what FORM_ACCESS in forms/access-registry.js checks for the
+     `cpp` form, and level defaults to 'hod', so an imported day lands
+     'approved' exactly like the Apr-Jun rows the CPP HOD's own account
+     posted — a historical report the plant already signed off in Excel has
+     nothing left to approve. */
+  { username: 'import-cpp',        role: 'cpp',         name: 'Data Import Service (CPP)' },
 ];
 
 function genPassword() {
@@ -33,8 +45,19 @@ function genPassword() {
 }
 
 async function main() {
+  /* Which accounts this run touches. Named on the command line = only
+     those, so rotating one account's password does not silently
+     invalidate the others'. No arguments = all of them. */
+  const only = process.argv.slice(2).filter((a) => !a.startsWith('-'));
+  const unknown = only.filter((u) => !ACCOUNTS.some((a) => a.username === u));
+  if (unknown.length) {
+    console.error(`Unknown account(s): ${unknown.join(', ')}. Known: ${ACCOUNTS.map((a) => a.username).join(', ')}`);
+    process.exit(2);
+  }
+  const selected = only.length ? ACCOUNTS.filter((a) => only.includes(a.username)) : ACCOUNTS;
+
   console.log('Creating/refreshing dedicated import service accounts...\n');
-  for (const acct of ACCOUNTS) {
+  for (const acct of selected) {
     const password = genPassword();
     const hash = await bcrypt.hash(password, SALT_ROUNDS);
     await db.query(`

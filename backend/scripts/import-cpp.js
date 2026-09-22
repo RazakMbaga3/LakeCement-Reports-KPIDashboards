@@ -1,21 +1,30 @@
 /*
-  scripts/import-cpp.js — one-time backfill of the `cpp` form (Captive
-  Power Plant daily generation report) from the plant's real FRM-LCL-PP-06
-  workbooks (April-June 2026), so the CPP dashboard, formula layer and MIS
-  reports can show real data instead of "0 rows" placeholders.
+  scripts/import-cpp.js — backfill of the `cpp` form (Captive Power Plant
+  daily generation report) from the plant's real FRM-LCL-PP-06 workbooks,
+  so the CPP dashboard, formula layer and MIS reports can show real data
+  instead of "0 rows" placeholders.
 
-  Source: "master raw material reports/CPP Daily & monthly reporty.zip"
-  (extracted to "master raw material reports/_cpp_extracted/"), one workbook
-  per month: "DAILY,MONTHLY & YEARLY REPORT-<MONTH>-2026.xlsx" (May's is
-  named "...EARLY REPORT-MAY-2026.xlsx" — a typo in the plant's own file
-  name, not ours). Each workbook has one sheet per day named "1".."N"
-  (sheet "0" is the previous month's last day, a spillover template row —
-  skipped). The sheet's real calendar date lives in row 6, column E (a
-  formula chaining off the previous sheet), used as ground truth rather
-  than trusting the sheet name to equal day-of-month.
+  Sources, one workbook per month, all the same FRM-LCL-PP-06 layout:
+    Apr-Jun 2026 (the original 2026-07-28 backfill)
+      "master raw material reports/CPP Daily & monthly reporty.zip"
+      (extracted to "master raw material reports/_cpp_extracted/")
+      "DAILY,MONTHLY & YEARLY REPORT-<MONTH>-2026.xlsx" — May's is named
+      "...EARLY REPORT-MAY-2026.xlsx" (a typo in the plant's own file name,
+      not ours).
+    Jul-Aug 2026 (added 2026-09-22, sent by the plant as the two months
+      that had never been keyed in anywhere but Excel)
+      "data/samples/2026-04-21/DAILY,MONTHLY & EARLY REPORT-JULY-2026.xlsx"
+      "data/samples/2026-04-21/DAILY,MONTHLY & EARLY REPORT--AUG 2026.xlsx"
 
-  Row -> fact mapping (row numbers identical across all 3 workbooks,
-  verified directly):
+  Each workbook has one sheet per day named "1".."N" (sheet "0" is the
+  previous month's last day, a carry-in snapshot of pasted values —
+  skipped; its figures belong to the previous workbook, which already
+  holds them as a real day). The sheet's real calendar date lives in row 6,
+  column E (a formula chaining off the previous sheet), used as ground
+  truth rather than trusting the sheet name to equal day-of-month.
+
+  Row -> fact mapping (row numbers verified identical across all five
+  workbooks, including the label text of every mapped row):
     7  Gross Power Generation        -> cpp_gross_gen_kwh
     8  Auxiliary power consumption   -> cpp_aux_kwh
     12 Plant Running Hours           -> cpp_run_hrs
@@ -44,10 +53,26 @@
   in the app itself (power-plant-report.html's report-loader/ratio-rollup
   computes — this single page is both the CPP entry form and its report),
   verified against this same source data to reproduce the cached Excel
-  values exactly (see the 2026-07-28 backfill session notes). Submitting them too would
+  values exactly (see the 2026-07-28 backfill session notes, and
+  scripts/verify-cpp.py for the Jul-Aug run). Submitting them too would
   create a second, driftable copy of the same numbers.
 
-  Usage: node scripts/import-cpp.js [--base-url http://localhost:5000/api]
+  Only the daily (column E) figures are imported. The workbook's own Month
+  to Date (F) and Year to Date (G) columns are pure cumulative formulas
+  over those same daily cells — verified cell by cell, every cumulative row
+  of every sheet in all five workbooks — so the app's own MTD/YTD rollup
+  (power-plant-report.html's computeRatios, summing the stored days from
+  month start / fiscal 1 April) reproduces them rather than storing a
+  second copy that could drift.
+
+  Usage: node scripts/import-cpp.js [--months 2026-07,2026-08]
+                                    [--base-url http://localhost:5000/api]
+
+  --months defaults to the Jul-Aug 2026 pair. The Apr-Jun three are
+  already in every database (locally from the original run, everywhere
+  else from db/migrations/015_seed_apr_jun_2026_reports.sql) and re-posting
+  them would only re-stamp updated_at, so they have to be asked for by
+  name: `--months 2026-04,2026-05,2026-06`, or `--months all`.
 */
 require('../config/env');
 const path = require('path');
@@ -60,12 +85,30 @@ const BASE = (process.argv.includes('--base-url')
 const CPP_USER = process.env.IMPORT_CPP_USER || 'cpp';
 const CPP_PASS = process.env.IMPORT_CPP_PASS || 'CPP@LCL2026';
 
-const SRC_DIR = path.join(__dirname, '..', '..', 'master raw material reports', '_cpp_extracted');
+const REPO_ROOT = path.join(__dirname, '..', '..');
+const CPP_2026_Q1_DIR = path.join(REPO_ROOT, 'master raw material reports', '_cpp_extracted');
+const SAMPLES_DIR     = path.join(REPO_ROOT, 'data', 'samples', '2026-04-21');
+
 const MONTHS = [
-  { file: 'DAILY,MONTHLY & YEARLY REPORT-APR-2026.xlsx',  year: 2026, month: 4, days: 30 },
-  { file: 'DAILY,MONTHLY & EARLY REPORT-MAY-2026.xlsx',   year: 2026, month: 5, days: 31 },
-  { file: 'DAILY,MONTHLY & YEARLY REPORT-JUNE-2026.xlsx', year: 2026, month: 6, days: 30 },
+  { key: '2026-04', dir: CPP_2026_Q1_DIR, file: 'DAILY,MONTHLY & YEARLY REPORT-APR-2026.xlsx',  year: 2026, month: 4, days: 30 },
+  { key: '2026-05', dir: CPP_2026_Q1_DIR, file: 'DAILY,MONTHLY & EARLY REPORT-MAY-2026.xlsx',   year: 2026, month: 5, days: 31 },
+  { key: '2026-06', dir: CPP_2026_Q1_DIR, file: 'DAILY,MONTHLY & YEARLY REPORT-JUNE-2026.xlsx', year: 2026, month: 6, days: 30 },
+  { key: '2026-07', dir: SAMPLES_DIR,     file: 'DAILY,MONTHLY & EARLY REPORT-JULY-2026.xlsx',  year: 2026, month: 7, days: 31 },
+  { key: '2026-08', dir: SAMPLES_DIR,     file: 'DAILY,MONTHLY & EARLY REPORT--AUG 2026.xlsx',  year: 2026, month: 8, days: 31 },
 ];
+
+/* Which months this run writes. Default = the two that were sent as plain
+   Excel and exist nowhere else; see the --months note in the header. */
+const monthsArg = process.argv.includes('--months')
+  ? process.argv[process.argv.indexOf('--months') + 1]
+  : '2026-07,2026-08';
+const wanted = monthsArg === 'all' ? MONTHS.map(m => m.key) : monthsArg.split(',').map(s => s.trim());
+const unknown = wanted.filter(k => !MONTHS.some(m => m.key === k));
+if (unknown.length) {
+  console.error(`Unknown --months value(s): ${unknown.join(', ')}. Known: ${MONTHS.map(m => m.key).join(', ')}`);
+  process.exit(2);
+}
+const SELECTED = MONTHS.filter(m => wanted.includes(m.key));
 
 const ROW_FACT = {
   7:  'cpp_gross_gen_kwh',
@@ -126,8 +169,8 @@ async function main() {
 
   let submitted = 0, skipped = 0, failed = 0;
 
-  for (const m of MONTHS) {
-    const full = path.join(SRC_DIR, m.file);
+  for (const m of SELECTED) {
+    const full = path.join(m.dir, m.file);
     const wb = new ExcelJS.Workbook();
     await wb.xlsx.readFile(full);
     console.log(`\n=== ${m.file} (${m.year}-${String(m.month).padStart(2, '0')}, ${m.days} days) ===`);
@@ -159,7 +202,7 @@ async function main() {
       if (!nonZero) { skipped++; continue; }
 
       const dateStr = `${m.year}-${String(m.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const r = await api('POST', '/reports/cpp', { token, body: { date: dateStr, data } });
+      const r = await api('POST', '/reports/cpp', { token, body: { date: dateStr, data, replace: true } });
       if (r.status >= 300) {
         failed++;
         console.error(`  ❌ ${dateStr}: HTTP ${r.status} ${JSON.stringify(r.body)}`);

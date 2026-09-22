@@ -12,16 +12,37 @@
   against whatever database it's run against.
 
   Usage: node scripts/export-seed-migration.js [outfile.json]
+           [--forms production,cpp,...] [--from YYYY-MM-DD] [--to YYYY-MM-DD]
+           [--kpi-months none|4,5,6] [--kpi-year 2026] [--title "one line"]
+
+  The defaults reproduce the original Apr-Jun 2026 export exactly, so the
+  flags only matter for a later backfill: the Jul-Aug 2026 CPP months were
+  exported with
+
+    node scripts/export-seed-migration.js _cpp_2026-07-to-08.json       --forms cpp --from 2026-07-01 --to 2026-08-31 --kpi-months none       --title "Jul-Aug 2026 CPP (FRM-LCL-PP-06) historical backfill"
 */
 require('../config/env');
 const fs = require('fs');
 const db = require('../db');
 
-const FORM_TYPES = ['production', 'power-cons', 'cpp', 'materials', 'stoppage', 'limestone', 'quality'];
-const START = '2026-04-01';
-const END   = '2026-06-30';
-const KPI_YEAR = 2026;
-const KPI_MONTHS = [4, 5, 6];
+function arg(name, fallback) {
+  const i = process.argv.indexOf('--' + name);
+  return i === -1 ? fallback : process.argv[i + 1];
+}
+
+const FORM_TYPES = arg('forms', 'production,power-cons,cpp,materials,stoppage,limestone,quality')
+  .split(',').map((s) => s.trim()).filter(Boolean);
+const START = arg('from', '2026-04-01');
+const END   = arg('to',   '2026-06-30');
+const KPI_YEAR = Number(arg('kpi-year', '2026'));
+/* `--kpi-months none` exports daily_reports only — a form-specific backfill
+   has no monthly-KPI rows to carry, and an empty array keeps the dump's
+   shape (and the generator's) unchanged. */
+const KPI_MONTHS_ARG = arg('kpi-months', '4,5,6');
+const KPI_MONTHS = KPI_MONTHS_ARG === 'none'
+  ? []
+  : KPI_MONTHS_ARG.split(',').map((s) => Number(s.trim())).filter((n) => n >= 1 && n <= 12);
+const TITLE = arg('title', 'Apr-Jun 2026 historical backfill: production, power-cons, cpp, materials, stoppage, limestone, quality daily_reports + kpi_monthly');
 
 async function main() {
   const outfile = process.argv[2] || 'seed-migration-2026-04-to-06.json';
@@ -54,6 +75,8 @@ async function main() {
   const dump = {
     exported_at: new Date().toISOString(),
     source: 'local dev DB',
+    title: TITLE,
+    range: { from: START, to: END, form_types: FORM_TYPES },
     daily_reports: reportsRes.rows,
     kpi_monthly: kpiRes.rows,
   };

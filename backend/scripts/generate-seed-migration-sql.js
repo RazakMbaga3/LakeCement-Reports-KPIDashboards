@@ -59,13 +59,17 @@ function main() {
   const dump = JSON.parse(fs.readFileSync(inFile, 'utf-8'));
 
   const lines = [];
-  lines.push(`-- Apr-Jun 2026 historical backfill: production, power-cons, cpp, materials,`);
-  lines.push(`-- stoppage, limestone, quality daily_reports + kpi_monthly.`);
+  /* The dump carries its own one-line title since 2026-09-22 (the Jul-Aug
+     CPP backfill); older dumps predate the field and were all the Apr-Jun
+     export, so that stays the fallback. */
+  (dump.title || 'Apr-Jun 2026 historical backfill: production, power-cons, cpp, materials, stoppage, limestone, quality daily_reports + kpi_monthly')
+    .match(/.{1,74}(\s|$)/g).forEach((chunk) => lines.push(`-- ${chunk.trim()}`));
   lines.push(`-- Generated ${new Date().toISOString()} by generate-seed-migration-sql.js from`);
   lines.push(`-- ${inFile.split(/[\\/]/).pop()} (exported ${dump.exported_at} from ${dump.source}).`);
   lines.push(`-- Idempotent: ON CONFLICT DO NOTHING on each table's real unique constraint.`);
   lines.push('');
 
+  if (dump.daily_reports.length) {
   lines.push('INSERT INTO daily_reports');
   lines.push('  (form_type, record_date, shift, data, status, submitted_by, submitted_at,');
   lines.push('   updated_by, updated_at, approved_by, approved_at, rejected_by, rejected_at, rejection_reason)');
@@ -83,7 +87,12 @@ function main() {
   lines.push(reportRows.join(',\n'));
   lines.push('ON CONFLICT (form_type, record_date, shift) DO NOTHING;');
   lines.push('');
+  }
 
+  /* A form-specific backfill (export --kpi-months none) carries no monthly
+     KPI rows. An INSERT ... VALUES with nothing between them is not valid
+     SQL, so the whole statement is omitted rather than emitted empty. */
+  if (dump.kpi_monthly.length) {
   lines.push('INSERT INTO kpi_monthly');
   lines.push('  (department, year, month, kpi_key, target, actual, unit, updated_by, updated_at)');
   lines.push('VALUES');
@@ -98,6 +107,7 @@ function main() {
   lines.push(kpiRows.join(',\n'));
   lines.push('ON CONFLICT (department, year, month, kpi_key) DO NOTHING;');
   lines.push('');
+  }
 
   fs.writeFileSync(outFile, lines.join('\n'));
   console.log(`Wrote ${outFile}`);
