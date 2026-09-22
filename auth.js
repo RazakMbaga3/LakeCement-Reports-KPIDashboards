@@ -947,8 +947,19 @@ const _DAILY_ACCESS = {
                 nav:  'all' },
   sales:      { edit: [],
                 nav:  ['sales-projection-form.html'] },
+  /* Raw Materials is the Purchase & Stores department's daily report (see
+     FORM_ACCESS.stores), so Purchase gets the nav row for it — before this
+     the role's nav was empty and a purchase user opened the app to a Daily
+     Reports group with no report in it at all. Read-only: the row carries a
+     VIEW badge, because submit rights stay with `stores`. Adding purchase
+     to FORM_ACCESS.materials as well would make `materials` a shared form
+     type, and middleware/approval.js then refuses to boot until someone
+     declares in FORM_APPROVAL_OWNER whose HOD signs the report off — an
+     accountability call for the business, not a side effect of adding a
+     button. GET /api/reports/* is requireAuth only, so the page reads its
+     data normally; only POST is gated by requireFormAccess. */
   purchase:   { edit: [],
-                nav:  [] },   // no submittable form yet — see FORM_ACCESS.purchase
+                nav:  ['materials-form.html'] },
   ei:         { edit: [],
                 nav:  ['daily-report.html','power-form.html'] },
   packing:    { edit: [],
