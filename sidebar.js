@@ -214,8 +214,20 @@ function renderSidebar() {
     (user.level === 'hod' && getMyFormAccess().length > 0);
   const showEntrySummary = hasKPI;
   const dailyItems = _sbBuildDailyGroup();
+  /* The Purchase dashboard sits at the foot of this group as the Purchase &
+     Stores button (2026-09-22, asked for directly). It is NOT an entry in
+     _DAILY_NAV_ITEMS, for two reasons. First, that catalogue is filtered by
+     _DAILY_ACCESS[role].nav, and the five roles carrying nav:'all' include
+     admin, finance and production — none of whom are in PURCHASE_VIEW_ROLES,
+     so they would each get a row the backend then 403s. Its own
+     canViewPurchases() gate is the same one routes/purchases.js enforces, so
+     the row appears for exactly the roles that can open the page. Second,
+     _DAILY_NAV_ITEMS rows carry a `page` key that forms/nav-status.js hangs
+     today's filled/not-filled dot on; a dashboard has no daily fill state,
+     so this row deliberately passes no `page` and gets no dot. */
+  const showPurchases = canViewPurchases();
 
-  if (dailyItems.length || canSeeApprovals || showEntrySummary) {
+  if (dailyItems.length || canSeeApprovals || showEntrySummary || showPurchases) {
     html += _sbGroupLabelHTML('daily');
 
     if (canSeeApprovals || showEntrySummary) {
@@ -268,6 +280,20 @@ function renderSidebar() {
       } else {
         html += _sbItemHTML(rowOpts(it));
       }
+    }
+
+    /* VIEW badge like every other row here — the dashboard is read-only, and
+       an unbadged row in a badged list reads as an oversight. Labelled just
+       "Purchases" to be findable: the KPI group's row for the same page is
+       called "Raw Materials & Purchases" after a merge that was never built,
+       which is why it was not recognisable as the Purchase dashboard. */
+    if (showPurchases) {
+      html += _sbItemHTML({
+        icon: 'shopping-cart', label: 'Purchases',
+        href: base + 'purchases.html',
+        active: currentPage === 'purchases.html',
+        badgeHTML: '<span class="sb-badge-view">VIEW</span>',
+      });
     }
   }
 
