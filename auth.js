@@ -1008,8 +1008,8 @@ const _DAILY_NAV_ITEMS = [
    Mirrored server-side in backend/config/formAccess.js — keep both in sync.
 ══════════════════════════════════════════════════════════════════════ */
 const _FORM_TYPE_ACCESS = {
-  production: ['production','quality','limestone','pile-quality'],
-  pm:         ['stoppage','power-cons'],   /* P&M owns Stoppage (Kiln/Cement Mill folded into Production Report); Power Cons. shared with E&I below */
+  production: ['production','quality','limestone','pile-quality','stoppage'],   /* Stoppage transferred from P&M 2026-09-22 — Production now fills it (and, as sole submitter, its own HOD approves it) */
+  pm:         ['power-cons'],   /* Stoppage moved to Production 2026-09-22 — P&M keeps read/view access to stoppage-form.html and reliability.html but no submit right. Power Cons. still shared with E&I below */
   logistics:  ['dispatch'],   /* Dispatch & SO submitted by both Logistics and Packing — Logistics approves, see FORM_APPROVAL_OWNER */
   cpp:        ['cpp'],   // 'power-plant' retired 2026-08-31 — see backend/config/forms.js
   mining:     ['mines'],
@@ -1073,7 +1073,7 @@ function applyDailyPermissions() {
   /* ── 1b. Show inline-edit buttons only to the owning department ──── */
   const _IE_BTN_ROLES = {
     'ie-btn-quality':   ['production'],
-    'ie-btn-stoppages': ['pm'],   /* P&M owns stoppage data — production views only */
+    'ie-btn-stoppages': ['production'],   /* Production owns stoppage data as of 2026-09-22 (moved from P&M) — P&M views only */
   };
   Object.entries(_IE_BTN_ROLES).forEach(([btnId, allowedRoles]) => {
     const btn = document.getElementById(btnId);
@@ -1183,8 +1183,9 @@ function applyInsightsPermissions() {
    APPLY PERMISSIONS — RELIABILITY PAGE (reliability.html)
    Read-only equipment reliability / downtime report — same as
    analytics.html, no role-based content filtering. Stoppage data entry
-   stays gated by _FORM_TYPE_ACCESS (pm role) on forms/stoppage-form.html;
-   this page only ever reads the aggregated numbers. ═══════════════════ */
+   stays gated by _FORM_TYPE_ACCESS (production role, moved from pm
+   2026-09-22) on forms/stoppage-form.html; this page only ever reads
+   the aggregated numbers. ═══════════════════════════════════════════ */
 function applyReliabilityPermissions() {
   renderUserHeader();
 }

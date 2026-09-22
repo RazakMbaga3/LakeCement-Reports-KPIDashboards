@@ -30,8 +30,8 @@
   'use strict';
 
   var FORM_ACCESS = {
-    production: ['production', 'quality', 'limestone', 'pile-quality'],
-    pm:         ['stoppage', 'power-cons'],   // P&M owns Stoppage; Power Cons. submitted by both P&M and E&I — E&I approves, see FORM_APPROVAL_OWNER
+    production: ['production', 'quality', 'limestone', 'pile-quality', 'stoppage'],   // Stoppage transferred from P&M 2026-09-22 — Production now fills AND (via approval.js's single-submitter rule) its own HOD approves it
+    pm:         ['power-cons'],   // Stoppage moved to Production 2026-09-22 — P&M keeps read-only access to stoppage-form.html/reliability.html but no submit right, see forms/stoppage-form.html's view-only mode. Power Cons. still submitted by both P&M and E&I — E&I approves, see FORM_APPROVAL_OWNER
     logistics:  ['dispatch'],   // Dispatch & SO submitted by both Logistics and Packing — Logistics approves, see FORM_APPROVAL_OWNER
     cpp:        ['cpp'],   // 'power-plant' retired 2026-08-31 — see config/forms.js
     mining:     ['mines'],
