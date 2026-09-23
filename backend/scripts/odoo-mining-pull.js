@@ -18,8 +18,9 @@
   A month is ~4-5k rows and takes ~10s. The endpoint has no pagination and
   truncates large ranges, so pull month by month rather than a whole year.
 
-  Requires ODOO_MINING_URL + ODOO_MINING_API_KEY (or the ODOO_DASHBOARD_*
-  pair it falls back to) — see services/odooMiningClient.js.
+  Requires ODOO_MINING_URL + ODOO_MINING_API_KEY (or the ODOO_DISPATCH_*
+  pair it falls back to — NOT the dashboard pair) — see
+  services/odooMiningClient.js.
 */
 require('../config/env');
 const { pullMiningTickets } = require('../services/odooMiningSync');
@@ -51,8 +52,9 @@ if (from > to) {
     }
     if (result.rowsReceived === 0) {
       console.log(
-        `\nNOTE: Odoo returned no mining rows for ${from}..${to}. The test instance's data stops `
-        + 'on 2026-03-28 — a range after that date is expected to come back empty.');
+        `\nNOTE: Odoo returned no mining rows for ${from}..${to}. Since the 2026-09-23 move to `
+        + 'the production ERP this usually means a genuinely quiet period rather than missing test '
+        + 'data — but confirm with a wider range before assuming the plant was idle.');
     }
     if (result.rowsUnknownProduct) {
       console.log(

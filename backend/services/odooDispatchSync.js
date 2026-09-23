@@ -4,8 +4,8 @@
   known field keys, and upserts into daily_reports (form_type='dispatch').
 
   Scope note: this feeds the standalone Dispatch report (dispatch-form.html)
-  with real channel×grade breakdowns — it currently has zero real rows,
-  ever. It does NOT feed the main dashboard's "Despatch / Day" KPI card;
+  with real channel×grade breakdowns. It does NOT feed the main dashboard's
+  "Despatch / Day" KPI card;
   that formula was re-pointed to the Production Report's CM-1 stock ledger
   on 2026-07-31 (see forms/formula-registry.js, 'despatch-day' v4) because
   the Dispatch form's own numbers drifted from what Operations reconciles
@@ -13,9 +13,10 @@
   consumer at all right now — populating them is still real value (the
   report itself), just not a KPI-card fix.
 
-  Mapping confirmed against real Odoo test data pulled 2026-08-04/05 (5
-  distinct product_grade values, 3 distinct dispatch_channel values
-  observed in every sample so far):
+  Mapping confirmed against real Odoo test data pulled 2026-08-04/05, and
+  re-confirmed against the PRODUCTION ERP 2026-09-23 after the endpoint
+  moved there (same 5 distinct product_grade values, same 3 distinct
+  dispatch_channel values, live through 2026-09-22):
     channel  '50 Kg Bag' -> 'reg' (matches dispatch-form.html's existing
              so_/veh_ "REG" naming for the 50kg-bag channel)
     channel  'Bulker'    -> 'blk'

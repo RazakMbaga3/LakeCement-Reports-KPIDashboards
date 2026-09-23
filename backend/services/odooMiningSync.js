@@ -53,28 +53,32 @@
   Each pull's result reports rowsUnknownProduct + the distinct codes seen
   so this is visible, not a silent gap.
 
-  ── The synthetic ticket number, and its one real weakness ──────────────
-  mining_report does not return a ticket number, and weighbridge_tickets
-  dedupes on a UNIQUE ticket_no. So each row gets a deterministic surrogate:
+  ── The ticket number: real on production, synthetic as a fallback ──────
+  The test instance never returned a ticket number, so this file originally
+  had to synthesise a deterministic surrogate for every row:
 
       ODOO-<16 hex of sha256(vendor|vehicle|gross_date|movement|product|qty)>
 
-  Deterministic means re-pulling the same range is a no-op rather than a
-  duplicate, which is what makes the rolling lookback window safe. The
-  'ODOO-' prefix keeps these keys in a namespace no real Odoo ticket number
-  can collide with. 64 bits of hash over ~60k rows/year puts a collision at
-  the 1-in-10^10 level — not a practical concern.
+  Since the 2026-09-23 move to the PRODUCTION ERP, mining_report DOES send
+  a real ticket_no (confirmed on every row sampled Jan–Sep 2026 — formats
+  vary by period, e.g. '56731' vs 'MN21092605', but it's never empty).
+  mapRow() below now uses that real value whenever the row has one, and
+  only falls back to the surrogate hash otherwise — so a stray future row
+  missing ticket_no still gets a stable, collision-resistant key instead of
+  being rejected outright. 64 bits of hash over ~60k rows/year puts a
+  surrogate collision at the 1-in-10^10 level — not a practical concern.
+  The 'ODOO-' prefix keeps surrogate keys out of the real ticket_no
+  namespace, which is plain alphanumeric strings with no fixed prefix.
 
-  The weakness is amendments. If someone corrects a ticket's weight in
-  Odoo, the hash changes, so the corrected row looks like a NEW ticket and
-  the stale one would linger — inflating that day's tonnage. Content
-  hashing cannot detect an edit; only a stable ticket_no can. That is why
-  syncDate() below does not merely upsert: for each date it pulls, it
-  DELETES the source='odoo' rows that were not in the pull, making the
-  synced set for that date an exact mirror of what Odoo currently holds.
-  Amendments and deletions both self-heal on the next run within the
-  lookback window. Asking the Odoo team for ticket_no would let this drop
-  back to a plain upsert — it is an open request, not a solved problem.
+  With a real ticket_no, an Odoo-side amendment (someone corrects a
+  ticket's weight) now lands as an ordinary UPDATE on the same row via the
+  ON CONFLICT clause below, instead of looking like a brand-new ticket next
+  to a stale one — the surrogate hash's one real weakness, now closed for
+  any row production actually sends ticket_no for. The belt-and-braces
+  stale-row sweep in syncDate() stays regardless: for each date it pulls,
+  it still DELETES the source='odoo' rows that weren't in this pull, so a
+  ticket Odoo deleted or reassigned to a different day self-heals the same
+  way it always did, rather than only amendments being covered.
 
   ── Why Excel-sourced dates are skipped by default ──────────────────────
   The Quarry dashboard sums every ticket in a date range. A day holding
@@ -122,6 +126,15 @@ function surrogateTicketNo(row) {
   return 'ODOO-' + crypto.createHash('sha256').update(parts).digest('hex').slice(0, 16);
 }
 
+/* Real ticket_no when the row has one (production, since 2026-09-23),
+   the content-hash surrogate otherwise (the test host; or any future row
+   production sends without one). VARCHAR(50) in migration 005 — real
+   values sampled so far ('56731', 'MN21092605') are well within that. */
+function ticketNoOf(row) {
+  const real = String(row.ticket_no ?? '').trim();
+  return real || surrogateTicketNo(row);
+}
+
 /* Raw Odoo row → the column set routes/quarry.js writes, or null if the row
    can't be trusted. A ticket with no usable date or no movement type has
    nowhere valid to land; net_qt must be a real number because it is summed
@@ -140,7 +153,7 @@ function mapRow(row) {
   return {
     unknownProductCode: label ? null : row.input_product,
     ticket: {
-      ticket_no:      surrogateTicketNo(row),
+      ticket_no:      ticketNoOf(row),
       vendor:         row.vendor || '',
       vehicle:        row.vehicle_no || '',
       transfer_type:  row.transfer_type || '',
@@ -154,9 +167,12 @@ function mapRow(row) {
 }
 
 /* Groups mapped tickets by date, keeping rejects so nothing vanishes
-   silently. Within a date, a repeated surrogate key means two rows were
-   byte-identical across every hashed field — the same weighing delivered
-   twice by the endpoint, not two events — so the later one is dropped. */
+   silently. Within a date, a repeated ticket_no collapses to the later
+   row: for a real ticket_no that's the endpoint sending the same ticket
+   twice in one pull (or, in principle, an amendment landing twice — the
+   later copy is the one to keep either way); for the surrogate hash it can
+   only mean two rows byte-identical across every hashed field, i.e. the
+   same weighing delivered twice, not two events. */
 function groupByDate(rows) {
   const byDate = new Map();
   const rejects = [];
@@ -317,5 +333,5 @@ async function pullMiningTickets(from, to, { overwriteExcelDates = false } = {})
 module.exports = {
   pullMiningTickets,
   // exported for tests / diagnostics
-  mapRow, groupByDate, surrogateTicketNo, dateOf, PRODUCT_LABEL,
+  mapRow, groupByDate, surrogateTicketNo, ticketNoOf, dateOf, PRODUCT_LABEL,
 };

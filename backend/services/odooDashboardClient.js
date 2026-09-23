@@ -24,8 +24,10 @@
   These two endpoints now live on the PRODUCTION ERP (erp.lakecement.co.tz,
   database `parallel`, its own API key), current to yesterday. The test host
   (46.101.75.211, database lcl_test_28_3, a 28-Mar-2026 snapshot) is what the
-  earlier findings below were measured on, and it still hosts dispatch_report
-  and mining_report, which production does NOT serve (404). Production data
+  earlier findings below were measured on. As of 2026-09-23, dispatch_report
+  and mining_report ALSO moved to this same production host (see
+  odooDispatchClient.js / odooMiningClient.js) — the test host may still
+  serve them too, but nothing here reads it any more. Production data
   has the same shape as test — same field names, products and units — so
   nothing here is server-specific. Defects re-measured on production the
   same day are noted per item.

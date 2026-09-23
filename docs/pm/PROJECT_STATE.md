@@ -38,8 +38,8 @@ piece of genuine engineering left that isn't waiting on someone else.
 
 | Workstream | Owner agent | Health | Basis |
 |---|---|---|---|
-| Code/Architecture | `code-architect` | 🟢 Green | Boots and verified; `npm test` green through smoke, now 11 suites. I-9 audit_log gaps, R-5 lint warnings, I-11 dotenv, I-13 log rotation, I-15 invite rollback and I-17 all fixed in tree. Open: I-19, the unbounded quarry ticket endpoint |
-| KPI/Data | `kpi-data-analyst` | 🟡 Amber | `accept:phase3` 27/27, KPI reference byte-current, all formula suites green. Quality KPI still at 1-day validation (I-2); Odoo dispatch/mining still on a TEST instance (R-1, re-scoped 2026-09-20) |
+| Code/Architecture | `code-architect` | 🟢 Green | Boots and verified; `npm test` green through smoke, now 11 suites. I-9 audit_log gaps, R-5 lint warnings, I-11 dotenv, I-13 log rotation, I-15 invite rollback and I-17 all fixed in tree. Open: **I-19 escalated 2026-09-23** — the unbounded quarry ticket endpoint now serves a real 784 KB gzipped payload (46,985 tickets) on every mines-report.html load, not a projection |
+| KPI/Data | `kpi-data-analyst` | 🟡 Amber | `accept:phase3` 27/27, KPI reference byte-current, all formula suites green. Quality KPI still at 1-day validation (I-2); Odoo dispatch/mining moved to production 2026-09-23 and dev-DB-backfilled (R-1 resolved for the app; droplet `.env`/backfill still pending — no SSH access from this session) |
 | UI/UX | `ui-ux-designer` | 🟢 Green | **Re-measured 2026-09-15.** Responsive 72/72 and a11y 0 violations — the design system is holding. I-12 and I-8 fixed; `adm-btn`'s 2px misalignment fixed. Remaining design-audit findings are an inventory backlog (68 colours vs a >30 threshold) plus audit false positives (I-20), not page defects |
 | QA/Testing | `qa-test-engineer` | 🟢 Green | 147 acceptance checks green across 9 suites; 11 unit suites green; the invariant gap that caused the outage is now covered by `test:approval` |
 | Security/Performance | `security-performance-auditor` | 🟡 Amber | Auth internals verified in source; `accept:phase1` 19/19. `openpg` unverifiable from code (R-4); email blocked at the tenant (R-6); perf not re-measured |
@@ -77,7 +77,7 @@ Legend: 🟢 on track, evidence current · 🟡 partial/at risk · 🔴 blocked/
 | **R-7** | **High — security, live** | forgot-password leaks which emails have accounts (known → 500, unknown → 200) because a send failure throws instead of returning `{sent:false}` | `security-performance-auditor` |
 | R-6 | High | No email can send — tenant blocks SMTP AUTH | Lake Cement IT |
 | R-4 | High | `openpg` may still hold its default password | `security-performance-auditor` / You |
-| R-1 | High | Odoo dispatch and mining still on the TEST instance; production, sales and purchases answer on production (re-scoped 2026-09-20) | You → Odoo Team |
+| R-1 | Medium | Odoo dispatch and mining moved to production 2026-09-23, same host/key as production/sales/purchases; app-side done, droplet `.env` + its own backfill still pending (re-scoped 2026-09-23) | You → whoever holds droplet SSH access |
 | I-7 | Medium | No backups configured locally; droplet state unverified | `deployment-engineer` |
 | I-2 | Medium | Quality KPI validated on 1 day of data vs. 91 for others | `kpi-data-analyst` |
 
@@ -86,7 +86,7 @@ Full log: [`RAID_LOG.md`](RAID_LOG.md) — 14 open, 2 assumptions, 4 closed/corr
 ## Go-live blockers owned outside this repo
 
 - **Lake Cement IT:** enable SMTP AUTH for `digital@lakecement.co.tz`, or move the sender to Graph API (R-6)
-- **Odoo Team:** `dispatch_report`/`mining_report` on production; approval status, run hours and a crusher group on `production_report`; Purchases field names; network path droplet↔Odoo (R-1, D-1)
+- **Odoo Team:** approval status, run hours and a crusher group on `production_report`; a Dispatch-report field for the "CEMENT B-M 42.5 N" (Duramax 42) grade; Purchases field names; network path droplet↔Odoo (D-1). (`dispatch_report`/`mining_report` on production — done 2026-09-23, see R-1.)
 - **Management / Plant Head:** who receives the daily digest and alerts (D-2); confirm the E&I approval decision (DEC-003)
 - **Whoever admins the Odoo-bundled Postgres:** `openpg` rotation (R-4)
 

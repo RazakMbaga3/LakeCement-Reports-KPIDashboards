@@ -10,20 +10,28 @@
   was never wired up. Re-tested 2026-09-08: it now returns real weighbridge
   traffic — 5,211 rows for Feb 2026, 3,990 for Mar 2026.
 
-  Row shape (confirmed against March 2026 data, 3,990 rows):
-    { vendor, vehicle_no, transfer_type, movement_type, input_product,
-      uom, gross_date, net_qt, reader }
-  Observed values: 2 vendors, 11 vehicles, transfer_type ∈ {Production
-  Transfers, Internal Transfers}, input_product ∈ {QRM001, QRM003, QRM007,
-  QRM008}, uom always 'MT', reader always 'RFID', and the six movement_type
-  values the Quarry dashboard already models.
+  Moved from the test instance to the PRODUCTION ERP 2026-09-23
+  (https://erp.lakecement.co.tz/mining_report), per Ankita (Teckzilla) —
+  same key as ODOO_PRODUCTION_API_KEY. Confirmed live through 2026-09-22.
 
-  ── The missing field, and why it shapes everything downstream ──────────
-  There is NO ticket_no in the response. weighbridge_tickets dedupes on a
-  UNIQUE ticket_no (migration 005), so odooMiningSync.js has to synthesise
-  a deterministic surrogate key from the row's own content. That works, but
-  it is strictly worse than the real thing — see that file's header. Adding
-  ticket_no to this endpoint is an open request with the Odoo team.
+  Row shape (confirmed against production data, Jan–Sep 2026):
+    { vendor, ticket_no, vehicle_no, transfer_type, movement_type,
+      input_product, uom, gross_date, net_qt, reader }
+  Observed values: transfer_type ∈ {Production Transfers, Internal
+  Transfers}, input_product ∈ {QRM001, QRM003, QRM005, QRM007, QRM008,
+  RM000003, RM000005}, uom always 'MT', reader always 'RFID', and the six
+  movement_type values the Quarry dashboard already models.
+
+  ── ticket_no now exists — the test host's one real gap is closed ───────
+  The test instance never returned a ticket number, which is why
+  odooMiningSync.js synthesises a deterministic surrogate key (see that
+  file's header for the full story). PRODUCTION DOES return ticket_no —
+  confirmed 2026-09-23, format varies by period ('56731' in Jul data,
+  'MN21092605' in Sep data, both plain strings, never empty in any row
+  sampled). odooMiningSync.js now prefers this real value and only falls
+  back to the content-hash surrogate when a row is missing it, so this
+  client still returns rows without ticket_no untouched rather than
+  inventing one — that decision belongs to the sync layer, not here.
 
   Configured from ODOO_MINING_URL + ODOO_MINING_API_KEY. When unset they are
   derived from the DISPATCH pair (same controller, same host, same key — the
@@ -31,11 +39,15 @@
 
   It deliberately does NOT fall back to the sales/purchase DASHBOARD pair.
   An earlier version did, and that was a trap: on 2026-09-19 the dashboards
-  moved to the production ERP (erp.lakecement.co.tz), which serves only
-  sale_dashboard_report and purchase_dashboard_report — mining_report and
-  dispatch_report are still 404 there and live only on the test host. With
-  the dashboard fallback, repointing the dashboards at production would have
-  silently repointed mining at an endpoint that does not exist.
+  moved to the production ERP ahead of dispatch/mining, so a shared
+  fallback would have silently repointed mining at whatever the dashboard
+  pair happened to point at that week. Now that all of dispatch_report,
+  mining_report, production_report, sale_dashboard_report and
+  purchase_dashboard_report are confirmed on the same production host under
+  ODOO_PRODUCTION_API_KEY, this fallback restriction is no longer live
+  ammunition — but it's left in place: ODOO_MINING_URL/ODOO_DISPATCH_URL
+  are still their own independent settings, and nothing should assume
+  every bespoke endpoint always shares a host just because it does today.
 */
 
 function config() {

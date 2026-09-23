@@ -23,11 +23,18 @@
       collapsed to 196 aggregated rows with zero duplicate
       (date,grade,channel) triples after the Odoo team's 2026-08-05 fix).
 
-  Configured from ODOO_DISPATCH_URL (full endpoint URL, e.g.
-  http://46.101.75.211:8069/dispatch_report) + ODOO_DISPATCH_API_KEY —
-  deliberately separate from ODOO_URL/ODOO_DB/ODOO_USERNAME/ODOO_API_KEY
+  Configured from ODOO_DISPATCH_URL (full endpoint URL) + ODOO_DISPATCH_API_KEY
+  — deliberately separate from ODOO_URL/ODOO_DB/ODOO_USERNAME/ODOO_API_KEY
   (odooClient.js's config), since this endpoint has nothing to do with
   Odoo's generic XML-RPC login flow.
+
+  Moved from the Odoo team's test instance (46.101.75.211) to the
+  PRODUCTION ERP 2026-09-23 (https://erp.lakecement.co.tz/dispatch_report),
+  per Ankita (Teckzilla) — same key as ODOO_PRODUCTION_API_KEY
+  (odooProductionClient.js). Confirmed by direct testing the same day:
+  same transport contract (form-encoded POST, ISO dates, response shape),
+  live data through 2026-09-22, product_grade/dispatch_channel values
+  unchanged from the mapping below.
 */
 
 function config() {
