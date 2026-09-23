@@ -70,7 +70,7 @@ test.before(async () => {
   process.env.SMTP_PORT = String(port);
   process.env.SMTP_USER = 'probe@example.test';
   process.env.SMTP_PASS = 'not-a-real-password';
-  process.env.SMTP_FROM = 'mis@lakecement.co.tz';
+  process.env.SMTP_FROM = 'digital@lakecement.co.tz';
 });
 
 test.after(async () => {

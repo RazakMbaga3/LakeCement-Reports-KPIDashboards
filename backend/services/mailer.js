@@ -59,7 +59,7 @@ async function sendMail({ subject, html, to }) {
   let info;
   try {
     info = await transport.t.sendMail({
-      from: process.env.SMTP_FROM || 'mis@lakecement.co.tz',
+      from: process.env.SMTP_FROM || 'digital@lakecement.co.tz',
       to: list.join(', '),
       subject, html,
     });

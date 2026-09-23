@@ -15,7 +15,7 @@ const assert = require('node:assert/strict');
 /* Set before requiring: mailer.js reads process.env at call time, but being
    explicit here keeps the test independent of whatever .env holds. */
 process.env.DIGEST_TRANSPORT = 'json';
-process.env.SMTP_FROM = 'mis@lakecement.co.tz';
+process.env.SMTP_FROM = 'digital@lakecement.co.tz';
 delete process.env.SMTP_HOST;          // force the json transport, not real SMTP
 
 const authMail = require('../services/authMail');
@@ -94,6 +94,6 @@ test('a name with HTML in it cannot inject markup into the message', async () =>
 test('the message is addressed from SMTP_FROM', async () => {
   await withAppUrl('https://mis.lakecement.co.tz', async () => {
     const r = await authMail.sendVerify({ to: TO, fullName: 'X', token: TOKEN });
-    assert.match(r.message.from.address, /mis@lakecement\.co\.tz/);
+    assert.match(r.message.from.address, /digital@lakecement\.co\.tz/);
   });
 });

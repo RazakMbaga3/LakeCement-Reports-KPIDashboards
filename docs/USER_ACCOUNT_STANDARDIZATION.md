@@ -60,7 +60,7 @@
 
 ## C. The standard we are adopting
 
-- **Email is the identity.** Format `firstname.lastname@lakecement.co.tz`. *(Domain assumed from `SMTP_FROM=mis@lakecement.co.tz` in `.env.example` — IT to confirm before anything is loaded.)*
+- **Email is the identity.** Format `firstname.lastname@lakecement.co.tz`. *(Domain assumed from `SMTP_FROM=digital@lakecement.co.tz` in `.env.example` — IT to confirm before anything is loaded.)*
 - **One account = one named person.** No shared departmental logins except the two `AUTOMATION` service accounts.
 - **`role` + `level` stay the access key.** Access rules across the app key off `role` (department) and `level` (`officer` / `senior` / `hod`). Those do not change. Email is added alongside as a unique identity and login alias.
 - **Three levels per department**, matching the existing `level` column: L1 HOD → L2 Senior → L3 Officer.
