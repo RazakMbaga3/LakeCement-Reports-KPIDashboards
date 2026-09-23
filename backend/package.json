@@ -32,6 +32,7 @@
     "accept:odoo-production-autofill": "node scripts/accept-odoo-production-autofill.js",
     "watchdog": "node scripts/watchdog-once.js",
     "dashboard:warm": "node scripts/warm-dashboards-once.js",
+    "queue:production-backlog": "node scripts/queue-production-backlog.js",
     "backup": "node scripts/backup-once.js",
     "restore:drill": "node scripts/restore-drill.js",
     "service:install": "node scripts/service-install.js",
