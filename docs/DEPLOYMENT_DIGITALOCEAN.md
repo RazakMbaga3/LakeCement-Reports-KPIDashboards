@@ -230,8 +230,13 @@ sudo certbot --nginx -d smr.lakecement.co.tz \
 installs a systemd timer that renews the certificate on its own; confirm
 with `sudo certbot renew --dry-run`.
 
-Then set `ALLOWED_ORIGIN` and `APP_URL` in `backend/.env` to
-`https://smr.lakecement.co.tz` (§2.5) and `pm2 reload ecosystem.config.js`.
+Then point `backend/.env` at the new domain and reload — `deploy/set-app-domain.sh`
+does both `ALLOWED_ORIGIN` and `APP_URL` in one idempotent command instead of
+hand-editing `.env`:
+```bash
+bash deploy/set-app-domain.sh smr.lakecement.co.tz
+pm2 reload ecosystem.config.js
+```
 From then on staff use that URL, not the bare IP.
 
 **If the MD later picks a different name**, it's a routine reconfigure, not a
@@ -241,8 +246,9 @@ sudo nano /etc/nginx/sites-available/lake-cement   # server_name <new-name>
 sudo nginx -t && sudo systemctl reload nginx
 sudo certbot --nginx -d <new-name> --redirect
 sudo certbot delete --cert-name smr.lakecement.co.tz   # drop the old one
+bash deploy/set-app-domain.sh <new-name>
+pm2 reload ecosystem.config.js
 ```
-Update `ALLOWED_ORIGIN` / `APP_URL` in `.env` to match and `pm2 reload`.
 
 *Stopgap if the A record is delayed and HTTPS is needed sooner:*
 `138.68.166.86.nip.io` is free wildcard DNS that resolves to that same IP, so
