@@ -441,12 +441,32 @@
     return res.json();
   }
 
+  /* ── Power Consumption Report — fixed Specific Power targets
+     (routes/power.js) ── one authoritative value per section, read by
+     every day's report instead of typed in fresh each time. */
+  async function getPowerTargets() {
+    const res = await fetch(BASE + '/power/targets', { headers: _headers() });
+    if (!res.ok) throw _httpError('getPowerTargets', '', res);
+    return res.json();
+  }
+
+  async function setPowerTarget(section, targetKwhMt) {
+    const res = await fetch(BASE + '/power/targets/' + encodeURIComponent(section), {
+      method:  'PUT',
+      headers: _headers(),
+      body:    JSON.stringify({ target_kwh_mt: targetKwhMt }),
+    });
+    if (!res.ok) throw _httpError('setPowerTarget', section, res);
+    return res.json();
+  }
+
   global.NyatiAPI = {
     submitForm, getForm, getFormRange, getFormHistory, getUnfinished,
     evalFormulas, getDailySeries, setOverride, clearOverride, getOverrides,
     getBaseline, getCompleteness, getDataRange, getDailySummary,
     getStoppageInsights, getEquipmentStoppageDetail,
     getStoppageReasons, addStoppageReason,
+    getPowerTargets, setPowerTarget,
     quarryImportTickets, quarryGetTickets,
     getSalesTerritories, getSalesDashboard, setSalesTarget,
     getPurchasesDashboard,

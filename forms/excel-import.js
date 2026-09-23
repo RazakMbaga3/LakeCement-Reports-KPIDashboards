@@ -1147,10 +1147,19 @@
   };
 
   /* ── Apply extracted data to form inputs ──────────────────────── */
+  /* 'date' is deliberately never written here. Every form's date input
+     has a form-persist.js change-listener that LOADS whatever's already
+     saved for that day — so setting it and dispatching 'change' like any
+     other field made the page reload the (usually blank) saved draft a
+     moment after applying, silently wiping every field this just filled.
+     The toast still said "N fields filled" because that count is taken
+     before the reload fires. The user is already on the day they meant
+     to fill — matching it to data.date is showPreview()'s job (the
+     "Report date" line), not applyToForm()'s. */
   function applyToForm(data) {
     var applied = 0;
     Object.keys(data).forEach(function (field) {
-      if (field === '_error' || data[field] === '' || data[field] == null) return;
+      if (field === '_error' || field === 'date' || data[field] === '' || data[field] == null) return;
       var el = document.querySelector('[data-field="' + field + '"]');
       if (!el) return;
       el.value = data[field];
@@ -1178,6 +1187,8 @@
     var fields  = Object.keys(data).filter(function (k) { return k !== '_error' && data[k] !== '' && data[k] != null; });
     var matched = fields.filter(function (k) { return !!document.querySelector('[data-field="' + k + '"]'); });
     var extra   = fields.filter(function (k) { return !document.querySelector('[data-field="' + k + '"]'); });
+    var dateEl  = document.querySelector('[data-field="date"]');
+    var openDate = dateEl ? dateEl.value : '';
 
     /* Build field table */
     var rowsHtml = fields.filter(function (k) { return k !== 'date'; }).map(function (k) {
@@ -1204,7 +1215,11 @@
         '</div>' +
         /* body */
         '<div style="padding:14px 18px;overflow-y:auto;flex:1">' +
-          (data.date ? '<div style="font-size:12px;color:#5A6270;margin-bottom:10px">Report date: <strong style="color:#173158">' + data.date + '</strong></div>' : '') +
+          (data.date ? (
+            openDate && openDate !== data.date
+              ? '<div style="font-size:12px;color:#92400E;background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;padding:7px 10px;margin-bottom:10px">⚠ This file is for <strong>' + data.date + '</strong>, but the report open here is for <strong>' + openDate + '</strong>. Applying will fill today\'s open report with that day\'s figures — switch the date first if that\'s not what you meant.</div>'
+              : '<div style="font-size:12px;color:#5A6270;margin-bottom:10px">Report date: <strong style="color:#173158">' + data.date + '</strong></div>'
+          ) : '') +
           '<div style="display:flex;gap:8px;margin-bottom:12px">' +
             '<span style="background:var(--st-good-bg);color:#065F46;font-size:12px;font-weight:700;padding:3px 10px;border-radius:9px">' + matched.length + ' matched</span>' +
             (extra.length ? '<span style="background:#F1F5F9;color:#64748B;font-size:12px;font-weight:700;padding:3px 10px;border-radius:10px">' + extra.length + ' not in form</span>' : '') +

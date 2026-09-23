@@ -318,6 +318,18 @@ CREATE TABLE IF NOT EXISTS sales_targets (
   UNIQUE (target_month, officer_code, grade_key)
 );
 
+-- Fixed Specific Power targets for the Power Consumption Report's Section 1
+-- table — see migration 022's header for why these live here instead of a
+-- plain HTML input. One row per section, no month/year dimension: the
+-- figure is a roughly-yearly engineering constant, changed deliberately and
+-- rarely rather than tracked per period.
+CREATE TABLE IF NOT EXISTS power_targets (
+  section       VARCHAR(20)  PRIMARY KEY,   -- crusher|rawmill|coalmill|kiln|cm1|cm2|packing|utilities
+  target_kwh_mt NUMERIC(8,2) NOT NULL,
+  updated_by    INTEGER REFERENCES users(id),
+  updated_at    TIMESTAMP    NOT NULL DEFAULT NOW()
+);
+
 -- ── INDEXES (speeds up common queries) ──────────────────────
 CREATE INDEX IF NOT EXISTS idx_daily_reports_date     ON daily_reports(record_date);
 CREATE INDEX IF NOT EXISTS idx_daily_reports_form     ON daily_reports(form_type);
