@@ -1009,6 +1009,7 @@
         [/STAMICO/i,          'cpp_coal_recv_stamico'],
         [/RUVUMA/i,           'cpp_coal_recv_ruvuma'],
         [/MCHEKANAI/i,        'cpp_coal_recv_mchekanai'],
+        [/JITEGEMEE/i,        'cpp_coal_recv_jitegemee'],
       ];
       rows.forEach(function (r) {
         var text = String(r[DESC] || '').trim();

@@ -759,6 +759,11 @@
         <input type="number" class="ci" step="any" data-field="cpp_coal_recv_mchekanai" value="" style="font-size:22px;font-weight:800;color:var(--navy);width:100%;border:none;background:transparent;text-align:center;font-family:var(--font);outline:none;" />
         <div class="coal-tile-unit">TONS</div>
       </div>
+      <div class="coal-tile">
+        <div class="coal-tile-src">JITEGEMEE</div>
+        <input type="number" class="ci" step="any" data-field="cpp_coal_recv_jitegemee" value="" style="font-size:22px;font-weight:800;color:var(--navy);width:100%;border:none;background:transparent;text-align:center;font-family:var(--font);outline:none;" />
+        <div class="coal-tile-unit">TONS</div>
+      </div>
     </div>
 
     <!-- Total bar -->
@@ -1132,7 +1137,7 @@ initKpiLive(CPP_COMPUTES);
   setTimeout(run, 260);
 }());
 
-/* Coal "Total Received Today" — summed live from the five source tiles.
+/* Coal "Total Received Today" — summed live from the six source tiles.
    It was hardcoded ("124 TONS (STAMICO 114 + Ruvuma 10)") back when those
    tiles were unwired mock inputs, so it stated a figure no one had entered. */
 (function () {
@@ -1142,6 +1147,7 @@ initKpiLive(CPP_COMPUTES);
     ['cpp_coal_recv_stamico',        'STAMICO'],
     ['cpp_coal_recv_ruvuma',         'Ruvuma'],
     ['cpp_coal_recv_mchekanai',      'MCHEKANAI'],
+    ['cpp_coal_recv_jitegemee',      'Jitegemee'],
   ];
   var totalEl = document.getElementById('coal-total');
   var partsEl = document.getElementById('coal-total-parts');
