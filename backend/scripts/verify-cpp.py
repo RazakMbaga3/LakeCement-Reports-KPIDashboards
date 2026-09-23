@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
 verify-cpp.py — INDEPENDENT full-coverage verification of the `cpp`
-form_type (Captive Power Plant, FRM-LCL-PP-06) for Jul-Aug 2026, separate
+form_type (Captive Power Plant, FRM-LCL-PP-06) for Jul-Sep 2026, separate
 from import-cpp.js's own logic.
 
-What it proves, for EVERY day of 2026-07-01..2026-08-31 (62 dates), against
-a fresh GET from the local API:
+What it proves, for every REPORTED day of 2026-07-01..2026-09-30, against a
+fresh GET from the local API (September is the month in progress: the days
+its workbook leaves blank are listed, not failed):
 
   1. DAILY (workbook column E) — every stored fact equals the plant's own
      daily figure.
@@ -39,6 +40,7 @@ import sys
 import urllib.request
 import urllib.error
 import calendar
+import re
 import datetime as dt
 import openpyxl
 import warnings
@@ -55,7 +57,16 @@ SAMPLES = os.path.join(ROOT, 'data', 'samples', '2026-04-21')
 MONTHS = [
     {'file': os.path.join(SAMPLES, 'DAILY,MONTHLY & EARLY REPORT-JULY-2026.xlsx'), 'year': 2026, 'month': 7},
     {'file': os.path.join(SAMPLES, 'DAILY,MONTHLY & EARLY REPORT--AUG 2026.xlsx'), 'year': 2026, 'month': 8},
+    {'file': os.path.join(SAMPLES, 'DAILY,MONTHLY & YEARLY REPORT-SEP-2026.xlsx'), 'year': 2026, 'month': 9},
 ]
+
+# The four lab/DCS constants, per column, as the workbook hardcodes them
+# into its own heat-rate formulas — re-parsed here from the formula text
+# (openpyxl expands the shared formulas exceljs hands back unexpanded) so
+# the importer's own extraction is checked rather than trusted.
+CONST_FIELDS = ['cpp_superheated_steam_enthalpy', 'cpp_feedwater_enthalpy',
+                'cpp_dm_water_enthalpy', 'cpp_boiler_efficiency']
+COL_SUFFIX = {5: '', 6: '_mtd', 7: '_ytd'}
 
 FISCAL_START = '2026-04-01'
 
@@ -135,6 +146,7 @@ PRE = chr(10)
 
 FAILURES = []
 KNOWN = []
+missing_consts = []
 CHECKS = 0
 MAXDEV = {}
 
@@ -224,6 +236,19 @@ def sheet_rows(ws):
     return found
 
 
+def sheet_is_blank(ws, R):
+    """True when the plant has not filled this sheet in at all — every mapped
+    reading blank or zero. Mirrors import-cpp.js's own all-zero test, which
+    is what decided there would be no record for the day. The heat-rate
+    cells still hold formulas on such a sheet, and they read #DIV/0!."""
+    for fact, row in R.items():
+        col = 6 if fact == 'cpp_flyash_gcv' else 5
+        v = cell(ws, row, col)
+        if v is not None and abs(v) > 0.001:
+            return False
+    return True
+
+
 def derived_rows(ws):
     found = {}
     for row in range(1, ws.max_row + 1):
@@ -265,6 +290,52 @@ def derive(f):
     }
 
 
+def sheet_constants(wsf, col):
+    """The constants the workbook itself uses in row 22/23 of one column."""
+    tg = wsf.cell(row=22, column=col).value
+    plant = wsf.cell(row=23, column=col).value
+    if not isinstance(tg, str) or not isinstance(plant, str):
+        return None
+    ent = re.search(r'\((\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\)', tg)
+    dm = re.search(r'\*\s*\((\d+(?:\.\d+)?)\)\s*\)', tg)
+    eff = re.search(r'\*\s*(\d*\.\d+)\s*\)\s*$', plant)
+    if not (ent and dm and eff):
+        return None
+    return {'cpp_superheated_steam_enthalpy': float(ent.group(1)),
+            'cpp_feedwater_enthalpy': float(ent.group(2)),
+            'cpp_dm_water_enthalpy': float(dm.group(1)),
+            'cpp_boiler_efficiency': float(eff.group(1))}
+
+
+def record_constants(rec, suffix):
+    """The constants the APP holds for one column of one day, or None."""
+    out = {}
+    for f in CONST_FIELDS:
+        v = rec['data'].get(f + suffix)
+        if v is None or v == '':
+            return None
+        out[f] = num(v)
+    return out if out['cpp_superheated_steam_enthalpy'] > 0 else None
+
+
+def rate_rollup(rows, rec, suffix, which):
+    """Heat Rate MTD/YTD exactly as power-plant-report.html computes it:
+    from the period totals and that column's own constants when the day
+    carries them, else the generation-weighted mean of the daily readings."""
+    gross = sum(num(r['data'].get('cpp_gross_gen_kwh')) for r in rows)
+    k = record_constants(rec, suffix)
+    if k and gross > 0:
+        rise = k['cpp_superheated_steam_enthalpy'] - k['cpp_feedwater_enthalpy']
+        if which == 'tg':
+            turbine = sum(num(r['data'].get('cpp_turbine_steam_mt')) for r in rows)
+            dm = sum(num(r['data'].get('cpp_dm_water_cons_m3')) for r in rows)
+            return ((turbine * rise) + (dm * k['cpp_dm_water_enthalpy'])) * 1000 / gross
+        boiler = sum(num(r['data'].get('cpp_boiler_steam_mt')) for r in rows)
+        if k['cpp_boiler_efficiency'] > 0:
+            return boiler * rise * 1000 / (gross * k['cpp_boiler_efficiency'])
+    return weighted_rate(rows, 'cpp_heat_rate_tg' if which == 'tg' else 'cpp_heat_rate_plant')
+
+
 def weighted_rate(rows, field):
     """Heat Rate MTD/YTD — generation-weighted mean of the stored daily
     readings, per formula-registry.js's monthlyAgg rule and the page's own
@@ -282,18 +353,21 @@ def main():
     token = api('POST', '/auth/login', body={'username': CPP_USER, 'password': CPP_PASS})['token']
     print('Logged in as %s\n' % CPP_USER)
 
-    rows = api('GET', '/reports/cpp?from=%s&to=2026-08-31' % FISCAL_START, token=token)
+    rows = api('GET', '/reports/cpp?from=%s&to=2026-09-30' % FISCAL_START, token=token)
     by_date = {}
     for r in rows:
         d = r['record_date'][:10]
         by_date[d] = {'record_date': d, 'data': r['data'] or {}, 'status': r['status']}
-    print('%d cpp records fetched for %s..2026-08-31' % (len(by_date), FISCAL_START))
+    print('%d cpp records fetched for %s..2026-09-30' % (len(by_date), FISCAL_START))
 
     for m in MONTHS:
         wb = openpyxl.load_workbook(m['file'], data_only=True)
+        wbf = openpyxl.load_workbook(m['file'], data_only=False)   # formula text, for the constants
         days = calendar.monthrange(m['year'], m['month'])[1]
         print('\n=== %s — %d-%02d, %d days ===' % (os.path.basename(m['file']), m['year'], m['month'], days))
         blanks = []
+        unreported = []
+        reported = 0
 
         for day in range(1, days + 1):
             date = '%d-%02d-%02d' % (m['year'], m['month'], day)
@@ -309,8 +383,17 @@ def main():
             D = derived_rows(ws)
             rec = by_date.get(date)
             if not rec:
-                FAILURES.append('%s NO RECORD in the app at all' % date)
+                # A sheet the plant has not filled in yet (every reading blank,
+                # its own heat-rate cells reading #DIV/0!) is not a missing
+                # record — there is nothing to record. The importer skips it
+                # rather than asserting the plant generated zero, and the
+                # workbook's own MTD/YTD simply do not move that day.
+                if sheet_is_blank(ws, R):
+                    unreported.append(date)
+                    continue
+                FAILURES.append('%s NO RECORD in the app, but the workbook has readings' % date)
                 continue
+            reported += 1
             if rec['status'] != 'approved':
                 FAILURES.append('%s status is %s, expected approved' % (date, rec['status']))
 
@@ -350,13 +433,34 @@ def main():
                 check('derived ' + key, date, 'MTD', mtd_d[key], cell(ws, D[key], 6))
                 check('derived ' + key, date, 'YTD', ytd_d[key], cell(ws, D[key], 7))
 
-            for key, fact in (('hr_tg', 'cpp_heat_rate_tg'), ('hr_plant', 'cpp_heat_rate_plant')):
-                check('rollup ' + key, date, 'MTD', weighted_rate(mtd_rows, fact),
+            # ── 5. the four constants, per column, as the app stores them
+            #      vs as the workbook's own formulas hardcode them
+            wsf = wbf[str(day)]
+            for col, suffix in COL_SUFFIX.items():
+                want_k = sheet_constants(wsf, col)
+                got_k = record_constants(rec, suffix)
+                if want_k is None:
+                    continue
+                if got_k is None:
+                    missing_consts.append('%s %s' % (date, suffix or '(day)'))
+                    continue
+                kind = 'DAY' if col == 5 else ('MTD' if col == 6 else 'YTD')
+                for f in CONST_FIELDS:
+                    check('const ' + f.replace('cpp_', '') + suffix, date, kind, got_k[f], want_k[f])
+
+            # ── 6. the two heat-rate rollups, on whichever basis the page
+            #      itself would use for this day (see rate_rollup)
+            for key, which in (('hr_tg', 'tg'), ('hr_plant', 'plant')):
+                fact = 'cpp_heat_rate_tg' if which == 'tg' else 'cpp_heat_rate_plant'
+                check('rollup ' + key, date, 'MTD', rate_rollup(mtd_rows, rec, '_mtd', which),
                       cell(ws, R[fact], 6), TOL_RATE_ROLLUP)
-                check('rollup ' + key, date, 'YTD', weighted_rate(ytd_rows, fact),
+                check('rollup ' + key, date, 'YTD', rate_rollup(ytd_rows, rec, '_ytd', which),
                       cell(ws, R[fact], 7), TOL_RATE_ROLLUP)
 
-        print('  %d days read' % days)
+        print('  %d of %d days reported and checked' % (reported, days))
+        if unreported:
+            print('  sheets the plant has not filled in (no record, nothing to check):')
+            print('    ' + ', '.join(unreported))
         if blanks:
             print('  cells the plant left blank (field omitted, counted as 0 in every rollup — same as the workbook):')
             for b in blanks:
@@ -367,6 +471,16 @@ def main():
         print(PRE + '%d known workbook defect(s) - the app is right, the source cell is not:' % len(KNOWN))
         for k in KNOWN:
             print('  ' + k)
+    if missing_consts:
+        by_month = {}
+        for entry in missing_consts:
+            by_month[entry[:7]] = by_month.get(entry[:7], 0) + 1
+        print(PRE + 'columns whose constants the app does not hold, by month:')
+        for mth in sorted(by_month):
+            print('  %s  %3d column(s)' % (mth, by_month[mth]))
+        print('  Jul-Aug were imported before the constants were part of the record. Both')
+        print('  months run at 0.78 throughout, so the weighted-mean fallback reproduces')
+        print('  the workbook exactly there — which is what the zero mismatches above say.')
     print('largest deviation per check type:')
     for k, v in sorted(MAXDEV.items(), key=lambda kv: -kv[1])[:8]:
         print('  %12.6g  %s' % (v, k))

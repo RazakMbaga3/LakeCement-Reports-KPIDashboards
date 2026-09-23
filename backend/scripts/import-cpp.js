@@ -15,6 +15,8 @@
       that had never been keyed in anywhere but Excel)
       "data/samples/2026-04-21/DAILY,MONTHLY & EARLY REPORT-JULY-2026.xlsx"
       "data/samples/2026-04-21/DAILY,MONTHLY & EARLY REPORT--AUG 2026.xlsx"
+    Sep 2026 (added 2026-09-23, the month still in progress)
+      "data/samples/2026-04-21/DAILY,MONTHLY & YEARLY REPORT-SEP-2026.xlsx"
 
   Each workbook has one sheet per day named "1".."N" (sheet "0" is the
   previous month's last day, a carry-in snapshot of pasted values —
@@ -68,11 +70,12 @@
   Usage: node scripts/import-cpp.js [--months 2026-07,2026-08]
                                     [--base-url http://localhost:5000/api]
 
-  --months defaults to the Jul-Aug 2026 pair. The Apr-Jun three are
-  already in every database (locally from the original run, everywhere
-  else from db/migrations/015_seed_apr_jun_2026_reports.sql) and re-posting
-  them would only re-stamp updated_at, so they have to be asked for by
-  name: `--months 2026-04,2026-05,2026-06`, or `--months all`.
+  --months defaults to the newest month, September 2026. Every earlier
+  month is already in every database (Apr-Jun from migration 015, Jul-Aug
+  from 020) and re-posting one would only re-stamp updated_at, so they have
+  to be asked for by name: `--months 2026-07,2026-08`, or `--months all`.
+  Re-running an earlier month is otherwise safe and would simply add that
+  month's heat-rate constants, which the Apr-Aug rows predate.
 */
 require('../config/env');
 const path = require('path');
@@ -95,13 +98,14 @@ const MONTHS = [
   { key: '2026-06', dir: CPP_2026_Q1_DIR, file: 'DAILY,MONTHLY & YEARLY REPORT-JUNE-2026.xlsx', year: 2026, month: 6, days: 30 },
   { key: '2026-07', dir: SAMPLES_DIR,     file: 'DAILY,MONTHLY & EARLY REPORT-JULY-2026.xlsx',  year: 2026, month: 7, days: 31 },
   { key: '2026-08', dir: SAMPLES_DIR,     file: 'DAILY,MONTHLY & EARLY REPORT--AUG 2026.xlsx',  year: 2026, month: 8, days: 31 },
+  { key: '2026-09', dir: SAMPLES_DIR,     file: 'DAILY,MONTHLY & YEARLY REPORT-SEP-2026.xlsx',  year: 2026, month: 9, days: 30 },
 ];
 
 /* Which months this run writes. Default = the two that were sent as plain
    Excel and exist nowhere else; see the --months note in the header. */
 const monthsArg = process.argv.includes('--months')
   ? process.argv[process.argv.indexOf('--months') + 1]
-  : '2026-07,2026-08';
+  : '2026-09';
 const wanted = monthsArg === 'all' ? MONTHS.map(m => m.key) : monthsArg.split(',').map(s => s.trim());
 const unknown = wanted.filter(k => !MONTHS.some(m => m.key === k));
 if (unknown.length) {
@@ -132,6 +136,64 @@ const ROW_FACT = {
   36: 'cpp_flyash_to_coalyard_nos',
   37: 'cpp_flyash_to_dumpyard_nos',
 };
+
+/* The four lab/DCS constants FRM-LCL-PP-06 hardcodes inside its own
+   heat-rate formulas, pulled back out of the formula text per sheet per
+   column. Row 22 (Heat Rate TG) carries the three enthalpies:
+
+     =((E17*(803-130)+E31*(30))*1000)/E7      ->  sh 803, fw 130, dm 30
+
+   and row 23 (Heat Rate Plant) carries the boiler efficiency:
+
+     =(E15*(803-130))*1000/(E7*0.78)          ->  eff 0.78
+
+   Column E is the day, F the month to date, G the year to date, and the
+   workbook genuinely varies them per column — 20 Sep 2026 runs its whole
+   sheet at 0.77 while 19 and 21 Sep run at 0.78. Storing them (since
+   2026-09-23) as the twelve cpp_*_enthalpy / cpp_boiler_efficiency[_mtd|
+   _ytd] fields is what lets power-plant-report.html reproduce that sheet's
+   MTD and YTD heat rates exactly instead of falling back to a
+   generation-weighted mean of the daily readings, which cannot express a
+   period whose efficiency moved. Returns null for a column whose formulas
+   don't parse, and the day is then stored without that column's constants
+   — the page's fallback still covers it. */
+const COL_SUFFIX = { 5: '', 6: '_mtd', 7: '_ytd' };
+
+/* Excel stores most of the Year-to-Date column as a SHARED formula whose
+   master is the Month-to-Date cell beside it ({ sharedFormula: 'F22' }
+   rather than any text), and exceljs hands that back unexpanded. The
+   constants are literals, identical for every member of a shared group —
+   only the cell references translate — so following the reference to the
+   master and reading its formula gives the right numbers. Without this,
+   every YTD column in the September workbook parsed as "no constants". */
+function formulaText(ws, row, col, depth) {
+  const cell = ws.getRow(row).getCell(col);
+  const v = cell ? cell.value : null;
+  if (typeof v === 'string' && v.startsWith('=')) return v;
+  if (!v || typeof v !== 'object') return null;
+  if (typeof v.formula === 'string') return v.formula;
+  if (typeof v.sharedFormula === 'string' && (depth || 0) < 3) {
+    const master = ws.getCell(v.sharedFormula);
+    if (master && master.row && master.col) return formulaText(ws, master.row, master.col, (depth || 0) + 1);
+  }
+  return null;
+}
+
+function columnConstants(ws, col) {
+  const tg = formulaText(ws, 22, col);
+  const plant = formulaText(ws, 23, col);
+  if (!tg || !plant) return null;
+  const ent = tg.match(/\((\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\)/);
+  const dm  = tg.match(/\*\s*\((\d+(?:\.\d+)?)\)\s*\)/);
+  const eff = plant.match(/\*\s*(\d*\.\d+)\s*\)\s*$/);
+  if (!ent || !dm || !eff) return null;
+  return {
+    cpp_superheated_steam_enthalpy: Number(ent[1]),
+    cpp_feedwater_enthalpy:         Number(ent[2]),
+    cpp_dm_water_enthalpy:          Number(dm[1]),
+    cpp_boiler_efficiency:          Number(eff[1]),
+  };
+}
 
 function cellNumber(cell) {
   if (!cell) return undefined;
@@ -198,7 +260,18 @@ async function main() {
       if (flyCombustible !== undefined) data.cpp_flyash_combustible_pct = Math.round(flyCombustible * 100) / 100;
       if (flyGcv !== undefined) data.cpp_flyash_gcv = Math.round(flyGcv * 100) / 100;
 
-      const nonZero = Object.values(data).some((v) => v && Math.abs(v) > 0.001);
+      /* Constants per column, named for the Day / MTD / YTD inputs on
+         power-plant-report.html. Read before the all-zero test below so an
+         unfilled sheet — whose heat-rate cells read #DIV/0! — is still
+         skipped whole rather than stored as constants with no readings. */
+      for (const [col, suffix] of Object.entries(COL_SUFFIX)) {
+        const k = columnConstants(ws, Number(col));
+        if (!k) { console.error(`  ⚠ ${m.key} day ${day}: could not read the column ${col} constants`); continue; }
+        for (const [field, value] of Object.entries(k)) data[field + suffix] = value;
+      }
+
+      const FACT_KEYS = Object.values(ROW_FACT).concat(['cpp_flyash_combustible_pct', 'cpp_flyash_gcv']);
+      const nonZero = FACT_KEYS.some((f) => data[f] && Math.abs(data[f]) > 0.001);
       if (!nonZero) { skipped++; continue; }
 
       const dateStr = `${m.year}-${String(m.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
