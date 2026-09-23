@@ -113,10 +113,13 @@ echo
 echo "== 6/6  Health check =="
 PORT="$(grep -m1 '^PORT=' "$ENV_FILE" | cut -d'=' -f2)"
 PORT="${PORT:-5000}"
-curl -sS "http://localhost:${PORT}/api/health" | tee /dev/stderr \
-  | grep -q '"dispatch":"configured' \
-  && echo "OK — odoo checks report configured in /api/health" \
-  || echo "WARNING: could not confirm from /api/health — check manually: curl localhost:${PORT}/api/health"
+HEALTH="$(curl -sS "http://localhost:${PORT}/api/health" || true)"
+echo "$HEALTH"
+if echo "$HEALTH" | grep -q '"dispatch":"configured'; then
+  echo "OK — odoo checks report configured in /api/health"
+else
+  echo "WARNING: could not confirm from /api/health — check manually: curl localhost:${PORT}/api/health"
+fi
 
 echo
 echo "Done. Open Sales, Purchases, the Dispatch report, Quarry dashboard and the"
