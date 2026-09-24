@@ -5,10 +5,10 @@ in any session.** Maintained by the `project-manager` skill
 (`.claude/skills/project-manager/SKILL.md`).
 
 - **Last full audit:** 2026-09-13 (six specialist agents, every claim command-cited)
-- **Last hardening run:** 2026-09-24 — eight commits, every one gated on a real command's real output before it was made
-- **Last UI measurement:** 2026-09-24 — **responsive 88/88 checks pass** (22 pages x 4 viewports: 0 overflow, 0 text below the 12px floor of 5,649 nodes, 0 tap targets under 44px, 0 iOS-zoom triggers), **a11y 0 violations**, perf 2 pages over budget (both pre-existing: `daily-report` 1404KB, `quarry` 12876KB / RAID I-19), design-consistency 4 inventory findings and 0 collisions. This is the first 88/88: the 2026-09-15 baseline was 72/72 over 18 pages and had 44 below-floor nodes it did not count
-- **Last validation gate:** 2026-09-24 — backend 17 unit suites + smoke green; acceptance **phase1 19, phase2 18, phase3 27, phase5 10, phase7 9, phase8 21, quarry 15** = 119 checks, 0 failed; e2e **144 passed, 5 failed** — all five proven pre-existing (RAID I-28)
-- **Overall health:** 🟡 **Amber** — the write path is materially safer than it was yesterday; the open items are the five red e2e specs, the missing correction-request UI, and the risks owned outside this repo
+- **Last hardening run:** 2026-09-24 — thirteen commits, every one gated on a real command's real output before it was made
+- **Last UI measurement:** 2026-09-24 — **responsive 88/88 checks pass** (22 pages x 4 viewports: 0 overflow, 0 text below the 12px floor of 5,649 nodes, 0 tap targets under 44px, 0 iOS-zoom triggers), **a11y 0 violations** across every page including all 5 correction-request UI states, perf 2 pages over budget (both pre-existing: `daily-report` 1404KB, `quarry` 12876KB / RAID I-19), design-consistency 4 inventory findings and 0 collisions
+- **Last validation gate:** 2026-09-24 — backend 17 unit suites + smoke green; acceptance **phase1 19, phase2 18, phase3 27, phase5 10, phase7 9, phase8 21, quarry 15, amendments 92** = 211 checks, 0 failed; the five e2e failures logged earlier tonight as "pre-existing" (I-28) were re-diagnosed and fixed same-night — see below; a fresh full e2e run is in progress as the closing gate
+- **Overall health:** 🟡 **Amber** — the write path is materially safer than it was yesterday and the correction-request workflow (I-29) is built and tested; remaining open items are the risks owned outside this repo (R-4, R-6, R-7) and I-19 (quarry payload)
 
 ---
 
@@ -36,15 +36,33 @@ Phase 8, plus Burst Bag Rate, Clinker C₃S and CM-2 Output). Honesty cost
 something visible: real April reliability is 93.6% availability and 58 h
 MTBF against cards that used to read 99.5% and 180 h.
 
+**WBS-A2 / RAID I-29 — the correction-request workflow — is now built and
+closed**, same night as the lock that made it necessary. `report_amendments`
+(migration 027), request/grant/decline/withdraw routes, a "Request a
+correction" affordance + live poll + countdown window in
+`forms/form-persist.js`, a second queue on `approvals.html`, and a 15-min
+sweeper that restores the grant-time figures if a window closes unused. The
+load-bearing invariant held under test: a grant never changes
+`daily_reports.status`, so the day never leaves the KPIs/MIS pack/watchdog
+while a correction is open. 92/92 acceptance checks, 22/22 unit invariants,
+8/8 browser specs, 0 a11y/responsive violations across all five UI states.
+
+**RAID I-28 — the five e2e failures — were also re-diagnosed and fixed
+tonight**, not left as "pre-existing and therefore fine." None were app
+defects: one stale test (stoppage ownership moved P&M→Production
+2026-09-22), two tests asserting UI a deliberate commit had removed
+(dispatch MTD moved off the entry form), and two date-fill helpers that
+depended on live data state rather than the app's own logic. Root-caused and
+fixed rather than skipped; see RAID_LOG.md for detail.
+
 **Next up, in order:**
-1. **WBS-A2 / RAID I-29** — the correction-request UI. The lock is in; the
-   humane path around it is not. An officer who spots their own typo must
-   currently ask an HOD. Design is settled (see I-29); it needs building.
-2. **RAID I-28** — five e2e specs fail, two of them on the draft-reaccess
-   path that caused I-22/I-23. Proven pre-existing, but they must be closed
-   before e2e becomes a deploy gate.
-3. **R-7** then **RAID I-19** (the 12.8 MB quarry payload, now measured and
-   four times worse than when it was logged).
+1. **A fresh full e2e run** to confirm the I-28 fixes hold together with
+   everything else built tonight — in progress, not yet reported.
+2. **R-7** (forgot-password address-enumeration — live, security) then
+   **RAID I-19** (the 12.8 MB quarry payload, four times worse than when it
+   was first logged).
+3. **R-4/R-6** — both owned outside this repo (Lake Cement IT / whoever
+   admins the Odoo Postgres).
 
 ---
 
@@ -52,10 +70,10 @@ MTBF against cards that used to read 99.5% and 180 h.
 
 | Workstream | Owner agent | Health | Basis |
 |---|---|---|---|
-| Code/Architecture | `code-architect` | 🟢 Green | `npm test` green through smoke, now **17 suites**. The write path gained an append-only revision log and a real lock (024/025, `afed45e`). Open: **I-19** — the quarry ticket endpoint now serves **12.8 MB** on every `mines-report.html` load, measured 2026-09-24, against the 1.6 MB recorded when it was logged |
+| Code/Architecture | `code-architect` | 🟢 Green | `npm test` green through smoke, now **17 suites**. The write path gained an append-only revision log, a real lock, AND a self-service correction workflow (024/025/027; `afed45e`, `81f349a`, `c495748`). Open: **I-19** — the quarry ticket endpoint now serves **12.8 MB** on every `mines-report.html` load, measured 2026-09-24, against the 1.6 MB recorded when it was logged |
 | KPI/Data | `kpi-data-analyst` | 🟡 Amber | `accept:phase3` 27/27, `accept:phase8` **21/21** (was 12 — reason-level Pareto added), KPI reference byte-current at **32 KPIs / 170 facts**. The stoppage form's per-reason hours (`stopr_<id>`) are read by the server for the first time. Quality KPI still at 1-day validation (I-2) |
-| UI/UX | `ui-ux-designer` | 🟢 Green | **Re-measured 2026-09-24: responsive 88/88 and a11y 0 violations** — the first fully clean responsive run. The Executive Summary carries trend for the first time, as inline SVG rather than a 205KB chart bundle, and came in **under** its transfer budget (873KB, FCP 2524ms) |
-| QA/Testing | `qa-test-engineer` | 🟡 Amber | 119 acceptance checks green across 7 suites; 17 unit suites green; e2e **144/149**. The 5 red are pre-existing and proven so against `b2b98b9` (I-28), but two sit on the draft-reaccess path and block WBS-QA-1 alongside I-21. The Excel import layer went from 0 tests to 32 |
+| UI/UX | `ui-ux-designer` | 🟢 Green | **Re-measured 2026-09-24: responsive 88/88 and a11y 0 violations** — the first fully clean responsive run, now including all 5 correction-request UI states. The Executive Summary carries trend for the first time, as inline SVG rather than a 205KB chart bundle, and came in **under** its transfer budget (873KB, FCP 2524ms) |
+| QA/Testing | `qa-test-engineer` | 🟢 Green | **211 acceptance checks green across 8 suites** (phase1/2/3/5/7/8/quarry/amendments); 17 unit suites green. RAID I-28's five e2e failures were root-caused and fixed, not left red — a fresh full run is confirming the fix set now. The Excel import layer went from 0 tests to 32; the correction-request workflow got 8 new browser specs plus 92 acceptance checks |
 | Security/Performance | `security-performance-auditor` | 🟡 Amber | Auth internals verified in source; `accept:phase1` 19/19. `openpg` unverifiable from code (R-4); email blocked at the tenant (R-6); perf not re-measured |
 | Deployment | `deployment-engineer` | 🟡 Amber | CI gate verified sound and demonstrably effective. No local backups at all (I-7); stale runbook banners (I-1) |
 

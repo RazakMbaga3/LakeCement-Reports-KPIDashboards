@@ -105,7 +105,7 @@ Suites: formulas 4/4 · facts 2/2 · access 8/8 · approval 5/5 · stores 5/5 ·
 
 ## Report write-path integrity  [WBS-DATA-7]
 
-**Status:** 🟡 **Partial** — the lock and the trail are done; the humane path around them is not
+**Status:** 🟢 **Done**
 **Owner:** `code-architect` · **Last verified:** 2026-09-24 via `validate`
 
 **What "done" means:** an approved report cannot be changed without a written
@@ -119,11 +119,20 @@ a route that does not require an HOD to do it for them.
 | 3 | The prior figures are recoverable | `e2e` "merge still holds when an approved report is amended" | 2026-09-24 | ✅ `report_revisions.prior_data` holds the original value; `action='FORM_AMEND_DIRECT'`; reason stored |
 | 4 | Autosave cannot bloat the log | `npm run test:revisions` (structural test) | 2026-09-24 | ✅ 21/21 — asserts `recordRevision(` appears only after the autosave branch returns |
 | 5 | Deleting a user does not take the trail hostage | migration 025, `accept:phase3` cleanup | 2026-09-24 | ✅ `ON DELETE SET NULL`; `actor_name` keeps the name |
-| 6 | A non-approver can request a correction | — | — | ❌ **not built** — RAID I-29 |
+| 6 | A non-approver can request a correction | `npm run accept:amendments`; `e2e/tests/report-amendment.spec.js` | 2026-09-24 | ✅ 92/92 + 8/8 — request→grant→edit→resubmit round-trip proven end to end |
+| 7 | A grant never removes the day from the KPIs | `accept:amendments` "the day STILL COUNTS in the KPI engine while its correction is open" | 2026-09-24 | ✅ `GET /api/formula/daily` returns the value mid-correction; `daily_reports.status` provably unchanged by a grant |
+| 8 | Separation of duties on a decision | `test:amendments` (unit) + `accept:amendments` | 2026-09-24 | ✅ 22/22 unit + live: requester cannot grant/decline own request; admin/md is the escalation |
+| 9 | A window that closes unused restores the figures, keeps the typing | `accept:amendments` "the sweeper" section | 2026-09-24 | ✅ report restored to grant-time snapshot; half-typed work kept in `report_revisions` (`AMENDMENT_EXPIRE_REVERT`) |
 
-**Known gaps:** criterion 6. The correction-request workflow
-(`report_amendments`, migration 026) is designed but unbuilt, so today the
-only routes back are a rejection or an approver's audited break-glass.
+Built as WS-A2 (migration 027 — 026 was taken by a concurrent session).
+`report_amendments`, request/grant/decline/withdraw routes, the "Request a
+correction" UI in `forms/form-persist.js` (button, live poll, countdown
+window), a second queue on `approvals.html`, and a 15-min expiry sweeper via
+`services/watchdog.js`. 0 a11y/responsive-standard violations across all 5
+new UI states (button / requested / granted / declined / expired) at
+1440px and 390px.
+
+**No known gaps.** RAID I-29 closed.
 
 ## Security & Auth  [WBS-SEC-1]
 
