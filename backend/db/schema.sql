@@ -94,6 +94,42 @@ CREATE TABLE IF NOT EXISTS daily_reports (
   UNIQUE (form_type, record_date, shift)        -- one entry per form per date per shift
 );
 
+-- ── REPORT REVISIONS (append-only history of daily_reports) ─
+-- Every PRE-IMAGE of a report that was ever reported: what it held before
+-- each change, who changed it and why. audit_log says a change happened;
+-- this says what the report used to say, which is the only thing that can
+-- answer "what number did the MIS pack quote on Tuesday" after someone
+-- edits the day. A full snapshot rather than a diff chain on purpose —
+-- see migrations/024_report_revisions.sql for the reasoning.
+-- Written by services/reportRevisions.js. NEVER UPDATE OR DELETE a row here.
+CREATE TABLE IF NOT EXISTS report_revisions (
+  id                 BIGSERIAL PRIMARY KEY,
+  form_type          VARCHAR(50)  NOT NULL,
+  record_date        DATE         NOT NULL,
+  shift              VARCHAR(10)  NOT NULL DEFAULT 'day',
+  revision           INTEGER      NOT NULL,     -- 1, 2, 3 … per report
+  action             VARCHAR(30)  NOT NULL CHECK (action IN (
+                       'FORM_SUBMIT', 'FORM_DRAFT', 'FORM_APPROVE', 'FORM_REJECT',
+                       'AMENDMENT_GRANT', 'AMENDMENT_EXPIRE_REVERT',
+                       'FORM_AMEND_DIRECT', 'ODOO_AUTOFILL')),
+  prior_data         JSONB,                     -- NULL = no report yet, or the action doesn't touch data
+  prior_status       VARCHAR(20),
+  prior_approved_by  INTEGER      REFERENCES users(id) ON DELETE SET NULL,
+  prior_approved_at  TIMESTAMP,
+  changed_fields     TEXT[]       NOT NULL DEFAULT '{}',
+  amendment_id       INTEGER,                   -- FK added by migration 025 (WS-A2)
+  actor_id           INTEGER      REFERENCES users(id) ON DELETE SET NULL,  -- NULL = no human (odoo-sync, cron), or a since-deleted account; actor_name keeps the name
+  actor_name         VARCHAR(100),
+  reason             TEXT,                      -- rejection reason, or the admin's amendReason
+  ip_address         VARCHAR(45),
+  created_at         TIMESTAMP    NOT NULL DEFAULT NOW(),
+  UNIQUE (form_type, record_date, shift, revision)
+);
+CREATE INDEX IF NOT EXISTS idx_report_revisions_report
+  ON report_revisions(form_type, record_date, shift, revision DESC);
+CREATE INDEX IF NOT EXISTS idx_report_revisions_created
+  ON report_revisions(created_at DESC);
+
 -- ── STOPPAGES ───────────────────────────────────────────────
 -- Separate table because stoppages are multi-row per day (multiple events)
 CREATE TABLE IF NOT EXISTS stoppages (

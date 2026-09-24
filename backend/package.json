@@ -53,13 +53,14 @@
     "seed:kpi": "node scripts/import-kpi-monthly-xlsx.js",
     "seed:kpi:dry": "node scripts/import-kpi-monthly-xlsx.js --dry-run",
     "seed:kpi:verify": "node scripts/import-kpi-monthly-xlsx.js --verify",
-    "test": "npm run lint && npm run test:formulas && npm run test:facts && npm run test:access && npm run test:approval && npm run test:stores && npm run test:kpi-keys && npm run test:form-facts && npm run test:form-hooks && npm run test:kpi-level && npm run test:auth-tokens && npm run test:auth-mail && npm run test:mailer && npm run test:odoo-production && npm run test:odoo-production-autofill && npm run test:excel && npm run smoke",
+    "test": "npm run lint && npm run test:formulas && npm run test:facts && npm run test:access && npm run test:approval && npm run test:stores && npm run test:kpi-keys && npm run test:form-facts && npm run test:form-hooks && npm run test:kpi-level && npm run test:auth-tokens && npm run test:auth-mail && npm run test:mailer && npm run test:odoo-production && npm run test:odoo-production-autofill && npm run test:revisions && npm run test:excel && npm run smoke",
     "test:auth-tokens": "node --test test/auth-tokens.test.js",
     "test:auth-mail": "node --test test/auth-mail.test.js",
     "test:mailer": "node --test test/mailer.test.js",
     "test:odoo-production": "node --test test/odoo-production.test.js",
     "test:odoo-production-autofill": "node --test test/odoo-production-autofill.test.js",
-    "test:excel": "node --test test/excel-extractors.test.js"
+    "test:excel": "node --test test/excel-extractors.test.js",
+    "test:revisions": "node --test test/report-revisions.test.js"
   },
   "keywords": [],
   "author": "",

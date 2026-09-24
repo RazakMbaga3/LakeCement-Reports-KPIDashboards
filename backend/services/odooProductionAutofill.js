@@ -15,7 +15,9 @@
      an approved report's stored data can be corrected in place. What it
      never does is touch that report's status/approved_by/approved_at: a
      correction is not a re-approval, and this must never look like a human
-     re-signed anything.
+     re-signed anything. Since 2026-09-24 each such write also lands in
+     report_revisions as an ODOO_AUTOFILL row, so the robot's corrections
+     sit in the same history as a person's — see upsertDay().
   B. A day Odoo has data for, that nobody has touched yet, is created as a
      'draft' — never 'approved' or 'pending_approval'. The officer still
      has to open it, add what Odoo cannot supply (run hours, receipts,
@@ -42,6 +44,7 @@
 
 const db     = require('../db');
 const logger = require('./logger');
+const { recordRevision } = require('./reportRevisions');
 const { pullProductionEntries, loadRangeFacts } = require('./odooProductionSync');
 
 const FORM_TYPE = 'production';
@@ -109,7 +112,8 @@ async function upsertDay(date, dayResult, { dryRun = false } = {}) {
     await client.query('BEGIN');
 
     const existing = await client.query(
-      `SELECT data FROM daily_reports WHERE form_type = $1 AND record_date = $2 AND shift = $3 FOR UPDATE`,
+      `SELECT data, status, approved_by, approved_at
+       FROM daily_reports WHERE form_type = $1 AND record_date = $2 AND shift = $3 FOR UPDATE`,
       [FORM_TYPE, date, SHIFT]);
     const row = existing.rows[0] || null;
 
@@ -132,6 +136,37 @@ async function upsertDay(date, dayResult, { dryRun = false } = {}) {
           [FORM_TYPE, date, SHIFT, JSON.stringify(toWrite)]);
         action = overrides.length ? 'overrode' : 'filled_blanks';
       }
+
+      /* The general revision log (services/reportRevisions.js), written
+         from the pre-image already read above — zero extra queries, since
+         `row` is the FOR UPDATE'd row itself.
+
+         This writer deliberately BYPASSES routes/reports.js: it writes
+         daily_reports directly, which is why decision A can correct an
+         already-'approved' day and why the route's REPORT_LOCKED check
+         does not apply to it. That is exactly why the revision matters
+         here — otherwise "why did this number change" has one answer for
+         humans and a different table for the robot. production_odoo_
+         overrides stays as it is: it is field-level and Odoo-specific
+         (which entry refs, what the old number was); this is the general
+         record that puts the robot's edits in the same history as
+         everyone else's.
+
+         Only written when something actually changed. The nightly cron
+         re-walks a whole range every run, and logging "nothing changed"
+         for every day of it would be precisely the bloat shouldSnapshot()
+         exists to prevent. */
+      await recordRevision(client, {
+        formType: FORM_TYPE, recordDate: date, shift: SHIFT, action: 'ODOO_AUTOFILL',
+        priorData:       row ? row.data : null,
+        priorStatus:     row ? row.status : null,
+        priorApprovedBy: row ? row.approved_by : null,
+        priorApprovedAt: row ? row.approved_at : null,
+        changedFields:   Object.keys(toWrite).sort(),
+        actorId:         null,             // no human did this
+        actorName:       'odoo-sync',
+        reason:          dayResult.refs.length ? `Odoo entries: ${dayResult.refs.join(',')}` : null,
+      });
 
       if (overrides.length) {
         const refs = dayResult.refs.join(',');

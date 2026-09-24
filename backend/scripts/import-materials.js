@@ -31,6 +31,18 @@ const FILE = process.argv.includes('--file')
 const STORES_USER = process.env.IMPORT_STORES_USER;
 const STORES_PASS = process.env.IMPORT_STORES_PASS;
 
+/* A RE-RUN lands on days that are already 'approved' or 'pending_approval',
+   which POST /api/reports/:formType now refuses outright (409
+   REPORT_LOCKED) rather than merging over them and quietly resetting the
+   approval — see THE LOCK in backend/routes/reports.js. Sending a reason
+   turns a re-run into an AUDITED amendment (FORM_AMEND_DIRECT, with the
+   full pre-image kept in report_revisions) instead of a silent overwrite.
+   Break-glass is admin/md only, so amending already-reported days needs
+   IMPORT_STORES_USER/IMPORT_STORES_PASS set to an admin account. A
+   first-time import is unaffected — nothing is locked yet. */
+const AMEND_REASON =
+  'Backfill re-import from the plant master Raw Material Report workbooks (scripts/import-materials.js)';
+
 async function api(method, pathname, { token, body } = {}) {
   const headers = {};
   if (body) headers['Content-Type'] = 'application/json';
@@ -39,6 +51,14 @@ async function api(method, pathname, { token, body } = {}) {
   let json = null;
   try { json = await res.json(); } catch { /* non-JSON */ }
   return { status: res.status, body: json };
+}
+
+/* A 409 REPORT_LOCKED is not bad data — it means the day has already been
+   reported and this account may not amend it. Say so plainly. */
+function lockedHint(r) {
+  return r.body && r.body.code === 'REPORT_LOCKED'
+    ? `\n     ↳ already ${r.body.status}. Re-run with an admin/md account to amend it (see AMEND_REASON).`
+    : '';
 }
 
 async function main() {
@@ -70,10 +90,12 @@ async function main() {
 
   for (const rec of records) {
     const { date, ...data } = rec;
-    const r = await api('POST', '/reports/materials', { token, body: { date, data } });
+    const r = await api('POST', '/reports/materials', {
+      token, body: { date, data, amendReason: AMEND_REASON },
+    });
     if (r.status >= 300) {
       failed++;
-      console.error(`  ❌ ${date}: HTTP ${r.status} ${JSON.stringify(r.body)}`);
+      console.error(`  ❌ ${date}: HTTP ${r.status} ${JSON.stringify(r.body)}${lockedHint(r)}`);
     } else {
       submitted++;
       process.stdout.write(`  ✅ ${date}\r`);

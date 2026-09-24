@@ -88,6 +88,29 @@ const BASE = (process.argv.includes('--base-url')
 const CPP_USER = process.env.IMPORT_CPP_USER || 'cpp';
 const CPP_PASS = process.env.IMPORT_CPP_PASS || 'CPP@LCL2026';
 
+/* A RE-RUN lands on days that are already 'approved' or 'pending_approval'.
+   POST /api/reports/:formType now refuses those outright (409
+   REPORT_LOCKED) instead of merging over them and quietly resetting the
+   approval — see THE LOCK in backend/routes/reports.js. This script posts
+   `replace: true`, so before the lock existed a re-run silently rewrote a
+   signed-off day's entire record; that is exactly the hole being closed.
+
+   Sending a reason turns the re-run into an AUDITED amendment
+   (audit_log action FORM_AMEND_DIRECT, plus a report_revisions row holding
+   the full pre-image) rather than a silent overwrite.
+
+   Break-glass is open to admin/md AND to the HOD of the role that owns the
+   form type — the same predicate as requireApprover(). For this script that
+   means the stock 'import-cpp' service account already qualifies: it is
+   role 'cpp', level 'hod', and 'cpp' owns the cpp form type. No admin
+   account is needed. (An admin-only break-glass would have been unusable
+   here, because requireFormAccess runs first and refuses an admin
+   submitting a cpp report at all.)
+   A first-time import needs none of this — nothing is locked yet. */
+const AMEND_REASON =
+  'Backfill re-import from the plant FRM-LCL-PP-06 CPP workbook (scripts/import-cpp.js); '
+  + 'the workbook is the source of record for these days';
+
 const REPO_ROOT = path.join(__dirname, '..', '..');
 const CPP_2026_Q1_DIR = path.join(REPO_ROOT, 'master raw material reports', '_cpp_extracted');
 const SAMPLES_DIR     = path.join(REPO_ROOT, 'data', 'samples', '2026-04-21');
@@ -220,6 +243,15 @@ async function api(method, pathname, { token, body } = {}) {
   return { status: res.status, body: json };
 }
 
+/* A 409 REPORT_LOCKED is not a bug in the data — it means the day has
+   already been reported and this account may not amend it. Say so, rather
+   than leaving the operator to decode a raw status code. */
+function lockedHint(r) {
+  return r.body && r.body.code === 'REPORT_LOCKED'
+    ? `\n     ↳ already ${r.body.status}. Re-run with an admin/md account to amend it (see AMEND_REASON).`
+    : '';
+}
+
 async function main() {
   const loginRes = await api('POST', '/auth/login', { body: { username: CPP_USER, password: CPP_PASS } });
   if (loginRes.status !== 200) {
@@ -275,10 +307,12 @@ async function main() {
       if (!nonZero) { skipped++; continue; }
 
       const dateStr = `${m.year}-${String(m.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const r = await api('POST', '/reports/cpp', { token, body: { date: dateStr, data, replace: true } });
+      const r = await api('POST', '/reports/cpp', {
+        token, body: { date: dateStr, data, replace: true, amendReason: AMEND_REASON },
+      });
       if (r.status >= 300) {
         failed++;
-        console.error(`  ❌ ${dateStr}: HTTP ${r.status} ${JSON.stringify(r.body)}`);
+        console.error(`  ❌ ${dateStr}: HTTP ${r.status} ${JSON.stringify(r.body)}${lockedHint(r)}`);
       } else {
         submitted++;
         process.stdout.write(`  ✅ ${dateStr}\r`);

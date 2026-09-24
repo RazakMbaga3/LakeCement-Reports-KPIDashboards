@@ -73,6 +73,18 @@ const BASE = (process.argv.includes('--base-url')
 const PM_USER = process.env.IMPORT_PM_USER || 'pm';
 const PM_PASS = process.env.IMPORT_PM_PASS || 'PM@LCL2026';
 
+/* A RE-RUN lands on days that are already 'approved' or 'pending_approval',
+   which POST /api/reports/:formType now refuses outright (409
+   REPORT_LOCKED) rather than merging over them and quietly resetting the
+   approval — see THE LOCK in backend/routes/reports.js. Sending a reason
+   turns a re-run into an AUDITED amendment (FORM_AMEND_DIRECT, with the
+   full pre-image kept in report_revisions) instead of a silent overwrite.
+   Break-glass is admin/md only, so amending already-reported days needs
+   IMPORT_PM_USER/IMPORT_PM_PASS set to an admin account. A first-time
+   import is unaffected — nothing is locked yet. */
+const AMEND_REASON =
+  'Backfill re-import from the plant IMS power workbooks, CUMULATIVE DAILY sheet (scripts/import-power-cons.js)';
+
 const SRC_DIR = path.join(__dirname, '..', '..', 'master power report April, May and June');
 const MONTHS = [
   { file: 'Copy of IMS Report of APRIL 2026_.xlsx', year: 2026, month: 4, days: 30 },
@@ -139,6 +151,14 @@ async function api(method, pathname, { token, body } = {}) {
   return { status: res.status, body: json };
 }
 
+/* A 409 REPORT_LOCKED is not bad data — it means the day has already been
+   reported and this account may not amend it. Say so plainly. */
+function lockedHint(r) {
+  return r.body && r.body.code === 'REPORT_LOCKED'
+    ? `\n     ↳ already ${r.body.status}. Re-run with an admin/md account to amend it (see AMEND_REASON).`
+    : '';
+}
+
 async function main() {
   const loginRes = await api('POST', '/auth/login', { body: { username: PM_USER, password: PM_PASS } });
   if (loginRes.status !== 200) {
@@ -175,10 +195,12 @@ async function main() {
       if (!nonZero) { skipped++; continue; }
 
       const dateStr = `${m.year}-${String(m.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const r = await api('POST', '/reports/power-cons', { token, body: { date: dateStr, data } });
+      const r = await api('POST', '/reports/power-cons', {
+        token, body: { date: dateStr, data, amendReason: AMEND_REASON },
+      });
       if (r.status >= 300) {
         failed++;
-        console.error(`  ❌ ${dateStr}: HTTP ${r.status} ${JSON.stringify(r.body)}`);
+        console.error(`  ❌ ${dateStr}: HTTP ${r.status} ${JSON.stringify(r.body)}${lockedHint(r)}`);
       } else {
         submitted++;
         process.stdout.write(`  ✅ ${dateStr}\r`);

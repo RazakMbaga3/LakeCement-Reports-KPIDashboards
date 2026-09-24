@@ -146,7 +146,25 @@
         try {
           await api().submitForm(item.formType, item.date, item.shift, item.data, { status: _intentOf(item) });
         } catch (e) {
-          return { ok: false, error: 'Could not send — server unreachable or rejected it.' };
+          /* Pass the server's own wording through rather than flattening every
+             failure into "unreachable or rejected it". Since the report lock
+             landed, the most likely rejection here is a real and specific one:
+             the day was approved while this item sat in the queue, so pushing
+             "mine" over it is refused with REPORT_LOCKED. "Server unreachable"
+             would send the author to check their wifi about a decision the
+             server made deliberately. The conflict deliberately stays in the
+             list — the splice below is not reached — so the work is not lost
+             and can be resolved once a correction is granted. */
+          var msg = (e && e.message) ? String(e.message) : '';
+          var locked = /REPORT_LOCKED/i.test(msg) || /409/.test(msg) ||
+                       (e && (e.status === 409 || e.code === 'REPORT_LOCKED'));
+          return {
+            ok: false,
+            code: locked ? 'REPORT_LOCKED' : 'SEND_FAILED',
+            error: locked
+              ? 'That day has already been approved, so it can no longer be overwritten. Ask an approver to reopen it for correction — your queued figures stay here until then.'
+              : ('Could not send — server unreachable or rejected it.' + (msg ? ' (' + msg + ')' : '')),
+          };
         }
       }
       c.splice(index, 1);

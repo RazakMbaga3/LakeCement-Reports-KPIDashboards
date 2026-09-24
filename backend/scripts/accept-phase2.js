@@ -199,11 +199,27 @@ async function main() {
       check('B3: newer server record is NOT overwritten; item flagged for review',
         c.pending === 0 && c.conflicts === 1 && rec.data._q === 'server-newer', JSON.stringify(c));
 
-      // B4: resolve "use mine" → queued data pushed
+      /* B4: "use mine" against an APPROVED server record is now REFUSED.
+         This assertion was inverted on 2026-09-24 and the change is the
+         point, not an accommodation. prodToken is a production HOD, so its
+         submit self-certifies straight to 'approved' — which means the old
+         B4 was asserting that an offline queue item could silently overwrite
+         an approved report and clear its approver. That is precisely the
+         hole WS-A1 closed (REPORT_LOCKED, routes/reports.js).
+
+         The work is not lost: resolveConflict() returns before its splice,
+         so the item stays in the conflict list awaiting a correction. */
       const r = await q.resolveConflict(0, 'mine');
       const rec2 = await live.getForm('production', '1999-02-13', 'day');
-      check('B4: resolving "use mine" pushes the queued data',
-        r.ok && q.counts().conflicts === 0 && rec2.data._q === 'mine-stale');
+      check('B4: "use mine" cannot overwrite an APPROVED report; item stays flagged',
+        r.ok === false && r.code === 'REPORT_LOCKED' &&
+        q.counts().conflicts === 1 && rec2.data._q === 'server-newer',
+        JSON.stringify({ ok: r.ok, code: r.code, conflicts: q.counts().conflicts, stored: rec2.data._q }));
+
+      // B4b: the queue tells the author WHY, not "server unreachable"
+      check('B4b: the refusal names the real reason, not a network error',
+        /approved/i.test(r.error || '') && !/unreachable/i.test(r.error || ''),
+        r.error);
     }
 
     // B5: resolve "keep server" → discard mine, server intact
