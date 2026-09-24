@@ -89,6 +89,13 @@ async function cleanup() {
         OR details LIKE '%ACCEPT8%'`, [names]);
   await db.query(`DELETE FROM daily_reports WHERE record_date BETWEEN '1998-07-01' AND '1998-07-31'
                   OR record_date BETWEEN '1999-06-01' AND '1999-07-31'`);
+  /* report_revisions is append-only in production — nothing in the app ever
+     deletes from it, by design. An acceptance run is the one exception: it
+     writes a revision for every sandbox submit, so without this each run
+     leaves rows behind forever. Scoped to exactly the sandbox ranges above,
+     so a real revision can never be caught by it. */
+  await db.query(`DELETE FROM report_revisions WHERE record_date BETWEEN '1998-07-01' AND '1998-07-31'
+                  OR record_date BETWEEN '1999-06-01' AND '1999-07-31'`);
   await db.query(`DELETE FROM kpi_overrides WHERE reason LIKE '%ACCEPT8%'`);
   await db.query('DELETE FROM users WHERE username = ANY($1)', [names]);
 }

@@ -13,6 +13,12 @@ module.exports = async () => {
   // 1. The declared write sandboxes.
   await pool.query('DELETE FROM kpi_monthly WHERE year = 2001');
   await pool.query("DELETE FROM daily_reports WHERE record_date BETWEEN '1999-01-01' AND '1999-12-31'");
+  /* report_revisions is append-only in production — nothing in the app ever
+     deletes from it, by design. The harness is the one exception: it writes
+     a revision for every sandbox submit, and without this every e2e run
+     would leave those rows behind forever. Scoped to the 1999 sandbox only,
+     so a real revision can never be caught by it. */
+  await pool.query("DELETE FROM report_revisions WHERE record_date BETWEEN '1999-01-01' AND '1999-12-31'");
 
   /* 2. Anything else a harness account authored. A test does not only write
         where it means to: merely OPENING mines-report.html persists a
@@ -31,6 +37,22 @@ module.exports = async () => {
     `DELETE FROM audit_log
      WHERE username LIKE 'e2e\_%'
         OR user_id IN (SELECT id FROM users WHERE username LIKE 'e2e\_%')`
+  );
+  /* The revision trail for everything a harness account wrote. The date-range
+     delete above only reaches the 1999 sandbox, but a test does not only write
+     where it means to (see step 2): cpp-entry and the mines page-load test
+     both land on real 2026 dates, and the daily_reports rows they leave are
+     removed by author just above — so the revision each one wrote has to go
+     the same way or it is orphaned for good. Same rule as audit_log: match
+     BOTH columns, because actor_name is a denormalised copy that outlives the
+     account (migration 025 made actor_id ON DELETE SET NULL precisely so this
+     table never blocks a user delete, which means the id alone stops matching
+     the moment a user row is gone). Harness full_names are all "E2E <role>
+     (<level>)", and no real person is ever attributed to one. */
+  await pool.query(
+    `DELETE FROM report_revisions
+     WHERE actor_name LIKE 'E2E %'
+        OR actor_id IN (${HARNESS_USERS})`
   );
   const { rowCount } = await pool.query(`DELETE FROM users WHERE username LIKE 'e2e\_%'`);
   console.log(`[e2e] cleaned up ${rowCount} harness accounts, both write sandboxes and anything they authored`);

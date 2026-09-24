@@ -97,6 +97,12 @@ async function cleanup() {
      WHERE username = ANY($1)
         OR user_id IN (SELECT id FROM users WHERE username = ANY($1))`, [names]);
   await db.query('DELETE FROM daily_reports WHERE record_date BETWEEN $1 AND $2', DATE_CLEAN);
+  /* report_revisions is append-only in production — nothing in the app ever
+     deletes from it, by design. An acceptance run is the one exception: it
+     writes a revision for every sandbox submit, so without this each run
+     leaves rows behind forever. Scoped to exactly the sandbox dates the
+     daily_reports delete above uses, so a real revision can never be caught. */
+  await db.query('DELETE FROM report_revisions WHERE record_date BETWEEN $1 AND $2', DATE_CLEAN);
   await db.query('DELETE FROM users WHERE username = ANY($1)', [names]);
 }
 
