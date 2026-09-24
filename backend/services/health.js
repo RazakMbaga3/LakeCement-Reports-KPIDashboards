@@ -6,11 +6,15 @@
                         backup stale)
           'down'      — the database is unreachable; the app cannot work
 
-  Odoo check is config-presence only (see checkOdoo below) — reports
+  Odoo check has two parts. checkOdoo() is config-presence only — reports
   'not_configured' until ODOO_URL is set; real connectivity is checked
   separately by GET /api/monitor/odoo/test so a flaky Odoo link can't turn
-  every health poll 'degraded'. Backup freshness activates once BACKUP_DIR
-  is set (Phase 7).
+  every health poll 'degraded'. checkOdooSync() (added 2026-09-24) reads
+  what each scheduled pull LAST DID from odoo_sync_state — no live Odoo
+  call — so a pull that has stopped running, or has been failing for hours,
+  is visible here instead of hiding behind "configured". It only degrades
+  health once a pull is genuinely overdue (hours, not one bad poll).
+  Backup freshness activates once BACKUP_DIR is set (Phase 7).
 */
 
 const fsp  = require('fs/promises');
@@ -56,14 +60,97 @@ function checkOdoo() {
   const dashboard  = !!process.env.ODOO_DASHBOARD_URL;
   const production = require('./odooProductionClient').isConfigured();
   if (!generic && !dispatch && !mining && !dashboard && !production) return 'not_configured';
+  /* "configured" only — this used to say "pulling on schedule", which was
+     a claim about the cron that nothing here checked (URLs set + cron off
+     read identically). Whether a pull is actually running is what
+     checkOdooSync() below answers. */
   return {
     ok: true,
     generic:    generic    ? 'configured, no pulls wired up yet' : 'not_configured',
-    dispatch:   dispatch   ? 'configured, pulling on schedule'   : 'not_configured',
-    mining:     mining     ? 'configured, pulling on schedule'   : 'not_configured',
+    dispatch:   dispatch   ? 'configured'                        : 'not_configured',
+    mining:     mining     ? 'configured'                        : 'not_configured',
     dashboard:  dashboard  ? 'configured, read on demand'        : 'not_configured',
-    production: production ? 'configured, pulling on schedule'   : 'not_configured',
+    production: production ? 'configured'                        : 'not_configured',
   };
+}
+
+/* ── Odoo pull freshness ─────────────────────────────────────────────── */
+
+const LIVE_MAX_AGE_MIN  = parseFloat(process.env.ODOO_LIVE_SYNC_MAX_AGE_MIN || '180'); // half-hourly job: 3h = 6 missed runs
+const DAILY_MAX_AGE_MIN = parseFloat(process.env.ODOO_SYNC_MAX_AGE_HOURS || '26') * 60;
+const STARTING_GRACE_S  = 900; // after a boot, "never run yet" is expected for a while
+
+/* Which schedules will actually run a pull in THIS process — mirrors the
+   gating in server.js so the answer can't drift from what really fires. */
+function pullSchedule(pullName) {
+  const live  = !!(process.env.ODOO_DISPATCH_URL || process.env.ODOO_MINING_URL)
+                && process.env.ODOO_LIVE_SYNC_CRON !== 'off';
+  const daily = !!(process.env.ODOO_URL || process.env.ODOO_DISPATCH_URL)
+                && process.env.ODOO_SYNC_CRON !== 'off';
+  const isLivePull = pullName === 'dispatch-daily-summary' || pullName === 'mining-weighbridge-tickets';
+  return { live: isLivePull && live, daily };
+}
+
+/* Pure: one pull's state row + how it's scheduled -> a verdict. Kept free
+   of I/O so the edge cases (never run, failing, overdue, cron off) are
+   unit-testable. */
+function classifySync(row, { live, daily }, { now = Date.now(), uptimeS = 0 } = {}) {
+  if (!live && !daily) {
+    return { ok: false, status: 'not_scheduled',
+             note: 'no cron is enabled for this pull (ODOO_SYNC_CRON / ODOO_LIVE_SYNC_CRON are off) — nothing fetches it automatically' };
+  }
+  const maxAgeMin = live ? LIVE_MAX_AGE_MIN : DAILY_MAX_AGE_MIN;
+  const okAt  = row && row.last_success_at ? new Date(row.last_success_at).getTime() : null;
+  const errAt = row && row.last_error_at   ? new Date(row.last_error_at).getTime()   : null;
+  const base  = {
+    last_success_at: okAt ? new Date(okAt).toISOString() : null,
+    last_success_min_ago: okAt ? Math.round((now - okAt) / 60000) : null,
+    max_age_min: Math.round(maxAgeMin),
+  };
+
+  if (errAt && (!okAt || errAt > okAt)) {
+    /* No raw error text here: GET /api/health is public, and upstream error
+       strings can name hosts/paths (RAID I-17 was exactly that leak). The
+       full message is on the authenticated GET /api/monitor/odoo/sync. */
+    return { ok: false, status: 'failing', ...base,
+             last_error_at: new Date(errAt).toISOString(),
+             note: 'last run failed — details on GET /api/monitor/odoo/sync (admin/md/it)' };
+  }
+  if (!okAt) {
+    return uptimeS < STARTING_GRACE_S
+      ? { ok: true, status: 'starting', ...base, note: 'first run has not finished yet' }
+      : { ok: false, status: 'never_run', ...base, note: 'scheduled but has never completed a run' };
+  }
+  if ((now - okAt) / 60000 > maxAgeMin) {
+    return { ok: false, status: 'stale', ...base };
+  }
+  return { ok: true, status: 'ok', ...base };
+}
+
+async function checkOdooSync() {
+  const mining     = require('./odooMiningClient').isConfigured();
+  const dispatch   = !!process.env.ODOO_DISPATCH_URL;
+  const production = require('./odooProductionClient').isConfigured();
+  const wanted = [
+    dispatch   && 'dispatch-daily-summary',
+    mining     && 'mining-weighbridge-tickets',
+    production && 'production-report-autofill',
+  ].filter(Boolean);
+  if (!wanted.length) return {};
+
+  let rows;
+  try {
+    rows = (await db.query('SELECT * FROM odoo_sync_state')).rows;
+  } catch (err) {
+    // Table missing (migration 026 not applied yet) — say so, don't fail health over it.
+    return { unavailable: { ok: true, status: 'unknown', note: 'sync state unreadable: ' + err.message } };
+  }
+  const byName = new Map(rows.map(r => [r.pull_name, r]));
+  const out = {};
+  for (const name of wanted) {
+    out[name] = classifySync(byName.get(name), pullSchedule(name), { uptimeS: process.uptime() });
+  }
+  return out;
 }
 
 /* Heuristic, not a guarantee: compares device IDs (fs.stat().dev) of
@@ -109,11 +196,20 @@ async function checkBackup() {
 async function deepHealth() {
   const [dbCheck, disk, backup] = await Promise.all([checkDb(), checkDisk(), checkBackup()]);
 
+  const odoo = checkOdoo();
+  if (odoo && odoo.ok && dbCheck.ok) {
+    odoo.sync = await checkOdooSync();
+    // An overdue/failing/unscheduled pull is real staleness on someone's
+    // report, so it degrades health — but only via the pull's own age, never
+    // a live Odoo call, so one flaky poll can't do it.
+    if (Object.values(odoo.sync).some(s => s.ok === false)) odoo.ok = false;
+  }
+
   let status = 'ok';
   // 'not_configured' degrades too now (a plant with zero backups shouldn't
   // show perpetually green health) — backup.ok is undefined on that string,
   // so !backup.ok is already true for it; no separate branch needed.
-  if (!disk.ok || !backup.ok) status = 'degraded';
+  if (!disk.ok || !backup.ok || (odoo && odoo.ok === false)) status = 'degraded';
   if (!dbCheck.ok) status = 'down';
 
   return {
@@ -122,11 +218,11 @@ async function deepHealth() {
     version: '1.0.0',
     uptime_s: Math.round(process.uptime()),
     timestamp: new Date().toISOString(),
-    checks: { db: dbCheck, disk, backup, odoo: checkOdoo() },
+    checks: { db: dbCheck, disk, backup, odoo },
   };
 }
 
 /* checkOdoo is exported so scripts/odoo-test-connection.js reports exactly
    the same per-connector view as GET /api/health, instead of a second copy
    of these rules that can drift from this one. */
-module.exports = { deepHealth, checkOdoo };
+module.exports = { deepHealth, checkOdoo, checkOdooSync, classifySync };

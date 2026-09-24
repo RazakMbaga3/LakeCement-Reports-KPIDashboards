@@ -238,6 +238,18 @@ CREATE TABLE IF NOT EXISTS odoo_production_entries (
 );
 CREATE INDEX IF NOT EXISTS idx_odoo_prod_entries_date_stage ON odoo_production_entries(production_date, stage);
 
+-- ── ODOO SYNC STATE ─────────────────────────────────────────
+-- What each scheduled Odoo pull last did (migration 026) — the only way to
+-- tell from inside the app whether a pull is actually live.
+CREATE TABLE IF NOT EXISTS odoo_sync_state (
+  pull_name        VARCHAR(60) PRIMARY KEY,
+  last_run_at      TIMESTAMPTZ,
+  last_success_at  TIMESTAMPTZ,
+  last_error       TEXT,
+  last_error_at    TIMESTAMPTZ,
+  last_result      JSONB
+);
+
 -- ── KPI MONTHLY ─────────────────────────────────────────────
 -- Stores manually entered or auto-calculated monthly KPI targets and actuals
 CREATE TABLE IF NOT EXISTS kpi_monthly (

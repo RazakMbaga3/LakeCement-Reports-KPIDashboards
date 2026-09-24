@@ -256,6 +256,29 @@ app.use('/api/client-errors', rateLimit({
     logger.info(`odoo sync scheduled (${spec})`);
   }
 
+  // LIVE Odoo sync — mining tickets + dispatch, every 30 minutes by default
+  // (services/odooSync.js's LIVE_PULLS). Added 2026-09-24 after the Quarry
+  // report was found missing the 22nd and 23rd with no way to tell whether
+  // pulling was even on: the daily 05:00 job above is gated by
+  // ODOO_SYNC_CRON, which .env.example ships as `off` (so a droplet built
+  // from it never pulls), and even when on it can't keep a weighbridge
+  // report current within the day. This one is a separate switch that is ON
+  // unless explicitly set to `off`, and it also runs once ~1 minute after
+  // every boot so a deploy/restart closes any gap at once. The delay keeps
+  // it out of the way of acceptance harnesses and smoke boots, which start
+  // the server, exercise it for seconds, and kill it.
+  if ((process.env.ODOO_DISPATCH_URL || process.env.ODOO_MINING_URL) && process.env.ODOO_LIVE_SYNC_CRON !== 'off') {
+    const { runOdooSync, LIVE_PULLS } = require('./services/odooSync');
+    const spec = process.env.ODOO_LIVE_SYNC_CRON || '*/30 * * * *';
+    const runLive = (why) => runOdooSync({ only: LIVE_PULLS })
+      .then(r => logger.info({ ran: r.ran, why }, 'odoo live sync run'))
+      .catch(err => logger.error({ err, why }, 'odoo live sync failed'));
+
+    cron.schedule(spec, () => runLive('scheduled'));
+    setTimeout(() => runLive('startup'), 60 * 1000).unref();
+    logger.info(`odoo live sync scheduled (${spec}), first run ~1 min after boot`);
+  }
+
   // Sales/Purchases dashboard cache warmer (services/dashboardCacheWarmer.js).
   // sale_dashboard_report's date filter is server-side broken (see
   // odooDashboardClient.js's header, defect 3) — every cold request costs

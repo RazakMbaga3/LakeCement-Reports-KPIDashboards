@@ -91,6 +91,25 @@ monitorRouter.get('/odoo/test', requireAuth, requireRole(...MONITOR_ROLES), asyn
   }
 });
 
+/* What each scheduled Odoo pull last did — the full detail behind
+   GET /api/health's per-pull verdicts (which deliberately carry no raw
+   error text, being public). Answers "is pulling actually live?" without
+   server access: when it last succeeded, what it fetched (rows received,
+   added, updated), and the last failure message if there was one. */
+monitorRouter.get('/odoo/sync', requireAuth, requireRole(...MONITOR_ROLES), async (req, res, next) => {
+  try {
+    const { checkOdooSync } = require('../services/health');
+    const { getSyncState } = require('../services/odooSync');
+    const [verdicts, state] = await Promise.all([checkOdooSync(), getSyncState()]);
+    res.json({
+      live_cron:  process.env.ODOO_LIVE_SYNC_CRON !== 'off' ? (process.env.ODOO_LIVE_SYNC_CRON || '*/30 * * * *') : 'off',
+      daily_cron: process.env.ODOO_SYNC_CRON !== 'off'      ? (process.env.ODOO_SYNC_CRON || '0 5 * * *')          : 'off',
+      verdicts,
+      state,
+    });
+  } catch (err) { next(err); }
+});
+
 /* Historical dispatch/mining pull, triggered from the browser instead of
    SSHing into the server to run scripts/odoo-{dispatch,mining}-pull.js —
    for a deployment where the person who needs the data doesn't hold

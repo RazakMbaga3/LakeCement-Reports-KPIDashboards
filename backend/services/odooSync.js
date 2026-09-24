@@ -49,13 +49,25 @@
        moisture-corrected raw-material figures the original "Production
        Entry Raw Meal" ask wanted (`final_qty_after_moisture`).
 
-  Scheduled in server.js on ODOO_SYNC_CRON (default 05:00 daily, off if
-  ODOO_SYNC_CRON=off). Manual run: `npm run odoo:sync`, or for a specific
+  Two schedules in server.js:
+    - ODOO_SYNC_CRON — every pull below, default 05:00 daily, off if
+      ODOO_SYNC_CRON=off.
+    - ODOO_LIVE_SYNC_CRON — only LIVE_PULLS (mining tickets + dispatch),
+      default every 30 minutes, plus once ~1 min after every boot so a
+      deploy/restart closes any gap immediately. Added 2026-09-24 when the
+      Quarry report was found missing the 22nd and 23rd with no way to tell
+      whether pulling was even running: a daily 05:00 job can't be "live"
+      for a weighbridge, and Odoo also receives a day's tickets late (the
+      22nd was still empty on the morning of the 23rd).
+  Every run is recorded in odoo_sync_state (migration 026) and surfaced by
+  GET /api/health, so "is it pulling?" has an answer that doesn't need
+  server access. Manual run: `npm run odoo:sync`, or for a specific
   date range: `npm run odoo:dispatch-pull -- 2026-08-01 2026-08-05`,
   `npm run odoo:mining-pull -- 2026-03-01 2026-03-31`,
   `npm run odoo:production-sync -- 2026-09-01 2026-09-20 [--dry-run]`.
 */
 
+const db = require('../db');
 const logger = require('./logger');
 const { fireAlert } = require('./watchdog');
 const { pullDispatchDailySummary } = require('./odooDispatchSync');
@@ -120,17 +132,70 @@ const PULLS = [
   },
 ];
 
-async function runOdooSync() {
-  if (!PULLS.length) {
+/* The two pulls that mirror plain facts (weighbridge tickets, dispatch
+   day-totals) and are cheap enough to run every half hour — the frequent
+   "live" job in server.js runs only these. The production autofill is left
+   to the daily job: it writes reviewable drafts and logs overrides, and a
+   day's figures don't move minute to minute the way the weighbridge does. */
+const LIVE_PULLS = ['dispatch-daily-summary', 'mining-weighbridge-tickets'];
+
+/* Remember what a pull last did (migration 026). This is the only way to
+   tell, from inside the app, whether a pull is really live — and it must
+   never be the thing that breaks a sync, so a failure to record is logged
+   and swallowed. */
+async function recordRun(name, { result, error }) {
+  try {
+    if (error) {
+      await db.query(`
+        INSERT INTO odoo_sync_state (pull_name, last_run_at, last_error, last_error_at)
+        VALUES ($1, NOW(), $2, NOW())
+        ON CONFLICT (pull_name) DO UPDATE
+          SET last_run_at = NOW(), last_error = EXCLUDED.last_error, last_error_at = NOW()
+      `, [name, String(error).slice(0, 2000)]);
+    } else {
+      await db.query(`
+        INSERT INTO odoo_sync_state (pull_name, last_run_at, last_success_at, last_result)
+        VALUES ($1, NOW(), NOW(), $2::jsonb)
+        ON CONFLICT (pull_name) DO UPDATE
+          SET last_run_at = NOW(), last_success_at = NOW(), last_result = EXCLUDED.last_result
+      `, [name, JSON.stringify(result || {})]);
+    }
+  } catch (err) {
+    logger.warn({ err, pull: name }, 'odoo sync: could not record run state (is migration 026 applied?)');
+  }
+}
+
+async function getSyncState() {
+  const { rows } = await db.query(
+    `SELECT pull_name, last_run_at, last_success_at, last_error, last_error_at, last_result
+     FROM odoo_sync_state ORDER BY pull_name`);
+  return rows;
+}
+
+/* A pull already running (a slow production window, an overlapping cron
+   tick) is skipped rather than stacked — two mining pulls re-mirroring the
+   same days at once would only fight each other. */
+const _inFlight = new Set();
+
+/* opts.only — restrict to these pull names (see LIVE_PULLS). */
+async function runOdooSync({ only } = {}) {
+  const pulls = only ? PULLS.filter(p => only.includes(p.name)) : PULLS;
+  if (!pulls.length) {
     logger.info('odoo sync: no pulls configured yet — skipping');
     return { ran: [], skipped: 'no pulls configured' };
   }
 
   const ran = [];
-  for (const pull of PULLS) {
+  for (const pull of pulls) {
+    if (_inFlight.has(pull.name)) {
+      ran.push({ name: pull.name, skipped: 'already running' });
+      continue;
+    }
+    _inFlight.add(pull.name);
     try {
       const result = await pull.run();
       ran.push({ name: pull.name, ...result });
+      await recordRun(pull.name, { result });
       /* Rows Odoo sent that we could not store are the one failure mode a
          successful-looking sync can hide: the run reports "ok" while that
          tonnage is simply missing. Dispatch calls them unmapped (no field
@@ -147,13 +212,16 @@ async function runOdooSync() {
     } catch (err) {
       logger.error({ err, pull: pull.name }, 'odoo sync pull failed');
       ran.push({ name: pull.name, error: err.message });
+      await recordRun(pull.name, { error: err.message });
       await fireAlert(
         'odoo-sync-failed:' + pull.name,
         `Odoo sync pull '${pull.name}' failed: ${err.message}`
       ).catch(() => { /* alerting must never break the sync itself */ });
+    } finally {
+      _inFlight.delete(pull.name);
     }
   }
   return { ran };
 }
 
-module.exports = { runOdooSync };
+module.exports = { runOdooSync, getSyncState, LIVE_PULLS };
