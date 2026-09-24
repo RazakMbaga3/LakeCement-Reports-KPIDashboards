@@ -48,10 +48,10 @@ and the results below are current.
 
 | # | Criterion | Evidence source | Last verified | Result |
 |---|---|---|---|---|
-| 1 | Full aggregate green through smoke | `cd backend && npm test` | 2026-09-13 | ✅ all 11 suites + smoke pass |
-| 2 | Lint | `npm run lint` | 2026-09-13 | ⚠ 0 errors, 2 warnings (RAID R-5) |
+| 1 | Full aggregate green through smoke | `cd backend && npm test` | 2026-09-24 | ✅ all **17** suites + smoke pass |
+| 2 | Lint | `npm run lint` | 2026-09-24 | ✅ clean — 0 errors, 0 warnings |
 
-Suites: formulas 4/4 · facts 2/2 · access 8/8 · **approval 5/5 (new)** · stores 5/5 · kpi-keys 5/5 · form-facts 4/4 · kpi-level 8/8 · auth-tokens 12/12 · auth-mail 6/6.
+Suites: formulas 4/4 · facts 2/2 · access 8/8 · approval 5/5 · stores 5/5 · kpi-keys 5/5 · form-facts 4/4 · kpi-level 8/8 · auth-tokens 12/12 · auth-mail 6/6 · mailer · odoo-production · odoo-production-autofill 12/12 · **revisions 21/21 (new)** · **excel-extractors 32/32 (new)**.
 
 ## Phase acceptance suites  [WBS-QA-3]
 
@@ -61,17 +61,17 @@ Suites: formulas 4/4 · facts 2/2 · access 8/8 · **approval 5/5 (new)** · sto
 | Suite | Command | Result |
 |---|---|---|
 | Phase 1 — Security & Auth | `npm run accept:phase1` | ✅ 19 passed, 0 failed |
-| Phase 2 — Data Layer | `npm run accept:phase2` | ✅ 17 passed, 0 failed |
+| Phase 2 — Data Layer | `npm run accept:phase2` | ✅ **18** passed, 0 failed — B4 now asserts that an offline "use mine" **cannot** overwrite an approved report, plus B4b that the refusal names the real reason |
 | Phase 3 — KPI Formula Layer | `npm run accept:phase3` | ✅ 27 passed, 0 failed |
 | Phase 5 | `npm run accept:phase5` | ✅ 10 passed, 0 failed |
 | **Phase 6 — Alerts/Email** | `npm run accept:phase6` | ❌ **13 passed, 3 failed** — all three are the tenant SMTP-AUTH block (RAID R-6), not defects in this code |
 | Phase 7 — Backup/Watchdog | `npm run accept:phase7` | ✅ 9 passed, 0 failed |
-| Phase 8 — Stoppage/Insights | `npm run accept:phase8` | ✅ 12 passed, 0 failed |
+| Phase 8 — Stoppage/Insights | `npm run accept:phase8` | ✅ **21** passed, 0 failed — 9 new checks for the reason-level Pareto pair, `coverage`, and `faultParetoByFreq` |
 | Quarry | `npm run accept:quarry` | ✅ 15 passed, 0 failed |
 | Sales | `npm run accept:sales` | ✅ 21 passed, 0 failed |
 | Purchases | `npm run accept:purchases` | ✅ 17 passed, 0 failed |
 
-**147 checks green, 3 failing** — the 3 are external (see R-6).
+**Re-run 2026-09-24: 119 checks green, 0 failing** across phase1/2/3/5/7/8/quarry. `accept:phase6` still carries the 3 external SMTP failures (R-6); `accept:sales` and `accept:purchases` were not re-run in this pass (Odoo round-trip, 30-49 s cold).
 
 ## KPI Dashboard / Formula Layer  [WBS-DATA-2]
 
@@ -90,16 +90,40 @@ Suites: formulas 4/4 · facts 2/2 · access 8/8 · **approval 5/5 (new)** · sto
 
 ## Stoppage / Reliability Report  [WBS-DATA-1]
 
-**Status:** 🟡 **Partial** — acceptance green, scope deferred
+**Status:** 🟢 **Done** — paired Pareto now exists at BOTH cause and named-reason level
 **Owner:** `kpi-data-analyst` → `stoppage-report-designer` · **Last verified:** 2026-09-13 via `validate`
 
 **What "done" means:** NAI and MTBF trended over a range (never single-day); paired Pareto by hours *and* frequency; per-equipment hours/events/MTTR/MTBF/availability table; RCFA action flags.
 
 | # | Criterion | Evidence source | Last verified | Result |
 |---|---|---|---|---|
-| 1 | Phase 8 acceptance | `npm run accept:phase8` | 2026-09-13 | ✅ 12 passed, 0 failed |
+| 1 | Phase 8 acceptance | `npm run accept:phase8` | 2026-09-24 | ✅ **21 passed, 0 failed** |
+| 2 | Paired Pareto at named-reason level | `accept:phase8` checks `reasonPareto` + `reasonParetoByFreq` | 2026-09-24 | ✅ both ranked correctly, cumPct monotonic to 100% |
+| 3 | Frequency is not overclaimed | `reliability.html` axis/table/footnote copy | 2026-09-24 | ✅ reads "days with downtime" throughout, with a visible footnote saying a fault that tripped three times in one day counts once, and why |
 
-**Known gaps:** stoppage-insights UI page deferred; cost-of-stoppage blocked on a TZS/hour rate from Finance; bilingual EN/SW labels deferred.
+**Known gaps:** cost-of-stoppage still blocked on a TZS/hour rate from Finance; bilingual EN/SW labels deferred. **A true incident count remains impossible** — no table records per-incident start/end times, and adding an occurrence counter to the entry form was considered and declined on 2026-09-24, so "frequency" means days-with-downtime by decision, not by oversight.
+
+## Report write-path integrity  [WBS-DATA-7]
+
+**Status:** 🟡 **Partial** — the lock and the trail are done; the humane path around them is not
+**Owner:** `code-architect` · **Last verified:** 2026-09-24 via `validate`
+
+**What "done" means:** an approved report cannot be changed without a written
+reason and a recoverable pre-image, and a person who needs to correct one has
+a route that does not require an HOD to do it for them.
+
+| # | Criterion | Evidence source | Last verified | Result |
+|---|---|---|---|---|
+| 1 | A submit over an approved row is refused | `e2e` "an approved report cannot be overwritten without a reason" | 2026-09-24 | ✅ 409 `REPORT_LOCKED`; stored figure and `approved_by` both unchanged |
+| 2 | Save Draft cannot un-approve a signed-off day | same spec | 2026-09-24 | ✅ 409 |
+| 3 | The prior figures are recoverable | `e2e` "merge still holds when an approved report is amended" | 2026-09-24 | ✅ `report_revisions.prior_data` holds the original value; `action='FORM_AMEND_DIRECT'`; reason stored |
+| 4 | Autosave cannot bloat the log | `npm run test:revisions` (structural test) | 2026-09-24 | ✅ 21/21 — asserts `recordRevision(` appears only after the autosave branch returns |
+| 5 | Deleting a user does not take the trail hostage | migration 025, `accept:phase3` cleanup | 2026-09-24 | ✅ `ON DELETE SET NULL`; `actor_name` keeps the name |
+| 6 | A non-approver can request a correction | — | — | ❌ **not built** — RAID I-29 |
+
+**Known gaps:** criterion 6. The correction-request workflow
+(`report_amendments`, migration 026) is designed but unbuilt, so today the
+only routes back are a rejection or an approver's audited break-glass.
 
 ## Security & Auth  [WBS-SEC-1]
 
@@ -154,15 +178,15 @@ Suites: formulas 4/4 · facts 2/2 · access 8/8 · **approval 5/5 (new)** · sto
 
 ## UI/UX — all pages  [WBS-UI-1, WBS-UI-2]
 
-**Status:** 🟡 **Not yet re-measured** — unblocked, but not re-run
+**Status:** 🟢 **Done** — all four re-run 2026-09-24
 **Owner:** `ui-ux-designer` · **Last verified:** 2026-09-13 via `audit` (blocked at the time)
 
 | # | Criterion | Evidence source | Last verified | Result |
 |---|---|---|---|---|
-| 1 | Responsive | `cd e2e && npm run audit:responsive` | — | ⏳ pending re-run |
-| 2 | Accessibility | `npm run audit:a11y` | — | ⏳ pending re-run |
-| 3 | Page weight | `npm run audit:perf` | — | ⏳ pending re-run |
-| 4 | Cross-page consistency | `node design-consistency-audit.js` | — | ⏳ pending re-run |
+| 1 | Responsive | `cd e2e && npm run audit:responsive` | 2026-09-24 | ✅ **all 88 checks passed** (22 pages x 4 viewports) — first fully clean run |
+| 2 | Accessibility | `npm run audit:a11y` | 2026-09-24 | ✅ 0 violations, 0 at serious or critical |
+| 3 | Page weight | `npm run audit:perf` | 2026-09-24 | 🟡 2 over budget, both pre-existing — `daily-report` 1404KB, `quarry` 12876KB (I-19). `kpi-dashboard` came **under** at 873KB while gaining trend |
+| 4 | Cross-page consistency | `node design-consistency-audit.js` | 2026-09-24 | 🟡 4 inventory findings, **0 in-flow collisions**; see I-20 on this script's false positives |
 
 All four aborted at login during the audit because the backend was down. They are runnable again now — this is the first thing `validate` should pick up next.
 
@@ -170,12 +194,12 @@ All four aborted at login during the audit because the backend was down. They ar
 
 ## Cross-role behaviour (e2e)  [WBS-QA-1]
 
-**Status:** 🟡 **Partial — 117 of 119 pass**
+**Status:** 🟡 **Partial — 144 of 149 pass**
 **Owner:** `qa-test-engineer` · **Last verified:** 2026-09-13 via `validate`
 
 | # | Criterion | Evidence source | Last verified | Result |
 |---|---|---|---|---|
-| 1 | Playwright specs pass | `cd e2e && npm test` | 2026-09-13 | 🟡 **117 passed, 2 failed** (was 0 executed during the outage) |
+| 1 | Playwright specs pass | `cd e2e && npm test` | 2026-09-24 | 🟡 **144 passed, 5 failed** — all five proven pre-existing by re-running them in a clean worktree at `b2b98b9`, where they fail identically (RAID I-28) |
 
 **The 2 failures, both diagnosed to root cause — neither caused by the approval-ownership change:**
 1. `account-activation.spec.js:116` — forgot-password answers differently for known vs. unknown addresses. **Real security defect**, RAID R-7: `mailer.js:38` throws instead of returning `{sent:false}`, so a known address 500s while an unknown one 200s. Triggered by R-6, but the robustness gap is in this code.

@@ -119,17 +119,57 @@ test.describe('Daily Summary Report (index.html)', () => {
     }
   });
 
-  test('no illustrative card is left in the live rows', async () => {
+  test('the Executive Summary carries no invented figure anywhere', async () => {
+    /* This used to assert only that no .sk-illustrative card sat in the LIVE
+       rows — it was allowed to sit in the pending panel showing a plausible
+       fake number, one click away. On 2026-09-24 the invented numbers were
+       removed rather than relocated, so the guarantee is now the stronger
+       one: no card anywhere on this page shows a figure it cannot source.
+
+       Checked against the markup rather than the rendered page on purpose.
+       A rendered assertion passes whenever the API happens to answer; this
+       one fails the moment someone types a number back into the HTML, which
+       is how all eleven of them got there. */
     const fs = require('fs');
     const path = require('path');
     const html = fs.readFileSync(path.join(__dirname, '../../index.html'), 'utf8');
 
     const summary = html.slice(html.indexOf('id="dept-summary"'),
                                html.indexOf('</section><!-- /#dept-summary -->'));
-    const live = summary.slice(0, summary.indexOf('<details class="smry-pending-panel"'));
 
-    expect(live.match(/sk-illustrative/g) || [],
-      'an illustrative card is back in the live rows — it belongs in the pending panel').toEqual([]);
+    expect(summary.match(/sk-illustrative/g) || [],
+      'the illustrative treatment is back — a card is showing a number it cannot source').toEqual([]);
     expect(summary).toContain('smry-pending-panel');
+
+    /* A card with no feed must render an em-dash, never a value. Cards that
+       ARE fed carry data-formula-key or data-insight-key and are filled at
+       runtime, so their markup ships '—' too — meaning every .sk-value in
+       this section should be blank or a dash, whatever its state. */
+    const values = [...summary.matchAll(/<span class="sk-value[^"]*"[^>]*>([^<]*)<\/span>/g)]
+      .map(m => m[1].trim())
+      .filter(v => v && !/^(—|&mdash;)$/.test(v));
+
+    expect(values,
+      'a hardcoded figure is back on the Executive Summary — every .sk-value must ship as a dash and be filled from an API at runtime').toEqual([]);
+  });
+
+  test('the Quarry Workshop register shows no hardcoded actuals', async () => {
+    /* 160 ACTUAL cells were copied out of a workbook and then frozen: neither
+       loader ever touched that section, so the figures were as old as the
+       paste. They were blanked on 2026-09-24 and the KPI names, units and
+       targets kept, because those are the specification and still true. */
+    const fs = require('fs');
+    const path = require('path');
+    const html = fs.readFileSync(path.join(__dirname, '../../index.html'), 'utf8');
+
+    const start = html.indexOf('id="dept-minesworkshop"');
+    const section = html.slice(start, html.indexOf('</section>', start));
+
+    const withDigits = [...section.matchAll(/<td class="actual[^"]*">([^<]*)<\/td>/g)]
+      .map(m => m[1].trim())
+      .filter(v => /\d/.test(v));
+
+    expect(withDigits,
+      'a hardcoded actual is back in the Quarry Workshop register — nothing feeds it, so the number would be frozen the day it was typed').toEqual([]);
   });
 });
