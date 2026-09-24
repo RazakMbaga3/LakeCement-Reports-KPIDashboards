@@ -3,13 +3,20 @@
    ─────────────────────────────────────────────────────────────────
    Injects an "Export ▾" dropdown into the toolbar of any form page.
    Reads window._nyatiFormId set by form-persist.js.
-   SheetJS loaded from CDN on first Excel export.
+   SheetJS served from this repo on first Excel export — see loadXLSX.
    ══════════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  var XLSX_CDN = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+  /* Same local-first loader as forms/excel-import.js — see the long
+     note there for why the CDN is only a fallback and how the vendored
+     copy's integrity is checked. Export had the identical defect:
+     on a plant network with no internet egress, "Export ▾ → Excel"
+     failed with "check internet connection". */
+  var XLSX_VENDOR = '../vendor/xlsx-0.18.5/xlsx.full.min.js';
+  var XLSX_CDN    = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+  var _selfSrc    = (document.currentScript && document.currentScript.src) || '';
   var _xlsxReady = false;
   var _xlsxQueue = [];
 
@@ -29,14 +36,34 @@
     if (_xlsxReady)  { cb(); return; }
     _xlsxQueue.push(cb);
     if (_xlsxQueue.length > 1) return;
-    var s = document.createElement('script');
-    s.src = XLSX_CDN;
-    s.onload = function () {
+
+    var tried = [];
+    function drain() {
       _xlsxReady = true;
       _xlsxQueue.splice(0).forEach(function (fn) { fn(); });
-    };
-    s.onerror = function () { alert('Could not load Excel library. Check internet connection.'); };
-    document.head.appendChild(s);
+    }
+    function attempt(url, onFail) {
+      tried.push(url);
+      var s = document.createElement('script');
+      s.src = url;
+      s.onload  = function () { if (!window.XLSX) onFail(); else drain(); };
+      s.onerror = onFail;
+      document.head.appendChild(s);
+    }
+
+    var vendor;
+    try { vendor = new URL(XLSX_VENDOR, _selfSrc).href; }
+    catch (e) { vendor = '/vendor/xlsx-0.18.5/xlsx.full.min.js'; }
+
+    attempt(vendor, function () {
+      attempt(XLSX_CDN, function () {
+        _xlsxQueue.length = 0;   /* or one failure kills the button for the session */
+        alert('Could not load the Excel library (SheetJS).\n\nTried:\n  ' + tried.join('\n  ') +
+              '\n\nThe local copy should be on this server at ' +
+              'vendor/xlsx-0.18.5/xlsx.full.min.js. If it is missing, re-deploy — ' +
+              'exporting does not need internet access.');
+      });
+    });
   }
 
   /* ─── Helpers ─────────────────────────────────────────────────── */

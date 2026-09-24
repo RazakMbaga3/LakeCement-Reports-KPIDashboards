@@ -2,29 +2,84 @@
    Nyati Cement — Excel Import  (drag-and-drop + file picker)
    ─────────────────────────────────────────────────────────────────
    Supports: dispatch · quality · materials · power-cons · pile-quality
-   Uses SheetJS (xlsx.js) loaded from CDN on first use.
+   Uses SheetJS (xlsx.js), served from this repo — see loadXLSX below.
    Reads window._nyatiFormId set by form-persist.js.
    ══════════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  var XLSX_CDN = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+  /* ── SheetJS loader ───────────────────────────────────────────────
+     SheetJS is 861 KB, so it stays LAZY: nothing is fetched until
+     someone actually imports a file, and page weight is unchanged.
+
+     It is served from this repo (vendor/xlsx-0.18.5/), not from a CDN.
+     The plant's network has no general internet egress, so the old
+     CDN-only loader made every "Import Excel" button on site fail with
+     "check your internet connection" on a network that was working
+     perfectly well. The CDN is kept only as a second attempt, for the
+     one case a local copy cannot cover: a server that has the HTML but
+     not vendor/ (a partial deploy).
+
+     vendor/xlsx-0.18.5/xlsx.full.min.js is byte-identical to the
+     published xlsx@0.18.5 dist/xlsx.full.min.js —
+       sha256 c9506197caf809a075b6dee1da0d36fb19da7158ffe8a88e7b0c96c5d8623c99
+     the same bytes come out of the npm tarball (itself checked against
+     the registry's own sha512), out of cdn.jsdelivr.net and out of
+     cdnjs. Re-check any time with:
+       sha256sum -c vendor/xlsx-0.18.5/SHA256SUMS
+
+     The vendor URL is resolved against THIS SCRIPT's src, not against
+     the page: forms/*.html load this file from forms/, but
+     daily-report.html and power-plant-report.html load it from the repo
+     root, so any one fixed relative path would be wrong for half of
+     them. */
+  var XLSX_VENDOR = '../vendor/xlsx-0.18.5/xlsx.full.min.js';
+  var XLSX_CDN    = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+  var _selfSrc    = (document.currentScript && document.currentScript.src) || '';
   var _xlsxLoaded = false;
   var _xlsxQueue  = [];
 
+  function vendorURL() {
+    try { return new URL(XLSX_VENDOR, _selfSrc).href; }
+    catch (e) { return '/vendor/xlsx-0.18.5/xlsx.full.min.js'; }
+  }
+
   function loadXLSX(cb) {
+    if (typeof XLSX !== 'undefined') { _xlsxLoaded = true; cb(); return; }
     if (_xlsxLoaded) { cb(); return; }
     _xlsxQueue.push(cb);
     if (_xlsxQueue.length > 1) return;
-    var s  = document.createElement('script');
-    s.src  = XLSX_CDN;
-    s.onload = function () {
+
+    var tried = [];
+    function drain() {
       _xlsxLoaded = true;
       _xlsxQueue.splice(0).forEach(function (fn) { fn(); });
-    };
-    s.onerror = function () { alert('Could not load SheetJS. Check your internet connection.'); };
-    document.head.appendChild(s);
+    }
+    function attempt(url, onFail) {
+      tried.push(url);
+      var s = document.createElement('script');
+      s.src = url;
+      /* A 200 that isn't SheetJS (a captive portal, an SPA 404 page)
+         fires onload, not onerror — so prove the global appeared. */
+      s.onload  = function () { if (typeof XLSX === 'undefined') onFail(); else drain(); };
+      s.onerror = onFail;
+      document.head.appendChild(s);
+    }
+
+    attempt(vendorURL(), function () {
+      attempt(XLSX_CDN, function () {
+        /* Clearing the queue matters: the old loader left the failed
+           callbacks queued, so the `length > 1` guard above made every
+           later click return silently — one failure killed the button
+           for the rest of the session. */
+        _xlsxQueue.length = 0;
+        alert('Could not load the Excel reader (SheetJS).\n\nTried:\n  ' + tried.join('\n  ') +
+              '\n\nThe local copy should be on this server at ' +
+              'vendor/xlsx-0.18.5/xlsx.full.min.js. If it is missing, re-deploy — ' +
+              'importing does not need internet access.');
+      });
+    });
   }
 
   /* ── Helpers ──────────────────────────────────────────────────── */
@@ -89,12 +144,37 @@
   ═══════════════════════════════════════════════════════════════ */
   var EXTRACTORS = {
 
-    /* ── Dispatch ─────────────────────────────────────────────── */
+    /* ── Dispatch ─────────────────────────────────────────────────
+       The report date is the cell beside this sheet's own "DATE"
+       label, found rather than positioned — the cell directly ABOVE it
+       also holds a date serial, one day LATER, and the old
+       `rows[1][17] || rows[2][17]` read that one first. So every
+       dispatch import reported the wrong day (21.04.2026 came out as
+       2026-04-22, 30.08.2026 as 2026-08-31), which tripped the preview
+       modal's "this file is for a different day" warning on every
+       single valid import — training officers to click past the one
+       warning meant to catch a genuinely wrong file. Nothing was
+       mis-saved: applyToForm() never writes `date`. Fixed 2026-09-24;
+       the old positional cells stay as a fallback for a copy of the
+       workbook that has lost its DATE label. */
     dispatch: function (wb) {
       var ws   = wb.Sheets[wb.SheetNames[0]];
       var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
 
-      var dateVal  = anyDate(rows[1][17]) || anyDate(rows[2][17]);
+      var dateVal = '';
+      for (var ddi = 0; ddi < Math.min(rows.length, 8) && !dateVal; ddi++) {
+        var drow = rows[ddi];
+        for (var ddj = 0; ddj < drow.length; ddj++) {
+          if (!/^DATE$/i.test(String(drow[ddj] || '').trim())) continue;
+          for (var ddk = ddj + 1; ddk < drow.length; ddk++) {
+            dateVal = anyDate(drow[ddk]);
+            if (dateVal) break;
+          }
+          break;
+        }
+      }
+      if (!dateVal) dateVal = anyDate(rows[2] && rows[2][17]) || anyDate(rows[1] && rows[1][17]);
+
       var salesRow = findRow(rows, function (r) { return /SALES\s+ON\s+DATE/i.test(String(r[1])); });
       var soRow    = findRow(rows, function (r) { return /PENDENCY/i.test(String(r[1])); });
 
@@ -365,13 +445,49 @@
        J9/K10/L11=consumption d/m/y  M12=closing(calc)  N13=pending GRN
        O14=min  P15=max  Q16=variance(calc). Date sits right of the
        "DATE" label near the top. Sections repeat supplier names, so
-       matching is section-scoped via the header rows in column C.  */
+       matching is section-scoped via the header rows in column C.
+
+       Those index numbers assume the sheet's used range starts at
+       column A. It does not: every real RAW MATERIAL REPORT in this
+       repo (21.04.2026 and 30.08.2026 both report B1:S..) leaves
+       column A empty, so SheetJS hands back rows whose index 0 is
+       column B — and this extractor was reading one column too far
+       right on every single one. The effect was silent: no label ever
+       matched, so the preview said "0 fields matched" and Apply did
+       nothing, on a file that was perfectly valid. Fixed 2026-09-24 the
+       same way production: and cpp: already handle it — find the
+       DESCRIPTION header at runtime and offset off that, so a file
+       that ever does start at column A still lines up. */
     materials: function (wb) {
       var secs = window.MATERIALS_SECTIONS;
       if (!secs) return { _error: 'Row catalogue missing — open this import from the Raw Materials form page.' };
 
       var ws   = wb.Sheets[wb.SheetNames[0]];
       var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      var descCol = -1;
+      for (var hi = 0; hi < rows.length && descCol < 0; hi++) {
+        for (var hc = 0; hc < 8; hc++) {
+          if (/^description$/i.test(String(rows[hi][hc] || '').trim())) { descCol = hc; break; }
+        }
+      }
+      /* "DESCRIPTION" alone is not enough to identify this workbook —
+         the Production and CPP reports carry that header too, and share
+         enough material names (clinker, GYPSUM, LIMESTONE) that a
+         Production report dropped here used to half-fill the Raw
+         Materials form with the wrong table's figures. The sheet's own
+         "RAW MATERIAL REPORT" title is what actually identifies it. */
+      var isRawMaterial = rows.slice(0, 8).some(function (r) {
+        return r.some(function (c) { return /RAW\s*MATERIAL\s+REPORT/i.test(String(c || '')); });
+      });
+      if (descCol < 0 || !isRawMaterial) {
+        return { _error: 'This does not look like a "RAW MATERIAL REPORT" sheet (no such title, or no DESCRIPTION column). Is this the Raw Materials workbook?' };
+      }
+      var OFF      = descCol - 2;
+      var DESC     = 2 + OFF,  OPEN_C   = 5 + OFF;
+      var RCVD_C   = 6 + OFF,  RCVD_M_C = 7 + OFF,  RCVD_Y_C = 8 + OFF;
+      var CONS_C   = 9 + OFF,  CONS_M_C = 10 + OFF, CONS_Y_C = 11 + OFF;
+      var GRN_C    = 13 + OFF, MIN_C    = 14 + OFF, MAX_C    = 15 + OFF;
 
       /* Date: find the row holding a "DATE" label, take the first
          date-parsable cell to its right (fallback: scan rows 1-4). */
@@ -401,7 +517,7 @@
       var current = secById('main');   /* Iron Ore / Gypsum / Clinker come first */
 
       rows.forEach(function (r) {
-        var label = String(r[2] || '').trim();
+        var label = String(r[DESC] || '').trim();
         if (!label) return;
 
         for (var h = 0; h < HDRS.length; h++) {
@@ -413,17 +529,17 @@
         for (var i = 0; i < current.rows.length; i++) {
           var row = current.rows[i];
           if (norm(row.label) !== nl && norm(row.xl || '') !== nl) continue;
-          out[row.f + '_cons']     = fmt(toNum(r[9]));
-          out[row.f + '_cons_mtd'] = fmt(toNum(r[10]));
-          out[row.f + '_cons_ytd'] = fmt(toNum(r[11]));
+          out[row.f + '_cons']     = fmt(toNum(r[CONS_C]));
+          out[row.f + '_cons_mtd'] = fmt(toNum(r[CONS_M_C]));
+          out[row.f + '_cons_ytd'] = fmt(toNum(r[CONS_Y_C]));
           if (!row.consOnly) {
-            out[row.f + '_open']     = fmt(toNum(r[5]));
-            out[row.f + '_rcvd']     = fmt(toNum(r[6]));
-            out[row.f + '_rcvd_mtd'] = fmt(toNum(r[7]));
-            out[row.f + '_rcvd_ytd'] = fmt(toNum(r[8]));
-            out[row.f + '_grn']      = fmt(toNum(r[13]));
-            out[row.f + '_min']      = fmt(toNum(r[14]));
-            out[row.f + '_max']      = fmt(toNum(r[15]));
+            out[row.f + '_open']     = fmt(toNum(r[OPEN_C]));
+            out[row.f + '_rcvd']     = fmt(toNum(r[RCVD_C]));
+            out[row.f + '_rcvd_mtd'] = fmt(toNum(r[RCVD_M_C]));
+            out[row.f + '_rcvd_ytd'] = fmt(toNum(r[RCVD_Y_C]));
+            out[row.f + '_grn']      = fmt(toNum(r[GRN_C]));
+            out[row.f + '_min']      = fmt(toNum(r[MIN_C]));
+            out[row.f + '_max']      = fmt(toNum(r[MAX_C]));
           }
           break;
         }
@@ -557,7 +673,15 @@
       return out;
     },
 
-    /* ── Pile Quality (CaO) ───────────────────────────────────── */
+    /* ── Pile Quality (CaO) ─────────────────────────────────────────
+       This was the only extractor with NO guard at all: it read a fixed
+       column index and returned whatever numbers happened to be there,
+       so dropping a Power Consumption report on the Pile Quality form
+       filled all 18 CaO boxes with kWh figures, no warning shown —
+       silently wrong data straight into the draft. Both problems are
+       the same problem, so both are fixed the same way: the %CaO column
+       is now located by its own heading, and if this sheet has no such
+       heading it is not a Pile Quality report and nothing is filled. */
     'pile-quality': function (wb) {
       /* Find the sheet for today, or use the last date-named sheet */
       var today = new Date();
@@ -573,15 +697,27 @@
 
       var dateVal = anyDate(shName) || anyDate(rows[1] && rows[1][0]);
 
-      /* Each data row: col 2 = %CaO. Skip header (row 0), read up to 18 samples */
-      var dataRows = rows.slice(1).filter(function (r) {
-        var v = toNum(r[2]);
+      /* "% Cao" heading in the sheet's header row — its index is the
+         column every data row's reading is read from. */
+      var caoCol = -1, hdrIdx = -1;
+      for (var hi = 0; hi < Math.min(rows.length, 5) && caoCol < 0; hi++) {
+        for (var hc = 0; hc < rows[hi].length; hc++) {
+          if (/^%?\s*ca\s*o\s*%?$/i.test(String(rows[hi][hc] || '').trim())) { caoCol = hc; hdrIdx = hi; break; }
+        }
+      }
+      if (caoCol < 0) {
+        return { _error: 'No "% CaO" column found in sheet "' + shName + '". Is this a Pile Quality report?' };
+      }
+
+      /* Each data row carries one hourly reading in that column. */
+      var dataRows = rows.slice(hdrIdx + 1).filter(function (r) {
+        var v = toNum(r[caoCol]);
         return v !== null && v > 0;
       });
 
       var result = { date: dateVal };
       dataRows.slice(0, 18).forEach(function (row, i) {
-        result['cao_h' + (i + 1)] = fmt(toNum(row[2]), 2);
+        result['cao_h' + (i + 1)] = fmt(toNum(row[caoCol]), 2);
       });
       return result;
     },

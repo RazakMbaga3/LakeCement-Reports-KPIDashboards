@@ -539,6 +539,16 @@
   var LS_TXNS    = 'lcMinesTxns.v1';
   var LS_OPEN    = 'lcMinesOpenings.v1';
   var LS_MANUAL  = 'lcMinesManual.v1';
+  /* SheetJS is served from this repo, not a CDN — the plant network has
+     no internet egress, so the CDN-only loader made ticket import fail
+     with "check internet connection" on a working network. See the long
+     note in forms/excel-import.js for the integrity check on the
+     vendored copy (sha256 c9506197…23c99, verified against the npm
+     tarball, jsdelivr and cdnjs). This page lives at the repo root, so
+     the relative path below resolves the same way its other scripts do.
+     The CDN stays as a fallback for a partial deploy that shipped the
+     HTML but not vendor/. */
+  var XLSX_LOCAL = 'vendor/xlsx-0.18.5/xlsx.full.min.js';
   var XLSX_CDN   = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
   var FY_START_MONTH = 4;   /* fiscal year runs April → March (workbook convention) */
 
@@ -1435,14 +1445,27 @@
   /* ══════════════════ EXCEL IMPORT ══════════════════ */
   var _xlsxLoaded = false, _xlsxQ = [];
   function loadXLSX(cb) {
+    if (window.XLSX) { _xlsxLoaded = true; cb(); return; }
     if (_xlsxLoaded) { cb(); return; }
     _xlsxQ.push(cb);
     if (_xlsxQ.length > 1) return;
-    var s = document.createElement('script');
-    s.src = XLSX_CDN;
-    s.onload = function () { _xlsxLoaded = true; _xlsxQ.splice(0).forEach(function (f) { f(); }); };
-    s.onerror = function () { toast('Could not load SheetJS — check internet connection.', true); _xlsxQ.length = 0; };
-    document.head.appendChild(s);
+
+    function drain() { _xlsxLoaded = true; _xlsxQ.splice(0).forEach(function (f) { f(); }); }
+    function attempt(url, onFail) {
+      var s = document.createElement('script');
+      s.src = url;
+      /* A 200 that isn't SheetJS fires onload, not onerror — so check. */
+      s.onload  = function () { if (!window.XLSX) onFail(); else drain(); };
+      s.onerror = onFail;
+      document.head.appendChild(s);
+    }
+    attempt(XLSX_LOCAL, function () {
+      attempt(XLSX_CDN, function () {
+        toast('Could not load the Excel reader. It should be on this server at ' +
+              XLSX_LOCAL + ' — if it is missing, re-deploy.', true);
+        _xlsxQ.length = 0;
+      });
+    });
   }
   function excelDateISO(v) {
     if (v == null || v === '') return '';

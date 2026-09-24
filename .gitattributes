@@ -1,0 +1,11 @@
+# Vendored third-party files are byte-exact artefacts, not source.
+#
+# core.autocrlf is true on the Windows dev machines here, so without this
+# rule git rewrites LF to CRLF on checkout — which changes the bytes of
+# vendor/xlsx-0.18.5/xlsx.full.min.js and makes it fail the very SHA256SUMS
+# file shipped beside it to prove it is the unmodified SheetJS 0.18.5
+# release. `-text` tells git to leave these files exactly as committed.
+#
+# Verify after any checkout with:
+#   sha256sum -c vendor/xlsx-0.18.5/SHA256SUMS
+vendor/** -text
