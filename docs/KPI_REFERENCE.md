@@ -7,7 +7,7 @@
 > `npm run docs:kpi` (in `backend/`) and commit both files together.
 
 This document defines every KPI the dashboards, MIS reports, and morning
-digest display: **29 KPIs** computed from **163 raw facts**.
+digest display: **32 KPIs** computed from **170 raw facts**.
 
 ## How a number gets onto a dashboard
 
@@ -33,9 +33,12 @@ formulas do not change when that happens.
 | KPI | Unit | Target | Monthly roll-up | Version |
 |---|---|---|---|---|
 | [Clinker Free Lime](#clinker-free-lime) | % | Spec 3.0% | Average | v1 |
+| [Clinker C3S](#clinker-c3s) | % | Target > 50% | Average | v1 |
 | [Despatch / Day](#despatch-day) | MT | — | Average | v4 |
 | [Kiln Output](#kiln-output) | MT | Target ≥ 2,000 MT/day | Average | v1 |
 | [Cement Produced (CM-1 + CM-2)](#cement-produced-day) | MT | — | Average | v1 |
+| [Cement Mill 2 Output](#cement-mill-2-output) | TPH | Target ≥ 55 TPH | Weighted average | v1 |
+| [Cement Mill 2 Production](#cement-mill-2-production) | MT | — | Average | v1 |
 | [Specific Thermal Energy Consumption](#specific-thermal-energy-consumption) | kcal/kg | Target < 780 kcal/kg | Weighted average | v3 |
 | [Specific Power Consumption – Total](#specific-power-consumption-total) | kWh/MT eq. cement | — | Weighted average | v4 |
 | [Specific Power Consumption – Up to Clinker](#specific-power-consumption-up-to-clinker) | kWh/MT clinker | — | Weighted average | v3 |
@@ -86,6 +89,30 @@ Daily free-lime measurement as reported by the quality lab. Lower is better; spe
 
 ```js
 function (f) { return pos(f.free_lime); }
+```
+
+**Monthly roll-up.** Average of the days that have a value (missing days are excluded, not counted as zero).
+
+<a id="clinker-c3s"></a>
+### Clinker C3S
+
+| | |
+|---|---|
+| Unit | % (shown to 1 decimal place) |
+| Target | Target > 50% — good is at or above 50 % |
+| Formula version | v1 |
+| Registry key | `clinker-c3s` |
+
+Tricalcium silicate (3CaO·SiO₂, "alite") as a percentage of the clinker, by Bogue calculation — the phase that carries almost all of a Portland cement's early strength, so it is the single number the kiln is steered by: too low and 3-day and 7-day strengths fall short of the TBS grade, too high and it is being bought with extra fuel and a harder-burning, more refractory-hostile kiln. The value stored is the DAY AVERAGE EXACTLY AS THE LAB REPORTS IT — the mean of the six four-hourly clinker samples in the QC Daily Report's "CLINKER : 4 HRS AVG" block (DAILY SUMMARY sheet, column R) — and is NOT re-derived here from CaO/SiO₂/Al₂O₃/Fe₂O₃. That is deliberate: the lab applies its own Bogue variant and free-lime correction, and recomputing it from the oxide columns would produce a second, slightly different C₃S that disagrees with the certificate the lab actually issues. Verified 2026-09-24 against "6. Quality Report 21.04.2026 (2).xlsx": the six readings R46:R51 average 61.007 and the stored 2026-04-21 row reads 61.01. The > 50% floor is the QC workbook's own printed target, the same ">50%" hint the entry form prints in the cell (forms/quality-form.html) and the same figure index.html's Production KPI table carries; it is a floor, not a band — a high C₃S is a fuel-cost question, not a conformance failure, so signage is ">=" like Blaine. Monthly figure is the mean of the days that reported. CAVEAT ON COVERAGE: as of 2026-09-24 the database holds exactly ONE reported quality day (2026-04-21), so this KPI is source-verified but not trend-verified — see the Quality entry gap in docs/pm/RAID_LOG.md.
+
+**Inputs**
+
+- **quality form:** c3s_ck (%)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) { return pos(f.c3s_ck); }
 ```
 
 **Monthly roll-up.** Average of the days that have a value (missing days are excluded, not counted as zero).
@@ -161,6 +188,74 @@ Cement produced that day by both cement mills combined, summed across every grad
 
 ```js
 function (f) { return pos(totalCementProd(f)); }
+```
+
+**Monthly roll-up.** Average of the days that have a value (missing days are excluded, not counted as zero).
+
+<a id="cement-mill-2-output"></a>
+### Cement Mill 2 Output
+
+| | |
+|---|---|
+| Unit | TPH (shown to 1 decimal place) |
+| Target | Target ≥ 55 TPH — good is at or above 55 TPH |
+| Formula version | v1 |
+| Registry key | `cement-mill-2-output` |
+
+Cement Mill 2 throughput = total CM-2 production that day ÷ total CM-2 running hours that day, both summed across all five grades (32.5N, 42.5R, 42.5N, OPC, 42.5N BM). This is the source Excel's own TPH cell, not a reconstruction: Production Report, PLANT OPERATIONS table, CEMENT MILL -2 TOTAL row, Q = J ÷ F. Verified 2026-09-24 against "1. Production Report 21.04.2026 (1).xlsx": F45 = 19.1 hrs, J45 = 995 MT, Q45 = 52.094, and the same arithmetic over the stored 2026-04-21 facts (250 + 495 + 0 + 0 + 250 MT over 4.5 + 10.1 + 0 + 0 + 4.5 hrs) reproduces 52.094 exactly.
+
+WHY RUNNING HOURS COME FROM THE PRODUCTION REPORT AND NOT FROM THE STOPPAGE FORM: (1440 − Σ CM-2 stoppage minutes) ÷ 60 is computable from the stoppage facts and, on the days where both exist, lands within ~0.1 TPH of this figure — but it is not what the plant's report divides by, it would make a Production KPI depend on a form another department owns, and it fails exactly where it would need to help: the stoppage form and the Production Report's running-hours column both stop on 2026-06-30, so it buys no extra coverage at all. The hours here also come from the same row, the same form and the same submitter as the tonnage, so the two can never disagree about which day they describe.
+
+WHEN IT IS NULL: a day with no reported running hours (Σ hours = 0) is null, not zero — it is an unmeasured rate, and averaging zeros in would invent a collapse that never happened. A day with hours but zero tonnage is also null rather than 0 TPH, following the same pos() convention Kiln Output uses; in this dataset every such day (e.g. 2026-06-09, 1.47 OPC hours against no tonnage) is the missing-OPC-tonnage artifact described below, not a real zero-output shift.
+
+Monthly figure is the running-hours-weighted mean of the daily rate, which is algebraically Σ production ÷ Σ hours — the same thing the Excel's own MTD columns give (K45 ÷ G45) and the same shape cpp-plant-load-factor uses for the identical reason. A plain mean of daily rates would let a 1.5-hour day count as much as a 24-hour one.
+
+DATA GAP, QUANTIFIED (2026-09-24, dev Postgres): 82 of 170 reported production days can compute this, all between 2026-04-01 and 2026-06-30. Every day from 2026-07-01 on arrives through the Odoo production autofill, whose rows carry 15–30 fields against 86–94 on a manual day and include no running hours at all. Separately, 35 Apr–Jun days carry CM-2 OPC running hours (80.65 hrs in total) with cm2_opc_mt stored as 0, so the denominator counts hours whose tonnage is missing: over Apr–Jun the stored facts give 91,969 MT ÷ 1,637.99 hrs = 56.15 TPH, where removing those unmatched OPC hours gives 59.00 TPH, so the true figure is somewhere between. The April cross-check is sharper still — the Excel's MTD to 21 April is 22,062 MT ÷ 380.27 hrs = 58.02 TPH, while the stored facts give 20,572 ÷ 380.27 = 54.10, the 1,490 MT difference being precisely the workbook's CM-2 OPC MTD tonnage (K43). Stored hours match the workbook to the second decimal; only the OPC tonnage is missing. Backfilling cm2_opc_mt for Apr–Jun fixes this with no formula change.
+
+ON THE 55 TPH TARGET: it is the plant's own Production KPI-tracker figure and the data supports it rather than contradicting it. Rated capacity on the same Excel row is 70 MT/hr; across the 82 computable days the daily rate runs min 46.9 / median 56.4 / max 64.2, clears 55 on 50 of them (61%), and never reaches rated capacity. Monthly: April 54.8, May 58.0, June 55.7 — the plant sits right on the target, which is what a correctly-set target looks like. Note those three figures are the UNDERSTATED ones; correcting the OPC gap moves all three up.
+
+**Inputs**
+
+- **production form:** cm2_325n_mt (MT), cm2_425r_mt (MT), cm2_425n_mt (MT), cm2_opc_mt (MT), cm2_425n_bm_mt (MT), cm2_325n_run_hrs (Hrs), cm2_425r_run_hrs (Hrs), cm2_425n_run_hrs (Hrs), cm2_opc_run_hrs (Hrs), cm2_425n_bm_run_hrs (Hrs)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) {
+        var hrs  = sumOf(CM2_RUN_HRS, f);
+        var prod = pos(sumOf(CM2_GRADES, f));
+        return (hrs > 0 && prod !== null) ? prod / hrs : null;
+      }
+```
+
+**Monthly roll-up.** Weighted average — Σ(daily value × weight) ÷ Σ(weight), where each day's weight is:
+
+```js
+function (f) { return sumOf(CM2_RUN_HRS, f); }
+```
+
+<a id="cement-mill-2-production"></a>
+### Cement Mill 2 Production
+
+| | |
+|---|---|
+| Unit | MT (shown to 0 decimal places) |
+| Target | Tracking only — no target |
+| Formula version | v1 |
+| Registry key | `cement-mill-2-production` |
+
+Cement ground by Cement Mill 2 that day, summed across all five grades (32.5N, 42.5R, 42.5N, OPC, 42.5N BM) — the source Excel's PLANT OPERATIONS table, CEMENT MILL -2 TOTAL row, PRODUCTION ON DATE cell (J45; 995 MT on 2026-04-21, which the stored facts for that day reproduce). No target: the plant states a rate target for CM-2 (see cement-mill-2-output, ≥ 55 TPH) but no daily tonnage target, and none is invented here — the same reasoning as cement-produced-day and despatch-day. Monthly figure is the mean of the days that reported, i.e. a MT/day rate, not a period total.
+
+This exists alongside cement-mill-2-output because the two have very different coverage, and the difference is the whole point. Output needs running hours, which only manually-filed Production Reports carry, so it stops at 2026-06-30 (82 days). Production needs only the tonnages, which the Odoo autofill does supply, so it covers 160 of the 170 reported days from 2026-04-01 to 2026-09-22 — mean 1,172 MT/day, by month 1,014 / 1,151 / 1,209 / 1,316 / 1,317 / 869 (Apr…Sep, September being a partial month). Anywhere CM-2 has to show a figure for a recent month, this is the one that exists; do not substitute it into a TPH card, because a tonnage judged against a 55 TPH target is meaningless.
+
+**Inputs**
+
+- **production form:** cm2_325n_mt (MT), cm2_425r_mt (MT), cm2_425n_mt (MT), cm2_opc_mt (MT), cm2_425n_bm_mt (MT)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) { return pos(sumOf(CM2_GRADES, f)); }
 ```
 
 **Monthly roll-up.** Average of the days that have a value (missing days are excluded, not counted as zero).
@@ -882,13 +977,14 @@ Every field a formula can reference. *Source* is where the value comes
 from today (`manual` = typed on the form; a fact flips to `odoo` when
 that feed goes live).
 
-### quality form (3 facts)
+### quality form (4 facts)
 
 | Fact key | Unit | Source |
 |---|---|---|
 | `free_lime` | % | manual |
 | `blaine_425r` | m²/kg | manual |
 | `strength_28d` | MPa | manual |
+| `c3s_ck` | % | manual |
 
 ### dispatch form (34 facts)
 
@@ -929,7 +1025,7 @@ that feed goes live).
 | `so_clinker` | MT | manual |
 | `dispatch_mtd_target` | MT | manual |
 
-### production form (17 facts)
+### production form (23 facts)
 
 | Fact key | Unit | Source |
 |---|---|---|
@@ -945,6 +1041,12 @@ that feed goes live).
 | `cm2_425n_mt` | MT | manual |
 | `cm2_425n_bm_mt` | MT | manual |
 | `cm2_325n_mt` | MT | manual |
+| `cm2_opc_mt` | MT | manual |
+| `cm2_325n_run_hrs` | Hrs | manual |
+| `cm2_425r_run_hrs` | Hrs | manual |
+| `cm2_425n_run_hrs` | Hrs | manual |
+| `cm2_opc_run_hrs` | Hrs | manual |
+| `cm2_425n_bm_run_hrs` | Hrs | manual |
 | `cm1_325n_cons_mt` | MT | manual |
 | `cm1_425r_cons_mt` | MT | manual |
 | `cm1_425n_cons_mt` | MT | manual |

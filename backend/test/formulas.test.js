@@ -54,9 +54,9 @@ const KILN = [
   { kiln_prod_mt: 1900, kiln_coal_cons: 240, kiln_coal_ncv: 4700 },
 ];
 const QUALITY = [
-  { free_lime: 2.5, blaine_425r: 3400, strength_28d: 42 },
-  { free_lime: 2.8, blaine_425r: 3500, strength_28d: 43 },
-  { free_lime: 3.1, blaine_425r: 3600, strength_28d: 44 },
+  { free_lime: 2.5, blaine_425r: 3400, strength_28d: 42, c3s_ck: 61.01 },
+  { free_lime: 2.8, blaine_425r: 3500, strength_28d: 43, c3s_ck: 55.5 },
+  { free_lime: 3.1, blaine_425r: 3600, strength_28d: 44, c3s_ck: 48.99 },
 ];
 // pwr_utils_kwh removed 2026-07-24 (Compressed Air/Utilities deleted from
 // the power-cons form) — consumed/supplied comments below reflect that.
@@ -82,10 +82,16 @@ const POWER = [
 // cm1_425r_cons_mt doubles as the despatch-day fixture: it's CM-1's stock-ledger
 // "Consumption" column, i.e. dispatch out of CM-1's stock (see formula-registry.js
 // despatch-day v4 — matches the Production Report's TOTAL — CM-1 On Date Consumption cell)
+// The cm2_*_run_hrs values are the cement-mill-2-output fixture: they are the
+// source Excel's RUNNING HOURS — ON DATE column for the CEMENT MILL -2 rows
+// (Production Report, PLANT OPERATIONS table), which is what the plant's own
+// TPH cell divides by. Chosen so each day's TPH is exact to the decimal:
+//   day 1: 500 MT / 10 hrs = 50.0    day 2: 400 MT / 8 hrs = 50.0
+//   day 3: 600 MT / 10 hrs = 60.0
 const CEMENT_MILL = [
-  { cm_clinker_own_cons: 440, cm_clinker_purch_cons: 200, cm1_425r_mt: 300, cm2_425r_mt: 500, cm1_425r_cons_mt: 2000 }, // total prod 800, total clinker 640
-  { cm_clinker_own_cons: 520, cm_clinker_purch_cons:   0, cm1_425r_mt: 250, cm2_425r_mt: 400, cm1_425r_cons_mt: 1500 }, // total prod 650, total clinker 520
-  { cm_clinker_own_cons: 300, cm_clinker_purch_cons: 340, cm1_425r_mt: 200, cm2_425r_mt: 600, cm1_425r_cons_mt: 2500 }, // total prod 800, total clinker 640
+  { cm_clinker_own_cons: 440, cm_clinker_purch_cons: 200, cm1_425r_mt: 300, cm2_425r_mt: 500, cm1_425r_cons_mt: 2000, cm2_425r_run_hrs: 10 }, // total prod 800, total clinker 640
+  { cm_clinker_own_cons: 520, cm_clinker_purch_cons:   0, cm1_425r_mt: 250, cm2_425r_mt: 400, cm1_425r_cons_mt: 1500, cm2_425r_run_hrs:  8 }, // total prod 650, total clinker 520
+  { cm_clinker_own_cons: 300, cm_clinker_purch_cons: 340, cm1_425r_mt: 200, cm2_425r_mt: 600, cm1_425r_cons_mt: 2500, cm2_425r_run_hrs: 10 }, // total prod 800, total clinker 640
 ];
 const PILE = [
   { cao_h1: 44, cao_h2: 46 }, // daily avg 45

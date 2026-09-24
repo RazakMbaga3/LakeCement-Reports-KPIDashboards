@@ -51,6 +51,22 @@
     blaine_425r:  { source: 'manual', form: 'quality', field: 'blaine_425r',  unit: 'm²/kg' },
     strength_28d: { source: 'manual', form: 'quality', field: 'strength_28d', unit: 'MPa' },
 
+    /* c3s_ck — Bogue C₃S of the CLINKER, day average. Declared 2026-09-24.
+       The field has existed on the quality form since the 2026-09-22 rebuild
+       (forms/quality-form.html, "Bogue phase composition — day average"
+       block, with the workbook's own ">50%" hint printed in the cell) and
+       real submissions carry it, but it was never a fact — so index.html's
+       "Clinker C3S" row and the Executive Summary card of the same name had
+       to stand on a hardcoded illustrative figure. Same provenance as
+       free_lime directly above: it is the mean of the QC workbook's six
+       four-hourly CLINKER readings (DAILY SUMMARY sheet, "CLINKER : 4 HRS
+       AVG" block, column R), which the lab computes and the form captures as
+       one number per day. Verified 2026-09-24 against "6. Quality Report
+       21.04.2026 (2).xlsx": R46:R51 = 61.7722 / 69.9040 / 72.4963 / 59.3599
+       / 54.4992 / 48.0106, mean 61.007, and the stored 2026-04-21 row reads
+       c3s_ck = 61.01. */
+    c3s_ck:       { source: 'manual', form: 'quality', field: 'c3s_ck',       unit: '%' },
+
     // dispatch form — three independently loaded channels (Regular Bags, Bulker,
     // Big Bags), each broken down by grade, matching the source Dispatch Report's
     // own column layout. Big Bags is only packed for 42.5R/42.5N B-M/42.5N.
@@ -174,6 +190,26 @@
     cm2_425n_bm_mt:  { source: 'manual', form: 'production', field: 'cm2_425n_bm_mt',  unit: 'MT' },
     cm2_325n_mt:     { source: 'manual', form: 'production', field: 'cm2_325n_mt',     unit: 'MT' },
 
+    /* CM-2's fifth grade and its per-grade Running Hours column — declared
+       2026-09-24 so cement-mill-2-output (TPH) can be computed from the same
+       report that already supplies the tonnages. All six have been real
+       <input data-field> cells on daily-report.html's Plant Operations table
+       since it was built; they are the Excel's own columns F (RUNNING HOURS
+       — ON DATE) and J (PRODUCTION — ON DATE) for rows 40–44, whose TOTAL —
+       CM-2 row 45 carries the TPH the plant reports (Q45 = J45 ÷ F45).
+
+       cm2_opc_mt is deliberately NOT added to CM_GRADES below: doing so
+       would silently change cement-produced-day and the clinker factor
+       inside specific-power-consumption-total, which is a separate change
+       needing its own source trace and version bump. See the data-gap note
+       on cement-mill-2-output for what that omission currently costs. */
+    cm2_opc_mt:          { source: 'manual', form: 'production', field: 'cm2_opc_mt',          unit: 'MT' },
+    cm2_325n_run_hrs:    { source: 'manual', form: 'production', field: 'cm2_325n_run_hrs',    unit: 'Hrs' },
+    cm2_425r_run_hrs:    { source: 'manual', form: 'production', field: 'cm2_425r_run_hrs',    unit: 'Hrs' },
+    cm2_425n_run_hrs:    { source: 'manual', form: 'production', field: 'cm2_425n_run_hrs',    unit: 'Hrs' },
+    cm2_opc_run_hrs:     { source: 'manual', form: 'production', field: 'cm2_opc_run_hrs',     unit: 'Hrs' },
+    cm2_425n_bm_run_hrs: { source: 'manual', form: 'production', field: 'cm2_425n_bm_run_hrs', unit: 'Hrs' },
+
     // CM-1 stock-ledger "Consumption" column (Plant Operations, Production Report) —
     // cement leaving CM-1's per-grade stock, i.e. what operations calls dispatch for
     // that mill. See despatch-day below: this IS the dispatch figure now, matching
@@ -249,6 +285,14 @@
   var KWH_GRINDING  = ['pwr_cm1_kwh', 'pwr_cm2_kwh'];
   var CM_GRADES     = ['cm1_425r_mt', 'cm1_425n_mt', 'cm1_325n_mt', 'cm1_opc_mt',
                        'cm2_425r_mt', 'cm2_425n_mt', 'cm2_425n_bm_mt', 'cm2_325n_mt'];
+  /* CM-2 alone, all FIVE grades including OPC — the source Excel's rows 40–44,
+     whose TOTAL — CM-2 row (45) is what the plant reports CM-2 output from.
+     Note this is a superset of CM_GRADES' CM-2 half, which omits cm2_opc_mt
+     (see that fact's declaration above). Used only by the two cement-mill-2-*
+     formulas, so no existing KPI's value moves. */
+  var CM2_GRADES    = ['cm2_325n_mt', 'cm2_425r_mt', 'cm2_425n_mt', 'cm2_opc_mt', 'cm2_425n_bm_mt'];
+  var CM2_RUN_HRS   = ['cm2_325n_run_hrs', 'cm2_425r_run_hrs', 'cm2_425n_run_hrs',
+                       'cm2_opc_run_hrs', 'cm2_425n_bm_run_hrs'];
   // no longer feeds despatch-day (see below) — kept because the Dispatch form
   // still collects its own channel×grade report independently of the KPI.
   var DISPATCH      = ['dispatch_reg_425r', 'dispatch_reg_425nbm', 'dispatch_reg_425n', 'dispatch_reg_325n', 'dispatch_reg_opc425n',
@@ -286,6 +330,21 @@
       notes: 'Daily free-lime measurement as reported by the quality lab. Lower is better; spec is < 3.0%.',
       inputs: ['free_lime'],
       daily: function (f) { return pos(f.free_lime); },
+      monthlyAgg: 'avg',
+    },
+
+    /* Added 2026-09-24. index.html carried a "Clinker C3S" row in the
+       Production table and a Clinker C3S card in the Executive Summary's
+       "Awaiting a data source" panel, both on a hardcoded illustrative 51%,
+       on the strength of a comment saying no registry KPI covered it. The
+       field has been submitted by the quality form since 2026-09-22; only
+       the fact and formula were missing. */
+    'clinker-c3s': {
+      label: 'Clinker C3S', unit: '%', dp: 1, version: 1,
+      target: 50, signage: '>=', targetLabel: 'Target > 50%',
+      notes: 'Tricalcium silicate (3CaO·SiO₂, "alite") as a percentage of the clinker, by Bogue calculation — the phase that carries almost all of a Portland cement\'s early strength, so it is the single number the kiln is steered by: too low and 3-day and 7-day strengths fall short of the TBS grade, too high and it is being bought with extra fuel and a harder-burning, more refractory-hostile kiln. The value stored is the DAY AVERAGE EXACTLY AS THE LAB REPORTS IT — the mean of the six four-hourly clinker samples in the QC Daily Report\'s "CLINKER : 4 HRS AVG" block (DAILY SUMMARY sheet, column R) — and is NOT re-derived here from CaO/SiO₂/Al₂O₃/Fe₂O₃. That is deliberate: the lab applies its own Bogue variant and free-lime correction, and recomputing it from the oxide columns would produce a second, slightly different C₃S that disagrees with the certificate the lab actually issues. Verified 2026-09-24 against "6. Quality Report 21.04.2026 (2).xlsx": the six readings R46:R51 average 61.007 and the stored 2026-04-21 row reads 61.01. The > 50% floor is the QC workbook\'s own printed target, the same ">50%" hint the entry form prints in the cell (forms/quality-form.html) and the same figure index.html\'s Production KPI table carries; it is a floor, not a band — a high C₃S is a fuel-cost question, not a conformance failure, so signage is ">=" like Blaine. Monthly figure is the mean of the days that reported. CAVEAT ON COVERAGE: as of 2026-09-24 the database holds exactly ONE reported quality day (2026-04-21), so this KPI is source-verified but not trend-verified — see the Quality entry gap in docs/pm/RAID_LOG.md.',
+      inputs: ['c3s_ck'],
+      daily: function (f) { return pos(f.c3s_ck); },
       monthlyAgg: 'avg',
     },
 
@@ -329,6 +388,41 @@
       notes: 'Cement produced that day by both cement mills combined, summed across every grade on the Production Report — CM-1 (32.5N, 42.5R, 42.5N, OPC, 42.5N BM) and CM-2 (32.5N, 42.5R, 42.5N, 42.5N BM) — matching the source Excel\'s J42+J48 total exactly, and the same CM_GRADES sum specific-power-consumption-total already uses for its clinker-factor arithmetic. No target is declared anywhere in the plant\'s reporting for total cement-mill throughput, so none is invented here (contrast Kiln Output, which does have a stated 2,000 MT/day target). Monthly figure is the mean of the days that reported — a rate, matching Kiln Output\'s and Despatch/Day\'s own convention — not a period total.',
       inputs: CM_GRADES,
       daily: function (f) { return pos(totalCementProd(f)); },
+      monthlyAgg: 'avg',
+    },
+
+    /* ── Cement Mill 2 ────────────────────────────────────────────────
+       Added 2026-09-24. index.html has carried a "Cement Mill 2 Output |
+       TPH | >= | 55" row in the Production table and a card of the same
+       name in the Executive Summary's "Awaiting a data source" panel, on a
+       hardcoded illustrative 62 TPH, next to a comment claiming no registry
+       KPI could cover it. Two keys, because the two questions have
+       genuinely different data behind them: OUTPUT is the throughput rate
+       the plant sets a target on and can only be computed on days that
+       report running hours; PRODUCTION is the plain daily tonnage, which is
+       reported on essentially every day. ────────────────────────────── */
+
+    'cement-mill-2-output': {
+      label: 'Cement Mill 2 Output', unit: 'TPH', dp: 1, version: 1,
+      target: 55, signage: '>=', targetLabel: 'Target ≥ 55 TPH',
+      provisional: true,
+      provisionalNote: 'Two data gaps, both outside this formula. (1) Running hours are only captured on manually-filed Production Reports — the Odoo autofill does not carry them — so this KPI is null, not zero, for every day since 2026-06-30. A blank month means "hours not reported", not "the mill did not run"; Cement Mill 2 Production (MT/day) still has those days. (2) On Apr–Jun days when CM-2 ran OPC, the stored rows hold the OPC running hours but zero OPC tonnage, which understates the rate. See the formula notes below before judging this against the 55 TPH target.',
+      notes: 'Cement Mill 2 throughput = total CM-2 production that day ÷ total CM-2 running hours that day, both summed across all five grades (32.5N, 42.5R, 42.5N, OPC, 42.5N BM). This is the source Excel\'s own TPH cell, not a reconstruction: Production Report, PLANT OPERATIONS table, CEMENT MILL -2 TOTAL row, Q = J ÷ F. Verified 2026-09-24 against "1. Production Report 21.04.2026 (1).xlsx": F45 = 19.1 hrs, J45 = 995 MT, Q45 = 52.094, and the same arithmetic over the stored 2026-04-21 facts (250 + 495 + 0 + 0 + 250 MT over 4.5 + 10.1 + 0 + 0 + 4.5 hrs) reproduces 52.094 exactly.\n\nWHY RUNNING HOURS COME FROM THE PRODUCTION REPORT AND NOT FROM THE STOPPAGE FORM: (1440 − Σ CM-2 stoppage minutes) ÷ 60 is computable from the stoppage facts and, on the days where both exist, lands within ~0.1 TPH of this figure — but it is not what the plant\'s report divides by, it would make a Production KPI depend on a form another department owns, and it fails exactly where it would need to help: the stoppage form and the Production Report\'s running-hours column both stop on 2026-06-30, so it buys no extra coverage at all. The hours here also come from the same row, the same form and the same submitter as the tonnage, so the two can never disagree about which day they describe.\n\nWHEN IT IS NULL: a day with no reported running hours (Σ hours = 0) is null, not zero — it is an unmeasured rate, and averaging zeros in would invent a collapse that never happened. A day with hours but zero tonnage is also null rather than 0 TPH, following the same pos() convention Kiln Output uses; in this dataset every such day (e.g. 2026-06-09, 1.47 OPC hours against no tonnage) is the missing-OPC-tonnage artifact described below, not a real zero-output shift.\n\nMonthly figure is the running-hours-weighted mean of the daily rate, which is algebraically Σ production ÷ Σ hours — the same thing the Excel\'s own MTD columns give (K45 ÷ G45) and the same shape cpp-plant-load-factor uses for the identical reason. A plain mean of daily rates would let a 1.5-hour day count as much as a 24-hour one.\n\nDATA GAP, QUANTIFIED (2026-09-24, dev Postgres): 82 of 170 reported production days can compute this, all between 2026-04-01 and 2026-06-30. Every day from 2026-07-01 on arrives through the Odoo production autofill, whose rows carry 15–30 fields against 86–94 on a manual day and include no running hours at all. Separately, 35 Apr–Jun days carry CM-2 OPC running hours (80.65 hrs in total) with cm2_opc_mt stored as 0, so the denominator counts hours whose tonnage is missing: over Apr–Jun the stored facts give 91,969 MT ÷ 1,637.99 hrs = 56.15 TPH, where removing those unmatched OPC hours gives 59.00 TPH, so the true figure is somewhere between. The April cross-check is sharper still — the Excel\'s MTD to 21 April is 22,062 MT ÷ 380.27 hrs = 58.02 TPH, while the stored facts give 20,572 ÷ 380.27 = 54.10, the 1,490 MT difference being precisely the workbook\'s CM-2 OPC MTD tonnage (K43). Stored hours match the workbook to the second decimal; only the OPC tonnage is missing. Backfilling cm2_opc_mt for Apr–Jun fixes this with no formula change.\n\nON THE 55 TPH TARGET: it is the plant\'s own Production KPI-tracker figure and the data supports it rather than contradicting it. Rated capacity on the same Excel row is 70 MT/hr; across the 82 computable days the daily rate runs min 46.9 / median 56.4 / max 64.2, clears 55 on 50 of them (61%), and never reaches rated capacity. Monthly: April 54.8, May 58.0, June 55.7 — the plant sits right on the target, which is what a correctly-set target looks like. Note those three figures are the UNDERSTATED ones; correcting the OPC gap moves all three up.',
+      inputs: CM2_GRADES.concat(CM2_RUN_HRS),
+      daily: function (f) {
+        var hrs  = sumOf(CM2_RUN_HRS, f);
+        var prod = pos(sumOf(CM2_GRADES, f));
+        return (hrs > 0 && prod !== null) ? prod / hrs : null;
+      },
+      monthlyAgg: { type: 'weighted', weight: function (f) { return sumOf(CM2_RUN_HRS, f); } },
+    },
+
+    'cement-mill-2-production': {
+      label: 'Cement Mill 2 Production', unit: 'MT', dp: 0, version: 1,
+      target: null, signage: null, targetLabel: null,
+      notes: 'Cement ground by Cement Mill 2 that day, summed across all five grades (32.5N, 42.5R, 42.5N, OPC, 42.5N BM) — the source Excel\'s PLANT OPERATIONS table, CEMENT MILL -2 TOTAL row, PRODUCTION ON DATE cell (J45; 995 MT on 2026-04-21, which the stored facts for that day reproduce). No target: the plant states a rate target for CM-2 (see cement-mill-2-output, ≥ 55 TPH) but no daily tonnage target, and none is invented here — the same reasoning as cement-produced-day and despatch-day. Monthly figure is the mean of the days that reported, i.e. a MT/day rate, not a period total.\n\nThis exists alongside cement-mill-2-output because the two have very different coverage, and the difference is the whole point. Output needs running hours, which only manually-filed Production Reports carry, so it stops at 2026-06-30 (82 days). Production needs only the tonnages, which the Odoo autofill does supply, so it covers 160 of the 170 reported days from 2026-04-01 to 2026-09-22 — mean 1,172 MT/day, by month 1,014 / 1,151 / 1,209 / 1,316 / 1,317 / 869 (Apr…Sep, September being a partial month). Anywhere CM-2 has to show a figure for a recent month, this is the one that exists; do not substitute it into a TPH card, because a tonnage judged against a 55 TPH target is meaningless.',
+      inputs: CM2_GRADES,
+      daily: function (f) { return pos(sumOf(CM2_GRADES, f)); },
       monthlyAgg: 'avg',
     },
 
