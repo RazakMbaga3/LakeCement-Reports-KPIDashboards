@@ -147,6 +147,204 @@ const STOP_CAUSES = {
 };
 const STOP_RE = /^stop_(.+)_(mech|ei|prod|planned|power|other)$/;
 
+/* ── Reason-level fields ────────────────────────────────────────
+   The stoppage form renders its seven section tabs from the governed
+   417-row reason catalogue (`stoppage_reasons`, migration 017) and writes
+   one field per named reason: stopr_<reasonId>, in DECIMAL HOURS (not
+   minutes — see forms/stoppage-reasons.js, step .01 / max 24). The coarse
+   stop_<equip>_<cause> cells above are DERIVED from these by that file's
+   _recompute(), which is why they are minutes and these are hours.
+
+   Until now nothing on the server read stopr_* at all: the plant typed a
+   named reason's hours on every entry and the number was summed into the
+   coarse matrix and otherwise discarded. Reading them here is what makes a
+   reason-level Pareto possible without adding a single field to the entry
+   form. */
+const STOPR_RE = /^stopr_(\d+)$/;
+
+/* WHAT "FREQUENCY" CAN HONESTLY MEAN HERE — read before changing this.
+   Neither source records per-incident start/end times, so an incident
+   COUNT is not derivable from stored data. The finest real resolution is
+   the calendar DAY: a reason either did or did not log downtime on a given
+   date. Every "frequency" figure below is therefore `days` — the number of
+   distinct dates on which that reason logged hours > 0 — and it is named
+   `days`, not `events`, everywhere it crosses the API boundary so the
+   front end cannot accidentally print it as an incident count.
+
+   A fault that tripped three times on one day counts ONCE. Adding an
+   occurrences counter to the entry form was considered and explicitly
+   declined, so this limitation is permanent until some source carries
+   per-incident timestamps. The UI states it in a visible footnote. */
+
+/* Reason hours arrive from two places that share ONE vocabulary by
+   deliberate design — stoppage_reasons.label and stoppage_facts
+   .fault_description are the same VARCHAR(300) drawn from the same
+   workbook (see migration 017's header comment):
+
+     a) stopr_<id> on daily_reports — what the shift types on the form now
+     b) stoppage_facts             — the historical monthly workbook import
+                                     (scripts/import-stoppage-facts.js)
+
+   Both are folded in, under the SAME per-(equipment, date) precedence rule
+   equipmentStoppageDetail() already documents and uses: if the granular
+   import has any row for an equipment on a date, it is authoritative for
+   that equipment-day and the form's stopr_* values for that equipment-day
+   are skipped. Nothing is ever double-counted, and a range spanning both
+   sources gets the best available number for every single day.
+
+   Folding in (b) is not optional dressing: without it this Pareto would be
+   empty on 100% of data recorded to date, because no daily_reports row has
+   ever carried a stopr_* key (the catalogue shipped after the last manual
+   entry). `coverage` below reports the two sources separately so the page
+   can say which one is actually speaking. */
+async function reasonLevelPareto(rows, from, to, spanDays) {
+  // agg key -> { reasonId, label, equipment, cause, hours, dates:Set }
+  const agg = {};
+  const entryDates = new Set();   // dates carrying stopr_* form data
+  const importDates = new Set();  // dates carrying stoppage_facts data
+
+  const add = (key, meta, hours, date) => {
+    const a = agg[key] = agg[key] || { ...meta, hours: 0, dates: new Set() };
+    a.hours += hours;
+    a.dates.add(date);
+  };
+
+  /* ── (b) granular import first, so its equipment-days win ── */
+  const factRows = (await db.query(
+    `SELECT f.record_date, f.equipment, f.cause, f.fault_description, f.hours, r.id AS reason_id
+       FROM stoppage_facts f
+       LEFT JOIN stoppage_reasons r
+         ON r.equipment = f.equipment AND r.cause = f.cause
+        AND lower(trim(r.label)) = lower(trim(f.fault_description))
+      WHERE f.record_date BETWEEN $1 AND $2`,
+    [from, to]
+  )).rows;
+
+  const factEquipDays = new Set();
+  for (const f of factRows) {
+    const date = String(f.record_date).slice(0, 10);
+    factEquipDays.add(f.equipment + '|' + date);
+    importDates.add(date);
+    const h = Number(f.hours);
+    if (!(h > 0)) continue;
+    // An imported fault whose wording never made it into the catalogue is
+    // still real downtime under a real name — keep it, keyed by its text,
+    // with reasonId null, rather than dropping it for failing to join.
+    const key = f.reason_id != null
+      ? 'r:' + f.reason_id
+      : 'f:' + f.equipment + '|' + f.cause + '|' + f.fault_description.trim().toLowerCase();
+    add(key, {
+      reasonId: f.reason_id != null ? f.reason_id : null,
+      label: f.fault_description, equipment: f.equipment, cause: f.cause,
+    }, h, date);
+  }
+
+  /* ── (a) form entries, skipping any equipment-day the import covers ── */
+  const wantedIds = new Set();
+  for (const r of rows) {
+    for (const k of Object.keys(r.data || {})) {
+      const m = k.match(STOPR_RE);
+      if (m) wantedIds.add(Number(m[1]));
+    }
+  }
+  // One query for the whole catalogue slice actually referenced — never a
+  // lookup per key.
+  const reasonMeta = {};
+  if (wantedIds.size) {
+    const meta = (await db.query(
+      `SELECT id, equipment, cause, label FROM stoppage_reasons WHERE id = ANY($1)`,
+      [[...wantedIds]]
+    )).rows;
+    for (const m of meta) reasonMeta[m.id] = m;
+  }
+
+  for (const r of rows) {
+    const date = String(r.record_date).slice(0, 10);
+    for (const [k, v] of Object.entries(r.data || {})) {
+      const m = k.match(STOPR_RE);
+      if (!m) continue;
+      const hours = num(v);                       // already decimal HOURS
+      if (hours === null || hours <= 0) continue;
+      const meta = reasonMeta[Number(m[1])];
+      if (!meta) continue;                        // reason deleted from the catalogue
+      if (factEquipDays.has(meta.equipment + '|' + date)) continue; // import wins
+      entryDates.add(date);
+      add('r:' + meta.id, {
+        reasonId: meta.id, label: meta.label, equipment: meta.equipment, cause: meta.cause,
+      }, hours, date);
+    }
+  }
+
+  const list = Object.values(agg);
+  const coveredDates = new Set([...entryDates, ...importDates]);
+  const catalogueSize = Number((await db.query(
+    `SELECT count(*)::int AS n FROM stoppage_reasons WHERE is_active`)).rows[0].n);
+
+  const coverage = {
+    daysInRange: spanDays,
+    // Days in [from,to] that carry reason-level data from EITHER source.
+    daysWithReasonData: coveredDates.size,
+    daysFromEntryForm: entryDates.size,
+    daysFromImport: importDates.size,
+    reasonsLogged: list.length,
+    catalogueSize,
+    sources: [
+      ...(entryDates.size ? ['entry-form'] : []),
+      ...(importDates.size ? ['imported-workbook'] : []),
+    ],
+  };
+
+  if (!list.length) {
+    const message =
+      'No reason-level stoppage data covers this period. Two things fill this chart: ' +
+      'the stoppage entry form\'s per-reason hour boxes (saved as stopr_<id> on each ' +
+      'daily report), and monthly Stoppage report workbooks imported with ' +
+      'scripts/import-stoppage-facts.js. The coarse equipment × cause totals above are ' +
+      'unaffected — they come from a different set of fields and are complete for this period.';
+    const empty = { available: false, message, rows: [] };
+    return { reasonPareto: empty, reasonParetoByFreq: { ...empty }, reasonCoverage: coverage };
+  }
+
+  const totalHours = list.reduce((s, a) => s + a.hours, 0);
+  const totalDays  = list.reduce((s, a) => s + a.dates.size, 0);
+
+  /* Same pct/cumPct machinery as buildCausePareto() below — one ranked
+     pass, cumulative running to ~100. byFreq ranks on `days` (chronicity,
+     Handbook §8.2 Fig. 67) and takes its share of the summed day-counts;
+     the hours ranking (severity, Fig. 66) takes its share of total hours. */
+  const build = (byFreq) => {
+    let cum = 0;
+    const base = byFreq ? totalDays : totalHours;
+    return list
+      .map(a => ({
+        reasonId: a.reasonId,
+        label: a.label,
+        equipment: a.equipment,
+        equipmentLabel: STOP_EQUIPMENT[a.equipment] || a.equipment,
+        cause: a.cause,
+        causeLabel: STOP_CAUSES[a.cause] || a.cause,
+        hours: parseFloat(a.hours.toFixed(2)),
+        days: a.dates.size,
+      }))
+      .sort((x, y) => byFreq
+        ? (y.days - x.days || y.hours - x.hours)
+        : (y.hours - x.hours || y.days - x.days))
+      .map(x => {
+        const pct = base > 0 ? ((byFreq ? x.days : x.hours) / base) * 100 : 0;
+        cum += pct;
+        // cum can drift a hair past 100 over hundreds of rows; clamp so the
+        // cumulative curve never draws above its own axis.
+        return { ...x, pct: parseFloat(pct.toFixed(2)), cumPct: parseFloat(Math.min(cum, 100).toFixed(2)) };
+      });
+  };
+
+  return {
+    reasonPareto:       { available: true, rows: build(false) },
+    reasonParetoByFreq: { available: true, rows: build(true) },
+    reasonCoverage:     coverage,
+  };
+}
+
 /* ── RCFA trigger thresholds (Handbook §8.3.1) ──────────────────
    The stoppage matrix only persists day-granularity totals per
    equipment×cause (no per-incident start/end timestamp, no repair-cost
@@ -363,11 +561,17 @@ async function stoppageInsights(from, to) {
     });
   });
 
+  // Reason-level Pareto pair — the named 417-term vocabulary, one level
+  // below the six coarse causes above. Same rows already fetched.
+  const { reasonPareto, reasonParetoByFreq, reasonCoverage } =
+    await reasonLevelPareto(rows.rows, from, to, spanDays);
+
   return {
     from, to, days: spanDays,
     totalHours: parseFloat(totalHours.toFixed(2)), totalEvents,
     overallAvailabilityPct, overallMtbfHours,
     pareto, paretoByFreq, equipment, rcfaFlags,
+    reasonPareto, reasonParetoByFreq, coverage: reasonCoverage,
   };
 }
 
@@ -477,7 +681,7 @@ async function equipmentStoppageDetail(equip, from, to) {
   const availabilityPct = parseFloat((100 * (1 - totalHours / calendarH)).toFixed(2));
 
   // ── Fault-name Pareto — granular only; honest empty-state otherwise ──
-  let faultPareto;
+  let faultPareto, faultParetoByFreq;
   if (!Object.keys(faultAgg).length) {
     const earliest = (await db.query(`SELECT MIN(record_date) AS d FROM stoppage_facts`)).rows[0].d;
     const earliestIso = earliest ? String(earliest).slice(0, 10) : null;
@@ -488,6 +692,7 @@ async function equipmentStoppageDetail(equip, from, to) {
         ? `Fault-level detail is available from ${earliestIso} onward (the earliest month imported via scripts/import-stoppage-facts.js) — no import covers ${from}..${to} yet.`
         : `Fault-level detail requires importing a monthly Stoppage report workbook (scripts/import-stoppage-facts.js) — none has been imported yet.`,
     };
+    faultParetoByFreq = { ...faultPareto };
   } else {
     const totalFaultHours = Object.values(faultAgg).reduce((s, f) => s + f.hours, 0);
     let cum = 0;
@@ -501,6 +706,27 @@ async function equipmentStoppageDetail(equip, from, to) {
       });
     const covered = [...granularDates].sort();
     faultPareto = { available: true, from: covered[0], to: covered[covered.length - 1], rows };
+
+    /* Chronicity twin of the above (Handbook §8.2 Fig. 67): the SAME named
+       faults re-ranked by how often they recurred instead of how long they
+       cost. `events` here is f.dates.size — DISTINCT DATES on which the
+       fault logged hours, not an incident count; stoppage_facts carries no
+       per-incident start/end time, so two trips on one date are one. The
+       `days` alias is the honest name and is what the UI prints; `events`
+       is kept so faultPareto's existing shape is unchanged for any other
+       consumer. Shares are taken against the summed day-counts, so cumPct
+       runs to 100 across this ranking rather than the hours one. */
+    const totalFaultDays = rows.reduce((s, f) => s + f.events, 0);
+    let cumF = 0;
+    const freqRows = rows
+      .map(f => ({ ...f, days: f.events }))
+      .sort((a, b) => b.events - a.events || b.hours - a.hours)
+      .map(f => {
+        const pct = totalFaultDays > 0 ? (f.events / totalFaultDays) * 100 : 0;
+        cumF += pct;
+        return { ...f, pct: parseFloat(pct.toFixed(2)), cumPct: parseFloat(Math.min(cumF, 100).toFixed(2)) };
+      });
+    faultParetoByFreq = { available: true, from: covered[0], to: covered[covered.length - 1], rows: freqRows };
   }
 
   // ── MTBF-by-month — granular source, full history, NOT scoped to the
@@ -538,7 +764,7 @@ async function equipmentStoppageDetail(equip, from, to) {
     equip, label, from, to, days: spanDays, calendarH,
     hours: parseFloat(totalHours.toFixed(2)), events: totalEvents,
     mttrHours, mtbfHours, availabilityPct,
-    pareto, paretoByFreq, faultPareto, mtbfByMonth,
+    pareto, paretoByFreq, faultPareto, faultParetoByFreq, mtbfByMonth,
     source: factRows.length && usedCoarse ? 'mixed' : (factRows.length ? 'granular' : (usedCoarse ? 'coarse' : 'none')),
   };
 }

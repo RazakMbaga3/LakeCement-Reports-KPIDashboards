@@ -34,6 +34,22 @@ function check(name, cond, extra) {
 }
 const close = (a, b, eps = 0.02) => a !== null && b !== null && Math.abs(a - b) <= eps;
 
+/* A Pareto is only a Pareto if its cumulative curve never dips and lands on
+   100% — that single property catches a wrong sort order, a share taken
+   against the wrong denominator, and a rounding drift that would draw the
+   curve above its own axis, all at once. */
+function paretoCumOk(rows) {
+  if (!Array.isArray(rows) || !rows.length) return false;
+  for (let i = 0; i < rows.length; i++) {
+    if (typeof rows[i].cumPct !== 'number' || rows[i].cumPct > 100.01) return false;
+    if (i > 0 && rows[i].cumPct < rows[i - 1].cumPct - 1e-9) return false;
+  }
+  return Math.abs(rows[rows.length - 1].cumPct - 100) <= 0.5;
+}
+function sortedDesc(rows, key) {
+  return rows.every((r, i) => i === 0 || rows[i - 1][key] >= r[key]);
+}
+
 async function api(method, pathname, { token, body } = {}) {
   const headers = {};
   if (body)  headers['Content-Type'] = 'application/json';
@@ -112,8 +128,22 @@ async function main() {
 
     const prod  = await loginToken(USERS.production);
     const admin = await loginToken(USERS.admin);
-    const submit = (token, form, date, data) =>
-      api('POST', `/reports/${form}`, { token, body: { date, data } });
+    /* Fails loudly. This helper used to ignore the HTTP status, and the
+       Part C comment below records it biting once already (a stale submitter
+       403ing silently, seeding the whole section with nothing). It then bit a
+       second time when the report lock landed and a re-submit over an
+       already-approved day started returning 409 — the seed silently did
+       nothing and four downstream checks failed with confusing data rather
+       than one check failing at the real cause. A seed that cannot seed is
+       never a pass. */
+    const submit = async (token, form, date, data) => {
+      const r = await api('POST', `/reports/${form}`, { token, body: { date, data } });
+      if (r.status >= 300) {
+        throw new Error(`seed submit ${form} ${date}: HTTP ${r.status} ` +
+          (r.body && r.body.error ? '— ' + r.body.error : ''));
+      }
+      return r;
+    };
 
     // ── Seed: production (kiln fields) 1999-07-01..10 → mean 2000, population σ ≈ 70.71 ──
     const PRODS = [2000, 2100, 1900, 2050, 1950, 2000, 2100, 1900, 2050, 1950];
@@ -175,9 +205,34 @@ async function main() {
     // nothing rather than failing loudly at the point of the mistake —
     // exactly what happened when this still said `pm`.
     console.log('Part C — stoppage intelligence:');
-    await submit(prod, 'stoppage', '1999-07-01',
-      { stop_kiln_mech: 5 * 60, stop_kiln_ei: 2 * 60, stop_crusher_other: 1 * 60 });
-    await submit(prod, 'stoppage', '1999-07-02', { stop_kiln_mech: 3 * 60 });
+
+    /* The coarse matrix and the named-reason hours are seeded in ONE submit
+       per day, because that is how the real form posts them — stoppage-form
+       writes stop_<equip>_<cause> and stopr_<reasonId> in the same payload.
+       They used to be two passes, the second relying on a re-submit MERGING
+       into the already-approved row. The report lock ended that on
+       2026-09-24: an approved day can no longer be silently overwritten, so
+       the second pass now correctly 409s. Merging the seed is the honest fix
+       — re-approving a signed report to add test data is the behaviour the
+       lock exists to prevent. */
+    const rsn = (await db.query(
+      `SELECT id, equipment, cause, label FROM stoppage_reasons
+       WHERE equipment IN ('kiln','crusher') AND is_active
+       ORDER BY equipment, id`)).rows;
+    const rA = rsn.find(r => r.equipment === 'kiln');
+    const rB = rsn.find(r => r.equipment === 'crusher');
+    if (!rA || !rB) throw new Error('stoppage_reasons catalogue is empty — migration 017 not applied?');
+
+    await submit(prod, 'stoppage', '1999-07-01', {
+      stop_kiln_mech: 5 * 60, stop_kiln_ei: 2 * 60, stop_crusher_other: 1 * 60,
+      ['stopr_' + rA.id]: 5, ['stopr_' + rB.id]: 1,
+    });
+    await submit(prod, 'stoppage', '1999-07-02', {
+      stop_kiln_mech: 3 * 60,
+      ['stopr_' + rA.id]: 3,
+    });
+    // Reason hours with no coarse matrix — leaves the coarse totals above intact.
+    await submit(prod, 'stoppage', '1999-07-03', { ['stopr_' + rA.id]: 2 });
 
     const st = await api('GET', '/insights/stoppages?from=1999-07-01&to=1999-07-31', { token: prod });
     const s = st.body;
@@ -190,6 +245,72 @@ async function main() {
       kilnEq && close(kilnEq.hours, 10) && kilnEq.events === 3 &&
       close(kilnEq.mttrHours, 3.33, 0.01) && kilnEq.availabilityPct < 100,
       kilnEq && JSON.stringify(kilnEq));
+
+    check('cause Pareto pair: both cumulative curves rise monotonically to 100%',
+      paretoCumOk(s.pareto) && paretoCumOk(s.paretoByFreq),
+      JSON.stringify({ h: s.pareto.map(r => r.cumPct), f: s.paretoByFreq.map(r => r.cumPct) }));
+
+    // ── C2. Reason-level Pareto pair (the named 417-term vocabulary) ──
+    // The stoppage form writes one DECIMAL-HOUR field per named reason,
+    // stopr_<reasonId>, alongside the coarse matrix above. "Frequency" at
+    // this level can only honestly be DAYS WITH DOWNTIME — no table records
+    // per-incident start/end times — so the API names the field `days`.
+    console.log('Part C2 — reason-level Pareto (stopr_<id> → stoppage_reasons):');
+    // Seeded above, in one submit per day. A: 5 + 3 + 2 = 10h over 3 distinct
+    // days. B: 1h on 1 day.
+    const st2 = await api('GET', '/insights/stoppages?from=1999-07-01&to=1999-07-31', { token: prod });
+    const sr = st2.body;
+    const rp = sr && sr.reasonPareto, rpf = sr && sr.reasonParetoByFreq;
+
+    check('reasonPareto: available, ranked by hours, reason labels joined from the catalogue',
+      st2.status === 200 && rp && rp.available === true && rp.rows.length === 2 &&
+      rp.rows[0].reasonId === rA.id && rp.rows[0].label === rA.label &&
+      rp.rows[0].equipment === 'kiln' && rp.rows[0].equipmentLabel === 'Kiln' &&
+      rp.rows[0].causeLabel && close(rp.rows[0].hours, 10) && rp.rows[0].days === 3,
+      rp ? JSON.stringify(rp.rows) : `status ${st2.status}`);
+
+    check('reasonPareto: hours ranking sorted desc with cumPct rising to 100%',
+      rp && rp.available && sortedDesc(rp.rows, 'hours') && paretoCumOk(rp.rows) &&
+      close(rp.rows[0].pct, 90.91, 0.05),
+      rp && JSON.stringify(rp.rows.map(r => ({ h: r.hours, pct: r.pct, cum: r.cumPct }))));
+
+    check('reasonParetoByFreq: ranked by DAYS WITH DOWNTIME (not hours), cumPct to 100%',
+      rpf && rpf.available === true && rpf.rows.length === 2 &&
+      rpf.rows[0].reasonId === rA.id && rpf.rows[0].days === 3 && rpf.rows[1].days === 1 &&
+      sortedDesc(rpf.rows, 'days') && paretoCumOk(rpf.rows) &&
+      // share is of the summed DAY counts (3+1), never of hours
+      close(rpf.rows[0].pct, 75, 0.05),
+      rpf && JSON.stringify(rpf.rows.map(r => ({ d: r.days, pct: r.pct, cum: r.cumPct }))));
+
+    check('reasonParetoByFreq exposes `days` and never an `events` incident count',
+      rpf && rpf.rows.every(r => typeof r.days === 'number' && r.events === undefined),
+      rpf && JSON.stringify(Object.keys(rpf.rows[0] || {})));
+
+    check('coverage: reports days actually carrying reason data, per source',
+      sr && sr.coverage && sr.coverage.daysInRange === 31 &&
+      sr.coverage.daysWithReasonData === 3 && sr.coverage.daysFromEntryForm === 3 &&
+      sr.coverage.daysFromImport === 0 && sr.coverage.reasonsLogged === 2 &&
+      sr.coverage.catalogueSize > 0 && sr.coverage.sources.includes('entry-form'),
+      sr && JSON.stringify(sr.coverage));
+
+    // Honest empty state, not a zeroed chart frame, for a range with none.
+    const st3 = await api('GET', '/insights/stoppages?from=1999-08-01&to=1999-08-31', { token: prod });
+    check('reason Pareto empty state says what would fill it (no fake zeros)',
+      st3.body && st3.body.reasonPareto.available === false &&
+      st3.body.reasonPareto.rows.length === 0 &&
+      /stopr_|import-stoppage-facts/.test(st3.body.reasonPareto.message) &&
+      st3.body.coverage.daysWithReasonData === 0,
+      st3.body && JSON.stringify(st3.body.reasonPareto).slice(0, 160));
+
+    // ── C3. Per-equipment named-fault Pareto pair ───────────────
+    const eq = await api('GET', '/insights/stoppages/kiln?from=1999-07-01&to=1999-07-31', { token: prod });
+    check('equipment detail returns faultParetoByFreq beside faultPareto',
+      eq.status === 200 && eq.body.faultPareto && eq.body.faultParetoByFreq,
+      `status ${eq.status}, keys ${eq.body && Object.keys(eq.body).join(',')}`);
+    check('faultParetoByFreq keeps the honest empty state when no workbook covers the range',
+      eq.body && eq.body.faultParetoByFreq.available === false &&
+      typeof eq.body.faultParetoByFreq.message === 'string',
+      eq.body && JSON.stringify(eq.body.faultParetoByFreq).slice(0, 160));
 
     // ── D. Institutional memory search ──────────────────────────
     console.log('Part D — institutional memory:');

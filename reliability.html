@@ -86,6 +86,48 @@
     .rl-pareto-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
     .rl-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 12px; }
 
+    /* ══ Stoppage cause reasons (the named catalogue) ══ */
+    /* Coverage strip — says which source is speaking and how much of the
+       range it actually covers, so a partial import never reads as a full
+       period. Sits ABOVE the charts because it qualifies both of them. */
+    .rl-reason-note {
+      display: flex; align-items: flex-start; gap: 8px;
+      background: var(--off-white); border: 1px solid var(--border); border-left: 3px solid var(--navy);
+      border-radius: 7px; padding: 10px 14px; margin-bottom: 14px;
+      font-size: 12px; color: var(--text-main); line-height: 1.5;
+    }
+    .rl-reason-note.is-partial { border-left-color: #d97706; }
+    .rl-reason-note i { color: var(--text-muted); flex-shrink: 0; margin-top: 1px; }
+    .rl-reason-note strong { color: var(--navy); }
+    /* 417 reasons will not fit on a page; the chart shows the top slice and
+       the table carries the complete ranking, scrolled. */
+    /* Both axes scroll: the full 417-reason ranking is taller than the card,
+       and seven columns are wider than a half-width card at 1280–1440px —
+       where these two cards sit side by side. Without overflow-x the last
+       column ("Days with downtime") was clipped mid-word, which is exactly
+       the label that must never be ambiguous here. */
+    .rl-reason-scroll { max-height: 320px; overflow: auto; border-top: 1px solid var(--border); }
+    .rl-reason-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .rl-reason-table thead th {
+      position: sticky; top: 0; z-index: 1;
+      text-align: left; padding: 6px 8px; font-size: 12px; font-weight: 700;
+      color: var(--text-muted); background: var(--off-white);
+      border-bottom: 1px solid var(--border); vertical-align: bottom;
+    }
+    .rl-reason-table tbody td { padding: 6px 8px; border-top: 1px solid #F1F5F9; color: var(--text-main); vertical-align: top; }
+    .rl-reason-table tbody tr:hover td { background: #FAFBFC; }
+    .rl-reason-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .rl-reason-table th.num { text-align: right; }
+    .rl-reason-table .rl-reason-name { font-weight: 600; color: var(--navy); }
+    .rl-reason-table .rl-reason-meta { color: var(--text-muted); }
+    /* The rollup row is a residual, not a reason — it reads recessive. */
+    .rl-reason-table tr.is-rollup td { background: #FAFBFC; color: var(--text-muted); font-style: italic; }
+    .rl-footnote {
+      font-size: 12px; color: var(--text-muted); line-height: 1.55;
+      margin: 10px 2px 0; padding-left: 10px; border-left: 2px solid var(--border);
+    }
+    .rl-footnote strong { color: var(--text-main); }
+
     /* ══ Equipment table ══ */
     .rl-equip-card {
       background: white; border: 1px solid var(--border); border-radius: 9px;
@@ -251,6 +293,39 @@
     </div>
   </div>
 
+  <!-- ══ Stoppage cause reasons — the named catalogue ══
+       One level below the six coarse causes above: the plant's own governed
+       reason vocabulary (stoppage_reasons, 417 rows, the same wording as the
+       monthly workbook's pre-printed fault lines). Paired per Handbook §8.2
+       for the same reason the cause pair is paired — a reason can be
+       high-hours/rare (one bad incident) or low-hours/near-daily (a nagging
+       fault), and either ranking alone hides one of them. -->
+  <div class="rl-section-hdr">
+    <span class="rl-section-title"><i data-lucide="list-tree" style="width:14px;height:14px;stroke-width:2.2"></i> Stoppage Cause Reasons</span>
+    <span class="rl-section-sub">— the named reason behind the downtime, ranked two ways (Handbook §8.2)</span>
+    <div class="rl-section-line"></div>
+  </div>
+  <div id="rl-reason-note"></div>
+  <div class="rl-pareto-grid" id="rl-reason-grid">
+    <div class="rl-pareto-card">
+      <div class="rl-pareto-hdr">
+        <div class="rl-pareto-title">By Hours Lost</div>
+        <div class="rl-pareto-sub">Severity — which named reasons cost the most downtime. Bars are share of reason-level hours, line is cumulative %</div>
+      </div>
+      <div class="rl-pareto-chart-wrap" style="height:300px"><canvas id="chart-reason-hours"></canvas></div>
+      <div id="table-reason-hours"></div>
+    </div>
+    <div class="rl-pareto-card">
+      <div class="rl-pareto-hdr">
+        <div class="rl-pareto-title">By Days With Downtime</div>
+        <div class="rl-pareto-sub">Chronicity — which named reasons keep coming back. A near-daily nuisance ranks low on hours and is invisible in the chart beside this one</div>
+      </div>
+      <div class="rl-pareto-chart-wrap" style="height:300px"><canvas id="chart-reason-days"></canvas></div>
+      <div id="table-reason-days"></div>
+    </div>
+  </div>
+  <div class="rl-footnote" id="rl-reason-footnote"></div>
+
   <!-- ══ Equipment table ══ -->
   <div class="rl-section-hdr">
     <span class="rl-section-title"><i data-lucide="settings-2" style="width:14px;height:14px;stroke-width:2.2"></i> Equipment Reliability</span>
@@ -335,6 +410,16 @@
   /* The Pareto cumulative line is an overlay, not a category: it wears
      ink so it reads as annotation over the bars rather than as a 7th cause. */
   var CUM_LINE_COLOR = LCL_CHART.ink;
+
+  /* Brand orange, used wherever bars are a MAGNITUDE RANKING of a large,
+     open-ended, non-fixed set (the fault-level Pareto and the reason-level
+     Pareto pair) rather than a fixed category set — ONE hue, per the
+     dataviz skill's "sequential = one hue" rule. Declared up here with the
+     other colour constants because two separate sections now depend on it.
+     Orange is 2.9:1 on white, under the 3:1 mark-contrast floor, which is
+     exactly why every chart using it is paired with a real data table —
+     the relief this page already mandates. */
+  var SEQUENTIAL_HUE = '#F49545';
 
   /* MTBF targets by equipment TYPE (Handbook §4.7.2): kilns >=500h, ball
      mills (raw mill + both cement mills, all tube/ball-type grinding
@@ -449,11 +534,26 @@
      lookup) let this same renderer serve the fault-level Pareto too (many
      named faults, not a fixed small category set — see renderFaultPareto,
      which passes a single sequential hue instead of per-cause colors, per
-     the dataviz skill's "sequential magnitude, one hue" rule). */
+     the dataviz skill's "sequential magnitude, one hue" rule).
+
+     Three more opts let it serve the REASON-level Pareto without a second
+     renderer being written:
+       opts.valueSuffix  — what the value is called in the tooltip. The old
+                           hard-coded `valueKey === 'hours' ? 'h' : ' events'`
+                           would have printed a day-count as " events", i.e.
+                           as an incident count, which is precisely the claim
+                           this data cannot support. Callers now say.
+       opts.tickTrunc    — axis ticks are truncated to N chars (reason labels
+                           run to ~60); the tooltip always shows the full
+                           label, so nothing is lost, only shortened.
+       opts.tooltipExtra — extra tooltip line(s), e.g. which section and
+                           cause a reason belongs to ("Others" exists in all
+                           seven sections and is ambiguous without it). */
   function renderParetoChart(canvasId, rows, valueKey, opts) {
     opts = opts || {};
     var labelKey = opts.labelKey || 'label';
     var colorFn = opts.colorFn || function (r) { return CAUSE_COLOR[r.cause] || LCL_CHART.status.neutral; };
+    var valueSuffix = opts.valueSuffix || (valueKey === 'hours' ? 'h' : ' events');
     var ctx = document.getElementById(canvasId);
     destroyChart(canvasId);
     if (!rows.length) return;
@@ -483,7 +583,11 @@
             callbacks: {
               label: function (c) {
                 var r = rows[c.dataIndex];
-                if (c.dataset.label === 'Share of total') return ' ' + r[labelKey] + ': ' + r[valueKey] + (valueKey === 'hours' ? 'h' : ' events') + ' (' + r.pct.toFixed(1) + '% share)';
+                if (c.dataset.label === 'Share of total') {
+                  var line = ' ' + r[labelKey] + ': ' + r[valueKey] + valueSuffix + ' (' + r.pct.toFixed(1) + '% share)';
+                  var extra = opts.tooltipExtra ? opts.tooltipExtra(r) : null;
+                  return extra ? [line, '   ' + extra] : line;
+                }
                 if (c.dataset.label === 'Cumulative %') return ' Cumulative: ' + r.cumPct.toFixed(1) + '%';
                 return null;
               },
@@ -491,8 +595,18 @@
           },
         },
         scales: {
-          x: { ticks: { font: { size: 12 }, maxRotation: 20, minRotation: 0 }, grid: { display: false } },
-          y: { min: 0, max: 100, title: { display: true, text: '% of total', font: { size: 12 } }, ticks: { font: { size: 12 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+          x: {
+            ticks: {
+              font: { size: 12 },
+              maxRotation: opts.tickTrunc ? 60 : 20, minRotation: 0, autoSkip: false,
+              callback: function (v, i) {
+                var t = String(labels[i] == null ? '' : labels[i]);
+                return opts.tickTrunc && t.length > opts.tickTrunc ? t.slice(0, opts.tickTrunc - 1) + '…' : t;
+              },
+            },
+            grid: { display: false },
+          },
+          y: { min: 0, max: 100, title: { display: true, text: opts.yTitle || '% of total', font: { size: 12 } }, ticks: { font: { size: 12 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
         },
       },
     });
@@ -511,6 +625,161 @@
       return '<tr><td>' + dot + r[labelKey] + '</td><td>' + r[valueKey] + '</td><td>' + r.pct.toFixed(1) + '%</td><td>' + r.cumPct.toFixed(1) + '%</td></tr>';
     }).join('');
     el.innerHTML = '<table class="rl-pareto-table"><thead><tr><th>' + headHdr + '</th><th>' + valueLabel + '</th><th>Share</th><th>Cumulative</th></tr></thead><tbody>' + body + '</tbody></table>';
+  }
+
+  /* ══ Stoppage cause reasons — the named 417-term catalogue ═══════
+     Bars here are a MAGNITUDE RANKING of a large, open-ended set, not a
+     fixed category set, so they take ONE hue (the dataviz skill's
+     "sequential = one hue" rule) exactly as the fault-level Pareto does.
+     Colouring them by cause was tried and rejected on evidence: the six
+     cause hues are validated for ADJACENT pairs in a fixed cause order,
+     but a reason ranking puts arbitrary causes side by side, and under
+     an all-pairs check that palette fails the normal-vision floor
+     (#5A6270 vs #1F5FA8, ΔE 10.9 < 15). Cause is carried in the table
+     column and the tooltip instead — where it is unambiguous and costs
+     no colour channel. Length encodes magnitude; nothing else does. */
+  var REASON_TOP_N = 15;
+  var ROLLUP_KEY = '__rollup__';
+
+  /* 417 categories cannot be charted. The API returns the COMPLETE ranked
+     list (so the table below is complete and the shares are true); the
+     chart shows the top N and folds the remainder into a single residual
+     bar, whose share is the sum of the folded shares — so the cumulative
+     curve still lands on 100% and the 80% line still means what it says. */
+  function bucketReasons(rows, valueKey) {
+    if (rows.length <= REASON_TOP_N + 1) return rows.slice();
+    var top = rows.slice(0, REASON_TOP_N);
+    var rest = rows.slice(REASON_TOP_N);
+    var restVal = rest.reduce(function (s, r) { return s + r[valueKey]; }, 0);
+    var restPct = rest.reduce(function (s, r) { return s + r.pct; }, 0);
+    var rollup = {
+      reasonId: ROLLUP_KEY,
+      label: 'All other reasons (' + rest.length + ')',
+      equipmentLabel: '—', causeLabel: '—',
+      hours: 0, days: 0,
+      pct: parseFloat(restPct.toFixed(2)),
+      cumPct: 100,
+    };
+    rollup[valueKey] = parseFloat(restVal.toFixed(2));
+    return top.concat([rollup]);
+  }
+
+  function reasonColor(r) {
+    // The rollup is a residual, not an identity — neutral, never a hue,
+    // the same rule "Other" follows in the cause charts above.
+    return r.reasonId === ROLLUP_KEY ? LCL_CHART.status.neutral : SEQUENTIAL_HUE;
+  }
+  function reasonTooltipExtra(r) {
+    return r.reasonId === ROLLUP_KEY
+      ? 'Everything outside the top ' + REASON_TOP_N
+      : r.equipmentLabel + ' · ' + r.causeLabel;
+  }
+
+  /* Companion table — mandatory on this page (the standing accessibility
+     decision: never colour-only encoding), and here it is also the only
+     place the FULL ranking exists, plus the only place Section and Cause
+     disambiguate a label like "Others" that occurs in all seven sections. */
+  function renderReasonTable(wrapId, rows, primaryKey) {
+    var el = document.getElementById(wrapId);
+    var isDays = primaryKey === 'days';
+    var body = rows.map(function (r, i) {
+      return '<tr>' +
+        '<td class="rl-reason-rank">' + (i + 1) + '</td>' +
+        '<td><span class="rl-reason-name">' + escapeHtml(r.label) + '</span></td>' +
+        '<td class="rl-reason-meta">' + escapeHtml(r.equipmentLabel) + '</td>' +
+        '<td class="rl-reason-meta">' + escapeHtml(r.causeLabel) + '</td>' +
+        '<td class="num">' + (isDays ? r.days : r.hours.toFixed(1)) + '</td>' +
+        '<td class="num">' + (isDays ? r.hours.toFixed(1) + 'h' : r.days) + '</td>' +
+        '<td class="num">' + r.pct.toFixed(1) + '%</td>' +
+        '<td class="num">' + r.cumPct.toFixed(1) + '%</td>' +
+      '</tr>';
+    }).join('');
+    el.innerHTML =
+      '<div class="rl-reason-scroll"><table class="rl-reason-table"><thead><tr>' +
+        '<th>#</th><th>Reason</th><th>Section</th><th>Cause</th>' +
+        '<th class="num">' + (isDays ? 'Days with downtime' : 'Hours') + '</th>' +
+        '<th class="num">' + (isDays ? 'Hours' : 'Days with downtime') + '</th>' +
+        '<th class="num">Share</th><th class="num">Cumulative</th>' +
+      '</tr></thead><tbody>' + body + '</tbody></table></div>';
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  var SOURCE_LABEL = {
+    'entry-form': 'the stoppage entry form’s per-reason hour boxes',
+    'imported-workbook': 'imported monthly Stoppage report workbooks',
+  };
+
+  function renderReasonSection(cur) {
+    var rp = cur.reasonPareto || { available: false, rows: [], message: '' };
+    var rpf = cur.reasonParetoByFreq || { available: false, rows: [] };
+    var cov = cur.coverage || {};
+    var note = document.getElementById('rl-reason-note');
+    var grid = document.getElementById('rl-reason-grid');
+    var foot = document.getElementById('rl-reason-footnote');
+
+    destroyChart('chart-reason-hours');
+    destroyChart('chart-reason-days');
+
+    /* Honest empty state — no chart frame, no zeroed axes. Say what would
+       fill it, and say that the coarse totals above are unaffected. */
+    if (!rp.available || !rp.rows.length) {
+      grid.style.display = 'none';
+      foot.style.display = 'none';
+      note.className = 'rl-reason-note is-partial';
+      note.innerHTML = '<i data-lucide="info" style="width:15px;height:15px"></i><div>' +
+        '<strong>No reason-level data for this period.</strong> ' + escapeHtml(rp.message || '') + '</div>';
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+
+    grid.style.display = '';
+    foot.style.display = '';
+
+    var hoursRows = rp.rows, daysRows = rpf.rows || [];
+
+    renderParetoChart('chart-reason-hours', bucketReasons(hoursRows, 'hours'), 'hours', {
+      colorFn: reasonColor, valueSuffix: 'h', tickTrunc: 18,
+      tooltipExtra: reasonTooltipExtra, yTitle: '% of reason-level hours',
+    });
+    renderReasonTable('table-reason-hours', hoursRows, 'hours');
+
+    renderParetoChart('chart-reason-days', bucketReasons(daysRows, 'days'), 'days', {
+      colorFn: reasonColor, tickTrunc: 18,
+      // NEVER " events" — this is a day count, not an incident count.
+      valueSuffix: ' days with downtime',
+      tooltipExtra: reasonTooltipExtra, yTitle: '% of all reason-days',
+    });
+    renderReasonTable('table-reason-days', daysRows, 'days');
+
+    // ── Coverage strip: which source, and how much of the range ──
+    var days = cov.daysWithReasonData || 0, span = cov.daysInRange || 0;
+    var partial = days < span;
+    var srcs = (cov.sources || []).map(function (s) { return SOURCE_LABEL[s] || s; });
+    var srcText = srcs.length === 2 ? srcs[0] + ' and ' + srcs[1] : (srcs[0] || 'no source');
+    note.className = 'rl-reason-note' + (partial ? ' is-partial' : '');
+    note.innerHTML = '<i data-lucide="' + (partial ? 'alert-triangle' : 'info') + '" style="width:15px;height:15px"></i><div>' +
+      'Reason-level data covers <strong>' + days + ' of ' + span + ' day' + (span === 1 ? '' : 's') +
+      '</strong> in this range, from ' + srcText + '. ' +
+      '<strong>' + (cov.reasonsLogged || 0) + '</strong> of ' + (cov.catalogueSize || 0) +
+      ' catalogued reasons logged downtime' +
+      (partial
+        ? '. The other ' + (span - days) + ' day' + (span - days === 1 ? '' : 's') +
+          ' carry no reason-level entry, so this ranking describes only the days that do — not the whole period.'
+        : '.') +
+      '</div>';
+
+    foot.innerHTML =
+      '<strong>What “days with downtime” counts:</strong> the number of distinct calendar dates on which that reason ' +
+      'logged any downtime — <strong>not</strong> the number of times it happened. A fault that tripped three times in ' +
+      'one day counts once, because no table records per-incident start and end times. Read it as “how many days did ' +
+      'this reason cost us something”, and read the hours chart beside it for how much it cost.';
+
+    if (window.lucide) lucide.createIcons();
   }
 
   function renderEquipmentTable(equipment) {
@@ -598,8 +867,7 @@
     { key: 'crusher', label: 'Crusher' },
     { key: 'packing', label: 'Packing' },
   ];
-  var SEQUENTIAL_HUE = '#F49545'; // brand orange — magnitude ranking (fault Pareto), not a fixed category, so ONE hue per the dataviz skill's "sequential = one hue" rule (never per-bar categorical colors for a many-named, non-fixed set)
-  var TREND_HUE = LCL_CHART.series[0];   // single series — slot 1
+  var TREND_HUE = LCL_CHART.series[0];   // single series — slot 1 (SEQUENTIAL_HUE now lives with the other colour constants at the top)
 
   var _activeEquip = EQUIP_LIST[0].key;
   var _equipDetailSeq = 0;
@@ -612,10 +880,21 @@
         '<div class="rl-stat-tile"><div class="rl-stat-top"><i data-lucide="wrench" class="rl-stat-icon" style="width:15px;height:15px"></i><span class="rl-stat-label">MTTR</span></div><div class="rl-stat-val" id="eq-mttr">—</div><div class="rl-stat-target">hours / event</div></div>' +
         '<div class="rl-stat-tile"><div class="rl-stat-top"><i data-lucide="octagon-pause" class="rl-stat-icon" style="width:15px;height:15px"></i><span class="rl-stat-label">Downtime</span></div><div class="rl-stat-val" id="eq-hours">—</div><div class="rl-stat-target" id="eq-events">— events</div></div>' +
       '</div>' +
-      '<div class="rl-pareto-card" style="margin-bottom:16px">' +
-        '<div class="rl-pareto-hdr"><div class="rl-pareto-title">Fault-Level Pareto</div><div class="rl-pareto-sub" id="eq-fault-sub">—</div></div>' +
-        '<div class="rl-pareto-chart-wrap" id="eq-fault-chart-wrap" style="height:280px"><canvas id="chart-eq-fault"></canvas></div>' +
-        '<div id="table-eq-fault"></div>' +
+      /* Named faults, paired the same way everything else on this page is
+         (Handbook §8.2): hours for severity, days-with-downtime for
+         chronicity. Showing only the hours half here was the one place the
+         page still broke its own pairing rule. */
+      '<div class="rl-pareto-grid" style="margin-bottom:16px">' +
+        '<div class="rl-pareto-card">' +
+          '<div class="rl-pareto-hdr"><div class="rl-pareto-title">Fault-Level Pareto — By Hours Lost</div><div class="rl-pareto-sub" id="eq-fault-sub">—</div></div>' +
+          '<div class="rl-pareto-chart-wrap" id="eq-fault-chart-wrap" style="height:280px"><canvas id="chart-eq-fault"></canvas></div>' +
+          '<div id="table-eq-fault"></div>' +
+        '</div>' +
+        '<div class="rl-pareto-card">' +
+          '<div class="rl-pareto-hdr"><div class="rl-pareto-title">Fault-Level Pareto — By Days With Downtime</div><div class="rl-pareto-sub" id="eq-faultf-sub">—</div></div>' +
+          '<div class="rl-pareto-chart-wrap" id="eq-faultf-chart-wrap" style="height:280px"><canvas id="chart-eq-faultf"></canvas></div>' +
+          '<div id="table-eq-faultf"></div>' +
+        '</div>' +
       '</div>' +
       '<div class="rl-pareto-grid" style="margin-bottom:16px">' +
         '<div class="rl-pareto-card">' +
@@ -680,10 +959,41 @@
     sub.textContent = 'Named faults, ' + fmtDateShort(fp.from) + ' – ' + fmtDateShort(fp.to) +
       ' (granular import coverage within the selected period) — bars are share of this section\'s fault hours, line is cumulative %';
     var colorFn = function () { return SEQUENTIAL_HUE; };
-    renderParetoChart('chart-eq-fault', fp.rows, 'hours', { labelKey: 'fault', colorFn: colorFn });
+    renderParetoChart('chart-eq-fault', fp.rows, 'hours', { labelKey: 'fault', colorFn: colorFn, tickTrunc: 18, valueSuffix: 'h' });
     renderParetoTable('table-eq-fault', fp.rows, 'hours', 'Hours', {
       labelKey: 'fault', colorFn: colorFn, headHdr: 'Fault',
       emptyMsg: 'No named-fault hours in this period.',
+    });
+  }
+
+  /* Chronicity twin of renderFaultPareto — the same named faults re-ranked
+     by DAYS WITH DOWNTIME. `days` is distinct dates carrying hours, not an
+     incident count: stoppage_facts has no per-incident timestamps, so two
+     trips on one date are one day. Labelled that way throughout. */
+  function renderFaultParetoByFreq(d) {
+    var fp = d.faultParetoByFreq;
+    var sub = document.getElementById('eq-faultf-sub');
+    var chartWrap = document.getElementById('eq-faultf-chart-wrap');
+    destroyChart('chart-eq-faultf');
+
+    if (!fp || !fp.available) {
+      sub.textContent = 'Not available for this period — see below.';
+      chartWrap.style.display = 'none';
+      document.getElementById('table-eq-faultf').innerHTML =
+        '<div class="rl-empty">' + ((fp && fp.message) || 'No named-fault detail for this period.') + '</div>';
+      return;
+    }
+    chartWrap.style.display = '';
+    sub.textContent = 'How often each fault recurred, ' + fmtDateShort(fp.from) + ' – ' + fmtDateShort(fp.to) +
+      ' — bars are share of all fault-days; a fault that tripped twice in one day counts once';
+    var colorFn = function () { return SEQUENTIAL_HUE; };
+    renderParetoChart('chart-eq-faultf', fp.rows, 'days', {
+      labelKey: 'fault', colorFn: colorFn, tickTrunc: 18,
+      valueSuffix: ' days with downtime', yTitle: '% of all fault-days',
+    });
+    renderParetoTable('table-eq-faultf', fp.rows, 'days', 'Days with downtime', {
+      labelKey: 'fault', colorFn: colorFn, headHdr: 'Fault',
+      emptyMsg: 'No named-fault days in this period.',
     });
   }
 
@@ -805,6 +1115,7 @@
 
     renderEquipKpis(d);
     renderFaultPareto(d);
+    renderFaultParetoByFreq(d);
     renderCauseTable(d);
     renderFreqByCauseChart('chart-eq-freq-bar', d.paretoByFreq);
     renderParetoChart('chart-eq-freq', d.paretoByFreq, 'events');
@@ -844,6 +1155,7 @@
     renderParetoTable('table-pareto-hours', cur.pareto, 'hours', 'Hours');
     renderParetoChart('chart-pareto-freq', cur.paretoByFreq, 'events');
     renderParetoTable('table-pareto-freq', cur.paretoByFreq, 'events', 'Events');
+    renderReasonSection(cur);
     renderEquipmentTable(cur.equipment);
     renderRcfa(cur.rcfaFlags);
     loadEquipDetail(); // refresh the active equipment-detail tab for the new range too
