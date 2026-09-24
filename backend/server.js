@@ -37,6 +37,7 @@ const powerRoutes   = require('./routes/power');
 const salesRoutes   = require('./routes/sales');
 const purchasesRoutes = require('./routes/purchases');
 const approvalsRoutes = require('./routes/approvals');
+const amendmentsRoutes = require('./routes/amendments');
 const adminRoutes     = require('./routes/admin');
 
 const app  = express();
@@ -144,6 +145,7 @@ app.use('/api/power',   powerRoutes);
 app.use('/api/sales',    salesRoutes);
 app.use('/api/purchases', purchasesRoutes);
 app.use('/api/approvals', approvalsRoutes);
+app.use('/api/amendments', amendmentsRoutes);
 app.use('/api/admin',    adminRoutes);
 app.use('/api/monitor',  monitorRouter);
 app.get('/api/metrics', metricsAuth, metricsHandler);

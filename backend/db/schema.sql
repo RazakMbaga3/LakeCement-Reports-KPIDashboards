@@ -130,6 +130,51 @@ CREATE INDEX IF NOT EXISTS idx_report_revisions_report
 CREATE INDEX IF NOT EXISTS idx_report_revisions_created
   ON report_revisions(created_at DESC);
 
+-- ── REPORT AMENDMENTS ───────────────────────────────────────
+-- Correction requests against a report that has already been reported. A
+-- grant opens a time-boxed write window; daily_reports.status is NOT changed,
+-- so the day keeps counting in every KPI while a correction is open. See
+-- migrations/027_report_amendments.sql for the reasoning.
+CREATE TABLE IF NOT EXISTS report_amendments (
+  id                   SERIAL       PRIMARY KEY,
+  form_type            VARCHAR(50)  NOT NULL,
+  record_date          DATE         NOT NULL,
+  shift                VARCHAR(10)  NOT NULL DEFAULT 'day',
+  status               VARCHAR(20)  NOT NULL DEFAULT 'requested'
+    CHECK (status IN ('requested','granted','applied','declined','withdrawn','expired')),
+  reason               TEXT         NOT NULL,
+  fields_flagged       TEXT[]       NOT NULL DEFAULT '{}',
+  requested_by         INTEGER      REFERENCES users(id) ON DELETE SET NULL,
+  requested_by_name    VARCHAR(100),
+  requested_at         TIMESTAMP    NOT NULL DEFAULT NOW(),
+  locked_status        VARCHAR(20),
+  decided_by           INTEGER      REFERENCES users(id) ON DELETE SET NULL,
+  decided_by_name      VARCHAR(100),
+  decided_at           TIMESTAMP,
+  decision_note        TEXT,
+  baseline_revision_id BIGINT       REFERENCES report_revisions(id) ON DELETE SET NULL,
+  expires_at           TIMESTAMP,
+  applied_at           TIMESTAMP,
+  applied_revision_id  BIGINT       REFERENCES report_revisions(id) ON DELETE SET NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_report_amendments_open
+  ON report_amendments(form_type, record_date, shift)
+  WHERE status IN ('requested','granted');
+CREATE INDEX IF NOT EXISTS idx_report_amendments_open
+  ON report_amendments(status, requested_at)
+  WHERE status IN ('requested','granted');
+CREATE INDEX IF NOT EXISTS idx_report_amendments_day
+  ON report_amendments(form_type, record_date, shift);
+CREATE INDEX IF NOT EXISTS idx_report_amendments_requester
+  ON report_amendments(requested_by, requested_at DESC);
+DO $ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'report_revisions_amendment_fk') THEN
+    ALTER TABLE report_revisions
+      ADD CONSTRAINT report_revisions_amendment_fk
+      FOREIGN KEY (amendment_id) REFERENCES report_amendments(id) ON DELETE SET NULL;
+  END IF;
+END $;
+
 -- ── STOPPAGES ───────────────────────────────────────────────
 -- Separate table because stoppages are multi-row per day (multiple events)
 CREATE TABLE IF NOT EXISTS stoppages (

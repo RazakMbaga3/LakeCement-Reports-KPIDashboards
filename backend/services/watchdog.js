@@ -10,6 +10,12 @@
     • missed entries: after MISSED_ENTRY_CUTOFF (default 10:00), any form
       in MISSED_ENTRY_FORMS with no submission for the day
                                  → 'missed-entry:<form>'
+    • correction windows that closed unused are SWEPT: the report is restored
+      to the figures it held when the window was granted, so a half-typed
+      correction can never become the permanent record. Not an alert by
+      itself — but a window that had to REVERT someone's unsubmitted work is
+      surfaced as 'amendment-expired:<form>', because a person lost progress
+      and should hear about it (their typing is kept in report_revisions).
 
   Each alert fires ONCE per day per kind (deduped against the alerts
   table) and is emailed to ALERT_TO (falls back to DIGEST_TO) via the
@@ -21,6 +27,7 @@
 const db = require('../db');
 const { REPORTED_STATUSES } = require('../config/forms');
 const { deepHealth } = require('./health');
+const { sweepExpired } = require('./reportAmendments');
 const { sendMail } = require('./mailer');
 
 function localDateStr(d) {
@@ -95,6 +102,22 @@ async function runWatchdog(opts = {}) {
   if (dbUp) {
     try { candidates.push(...await missedEntries(date)); }
     catch (err) { candidates.push({ kind: 'watchdog-error', detail: 'missed-entry check failed: ' + err.message }); }
+
+    /* Its own try/catch, and after the missed-entry check: housekeeping
+       failing must neither hide a health alert nor stop the next run from
+       trying again. */
+    try {
+      const swept = await sweepExpired();
+      for (const w of swept.filter(x => x.reverted)) {
+        candidates.push({
+          kind: 'amendment-expired:' + w.formType,
+          detail: `Correction #${w.id} on the ${w.formType} report for ${String(w.date).slice(0, 10)} expired unused `
+                + `(requested by ${w.requestedBy || 'unknown'}); unsubmitted changes were reverted and are kept in report_revisions.`,
+        });
+      }
+    } catch (err) {
+      candidates.push({ kind: 'watchdog-error', detail: 'correction-window sweep failed: ' + err.message });
+    }
   }
 
   // Dedupe: one alert per kind per day (only possible while the DB is up)

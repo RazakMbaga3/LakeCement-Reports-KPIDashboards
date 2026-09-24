@@ -30,8 +30,12 @@
   code 'REPORT_LOCKED'. It used to merge silently and reset the row to
   'pending_approval', erasing approved_by/approved_at with no record that
   they had ever been set. The only way through today is an admin/md
-  break-glass with a written `amendReason` (audited as FORM_AMEND_DIRECT);
-  a granted correction window is WS-A2's job. See THE LOCK in the handler.
+  break-glass with a written `amendReason` (audited as FORM_AMEND_DIRECT), or
+  a GRANTED CORRECTION WINDOW: someone other than the author has approved a
+  time-boxed amendment for that specific day (routes/amendments.js,
+  services/reportAmendments.js). A granted window does not change the report's
+  status, so the day keeps counting in the KPIs while it is open. See THE LOCK
+  in the handler.
 
   EVERY CHANGE KEEPS ITS PRE-IMAGE: submit, approve and reject each write a
   report_revisions row inside the same transaction as the change itself —
@@ -48,6 +52,7 @@ const { requireApprover, OWNING_ROLE_BY_FORM_TYPE } = require('../middleware/app
 const { validate, z, zDate, zShift, zNumeric } = require('../middleware/validate');
 const { formSubmissions } = require('../services/metrics');
 const { shouldSnapshot, changedFields, recordRevision } = require('../services/reportRevisions');
+const amendments = require('../services/reportAmendments');
 const { FACTS } = require('../../forms/formula-registry.js');
 
 const router = express.Router();
@@ -153,17 +158,32 @@ router.post('/:formType',
           DO UPDATE SET data = daily_reports.data || EXCLUDED.data,
                         updated_by = $5, updated_at = NOW()
           WHERE daily_reports.status NOT IN ('pending_approval', 'approved')
+             OR EXISTS (SELECT 1 FROM report_amendments a
+                         WHERE a.form_type   = daily_reports.form_type
+                           AND a.record_date = daily_reports.record_date
+                           AND a.shift       = daily_reports.shift
+                           AND a.status      = 'granted'
+                           AND a.expires_at  > NOW())
           RETURNING *
         `, [formType, date, shift, JSON.stringify(data), req.user.id]);
 
+        /* The EXISTS above is what lets a granted correction window take a
+           background save. It sits in the same statement as the lock check so
+           the property this branch depends on — a submit landing between "look"
+           and "write" cannot be overwritten — survives: still one atomic
+           statement, no separate read. */
         if (!result.rows[0]) {
           const cur = await db.query(
             'SELECT status FROM daily_reports WHERE form_type = $1 AND record_date = $2 AND shift = $3',
             [formType, date, shift]);
           const locked = cur.rows[0] ? cur.rows[0].status : 'submitted';
+          const closed = await amendments.lastClosedWindow(db, { formType, date, shift });
           return res.status(409).json({
-            error: `This report was already submitted (${locked}) — reload the page to see it.`,
+            error: closed
+              ? 'Your correction window has closed — request a new one to keep editing.'
+              : `This report was already submitted (${locked}) — reload the page to see it.`,
             status: locked,
+            ...(closed ? { code: 'WINDOW_CLOSED' } : {}),
           });
         }
         return res.json({ success: true, record: result.rows[0] });
@@ -236,17 +256,19 @@ router.post('/:formType',
            anywhere recorded that it had ever existed. The only thing
            stopping it was that no screen offered the button.
 
-           There are meant to be exactly THREE ways past this, and each one
-           leaves a trace:
-             1. A granted correction window — an HOD/admin opens a
-                time-boxed amendment for a specific day, the author fixes it,
-                it re-enters approval. NOT BUILT YET: migration 025 / WS-A2
-                adds the report_amendments table and this becomes one more
-                `|| grantedAmendment` below, nothing else in this handler.
-             2. admin/md break-glass, with a written reason. Audited as
-                FORM_AMEND_DIRECT, never offered in any UI, and how a
-                re-import becomes an amendment instead of an overwrite
-                (see scripts/import-cpp.js).
+           There are exactly THREE ways past this, and each one leaves a
+           trace:
+             1. A granted correction window — the author (or a colleague)
+                asked for a correction with a written reason, someone OTHER
+                than the requester granted it, and it has not expired. The
+                author fixes the day and resubmits; it re-enters approval like
+                any submission. Nothing about the report's status changed when
+                the window opened, so the day never left the KPIs. Marks the
+                amendment 'applied' in this same transaction.
+             2. Break-glass, with a written reason: admin/md, or the HOD who
+                owns this form type. Audited as FORM_AMEND_DIRECT, never
+                offered in any UI, and how a re-import becomes an amendment
+                instead of an overwrite (see scripts/import-cpp.js).
              3. The Odoo autofill, which does not come through this route at
                 all — it writes daily_reports directly and deliberately, and
                 is therefore not subject to this lock (decision A in
@@ -284,29 +306,59 @@ router.post('/:formType',
           req.user.role === 'md' ||
           (req.user.level === 'hod' && req.user.role === OWNING_ROLE_BY_FORM_TYPE[formType]);
         const breakGlass = isApprover && !!amendReason;
-        const mayOverwriteReported = breakGlass;   // WS-A2: `|| grantedAmendment`
 
-        if (lockedStatus && !mayOverwriteReported) {
-          return { locked: lockedStatus };
+        /* The granted window, read UNDER the report's row lock (taken above)
+           and locked itself, so two overlapping submits cannot both consume
+           it. Expiry is compared against the database's NOW(), never this
+           process's clock. A window wins over break-glass: it needs no
+           reason typed here because one was already given, and approved, when
+           it was requested. */
+        const windowRow = lockedStatus
+          ? await amendments.findActiveWindow(client, { formType, date, shift, lock: true })
+          : null;
+        const viaWindow = !!windowRow;
+
+        if (lockedStatus && !viaWindow && !breakGlass) {
+          const closed = await amendments.lastClosedWindow(client, { formType, date, shift });
+          return { locked: lockedStatus, windowClosed: !!closed };
         }
-        const isAmendment = !!lockedStatus;
+        const isAmendment = !!lockedStatus && !viaWindow;   // break-glass, not a window
 
-        const result = await client.query(`
-          INSERT INTO daily_reports (form_type, record_date, shift, data, submitted_by, submitted_at, status, approved_by, approved_at)
-          VALUES ($1, $2, $3, $4, $5, NOW(), $6, $7, $8)
-          ON CONFLICT (form_type, record_date, shift)
-          DO UPDATE SET
-            data        = CASE WHEN $9 THEN daily_reports.data || EXCLUDED.data ELSE EXCLUDED.data END,
-            updated_by  = $5,
-            updated_at  = NOW(),
-            status      = EXCLUDED.status,
-            approved_by = EXCLUDED.approved_by,
-            approved_at = EXCLUDED.approved_at,
-            rejected_by = NULL,
-            rejected_at = NULL,
-            rejection_reason = NULL
-          RETURNING *
-        `, [formType, date, shift, JSON.stringify(data), req.user.id, status, approvedBy, approvedAt, merge]);
+        /* A Save Draft INSIDE a window must not un-approve the day. The whole
+           point of a window is that the report keeps its status — and so keeps
+           counting in the KPIs, the MIS pack, entry completeness and the
+           watchdog — while someone fixes it. Flipping it to 'draft' would
+           blank all of those the moment the author saved their progress,
+           which is exactly what the window exists to avoid. So a draft here
+           writes the data and touches nothing else; only a real submission
+           moves the status. */
+        const keepStatus = viaWindow && isDraft;
+
+        const result = keepStatus
+          ? await client.query(`
+              UPDATE daily_reports SET
+                data       = CASE WHEN $4 THEN data || $5::jsonb ELSE $5::jsonb END,
+                updated_by = $6,
+                updated_at = NOW()
+              WHERE form_type = $1 AND record_date = $2 AND shift = $3
+              RETURNING *
+            `, [formType, date, shift, merge, JSON.stringify(data), req.user.id])
+          : await client.query(`
+              INSERT INTO daily_reports (form_type, record_date, shift, data, submitted_by, submitted_at, status, approved_by, approved_at)
+              VALUES ($1, $2, $3, $4, $5, NOW(), $6, $7, $8)
+              ON CONFLICT (form_type, record_date, shift)
+              DO UPDATE SET
+                data        = CASE WHEN $9 THEN daily_reports.data || EXCLUDED.data ELSE EXCLUDED.data END,
+                updated_by  = $5,
+                updated_at  = NOW(),
+                status      = EXCLUDED.status,
+                approved_by = EXCLUDED.approved_by,
+                approved_at = EXCLUDED.approved_at,
+                rejected_by = NULL,
+                rejected_at = NULL,
+                rejection_reason = NULL
+              RETURNING *
+            `, [formType, date, shift, JSON.stringify(data), req.user.id, status, approvedBy, approvedAt, merge]);
 
         const record = result.rows[0];
         const action = isAmendment ? 'FORM_AMEND_DIRECT' : (isDraft ? 'FORM_DRAFT' : 'FORM_SUBMIT');
@@ -318,21 +370,28 @@ router.post('/:formType',
            upsert, so changed_fields reflects what the merge actually did
            instead of this route re-deriving JSONB `||` semantics in JS.
 
+           A draft inside a window keeps the report's status, so that is the
+           status compared: prior.status is a REPORTED one, and a write over
+           reported data is always captured.
+
            The form's UNATTENDED autosave never gets here: its branch
            returns above, before this transaction exists. That is the
            structural reason background saves cannot bloat this table, and
            test/report-revisions.test.js asserts the ordering holds. */
-        if (shouldSnapshot(prior, { status })) {
-          await recordRevision(client, {
+        let revision = null;
+        if (shouldSnapshot(prior, { status: keepStatus ? prior.status : status })) {
+          revision = await recordRevision(client, {
             formType, recordDate: date, shift, action,
             priorData:        prior ? prior.data : null,
             priorStatus:      prior ? prior.status : null,
             priorApprovedBy:  prior ? prior.approved_by : null,
             priorApprovedAt:  prior ? prior.approved_at : null,
             changedFields:    changedFields(prior ? prior.data : null, record.data),
+            amendmentId:      viaWindow ? windowRow.id : null,
             actorId:          req.user.id,
             actorName:        req.user.name || req.user.username,
-            reason:           isAmendment ? amendReason : null,
+            reason:           viaWindow ? `Correction #${windowRow.id}: ${windowRow.reason}`
+                                        : (isAmendment ? amendReason : null),
             ipAddress:        req.ip,
           });
         }
@@ -340,11 +399,30 @@ router.post('/:formType',
         await client.query(
           'INSERT INTO audit_log (user_id, username, action, form_type, record_date, details, ip_address) VALUES ($1,$2,$3,$4,$5,$6,$7)',
           [req.user.id, req.user.username, action, formType, date,
-           `${Object.keys(data).length} field(s), ${merge ? 'merged' : 'replaced'} → status ${status}`
-             + (isAmendment ? ` — AMENDED a ${lockedStatus} report: ${amendReason}` : ''), req.ip]
+           `${Object.keys(data).length} field(s), ${merge ? 'merged' : 'replaced'} → status ${keepStatus ? prior.status : status}`
+             + (isAmendment ? ` — AMENDED a ${lockedStatus} report: ${amendReason}` : '')
+             + (viaWindow ? ` — inside correction #${windowRow.id}${keepStatus ? ' (draft, status unchanged)' : ''}` : ''), req.ip]
         );
 
-        return { record };
+        /* A submission inside the window is what CLOSES it. The amendment is
+           marked applied in the same transaction as the write it authorised,
+           so there is no state in which the data changed but the window is
+           still open — or the reverse. */
+        if (viaWindow && !isDraft) {
+          await client.query(
+            `UPDATE report_amendments SET status = 'applied', applied_at = NOW(), applied_revision_id = $2
+              WHERE id = $1`, [windowRow.id, revision ? revision.id : null]);
+          await client.query(
+            'INSERT INTO audit_log (user_id, username, action, form_type, record_date, details, ip_address) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+            [req.user.id, req.user.username, 'REPORT_AMEND_APPLY', formType, date,
+             `Correction #${windowRow.id} applied — now ${status}`, req.ip]);
+        }
+
+        /* Hand the client the window's CURRENT state so it can keep (or drop)
+           the "correction open" banner without a second round trip. */
+        const openAmendment = viaWindow ? await amendments.findOpen(client, { formType, date, shift }) : null;
+
+        return { record, amendment: openAmendment };
       });
 
       /* 409, not 403: the request was legitimate, the report's current state
@@ -352,16 +430,18 @@ router.post('/:formType',
          this apart from the autosave conflict above, which has no code. */
       if (outcome.locked) {
         return res.status(409).json({
-          error: `This report is ${outcome.locked} and can no longer be overwritten. `
-               + 'Ask an approver to reopen it for correction.',
-          code:   'REPORT_LOCKED',
+          error: outcome.windowClosed
+            ? 'Your correction window has closed — request a new one to keep editing.'
+            : `This report is ${outcome.locked} and can no longer be overwritten. `
+              + 'Use "Request a correction" on the form to ask an approver to reopen it.',
+          code:   outcome.windowClosed ? 'WINDOW_CLOSED' : 'REPORT_LOCKED',
           status: outcome.locked,
         });
       }
 
       if (!isDraft) formSubmissions.inc({ form_type: formType });
 
-      res.json({ success: true, record: outcome.record });
+      res.json({ success: true, record: outcome.record, amendment: outcome.amendment });
     } catch (err) { next(err); }
   });
 
@@ -572,7 +652,15 @@ router.get('/:formType/:date',
       );
 
       // Return the record if found, or null (form not yet filled for this day)
-      res.json(result.rows[0] || null);
+      const row = result.rows[0];
+      if (!row) return res.json(null);
+
+      /* The day's open correction request or window, if any, rides along so a
+         form learns it is unlocked — or waiting on an approver — on the same
+         read that loads it, with no second round trip. Additive: a record with
+         no amendment carries `amendment: null` and every existing reader of
+         this endpoint ignores keys it does not know. */
+      res.json({ ...row, amendment: await amendments.findOpen(db, { formType, date, shift }) });
     } catch (err) { next(err); }
   });
 
