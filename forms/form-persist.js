@@ -302,6 +302,33 @@
     return STATUS_META[status] ? status : 'draft';
   }
 
+  /* ── Correction requests ─────────────────────────────────────────
+     A report that is approved or awaiting sign-off is locked. The way through
+     is a request that an approver (never the requester) grants, which opens a
+     time-boxed WINDOW: the report keeps its status — so the day never leaves
+     the KPIs — but this form unlocks until the window closes. See
+     routes/amendments.js and migrations/027_report_amendments.sql.
+
+     THE CLOCK. The server sends `seconds_left`, computed by ITS clock. It is
+     turned into a moment on THIS clock once, on receipt (_closesAt), and every
+     later question is asked of that. A server timestamp is never compared to
+     the browser's own time: expires_at is a `timestamp without time zone`, so
+     that comparison is only right by coincidence of time zones. */
+  function _stampAmendment(a) {
+    if (!a) return null;
+    const out = Object.assign({}, a);
+    if (out.status === 'granted' && typeof out.seconds_left === 'number') {
+      out._closesAt = Date.now() + out.seconds_left * 1000;
+    }
+    return out;
+  }
+  function _winOpen(a) {
+    return !!(a && a.status === 'granted' && a._closesAt && a._closesAt > Date.now());
+  }
+  function _hhmm(ms) {
+    return new Date(ms).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }
+
   /* ── localStorage key ───────────────────────────────────────────── */
   function _key(formId, date) {
     return `${NS}-${formId}-${date}`;
@@ -334,6 +361,10 @@
     localTimer: null, serverTimer: null, retryMs: 20000,
     flushedVersion: -1,   // editVersion last sent by the hide/close flush, so its two triggers don't double-send
     handedOff: null,      // a day whose unsaved work was just kept as a draft on the way to another day
+    amendment: null,      // this day's open correction request / window (routes/amendments.js), or null
+    lastAmendment: null,  // what became of the last request that did NOT end in a correction, if recent
+    amendTimer: null,     // fires when an open window runs out
+    amendPoll: null,      // watches a pending request for the approver's answer
   };
 
   function _localSnap(formId, date) {
@@ -433,11 +464,19 @@
     if (record && record.data) {
       const status = _normaliseStatus(record.status || record.data._status);
       const at     = record.updated_at || record.submitted_at;
-      const meta   = { formId, date, savedAt: at, status, rejectionReason: record.rejection_reason || null, unsynced: false };
-      if (snap && snap._m.unsynced && !STATUS_META[status].locked
+      const amendment     = _stampAmendment(record.amendment);
+      const lastAmendment = record.last_amendment || null;
+      const meta   = { formId, date, savedAt: at, status, rejectionReason: record.rejection_reason || null, unsynced: false,
+                       amendment, lastAmendment };
+      /* Typed-but-unsent work is put back when the report is editable — and a
+         report inside an open correction window IS editable, whatever its
+         status says. Without this, work typed in a window and never confirmed
+         was thrown away in favour of the older server copy on the next visit. */
+      const editable = !STATUS_META[status].locked || _winOpen(amendment);
+      if (snap && snap._m.unsynced && editable
           && (Date.parse(snap._m.savedAt) || 0) > (Date.parse(at) || 0)) {
         return { source: 'recovered', payload: snap, reached, serverRow: true,
-                 meta: Object.assign({}, snap._m, { status, rejectionReason: meta.rejectionReason }) };
+                 meta: Object.assign({}, snap._m, { status, rejectionReason: meta.rejectionReason, amendment, lastAmendment }) };
       }
       return { source: 'server', payload: { _m: meta, inputs: [], data: record.data }, meta, reached, serverRow: true };
     }
@@ -449,8 +488,14 @@
     if (res.source === 'none') return null;
     _restore(document.body, res.payload);
     if (res.source === 'server') {
-      // Mirror into localStorage as an offline cache for _showHistory().
-      try { localStorage.setItem(_key(formId, date), JSON.stringify(res.payload)); } catch (e) { /* see _write */ }
+      /* Mirror into localStorage as an offline cache for _showHistory().
+         The correction window is deliberately NOT mirrored: it is a live grant
+         with an expiry, and a cached copy would keep a form unlocked on a
+         device that can no longer ask the server whether it is still open. */
+      const cached = Object.assign({}, res.payload, { _m: Object.assign({}, res.payload._m) });
+      delete cached._m.amendment;
+      delete cached._m.lastAmendment;
+      try { localStorage.setItem(_key(formId, date), JSON.stringify(cached)); } catch (e) { /* see _write */ }
     }
     return res.meta;
   }
@@ -483,7 +528,8 @@
       }
       /* The server's answer is authoritative: an Officer's submission comes
          back 'pending_approval', not 'approved'. */
-      return { ok: true, status: (res && res.record && res.record.status) || null };
+      return { ok: true, status: (res && res.record && res.record.status) || null,
+               amendment: res ? res.amendment : undefined };
     } catch (e) {
       const retryable = !e.status || e.status === 401 || e.status >= 500;
       if (opts.autosave) {
@@ -820,44 +866,78 @@
       b.style.cursor  = '';
     });
     document.getElementById('_nyb')?.remove();
+    document.getElementById('_ny-amend-btn')?.remove();
+    document.getElementById('_ny-amend-wd')?.remove();
   }
 
   /* ── Sync the toolbar DRAFT/SUBMITTED pill to the real status ──────── */
-  function _updateStatusPill(status) {
+  function _updateStatusPill(status, amendment) {
     const pill = document.querySelector('.rpt-pill');
     if (!pill) return;
     const st   = _normaliseStatus(status);
     const meta = STATUS_META[st];
-    pill.textContent = meta.pill;
+    const correcting = _winOpen(amendment);
+    /* Inside a correction window the report is still 'approved' (or awaiting
+       sign-off) to everything downstream, but to the person at this form it is
+       open for editing — saying APPROVED over a form they can type into would
+       be the pill lying about the one thing they need to know. */
+    pill.textContent = correcting ? 'CORRECTION OPEN' : meta.pill;
     /* .is-submitted is the page's existing green style; keep it for the two
        states that mean "this has been sent", and mark the other two so a
        page can style them without knowing this file's vocabulary. */
-    pill.classList.toggle('is-submitted', st === 'approved' || st === 'pending_approval');
-    pill.classList.toggle('is-pending',  st === 'pending_approval');
+    pill.classList.toggle('is-submitted', (st === 'approved' || st === 'pending_approval') && !correcting);
+    pill.classList.toggle('is-pending',  st === 'pending_approval' || correcting);
     pill.classList.toggle('is-rejected', st === 'rejected');
 
     /* The printed sign-off strip states the status too, at the bottom of
        the page. It was the literal word DRAFT in the markup, so an
        approved report printed "Status: DRAFT" underneath a toolbar
        reading APPROVED — and the printed copy is the one that gets
-       filed. Anything carrying data-report-status follows the pill. */
+       filed. Anything carrying data-report-status follows the pill.
+       It deliberately follows the REPORT's status, not the correction
+       window: what is filed is what the report IS. */
     document.querySelectorAll('[data-report-status]').forEach(el => { el.textContent = meta.pill; });
   }
 
   /* ── Status banner ───────────────────────────────────────────────
      One banner driven by STATUS_META, replacing the hardcoded green
      "Report Submitted & Locked" strip _lockForm() used to paint whatever
-     the server had actually decided. */
-  function _showStatusBanner(status, reason) {
+     the server had actually decided. It also says what became of a
+     correction: an open window and its closing time; a request still waiting;
+     the last one declined, or a window that closed unused. */
+  function _showStatusBanner(status, reason, amendment, lastAmendment) {
     document.getElementById('_nyb')?.remove();
-    const meta = STATUS_META[_normaliseStatus(status)];
-    if (!meta || !meta.banner) return;
+    const st   = _normaliseStatus(status);
+    const meta = STATUS_META[st];
+
+    let text, bg;
+    if (_winOpen(amendment)) {
+      text = 'Correction window open until ' + _hhmm(amendment._closesAt) +
+             ' — fix the figures and submit again. Anything you do not submit is restored to the approved figures when it closes.';
+      bg = BANNER_BG.warn;
+    } else if (!meta || !meta.banner) {
+      return;
+    } else {
+      text = meta.banner.text;
+      bg   = meta.banner.bg;
+      if (amendment && amendment.status === 'requested') {
+        text += '  A correction was requested' + (amendment.requested_by_name ? ' by ' + amendment.requested_by_name : '') +
+                ' and is waiting for an approver.';
+      } else if (lastAmendment && lastAmendment.status === 'declined') {
+        text += '  Your last correction request was declined' +
+                (lastAmendment.decided_by_name ? ' by ' + lastAmendment.decided_by_name : '') +
+                (lastAmendment.decision_note ? ': ' + lastAmendment.decision_note : '.');
+      } else if (lastAmendment && lastAmendment.status === 'expired') {
+        text += '  A correction window closed unused, so the figures were restored.';
+      }
+    }
 
     const banner = document.createElement('div');
     banner.id = '_nyb';
     const msg = document.createElement('span');
-    /* textContent, not innerHTML: `reason` is free text typed by an HOD. */
-    msg.textContent = meta.banner.text + (reason ? '  Reason: ' + reason : '');
+    /* textContent, not innerHTML: `reason`, a requester's name and a decline
+       note are all free text typed by a person. */
+    msg.textContent = text + (reason ? '  Reason: ' + reason : '');
     banner.appendChild(msg);
 
     const close = document.createElement('button');
@@ -873,7 +953,7 @@
 
     Object.assign(banner.style, {
       position: 'fixed', top: '0', left: '0', right: '0', zIndex: '9997',
-      background: meta.banner.bg, color: 'white', padding: '9px 48px 9px 16px',
+      background: bg, color: 'white', padding: '9px 48px 9px 16px',
       textAlign: 'center', fontFamily: 'Inter,sans-serif',
       fontSize: '12px', fontWeight: '700', letterSpacing: '.3px',
     });
@@ -881,11 +961,29 @@
   }
 
   /* Apply every visible consequence of a status in one call, so no caller
-     can set the pill and forget the lock (or vice versa). */
-  function _applyStatus(status, reason) {
+     can set the pill and forget the lock (or vice versa).
+
+     `amendment` / `lastAmendment`: undefined keeps what is already known, null
+     clears it. A caller that is loading a DIFFERENT day must pass them
+     explicitly, or the previous day's window would follow the user across. */
+  function _applyStatus(status, reason, amendment, lastAmendment) {
     const st = _normaliseStatus(status);
-    S.status   = st;
-    S.editable = !STATUS_META[st].locked;
+    S.status = st;
+    if (amendment !== undefined)     S.amendment     = _stampAmendment(amendment);
+    if (lastAmendment !== undefined) S.lastAmendment = lastAmendment || null;
+
+    const windowOpen = _winOpen(S.amendment);
+    /* A report is editable when its STATUS says so, or when an approver has
+       opened a correction window on it. The status itself never changed: only
+       who may write to it, and until when. */
+    S.editable = !STATUS_META[st].locked || windowOpen;
+
+    clearTimeout(S.amendTimer);
+    if (windowOpen) {
+      // clamp: setTimeout stores its delay in 32 bits
+      S.amendTimer = setTimeout(_onWindowClosed, Math.min(S.amendment._closesAt - Date.now() + 250, 2147483000));
+    }
+
     if (!S.editable) {
       /* A report awaiting sign-off, or approved, belongs to the approver:
          nothing pending may be written to it from here. */
@@ -893,12 +991,159 @@
       clearTimeout(S.serverTimer);
       S.dirty = false;
     }
-    _updateStatusPill(st);
+    _updateStatusPill(st, S.amendment);
     /* Lock/unlock FIRST: _unlockForm() clears the banner element, so
        painting the banner before it would wipe the rejection notice — the
        one state where the form is both unlocked and needs a message. */
-    if (STATUS_META[st].locked) _lockForm(); else _unlockForm();
-    _showStatusBanner(st, reason);
+    if (S.editable) _unlockForm(); else _lockForm();
+    _showStatusBanner(st, reason, S.amendment, S.lastAmendment);
+    _paintAmendUI();
+  }
+
+  /* ── Correction requests: the button, the wait, the window ─────────── */
+
+  const _AMEND_POLL_MS = 45000;
+  // Tunable so a test does not have to wait forty-five real seconds.
+  const _amendPollMs = () => (typeof global.NYATI_AMEND_POLL_MS === 'number' ? global.NYATI_AMEND_POLL_MS : _AMEND_POLL_MS);
+
+  /* The window ran out on this screen. The server refuses further writes on
+     its own clock and the sweeper restores the report's figures within
+     minutes; this just makes the screen agree, so nobody keeps typing into a
+     form that will refuse them. */
+  function _onWindowClosed() {
+    if (!S.amendment || S.amendment.status !== 'granted') return;
+    S.amendment = Object.assign({}, S.amendment, { status: 'expired' });
+    _applyStatus(S.status, null, S.amendment, { status: 'expired' });
+    _toast('Your correction window has closed. Anything you did not submit is restored to the approved figures — ' +
+           'request another correction if you still need to change this report.', 'warn', 14000);
+  }
+
+  function _paintAmendUI() {
+    document.getElementById('_ny-amend-btn')?.remove();
+    document.getElementById('_ny-amend-wd')?.remove();
+    clearTimeout(S.amendPoll);
+
+    const meta = STATUS_META[S.status];
+    if (!meta || !meta.locked) return;                                  // drafts and rejected reports are already editable
+    if (document.getElementById('dr-view-only-banner')) return;         // this role cannot submit this form (the server refuses it too)
+    const host = document.querySelector('.btn-grp') || document.querySelector('.toolbar');
+    if (!host) return;
+    const a = S.amendment;
+    if (_winOpen(a)) return;                                            // editing now — nothing to ask for
+
+    if (a && a.status === 'requested') {
+      const me = (typeof getCurrentUser === 'function' && getCurrentUser()) || {};
+      if (a.requested_by && me.userId === a.requested_by) {
+        const wd = document.createElement('button');
+        wd.id = '_ny-amend-wd';
+        wd.type = 'button';
+        wd.className = 'btn btn-out';
+        wd.textContent = 'Withdraw correction request';
+        wd.title = 'Take back your request. Nothing about the report changes.';
+        wd.addEventListener('click', _withdrawRequest);
+        host.appendChild(wd);
+      }
+      _schedulePoll();
+      return;
+    }
+
+    /* Created here in JS, not written into 11 pages of markup — and given an id
+       rather than a style class to be found by — so it stays outside the reach
+       of the static form-hooks test, which exists because a button once bound
+       by its STYLE class (.btn-out) swallowed seven pages' Save Draft. */
+    const btn = document.createElement('button');
+    btn.id = '_ny-amend-btn';
+    btn.type = 'button';
+    btn.className = 'btn btn-out';
+    btn.textContent = 'Request a correction';
+    btn.title = 'Spotted a mistake in a report that is already submitted? Ask an approver to reopen it.';
+    btn.addEventListener('click', _requestCorrection);
+    host.appendChild(btn);
+  }
+
+  /* One place that turns a refusal into words. The server's own sentence is
+     kept ("you cannot decide your own request"), and a dropped connection —
+     which has no status at all — is said plainly rather than as an error. A
+     correction request is NEVER queued for later: it is a governance act with a
+     reason and a moment, and replaying one hours after the fact would
+     misattribute it. */
+  function _amendFailure(e, what) {
+    if (!e || !e.status) {
+      _toast('That needs the server, and it could not be reached. Try again when you are back online — ' + what + ' was not sent.', 'warn', 9000);
+      return;
+    }
+    if (e.code === 'AMENDMENT_ALREADY_OPEN' && e.body && e.body.amendment) {
+      _applyStatus(S.status, null, e.body.amendment);
+      _toast('A correction request is already open for this report.', 'warn', 8000);
+      return;
+    }
+    _toast(e.message || (what + ' failed.'), 'err', 10000);
+  }
+
+  async function _requestCorrection() {
+    if (!S.formId || !S.loadedDate || !global.NyatiAPI || !global.NyatiAPI.requestAmendment) return;
+    const reason = window.prompt(
+      'Why does this report need correcting?\n\n' +
+      'Say what is wrong — at least 10 characters. An approver reads this to decide whether to reopen it.');
+    if (reason === null) return;
+    const text = reason.trim();
+    if (text.length < 10) {
+      window.alert('Please say what is wrong in at least 10 characters — "fix" is not enough for an approver to act on.');
+      return;
+    }
+    const date = S.loadedDate;
+    try {
+      const res = await global.NyatiAPI.requestAmendment(S.formId, date, text);
+      if (date !== S.loadedDate) return;                 // the user moved to another day while it was sent
+      _applyStatus(S.status, null, res.amendment);
+      _toast('Correction requested — an approver will review it. The answer will appear here.', 'ok', 7000);
+    } catch (e) { _amendFailure(e, 'your correction request'); }
+  }
+
+  async function _withdrawRequest() {
+    if (!S.amendment || S.amendment.status !== 'requested') return;
+    if (!window.confirm('Withdraw your correction request? Nothing about the report changes.')) return;
+    const date = S.loadedDate, id = S.amendment.id;
+    try {
+      await global.NyatiAPI.withdrawAmendment(S.formId, date, id);
+      if (date !== S.loadedDate) return;
+      _applyStatus(S.status, null, null, null);
+      _toast('Correction request withdrawn.', 'ok');
+    } catch (e) { _amendFailure(e, 'the withdrawal'); }
+  }
+
+  /* While a request is waiting, watch for the answer. Without this the
+     requester's open form stays on "waiting" until they happen to reload,
+     which is how a granted 24-hour window gets half used up unnoticed. Only
+     the amendment state is read back — never the report's figures, which the
+     person may be looking at. */
+  function _schedulePoll() {
+    clearTimeout(S.amendPoll);
+    if (!(S.amendment && S.amendment.status === 'requested')) return;
+    S.amendPoll = setTimeout(_pollAmendment, _amendPollMs());
+  }
+
+  async function _pollAmendment() {
+    if (!S.amendment || S.amendment.status !== 'requested' || !S.loadedDate || !global.NyatiAPI) return;
+    const date = S.loadedDate, id = S.amendment.id;
+    try {
+      const rec = await global.NyatiAPI.getForm(S.formId, date);
+      if (date !== S.loadedDate) return;                 // moved on
+      if (rec) {
+        const a = rec.amendment || null;
+        if (!a || a.id !== id || a.status !== 'requested') {
+          _applyStatus(_normaliseStatus(rec.status), null, a, rec.last_amendment || null);
+          if (S.amendment && S.amendment.status === 'granted') {
+            _toast('Your correction request was approved — you can edit until ' + _hhmm(S.amendment._closesAt) + '.', 'ok', 10000);
+          } else if (rec.last_amendment && rec.last_amendment.status === 'declined') {
+            _toast('Your correction request was declined' +
+                   (rec.last_amendment.decision_note ? ': ' + rec.last_amendment.decision_note : '.'), 'warn', 14000);
+          }
+          return;
+        }
+      }
+    } catch (e) { /* offline — try again next tick */ }
+    _schedulePoll();
   }
 
   /* ── Anomaly check at submit time ─────────────────────────────────
@@ -1111,8 +1356,13 @@
     } else if (res.locked) {
       S.stopped = true;
       _setChip('device');
-      _toast('This report was submitted or approved from another window, so it is no longer being autosaved. ' +
-             'Reload the page to see the current version — what you just typed is kept on this device.', 'warn', 12000);
+      if (res.error && res.error.code === 'WINDOW_CLOSED') {
+        _toast('Your correction window has closed, so this is no longer being autosaved. Request another correction ' +
+               'to keep editing — what you just typed is kept on this device.', 'warn', 12000);
+      } else {
+        _toast('This report was submitted or approved from another window, so it is no longer being autosaved. ' +
+               'Reload the page to see the current version — what you just typed is kept on this device.', 'warn', 12000);
+      }
     } else if (res.retry) {
       S.failed = true;
       _setChip('device');
@@ -1206,7 +1456,13 @@
     document.addEventListener('input',  onEdit, true);
     document.addEventListener('change', onEdit, true);
 
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') _flushOnHide(); });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') { _flushOnHide(); return; }
+      /* Timers are throttled or frozen in a background tab, so a window can run
+         out — or a request can be answered — while nobody was looking. */
+      if (S.amendment && S.amendment.status === 'granted' && S.amendment._closesAt <= Date.now()) _onWindowClosed();
+      else if (S.amendment && S.amendment.status === 'requested') { clearTimeout(S.amendPoll); _pollAmendment(); }
+    });
     window.addEventListener('pagehide', _flushOnHide);
     window.addEventListener('beforeunload', e => {
       // Only when the work is NOT known to be safe: the server has not got it
@@ -1244,10 +1500,10 @@
         if (!initial) {
           _toast(`Loaded ${STATUS_META[_normaliseStatus(meta.status)].pill.toLowerCase()} — ${meta.date || date}${kept ? "." + kept : ""}`, 'ok', kept ? 6000 : 0);
         }
-        _applyStatus(meta.status, meta.rejectionReason);
+        _applyStatus(meta.status, meta.rejectionReason, meta.amendment || null, meta.lastAmendment || null);
       } else {
         _clearForm(body);
-        _applyStatus('draft');
+        _applyStatus('draft', undefined, null, null);
         if (kept) _toast(kept.trim(), 'ok', 6000);
       }
 
@@ -1292,7 +1548,11 @@
         const { payload } = _write(formId, 'draft', { date, unsynced: true });
         _toast(`Saving draft — ${date}…`, 'ok');
         _setChip('saving');
-        _applyStatus('draft');
+        /* Inside a correction window a draft keeps the report's real status
+           (the server refuses to flip it to 'draft': the whole point of a
+           window is that the day keeps counting). Painting DRAFT here would
+           announce the opposite of what is about to happen. */
+        if (!_winOpen(S.amendment)) _applyStatus('draft');
         document.dispatchEvent(new CustomEvent('nyati:saved', { detail: { formId, date } }));
 
         const sync = await _syncToServer(formId, date, payload.data, 'draft');
@@ -1301,6 +1561,8 @@
           if (S.editVersion === v) { _markSynced(formId, date); S.dirty = false; _setChip('server'); }
           else { S.dirtySince = Date.now(); _setChip('dirty'); _scheduleServer(); }
           _unfinishedTouch(formId, date, sync.status || 'draft');
+          // The server's answer carries the window's fresh clock — keep ours aligned to it.
+          if (sync.amendment) _applyStatus(sync.status || S.status, null, sync.amendment);
           _toast(`Draft saved — ${date}`, 'ok');
         } else if (sync.queued) {
           S.failed = true; S.dirty = true; _setChip('device');
@@ -1367,7 +1629,7 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(a.href);
 
-        _applyStatus('pending_approval');   // provisional until the server answers
+        _applyStatus('pending_approval', null, null);   // provisional until the server answers — null: a window's use ends here
         _setChip('submitted');
         document.dispatchEvent(new CustomEvent('nyati:submitted', { detail: { formId, date } }));
 
@@ -1380,7 +1642,9 @@
           const st = _normaliseStatus(sync.status || 'approved');
           S.serverHasRow = true;
           _markSynced(formId, date);
-          _applyStatus(st);
+          // A correction submitted inside a window CLOSES it (the server marks it applied
+          // in the same transaction), so the answer carries no open amendment.
+          _applyStatus(st, null, sync.amendment || null, null);
           _setChip('submitted');
           _unfinishedTouch(formId, date, null);
           _toast(st === 'pending_approval'
@@ -1389,6 +1653,12 @@
         } else if (sync.queued) {
           _setChip('device');
           _toast(`Submitted locally — server offline, queued for auto-sync`, 'warn');
+        } else if (sync.error && (sync.error.code === 'WINDOW_CLOSED' || sync.error.code === 'REPORT_LOCKED')) {
+          /* A deliberate refusal, not an outage — and not "contact IT". The
+             figures typed are still in the JSON file just downloaded and in this
+             device's copy; what is needed is a correction the approver grants. */
+          _toast((sync.error.serverMessage || 'This report is locked.') +
+                 ' What you typed is kept on this device and in the file that was just downloaded.', 'err', 14000);
         } else {
           _toast(`Submitted & downloaded locally — the server REJECTED it. Contact IT.`, 'err');
         }
@@ -1404,6 +1674,10 @@
         const next = dateInput.value;
         if (!next) return;
         if (S.dirty && S.editable && S.loadedDate && S.loadedDate !== next) _handOff(S.loadedDate);
+        /* The previous day's window (and its timers) must not follow the user
+           to the next day while the new one is still loading. */
+        clearTimeout(S.amendTimer); clearTimeout(S.amendPoll);
+        S.amendment = null; S.lastAmendment = null;
         _unlockForm();
         await loadDay(next, false);
       });

@@ -43,6 +43,17 @@
                padding:3px 0; border-bottom:1px dotted #E2E8F0; }
   .apv-field-k { color:var(--text-muted,#64748B); }
   .apv-field-v { font-weight:700; color:var(--navy,#173158); white-space:nowrap; }
+
+  /* Correction requests — the second queue. Same table, same buttons; only what
+     is genuinely new gets a rule of its own. */
+  .apv-h2 { font-size:14px; font-weight:800; color:var(--navy,#173158); margin:32px 0 4px; }
+  .apv-h2 + .apv-intro { margin-bottom:12px; }
+  .amd-pill { display:inline-block; padding:2px 9px; border-radius:6px; font-size:12px; font-weight:700; }
+  .amd-pill.is-wait { background:var(--st-warn-bg); color:var(--amber-ink); }
+  .amd-pill.is-open { background:var(--st-good-bg); color:var(--green-ink); }
+  .amd-note { font-size:12px; color:var(--text-muted,#64748B); }
+  .apv-btn-grant { background:var(--st-good); color:white; }
+  .apv-btn-grant:hover { background:#0F6039; }
 </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="design-system.css?v=1" />
@@ -76,6 +87,24 @@
        its own rather than one sentence stranded under eight column
        headings for rows that are not there. -->
   <div id="apv-state" hidden></div>
+
+  <!-- Correction requests. A report that is approved (or waiting here) is
+       locked; this is how a mistake in one gets fixed without a developer.
+       Approvers decide; the person who asked sees the answer. Hidden until the
+       first response so a slow fetch never flashes an empty panel. -->
+  <section id="amd-section" hidden aria-labelledby="amd-title">
+    <h2 class="apv-h2" id="amd-title">Correction requests</h2>
+    <p class="apv-intro" id="amd-intro"></p>
+    <div class="apv-table-wrap" id="amd-table-wrap">
+      <table class="apv-table" id="amd-table">
+        <thead>
+          <tr><th>Report</th><th>Date</th><th>Requested By</th><th>Requested At</th><th>Status</th><th>Why</th><th>Figures</th><th>Action</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div id="amd-state" hidden></div>
+  </section>
 </main>
 
 <footer class="dash-footer">
@@ -93,7 +122,7 @@
   requireAuth();
   applyApprovalsPermissions();
 </script>
-<script src="forms/api-client.js"></script>
+<script src="forms/api-client.js?v=5"></script>
 <script src="forms/client-errors.js"></script>
 <script>
 (function () {
@@ -117,11 +146,18 @@
       d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
   }
 
+  /* The two tables this page shows. Each has its own wrapper, panel and column
+     count: showState used to hardcode the first one's ids and colspan="8". */
+  var APV = { wrap: 'apv-table-wrap', panel: 'apv-state', table: 'apv-table', cols: 8 };
+  var AMD = { wrap: 'amd-table-wrap', panel: 'amd-state', table: 'amd-table', cols: 8 };
+
   /* isError: true = failure panel, false = empty panel, null = show the
-     table again. The table and the panel are never both on screen. */
-  function showState(isError, icon, title, body) {
-    var wrap  = document.getElementById('apv-table-wrap');
-    var panel = document.getElementById('apv-state');
+     table again. The table and the panel are never both on screen.
+     `ids` says which table (default: the approvals queue, exactly as before). */
+  function showState(isError, icon, title, body, ids) {
+    ids = ids || APV;
+    var wrap  = document.getElementById(ids.wrap);
+    var panel = document.getElementById(ids.panel);
     if (!wrap || !panel) return;
     if (isError === null) {
       wrap.hidden = false; panel.hidden = true; panel.innerHTML = '';
@@ -132,9 +168,9 @@
        final pending report was approved, its row stayed in the DOM behind the
        empty-state panel (RAID I-12). A single placeholder row keeps the table
        well-formed and carries the same message as the panel. */
-    var tbody = document.querySelector('#apv-table tbody');
+    var tbody = document.querySelector('#' + ids.table + ' tbody');
     if (tbody) {
-      tbody.innerHTML = '<tr><td colspan="8" class="apv-empty">' +
+      tbody.innerHTML = '<tr><td colspan="' + ids.cols + '" class="apv-empty">' +
         escHtml(title) + '</td></tr>';
     }
     wrap.hidden = true;
@@ -241,7 +277,149 @@
     }
   });
 
+  /* ══ Correction requests ═══════════════════════════════════════════════ */
+
+  var me = (typeof getCurrentUser === 'function' && getCurrentUser()) || {};
+  var isApprover = me.role === 'admin' || me.role === 'md' || me.level === 'hod';
+
+  /* The server's own sentence when there was a response ("you cannot decide
+     your own correction request"); humanError only for a dropped connection,
+     which has no status and no sentence of its own. */
+  function amdError(e, fallback) {
+    return (e && e.status) ? e.message : humanError(e, fallback);
+  }
+
+  function timeLeft(secs) {
+    if (secs == null) return '';
+    var h = Math.floor(secs / 3600), m = Math.floor((secs % 3600) / 60);
+    return h > 0 ? h + ' h ' + (m ? m + ' min' : '') : Math.max(1, m) + ' min';
+  }
+
+  async function loadAmendments() {
+    var section = document.getElementById('amd-section');
+    var tbody   = document.querySelector('#amd-table tbody');
+    var rows;
+    try {
+      rows = await NyatiAPI.getAmendments('open');
+    } catch (e) {
+      /* An older server, or a hiccup, must never take the approvals queue down
+         with it — the section simply stays out of the way. */
+      section.hidden = true;
+      return;
+    }
+
+    /* An approver always sees the section, even empty: "nothing is waiting" is
+       the reassuring answer. Everyone else sees it only when they have asked
+       for something, so it is never a permanent empty box on their page. */
+    if (!rows.length && !isApprover) { section.hidden = true; return; }
+    section.hidden = false;
+    document.getElementById('amd-title').textContent = isApprover ? 'Correction requests' : 'Your correction requests';
+    document.getElementById('amd-intro').textContent = isApprover
+      ? 'A report that is already approved or awaiting sign-off is locked. When someone finds a mistake in one, they ask here. Granting opens a time-boxed window in which they can fix it; the report keeps counting in the KPIs meanwhile, and anything they do not resubmit is restored when the window closes. You cannot decide a request you made yourself.'
+      : 'You asked for these reports to be reopened. An approver decides; the answer appears on the report itself, and here.';
+
+    if (!rows.length) {
+      showState(false, 'check-circle', 'No corrections waiting',
+        'Nothing has been asked of you. Requests from your department appear here.', AMD);
+      return;
+    }
+    showState(null, null, null, null, AMD);
+
+    tbody.innerHTML = rows.map(function (r, i) {
+      var fields = r.fields || [];
+      var mine   = r.requested_by && me.userId === r.requested_by;
+      var status, action;
+
+      if (r.status === 'granted') {
+        status = '<span class="amd-pill is-open">Window open</span><div class="amd-note">' + timeLeft(r.seconds_left) + ' left</div>';
+        action = '<span class="amd-note">Being corrected</span>';
+      } else {
+        status = '<span class="amd-pill is-wait">Waiting for an approver</span>';
+        if (mine) {
+          action = '<button class="apv-btn apv-btn-reject" data-action="withdraw">Withdraw</button>';
+        } else if (isApprover) {
+          action = '<button class="apv-btn apv-btn-grant" data-action="grant">Grant</button>' +
+                   '<button class="apv-btn apv-btn-reject" data-action="decline">Decline</button>';
+        } else {
+          action = '<span class="amd-note">—</span>';
+        }
+      }
+
+      var detail = fields.length
+        ? '<tr class="apv-detail" id="amd-d' + i + '" hidden><td colspan="8">' +
+            '<div class="apv-fields">' + fields.map(function (f) {
+              return '<div class="apv-field"><span class="apv-field-k">' + escHtml(f.label) +
+                     '</span><span class="apv-field-v">' + escHtml(String(f.value)) + '</span></div>';
+            }).join('') + '</div></td></tr>'
+        : '';
+
+      return '<tr data-id="' + escHtml(r.id) + '" data-form-type="' + escHtml(r.form_type) + '" data-date="' + escHtml(r.record_date) +
+             '" data-label="' + escHtml(labelFor(r)) + '">' +
+        '<td class="apv-form-label">' + escHtml(labelFor(r)) + '</td>' +
+        '<td>' + escHtml(r.record_date) + '</td>' +
+        '<td>' + escHtml(r.requested_by_name || '—') + '</td>' +
+        '<td>' + fmtDateTime(r.requested_at) + '</td>' +
+        '<td>' + status + '</td>' +
+        '<td class="apv-remarks">' + escHtml(r.reason) + '</td>' +
+        '<td class="apv-figures">' + (fields.length
+            ? '<button class="apv-btn apv-btn-view" data-action="view" data-target="amd-d' + i + '">' + fields.length + ' figures</button>'
+            : '<span class="apv-none">no figures</span>') + '</td>' +
+        '<td class="apv-actions">' + action + '</td>' +
+      '</tr>' + detail;
+    }).join('');
+  }
+
+  document.querySelector('#amd-table').addEventListener('click', async function (ev) {
+    var btn = ev.target.closest('button[data-action]');
+    if (!btn) return;
+    var row = btn.closest('tr');
+    var action = btn.dataset.action;
+
+    if (action === 'view') {
+      var panel = document.getElementById(btn.dataset.target);
+      if (panel) { panel.hidden = !panel.hidden; btn.classList.toggle('is-open', !panel.hidden); }
+      return;
+    }
+
+    var id = row.dataset.id, formType = row.dataset.formType, date = row.dataset.date, label = row.dataset.label;
+    function lock(on) { row.querySelectorAll('button').forEach(function (b) { b.disabled = on; }); }
+
+    try {
+      if (action === 'grant') {
+        var raw = window.prompt(
+          'Open a correction window for ' + label + ', ' + date + '.\n\n' +
+          '• The report stays approved and keeps counting in the KPIs while it is open.\n' +
+          '• Its current figures are saved first, and restored automatically if nothing is resubmitted.\n\n' +
+          'How many hours should it stay open? (1–72)', '24');
+        if (raw === null) return;
+        var hours = parseInt(raw, 10);
+        if (!(hours >= 1 && hours <= 72) || String(hours) !== raw.trim()) {
+          alert('Enter a whole number of hours between 1 and 72.'); return;
+        }
+        lock(true);
+        await NyatiAPI.grantAmendment(formType, date, id, hours);
+      } else if (action === 'decline') {
+        var note = window.prompt('Why is this correction request being declined?\n(At least 10 characters — the person who asked will read it.)');
+        if (note === null) return;
+        note = note.trim();
+        if (note.length < 10) { alert('Please give a reason of at least 10 characters.'); return; }
+        lock(true);
+        await NyatiAPI.declineAmendment(formType, date, id, note);
+      } else if (action === 'withdraw') {
+        if (!window.confirm('Withdraw your correction request? Nothing about the report changes.')) return;
+        lock(true);
+        await NyatiAPI.withdrawAmendment(formType, date, id);
+      }
+      loadAmendments();
+    } catch (e) {
+      alert(amdError(e, 'That could not be completed.'));
+      lock(false);
+      loadAmendments();       // the queue may have moved on under us (someone else decided it)
+    }
+  });
+
   load();
+  loadAmendments();
 
   var _dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
   var fEl = document.getElementById('footer-date');

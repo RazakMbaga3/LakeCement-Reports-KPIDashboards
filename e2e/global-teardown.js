@@ -22,6 +22,14 @@ module.exports = async () => {
      would leave those rows behind forever. Scoped to the 1999 sandbox only,
      so a real revision can never be caught by it. */
   await pool.query("DELETE FROM report_revisions WHERE record_date BETWEEN '1999-01-01' AND '1999-12-31'");
+  /* report_amendments and the system-authored audit rows the expiry sweeper
+     writes ('system': no user id, no e2e_ username, so the by-user deletes below
+     never find them). Sandbox dates only — nothing real carries a 1999 date. */
+  await pool.query("DELETE FROM report_amendments WHERE record_date BETWEEN '1999-01-01' AND '1999-12-31'");
+  await pool.query("DELETE FROM report_amendments WHERE record_date BETWEEN '2098-01-01' AND '2098-12-31'");
+  await pool.query("DELETE FROM audit_log WHERE username = 'system' AND record_date BETWEEN '1999-01-01' AND '1999-12-31'");
+  // The sweeper's revert raises this alert through the watchdog. Sandbox dates only: they are in the detail text.
+  await pool.query("DELETE FROM alerts WHERE kind LIKE 'amendment-expired:%' AND detail LIKE '%for 1999-%'");
   await pool.query("DELETE FROM report_revisions WHERE record_date BETWEEN '2098-01-01' AND '2098-12-31'");
 
   /* 2. Anything else a harness account authored. A test does not only write
@@ -58,6 +66,10 @@ module.exports = async () => {
      WHERE actor_name LIKE 'E2E %'
         OR actor_id IN (${HARNESS_USERS})`
   );
+  /* A request a harness account made against a real-dated report, if a test
+     strayed off the sandbox. The name is denormalised for exactly this: the id
+     goes NULL when the user row is deleted (ON DELETE SET NULL). */
+  await pool.query(`DELETE FROM report_amendments WHERE requested_by_name LIKE 'E2E %' OR decided_by_name LIKE 'E2E %'`);
   const { rowCount } = await pool.query(`DELETE FROM users WHERE username LIKE 'e2e\_%'`);
   console.log(`[e2e] cleaned up ${rowCount} harness accounts, both write sandboxes and anything they authored`);
   await pool.end();

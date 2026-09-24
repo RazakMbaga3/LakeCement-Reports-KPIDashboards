@@ -50,6 +50,9 @@ module.exports = async () => {
   await pool.query('DELETE FROM kpi_monthly WHERE year = 2001');
 
   /* Both write sandboxes: year-2001 for kpi_monthly, 1999 dates for daily_reports. */
+  // A run that crashed part-way must not leave a granted window behind for the next one.
+  await pool.query("DELETE FROM report_amendments WHERE record_date BETWEEN '1999-01-01' AND '1999-12-31'");
+  await pool.query("DELETE FROM report_revisions  WHERE record_date BETWEEN '1999-01-01' AND '1999-12-31'");
   await pool.query("DELETE FROM daily_reports WHERE record_date BETWEEN '1999-01-01' AND '1999-12-31'");
   /* 2098 is draft-reaccess.spec.js's sandbox: it must sort NEWEST, because the history
      panel only sees the newest 120 days of a form. */

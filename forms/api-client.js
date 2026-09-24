@@ -64,7 +64,19 @@
       body:    JSON.stringify(body),
       keepalive: !!(opts && opts.keepalive),
     });
-    if (!res.ok) throw _httpError('submitForm', formType, res);
+    if (!res.ok) {
+      const err = _httpError('submitForm', formType, res);
+      /* The refusal's own body: REPORT_LOCKED and WINDOW_CLOSED are both a 409,
+         and the form has to say different things about them — "ask for a
+         correction" versus "your correction window has closed". The generic
+         message only ever carried the status. Best-effort: a non-JSON body
+         (an HTML error page from a proxy) simply leaves these unset. */
+      try {
+        const b = await res.json();
+        if (b) { err.code = b.code; err.serverMessage = b.error; err.body = b; }
+      } catch (e) { /* not JSON */ }
+      throw err;
+    }
     return res.json();
   }
 
@@ -376,6 +388,55 @@
     return body;
   }
 
+  /* ── Correction requests (routes/amendments.js) ────────────────────
+     A locked report (approved, or awaiting sign-off) can be corrected only
+     through a request an approver grants. Errors carry the server's own
+     wording AND its machine-readable code — "you cannot decide your own
+     correction request", AMENDMENT_ALREADY_OPEN — because the page needs both:
+     the sentence for the person, the code to decide what to show. */
+  async function _amend(method, path, body) {
+    const res = await fetch(BASE + '/amendments' + path, {
+      method, headers: _headers(), body: body ? JSON.stringify(body) : undefined,
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok) {
+      const err = new Error((json && json.error) || ('Correction request failed (' + res.status + ')'));
+      err.status = res.status;
+      err.code = json && json.code;
+      err.body = json;
+      throw err;
+    }
+    return json;
+  }
+  const _ap = (formType, date) => '/' + encodeURIComponent(formType) + '/' + encodeURIComponent(date);
+
+  /* POST — ask for a correction. `reason` is at least 10 characters. */
+  function requestAmendment(formType, date, reason, opts) {
+    return _amend('POST', _ap(formType, date), Object.assign({ reason }, opts || {}));
+  }
+  /* GET — my requests (officer), or the ones I decide (HOD), or all (admin/md). */
+  function getAmendments(state, days) {
+    const qs = new URLSearchParams({ state: state || 'open' });
+    if (days) qs.set('days', days);
+    return _amend('GET', '?' + qs.toString());
+  }
+  /* POST — open a time-boxed window. `hours` 1-72, default 24. */
+  function grantAmendment(formType, date, id, hours, note) {
+    return _amend('POST', _ap(formType, date) + '/' + id + '/grant', { hours: hours || undefined, note: note || undefined });
+  }
+  /* POST — refuse, with a reason (at least 10 characters). */
+  function declineAmendment(formType, date, id, note) {
+    return _amend('POST', _ap(formType, date) + '/' + id + '/decline', { note });
+  }
+  /* POST — take back a request nobody has decided yet. */
+  function withdrawAmendment(formType, date, id) {
+    return _amend('POST', _ap(formType, date) + '/' + id + '/withdraw', {});
+  }
+  /* GET — a day's requests and the revision trail behind it (no figures). */
+  function getAmendmentHistory(formType, date) {
+    return _amend('GET', _ap(formType, date));
+  }
+
   /* ── Admin: user provisioning (admin-users.html) ───────────────────
      All admin-only server-side. Errors carry the server's own wording —
      "that email is already on another account", "you cannot change your
@@ -471,6 +532,7 @@
     getSalesTerritories, getSalesDashboard, setSalesTarget,
     getPurchasesDashboard,
     getApprovals, approveReport, rejectReport,
+    requestAmendment, getAmendments, grantAmendment, declineAmendment, withdrawAmendment, getAmendmentHistory,
     getMisEmployees, getMisItAssets, getMisVehicles, getMisComplianceCerts,
     getKpiSubmission, submitKpiMonth, reopenKpiMonth,
     adminGetCatalogue, adminListUsers, adminCreateUser, adminUpdateUser,
