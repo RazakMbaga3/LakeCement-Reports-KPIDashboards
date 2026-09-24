@@ -246,6 +246,10 @@ async function main() {
     r = await decline(T.hod, D(11), a2, 'The weighbridge ticket matches the figure as submitted.');
     check('the owning HOD can decline, with a reason (200)', r.status === 200 && r.body.amendment.status === 'declined', JSON.stringify(r.body));
     check('…the report is still locked, untouched', (await report(D(11))).status === 'pending_approval');
+    r = await api('GET', `/reports/production/${D(11)}`, { token: T.officer });
+    check('the day read tells the requester what became of it (last_amendment: declined, with the reason)',
+      r.body && r.body.amendment === null && r.body.last_amendment && r.body.last_amendment.status === 'declined'
+      && /weighbridge ticket/.test(r.body.last_amendment.decision_note || ''), JSON.stringify(r.body && r.body.last_amendment));
     r = await grant(T.hod, D(11), a2);
     check('a decided request cannot be decided again (409 AMENDMENT_NOT_PENDING)',
       r.status === 409 && r.body.code === 'AMENDMENT_NOT_PENDING', JSON.stringify(r.body));
@@ -400,6 +404,9 @@ async function main() {
       `kiln_prod_mt=${reverted.data.kiln_prod_mt}`);
     check('…its status was never touched', reverted.status === 'approved');
     check('the amendment is closed as expired', (await amendmentRow(a4)).status === 'expired');
+    r = await api('GET', `/reports/production/${D(14)}`, { token: T.hod });
+    check('…and the day read says so (last_amendment: expired)', r.body && r.body.last_amendment && r.body.last_amendment.status === 'expired',
+      JSON.stringify(r.body && r.body.last_amendment));
 
     const revs14 = await revisions(D(14));
     const revert = revs14.find(v => v.action === 'AMENDMENT_EXPIRE_REVERT');

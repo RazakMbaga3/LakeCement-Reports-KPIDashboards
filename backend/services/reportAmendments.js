@@ -157,6 +157,25 @@ async function lastClosedWindow(q, { formType, date, shift = 'day' }) {
   return r.rows[0] || null;
 }
 
+/* What became of the last request that did NOT end in a correction — declined,
+   or a window that closed unused — if it happened recently. A day's open
+   amendment is the live one; once it is declined the form would otherwise show
+   nothing at all, and the person who asked would never learn why. Surfaced on
+   the same day read, so a locked form can say "your last request was declined:
+   <the reason>" instead of quietly offering the button again. Only the last 72
+   hours: after that it is history, not news. */
+async function lastDecision(q, { formType, date, shift = 'day' }) {
+  const r = await q.query(
+    `SELECT a.id, a.status, a.decision_note, a.decided_by_name, a.decided_at, a.expires_at
+       FROM report_amendments a
+      WHERE a.form_type = $1 AND a.record_date = $2 AND a.shift = $3
+        AND a.status IN ('declined', 'expired')
+        AND COALESCE(a.expires_at, a.decided_at) > NOW() - INTERVAL '72 hours'
+      ORDER BY a.id DESC LIMIT 1`,
+    [formType, date, shift]);
+  return r.rows[0] || null;
+}
+
 /* ── The expiry sweeper ──────────────────────────────────────────────────
    Run by the watchdog every 15 minutes (services/watchdog.js).
 
@@ -251,5 +270,5 @@ async function sweepExpired() {
 module.exports = {
   OPEN_STATUSES, LOCKED_STATUSES, DEFAULT_WINDOW_HOURS, MAX_WINDOW_HOURS, MIN_REASON_CHARS,
   isPrivileged, windowIsOpen, mayDecide, mayWithdraw, clampHours,
-  PRESENT_COLUMNS, findOpen, findActiveWindow, lastClosedWindow, sweepExpired,
+  PRESENT_COLUMNS, findOpen, findActiveWindow, lastClosedWindow, lastDecision, sweepExpired,
 };

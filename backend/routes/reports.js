@@ -660,7 +660,15 @@ router.get('/:formType/:date',
          read that loads it, with no second round trip. Additive: a record with
          no amendment carries `amendment: null` and every existing reader of
          this endpoint ignores keys it does not know. */
-      res.json({ ...row, amendment: await amendments.findOpen(db, { formType, date, shift }) });
+      const open = await amendments.findOpen(db, { formType, date, shift });
+      res.json({
+        ...row,
+        amendment: open,
+        /* Only when nothing is open: what became of the last request that did
+           not end in a correction, so a locked form can say why it is locked
+           rather than quietly offering the button again. */
+        last_amendment: open ? null : await amendments.lastDecision(db, { formType, date, shift }),
+      });
     } catch (err) { next(err); }
   });
 
