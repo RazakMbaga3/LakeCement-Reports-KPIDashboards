@@ -14,6 +14,12 @@
   <link rel="stylesheet" href="design-system.css?v=1" />
   <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=1"></script>
+  <!-- Charting: the same pinned Chart.js + shared contrast-validated theme the
+       six other charting pages use. The Executive Summary had no chart library
+       and no <canvas> at all until 2026-09-24 — it showed levels but never
+       trend, which is the one thing a monthly figure cannot tell you. -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="chart-theme.js?v=1"></script>
 </head>
 <body>
 
@@ -165,7 +171,7 @@
         <span class="smry-cat-label">Production Output</span>
         <div class="smry-cat-line"></div>
       </div>
-      <div class="smry-hero smry-hero-3">
+      <div class="smry-hero">
 
         <!-- Kiln Output — wired live to the formula layer, see app.js#loadHeroCards -->
         <div class="sk-card" data-formula-key="kiln-output" data-unit-label="TPD">
@@ -179,6 +185,7 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
+          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: —</span>
             <span class="sk-pct">—</span>
@@ -198,6 +205,7 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
+          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: —</span>
             <span class="sk-pct">—</span>
@@ -217,6 +225,7 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
+          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: —</span>
             <span class="sk-pct">—</span>
@@ -225,6 +234,30 @@
         </div>
 
 
+
+        <!-- Cement Mill 2 Output — wired live. Was an illustrative 62 TPH.
+             The registry now computes it from the production form's own CM-2
+             grade tonnages and CM-2 running hours — the source Excel's own TPH
+             cell, not a reconstruction — so it does not depend on the stoppage
+             form, which has had no entry since 2026-06-30 (RAID I-27). -->
+        <div class="sk-card" data-formula-key="cement-mill-2-output" data-unit-label="TPH">
+          <div class="sk-top">
+            <div class="sk-label">Cement Mill 2 Output</div>
+            <span class="sk-dept-tag">Production</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">&mdash;</span>
+            <span class="sk-unit">TPH</span>
+            <span class="sk-delta"></span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
+          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: &mdash;</span>
+            <span class="sk-pct">&mdash;</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Loading&hellip;</div>
+        </div>
       </div><!-- /smry-hero -->
 
       <!-- ── ENERGY EFFICIENCY ───────────────────────────────── -->
@@ -249,6 +282,7 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
+          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
           <div class="sk-foot">
             <span class="sk-tgt">No fixed target — see methodology note</span>
             <span class="sk-pct">—</span>
@@ -268,6 +302,7 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
+          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
           <div class="sk-foot">
             <span class="sk-tgt">No fixed target — see methodology note</span>
             <span class="sk-pct">—</span>
@@ -288,6 +323,7 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
+          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: &lt; 3,800 kcal/kWh</span>
             <span class="sk-pct">—</span>
@@ -307,6 +343,7 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
+          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: &lt; 10.0%</span>
             <span class="sk-pct">—</span>
@@ -344,6 +381,7 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
+          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: —</span>
             <span class="sk-pct">—</span>
@@ -351,7 +389,131 @@
           <div class="sk-status"><span class="sk-status-dot"></span> Loading…</div>
         </div>
 
+
+        <!-- Burst Bag Rate — wired live. It sat in the "awaiting a data source"
+             panel on the strength of a comment saying no registry KPI covered it;
+             burst-bag-rate has been a full, reviewed registry formula the whole
+             time (grade-weighted, target < 0.30%). The card was illustrative, the
+             formula was not. -->
+        <div class="sk-card" data-formula-key="burst-bag-rate" data-unit-label="%">
+          <div class="sk-top">
+            <div class="sk-label">Burst Bag Rate</div>
+            <span class="sk-dept-tag">Packing</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">&mdash;</span>
+            <span class="sk-unit">%</span>
+            <span class="sk-delta"></span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
+          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: &mdash;</span>
+            <span class="sk-pct">&mdash;</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Loading&hellip;</div>
+        </div>
+
+        <!-- Clinker C3S — wired live. Carried an invented 51% under an
+             "Illustrative" caption because a stale comment claimed no registry
+             KPI covered it. The lab has been keying the Bogue day average into
+             quality-form.html as c3s_ck all along; it simply was not a
+             registered FACT. Now it is, with the form's own >50% target. -->
+        <div class="sk-card" data-formula-key="clinker-c3s" data-unit-label="%">
+          <div class="sk-top">
+            <div class="sk-label">Clinker C&#8323;S</div>
+            <span class="sk-dept-tag">Production</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">&mdash;</span>
+            <span class="sk-unit">%</span>
+            <span class="sk-delta"></span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
+          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: &mdash;</span>
+            <span class="sk-pct">&mdash;</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Loading&hellip;</div>
+        </div>
       </div><!-- /quality row -->
+
+      <!-- ── EQUIPMENT RELIABILITY ─────────────────────────────
+           Live, from GET /api/insights/stoppages. These three sat in the
+           "awaiting a data source" panel carrying invented figures (99.5%,
+           180 hrs, 98.05%) under a comment asserting that no source existed.
+           insights.js has computed availability and MTBF per equipment since
+           Phase 8 — the source existed, the card just never asked for it.
+
+           Targets are the LafargeHolcim PM Handbook v4.0 figures the
+           reliability report already holds itself to: NAI >= 90%, kiln MTBF
+           >= 500 h. Fed by kpi-data.js#loadReliabilityCards. -->
+      <div class="smry-cat">
+        <i data-lucide="settings-2" class="smry-cat-icon"></i>
+        <span class="smry-cat-label">Equipment Reliability</span>
+        <div class="smry-cat-line"></div>
+      </div>
+      <div class="smry-row smry-row-3">
+
+        <div class="sk-card" data-insight-key="kiln-availability" data-unit-label="%">
+          <div class="sk-top">
+            <div class="sk-label">Kiln Availability (NAI)</div>
+            <span class="sk-dept-tag">Mechanical</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">&mdash;</span>
+            <span class="sk-unit">%</span>
+            <span class="sk-delta"></span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
+          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: &ge; 90%</span>
+            <span class="sk-pct">&mdash;</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Loading&hellip;</div>
+        </div>
+
+        <div class="sk-card" data-insight-key="kiln-mtbf" data-unit-label="hrs">
+          <div class="sk-top">
+            <div class="sk-label">MTBF &mdash; Kiln</div>
+            <span class="sk-dept-tag">Mechanical</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">&mdash;</span>
+            <span class="sk-unit">hrs</span>
+            <span class="sk-delta"></span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
+          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: &ge; 500 hrs</span>
+            <span class="sk-pct">&mdash;</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Loading&hellip;</div>
+        </div>
+
+        <div class="sk-card" data-insight-key="plant-availability" data-unit-label="%">
+          <div class="sk-top">
+            <div class="sk-label">Plant Availability</div>
+            <span class="sk-dept-tag">All Depts</span>
+          </div>
+          <div class="sk-value-row">
+            <span class="sk-value">&mdash;</span>
+            <span class="sk-unit">%</span>
+            <span class="sk-delta"></span>
+          </div>
+          <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
+          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
+          <div class="sk-foot">
+            <span class="sk-tgt">Target: &ge; 90%</span>
+            <span class="sk-pct">&mdash;</span>
+          </div>
+          <div class="sk-status"><span class="sk-status-dot"></span> Loading&hellip;</div>
+        </div>
+
+      </div><!-- /reliability row -->
 
       <!-- ── DEPT ACHIEVEMENT SCORECARD ─────────────────────── -->
       <div class="smry-cat">
@@ -454,233 +616,99 @@
            seven KPIs the formula layer genuinely computes. Each card graduates
            out of this panel the day it gets a real source — see
            forms/formula-registry.js. -->
+      <!-- ── AWAITING A DATA SOURCE ──────────────────────
+           These cards once carried plausible-looking numbers over an
+           "Illustrative" caption — 99.5%, 180 hrs, 21 hazards. Shown that way
+           the Executive Summary read as mostly invented, which is how the
+           plant head read it, because nobody scanning a grid weighs a dashed
+           border against a solid one.
+
+           On 2026-09-24 the invented numbers were removed rather than hidden.
+           Three of the original eleven graduated to live data the same day
+           (Kiln Availability, Kiln MTBF and Plant Availability, all from
+           /api/insights/stoppages, which has computed them since Phase 8) and
+           Burst Bag Rate graduated to the formula registry, where it had in
+           fact been defined all along. What is left is the genuine backlog:
+           each card keeps its name, unit and department — that is the
+           specification of what the plant expects to see — and states the one
+           thing that would fill it. A card graduates the day its feed exists. -->
       <details class="smry-pending-panel" id="smry-pending-panel">
         <summary class="spp-summary">
           <span class="spp-chevron" aria-hidden="true"></span>
           <span class="spp-title">Awaiting a data source</span>
-          <span class="spp-count">11 KPIs</span>
-          <span class="spp-hint">Illustrative figures — no live feed behind them yet</span>
+          <span class="spp-count" id="spp-count">&mdash;</span>
+          <span class="spp-hint">No figure is shown for these — nothing feeds them yet</span>
         </summary>
         <div class="spp-body">
 
           <div class="smry-cat">
-            <i data-lucide="factory" class="smry-cat-icon"></i>
-            <span class="smry-cat-label">Production Output</span>
-            <div class="smry-cat-line"></div>
-          </div>
-          <div class="smry-row smry-row-4">
-
-            <!-- Cement Mill 2 Output — no formula-registry KPI covers this yet
-                 (registry has combined Cement Grinding SPC, not CM-2 output alone).
-                 Left as a clearly-labeled illustrative placeholder, not live data. -->
-            <div class="sk-card on-track sk-illustrative">
-              <div class="sk-top">
-                <div class="sk-label">Cement Mill 2 Output</div>
-                <span class="sk-dept-tag">Production</span>
-              </div>
-              <div class="sk-value-row">
-                <span class="sk-value">62</span>
-                <span class="sk-unit">TPH</span>
-                <span class="sk-delta neg">↓ −1 vs Jan</span>
-              </div>
-              <div class="sk-bar"><div class="sk-bar-fill" style="width:100%"></div></div>
-              <div class="sk-foot">
-                <span class="sk-tgt">Target: ≥ 55 TPH</span>
-                <span class="sk-pct">112.7%</span>
-              </div>
-              <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
-            </div>
-          </div>
-
-          <!-- ── EQUIPMENT RELIABILITY ───────────────────────────── -->
-          <div class="smry-cat">
-            <i data-lucide="settings-2" class="smry-cat-icon"></i>
-            <span class="smry-cat-label">Equipment Reliability</span>
-            <div class="smry-cat-line"></div>
-          </div>
-          <div class="smry-row smry-row-4">
-
-            <!-- Equipment Reliability cards: no formula-registry KPI covers Network
-                 Availability, MTBF, or Stack Emission — these live only in kpi_monthly
-                 (manual entry) and, per the 2026-07-28 audit, kpi_monthly has real rows
-                 for exactly one dept/month (E&I, Feb 2026). Marked illustrative rather
-                 than silently showing frozen Jan/Feb figures as if current. -->
-            <div class="sk-card on-track sk-illustrative">
-              <div class="sk-top">
-                <div class="sk-label">Network Availability — Kiln</div>
-                <span class="sk-dept-tag">E &amp; I</span>
-              </div>
-              <div class="sk-value-row">
-                <span class="sk-value">99.5</span>
-                <span class="sk-unit">%</span>
-                <span class="sk-delta flat">→ stable</span>
-              </div>
-              <div class="sk-bar"><div class="sk-bar-fill" style="width:99.5%"></div></div>
-              <div class="sk-foot">
-                <span class="sk-tgt">Target: &gt; 90%</span>
-                <span class="sk-pct">99.5%</span>
-              </div>
-              <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
-            </div>
-
-            <div class="sk-card concern sk-illustrative">
-              <div class="sk-top">
-                <div class="sk-label">MTBF — Kiln</div>
-                <span class="sk-dept-tag">E &amp; I</span>
-              </div>
-              <div class="sk-value-row">
-                <span class="sk-value">180</span>
-                <span class="sk-unit">hrs</span>
-                <span class="sk-delta flat">→ no change</span>
-              </div>
-              <div class="sk-bar"><div class="sk-bar-fill" style="width:45%"></div></div>
-              <div class="sk-foot">
-                <span class="sk-tgt">Target: &gt; 400 hrs</span>
-                <span class="sk-pct">45% of target</span>
-              </div>
-              <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
-            </div>
-
-            <div class="sk-card on-track sk-illustrative">
-              <div class="sk-top">
-                <div class="sk-label">NAI Kiln — Mechanical</div>
-                <span class="sk-dept-tag">Mechanical</span>
-              </div>
-              <div class="sk-value-row">
-                <span class="sk-value">98.05</span>
-                <span class="sk-unit">%</span>
-                <span class="sk-delta flat">→ stable</span>
-              </div>
-              <div class="sk-bar"><div class="sk-bar-fill" style="width:98.05%"></div></div>
-              <div class="sk-foot">
-                <span class="sk-tgt">Target: &gt; 92%</span>
-                <span class="sk-pct">98.1%</span>
-              </div>
-              <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
-            </div>
-
-            <div class="sk-card concern sk-illustrative">
-              <div class="sk-top">
-                <div class="sk-label">Stack Emission</div>
-                <span class="sk-dept-tag">Mechanical</span>
-              </div>
-              <div class="sk-value-row">
-                <span class="sk-value">60</span>
-                <span class="sk-unit">mg/m³</span>
-                <span class="sk-delta flat">→ no change</span>
-              </div>
-              <div class="sk-bar"><div class="sk-bar-fill" style="width:83.3%"></div></div>
-              <div class="sk-foot">
-                <span class="sk-tgt">Target: &lt; 50 mg/m³</span>
-                <span class="sk-pct">+20% over</span>
-              </div>
-              <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
-            </div>
-
-          </div><!-- /reliability row -->
-
-          <!-- ── SAFETY ──────────────────────────────────────────── -->
-          <div class="smry-cat">
-            <i data-lucide="shield-check" class="smry-cat-icon"></i>
+            <i data-lucide="hard-hat" class="smry-cat-icon"></i>
             <span class="smry-cat-label">Health &amp; Safety — Plant Wide</span>
             <div class="smry-cat-line"></div>
           </div>
           <div class="smry-row smry-row-4">
-
-            <!-- Safety cards: tracked in kpi_monthly (manual), same near-empty real
-                 data state as Equipment Reliability above — marked illustrative. -->
-            <div class="sk-card on-track sk-safety sk-illustrative">
+            <div class="sk-card sk-pending">
               <div class="sk-top">
                 <div class="sk-label">Fatalities</div>
                 <span class="sk-dept-tag">All Depts</span>
               </div>
               <div class="sk-value-row">
-                <span class="sk-value">0</span>
+                <span class="sk-value is-empty">&mdash;</span>
                 <span class="sk-unit">YTD</span>
               </div>
-              <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
+              <div class="sk-status"><span class="sk-status-dot"></span> Needs an HSE entry form — no field in the app captures this</div>
             </div>
-
-            <div class="sk-card on-track sk-safety sk-illustrative">
+            <div class="sk-card sk-pending">
               <div class="sk-top">
                 <div class="sk-label">Lost Time Injuries</div>
                 <span class="sk-dept-tag">All Depts</span>
               </div>
               <div class="sk-value-row">
-                <span class="sk-value">0</span>
+                <span class="sk-value is-empty">&mdash;</span>
                 <span class="sk-unit">YTD</span>
               </div>
-              <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
+              <div class="sk-status"><span class="sk-status-dot"></span> Needs an HSE entry form — no field in the app captures this</div>
             </div>
-
-            <div class="sk-card on-track sk-safety sk-illustrative">
+            <div class="sk-card sk-pending">
               <div class="sk-top">
                 <div class="sk-label">Medical Treatment Injuries</div>
                 <span class="sk-dept-tag">All Depts</span>
               </div>
               <div class="sk-value-row">
-                <span class="sk-value">0</span>
+                <span class="sk-value is-empty">&mdash;</span>
                 <span class="sk-unit">YTD</span>
               </div>
-              <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
+              <div class="sk-status"><span class="sk-status-dot"></span> Needs an HSE entry form — no field in the app captures this</div>
             </div>
-
-            <div class="sk-card watch sk-safety sk-illustrative">
+            <div class="sk-card sk-pending">
               <div class="sk-top">
                 <div class="sk-label">Hazards Reported</div>
                 <span class="sk-dept-tag">All Depts</span>
               </div>
               <div class="sk-value-row">
-                <span class="sk-value" id="smry-hazards-total">21</span>
+                <span class="sk-value is-empty">&mdash;</span>
                 <span class="sk-unit">this month</span>
               </div>
-              <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
+              <div class="sk-status"><span class="sk-status-dot"></span> Needs an HSE entry form — no field in the app captures this</div>
             </div>
+          </div>
 
-          </div><!-- /safety row -->
-
-          <!-- ── PACKING &amp; QUALITY ────────────────────── -->
           <div class="smry-cat">
-            <i data-lucide="package" class="smry-cat-icon"></i>
-            <span class="smry-cat-label">Packing &amp; Product Quality</span>
+            <i data-lucide="wind" class="smry-cat-icon"></i>
+            <span class="smry-cat-label">Environment</span>
             <div class="smry-cat-line"></div>
           </div>
-          <div class="smry-row smry-row-3">
-
-            <div class="sk-card concern sk-illustrative">
+          <div class="smry-row smry-row-4">
+            <div class="sk-card sk-pending">
               <div class="sk-top">
-                <div class="sk-label">Burst Bag Generation</div>
-                <span class="sk-dept-tag">Packing</span>
+                <div class="sk-label">Stack Emission</div>
+                <span class="sk-dept-tag">Mechanical</span>
               </div>
               <div class="sk-value-row">
-                <span class="sk-value">0.50</span>
-                <span class="sk-unit">%</span>
-                <span class="sk-delta flat">→ same as Jan</span>
+                <span class="sk-value is-empty">&mdash;</span>
+                <span class="sk-unit">mg/Nm&sup3;</span>
               </div>
-              <div class="sk-bar"><div class="sk-bar-fill" style="width:60%"></div></div>
-              <div class="sk-foot">
-                <span class="sk-tgt">Target: &lt; 0.30%</span>
-                <span class="sk-pct">+66.7% over</span>
-              </div>
-              <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
-            </div>
-
-            <div class="sk-card on-track sk-illustrative">
-              <div class="sk-top">
-                <div class="sk-label">Clinker C3S</div>
-                <span class="sk-dept-tag">Production</span>
-              </div>
-              <div class="sk-value-row">
-                <span class="sk-value">51</span>
-                <span class="sk-unit">%</span>
-                <span class="sk-delta flat">→ stable</span>
-              </div>
-              <div class="sk-bar"><div class="sk-bar-fill" style="width:100%"></div></div>
-              <div class="sk-foot">
-                <span class="sk-tgt">Target: &gt; 50%</span>
-                <span class="sk-pct">102%</span>
-              </div>
-              <div class="sk-status"><span class="sk-status-dot"></span> Illustrative — not yet wired to live data</div>
+              <div class="sk-status"><span class="sk-status-dot"></span> Needs a CEMS feed or a manual stack-monitoring entry</div>
             </div>
           </div>
 
@@ -1718,6 +1746,22 @@
 
     <!-- ═══ MINES WORKSHOP ═══ -->
     <section class="dept-section hidden" id="dept-minesworkshop">
+
+      <!-- This register carried 160 hardcoded ACTUAL values copied from a
+           2026 workbook. They were never fed by anything: kpi-data.js
+           excludes this section from loadManualValues() and no row here
+           carries a data-formula-key, so loadAutoCalcValues() skips it too.
+           Frozen numbers in a live dashboard are worse than no numbers, so
+           the actuals are blank until a source exists. The KPI names, units,
+           signage and targets stay — they are the specification of what this
+           department expects to track, which is still true. -->
+      <div class="dept-notice" role="note">
+        <strong>Not yet fed by a data source.</strong>
+        The Quarry Workshop equipment register is not part of the monthly KPI
+        backfill — its workbook has a per-machine shape that does not map to
+        <code>kpi_monthly</code>. Targets below are the agreed specification;
+        actuals stay blank until this register gets a feed.
+      </div>
       <div class="table-wrapper" style="overflow-x:auto;">
 
         <!-- ── MINES EQUIPMENT ───────────────────────────────────── -->
@@ -1755,168 +1799,168 @@
             <tr class="section-row"><td colspan="23">MINES EQUIPMENT</td></tr>
 
             <!-- Eq. Availability -->
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>Eq. Availability</td><td>%</td><td class="sign">&gt;</td>
-              <td class="target">100%</td><td class="actual orange">82%</td>
-              <td class="target">100%</td><td class="actual red">0%</td>
-              <td class="target">100%</td><td class="actual green">94%</td>
-              <td class="target">100%</td><td class="actual green">95%</td>
-              <td class="target">100%</td><td class="actual green">94%</td>
-              <td class="target">100%</td><td class="actual green">94%</td>
-              <td class="target">100%</td><td class="actual red">0%</td>
-              <td class="target">100%</td><td class="actual green">100%</td>
-              <td class="target">100%</td><td class="actual red">0%</td>
-              <td class="target">100%</td><td class="actual green">98%</td>
+              <td class="target">100%</td><td class="actual no-data">—</td>
+              <td class="target">100%</td><td class="actual no-data">—</td>
+              <td class="target">100%</td><td class="actual no-data">—</td>
+              <td class="target">100%</td><td class="actual no-data">—</td>
+              <td class="target">100%</td><td class="actual no-data">—</td>
+              <td class="target">100%</td><td class="actual no-data">—</td>
+              <td class="target">100%</td><td class="actual no-data">—</td>
+              <td class="target">100%</td><td class="actual no-data">—</td>
+              <td class="target">100%</td><td class="actual no-data">—</td>
+              <td class="target">100%</td><td class="actual no-data">—</td>
             </tr>
 
             <!-- Production Rate / Running Hrs -->
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>Production Rate / Running Hrs</td><td>MT</td><td class="sign">&lt;</td>
-              <td class="target">—</td><td class="actual">—</td>
-              <td class="target">—</td><td class="actual">—</td>
-              <td class="target">—</td><td class="actual">—</td>
-              <td class="target">—</td><td class="actual">—</td>
-              <td class="target">—</td><td class="actual">—</td>
-              <td class="target">—</td><td class="actual">—</td>
-              <td class="target">—</td><td class="actual">—</td>
-              <td class="target">—</td><td class="actual">—</td>
-              <td class="target">—</td><td class="actual">—</td>
-              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
             </tr>
 
             <!-- Utilization Rate -->
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>Utilization Rate</td><td>%</td><td class="sign">&gt;</td>
-              <td class="target">100.0%</td><td class="actual orange">72.7%</td>
-              <td class="target">100.0%</td><td class="actual">—</td>
-              <td class="target">100.0%</td><td class="actual green">94.0%</td>
-              <td class="target">100.0%</td><td class="actual orange">58.8%</td>
-              <td class="target">100.0%</td><td class="actual green">104.9%</td>
-              <td class="target">100.0%</td><td class="actual orange">69.4%</td>
-              <td class="target">100.0%</td><td class="actual">—</td>
-              <td class="target">100.0%</td><td class="actual orange">83.6%</td>
-              <td class="target">100.0%</td><td class="actual">—</td>
-              <td class="target">100.0%</td><td class="actual orange">49.5%</td>
+              <td class="target">100.0%</td><td class="actual no-data">—</td>
+              <td class="target">100.0%</td><td class="actual no-data">—</td>
+              <td class="target">100.0%</td><td class="actual no-data">—</td>
+              <td class="target">100.0%</td><td class="actual no-data">—</td>
+              <td class="target">100.0%</td><td class="actual no-data">—</td>
+              <td class="target">100.0%</td><td class="actual no-data">—</td>
+              <td class="target">100.0%</td><td class="actual no-data">—</td>
+              <td class="target">100.0%</td><td class="actual no-data">—</td>
+              <td class="target">100.0%</td><td class="actual no-data">—</td>
+              <td class="target">100.0%</td><td class="actual no-data">—</td>
             </tr>
 
             <!-- Work Order Cycle Time -->
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>Work Order Cycle Time</td><td>HRS</td><td class="sign">&lt;</td>
-              <td class="target">—</td><td class="actual">—</td>
-              <td class="target">—</td><td class="actual">—</td>
-              <td class="target">—</td><td class="actual">—</td>
-              <td class="target">—</td><td class="actual">—</td>
-              <td class="target">—</td><td class="actual">—</td>
-              <td class="target">—</td><td class="actual">—</td>
-              <td class="target">—</td><td class="actual">—</td>
-              <td class="target">—</td><td class="actual">—</td>
-              <td class="target">—</td><td class="actual">—</td>
-              <td class="target">—</td><td class="actual">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
+              <td class="target">—</td><td class="actual no-data">—</td>
             </tr>
 
             <!-- Maintenance Downtime -->
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>Maintenance Downtime</td><td>HRS</td><td class="sign">&lt;</td>
-              <td class="target">60</td><td class="actual green">45.0</td>
-              <td class="target">60.0</td><td class="actual red">250.0</td>
-              <td class="target">60.0</td><td class="actual green">16.0</td>
-              <td class="target">60.0</td><td class="actual green">26.0</td>
-              <td class="target">60.0</td><td class="actual green">30.0</td>
-              <td class="target">60.0</td><td class="actual green">15.0</td>
-              <td class="target">60.0</td><td class="actual red">250.0</td>
-              <td class="target">60.0</td><td class="actual green">2.0</td>
-              <td class="target">60.0</td><td class="actual red">500.0</td>
-              <td class="target">60.0</td><td class="actual green">18.0</td>
+              <td class="target">60</td><td class="actual no-data">—</td>
+              <td class="target">60.0</td><td class="actual no-data">—</td>
+              <td class="target">60.0</td><td class="actual no-data">—</td>
+              <td class="target">60.0</td><td class="actual no-data">—</td>
+              <td class="target">60.0</td><td class="actual no-data">—</td>
+              <td class="target">60.0</td><td class="actual no-data">—</td>
+              <td class="target">60.0</td><td class="actual no-data">—</td>
+              <td class="target">60.0</td><td class="actual no-data">—</td>
+              <td class="target">60.0</td><td class="actual no-data">—</td>
+              <td class="target">60.0</td><td class="actual no-data">—</td>
             </tr>
 
             <!-- MTBF -->
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>Mean Time Between Failure (MTBF)</td><td>HRS</td><td class="sign">&gt;</td>
-              <td class="target">250</td><td class="actual red">40.3</td>
-              <td class="target">250.0</td><td class="actual red">Nil</td>
-              <td class="target">250.0</td><td class="actual orange">215.9</td>
-              <td class="target">250.0</td><td class="actual orange">168.2</td>
-              <td class="target">250.0</td><td class="actual green">505.2</td>
-              <td class="target">480.0</td><td class="actual orange">54.4</td>
-              <td class="target">480.0</td><td class="actual orange">18.7</td>
-              <td class="target">480.0</td><td class="actual green">480.0</td>
-              <td class="target">255.0</td><td class="actual">—</td>
-              <td class="target">480.0</td><td class="actual orange">256.8</td>
+              <td class="target">250</td><td class="actual no-data">—</td>
+              <td class="target">250.0</td><td class="actual no-data">—</td>
+              <td class="target">250.0</td><td class="actual no-data">—</td>
+              <td class="target">250.0</td><td class="actual no-data">—</td>
+              <td class="target">250.0</td><td class="actual no-data">—</td>
+              <td class="target">480.0</td><td class="actual no-data">—</td>
+              <td class="target">480.0</td><td class="actual no-data">—</td>
+              <td class="target">480.0</td><td class="actual no-data">—</td>
+              <td class="target">255.0</td><td class="actual no-data">—</td>
+              <td class="target">480.0</td><td class="actual no-data">—</td>
             </tr>
 
             <!-- Maintenance Cost / Running Hrs -->
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>Maintenance Cost / Running Hrs</td><td>TSH</td><td class="sign">&lt;</td>
-              <td class="target">TSh4,000</td><td class="actual red">TSh14,961</td>
-              <td class="target">TSh4,000</td><td class="actual green">TSh0</td>
-              <td class="target">TSh4,000</td><td class="actual green">TSh455</td>
-              <td class="target">TSh2,083</td><td class="actual green">TSh0</td>
-              <td class="target">TSh2,083</td><td class="actual red">TSh2,123</td>
-              <td class="target">TSh4,000</td><td class="actual green">TSh727</td>
-              <td class="target">TSh4,000</td><td class="actual">—</td>
-              <td class="target">TSh1,000</td><td class="actual green">TSh0</td>
-              <td class="target">TSh2,000</td><td class="actual green">TSh0</td>
-              <td class="target">TSh1,000</td><td class="actual green">TSh0</td>
+              <td class="target">TSh4,000</td><td class="actual no-data">—</td>
+              <td class="target">TSh4,000</td><td class="actual no-data">—</td>
+              <td class="target">TSh4,000</td><td class="actual no-data">—</td>
+              <td class="target">TSh2,083</td><td class="actual no-data">—</td>
+              <td class="target">TSh2,083</td><td class="actual no-data">—</td>
+              <td class="target">TSh4,000</td><td class="actual no-data">—</td>
+              <td class="target">TSh4,000</td><td class="actual no-data">—</td>
+              <td class="target">TSh1,000</td><td class="actual no-data">—</td>
+              <td class="target">TSh2,000</td><td class="actual no-data">—</td>
+              <td class="target">TSh1,000</td><td class="actual no-data">—</td>
             </tr>
 
             <!-- Tyre / Track Cost -->
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>Tyre / Track Cost / Running Hrs</td><td>TSH</td><td class="sign">&lt;</td>
-              <td class="target">TSh4,000</td><td class="actual green">TSh0</td>
-              <td class="target">TSh4,000</td><td class="actual green">TSh0</td>
-              <td class="target">TSh4,000</td><td class="actual green">TSh2,662</td>
-              <td class="target">TSh2,083</td><td class="actual green">TSh0</td>
-              <td class="target">TSh2,083</td><td class="actual green">TSh0</td>
-              <td class="target">TSh4,000</td><td class="actual red">TSh8,661</td>
-              <td class="target">TSh4,000</td><td class="actual green">TSh0</td>
-              <td class="target">TSh1,000</td><td class="actual red">TSh2,578</td>
-              <td class="target">TSh2,000</td><td class="actual green">TSh0</td>
-              <td class="target">TSh1,000</td><td class="actual green">TSh0</td>
+              <td class="target">TSh4,000</td><td class="actual no-data">—</td>
+              <td class="target">TSh4,000</td><td class="actual no-data">—</td>
+              <td class="target">TSh4,000</td><td class="actual no-data">—</td>
+              <td class="target">TSh2,083</td><td class="actual no-data">—</td>
+              <td class="target">TSh2,083</td><td class="actual no-data">—</td>
+              <td class="target">TSh4,000</td><td class="actual no-data">—</td>
+              <td class="target">TSh4,000</td><td class="actual no-data">—</td>
+              <td class="target">TSh1,000</td><td class="actual no-data">—</td>
+              <td class="target">TSh2,000</td><td class="actual no-data">—</td>
+              <td class="target">TSh1,000</td><td class="actual no-data">—</td>
             </tr>
 
             <!-- Fuel Consumption -->
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>Fuel Consumption / Running Hrs</td><td>LPH</td><td class="sign">&lt;</td>
-              <td class="target">80.00</td><td class="actual red">93.90</td>
-              <td class="target">80.00</td><td class="actual red">3140</td>
-              <td class="target">30.00</td><td class="actual red">31.40</td>
-              <td class="target">15.00</td><td class="actual red">17.12</td>
-              <td class="target">15.00</td><td class="actual green">12.39</td>
-              <td class="target">2.00</td><td class="actual red">4.43</td>
-              <td class="target">2.00</td><td class="actual">—</td>
-              <td class="target">2.00</td><td class="actual green">0.27</td>
-              <td class="target">2.00</td><td class="actual">—</td>
-              <td class="target">2.00</td><td class="actual green">0.21</td>
+              <td class="target">80.00</td><td class="actual no-data">—</td>
+              <td class="target">80.00</td><td class="actual no-data">—</td>
+              <td class="target">30.00</td><td class="actual no-data">—</td>
+              <td class="target">15.00</td><td class="actual no-data">—</td>
+              <td class="target">15.00</td><td class="actual no-data">—</td>
+              <td class="target">2.00</td><td class="actual no-data">—</td>
+              <td class="target">2.00</td><td class="actual no-data">—</td>
+              <td class="target">2.00</td><td class="actual no-data">—</td>
+              <td class="target">2.00</td><td class="actual no-data">—</td>
+              <td class="target">2.00</td><td class="actual no-data">—</td>
             </tr>
 
             <!-- Lubrication Consumption -->
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>Lubrication Consumption / Running Hrs</td><td>LTRS</td><td class="sign">&lt;</td>
-              <td class="target">0.60</td><td class="actual red">1.34</td>
-              <td class="target">0.60</td><td class="actual green">0.18</td>
-              <td class="target">0.60</td><td class="actual green">0.00</td>
-              <td class="target">0.29</td><td class="actual green">0.22</td>
-              <td class="target">0.08</td><td class="actual red">0.13</td>
-              <td class="target">0.10</td><td class="actual red">0.18</td>
-              <td class="target">0.10</td><td class="actual">—</td>
-              <td class="target">25.00</td><td class="actual green">0.04</td>
-              <td class="target">0.05</td><td class="actual">—</td>
-              <td class="target">0.03</td><td class="actual red">0.06</td>
+              <td class="target">0.60</td><td class="actual no-data">—</td>
+              <td class="target">0.60</td><td class="actual no-data">—</td>
+              <td class="target">0.60</td><td class="actual no-data">—</td>
+              <td class="target">0.29</td><td class="actual no-data">—</td>
+              <td class="target">0.08</td><td class="actual no-data">—</td>
+              <td class="target">0.10</td><td class="actual no-data">—</td>
+              <td class="target">0.10</td><td class="actual no-data">—</td>
+              <td class="target">25.00</td><td class="actual no-data">—</td>
+              <td class="target">0.05</td><td class="actual no-data">—</td>
+              <td class="target">0.03</td><td class="actual no-data">—</td>
             </tr>
 
             <!-- Hydraulic Oil Consumption -->
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>Hydraulic Oil Consumption / Running Hrs</td><td>LTRS</td><td class="sign">&lt;</td>
-              <td class="target">0.8</td><td class="actual red">1.01</td>
-              <td class="target">0.4</td><td class="actual">—</td>
-              <td class="target">0.4</td><td class="actual green">0.37</td>
-              <td class="target">0.1</td><td class="actual">—</td>
-              <td class="target">0.08</td><td class="actual red">0.13</td>
-              <td class="target">0.04</td><td class="actual green">0.00</td>
-              <td class="target">0.04</td><td class="actual green">0.01</td>
-              <td class="target">0.04</td><td class="actual green">0.00</td>
-              <td class="target">0.02</td><td class="actual green">0.00</td>
-              <td class="target">0.01</td><td class="actual green">0.00</td>
+              <td class="target">0.8</td><td class="actual no-data">—</td>
+              <td class="target">0.4</td><td class="actual no-data">—</td>
+              <td class="target">0.4</td><td class="actual no-data">—</td>
+              <td class="target">0.1</td><td class="actual no-data">—</td>
+              <td class="target">0.08</td><td class="actual no-data">—</td>
+              <td class="target">0.04</td><td class="actual no-data">—</td>
+              <td class="target">0.04</td><td class="actual no-data">—</td>
+              <td class="target">0.04</td><td class="actual no-data">—</td>
+              <td class="target">0.02</td><td class="actual no-data">—</td>
+              <td class="target">0.01</td><td class="actual no-data">—</td>
             </tr>
           </tbody>
         </table>
@@ -1950,68 +1994,68 @@
           <tbody>
             <tr class="section-row"><td colspan="14">PLANT EQUIPMENT</td></tr>
 
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>Running Hours – Cumulative</td><td>HRS</td><td class="sign">&gt;</td>
-              <td class="actual">0</td><td class="actual">133</td><td class="actual">117.3</td>
-              <td class="actual">165.8</td><td class="actual">176.7</td><td class="actual">426.3</td>
-              <td class="actual">286</td><td class="actual">—</td><td class="actual">106.4</td>
-              <td class="actual">6</td><td class="actual">156</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td>
             </tr>
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>Total Available Time – Month</td><td>HRS</td><td class="sign">&gt;</td>
-              <td class="actual">0</td><td class="actual">230</td><td class="actual">244</td>
-              <td class="actual">228</td><td class="actual">210</td><td class="actual">204</td>
-              <td class="actual">220</td><td class="actual">220</td><td class="actual">240</td>
-              <td class="actual">250</td><td class="actual">226</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td>
             </tr>
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>Running Hours – Month</td><td>HRS</td><td class="sign">&gt;</td>
-              <td class="actual">0</td><td class="actual">70</td><td class="actual">65</td>
-              <td class="actual">79</td><td class="actual">90</td><td class="actual">201</td>
-              <td class="actual">147</td><td class="actual">—</td><td class="actual">89</td>
-              <td class="actual">5</td><td class="actual">64.2</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td>
             </tr>
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>Maintenance Downtime</td><td>HRS</td><td class="sign">&lt;</td>
-              <td class="actual">250</td><td class="actual">20</td><td class="actual">6</td>
-              <td class="actual">22</td><td class="actual">40</td><td class="actual">46</td>
-              <td class="actual">30</td><td class="actual">—</td><td class="actual">10</td>
-              <td class="actual">0</td><td class="actual">24</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td>
             </tr>
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>NAI</td><td>HRS</td><td class="sign">&gt;</td>
-              <td class="actual">—</td><td class="actual">—</td><td class="actual">—</td>
-              <td class="actual">—</td><td class="actual">—</td><td class="actual">—</td>
-              <td class="actual">—</td><td class="actual">—</td><td class="actual">—</td>
-              <td class="actual">—</td><td class="actual">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td>
             </tr>
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>MTBF</td><td>HRS</td><td class="sign">&gt;</td>
-              <td class="actual">0</td><td class="actual">63</td><td class="actual">65</td>
-              <td class="actual">86.8</td><td class="actual">43.35</td><td class="actual">46.2</td>
-              <td class="actual">69.9</td><td class="actual">NIL</td><td class="actual">NIL</td>
-              <td class="actual">NIL</td><td class="actual">91.8</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td>
             </tr>
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>Maintenance Cost / Running Hrs</td><td>TSH</td><td class="sign">&lt;</td>
-              <td class="actual">—</td><td class="actual">TSh210.8</td><td class="actual">TSh15,429.4</td>
-              <td class="actual">TSh0.0</td><td class="actual">TSh787.4</td><td class="actual">TSh364.9</td>
-              <td class="actual">TSh16,338.0</td><td class="actual">—</td><td class="actual">TSh0.0</td>
-              <td class="actual">TSh0.0</td><td class="actual">TSh850.7</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td>
             </tr>
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>Fuel Consumption / Running Hrs</td><td>LPH</td><td class="sign">&lt;</td>
-              <td class="actual">0.00</td><td class="actual">2.86</td><td class="actual">0.46</td>
-              <td class="actual">1.14</td><td class="actual">1.67</td><td class="actual">7.19</td>
-              <td class="actual">6.80</td><td class="actual">—</td><td class="actual">0.54</td>
-              <td class="actual">18.00</td><td class="actual">0.47</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td>
             </tr>
-            <tr class="data-row">
+            <tr class="data-row no-data-row">
               <td>Lubrication Consumption / Running Hrs</td><td>LPH</td><td class="sign">&lt;</td>
-              <td class="actual">0.00</td><td class="actual">1.14</td><td class="actual">0.00</td>
-              <td class="actual">0.00</td><td class="actual">0.19</td><td class="actual">0.09</td>
-              <td class="actual">0.00</td><td class="actual">—</td><td class="actual">0.00</td>
-              <td class="actual">0.00</td><td class="actual">0.16</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td><td class="actual no-data">—</td>
+              <td class="actual no-data">—</td><td class="actual no-data">—</td>
             </tr>
           </tbody>
         </table>

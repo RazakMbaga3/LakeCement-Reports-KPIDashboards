@@ -683,6 +683,247 @@ function renderConcerns(results, mo, calYear) {
   }
 }
 
+/* ─── Hero-card sparklines ─────────────────────────────────────
+   The Executive Summary showed levels and never trend: a single month's
+   figure cannot tell you whether a KPI is recovering or sliding, which is
+   the first question anyone asks of it. One GET /api/formula/daily covers
+   every KPI on the page, so this is one request, not one per card.
+
+   Design notes, against the dataviz rules this repo follows:
+   - ONE series per spark, so there is no legend and no categorical hue to
+     assign. The line is a single neutral ink for every card — status is
+     already carried twice on the card (the ::before edge bar and the status
+     dot), and painting the line by status too would be the same dimension
+     on a third channel.
+   - No axes, no grid, no point markers, no value labels. A spark answers
+     "which way is this going" and deliberately nothing else; the exact
+     figure is the 38px number directly above it.
+   - The canvas is aria-hidden. It is decorative here in the strict sense:
+     the value, the target, the achievement % and the status text are all
+     real text in the same card, so a screen reader loses no information.
+   - A series of fewer than 3 points is not a trend. The slot is removed
+     rather than drawn, so a card never implies a shape from two dots. */
+const SPARK_DAYS = 90;
+const SPARK_MIN_POINTS = 3;
+
+/* Sequence guard. applyFilters() fires loadSparklines() on every month, year
+   and view change, and a fast operator can start a second run before the
+   first await resolves. Without this the late response of an abandoned run
+   paints over the current one, and — because Chart.js refuses to bind twice
+   to one canvas — throws "Canvas is already in use". Same guard, same
+   reason, as reliability.html's _loadSeq. */
+let _sparkSeq = 0;
+
+/* Destroy by canvas, not by a kept array: Chart.getChart() asks Chart.js what
+   is actually bound right now, which stays correct even when a previous run
+   was abandoned mid-flight and its array reference was replaced. */
+function destroySparkline(canvas) {
+  if (typeof Chart === 'undefined' || !canvas) return;
+  const existing = Chart.getChart(canvas);
+  if (existing) { try { existing.destroy(); } catch (e) { /* already gone */ } }
+}
+
+async function loadSparklines(mo, yr, view) {
+  const seq = ++_sparkSeq;
+  const slots = Array.from(document.querySelectorAll('#dept-summary .sk-card[data-formula-key] .sk-spark'));
+  if (!slots.length || typeof Chart === 'undefined' || !window.LCL_CHART) return;
+  if (!window.NyatiAPI || !NyatiAPI.getDailySeries) return;
+
+  const range = reliabilityRange(mo, yr, view);
+  const to = new Date(range.to + 'T00:00:00');
+  const fromD = new Date(to);
+  fromD.setDate(fromD.getDate() - (SPARK_DAYS - 1));
+  const p2 = n => String(n).padStart(2, '0');
+  const from = fromD.getFullYear() + '-' + p2(fromD.getMonth() + 1) + '-' + p2(fromD.getDate());
+
+  let daily;
+  try {
+    daily = await NyatiAPI.getDailySeries(from, range.to);
+  } catch (e) {
+    if (seq !== _sparkSeq) return;
+    slots.forEach(s => { s.style.display = 'none'; });
+    return;
+  }
+
+  if (seq !== _sparkSeq) return;   // a newer run started while this one awaited
+
+  slots.forEach(slot => {
+    const card = slot.closest('.sk-card');
+    const key  = card && card.dataset.formulaKey;
+    const entry = key && daily[key];
+    const points = entry && Array.isArray(entry.series)
+      ? entry.series.filter(p => p.value != null)
+      : [];
+
+    if (points.length < SPARK_MIN_POINTS) {
+      destroySparkline(slot.querySelector('canvas'));
+      slot.style.display = 'none';
+      return;
+    }
+    slot.style.display = '';
+
+    const canvas = slot.querySelector('canvas');
+    if (!canvas) return;
+    destroySparkline(canvas);
+
+    const ink = LCL_CHART.ink2;
+    new Chart(canvas.getContext('2d'), LCL_CHART.merge({
+      type: 'line',
+      data: {
+        labels: points.map(p => p.date),
+        datasets: [{
+          data: points.map(p => p.value),
+          borderColor: ink,
+          backgroundColor: LCL_CHART.alpha(ink, 0.12),
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          fill: true,
+          tension: 0.25,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        scales: { x: { display: false }, y: { display: false } },
+        elements: { line: { capBezierPoints: true } },
+        layout: { padding: 0 },
+      },
+    }));
+
+    /* Restate the shape as text on the slot, for the title tooltip. The card's
+       own title attribute is already spoken for by the override/provisional
+       note in loadHeroCards, so this goes on the slot, not the card. */
+    const first = points[0].value, last = points[points.length - 1].value;
+    const dir = last > first ? 'rising' : last < first ? 'falling' : 'flat';
+    slot.title = points.length + ' days to ' + range.to + ' — ' + dir +
+                 ' (' + fmtNum(first) + ' → ' + fmtNum(last) + ')';
+  });
+}
+
+
+/* ─── Equipment Reliability hero cards ─────────────────────────
+   Fed by GET /api/insights/stoppages, which has computed availability and
+   MTBF per equipment since Phase 8. Three cards on the Executive Summary
+   used to carry invented figures (99.5%, 180 hrs, 98.05%) beneath a comment
+   asserting that no source existed for them. It did; nothing asked for it.
+
+   Targets are the LafargeHolcim PM Handbook v4.0 figures the reliability
+   report already holds itself to — NAI >= 90%, kiln MTBF >= 500 h — kept
+   here rather than in the formula registry because these are not registry
+   KPIs: they are derived server-side from the stoppage matrix, not from a
+   FACTS lookup. If they ever move into the registry, delete this function
+   and give the cards a data-formula-key instead.
+
+   Honesty rule: the stoppage form has had no manual entry since 2026-06-30
+   (RAID I-27), so most recent months legitimately have nothing to show.
+   A month with no stoppage data says so; it never falls back to a stale
+   figure from a month that does have data. */
+const RELIABILITY_TARGETS = {
+  'kiln-availability':  { target: 90,  signage: '>=', label: 'Target ≥ 90%' },
+  'plant-availability': { target: 90,  signage: '>=', label: 'Target ≥ 90%' },
+  'kiln-mtbf':          { target: 500, signage: '>=', label: 'Target ≥ 500 hrs' },
+};
+
+function reliabilityRange(mo, yr, view) {
+  const calYear = fiscalPosToCalYear(calMonthToFiscalPos(mo), yr);
+  const p2 = n => String(n).padStart(2, '0');
+  if (view === 'today') {
+    const t = new Date();
+    const d = t.getFullYear() + '-' + p2(t.getMonth() + 1) + '-' + p2(t.getDate());
+    return { from: d, to: d, label: 'today' };
+  }
+  if (view === 'full' || view === 'ytd') {
+    // Fiscal year runs April → March.
+    return { from: yr + '-04-01', to: (+yr + 1) + '-03-31', label: 'FY' + yr + '/' + ((+yr + 1) % 100) };
+  }
+  const last = new Date(calYear, mo + 1, 0).getDate();
+  return {
+    from: calYear + '-' + p2(mo + 1) + '-01',
+    to:   calYear + '-' + p2(mo + 1) + '-' + p2(last),
+    label: MONTHS[mo] + ' ' + calYear,
+  };
+}
+
+async function loadReliabilityCards(mo, yr, view) {
+  const cards = Array.from(document.querySelectorAll('.sk-card[data-insight-key]'));
+  if (!cards.length) return;
+
+  if (!window.NyatiAPI || !NyatiAPI.getStoppageInsights) {
+    cards.forEach(markHeroCardUnavailable);
+    return;
+  }
+
+  const range = reliabilityRange(mo, yr, view);
+  let data;
+  try {
+    data = await NyatiAPI.getStoppageInsights(range.from, range.to);
+  } catch (e) {
+    cards.forEach(markHeroCardUnavailable);
+    return;
+  }
+
+  const kiln = (data.equipment || []).find(x => x.key === 'kiln') || null;
+
+  /* totalEvents === 0 means no stoppage row in the window at all. That is
+     "nobody filed a stoppage report", not "the plant never stopped", and
+     the two must not look alike on an executive page. */
+  const noData = !data || !data.totalEvents;
+
+  const VALUES = {
+    'kiln-availability':  kiln ? kiln.availabilityPct : null,
+    'kiln-mtbf':          kiln ? kiln.mtbfHours : null,
+    'plant-availability': data ? data.overallAvailabilityPct : null,
+  };
+
+  cards.forEach(card => {
+    const key      = card.dataset.insightKey;
+    const spec     = RELIABILITY_TARGETS[key];
+    const valueEl  = card.querySelector('.sk-value');
+    const barEl    = card.querySelector('.sk-bar-fill');
+    const tgtEl    = card.querySelector('.sk-tgt');
+    const pctEl    = card.querySelector('.sk-pct');
+    const statusEl = card.querySelector('.sk-status');
+    const dotSpan  = statusEl ? statusEl.querySelector('.sk-status-dot') : null;
+    const val      = VALUES[key];
+
+    const setStatus = txt => {
+      if (!statusEl) return;
+      statusEl.innerHTML = '';
+      if (dotSpan) statusEl.appendChild(dotSpan);
+      statusEl.append(' ' + txt);
+    };
+
+    if (noData || val == null) {
+      if (valueEl) { valueEl.textContent = '—'; valueEl.classList.add('is-empty'); }
+      if (barEl) barEl.style.width = '0%';
+      if (tgtEl) tgtEl.textContent = '';
+      if (pctEl) pctEl.textContent = '';
+      setStatus('No stoppage report filed for ' + range.label);
+      card.classList.add('sk-nodata');
+      card.classList.remove('on-track', 'watch', 'concern');
+      return;
+    }
+
+    card.classList.remove('sk-nodata');
+    if (valueEl) { valueEl.textContent = fmtNum(val); valueEl.classList.remove('is-empty'); }
+
+    const achieved = signageAchieved(spec.signage, val, spec.target);
+    const pct = spec.target !== 0 ? (val / spec.target) * 100 : 0;
+    if (tgtEl) tgtEl.textContent = spec.label;
+    if (pctEl) pctEl.textContent = pct.toFixed(1) + '%';
+    if (barEl) barEl.style.width = Math.max(0, Math.min(100, pct)) + '%';
+    card.classList.remove('on-track', 'watch', 'concern');
+    card.classList.add(achieved ? 'on-track' : 'concern');
+    setStatus((achieved ? 'On Track' : 'Concern') + ' — ' + range.label);
+    card.title = 'Computed from the stoppage matrix over ' + range.from + ' .. ' + range.to +
+                 ' (' + data.totalEvents + ' stoppage entries). Full detail on the Reliability report.';
+  });
+}
+
+
 function markHeroCardUnavailable(card) {
   const valueEl = card.querySelector('.sk-value');
   const statusEl = card.querySelector('.sk-status');

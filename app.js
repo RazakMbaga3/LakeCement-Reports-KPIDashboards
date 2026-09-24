@@ -325,20 +325,36 @@ function updateSummaryDashboard() {
     const achieved    = section.querySelectorAll('.achieved-tag').length;
     const notAchieved = section.querySelectorAll('.not-tag').length;
     const total = achieved + notAchieved;
-    const rate  = total > 0 ? Math.round((achieved / total) * 100) : 0;
+
+    const chip  = document.querySelector('.sc-chip[data-dept="' + d + '"]');
+    const pctEl = document.getElementById('sc-pct-' + d);
+    const barEl = document.getElementById('sc-bar-' + d);
+    const lblEl = document.getElementById('sc-lbl-' + d);
+
+    /* A department with no scored KPI is not a department scoring zero.
+       Quarry Workshop has no .achieved-tag/.not-tag cells at all — its
+       register is a per-machine grid with no status column and no feed —
+       so total===0 and the old code rounded that to rate 0 → 'concern'.
+       The chip read "0% / Concern" permanently: an artefact of the
+       arithmetic, not a fact about the workshop. Any department hits
+       total===0 the same way in a month nobody has entered yet, so this
+       is handled for all of them rather than special-cased to one. */
+    if (total === 0) {
+      if (chip)  { chip.className = 'sc-chip untracked';
+                   chip.title = 'No KPI on this tab carries both a target and an actual yet, so there is nothing to score.'; }
+      if (pctEl) pctEl.textContent = '—';
+      if (barEl) barEl.style.width = '0%';
+      if (lblEl) lblEl.textContent = 'Not tracked';
+      return;
+    }
+
+    const rate   = Math.round((achieved / total) * 100);
     const status = rate >= 75 ? 'on-track' : rate >= 55 ? 'watch' : 'concern';
     const lbl    = rate >= 75 ? 'On Track' : rate >= 55 ? 'Watch'  : 'Concern';
 
-    const chip = document.querySelector(`.sc-chip[data-dept="${d}"]`);
-    if (chip) { chip.className = 'sc-chip ' + status; }
-
-    const pctEl = document.getElementById('sc-pct-' + d);
+    if (chip)  { chip.className = 'sc-chip ' + status; chip.removeAttribute('title'); }
     if (pctEl) pctEl.textContent = rate + '%';
-
-    const barEl = document.getElementById('sc-bar-' + d);
     if (barEl) barEl.style.width = rate + '%';
-
-    const lblEl = document.getElementById('sc-lbl-' + d);
     if (lblEl) lblEl.textContent = lbl;
   });
 }
@@ -376,18 +392,17 @@ function applyPeriodCards(view) {
     c.classList.toggle('active', c.dataset.period === view)
   );
 
-  // Swap sk-card values for any remaining illustrative cards tagged with
-  // data-daily/data-month/data-ytd/data-full (the formula-backed cards are
-  // populated live by loadHeroCards() instead — see below).
-  document.querySelectorAll('.sk-card[data-daily]').forEach(card => {
-    const val  = card.dataset[view] ?? card.dataset.month;
-    const valEl = card.querySelector('.sk-value');
-    if (valEl && val) valEl.textContent = val;
-  });
+  /* The illustrative-card swap that used to live here read
+     data-daily/data-month/data-ytd/data-full off .sk-card. Zero elements
+     in the page have ever carried those attributes — it was dead on
+     arrival — and as of 2026-09-24 no illustrative card exists at all. */
 
-  // Formula-backed hero cards only have a real Month/YTD view — Today and
-  // Full Year aren't computed by evalMonth, so re-fetch on any view change.
+  // Formula-backed hero cards and the reliability cards both re-fetch on any
+  // view change: evalMonth produces a month aggregate, so Today and Full Year
+  // need a different call rather than a relabelled month figure.
   if (typeof loadHeroCards === 'function') loadHeroCards(mo, yr, view);
+  if (typeof loadReliabilityCards === 'function') loadReliabilityCards(mo, yr, view);
+  if (typeof loadSparklines === 'function') loadSparklines(mo, yr, view);
 
   // Update period badge and context bar label. "yr" is the fiscal year's
   // start year (FY2026 = Apr 2026 → Mar 2027) — YTD/Full-Year text must

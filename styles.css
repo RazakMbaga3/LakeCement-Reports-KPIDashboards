@@ -1045,28 +1045,23 @@ html[data-embed="1"] .toolbar { position: static !important; }
 .sk-card.sk-safety .sk-bar   { display: none; }
 .sk-card.sk-safety .sk-foot  { display: none; }
 
-/* Illustrative cards — not wired to any live data source (see
-   docs/KPI_REFERENCE.md / the formula registry for what IS live). Dashed
-   border + reduced opacity + a corner tag make this visually unmistakable
-   at a glance, rather than looking identical to a real current figure.
-   .sk-card has overflow:hidden (clips its ::before top-bar), so the tag
-   is an inset badge rather than an overflowing ribbon. */
-.sk-card.sk-illustrative {
-  border-style: dashed;
-  opacity: .72;
-}
-.sk-card.sk-illustrative::before {
-  background: repeating-linear-gradient(
-    45deg, var(--text-muted), var(--text-muted) 6px, transparent 6px, transparent 12px
-  );
-}
-.sk-card.sk-illustrative::after {
-  content: 'ILLUSTRATIVE';
-  position: absolute; bottom: 8px; right: 8px;
-  font-size: 12px; font-weight: 700; letter-spacing: .5px;
-  color: #fff; background: var(--text-muted);
-  border-radius: 6px; padding: 2px 4px; line-height: 1;
-}
+/* .sk-card.sk-illustrative was removed on 2026-09-24 along with the last
+   card that used it. Its job was to make an invented figure visually
+   unmistakable; the figures are gone, so the treatment has nothing left to
+   mark. A card with no feed now uses .sk-pending below, which never renders
+   a number at all — see e2e/tests/daily-summary.spec.js, which holds the
+   "no illustrative card in the live rows" line. */
+
+/* Sparkline — the 90-day shape behind the headline figure. Deliberately
+   small, axis-free and unlabelled: it answers "which way is this going"
+   and nothing else. The number above it stays the primary reading, so the
+   canvas is aria-hidden and the trend is restated in the card's title
+   attribute for anyone who cannot see it (see kpi-data.js#loadSparklines).
+   Height is fixed so a card with a sparkline and one without still line up. */
+.sk-spark { height: 34px; margin: 2px 0 4px; position: relative; }
+.sk-spark canvas { width: 100% !important; height: 34px !important; display: block; }
+.sk-card.sk-nodata .sk-spark { display: none; }
+.sk-card.sk-pending .sk-spark { display: none; }
 
 /* Live formula-driven cards (data-formula-key present) while loading, before
    the first /api/formula/eval response lands — keep neutral, not red/green. */
@@ -1455,6 +1450,12 @@ body.period-full .sk-delta { opacity: 0; }
 .sc-chip.on-track .sc-chip-bar { background: var(--green); }
 .sc-chip.watch    .sc-chip-bar { background: var(--orange); }
 .sc-chip.concern  .sc-chip-bar { background: var(--red); }
+/* Neutral, deliberately outside the status palette: "nothing to score" is
+   not a grade. Painting it amber or red would claim the workshop is
+   failing when what is true is that nobody measures it here yet. */
+.sc-chip.untracked .sc-chip-pct,
+.sc-chip.untracked .sc-chip-status { color: var(--text-muted); }
+.sc-chip.untracked .sc-chip-bar { background: var(--border); }
 
 /* Responsive */
 @media (max-width: 1280px) {
