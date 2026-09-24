@@ -75,7 +75,32 @@ const CACHE_TTL_CLOSED_MS = 12 * 60 * 60 * 1000; // range fully in the past — 
    Odoo clients would time out almost every sales request. */
 const DASHBOARD_TIMEOUT_MS = 180000;
 
-const _cache = new Map(); // 'endpoint|from|to' -> { at, ttl, result }
+const _cache = new Map(); // 'endpoint|from|to' -> { at, ttl, result, size }
+
+/* The cache holds whole parsed Odoo bundles, and a single sales month is up
+   to ~9 MB of JSON — measured 2026-09-24 at roughly 10-20 MB of retained
+   heap per month once parsed. It used to be bounded only by TTL (12h for a
+   closed month), i.e. not bounded at all: browsing back through a few
+   months, or the startup cache warmer's 13, pushed the process past pm2's
+   `max_memory_restart: '300M'` (deploy/ecosystem.config.js), and the droplet
+   crash-looped every 30-60s. So it is now a byte-budgeted LRU: `size` is the
+   raw JSON text length, and the least-recently-used entries are dropped
+   until the total fits. Tunable, but keep it well below the pm2 limit minus
+   the app's own ~100 MB baseline and the transient peak of parsing a 9 MB
+   response. */
+const CACHE_MAX_BYTES = parseFloat(process.env.DASHBOARD_CACHE_MAX_MB || '24') * 1048576;
+
+function _evict() {
+  const now = Date.now();
+  for (const [k, v] of _cache) if (now - v.at >= v.ttl) _cache.delete(k);
+  let total = 0;
+  for (const v of _cache.values()) total += v.size;
+  for (const k of _cache.keys()) {           // Map iterates oldest-used first
+    if (total <= CACHE_MAX_BYTES) break;
+    total -= _cache.get(k).size;
+    _cache.delete(k);
+  }
+}
 
 function config() {
   const { ODOO_DASHBOARD_URL, ODOO_DASHBOARD_API_KEY } = process.env;
@@ -96,7 +121,10 @@ async function fetchBundle(endpoint, from, to) {
 
   const key = `${endpoint}|${from}|${to}`;
   const hit = _cache.get(key);
-  if (hit && Date.now() - hit.at < hit.ttl) return hit.result;
+  if (hit && Date.now() - hit.at < hit.ttl) {
+    _cache.delete(key); _cache.set(key, hit);   // refresh recency for the LRU
+    return hit.result;
+  }
 
   const body = new URLSearchParams({ api_key: cfg.apiKey, from_date: from, to_date: to });
   const url = `${cfg.base}/${endpoint}`;
@@ -163,7 +191,8 @@ async function fetchBundle(endpoint, from, to) {
      this is what makes a 12-month trend viable at ~5s per uncached month. */
   const today = new Date().toISOString().slice(0, 10);
   const ttl = to < today ? CACHE_TTL_CLOSED_MS : CACHE_TTL_OPEN_MS;
-  _cache.set(key, { at: Date.now(), ttl, result });
+  _cache.set(key, { at: Date.now(), ttl, result, size: text.length });
+  _evict();
   return result;
 }
 
@@ -171,5 +200,10 @@ const fetchPurchaseBundle = (from, to) => fetchBundle('purchase_dashboard_report
 const fetchSaleBundle     = (from, to) => fetchBundle('sale_dashboard_report', from, to);
 
 function _clearCache() { _cache.clear(); } // tests only
+function _cacheStats() {                   // tests / diagnostics only
+  let bytes = 0;
+  for (const v of _cache.values()) bytes += v.size;
+  return { entries: _cache.size, bytes, maxBytes: CACHE_MAX_BYTES };
+}
 
-module.exports = { isConfigured, fetchPurchaseBundle, fetchSaleBundle, _clearCache, DASHBOARD_TIMEOUT_MS };
+module.exports = { isConfigured, fetchPurchaseBundle, fetchSaleBundle, _clearCache, _cacheStats, DASHBOARD_TIMEOUT_MS };

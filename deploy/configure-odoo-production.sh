@@ -98,6 +98,23 @@ set_env_var ODOO_MINING_URL         "${PROD_HOST}/mining_report"
 # back to ODOO_DISPATCH_API_KEY, which is now correct (see
 # backend/services/odooMiningClient.js).
 
+# backend/.env.example ships ODOO_SYNC_CRON=off, so a .env copied from it
+# never runs the daily Odoo pull — production-report autofill included.
+# GET /api/health showed exactly that on this droplet on 2026-09-24
+# ("production-report-autofill: not_scheduled"). Turn it on ONLY if it is
+# explicitly off; an unset or already-scheduled value is left alone.
+# (Mining + dispatch no longer depend on it: they pull every 30 min via
+# ODOO_LIVE_SYNC_CRON, which is on unless set to off.)
+if grep -qE '^ODOO_SYNC_CRON=[[:space:]]*off' "$ENV_FILE"; then
+  sed -i 's|^ODOO_SYNC_CRON=.*|ODOO_SYNC_CRON=0 5 * * *|' "$ENV_FILE"
+  echo "  ODOO_SYNC_CRON was 'off' -> set to '0 5 * * *' (daily pull incl. production autofill)"
+else
+  echo "  ODOO_SYNC_CRON left as-is: $(grep -m1 '^ODOO_SYNC_CRON=' "$ENV_FILE" || echo '(unset -> default daily 05:00)')"
+fi
+if grep -qE '^ODOO_LIVE_SYNC_CRON=[[:space:]]*off' "$ENV_FILE"; then
+  echo "  WARNING: ODOO_LIVE_SYNC_CRON=off — mining/dispatch will NOT pull every 30 min. Remove that line to make them live." >&2
+fi
+
 echo
 echo "== 4/6  Reloading the app so the new .env takes effect =="
 pm2 reload "$APP_DIR/deploy/ecosystem.config.js" --update-env

@@ -279,26 +279,25 @@ app.use('/api/client-errors', rateLimit({
     logger.info(`odoo live sync scheduled (${spec}), first run ~1 min after boot`);
   }
 
-  // Sales/Purchases dashboard cache warmer (services/dashboardCacheWarmer.js).
-  // sale_dashboard_report's date filter is server-side broken (see
-  // odooDashboardClient.js's header, defect 3) — every cold request costs
-  // 30-49s on production regardless of range, and odooDashboardClient's own
-  // cache only helps the SECOND person to ask for a given month. This
-  // pre-asks for the current month plus the trailing year on a schedule
-  // comfortably inside that cache's 12h TTL for closed months, so a real
-  // user is very unlikely to be first. Also runs once at startup — a
-  // restart empties the in-process cache, and the next cron tick could be
-  // hours away. Never blocks startup or fails the process either way.
-  if (process.env.ODOO_DASHBOARD_URL && process.env.DASHBOARD_WARM_CRON !== 'off') {
+  // Sales/Purchases dashboard cache warmer (services/dashboardCacheWarmer.js)
+  // — OFF UNLESS DASHBOARD_WARM_CRON IS SET to a cron spec. It used to be on
+  // by default and ran at every startup; on 2026-09-24 the production
+  // droplet was found crash-looping every 30-60s. The warmer pulled 13
+  // months of multi-MB sales bundles into odooDashboardClient's cache, which
+  // then had no size bound, so the process crossed pm2's 300M
+  // max_memory_restart, was killed, restarted, and started the warmer again
+  // — also re-hitting Odoo's slowest endpoint every minute. The cache is now
+  // byte-bounded, which means it can only hold ~2-3 sales months, so warming
+  // 13 of them into it no longer achieves anything. The real fix for the
+  // 30-49s cold month is to cache the small COMPUTED dashboard payload, not
+  // the raw bundle — until then this stays opt-in.
+  if (process.env.ODOO_DASHBOARD_URL && process.env.DASHBOARD_WARM_CRON && process.env.DASHBOARD_WARM_CRON !== 'off') {
     const { warmDashboards } = require('./services/dashboardCacheWarmer');
-    const spec = process.env.DASHBOARD_WARM_CRON || '0 */6 * * *'; // every 6h, inside the 12h closed-month cache TTL
-    const runWarm = (why) => warmDashboards()
-      .then(r => logger.info({ ...r, why }, 'dashboard cache warmer run'))
-      .catch(err => logger.error({ err, why }, 'dashboard cache warmer failed'));
-
-    cron.schedule(spec, () => runWarm('scheduled'));
-    runWarm('startup');
-    logger.info(`dashboard cache warmer scheduled (${spec}), and running once now`);
+    const spec = process.env.DASHBOARD_WARM_CRON;
+    cron.schedule(spec, () => warmDashboards()
+      .then(r => logger.info(r, 'dashboard cache warmer run'))
+      .catch(err => logger.error({ err }, 'dashboard cache warmer failed')));
+    logger.info(`dashboard cache warmer scheduled (${spec}) — opt-in, see server.js comment`);
   }
 }
 
