@@ -75,6 +75,7 @@ const PAGES = [
   ['form-quality',   'forms/quality-form.html'],
   ['form-stoppage',  'forms/stoppage-form.html'],
   ['form-power',     'forms/power-form.html'],
+  ['form-pile-quality', 'forms/pile-quality-form.html'],
 ];
 
 /* Floors. Mobile is stricter than desktop by design: density is correct

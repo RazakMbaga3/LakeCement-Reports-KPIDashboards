@@ -70,6 +70,7 @@ const PAGES = [
   ['quarry',         'mines-report.html'],
   ['form-quality',   'forms/quality-form.html'],
   ['form-dispatch',  'forms/dispatch-form.html'],
+  ['form-pile-quality', 'forms/pile-quality-form.html'],
 ];
 
 const kb = b => Math.round(b / 1024);
