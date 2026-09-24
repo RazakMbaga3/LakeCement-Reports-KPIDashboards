@@ -255,6 +255,21 @@
      identical to an approved one, and a REJECTED report still showed
      "Submitted & Locked" — no reason, no way to correct and resend, the
      author never learning it had been turned back. */
+  /* Banner backgrounds carry WHITE bold 12px text, so they must clear 4.5:1
+     against white. The raw hexes this used to hold did not: #239557 (Nyati
+     green) is 3.81:1 and #D97706 (amber) about 3.2:1 — both WCAG AA failures,
+     and axe reported the green as a serious violation on dispatch-form.html
+     the moment an audited day was in the Approved state. Blank days never
+     show the banner, which is why earlier a11y runs read 0 and this looked new.
+     design-system.css already holds a validated set for exactly this job
+     (--st-good 5.4:1, --st-warn 4.6:1, --st-bad 5.6:1 on white); the hex after
+     each var() is the same value, so a page that does not load the design
+     system still gets a solid banner rather than a transparent one. */
+  const BANNER_BG = {
+    good: 'var(--st-good, #0F7A41)',
+    warn: 'var(--st-warn, #9A6100)',
+    bad:  'var(--st-bad, #C0271F)',
+  };
   const STATUS_META = {
     draft: {
       pill: 'DRAFT', locked: false,
@@ -263,17 +278,17 @@
     pending_approval: {
       pill: 'AWAITING SIGN-OFF', locked: true,
       chip: '✓ Submitted',
-      banner: { bg: '#D97706', text: 'Submitted — waiting for your HOD to sign off. It is not counted as approved yet.' },
+      banner: { bg: BANNER_BG.warn, text: 'Submitted — waiting for your HOD to sign off. It is not counted as approved yet.' },
     },
     approved: {
       pill: 'APPROVED', locked: true,
       chip: '✓ Approved',
-      banner: { bg: '#239557', text: '✓  Report submitted and approved.' },
+      banner: { bg: BANNER_BG.good, text: '✓  Report submitted and approved.' },
     },
     rejected: {
       pill: 'REJECTED', locked: false,
       chip: '✕ Rejected',
-      banner: { bg: '#DC2626', text: 'Rejected by your HOD — correct the figures and submit again.' },
+      banner: { bg: BANNER_BG.bad, text: 'Rejected by your HOD — correct the figures and submit again.' },
     },
   };
   /* 'submitted' is what this layer wrote before the approval workflow
@@ -487,7 +502,8 @@
     type = type || 'ok';
     document.getElementById('_nyt')?.remove();
 
-    const colors = { ok: '#239557', warn: '#D97706', err: '#DC2626' };
+    // Same validated pairs as the status banner — white text, so the same 4.5:1 floor.
+    const colors = { ok: BANNER_BG.good, warn: BANNER_BG.warn, err: BANNER_BG.bad };
     const icons  = { ok: '✓',       warn: '⚠',       err: '✕'      };
 
     if (!document.getElementById('_nyt-css')) {
