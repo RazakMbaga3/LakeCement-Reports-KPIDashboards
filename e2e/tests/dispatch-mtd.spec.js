@@ -1,91 +1,55 @@
 /*
-  forms/dispatch-form.html's MTD/YTD figures.
+  forms/dispatch-form.html — what the entry form still owns.
 
-  Until this change, the dispatch matrix's MTD/YTD cells (other than
-  Regular Bags 42.5R/42.5N, which showed plausible-but-static numbers)
-  were either hardcoded or an honest em-dash with a note saying the
-  rollup hadn't been built. The 15 channel/grade dispatch fields
-  themselves were already real data-field inputs (unlike quality-form.html
-  or power-form.html, where most of the underlying daily fields aren't
-  captured at all) — this only needed the MTD/YTD layer wired on top,
-  live, the same way power-plant-report.html and daily-report.html got it.
+  HISTORY, because two tests used to live here and were removed on purpose.
 
-  "MTD Target Achievement %" is the one figure here that ISN'T a plain
-  sum: it's this month's live dispatch total ÷ this month's target (a
-  manual figure, not itself summable), so report-rollup.js's live cache is
-  read via its public reportRollupLiveSum() helper rather than painted
-  directly.
+  This file once held three specs for the dispatch matrix's MTD/YTD layer: that
+  its [data-roll-mtd] / [data-roll-ytd] cells folded in the live, unsaved day
+  without waiting for a save, and that "MTD Target Achievement %"
+  (dispatch_mtd_pct) recomputed from the report-rollup MTD sum. They were real
+  and they passed.
+
+  Then d1bffe4 split Dispatch & SO into a review page and a slimmed entry form,
+  and moved that whole layer OFF the entry form — deliberately. The form's own
+  comment says why: the KPI strip "answered a reviewer's question, not an entry
+  one, and it computed those answers from whatever was in the cells rather than
+  from anything submitted". The form now carries zero data-roll-* cells and no
+  report-rollup at all; MTD/YTD lives on dispatch.html, driven by the server
+  and the formula registry.
+
+  The two specs kept asserting the removed UI, so they failed with "element(s)
+  not found" from that commit onward — and sat in the suite as "pre-existing
+  failures" for weeks. A red test for a feature that was intentionally deleted
+  carries no signal and teaches people to ignore the suite, so they are gone
+  rather than skipped. (Confirmed, not assumed: grep finds no data-roll-mtd on
+  either page, and report-rollup only on dispatch.html.)
+
+  KNOWN GAP: dispatch.html's own MTD/YTD context switch has no e2e coverage.
+  It is the natural home for the replacement of those two specs.
+
+  What remains is the one thing the entry form must always do.
 */
 const { test, expect } = require('@playwright/test');
-const { loginAs, collectErrors } = require('../fixtures/auth');
+const { loginAs } = require('../fixtures/auth');
+const { setReportDate } = require('../fixtures/forms');
 const { pool } = require('../fixtures/db');
 
 const D = '1999-06-18';
-const MTD_SEED_DATE = '1999-06-01';
 
 async function cleanup() {
-  await pool.query("DELETE FROM daily_reports WHERE form_type = 'dispatch' AND record_date IN ($1, $2)", [D, MTD_SEED_DATE]);
-}
-
-async function seedMtdHistory(data) {
-  const { rows } = await pool.query('SELECT id FROM users WHERE username = $1', ['e2e_logistics']);
-  await pool.query(
-    `INSERT INTO daily_reports (form_type, record_date, shift, data, submitted_by, submitted_at, status)
-     VALUES ('dispatch', $1, 'day', $2, $3, NOW(), 'approved')`,
-    [MTD_SEED_DATE, JSON.stringify(data), rows[0].id]
-  );
+  await pool.query("DELETE FROM daily_reports WHERE form_type = 'dispatch' AND record_date = $1", [D]);
 }
 
 async function openForm(page) {
   await loginAs(page, 'logistics');
   await page.goto('/forms/dispatch-form.html');
   await page.waitForLoadState('networkidle');
-  await page.fill('input[type="date"]', D);
+  await setReportDate(page, D);
   await page.waitForTimeout(400);
 }
 
 test.beforeEach(cleanup);
 test.afterAll(cleanup);
-
-test('dispatch matrix MTD/YTD fold in the live, unsaved day without waiting for a save', async ({ page }) => {
-  await seedMtdHistory({ dispatch_reg_425r: 1000, dispatch_blk_425r: 200 });
-  await openForm(page);
-
-  await expect(page.locator('[data-roll-mtd="dispatch_reg_425r"]')).toHaveText('1,000');
-  await expect(page.locator('[data-roll-ytd="dispatch_reg_425r"]')).toHaveText('1,000');
-  await expect(page.locator('[data-roll-mtd="dispatch_blk_425r"]')).toHaveText('200');
-
-  await page.fill('input[data-field="dispatch_reg_425r"]', '150');
-  await page.fill('input[data-field="dispatch_blk_425r"]', '50');
-  await page.locator('input[data-field="dispatch_blk_425r"]').blur();
-  await page.waitForTimeout(300);
-
-  const rows = await pool.query(
-    "SELECT 1 FROM daily_reports WHERE form_type = 'dispatch' AND record_date = $1", [D]);
-  expect(rows.rowCount, 'nothing should be persisted yet').toBe(0);
-
-  await expect(page.locator('[data-roll-mtd="dispatch_reg_425r"]')).toHaveText('1,150');
-  await expect(page.locator('[data-roll-ytd="dispatch_reg_425r"]')).toHaveText('1,150');
-  await expect(page.locator('[data-roll-mtd="dispatch_blk_425r"]')).toHaveText('250');
-});
-
-test('MTD Target Achievement % updates live from the report-rollup MTD sum, not a per-day average', async ({ page }) => {
-  /* Seed 4,000 MT already dispatched this month; type 1,000 MT more
-     (unsaved) against a 10,000 MT monthly target -> 5,000 / 10,000 = 50%.
-     This is the one dispatch figure that isn't a plain sum, so it proves
-     reportRollupLiveSum() is feeding the ratio, not report-rollup's own
-     [data-roll-mtd] painting (which can't divide by another field). */
-  await seedMtdHistory({ dispatch_reg_425r: 4000 });
-  await openForm(page);
-
-  await page.fill('input[data-field="dispatch_mtd_target"]', '10000');
-  await page.fill('input[data-field="dispatch_reg_425r"]', '1000');
-  await page.locator('input[data-field="dispatch_reg_425r"]').blur();
-  await page.waitForTimeout(300);
-
-  await expect(page.locator('[data-kpi="dispatch_mtd_pct"]').first()).toHaveText('50.0%');
-  await expect(page.locator('#dispatch-mtd-pct-lbl')).toHaveText('50.0%');
-});
 
 test('every real dispatch field is still editable for the logistics role', async ({ page }) => {
   await openForm(page);

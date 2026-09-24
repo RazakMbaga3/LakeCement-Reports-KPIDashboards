@@ -51,6 +51,9 @@ module.exports = async () => {
 
   /* Both write sandboxes: year-2001 for kpi_monthly, 1999 dates for daily_reports. */
   await pool.query("DELETE FROM daily_reports WHERE record_date BETWEEN '1999-01-01' AND '1999-12-31'");
+  /* 2098 is draft-reaccess.spec.js's sandbox: it must sort NEWEST, because the history
+     panel only sees the newest 120 days of a form. */
+  await pool.query("DELETE FROM daily_reports WHERE record_date BETWEEN '2098-01-01' AND '2098-12-31'");
 
   console.log(`[e2e] ${accounts.length} harness accounts ready; sandboxes cleared`);
 };

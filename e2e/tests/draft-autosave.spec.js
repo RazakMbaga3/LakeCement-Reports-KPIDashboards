@@ -26,6 +26,7 @@
 */
 const { test, expect } = require('@playwright/test');
 const { loginAs } = require('../fixtures/auth');
+const { setReportDate } = require('../fixtures/forms');
 const { pool } = require('../fixtures/db');
 
 const D  = '1999-06-19';
@@ -56,7 +57,7 @@ async function open(page, role, path, date = D) {
   await loginAs(page, role);
   await page.goto(path);
   await page.waitForLoadState('networkidle');
-  await page.fill('input[type="date"]', date);
+  await setReportDate(page, date);
   await page.waitForTimeout(500);
 }
 const chip = page => page.locator('#_ny-saved-chip');
@@ -135,7 +136,7 @@ test.describe('inputs without a data-field', () => {
 
     await page.reload();
     await page.waitForLoadState('networkidle');
-    await page.fill('input[type="date"]', D);
+    await setReportDate(page, D);
     await expect(page.locator(`[data-field="${key}"]`)).toHaveValue('19:30');
   });
 
@@ -216,13 +217,13 @@ test.describe('autosave', () => {
   test('switching to another day keeps what was typed as a draft first', async ({ page }) => {
     await open(page, 'cpp_officer', '/power-plant-report.html');           // no fast autosave: the hand-off must do it
     await page.fill('input[data-field="cpp_gross_gen_kwh"]', '111000');
-    await page.fill('input[type="date"]', D2);                              // leave D with unsaved work
+    await setReportDate(page, D2);                              // leave D with unsaved work
 
     await expect.poll(async () => (await row('cpp', D))?.status, { timeout: 8000 }).toBe('draft');
     expect(+(await row('cpp', D)).data.cpp_gross_gen_kwh).toBe(111000);
     await expect(page.locator('input[data-field="cpp_gross_gen_kwh"]'), 'the new day starts clean').toHaveValue('');
 
-    await page.fill('input[type="date"]', D);                               // and coming back finds it
+    await setReportDate(page, D);                               // and coming back finds it
     await expect(page.locator('input[data-field="cpp_gross_gen_kwh"]')).toHaveValue('111000');
   });
 
@@ -262,7 +263,7 @@ test.describe('autosave', () => {
 
     await page.reload();
     await page.waitForLoadState('networkidle');
-    await page.fill('input[type="date"]', D);
+    await setReportDate(page, D);
     await expect(page.locator('input[data-field="cpp_gross_gen_kwh"]'),
       'the newer typed value must win over the older server copy').toHaveValue('999');
     await expect.poll(async () => +(await row('cpp')).data.cpp_gross_gen_kwh, { timeout: 10000 }).toBe(999);

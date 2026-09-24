@@ -9,6 +9,7 @@
 */
 const { test, expect } = require('@playwright/test');
 const { loginAs, collectErrors } = require('../fixtures/auth');
+const { setReportDate } = require('../fixtures/forms');
 const { pool } = require('../fixtures/db');
 
 const D = '1999-06-16';
@@ -21,7 +22,13 @@ const FORMS = [
   ['/daily-report.html',                 'production',       'production'],
   ['/power-plant-report.html',           'cpp',              'cpp'],
   ['/mines-report.html',                 'mines',            'mining'],
-  ['/forms/stoppage-form.html',          'stoppage',         'pm'],
+  /* Production, not pm. Stoppage submit rights moved P&M -> Production on
+     2026-09-22 (a full transfer: P&M is view-only — see docs/ACCESS_MODEL.md and
+     forms/access-registry.js FORM_ACCESS). This row still said 'pm' and had
+     been failing ever since, which read as a defect in the page when it was the
+     test that was stale; the inverse is asserted separately below so the
+     transfer is held from both sides. */
+  ['/forms/stoppage-form.html',          'stoppage',         'production'],
   ['/forms/power-form.html',             'power-cons',       'pm'],
   ['/forms/dispatch-form.html',          'dispatch',         'logistics'],
   ['/forms/dispatch-form.html',          'dispatch',         'packing'],
@@ -48,6 +55,17 @@ async function seed(formType, status, reason) {
 
 test.beforeEach(cleanup);
 test.afterAll(cleanup);
+
+test('P&M is view-only on the stoppage form since ownership moved to Production', async ({ page }) => {
+  const errors = collectErrors(page);
+  await loginAs(page, 'pm');
+  await page.goto('/forms/stoppage-form.html');
+  await page.waitForLoadState('networkidle');
+  await expect(page.locator('#app-sidebar')).toBeVisible();
+  await expect(page.locator('#dr-view-only-banner'),
+    'pm no longer submits stoppage — it must get the view-only shell, not the entry controls').toHaveCount(1);
+  expect(errors(), 'uncaught errors').toEqual([]);
+});
 
 for (const [url, formType, role] of FORMS) {
   test(`${url} loads clean for ${role}`, async ({ page }) => {
@@ -221,7 +239,7 @@ test('production MTD folds in the live, unsaved day without waiting for a save',
   await loginAs(page, 'production');
   await page.goto('/daily-report.html');
   await page.waitForLoadState('networkidle');
-  await page.fill('input[type="date"]', D);
+  await setReportDate(page, D);
   await page.waitForTimeout(400);
 
   await expect(page.locator('[data-roll-mtd="kiln_prod_mt"]').first()).toHaveText('500');

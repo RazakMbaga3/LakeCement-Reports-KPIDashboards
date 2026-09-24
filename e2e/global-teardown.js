@@ -13,12 +13,16 @@ module.exports = async () => {
   // 1. The declared write sandboxes.
   await pool.query('DELETE FROM kpi_monthly WHERE year = 2001');
   await pool.query("DELETE FROM daily_reports WHERE record_date BETWEEN '1999-01-01' AND '1999-12-31'");
+  /* 2098 is draft-reaccess.spec.js's sandbox: it must sort NEWEST, because the history
+     panel only sees the newest 120 days of a form. */
+  await pool.query("DELETE FROM daily_reports WHERE record_date BETWEEN '2098-01-01' AND '2098-12-31'");
   /* report_revisions is append-only in production — nothing in the app ever
      deletes from it, by design. The harness is the one exception: it writes
      a revision for every sandbox submit, and without this every e2e run
      would leave those rows behind forever. Scoped to the 1999 sandbox only,
      so a real revision can never be caught by it. */
   await pool.query("DELETE FROM report_revisions WHERE record_date BETWEEN '1999-01-01' AND '1999-12-31'");
+  await pool.query("DELETE FROM report_revisions WHERE record_date BETWEEN '2098-01-01' AND '2098-12-31'");
 
   /* 2. Anything else a harness account authored. A test does not only write
         where it means to: merely OPENING mines-report.html persists a

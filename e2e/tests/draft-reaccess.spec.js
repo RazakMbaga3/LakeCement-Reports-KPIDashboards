@@ -15,17 +15,35 @@
     3. The same `.btn-out` binding swallowed every other outline button on
        those pages: the "View report" links never navigated.
 
-  Writes go to 1999 dates, cleaned up here and by global-teardown.
+  Writes go to 2098 dates, cleaned up here and by global-teardown.
+
+  WHY 2098 AND NOT 1999, like every other spec: the Load Previous panel asks
+  the server for the NEWEST 120 days (form-persist.js _HISTORY_LIMIT) and, by
+  design, only claims a local draft is "this device only" for a day that list
+  actually covers. Once the CPP history passed 120 days — the Apr-Sep 2026
+  seed migrations alone are ~170 — a 1999 sandbox date sat beyond the end of
+  the list, so the draft that WAS on the server was never listed and the
+  device-only flag was (correctly) withheld. Two tests here started failing,
+  and read as pre-existing defects, when the app was right and the tests had
+  quietly assumed a near-empty database. They would have failed identically in
+  CI, whose migrations seed the same days.
+
+  A far-FUTURE date sorts first in a newest-first list, so it is inside the
+  window however many real rows exist. The rule itself is now held directly
+  by the two tests at the bottom, against a stubbed list, so it no longer
+  depends on the size of the database at all.
 */
 const { test, expect } = require('@playwright/test');
 const { loginAs } = require('../fixtures/auth');
+const { setReportDate } = require('../fixtures/forms');
 const { pool } = require('../fixtures/db');
 
-const D  = '1999-06-19';
-const D2 = '1999-06-20';
-const D3 = '1999-06-21';
+const D  = '2098-06-19';
+const D2 = '2098-06-20';
+const D3 = '2098-06-21';
 
 async function cleanup() {
+  await pool.query("DELETE FROM daily_reports WHERE record_date BETWEEN '2098-01-01' AND '2098-12-31'");
   await pool.query("DELETE FROM daily_reports WHERE record_date BETWEEN '1999-01-01' AND '1999-12-31'");
 }
 async function storedRow(date = D) {
@@ -38,7 +56,7 @@ async function openForm(page, date = D) {
   await loginAs(page, 'cpp_officer');
   await page.goto('/power-plant-report.html');
   await page.waitForLoadState('networkidle');
-  await page.fill('input[type="date"]', date);
+  await setReportDate(page, date);
   await page.waitForTimeout(400);   // form-persist reloads the day on change
 }
 
@@ -137,18 +155,18 @@ test.describe('GET /api/reports/:formType/history', () => {
     await page.waitForLoadState('networkidle');
 
     const out = await page.evaluate(async () => {
-      await NyatiAPI.submitForm('cpp', '1999-06-18', 'day', { cpp_gross_gen_kwh: '1' }, { status: 'draft' });
-      await NyatiAPI.submitForm('cpp', '1999-06-19', 'day', { cpp_gross_gen_kwh: '2' }, { status: 'submitted' });
+      await NyatiAPI.submitForm('cpp', '2098-06-18', 'day', { cpp_gross_gen_kwh: '1' }, { status: 'draft' });
+      await NyatiAPI.submitForm('cpp', '2098-06-19', 'day', { cpp_gross_gen_kwh: '2' }, { status: 'submitted' });
       return {
         all: await NyatiAPI.getFormHistory('cpp', 365),
         one: await NyatiAPI.getFormHistory('cpp', 1),
       };
     });
 
-    const mine = out.all.filter(r => r.record_date.startsWith('1999-'));
+    const mine = out.all.filter(r => r.record_date.startsWith('2098-'));
     expect(mine.map(r => [r.record_date, r.status])).toEqual([
-      ['1999-06-19', 'pending_approval'],   // an officer's submission needs sign-off
-      ['1999-06-18', 'draft'],
+      ['2098-06-19', 'pending_approval'],   // an officer's submission needs sign-off
+      ['2098-06-18', 'draft'],
     ]);
     expect(out.all.every(r => !('data' in r)), 'history must not ship the field data').toBe(true);
 
@@ -174,5 +192,55 @@ test.describe('GET /api/reports/:formType/history', () => {
       };
     });
     expect(r).toEqual({ anon: 401, unknown: 400, badLimit: 400, ok: 200 });
+  });
+});
+
+test.describe('"this device only" is only claimed for days the server list covers', () => {
+  /* form-persist.js _historyEntries(): a local draft is flagged "This device
+     only — not on the server" when the server's answer proves it is not there.
+     A FULL list (120 rows, the cap) proves nothing about days older than its
+     last row, so for those the flag is withheld rather than guessed.
+
+     Held here against a stubbed /history response, so the rule is tested
+     directly and cannot be perturbed by how many real days the database has —
+     which is what silently broke the two end-to-end tests above. */
+  const OLD = '1999-06-01';   // older than every stubbed row
+
+  function fakeHistory(n) {
+    const rows = [];
+    const start = Date.UTC(2097, 0, 1);
+    for (let i = 0; i < n; i++) {
+      const d = new Date(start + (n - 1 - i) * 86400000).toISOString().slice(0, 10);
+      rows.push({ record_date: d, shift: 'day', status: 'approved', submitted_at: d + 'T08:00:00Z',
+                  updated_at: d + 'T08:00:00Z', rejection_reason: null, saved_by_name: 'Stubbed' });
+    }
+    return rows;   // newest first, like the endpoint
+  }
+
+  async function panelFor(page, historyRows) {
+    await openForm(page);
+    await page.route('**/api/reports/cpp/history*', route => route.fulfill({ json: historyRows }));
+    await page.evaluate(date => {
+      localStorage.setItem('nyati-cpp-' + date, JSON.stringify({
+        _m: { formId: 'cpp', date, savedAt: new Date().toISOString(), status: 'draft' },
+        inputs: [], data: { date, cpp_gross_gen_kwh: '1000' },
+      }));
+    }, OLD);
+    await page.locator('[data-persist="history"]').click();
+    const panel = page.locator('#_nyh');
+    await expect(panel).toContainText(OLD);
+    return panel;
+  }
+
+  test('a short list covers everything, so an unsent local draft IS flagged', async ({ page }) => {
+    const panel = await panelFor(page, fakeHistory(3));
+    await expect(panel, 'the server said it has nothing this old — the draft is on this device only')
+      .toContainText('This device only');
+  });
+
+  test('a full list says nothing about older days, so the flag is withheld', async ({ page }) => {
+    const panel = await panelFor(page, fakeHistory(120));
+    await expect(panel, 'the list is capped: a day older than its last row may well be on the server')
+      .not.toContainText('This device only');
   });
 });

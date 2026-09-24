@@ -29,6 +29,7 @@
 */
 const { test, expect } = require('@playwright/test');
 const { loginAs, collectErrors } = require('../fixtures/auth');
+const { setReportDate } = require('../fixtures/forms');
 const { pool } = require('../fixtures/db');
 
 const D = '1999-06-17';
@@ -77,7 +78,7 @@ async function openForm(page) {
   await loginAs(page, 'cpp_officer');
   await page.goto('/power-plant-report.html');
   await page.waitForLoadState('networkidle');
-  await page.fill('input[type="date"]', D);
+  await setReportDate(page, D);
   /* form-persist reloads the day on change; give it the same beat the page's
      own listeners use before asserting on what is on screen. */
   await page.waitForTimeout(400);

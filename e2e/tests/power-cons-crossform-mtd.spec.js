@@ -17,6 +17,7 @@
 */
 const { test, expect } = require('@playwright/test');
 const { loginAs, collectErrors } = require('../fixtures/auth');
+const { setReportDate } = require('../fixtures/forms');
 const { pool } = require('../fixtures/db');
 
 const D = '1999-06-22';
@@ -42,7 +43,7 @@ async function openForm(page) {
   await loginAs(page, 'pm');
   await page.goto('/forms/power-form.html');
   await page.waitForLoadState('networkidle');
-  await page.fill('input[type="date"]', D);
+  await setReportDate(page, D);
   await page.waitForTimeout(500);
 }
 
