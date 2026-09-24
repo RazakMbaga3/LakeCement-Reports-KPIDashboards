@@ -48,16 +48,23 @@ test.describe('submit pipeline', () => {
     /* The defect this guards: power-plant-report.html renders 22 CPP metrics
        but binds only `date` and `prepared_by` to inputs, while being wired to
        Submit. With a replacing upsert, one click replaced that day's entire
-       CPP record with two fields. */
+       CPP record with two fields.
+
+       Both writes are drafts. The 'cpp' account is seeded at level 'hod', so a
+       plain submit self-certifies to 'approved' — and since the report lock
+       landed, a second write over an approved row is refused outright (409
+       REPORT_LOCKED). Keeping the pair as drafts tests the merge semantics
+       themselves rather than the lock; merge-under-amendment is the test
+       immediately below. */
     await loginAs(page, 'cpp');
     await page.goto('/index.html');
 
-    let r = await post(page, 'cpp', { date: D, shift: 'day',
+    let r = await post(page, 'cpp', { date: D, shift: 'day', status: 'draft',
       data: { cpp_gross_gen_kwh: 152000, cpp_aux_kwh: 17000, cpp_heat_rate_plant: 3900 } });
     expect(r.status, JSON.stringify(r.body)).toBe(200);
 
     // Now the partial write a display-only page would make.
-    r = await post(page, 'cpp', { date: D, shift: 'day', data: { prepared_by: 'CPP Officer' } });
+    r = await post(page, 'cpp', { date: D, shift: 'day', status: 'draft', data: { prepared_by: 'CPP Officer' } });
     expect(r.status).toBe(200);
 
     const row = await storedRow('cpp');
@@ -67,11 +74,66 @@ test.describe('submit pipeline', () => {
     expect(Number(row.data.cpp_heat_rate_plant)).toBe(3900);
   });
 
-  test('replace:true still overwrites, for callers that own the whole row', async ({ page }) => {
+  test('merge still holds when an approved report is amended with a reason', async ({ page }) => {
+    /* The same wipe-by-partial-write hazard, on the one path that can still
+       reach an approved row. An amendment must not be a back door around the
+       merge guarantee. */
     await loginAs(page, 'cpp');
     await page.goto('/index.html');
-    await post(page, 'cpp', { date: D, shift: 'day', data: { cpp_aux_kwh: 17000, cpp_run_hrs: 24 } });
-    const r = await post(page, 'cpp', { date: D, shift: 'day', replace: true, data: { cpp_aux_kwh: 1 } });
+
+    let r = await post(page, 'cpp', { date: D, shift: 'day',
+      data: { cpp_gross_gen_kwh: 152000, cpp_aux_kwh: 17000 } });
+    expect(r.status, JSON.stringify(r.body)).toBe(200);
+    expect((await storedRow('cpp')).status).toBe('approved');
+
+    r = await post(page, 'cpp', { date: D, shift: 'day', data: { cpp_aux_kwh: 16000 },
+      amendReason: 'Auxiliary kWh keyed from the wrong meter reading' });
+    expect(r.status, JSON.stringify(r.body)).toBe(200);
+
+    const row = await storedRow('cpp');
+    expect(Number(row.data.cpp_aux_kwh), 'the amended field changes').toBe(16000);
+    expect(Number(row.data.cpp_gross_gen_kwh), 'untouched fields survive an amendment').toBe(152000);
+
+    const { rows } = await pool.query(
+      "SELECT action, prior_data->>'cpp_aux_kwh' AS prior_aux, reason" +
+      "  FROM report_revisions WHERE form_type='cpp' AND record_date=$1" +
+      " ORDER BY revision DESC LIMIT 1", [D]);
+    expect(rows[0].action).toBe('FORM_AMEND_DIRECT');
+    expect(Number(rows[0].prior_aux), 'the pre-image keeps the original figure').toBe(17000);
+    expect(rows[0].reason).toContain('wrong meter reading');
+  });
+
+  test('an approved report cannot be overwritten without a reason', async ({ page }) => {
+    /* The regression this whole lock exists to create. Before 2026-09-24 the
+       second POST below returned 200, merged over a signed-off day and cleared
+       its approver, leaving nothing behind but "1 field(s), merged" in
+       audit_log. */
+    await loginAs(page, 'cpp');
+    await page.goto('/index.html');
+
+    await post(page, 'cpp', { date: D, shift: 'day', data: { cpp_aux_kwh: 17000 } });
+    expect((await storedRow('cpp')).status).toBe('approved');
+
+    const r = await post(page, 'cpp', { date: D, shift: 'day', data: { cpp_aux_kwh: 1 } });
+    expect(r.status).toBe(409);
+    expect(r.body.code).toBe('REPORT_LOCKED');
+
+    const afterRow = await storedRow('cpp');
+    expect(Number(afterRow.data.cpp_aux_kwh), 'the stored figure is untouched').toBe(17000);
+    expect(afterRow.status).toBe('approved');
+
+    // Save Draft is the quieter route to the same overwrite — also refused.
+    const d = await post(page, 'cpp', { date: D, shift: 'day', status: 'draft', data: { cpp_aux_kwh: 2 } });
+    expect(d.status, 'Save Draft must not un-approve a signed-off day').toBe(409);
+    expect((await storedRow('cpp')).status).toBe('approved');
+  });
+
+  test('replace:true still overwrites, for callers that own the whole row', async ({ page }) => {
+    // Drafts, for the same reason as the merge test above.
+    await loginAs(page, 'cpp');
+    await page.goto('/index.html');
+    await post(page, 'cpp', { date: D, shift: 'day', status: 'draft', data: { cpp_aux_kwh: 17000, cpp_run_hrs: 24 } });
+    const r = await post(page, 'cpp', { date: D, shift: 'day', status: 'draft', replace: true, data: { cpp_aux_kwh: 1 } });
     expect(r.status).toBe(200);
     const row = await storedRow('cpp');
     expect(Number(row.data.cpp_aux_kwh)).toBe(1);
