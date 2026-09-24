@@ -418,7 +418,13 @@ html[data-embed="1"] .toolbar { position: static !important; }
 .sb-pair { display: flex; align-items: stretch; gap: 4px; margin: 2px 6px; }
 .sb-pair .sb-item {
   flex: 1; min-width: 0; margin: 0; padding: 6px 4px;
-  grid-template-columns: 16px 1fr; align-items: start; gap: 4px; font-size: 11px;
+  grid-template-columns: 16px 1fr; align-items: start; gap: 4px; font-size: var(--fs-xs);
+  /* var(--fs-xs) is 12px — the type floor design-system.css declares as
+     "THE FLOOR". This pair was the only place in the app still under it,
+     and it put 2 nodes per page x 22 pages = 44 below-floor findings into
+     every responsive audit run. The labels already wrap rather than
+     truncate (see below), so the extra pixel costs a second line on the
+     longest one, not a clipped stub. */
 }
 .sb-pair .sb-item-icon { width: 18px; height: 18px; margin-top: 1px; }
 /* Half-width pills can't fit "Equipment Reliability" on one line — wrap
@@ -1058,8 +1064,8 @@ html[data-embed="1"] .toolbar { position: static !important; }
    canvas is aria-hidden and the trend is restated in the card's title
    attribute for anyone who cannot see it (see kpi-data.js#loadSparklines).
    Height is fixed so a card with a sparkline and one without still line up. */
-.sk-spark { height: 34px; margin: 2px 0 4px; position: relative; }
-.sk-spark canvas { width: 100% !important; height: 34px !important; display: block; }
+.sk-spark { height: 34px; margin: 2px 0 4px; position: relative; color: var(--chart-ink-2, #6B7785); }
+.sk-spark svg { width: 100%; height: 34px; display: block; overflow: visible; }
 .sk-card.sk-nodata .sk-spark { display: none; }
 .sk-card.sk-pending .sk-spark { display: none; }
 
@@ -1475,6 +1481,13 @@ body.period-full .sk-delta { opacity: 0; }
   .sk-value   { font-size: 22px; }
   .sc-chip-pct { font-size: 18px; }
   .smry-alerts { padding: 8px 14px; }
+  /* A concern chip must be able to wrap below 768px. .smry-alerts already
+     wraps BETWEEN chips, but the chip itself was white-space:nowrap, so a
+     single long one just ran off the side: at 360px the Executive Summary
+     overflowed by 24px. It surfaced when the registry grew from 29 KPIs to
+     32 and "Cement Mill 2 Output" joined the strip — the CSS had always
+     been one long label away from this. */
+  .smry-alert-chip { white-space: normal; max-width: 100%; min-width: 0; }
 }
 
 /* ══════════════════════════════════════════════════════════════

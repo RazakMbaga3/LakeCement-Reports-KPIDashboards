@@ -685,48 +685,57 @@ function renderConcerns(results, mo, calYear) {
 
 /* ─── Hero-card sparklines ─────────────────────────────────────
    The Executive Summary showed levels and never trend: a single month's
-   figure cannot tell you whether a KPI is recovering or sliding, which is
-   the first question anyone asks of it. One GET /api/formula/daily covers
-   every KPI on the page, so this is one request, not one per card.
+   figure cannot say whether a KPI is recovering or sliding, which is the
+   first question anyone asks of it. One GET /api/formula/daily covers every
+   KPI on the page, so this is one request, not one per card.
+
+   Drawn as inline SVG rather than with a charting library. A sparkline is a
+   polyline; Chart.js would have added 205KB of UMD to the page every manager
+   opens first, taking it over its transfer budget, and would have made the
+   trend depend on a CDN that a plant network may not reach. The pages with
+   real charts still use Chart.js, where the bundle earns its size.
 
    Design notes, against the dataviz rules this repo follows:
-   - ONE series per spark, so there is no legend and no categorical hue to
-     assign. The line is a single neutral ink for every card — status is
-     already carried twice on the card (the ::before edge bar and the status
-     dot), and painting the line by status too would be the same dimension
-     on a third channel.
+   - ONE series, so there is no legend and no categorical hue to assign. The
+     stroke is a single neutral ink for every card: status is already carried
+     twice on the card (the ::before edge bar and the status dot), and
+     colouring the line by status too would be a third channel for one
+     dimension.
    - No axes, no grid, no point markers, no value labels. A spark answers
-     "which way is this going" and deliberately nothing else; the exact
-     figure is the 38px number directly above it.
-   - The canvas is aria-hidden. It is decorative here in the strict sense:
-     the value, the target, the achievement % and the status text are all
-     real text in the same card, so a screen reader loses no information.
-   - A series of fewer than 3 points is not a trend. The slot is removed
-     rather than drawn, so a card never implies a shape from two dots. */
+     which way this is going and deliberately nothing else; the exact figure
+     is the large number directly above it.
+   - The SVG is aria-hidden. It is decorative in the strict sense here — the
+     value, target, achievement % and status are all real text in the same
+     card, so a screen reader loses nothing.
+   - Fewer than 3 points is not a trend: the slot is hidden rather than
+     drawn, so a card never implies a shape from two dots. */
 const SPARK_DAYS = 90;
 const SPARK_MIN_POINTS = 3;
+const SPARK_W = 100, SPARK_H = 34, SPARK_PAD = 3;
 
-/* Sequence guard. applyFilters() fires loadSparklines() on every month, year
-   and view change, and a fast operator can start a second run before the
-   first await resolves. Without this the late response of an abandoned run
-   paints over the current one, and — because Chart.js refuses to bind twice
-   to one canvas — throws "Canvas is already in use". Same guard, same
-   reason, as reliability.html's _loadSeq. */
+/* Sequence guard. applyFilters() fires this on every month, year and view
+   change, and a fast operator can start a second run before the first await
+   resolves — without this the late response of an abandoned run paints over
+   the current one. Same guard, same reason, as reliability.html's _loadSeq. */
 let _sparkSeq = 0;
 
-/* Destroy by canvas, not by a kept array: Chart.getChart() asks Chart.js what
-   is actually bound right now, which stays correct even when a previous run
-   was abandoned mid-flight and its array reference was replaced. */
-function destroySparkline(canvas) {
-  if (typeof Chart === 'undefined' || !canvas) return;
-  const existing = Chart.getChart(canvas);
-  if (existing) { try { existing.destroy(); } catch (e) { /* already gone */ } }
+function sparkPath(values) {
+  const min = Math.min.apply(null, values);
+  const max = Math.max.apply(null, values);
+  const span = (max - min) || 1;               // a flat series draws a flat line, not NaN
+  const innerH = SPARK_H - SPARK_PAD * 2;
+  const step = values.length > 1 ? SPARK_W / (values.length - 1) : 0;
+  return values.map((v, i) => {
+    const x = (i * step).toFixed(2);
+    const y = (SPARK_PAD + innerH - ((v - min) / span) * innerH).toFixed(2);
+    return (i ? 'L' : 'M') + x + ' ' + y;
+  }).join(' ');
 }
 
 async function loadSparklines(mo, yr, view) {
   const seq = ++_sparkSeq;
   const slots = Array.from(document.querySelectorAll('#dept-summary .sk-card[data-formula-key] .sk-spark'));
-  if (!slots.length || typeof Chart === 'undefined' || !window.LCL_CHART) return;
+  if (!slots.length) return;
   if (!window.NyatiAPI || !NyatiAPI.getDailySeries) return;
 
   const range = reliabilityRange(mo, yr, view);
@@ -749,60 +758,44 @@ async function loadSparklines(mo, yr, view) {
 
   slots.forEach(slot => {
     const card = slot.closest('.sk-card');
-    const key  = card && card.dataset.formulaKey;
+    const key = card && card.dataset.formulaKey;
     const entry = key && daily[key];
     const points = entry && Array.isArray(entry.series)
       ? entry.series.filter(p => p.value != null)
       : [];
 
+    const svg = slot.querySelector('svg');
+    if (!svg) return;
+
     if (points.length < SPARK_MIN_POINTS) {
-      destroySparkline(slot.querySelector('canvas'));
+      svg.innerHTML = '';
       slot.style.display = 'none';
+      slot.removeAttribute('title');
       return;
     }
     slot.style.display = '';
 
-    const canvas = slot.querySelector('canvas');
-    if (!canvas) return;
-    destroySparkline(canvas);
+    const values = points.map(p => Number(p.value));
+    const d = sparkPath(values);
 
-    const ink = LCL_CHART.ink2;
-    new Chart(canvas.getContext('2d'), LCL_CHART.merge({
-      type: 'line',
-      data: {
-        labels: points.map(p => p.date),
-        datasets: [{
-          data: points.map(p => p.value),
-          borderColor: ink,
-          backgroundColor: LCL_CHART.alpha(ink, 0.12),
-          borderWidth: 2,
-          pointRadius: 0,
-          pointHoverRadius: 0,
-          fill: true,
-          tension: 0.25,
-        }],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        plugins: { legend: { display: false }, tooltip: { enabled: false } },
-        scales: { x: { display: false }, y: { display: false } },
-        elements: { line: { capBezierPoints: true } },
-        layout: { padding: 0 },
-      },
-    }));
+    /* The fill closes the same path down to the baseline. Kept very light:
+       it gives the line a body to read against at 34px tall without
+       competing with the figure above it. */
+    const area = d + ' L' + SPARK_W + ' ' + SPARK_H + ' L0 ' + SPARK_H + ' Z';
+    svg.innerHTML =
+      '<path d="' + area + '" fill="currentColor" fill-opacity="0.12" stroke="none"></path>' +
+      '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.6" ' +
+      'stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></path>';
 
-    /* Restate the shape as text on the slot, for the title tooltip. The card's
-       own title attribute is already spoken for by the override/provisional
-       note in loadHeroCards, so this goes on the slot, not the card. */
-    const first = points[0].value, last = points[points.length - 1].value;
+    /* Restate the shape as text on the slot. The card's own title attribute
+       is already spoken for by the override/provisional note in
+       loadHeroCards, so this goes on the slot, not the card. */
+    const first = values[0], last = values[values.length - 1];
     const dir = last > first ? 'rising' : last < first ? 'falling' : 'flat';
-    slot.title = points.length + ' days to ' + range.to + ' — ' + dir +
+    slot.title = values.length + ' days to ' + range.to + ' — ' + dir +
                  ' (' + fmtNum(first) + ' → ' + fmtNum(last) + ')';
   });
 }
-
 
 /* ─── Equipment Reliability hero cards ─────────────────────────
    Fed by GET /api/insights/stoppages, which has computed availability and

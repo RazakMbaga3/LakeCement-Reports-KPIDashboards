@@ -14,12 +14,14 @@
   <link rel="stylesheet" href="design-system.css?v=1" />
   <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=1"></script>
-  <!-- Charting: the same pinned Chart.js + shared contrast-validated theme the
-       six other charting pages use. The Executive Summary had no chart library
-       and no <canvas> at all until 2026-09-24 — it showed levels but never
-       trend, which is the one thing a monthly figure cannot tell you. -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <script src="chart-theme.js?v=1"></script>
+  <!-- No charting library on this page, deliberately. Its only chart is the
+       per-card sparkline, which is a polyline — drawing it with Chart.js cost
+       205KB of UMD bundle and pushed the page from 748KB to 953KB against a
+       900KB budget, on the one page every manager opens first. It is now
+       inline SVG built in kpi-data.js: no library, no CDN round-trip, and it
+       renders on a plant network with no internet egress. Pages with real
+       charts (analytics, reliability, insights, balance, sales, purchases)
+       still load Chart.js + chart-theme.js, where the bundle earns its size. -->
 </head>
 <body>
 
@@ -185,7 +187,7 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
-          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
+          <div class="sk-spark" aria-hidden="true"><svg viewBox="0 0 100 34" preserveAspectRatio="none" focusable="false"></svg></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: —</span>
             <span class="sk-pct">—</span>
@@ -205,7 +207,7 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
-          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
+          <div class="sk-spark" aria-hidden="true"><svg viewBox="0 0 100 34" preserveAspectRatio="none" focusable="false"></svg></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: —</span>
             <span class="sk-pct">—</span>
@@ -225,7 +227,7 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
-          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
+          <div class="sk-spark" aria-hidden="true"><svg viewBox="0 0 100 34" preserveAspectRatio="none" focusable="false"></svg></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: —</span>
             <span class="sk-pct">—</span>
@@ -251,7 +253,7 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
-          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
+          <div class="sk-spark" aria-hidden="true"><svg viewBox="0 0 100 34" preserveAspectRatio="none" focusable="false"></svg></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: &mdash;</span>
             <span class="sk-pct">&mdash;</span>
@@ -282,7 +284,7 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
-          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
+          <div class="sk-spark" aria-hidden="true"><svg viewBox="0 0 100 34" preserveAspectRatio="none" focusable="false"></svg></div>
           <div class="sk-foot">
             <span class="sk-tgt">No fixed target — see methodology note</span>
             <span class="sk-pct">—</span>
@@ -302,7 +304,7 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
-          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
+          <div class="sk-spark" aria-hidden="true"><svg viewBox="0 0 100 34" preserveAspectRatio="none" focusable="false"></svg></div>
           <div class="sk-foot">
             <span class="sk-tgt">No fixed target — see methodology note</span>
             <span class="sk-pct">—</span>
@@ -323,7 +325,7 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
-          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
+          <div class="sk-spark" aria-hidden="true"><svg viewBox="0 0 100 34" preserveAspectRatio="none" focusable="false"></svg></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: &lt; 3,800 kcal/kWh</span>
             <span class="sk-pct">—</span>
@@ -343,7 +345,7 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
-          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
+          <div class="sk-spark" aria-hidden="true"><svg viewBox="0 0 100 34" preserveAspectRatio="none" focusable="false"></svg></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: &lt; 10.0%</span>
             <span class="sk-pct">—</span>
@@ -381,7 +383,7 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
-          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
+          <div class="sk-spark" aria-hidden="true"><svg viewBox="0 0 100 34" preserveAspectRatio="none" focusable="false"></svg></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: —</span>
             <span class="sk-pct">—</span>
@@ -406,7 +408,7 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
-          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
+          <div class="sk-spark" aria-hidden="true"><svg viewBox="0 0 100 34" preserveAspectRatio="none" focusable="false"></svg></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: &mdash;</span>
             <span class="sk-pct">&mdash;</span>
@@ -430,7 +432,7 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
-          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
+          <div class="sk-spark" aria-hidden="true"><svg viewBox="0 0 100 34" preserveAspectRatio="none" focusable="false"></svg></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: &mdash;</span>
             <span class="sk-pct">&mdash;</span>
@@ -467,7 +469,6 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
-          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: &ge; 90%</span>
             <span class="sk-pct">&mdash;</span>
@@ -486,7 +487,6 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
-          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: &ge; 500 hrs</span>
             <span class="sk-pct">&mdash;</span>
@@ -505,7 +505,6 @@
             <span class="sk-delta"></span>
           </div>
           <div class="sk-bar"><div class="sk-bar-fill" style="width:0%"></div></div>
-          <div class="sk-spark" aria-hidden="true"><canvas></canvas></div>
           <div class="sk-foot">
             <span class="sk-tgt">Target: &ge; 90%</span>
             <span class="sk-pct">&mdash;</span>
