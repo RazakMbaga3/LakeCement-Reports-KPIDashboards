@@ -167,13 +167,13 @@ CREATE INDEX IF NOT EXISTS idx_report_amendments_day
   ON report_amendments(form_type, record_date, shift);
 CREATE INDEX IF NOT EXISTS idx_report_amendments_requester
   ON report_amendments(requested_by, requested_at DESC);
-DO $ BEGIN
+DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'report_revisions_amendment_fk') THEN
     ALTER TABLE report_revisions
       ADD CONSTRAINT report_revisions_amendment_fk
       FOREIGN KEY (amendment_id) REFERENCES report_amendments(id) ON DELETE SET NULL;
   END IF;
-END $;
+END $$;
 
 -- ── STOPPAGES ───────────────────────────────────────────────
 -- Separate table because stoppages are multi-row per day (multiple events)
