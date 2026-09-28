@@ -260,18 +260,26 @@ app.use('/api/client-errors', rateLimit({
     logger.info(`odoo sync scheduled (${spec})`);
   }
 
-  // LIVE Odoo sync — mining tickets + dispatch, every 30 minutes by default
-  // (services/odooSync.js's LIVE_PULLS). Added 2026-09-24 after the Quarry
-  // report was found missing the 22nd and 23rd with no way to tell whether
-  // pulling was even on: the daily 05:00 job above is gated by
-  // ODOO_SYNC_CRON, which .env.example ships as `off` (so a droplet built
-  // from it never pulls), and even when on it can't keep a weighbridge
-  // report current within the day. This one is a separate switch that is ON
-  // unless explicitly set to `off`, and it also runs once ~1 minute after
-  // every boot so a deploy/restart closes any gap at once. The delay keeps
-  // it out of the way of acceptance harnesses and smoke boots, which start
-  // the server, exercise it for seconds, and kill it.
-  if ((process.env.ODOO_DISPATCH_URL || process.env.ODOO_MINING_URL) && process.env.ODOO_LIVE_SYNC_CRON !== 'off') {
+  // LIVE Odoo sync — mining tickets, dispatch AND the production autofill,
+  // every 30 minutes by default (services/odooSync.js's LIVE_PULLS). Added
+  // 2026-09-24 after the Quarry report was found missing the 22nd and 23rd
+  // with no way to tell whether pulling was even on: the daily 05:00 job
+  // above is gated by ODOO_SYNC_CRON, which .env.example ships as `off` (so a
+  // droplet built from it never pulls), and even when on it can't keep a
+  // weighbridge report current within the day. This one is a separate switch
+  // that is ON unless explicitly set to `off`, and it also runs once ~1
+  // minute after every boot so a deploy/restart closes any gap at once. The
+  // delay keeps it out of the way of acceptance harnesses and smoke boots,
+  // which start the server, exercise it for seconds, and kill it.
+  //
+  // Production joined this job on 2026-09-28: it had been left on the daily
+  // ODOO_SYNC_CRON alone, which is `off` by default, so the live droplet
+  // pulled Mining and Dispatch every 30 min while Production never pulled at
+  // all and the report screen stayed empty. ODOO_PRODUCTION_URL is in the
+  // gate below so a droplet that only has the production connector still
+  // schedules the job.
+  if ((process.env.ODOO_DISPATCH_URL || process.env.ODOO_MINING_URL || process.env.ODOO_PRODUCTION_URL)
+      && process.env.ODOO_LIVE_SYNC_CRON !== 'off') {
     const { runOdooSync, LIVE_PULLS } = require('./services/odooSync');
     const spec = process.env.ODOO_LIVE_SYNC_CRON || '*/30 * * * *';
     const runLive = (why) => runOdooSync({ only: LIVE_PULLS })

@@ -81,14 +81,21 @@ const DAILY_MAX_AGE_MIN = parseFloat(process.env.ODOO_SYNC_MAX_AGE_HOURS || '26'
 const STARTING_GRACE_S  = 900; // after a boot, "never run yet" is expected for a while
 
 /* Which schedules will actually run a pull in THIS process — mirrors the
-   gating in server.js so the answer can't drift from what really fires. */
+   gating in server.js so the answer can't drift from what really fires.
+   LIVE_PULLS comes from config/odooPulls.js rather than being restated here:
+   when production joined the live job on 2026-09-28, a local copy of the list
+   was exactly what would have gone on reporting `not_scheduled` for a pull
+   that had in fact started running. (It cannot be imported from odooSync.js —
+   that closes a health -> odooSync -> watchdog -> health cycle; see that
+   config file.) */
+const { LIVE_PULLS } = require('../config/odooPulls');
+
 function pullSchedule(pullName) {
-  const live  = !!(process.env.ODOO_DISPATCH_URL || process.env.ODOO_MINING_URL)
+  const live  = !!(process.env.ODOO_DISPATCH_URL || process.env.ODOO_MINING_URL || process.env.ODOO_PRODUCTION_URL)
                 && process.env.ODOO_LIVE_SYNC_CRON !== 'off';
   const daily = !!(process.env.ODOO_URL || process.env.ODOO_DISPATCH_URL)
                 && process.env.ODOO_SYNC_CRON !== 'off';
-  const isLivePull = pullName === 'dispatch-daily-summary' || pullName === 'mining-weighbridge-tickets';
-  return { live: isLivePull && live, daily };
+  return { live: LIVE_PULLS.includes(pullName) && live, daily };
 }
 
 /* Pure: one pull's state row + how it's scheduled -> a verdict. Kept free

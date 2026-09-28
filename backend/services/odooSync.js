@@ -132,12 +132,25 @@ const PULLS = [
   },
 ];
 
-/* The two pulls that mirror plain facts (weighbridge tickets, dispatch
-   day-totals) and are cheap enough to run every half hour — the frequent
-   "live" job in server.js runs only these. The production autofill is left
-   to the daily job: it writes reviewable drafts and logs overrides, and a
-   day's figures don't move minute to minute the way the weighbridge does. */
-const LIVE_PULLS = ['dispatch-daily-summary', 'mining-weighbridge-tickets'];
+/* The pulls the frequent "live" job in server.js runs — defined in
+   config/odooPulls.js, which health.js reads too (see that file for why it
+   is not defined here).
+
+   The production autofill was deliberately left off this list when it was
+   added on 2026-09-24 — the reasoning being that a day's tonnages don't move
+   minute to minute the way a weighbridge does. That reasoning was wrong in
+   practice for one reason: the daily job it was left on is gated by
+   ODOO_SYNC_CRON, which .env.example ships as `off`, so on a droplet built
+   from that file the autofill never ran at all. Production stayed empty for
+   days while Mining and Dispatch stayed current, because only they were on
+   the switch that defaults to ON. Being on the same schedule as the other two
+   is what makes "is it pulling?" have one answer instead of three.
+
+   Re-running it is safe and near-free when nothing changed: the pull is
+   idempotent (content-hashed entries, unchanged rows are a no-op) and the
+   autofill only writes a field whose value actually differs, so a repeat run
+   over a quiet window writes nothing and logs no override. */
+const { LIVE_PULLS } = require('../config/odooPulls');
 
 /* Remember what a pull last did (migration 026). This is the only way to
    tell, from inside the app, whether a pull is really live — and it must
