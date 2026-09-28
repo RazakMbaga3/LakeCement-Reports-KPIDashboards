@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Lake Cement – IT Asset Register</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="auth.js?v=12"></script>
+  <script src="forms/api-client.js"></script>
+  <script src="sidebar.js?v=4"></script>
+  <script src="loader.js?v=1"></script>
+  <style>
+    body { display:flex; flex-direction:column; min-height:100vh; background:var(--off-white); }
+    .ita-main { max-width: 1440px; margin: 0 auto; padding: 20px 28px 64px; width: 100%; }
+
+    .ita-intro { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; max-width: 900px; line-height: 1.6; }
+    .ita-intro > summary {
+      cursor: pointer; font-weight: 700; color: var(--navy);
+      list-style: none; display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 0; min-height: 24px;
+    }
+    .ita-intro > summary::-webkit-details-marker { display: none; }
+    .ita-intro > summary::before { content: '›'; transition: transform .15s; font-size: 14px; }
+    .ita-intro[open] > summary::before { transform: rotate(90deg); }
+    .ita-intro > p { margin: 4px 0 0; }
+
+    /* KV strip */
+    .ita-kv-strip { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+    .ita-kv {
+      flex:1; min-width:110px; background:white; border:1.5px solid var(--border); border-radius:10px;
+      padding:10px 14px; cursor:pointer; transition:border-color .15s, box-shadow .15s;
+    }
+    .ita-kv:hover { border-color:var(--navy); }
+    .ita-kv.active { border-color:var(--navy); box-shadow:0 0 0 2px rgba(23,49,88,.12); }
+    .ita-kv-val { font-size:20px; font-weight:800; color:var(--navy); line-height:1.1; }
+    .ita-kv-lbl { font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.4px; margin-top:3px; }
+
+    /* Toolbar (matches admin-users.html's .adm-bar pattern) */
+    .ita-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+    .ita-bar input[type=search] {
+      font-family: var(--font); font-size: 12px; padding: 8px 10px;
+      border: 1.5px solid var(--border); border-radius: 6px; background: white; color: var(--navy);
+      min-width: 240px;
+    }
+    .ita-spacer { flex: 1; }
+    .ita-btn { font-family: var(--font); font-size: 12px; font-weight: 700; padding: 8px 14px;
+               border-radius: 6px; border: 1.5px solid transparent; cursor: pointer;
+               display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .ita-btn-primary { background: var(--navy, #173158); color: white; }
+    .ita-btn-primary:hover { background: #0f2340; }
+    .ita-btn-ghost { background: white; color: var(--navy); border: 1.5px solid var(--border); }
+    .ita-btn-ghost:hover { background: var(--off-white); }
+    .ita-btn-danger { background: white; color: #B91C1C; border: 1.5px solid var(--st-bad-bd); }
+    .ita-btn-danger:hover { background: var(--st-bad-bg); }
+    .ita-btn:disabled { opacity: .45; cursor: not-allowed; }
+    .ita-btn-sm { font-size: 11px; padding: 5px 9px; }
+
+    /* Table */
+    .ita-wrap { overflow-x: auto; background: white; border: 1.5px solid var(--border); border-radius: 14px; }
+    table.ita-table { border-collapse: collapse; font-size: 12px; width: 100%; }
+    table.ita-table th, table.ita-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #F0F4F8; white-space: nowrap; }
+    table.ita-table th { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+                         color: var(--text-muted); background: var(--off-white); position: sticky; top: 0; z-index: 1; }
+    table.ita-table tr:last-child td { border-bottom: none; }
+    table.ita-table tbody tr:hover { background: #FAFCFF; }
+    .ita-empty-cell { color: #C0C8D4; font-style: italic; }
+    .ita-actions-cell { display:flex; gap:6px; white-space:nowrap; }
+    .ita-empty { text-align: center; padding: 56px 20px; color: var(--text-muted); }
+    .ita-count { font-size: 12px; color: var(--text-muted); }
+
+    .ita-source-tag { display:inline-block; font-size:10px; font-weight:800; letter-spacing:.4px;
+      padding:2px 6px; border-radius:5px; text-transform:uppercase; }
+    .ita-source-import { background:var(--seq-2); color:var(--seq-7); }
+    .ita-source-manual { background:#F1F5F9; color:var(--text-muted); }
+
+    /* Pagination */
+    .ita-pager { display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-top:12px; font-size:12px; color:var(--text-muted); }
+
+    /* Drawer (matches admin-users.html's .adm-drawer pattern) */
+    .ita-scrim { position: fixed; inset: 0; background: rgba(15,25,45,.45); z-index: 900; }
+    .ita-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(460px, 100%);
+                  background: white; z-index: 901; box-shadow: -8px 0 32px rgba(0,0,0,.18);
+                  display: flex; flex-direction: column; }
+    .ita-drawer header { padding: 16px 20px 14px; border-bottom: 1.5px solid var(--border); }
+    .ita-drawer h2 { font-size: 15px; color: var(--navy); margin: 0 0 3px; }
+    .ita-drawer .sub { font-size: 12px; color: var(--text-muted); }
+    .ita-drawer .body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+    .ita-drawer footer { padding: 14px 20px; border-top: 1.5px solid var(--border);
+                         display: flex; gap: 10px; justify-content: flex-end; background: var(--off-white); }
+    .ita-field { margin-bottom: 14px; }
+    .ita-field label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase;
+                       letter-spacing: .5px; color: var(--text-muted); margin-bottom: 4px; }
+    .ita-field input {
+      width: 100%; font-family: var(--font); font-size: 13px; padding: 8px 10px;
+      border: 1.5px solid var(--border); border-radius: 6px; background: white; color: var(--navy); }
+    .ita-err { background: var(--st-bad-bg); border: 1.5px solid var(--st-bad-bd); color: #B91C1C;
+               font-size: 12px; padding: 10px 12px; border-radius: 6px; margin-bottom: 14px; line-height: 1.5; }
+
+    /* Import modal */
+    .ita-import-body { padding: 4px 0 0; }
+    .ita-drop {
+      border: 2px dashed var(--border); border-radius: 10px; padding: 28px 16px; text-align: center;
+      color: var(--text-muted); font-size: 12px; cursor: pointer; transition: border-color .15s, background .15s;
+    }
+    .ita-drop:hover, .ita-drop.drag { border-color: var(--navy); background: #F8FAFC; }
+    .ita-drop strong { color: var(--navy); }
+    .ita-import-result { margin-top: 14px; }
+    .ita-import-row { display:flex; align-items:center; gap:10px; font-size:12px; padding:6px 0; border-bottom:1px solid #F0F4F8; }
+    .ita-import-row:last-child { border-bottom: none; }
+    .ita-import-row .lbl { flex:1; color:var(--navy); font-weight:600; }
+    .ita-import-row .delta { font-weight:700; color:var(--text-muted); }
+    .ita-import-row .delta.grew { color: var(--green-ink); }
+    .ita-import-row .delta.shrank { color: var(--amber-ink); }
+    .ita-missing-note { font-size:12px; color:var(--amber-ink); background:var(--st-warn-bg);
+      border:1.5px solid var(--st-warn-bd); border-radius:6px; padding:8px 10px; margin-top:12px; line-height:1.5; }
+    .ita-last-import { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+  </style>
+  <!-- Design system — loaded last so it settles equal-specificity ties -->
+  <link rel="stylesheet" href="design-system.css?v=1" />
+  <script src="lucide-icons.js?v=1"></script>
+  <script src="a11y.js?v=1"></script>
+  <script src="mobile-shell.js?v=1"></script>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="app-sidebar"></aside>
+  <script>renderSidebar();</script>
+
+  <div class="main">
+
+<header class="top-header" id="app-header"></header>
+<script>renderTopHeader();</script>
+
+<main class="ita-main">
+  <details class="ita-intro">
+    <summary>About this page</summary>
+    <p>
+      The company's IT equipment register — computers, printers, network gear, CCTV, licenses, external drives,
+      biometric devices and e-waste. Edit rows directly, or re-upload IT's monthly Excel report (the same
+      "M - 19 IT Report" workbook) to refresh a whole category at once. <strong>Importing a category replaces
+      its rows entirely</strong> — it does not merge with what is already here, so an upload should always be
+      IT's complete, current list for that sheet, not a partial one. Every add, edit, delete and import is
+      written to the audit trail.
+    </p>
+  </details>
+
+  <div class="ita-kv-strip" id="ita-kv-strip">
+    <div class="ita-kv"><div class="ita-kv-val">—</div><div class="ita-kv-lbl">Loading…</div></div>
+  </div>
+
+  <div class="ita-bar">
+    <input type="search" id="f-q" placeholder="Search this register…" />
+    <span class="ita-count" id="ita-count"></span>
+    <span class="ita-spacer"></span>
+    <button class="ita-btn ita-btn-ghost" onclick="openImportModal()">
+      <i data-lucide="upload" style="width:13px;height:13px;"></i> Import Excel…
+    </button>
+    <button class="ita-btn ita-btn-primary" id="add-btn" onclick="openRowDrawer(null)">
+      <i data-lucide="plus-circle" style="width:13px;height:13px;"></i> Add Row
+    </button>
+  </div>
+
+  <div class="ita-last-import" id="ita-last-import"></div>
+
+  <div class="ita-wrap">
+    <table class="ita-table" id="ita-table">
+      <thead><tr><th colspan="1" class="ita-empty">Loading…</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="ita-pager" id="ita-pager" style="display:none">
+    <button class="ita-btn ita-btn-ghost ita-btn-sm" id="pg-prev" onclick="pagerPrev()">‹ Prev</button>
+    <span id="pg-label"></span>
+    <button class="ita-btn ita-btn-ghost ita-btn-sm" id="pg-next" onclick="pagerNext()">Next ›</button>
+  </div>
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span id="footer-date"></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+  </div><!-- /.main -->
+</div><!-- /.app-shell -->
+
+<div id="ita-drawer-host"></div>
+<div id="ita-import-host"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.544.0/umd/lucide.min.js"></script>
+<script src="forms/client-errors.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  requireAuth();
+  // Backend refuses every route here to anyone outside admin/it (writes)
+  // or admin/it/management/md (reads) — see backend/config/itAssetsAccess.js.
+  // This redirect is about not showing a broken empty screen, not security.
+  if (getCurrentUser() && !canManageITAssets()) { window.location.href = 'index.html'; return; }
+
+  const $   = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  let OVERVIEW  = [];      // [{category,label,count,lastImport}]
+  let CURRENT   = null;    // active category key
+  let COLUMNS   = [];      // this category's column defs, derived from the first page of rows... see note below
+  let ROWS      = [];      // current page's rows
+  let TOTAL     = 0;
+  let LIMIT     = 100;
+  let OFFSET    = 0;
+  let SEARCH_T  = null;
+
+  /* The API returns each row's `data` as a plain object of category-specific
+     keys — it does not separately publish the column list/order (that lives
+     server-side in services/itAssetImport.js's CATEGORIES). Rather than
+     duplicate that list here (a second place it could drift from the
+     server's), the page derives display columns from the union of keys
+     actually present across the loaded page's rows, in first-seen order.
+     A category with zero rows shows an empty state instead of a header
+     with no columns — see render(). */
+  function deriveColumns(rows) {
+    const seen = [];
+    const has = new Set();
+    for (const r of rows) {
+      for (const k of Object.keys(r.data || {})) {
+        if (!has.has(k)) { has.add(k); seen.push(k); }
+      }
+    }
+    return seen;
+  }
+  function columnLabel(key) {
+    return key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      .replace(/\bSn\b/, 'SN').replace(/\bIp\b/, 'IP').replace(/\bMac\b/, 'MAC')
+      .replace(/\bOs\b/, 'OS').replace(/\bSl No\b/, 'Sl No').replace(/\bDcs\b/, 'DCS');
+  }
+
+  function fmtDate(v) {
+    if (!v) return '';
+    const d = new Date(v);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  /* ── Overview strip ───────────────────────────────────────────────── */
+  function renderKvStrip() {
+    const strip = $('ita-kv-strip');
+    strip.innerHTML = OVERVIEW.map(c => `
+      <div class="ita-kv ${c.category === CURRENT ? 'active' : ''}" data-cat="${esc(c.category)}">
+        <div class="ita-kv-val">${c.count}</div>
+        <div class="ita-kv-lbl">${esc(c.label)}</div>
+      </div>`).join('');
+    strip.querySelectorAll('.ita-kv').forEach(el => {
+      el.addEventListener('click', () => switchCategory(el.dataset.cat));
+    });
+  }
+
+  async function loadOverview() {
+    const data = await NyatiAPI.itAssetsOverview();
+    OVERVIEW = data.categories;
+    renderKvStrip();
+  }
+
+  /* ── Category switch + list ───────────────────────────────────────── */
+  async function switchCategory(cat) {
+    CURRENT = cat;
+    OFFSET  = 0;
+    $('f-q').value = '';
+    renderKvStrip();
+    await loadRows();
+  }
+
+  async function loadRows() {
+    const tbody = $('ita-table').querySelector('tbody');
+    const thead = $('ita-table').querySelector('thead');
+    thead.innerHTML = '<tr><th class="ita-empty">Loading…</th></tr>';
+    tbody.innerHTML = '';
+
+    const q = $('f-q').value.trim();
+    let data;
+    try {
+      data = await NyatiAPI.itAssetsList(CURRENT, { q: q || undefined, limit: LIMIT, offset: OFFSET });
+    } catch (e) {
+      thead.innerHTML = '<tr><th class="ita-empty">Could not load this register</th></tr>';
+      tbody.innerHTML = `<tr><td class="ita-empty">${esc(humanError(e))}</td></tr>`;
+      return;
+    }
+    ROWS    = data.rows;
+    TOTAL   = data.total;
+    COLUMNS = deriveColumns(ROWS);
+    render();
+  }
+
+  function render() {
+    const cat = OVERVIEW.find(c => c.category === CURRENT);
+    const thead = $('ita-table').querySelector('thead');
+    const tbody = $('ita-table').querySelector('tbody');
+
+    $('ita-count').textContent = TOTAL + (TOTAL === 1 ? ' row' : ' rows') +
+      (cat ? ' in ' + cat.label : '');
+
+    if (cat && cat.lastImport) {
+      const li = cat.lastImport;
+      $('ita-last-import').innerHTML = `<i data-lucide="upload" style="width:12px;height:12px;vertical-align:-1px"></i> ` +
+        `Last imported ${fmtDate(li.imported_at)} by ${esc(li.imported_by_name || '—')} ` +
+        `from <em>${esc(li.source_filename || 'an upload')}</em> — ` +
+        `${li.previous_row_count} → ${li.row_count} rows.`;
+    } else {
+      $('ita-last-import').textContent = '';
+    }
+
+    if (!ROWS.length) {
+      thead.innerHTML = '<tr><th class="ita-empty" style="text-align:left">No rows</th></tr>';
+      tbody.innerHTML = `<tr><td class="ita-empty">${TOTAL === 0
+        ? 'This register is empty. Add a row, or import IT’s Excel report.'
+        : 'No rows match this search.'}</td></tr>`;
+      renderPager();
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+
+    thead.innerHTML = '<tr>' +
+      COLUMNS.map(k => `<th>${esc(columnLabel(k))}</th>`).join('') +
+      '<th>Source</th><th style="text-align:right">Actions</th></tr>';
+
+    tbody.innerHTML = ROWS.map(r => {
+      const cells = COLUMNS.map(k => {
+        const v = r.data[k];
+        return v ? `<td>${esc(v)}</td>` : `<td class="ita-empty-cell">—</td>`;
+      }).join('');
+      const srcCls = r.source === 'import' ? 'ita-source-import' : 'ita-source-manual';
+      return `<tr>
+        ${cells}
+        <td><span class="ita-source-tag ${srcCls}">${esc(r.source)}</span></td>
+        <td class="ita-actions-cell">
+          <button class="ita-btn ita-btn-ghost ita-btn-sm" onclick="openRowDrawer(${r.id})" title="Edit">
+            <i data-lucide="pencil" style="width:12px;height:12px"></i>
+          </button>
+          <button class="ita-btn ita-btn-danger ita-btn-sm" onclick="deleteRow(${r.id})" title="Delete">
+            <i data-lucide="trash-2" style="width:12px;height:12px"></i>
+          </button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    renderPager();
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function renderPager() {
+    const pager = $('ita-pager');
+    if (TOTAL <= LIMIT) { pager.style.display = 'none'; return; }
+    pager.style.display = 'flex';
+    const from = TOTAL === 0 ? 0 : OFFSET + 1;
+    const to   = Math.min(OFFSET + LIMIT, TOTAL);
+    $('pg-label').textContent = `${from}–${to} of ${TOTAL}`;
+    $('pg-prev').disabled = OFFSET === 0;
+    $('pg-next').disabled = OFFSET + LIMIT >= TOTAL;
+  }
+  window.pagerPrev = () => { OFFSET = Math.max(0, OFFSET - LIMIT); loadRows(); };
+  window.pagerNext = () => { OFFSET = OFFSET + LIMIT; loadRows(); };
+
+  $('f-q').addEventListener('input', () => {
+    clearTimeout(SEARCH_T);
+    SEARCH_T = setTimeout(() => { OFFSET = 0; loadRows(); }, 300);
+  });
+
+  /* ── Add / Edit drawer ────────────────────────────────────────────── */
+  window.openRowDrawer = function (id) {
+    const row = id ? ROWS.find(r => r.id === id) : null;
+    const isNew = !row;
+
+    // A new row on a category with no rows loaded yet has no column list to
+    // build fields from (deriveColumns needs at least one existing row).
+    // Rather than leave "Add Row" silently broken on an empty register,
+    // fall back to the category's own label as a single free-text hint —
+    // IT is expected to import a workbook first for any category that
+    // starts empty, but manual entry should still not be a dead button.
+    const cols = COLUMNS.length ? COLUMNS : ['note'];
+
+    $('ita-drawer-host').innerHTML = `
+      <div class="ita-scrim" onclick="closeRowDrawer()"></div>
+      <aside class="ita-drawer">
+        <header>
+          <h2>${isNew ? 'Add row' : 'Edit row'}</h2>
+          <div class="sub">${OVERVIEW.find(c => c.category === CURRENT)?.label || CURRENT}</div>
+        </header>
+        <div class="body">
+          <div id="d-err" style="display:none" class="ita-err"></div>
+          ${cols.map(k => `
+            <div class="ita-field">
+              <label>${esc(columnLabel(k))}</label>
+              <input id="f-${esc(k)}" value="${esc(row ? (row.data[k] || '') : '')}" />
+            </div>`).join('')}
+        </div>
+        <footer>
+          <button class="ita-btn ita-btn-ghost" onclick="closeRowDrawer()">Cancel</button>
+          <button class="ita-btn ita-btn-primary" onclick="saveRow(${isNew ? 'null' : row.id})">
+            ${isNew ? 'Create row' : 'Save changes'}
+          </button>
+        </footer>
+      </aside>`;
+    if (window.lucide) lucide.createIcons();
+  };
+
+  window.closeRowDrawer = () => { $('ita-drawer-host').innerHTML = ''; };
+
+  function showDrawerErr(msg) {
+    const el = $('d-err');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  window.saveRow = async function (id) {
+    const cols = COLUMNS.length ? COLUMNS : ['note'];
+    const data = {};
+    cols.forEach(k => { data[k] = $('f-' + k).value.trim() || null; });
+
+    try {
+      if (id) await NyatiAPI.itAssetUpdate(CURRENT, id, data);
+      else    await NyatiAPI.itAssetCreate(CURRENT, data);
+      closeRowDrawer();
+      await Promise.all([loadOverview(), loadRows()]);
+    } catch (e) {
+      showDrawerErr(e.serverMessage || humanError(e));
+    }
+  };
+
+  window.deleteRow = async function (id) {
+    if (!confirm('Delete this row? This cannot be undone.')) return;
+    try {
+      await NyatiAPI.itAssetDelete(CURRENT, id);
+      await Promise.all([loadOverview(), loadRows()]);
+    } catch (e) {
+      alert(humanError(e));
+    }
+  };
+
+  /* ── Import modal ─────────────────────────────────────────────────── */
+  window.openImportModal = function () {
+    $('ita-import-host').innerHTML = `
+      <div class="ita-scrim" onclick="closeImportModal()"></div>
+      <aside class="ita-drawer">
+        <header>
+          <h2>Import IT Asset Register</h2>
+          <div class="sub">Upload IT's monthly Excel report (the "M - 19 IT Report" workbook)</div>
+        </header>
+        <div class="body ita-import-body">
+          <div id="im-err" style="display:none" class="ita-err"></div>
+          <div class="ita-drop" id="im-drop">
+            <i data-lucide="upload" style="width:28px;height:28px;margin-bottom:8px;opacity:.5"></i>
+            <div><strong>Click to choose a file</strong> or drag it here</div>
+            <div style="margin-top:4px">.xlsx only, up to 10MB</div>
+            <input type="file" id="im-file" accept=".xlsx" style="display:none" />
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:12px;line-height:1.5">
+            Every sheet found in the workbook <strong>replaces</strong> that category's rows entirely.
+            A sheet the workbook doesn't have is left completely untouched — its existing rows stay as they are.
+          </div>
+          <div class="ita-import-result" id="im-result"></div>
+        </div>
+        <footer>
+          <button class="ita-btn ita-btn-ghost" onclick="closeImportModal()" id="im-close-btn">Close</button>
+        </footer>
+      </aside>`;
+    if (window.lucide) lucide.createIcons();
+
+    const drop = $('im-drop');
+    const fileInput = $('im-file');
+    drop.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => { if (fileInput.files[0]) doImport(fileInput.files[0]); });
+    ['dragover', 'dragenter'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); }));
+    ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('drag'); }));
+    drop.addEventListener('drop', e => {
+      const f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) doImport(f);
+    });
+  };
+
+  window.closeImportModal = function () {
+    $('ita-import-host').innerHTML = '';
+    // The overview counts (and, if the current category was touched, its
+    // rows) may have changed even if the admin closes without reading the
+    // result — refresh regardless rather than leave stale counts on screen.
+    loadOverview();
+    if (CURRENT) loadRows();
+  };
+
+  async function doImport(file) {
+    const errEl = $('im-err');
+    errEl.style.display = 'none';
+    $('im-drop').innerHTML = `<i data-lucide="refresh-cw" style="width:20px;height:20px"></i> Importing ${esc(file.name)}…`;
+    $('im-close-btn').disabled = true;
+
+    let result;
+    try {
+      result = await NyatiAPI.itAssetsImport(file);
+    } catch (e) {
+      $('im-drop').innerHTML = `<strong>${esc(file.name)}</strong><div style="margin-top:6px">Click to try a different file</div>`;
+      errEl.textContent = e.serverMessage || humanError(e, 'That file could not be imported.');
+      errEl.style.display = 'block';
+      $('im-close-btn').disabled = false;
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+
+    $('im-drop').innerHTML = `<i data-lucide="check-circle" style="width:20px;height:20px;color:var(--green-ink)"></i>
+      <div style="margin-top:6px"><strong>${esc(result.filename)}</strong> imported</div>`;
+    $('im-close-btn').disabled = false;
+
+    const rowsHTML = result.imported.map(r => {
+      const delta = r.newCount - r.previousCount;
+      const cls = delta > 0 ? 'grew' : (delta < 0 ? 'shrank' : '');
+      const sign = delta > 0 ? '+' : '';
+      return `<div class="ita-import-row">
+        <span class="lbl">${esc(r.label)}</span>
+        <span>${r.previousCount} → ${r.newCount}</span>
+        <span class="delta ${cls}">${sign}${delta}</span>
+      </div>`;
+    }).join('');
+    let missingHTML = '';
+    if (result.missing && result.missing.length) {
+      missingHTML = `<div class="ita-missing-note">
+        Not found in this workbook, left unchanged: ${result.missing.map(m => esc(m.label)).join(', ')}.
+      </div>`;
+    }
+    $('im-result').innerHTML = rowsHTML + missingHTML;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  /* ── Init ──────────────────────────────────────────────────────────── */
+  (async function init() {
+    try {
+      await loadOverview();
+      if (OVERVIEW.length) await switchCategory(OVERVIEW[0].category);
+    } catch (e) {
+      $('ita-kv-strip').innerHTML = `<div class="ita-kv"><div class="ita-kv-val">—</div><div class="ita-kv-lbl">${esc(humanError(e))}</div></div>`;
+    }
+  })();
+})();
+</script>
+</body>
+</html>

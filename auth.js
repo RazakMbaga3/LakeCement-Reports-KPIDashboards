@@ -49,6 +49,7 @@ const PERMISSIONS = {
     commercial: { sales:'view', purchase:'view' },
     canViewAudit:  true,
     canManageUsers:false,
+    canManageITAssets:false,
     canExport:     true,
   },
 
@@ -62,6 +63,7 @@ const PERMISSIONS = {
     commercial: { sales:null, purchase:null },
     canViewAudit:  true,
     canManageUsers:true,
+    canManageITAssets:true,
     canExport:     true,
   },
 
@@ -75,6 +77,7 @@ const PERMISSIONS = {
     commercial: { sales:'view', purchase:'view' },
     canViewAudit:  false,
     canManageUsers:false,
+    canManageITAssets:false,
     canExport:     true,
   },
 
@@ -88,6 +91,7 @@ const PERMISSIONS = {
     commercial: { sales:null, purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
+    canManageITAssets:false,
     canExport:     true,
   },
 
@@ -101,6 +105,7 @@ const PERMISSIONS = {
     commercial: { sales:null, purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
+    canManageITAssets:false,
     canExport:     true,
   },
 
@@ -114,6 +119,7 @@ const PERMISSIONS = {
     commercial: { sales:null, purchase:'view' },   /* Stores receives against Purchase's POs — see PURCHASE_VIEW_ROLES in forms/access-registry.js */
     canViewAudit:  false,
     canManageUsers:false,
+    canManageITAssets:false,
     canExport:     true,
   },
 
@@ -127,6 +133,7 @@ const PERMISSIONS = {
     commercial: { sales:null, purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
+    canManageITAssets:false,
     canExport:     false,
   },
 
@@ -140,6 +147,7 @@ const PERMISSIONS = {
     commercial: { sales:null, purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
+    canManageITAssets:false,
     canExport:     false,
   },
 
@@ -153,6 +161,7 @@ const PERMISSIONS = {
     commercial: { sales:null, purchase:null },
     canViewAudit:  true,
     canManageUsers:false,
+    canManageITAssets:true,
     canExport:     false,
   },
 
@@ -166,6 +175,7 @@ const PERMISSIONS = {
     commercial: { sales:null, purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
+    canManageITAssets:false,
     canExport:     false,
   },
 
@@ -179,6 +189,7 @@ const PERMISSIONS = {
     commercial: { sales:null, purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
+    canManageITAssets:false,
     canExport:     false,
   },
 
@@ -192,6 +203,7 @@ const PERMISSIONS = {
     commercial: { sales:null, purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
+    canManageITAssets:false,
     canExport:     false,
   },
 
@@ -205,6 +217,7 @@ const PERMISSIONS = {
     commercial: { sales:'edit', purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
+    canManageITAssets:false,
     canExport:     true,
   },
 
@@ -218,6 +231,7 @@ const PERMISSIONS = {
     commercial: { sales:null, purchase:'view' },
     canViewAudit:  false,
     canManageUsers:false,
+    canManageITAssets:false,
     canExport:     true,
   },
 
@@ -231,6 +245,7 @@ const PERMISSIONS = {
     commercial: { sales:null, purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
+    canManageITAssets:false,
     canExport:     false,
   },
 
@@ -244,6 +259,7 @@ const PERMISSIONS = {
     commercial: { sales:null, purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
+    canManageITAssets:false,
     canExport:     false,
   },
 
@@ -271,6 +287,7 @@ const PERMISSIONS = {
     commercial: { sales:null, purchase:null },
     canViewAudit:  false,
     canManageUsers:false,
+    canManageITAssets:false,
     canExport:     true,
   },
 };
@@ -454,6 +471,7 @@ function canEdit(tab, section) {
 function canViewAudit()    { return _getPerms().canViewAudit    === true; }
 function canExport()       { return _getPerms().canExport       === true; }
 function canManageUsers()  { return _getPerms().canManageUsers  === true; }
+function canManageITAssets() { return _getPerms().canManageITAssets === true; }
 function canSubmitDaily()  { return _getPerms().kpi?.daily      === true; }
 
 /* Sales & Purchases sidebar group — 'view'|'edit'|null, parallel to the

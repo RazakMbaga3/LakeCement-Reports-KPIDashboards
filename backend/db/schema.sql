@@ -175,6 +175,44 @@ DO $$ BEGIN
   END IF;
 END $$;
 
+-- ── IT ASSET REGISTER ───────────────────────────────────────
+-- One polymorphic table for all 10 IT asset registers (computers,
+-- printers, licenses, CCTV, network gear, etc.) — category + JSONB data,
+-- same "many shapes, one lifecycle" choice as daily_reports' form_type +
+-- data. it_asset_imports is the audit trail for the whole-category
+-- replace-on-import an upload performs. See
+-- migrations/028_it_assets.sql for the full reasoning.
+CREATE TABLE IF NOT EXISTS it_assets (
+  id              SERIAL       PRIMARY KEY,
+  category        VARCHAR(30)  NOT NULL
+    CHECK (category IN (
+      'factory_computers', 'ho_computers', 'printers', 'equipment_software',
+      'dcs_licenses', 'network_switches', 'cctv', 'external_hard_disks',
+      'biometric_devices', 'ewaste'
+    )),
+  data            JSONB        NOT NULL DEFAULT '{}',
+  source          VARCHAR(10)  NOT NULL DEFAULT 'manual'
+    CHECK (source IN ('import', 'manual')),
+  created_at      TIMESTAMP    NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMP    NOT NULL DEFAULT NOW(),
+  updated_by      INTEGER      REFERENCES users(id) ON DELETE SET NULL,
+  updated_by_name VARCHAR(100)
+);
+CREATE INDEX IF NOT EXISTS idx_it_assets_category ON it_assets (category);
+CREATE INDEX IF NOT EXISTS idx_it_assets_data_gin ON it_assets USING GIN (data);
+
+CREATE TABLE IF NOT EXISTS it_asset_imports (
+  id                  SERIAL       PRIMARY KEY,
+  category            VARCHAR(30)  NOT NULL,
+  imported_at         TIMESTAMP    NOT NULL DEFAULT NOW(),
+  imported_by         INTEGER      REFERENCES users(id) ON DELETE SET NULL,
+  imported_by_name    VARCHAR(100),
+  source_filename     VARCHAR(255),
+  row_count           INTEGER      NOT NULL,
+  previous_row_count  INTEGER      NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_it_asset_imports_category ON it_asset_imports (category, imported_at DESC);
+
 -- ── STOPPAGES ───────────────────────────────────────────────
 -- Separate table because stoppages are multi-row per day (multiple events)
 CREATE TABLE IF NOT EXISTS stoppages (

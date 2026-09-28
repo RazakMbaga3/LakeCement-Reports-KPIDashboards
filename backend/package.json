@@ -64,7 +64,8 @@
     "test:odoo-sync-health": "node --test test/odoo-sync-health.test.js",
     "test:dashboard-cache": "node --test test/dashboard-cache.test.js",
     "accept:amendments": "node scripts/accept-amendments.js",
-    "test:amendments": "node --test test/report-amendments.test.js"
+    "test:amendments": "node --test test/report-amendments.test.js",
+    "accept:it-assets": "node scripts/accept-it-assets.js"
   },
   "keywords": [],
   "author": "",
@@ -79,6 +80,7 @@
     "express-rate-limit": "^8.5.2",
     "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.3",
+    "multer": "^2.4.0",
     "node-cron": "^4.6.0",
     "node-windows": "^1.0.0-beta.8",
     "nodemailer": "^9.0.3",

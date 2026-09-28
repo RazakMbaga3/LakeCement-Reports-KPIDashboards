@@ -354,6 +354,67 @@
     return res.json();
   }
 
+  /* ── IT Asset Register (backend/routes/itAssets.js) ────────────────
+     Database-backed, editable, Excel-importable — replaces the static
+     snapshot GET /api/mis/it-assets still serves to mis.html's own tab
+     (that page is unchanged; this is the new it-assets.html's API). */
+  async function itAssetsOverview() {
+    const res = await fetch(BASE + '/it-assets', { headers: _headers() });
+    if (!res.ok) throw _httpError('itAssetsOverview', '', res);
+    return res.json();
+  }
+  async function itAssetsList(category, opts) {
+    const params = new URLSearchParams();
+    if (opts && opts.q)      params.set('q', opts.q);
+    if (opts && opts.limit)  params.set('limit', opts.limit);
+    if (opts && opts.offset) params.set('offset', opts.offset);
+    const qs = params.toString();
+    const res = await fetch(BASE + '/it-assets/' + encodeURIComponent(category) + (qs ? '?' + qs : ''), { headers: _headers() });
+    if (!res.ok) throw _httpError('itAssetsList', category, res);
+    return res.json();
+  }
+  async function itAssetCreate(category, data) {
+    const res = await fetch(BASE + '/it-assets/' + encodeURIComponent(category), {
+      method: 'POST', headers: _headers(), body: JSON.stringify(data),
+    });
+    if (!res.ok) throw _httpError('itAssetCreate', category, res);
+    return res.json();
+  }
+  async function itAssetUpdate(category, id, patch) {
+    const res = await fetch(BASE + '/it-assets/' + encodeURIComponent(category) + '/' + encodeURIComponent(id), {
+      method: 'PUT', headers: _headers(), body: JSON.stringify(patch),
+    });
+    if (!res.ok) throw _httpError('itAssetUpdate', category, res);
+    return res.json();
+  }
+  async function itAssetDelete(category, id) {
+    const res = await fetch(BASE + '/it-assets/' + encodeURIComponent(category) + '/' + encodeURIComponent(id), {
+      method: 'DELETE', headers: _headers(),
+    });
+    if (!res.ok) throw _httpError('itAssetDelete', category, res);
+    return res.json();
+  }
+  /* Multipart upload — deliberately NOT using _headers(), which sets
+     Content-Type: application/json; fetch must set its own multipart
+     boundary for a FormData body, so only the Authorization header is
+     carried over here. */
+  async function itAssetsImport(file) {
+    const token = (typeof getAuthToken === 'function') ? getAuthToken() : null;
+    const h = {};
+    if (token) h['Authorization'] = 'Bearer ' + token;
+    const body = new FormData();
+    body.append('file', file);
+    const res = await fetch(BASE + '/it-assets/import', { method: 'POST', headers: h, body });
+    if (!res.ok) {
+      let msg = '';
+      try { msg = (await res.json()).error || ''; } catch { /* non-JSON error body */ }
+      const err = _httpError('itAssetsImport', file.name, res);
+      if (msg) err.serverMessage = msg;
+      throw err;
+    }
+    return res.json();
+  }
+
   /* ── Monthly KPI submission lock ──────────────────────────────────
      A department-month is "submitted" once its HOD declares it final;
      kpi_monthly writes for that period are then refused with 409
@@ -534,6 +595,7 @@
     getApprovals, approveReport, rejectReport,
     requestAmendment, getAmendments, grantAmendment, declineAmendment, withdrawAmendment, getAmendmentHistory,
     getMisEmployees, getMisItAssets, getMisVehicles, getMisComplianceCerts,
+    itAssetsOverview, itAssetsList, itAssetCreate, itAssetUpdate, itAssetDelete, itAssetsImport,
     getKpiSubmission, submitKpiMonth, reopenKpiMonth,
     adminGetCatalogue, adminListUsers, adminCreateUser, adminUpdateUser,
     adminResetPw, adminUnlockUser,

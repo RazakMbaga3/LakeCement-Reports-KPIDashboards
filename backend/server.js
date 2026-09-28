@@ -39,6 +39,7 @@ const purchasesRoutes = require('./routes/purchases');
 const approvalsRoutes = require('./routes/approvals');
 const amendmentsRoutes = require('./routes/amendments');
 const adminRoutes     = require('./routes/admin');
+const itAssetsRoutes  = require('./routes/itAssets');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -147,6 +148,7 @@ app.use('/api/purchases', purchasesRoutes);
 app.use('/api/approvals', approvalsRoutes);
 app.use('/api/amendments', amendmentsRoutes);
 app.use('/api/admin',    adminRoutes);
+app.use('/api/it-assets', itAssetsRoutes);
 app.use('/api/monitor',  monitorRouter);
 app.get('/api/metrics', metricsAuth, metricsHandler);
 

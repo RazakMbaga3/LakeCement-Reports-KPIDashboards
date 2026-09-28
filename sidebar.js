@@ -378,11 +378,28 @@ function renderSidebar() {
      canManageUsers is admin-only today. Gated on the permission rather
      than on the role so widening it later is a one-line change in
      auth.js's PERMISSIONS, not an edit here as well. */
+  /* canManageITAssets is 'it'+'admin' today (backend/config/itAssetsAccess.js
+     mirrors the same two roles for write access) — its own flag rather than
+     reusing canManageUsers so the IT department can reach its own register
+     without also gaining User Administration. Placed in the same
+     Administration group as User Administration since both are "manage a
+     company-wide register", not a department's own daily data. */
+  const showAdminGroup = perms.canManageUsers || perms.canManageITAssets;
+  if (showAdminGroup) html += _sbGroupLabelHTML('admin');
   if (perms.canManageUsers) {
-    html += _sbGroupLabelHTML('admin');
     html += _sbItemHTML({
       icon: 'users', label: 'User Administration',
       active: currentPage === 'admin-users.html', href: base + 'admin-users.html',
+    });
+  }
+  if (perms.canManageITAssets) {
+    html += _sbItemHTML({
+      // 'monitor', not 'hard-drive' — the self-hosted lucide-icons.js subset
+      // (docs/DESIGN_SYSTEM.md) is a generated, pinned 93-icon set and does
+      // not include 'hard-drive'; 'monitor' is already in it and used
+      // elsewhere for this exact IT-assets concept (mis.html's own tab).
+      icon: 'monitor', label: 'IT Asset Register',
+      active: currentPage === 'it-assets.html', href: base + 'it-assets.html',
     });
   }
 
