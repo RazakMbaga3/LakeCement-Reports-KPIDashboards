@@ -195,17 +195,28 @@
                per grade, none of which had a data-field — so they looked like
                data entry, accepted typing, and were silently discarded on
                submit. Only the monthly total was ever stored. That one field
-               is now the whole row, and it declares itself as a standing
-               default so re-opening the form on a fresh day does not wipe the
-               plan. It is a registry fact (dispatch_mtd_target) as of
-               2026-09-15, which is what lets the review page say where every
-               MTD-achievement percentage got its denominator. -->
+               is now the whole row. It is a registry fact
+               (dispatch_mtd_target) as of 2026-09-15, which is what lets the
+               review page say where every MTD-achievement percentage got its
+               denominator.
+
+               It carried data-default="10200" until 2026-09-28. That number
+               was invented — no plant plan was ever entered, and nothing was
+               ever stored for this field in any report. Its only effect was
+               to hand the review page a denominator nobody chose: against
+               September's real 51,507 MT the "MTD vs Monthly Plan" card read
+               423.7%, which looks like a plant smashing its target and is
+               simply an artefact of a hardcoded HTML attribute. The card
+               already knows how to say "No monthly plan entered on the
+               report" when the field is empty; the default was what stopped
+               that honest fallback from ever showing. A target is the
+               plant's to set, not this form's to assume. See DEC-006. -->
           <tr class="trow">
             <td class="tp">Dispatch plan (month)</td>
             <td class="cs" colspan="8"><div class="cv" style="text-align:left;padding-left:10px;font-weight:500">
               Entered once a month, in MT. Every month-to-date achievement figure is measured against it.
             </div></td>
-            <td class="cm"><input class="ci" type="number" data-field="dispatch_mtd_target" data-default="10200" /></td>
+            <td class="cm"><input class="ci" type="number" data-field="dispatch_mtd_target" placeholder="e.g. 55000" /></td>
           </tr>
         </tbody>
       </table>
@@ -305,14 +316,14 @@
           <tr>
             <td class="tp">42.5 R</td>
             <td class="cm"><input class="ci" type="number" data-field="bags_pl1" /></td>
-            <td class="cm"><input class="ci" type="number" data-default="7000" /></td>
+            <td class="cm"><div class="cv">7,000</div></td>
             <td class="cm"><input class="ci" type="number" step="0.01" data-field="burst_rate_pl1" /></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:10px" /></td>
           </tr>
           <tr>
             <td class="tp">42.5 N / B-M</td>
             <td class="cm"><input class="ci" type="number" data-field="bags_pl2" /></td>
-            <td class="cm"><input class="ci" type="number" data-default="600" /></td>
+            <td class="cm"><div class="cv">600</div></td>
             <td class="cm"><input class="ci" type="number" step="0.01" data-field="burst_rate_pl2" /></td>
             <td class="cm"><input class="ci" type="text" style="text-align:left;padding-left:10px" /></td>
           </tr>

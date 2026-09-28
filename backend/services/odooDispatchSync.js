@@ -32,27 +32,43 @@
              byte-exact confirmed match — flag to the Odoo/quality team
              if this ever needs correcting.
 
-  A distinct 'Big Bag' channel (dispatch_bag_*) has never appeared in any
-  Odoo sample pulled so far — deliberately NOT mapped by guesswork. If it
-  shows up in a future pull it lands in the "unmapped" bucket below
-  (logged with a sample) rather than being silently dropped or filed
-  under the wrong key. Same for any channel×grade combination this form
-  has no field for at all (e.g. dispatch_bag_* only covers 3 of the 5
-  grades) — unmapped, never force-written to an invented key.
+  A 'Big Bag' channel (dispatch_bag_*) first appeared in Odoo on
+  2026-09-04, but ONLY carrying FLY ASH — never cement. So the three Big
+  Bag cement fields still have no confirmed Odoo source and remain
+  deliberately unmapped: the channel existing is not evidence that a
+  cement row under it would mean what dispatch_bag_* means. Map it the
+  day real cement arrives there, not before. Same for any channel×grade
+  combination this form has no field for at all (dispatch_bag_* covers
+  only 3 of the 5 grades) — unmapped, never force-written to an invented
+  key.
 
-  grade 'CEMENT B-M 42.5 N' — surfaced 2026-09-09 in production's first
-  historical backfill (3 March rows, unmapped). Briefly mapped to
-  dispatch_*_425nbm on the assumption it was the long-anticipated
-  '42.5N B-M' grade with its words reordered — WRONG, corrected the same
-  day: it's actually the Duramax 42 marketing name (confirmed against
-  services/sales.js's Odoo product catalogue — Duramax 42 = product code
-  FG005, whose real Odoo name is this exact string). dispatch-form.html
-  has no field for Duramax at all, so this stays deliberately UNMAPPED —
-  filing it under dispatch_*_425nbm would have meant real Duramax
-  tonnage silently misreported as 42.5N B-M, which is worse than an
-  honest "unmapped" bucket. Adding a Duramax column to the Dispatch
-  report is a real, separate ask — not done here without sign-off, since
-  it changes a form the plant actively fills in.
+  grade 'CEMENT B-M 42.5 N' -> '425nbm'. This one has flipped twice; the
+  history matters, because the reasoning that unmapped it was sound and
+  still produced a wrong answer.
+
+  Surfaced 2026-09-09 in production's first historical backfill, mapped to
+  dispatch_*_425nbm, then un-mapped the same day on discovering it is
+  product code FG005, whose marketing name is "Duramax 42" (services/
+  sales.js). The inference was: the Dispatch report's '42.5 N B-M' column
+  is a different thing from Duramax, so filing Duramax tonnage there would
+  misreport it. Reasonable — and wrong on the premise. Duramax 42 IS the
+  42.5 N B-M grade; "Duramax" is the marketing name and "42.5 N B-M" the
+  plant's own name for the same product. Two independent confirmations:
+
+    1. config/odooProductionMap.js has mapped FG005 -> '425n_bm' since it
+       was written, so the Production Report side of this app has always
+       treated them as one grade. Only this file disagreed.
+    2. Plant-head confirmation 2026-09-28, with the Dispatch Report
+       workbook for 27 Sept 2026 beside the app's own screen: Regular
+       Bags 42.5 N B-M = 150 MT and Bulker 42.5 N B-M = 90 MT, against
+       Odoo rows of exactly 150 and 89.58 MT under 'CEMENT B-M 42.5 N',
+       and an app total 239.58 MT short of the workbook's on exactly
+       those two cells.
+
+  So the "honest unmapped bucket" was not honest in effect: it silently
+  dropped every Duramax dispatch from the report from 2026-09-09 until
+  this was fixed, and the only visible trace was a logger.warn nobody
+  reads. See docs/pm/DECISIONS.md DEC-005.
 */
 const db     = require('../db');
 const logger = require('./logger');
@@ -68,9 +84,18 @@ const GRADE_SUFFIX = {
   'CEMENT 42.5 N':     '425n',
   'CEMENT OPC 42.5 N': 'opc425n',
   'CEMENT 32.5':       '325n', // see header note — assumed, not confirmed
-  // 'CEMENT B-M 42.5 N': Duramax 42 — no dispatch-form field exists yet, see header note
+  'CEMENT B-M 42.5 N': '425nbm', // Duramax 42 (FG005) = the 42.5 N B-M grade — see header note
 };
-const OUT_OF_SCOPE_GRADES = new Set(['SCRAP STEEL']); // not a cement dispatch
+/* Not cement dispatches. These are counted and logged as SKIPPED, which is
+   the quiet, expected outcome — unlike UNMAPPED, which means "a row we
+   should probably be reporting has nowhere to go" and is meant to be read
+   as an alarm. Keeping known non-cement traffic out of the unmapped bucket
+   is what lets that alarm stay meaningful: the Duramax rows sat in it for
+   19 days among perennial fly-ash noise. Added 2026-09-28 after a sweep of
+   every row since January:
+     FLY ASH      36.58 MT over 2 days (Big Bag) — a raw material going out
+     VEHICLE SOLD  0.10 MT over 2 days (Pcs)     — an asset disposal */
+const OUT_OF_SCOPE_GRADES = new Set(['SCRAP STEEL', 'FLY ASH', 'VEHICLE SOLD']);
 
 // Every field this mapping is allowed to write — matches dispatch-form.html
 // data-field attributes exactly, so a mapping bug can never invent a field
@@ -127,20 +152,43 @@ function buildDayMaps(rows) {
    deliberately re-pulls a 5-day trailing window every run) is mid-flight
    for that same day, silently discarding whichever write lost the race. */
 async function upsertDay(date, odooFields) {
-  /* status 'approved' explicitly: daily_reports.status DEFAULTS to 'draft'
-     (migration 010), and everything that reads the table for analysis now
-     ignores drafts (REPORTED_STATUSES in config/forms.js). A figure pulled
-     from the ERP is authoritative reported data, not somebody's unfinished
-     entry, and there is no human in the loop to sign it off — so leaving it
-     to the default would have made every synced day invisible to the KPI
-     engine, the MIS pack and Entry Completeness.
+  /* status 'draft' for a day nobody has touched — changed 2026-09-28, see
+     DEC-007. This sync used to insert new days as 'approved', reasoning
+     that an ERP figure is authoritative reported data with no human in the
+     loop to sign it off, and that a 'draft' would be invisible to the KPI
+     engine, the MIS pack and Entry Completeness (REPORTED_STATUSES in
+     config/forms.js). The first half of that was sound; the conclusion
+     collided with a rule added later.
 
-     ON CONFLICT leaves status alone: if an operator has since submitted or
-     had that day rejected, the sync's fresher figures merge in without
-     overriding the human decision about the record. */
+     Since 2026-09-24 routes/reports.js refuses any submit over a report
+     that is already 'approved' OR 'pending_approval' (code REPORT_LOCKED).
+     Because this sync touches every dispatch day, it had pre-approved all
+     208 of them — so the Dispatch & SO form was locked on EVERY date, and
+     the half of it Odoo cannot supply could never be entered by anyone.
+     That is why SO Pendency, Bags Packed, Burst Bag Rate and the 8 AM
+     vehicle queue had been empty since the sync began: not a missing data
+     entry, an impossible one. Zero dispatch rows have ever had a human
+     submitter.
+
+     'draft' is the only status that leaves the day writable, and it is the
+     same answer odooProductionAutofill.js reached for the same problem
+     (decision B, 2026-09-21): a day Odoo has data for, that nobody has
+     touched, is a draft the officer still opens, completes and submits
+     through the normal HOD step. Using it here means one autofill workflow
+     in this codebase instead of two.
+
+     The cost is deliberate and known: a dispatch day counts in the KPI
+     engine and the MIS pack only once the officer submits it. That is the
+     same bargain Production already makes, and it is the honest one — the
+     alternative is a report that claims to be signed off while half of it
+     was never filled in, and that nobody could ever fix.
+
+     ON CONFLICT still leaves status alone: once an operator has submitted
+     a day, or an HOD approved or rejected it, the sync's fresher figures
+     merge in without overriding the human decision about the record. */
   await db.query(`
     INSERT INTO daily_reports (form_type, record_date, shift, data, submitted_at, status)
-    VALUES ('dispatch', $1, 'day', $2, NOW(), 'approved')
+    VALUES ('dispatch', $1, 'day', $2, NOW(), 'draft')
     ON CONFLICT (form_type, record_date, shift)
     DO UPDATE SET data = daily_reports.data || EXCLUDED.data, updated_at = NOW()
   `, [date, JSON.stringify(odooFields)]);
