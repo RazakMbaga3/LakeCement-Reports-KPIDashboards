@@ -463,19 +463,33 @@ async function gatherDailySummary(date, role) {
   const miningAvailable = mining.rows.length > 0;
   const miningRows = MINING_ROWS.map(row => {
     let onDate = 0, mtd = 0, ytd = 0;
+    /* A row whose movement types appear nowhere in the ticket log has no
+       figure — it is not a measured zero. Both "… to Golani Waste dump"
+       movements (MV.S_WD / MV.N_WD) match none of the 8 movement types the
+       46,985 tickets actually carry, so "South Mine to Dump  0.00 MT" was
+       printing in the MIS pack as reconciled fact on every run. miningAvailable
+       is true whenever ANY ticket exists anywhere, so it could never catch
+       this; the distinction has to be per row. Same discipline as sumFields()
+       and unavailable() elsewhere in this file. */
+    let seen = false;
     for (const mv of row.movements) {
       const t = mvTotals[mv];
       if (!t) continue;
+      seen = true;
       onDate += num(t.on_date);
       mtd    += num(t.mtd);
       ytd    += num(t.ytd);
     }
+    const has = miningAvailable && seen;
     return {
       key: row.key, label: row.label, unit: 'MT',
-      onDate: miningAvailable ? round2(onDate) : null,
-      mtd:    miningAvailable ? round2(mtd)    : null,
-      ytd:    miningAvailable ? round2(ytd)    : null,
-      available: miningAvailable,
+      onDate: has ? round2(onDate) : null,
+      mtd:    has ? round2(mtd)    : null,
+      ytd:    has ? round2(ytd)    : null,
+      available: has,
+      ...(miningAvailable && !seen
+        ? { reason: 'no weighbridge ticket has ever carried this movement type' }
+        : {}),
     };
   });
 
