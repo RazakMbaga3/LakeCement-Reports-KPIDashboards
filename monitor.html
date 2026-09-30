@@ -54,6 +54,14 @@
   .pull-row .btn { margin-left:0; }
   #pull-result { margin-top:12px; font-size:12px; }
   #pull-result .mono { display:block; white-space:pre-wrap; background:#F7F8FA; border:1px solid #EEF2F7; border-radius:6px; padding:10px 12px; margin-top:6px; }
+  /* Data-pipeline table. "92 days ago" wrapping to three lines made every
+     row triple height and buried the dates it sits next to. */
+  #t-pipeline td:nth-child(4) { white-space:nowrap; }
+  #t-pipeline td:nth-child(3) { white-space:nowrap; font-variant-numeric:tabular-nums; }
+  #t-pipeline td:nth-child(5), #t-pipeline td:nth-child(6) { text-align:right; font-variant-numeric:tabular-nums; }
+  /* The explanation column is prose, not a payload — monospace made it the
+     heaviest thing in the card when it should read as a caption. */
+  #t-pipeline td:nth-child(7) .mono { font-family:inherit; font-size:12px; line-height:1.45; }
 </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="design-system.css?v=1" />
@@ -79,6 +87,15 @@
     <div class="chip"><div class="lbl">Backup</div><div class="val" id="c-backup">…</div></div>
     <div class="chip"><div class="lbl">Uptime</div><div class="val" id="c-uptime">…</div></div>
     <button class="btn" onclick="runWatchdog()" id="wd-btn"><i data-lucide="refresh-cw"></i> Run checks now</button>
+  </div>
+
+  <!-- First card on purpose: "is the system receiving and processing the
+       expected data?" is the question this page exists to answer, and until
+       now nothing on it looked at daily_reports at all. Everything below is
+       rendered from GET /api/monitor/pipeline — no hardcoded state. -->
+  <div class="card">
+    <h2>Data pipeline — are the daily reports arriving?</h2>
+    <div id="t-pipeline"><div class="empty">Loading…</div></div>
   </div>
 
   <div class="card">
@@ -174,7 +191,12 @@
     setChip('c-backup', h.checks.backup === 'not_configured' ? 'n/a'
       : (h.checks.backup.ok ? (h.checks.backup.age_hours + ' h old') : 'STALE'),
       h.checks.backup === 'not_configured' ? '' : (h.checks.backup.ok ? 'ok' : 'warn'));
-    setChip('c-uptime', Math.floor(h.uptime_s / 3600) + 'h ' + Math.floor((h.uptime_s % 3600) / 60) + 'm', 'ok');
+    /* Not unconditionally 'ok': a near-zero uptime is what a crash-loop
+       looks like (the pm2 memory-limit loop of 2026-09-24 restarted the
+       process every few seconds), and a green chip reporting "0h 0m" is a
+       fake health indicator. Under 5 minutes reads as a recent restart. */
+    setChip('c-uptime', Math.floor(h.uptime_s / 3600) + 'h ' + Math.floor((h.uptime_s % 3600) / 60) + 'm',
+      h.uptime_s < 300 ? 'warn' : 'ok');
 
     table('t-alerts', ['When', 'Kind', 'Detail', 'Emailed'],
       s.alerts.map(a => [when(a.created_at),
@@ -196,6 +218,84 @@
         esc(o.value_computed ?? '—') + ' → <strong>' + esc(o.value_override) + '</strong>',
         esc(o.created_by_name || ''), esc(o.reason),
         o.cleared_at ? '<span class="tag t-warn">cleared</span>' : '<span class="tag t-ok">active</span>']));
+
+    loadPipeline();
+  }
+
+  /* ── Data pipeline ────────────────────────────────────────────────
+     Separate fetch from /monitor/summary so a slow or failing pipeline
+     query can't blank the health chips, and vice versa. */
+  const PIPE_STATUS = {
+    ok:             { cls: 't-ok',   text: 'flowing' },
+    silent:         { cls: 't-bad',  text: 'silent' },
+    not_counting:   { cls: 't-bad',  text: 'not counting' },
+    never_received: { cls: 't-warn', text: 'never received' },
+  };
+
+  async function loadPipeline() {
+    let p;
+    try {
+      const res = await fetch(API + '/monitor/pipeline', { headers: { 'Authorization': 'Bearer ' + getAuthToken() } });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      p = await res.json();
+    } catch (e) {
+      document.getElementById('t-pipeline').innerHTML =
+        '<div class="empty">Could not load pipeline status (' + esc(e.message) + ')</div>';
+      return;
+    }
+
+    /* Worst first — a form that stopped arriving is the reason to open this
+       page, and alphabetical order buries it among the healthy ones. */
+    const rank = { not_counting: 0, silent: 1, never_received: 2, ok: 3 };
+    const forms = p.forms.slice().sort((a, b) =>
+      (rank[a.status] - rank[b.status]) || (b.daysSinceLastCounted || 0) - (a.daysSinceLastCounted || 0));
+
+    const age = (d) => d === null || d === undefined ? '—'
+      : d === 0 ? 'today' : d === 1 ? 'yesterday' : d + ' days ago';
+
+    table('t-pipeline',
+      ['Form', 'Status', 'Last counted', 'Age', 'Rows counted', 'Not counted', 'What it means'],
+      forms.map(f => {
+        const st = PIPE_STATUS[f.status] || { cls: 't-warn', text: f.status };
+        const uncounted = f.rowsTotal - f.rowsCounted;
+        return [
+          '<strong>' + esc(f.formType) + '</strong>',
+          '<span class="tag ' + st.cls + '">' + esc(st.text) + '</span>',
+          esc(f.lastCountedDate || '—'),
+          esc(age(f.daysSinceLastCounted)),
+          esc(f.rowsCounted),
+          uncounted > 0
+            ? '<span class="tag t-warn">' + uncounted + '</span>'
+            : '—',
+          '<span class="mono" title="' + esc(f.note || '') + '">' + esc(f.note || '') + '</span>',
+        ];
+      }));
+
+    /* A summary line above the table, so the state is legible without
+       reading eleven rows. */
+    const s2 = p.summary;
+    const bits = [];
+    if (s2.notCounting)   bits.push(s2.notCounting + ' arriving but not counting');
+    if (s2.silent)        bits.push(s2.silent + ' silent');
+    if (s2.neverReceived) bits.push(s2.neverReceived + ' never received');
+    if (s2.ok)            bits.push(s2.ok + ' flowing');
+
+    const orphans = p.orphanFormTypes.length
+      ? '<div class="pull-note" style="margin:0;padding-top:8px;border-top:1px solid #F0F4F8">'
+        + '<strong>Orphaned form types:</strong> '
+        + p.orphanFormTypes.map(o =>
+            esc(o.formType) + ' (' + o.rowsTotal + ' row' + (o.rowsTotal === 1 ? '' : 's')
+            + ', ' + esc(o.firstRecordDate) + ')').join(', ')
+        + ' — not in the app\'s form list, so no report or KPI reads them.</div>'
+      : '';
+
+    const host = document.getElementById('t-pipeline');
+    host.insertAdjacentHTML('afterbegin',
+      '<div class="pull-note" style="padding:12px 16px 0;margin:0">'
+      + esc(bits.join(' · '))
+      + ' — a form counts only once its day is submitted and not rejected ('
+      + esc(p.reportedStatuses.join(' / ')) + ').</div>');
+    if (orphans) host.insertAdjacentHTML('beforeend', orphans);
   }
 
   async function runWatchdog() {

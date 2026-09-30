@@ -310,6 +310,22 @@
   var CAO_HOLES     = Object.keys(FACTS).filter(function (k) { return k.indexOf('cao_h') === 0; });
 
   function sumOf(keys, f) { return keys.reduce(function (s, k) { return s + z0(f[k]); }, 0); }
+  /* True when at least one of `keys` carries a real reading.
+
+     sumOf() deliberately reads a missing field as 0 so that one unmetered
+     section doesn't null out a whole total. The cost is that "every input is
+     missing" and "every input is genuinely zero" produce the same 0, which is
+     only safe for a formula whose guard already proves the reading exists.
+     Any formula dividing by, or built on, a sumOf() total needs this instead
+     — see specific-power-consumption-total, where it was the difference
+     between "no power data" and a headline 0 kWh/MT. */
+  function anyReading(keys, f) {
+    for (var i = 0; i < keys.length; i++) {
+      var v = f[keys[i]];
+      if (v !== null && v !== undefined && v !== '' && !isNaN(Number(v))) return true;
+    }
+    return false;
+  }
   /* total cement produced by both mills that day (matches source Excel J42+J48) */
   function totalCementProd(f) { return sumOf(CM_GRADES, f); }
   /* total clinker consumed by the cement mills that day, own + purchased combined
@@ -456,6 +472,16 @@
       daily: function (f) {
         var cementProd = totalCementProd(f);
         if (cementProd <= 0) return null;
+        /* Guard the POWER side too, not just production. cementProd comes from
+           the production form while every kWh input comes from power-cons, so
+           a day with production filed and no power reading used to fall
+           through: sumOf() read each missing kWh as 0, the kilnProd branch
+           below took its `: 0` fallback, and the KPI returned a hard 0 —
+           rendered as "0 kWh/MT eq. cement", which reads as perfect
+           efficiency rather than absent data. That is exactly what the whole
+           of Sep 2026 showed (no power-cons row exists after 2026-06-30)
+           while every sibling SPC/STE formula correctly returned null. */
+        if (!anyReading(KWH_CLINKER, f) && !anyReading(KWH_DOWNSTREAM, f)) return null;
         var clinkerFactor = totalClinkerCons(f) / cementProd;
         var kilnProd = pos(f.pwr_kiln_prod_mt);
         var upstreamPerTonClinker = kilnProd ? sumOf(KWH_CLINKER, f) / kilnProd : 0;
@@ -475,7 +501,13 @@
       inputs: KWH_CLINKER.concat(['pwr_kiln_prod_mt']),
       daily: function (f) {
         var prod = pos(f.pwr_kiln_prod_mt);
-        return prod ? sumOf(KWH_CLINKER, f) / prod : null;
+        if (!prod) return null;
+        /* Same false-zero trap as specific-power-consumption-total: the guard
+           above only proves clinker tonnage was recorded, and sumOf() reads
+           every absent kWh as 0, so a day with tonnage and no meter reading
+           returned 0 kWh/MT clinker rather than "unknown". */
+        if (!anyReading(KWH_CLINKER, f)) return null;
+        return sumOf(KWH_CLINKER, f) / prod;
       },
       monthlyAgg: { type: 'weighted', weight: function (f) { return pos(f.pwr_kiln_prod_mt) || 0; } },
     },

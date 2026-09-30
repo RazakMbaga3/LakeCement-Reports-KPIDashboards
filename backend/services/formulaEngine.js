@@ -29,7 +29,31 @@ function round(v, dp) {
   return v === null || v === undefined ? null : parseFloat(Number(v).toFixed(dp ?? 2));
 }
 
-/* One entry per (date, shift) with all declared facts resolved */
+/* One entry per DATE with all declared facts resolved.
+
+   The unit of evaluation is the calendar day, not the (date, shift) pair.
+   That matters because every formula is written against a day's facts —
+   `kiln_prod_mt` means "clinker produced that day", and a KPI with
+   monthlyAgg:'sum' means "sum over days".
+
+   Keying entries by (date, shift) instead produced two numbers for the same
+   KPI and the same month as soon as a single night-shift row existed:
+   evalMonth summed both shifts while evalDaily silently kept one of them,
+   so a 'sum' KPI read exactly 2x higher on a KPI card than on the trend
+   chart beside it — and gatherMonthly() in services/misReport.js calls BOTH,
+   so one MIS pack disagreed with itself. Verified against a scratch month:
+   total-power-kwh came out 365,033 monthly against 182,517 in its own
+   series. Latent rather than historical — every row written to date is
+   shift='day' — but the forms accept 'night' and 'all', so it was one
+   night-shift entry away from silently doubling a headline figure.
+
+   Facts from different forms merge into the same day (that is how a formula
+   spanning production + power works at all), and so do facts from different
+   shifts of the same form. Where two shifts of ONE form both carry the same
+   fact, the later shift wins by field, which is the same last-write-wins
+   rule a single 'all'-shift row would have given. Summing them here instead
+   would double-count every ratio's denominator; forms that genuinely need
+   per-shift totals aggregate within the day's own row today. */
 async function buildEntries(from, to) {
   const forms = [...new Set(Object.values(FACTS).map(f => f.form))];
   /* Drafts and rejected reports are not data — see REPORTED_STATUSES. */
@@ -37,18 +61,24 @@ async function buildEntries(from, to) {
     `SELECT form_type, record_date, shift, data
      FROM daily_reports
      WHERE form_type = ANY($1) AND record_date BETWEEN $2 AND $3
-       AND status = ANY($4)`,
+       AND status = ANY($4)
+     ORDER BY record_date,
+              CASE shift WHEN 'day' THEN 1 WHEN 'night' THEN 2 ELSE 3 END`,
     [forms, from, to, REPORTED_STATUSES]
   );
 
-  const entries = new Map(); // "date|shift" → { date, shift, facts }
+  const entries = new Map(); // "date" → { date, facts }
   for (const row of result.rows) {
-    const key = `${row.record_date}|${row.shift}`;
-    if (!entries.has(key)) entries.set(key, { date: row.record_date, shift: row.shift, facts: {} });
-    const entry = entries.get(key);
+    const date = String(row.record_date).slice(0, 10);
+    if (!entries.has(date)) entries.set(date, { date: row.record_date, facts: {} });
+    const entry = entries.get(date);
     for (const [factKey, fact] of Object.entries(FACTS)) {
       if (fact.form !== row.form_type) continue;
-      entry.facts[factKey] = num(row.data ? row.data[fact.field] : null);
+      const v = num(row.data ? row.data[fact.field] : null);
+      /* Don't let a later shift's blank field erase an earlier shift's
+         reading — only a real value overwrites. */
+      if (v === null && entry.facts[factKey] !== undefined) continue;
+      entry.facts[factKey] = v;
     }
   }
   return [...entries.values()].sort((a, b) => (a.date < b.date ? -1 : 1));
@@ -169,15 +199,15 @@ async function evalDaily(from, to) {
   const out = {};
   for (const key of Object.keys(FORMULAS)) {
     const formula = FORMULAS[key];
-    // one value per date — prefer the 'day' shift entry when both exist
-    const byDate = new Map();
-    for (const e of entries) {
-      if (byDate.has(e.date) && e.shift !== 'day') continue;
-      byDate.set(e.date, round(dailyValue(formula, e.facts, key), formula.dp));
-    }
+    /* buildEntries already yields exactly one entry per date, so the series
+       and evalMonth() are two views of the same rows by construction — the
+       trend chart can no longer disagree with the KPI card above it. */
     out[key] = {
       ...formulaMeta(key),
-      series: [...byDate.entries()].map(([date, value]) => ({ date, value })),
+      series: entries.map(e => ({
+        date: e.date,
+        value: round(dailyValue(formula, e.facts, key), formula.dp),
+      })),
     };
   }
   return out;

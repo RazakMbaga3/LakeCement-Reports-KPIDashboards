@@ -190,3 +190,48 @@ test('formulas return null instead of 0/NaN when required facts are missing', ()
   assert.strictEqual(FORMULAS['power-distribution-loss-pct'].daily({}), null);
   assert.strictEqual(FORMULAS['pile-cao-avg'].daily({}), null);
 });
+
+/* The all-facts-missing case above is the easy half. The dangerous half is a
+   PARTIALLY filled day: facts for one form present, the other form's absent.
+   specific-power-consumption-total guarded only cement production (production
+   form) while every kWh input comes from power-cons, so a day with production
+   filed and no power reading returned a hard 0 — "0 kWh/MT eq. cement", which
+   reads as perfect efficiency rather than missing data. Every sibling SPC/STE
+   formula returned null on the same facts. 79 real days across Jul-Sep 2026
+   were affected (no power-cons row exists after 2026-06-30). */
+test('a cross-form partial day does not fabricate a zero', () => {
+  /* Production side fully filled: both mills produced, clinker consumed.
+     Fact keys (not form field names) — cm1_425r_mt, not cm1_425r_prod_mt.
+     Getting these wrong makes cementProd 0, so the formula returns null via
+     its FIRST guard and the test passes for the wrong reason. */
+  const productionOnly = {
+    cm1_425r_mt: 900, cm2_425r_mt: 700,
+    cm_clinker_own_cons: 1200, cm_clinker_purch_cons: 0,
+    pwr_kiln_prod_mt: 1500,
+  };
+  /* Proves the fixture reaches the power guard rather than tripping the
+     production one — otherwise every assertion below is vacuous. */
+  assert.ok(FORMULAS['cement-produced-day'].daily(productionOnly) > 0,
+    'fixture must record real cement production, or the power guard is never reached');
+
+  const spcTotal = FORMULAS['specific-power-consumption-total'].daily(productionOnly);
+  assert.strictEqual(spcTotal, null,
+    'no kWh reading at all must be null, never 0 — a 0 here reads as perfect efficiency');
+
+  /* Siblings on the identical facts, to keep the whole family consistent. */
+  assert.strictEqual(FORMULAS['specific-power-consumption-up-to-clinker'].daily(productionOnly), null);
+  assert.strictEqual(FORMULAS['specific-power-consumption-cement-grinding'].daily(productionOnly), null);
+  assert.strictEqual(FORMULAS['power-distribution-loss-pct'].daily(productionOnly), null);
+
+  /* And the converse: once ONE real kWh reading exists the formula must
+     compute again, so the guard can't silently blank a metered day. */
+  const withOneReading = Object.assign({}, productionOnly, { pwr_cm1_kwh: 42000 });
+  const v = FORMULAS['specific-power-consumption-total'].daily(withOneReading);
+  assert.ok(typeof v === 'number' && v > 0,
+    'one genuine kWh reading must still produce a value, got ' + JSON.stringify(v));
+
+  /* A genuine measured zero is data, not absence, and must survive. */
+  const genuineZero = Object.assign({}, productionOnly, { pwr_cm1_kwh: 0 });
+  assert.strictEqual(FORMULAS['specific-power-consumption-total'].daily(genuineZero), 0,
+    'an explicitly recorded 0 kWh is a reading and must not be nulled');
+});

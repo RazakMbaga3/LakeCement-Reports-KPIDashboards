@@ -25,6 +25,7 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 const { validate, z, zDate } = require('../middleware/validate');
 const { deepHealth }  = require('../services/health');
 const { runWatchdog } = require('../services/watchdog');
+const { VALID_FORMS, REPORTED_STATUSES } = require('../config/forms');
 const odoo    = require('../services/odooClient');
 const metrics = require('../services/metrics');
 const { pullDispatchDailySummary } = require('../services/odooDispatchSync');
@@ -59,6 +60,138 @@ monitorRouter.get('/summary', requireAuth, requireRole(...MONITOR_ROLES), async 
       overrides: overrides.rows,
       clientErrors: clientErrors.rows,
       alerts: alerts.rows,
+    });
+  } catch (err) { next(err); }
+});
+
+/* ── GET /api/monitor/pipeline ────────────────────────────────
+   "Is the system receiving and processing the expected data?" — the one
+   question the monitor page existed to answer and could not.
+
+   /summary already covers the Odoo side (odoo_sync_state) and the noise side
+   (alerts, client errors). Neither says anything about daily_reports itself,
+   so two real conditions on this database were invisible here:
+
+     1. A form going SILENT. power-cons, materials, limestone and stoppage
+        have no row at all after 2026-06-30. The watchdog does fire
+        missed-entry:* daily, but that is one alert row per day per form —
+        nothing anywhere states "power-cons last arrived 92 days ago", so a
+        three-month outage reads as ordinary daily noise.
+
+     2. Data that ARRIVED but does not COUNT. Every dispatch row is status
+        'draft' (deliberate — migration 030 leaves Odoo-written days writable
+        so an officer can finish the manual-only fields), and 'draft' is not
+        in REPORTED_STATUSES. So ~2,000 MT/day of real Odoo tonnage sits in
+        the table while every dispatch KPI reads null. "Rows exist" and "rows
+        count" are different facts and the operator needs both.
+
+   Everything here is derived from a live query; nothing is hardcoded and
+   nothing reports OK by default. A form with no rows at all reports
+   'never_received' rather than being omitted. */
+monitorRouter.get('/pipeline', requireAuth, requireRole(...MONITOR_ROLES), async (req, res, next) => {
+  try {
+    const SILENT_AFTER_DAYS = parseFloat(process.env.FORM_SILENT_AFTER_DAYS || '3');
+
+    const [perForm, orphans] = await Promise.all([
+      db.query(
+        `SELECT form_type,
+                COUNT(*)                                              AS rows_total,
+                COUNT(*) FILTER (WHERE status = ANY($1))              AS rows_counted,
+                COUNT(*) FILTER (WHERE status = 'draft')              AS rows_draft,
+                COUNT(*) FILTER (WHERE status = 'pending_approval')   AS rows_pending,
+                COUNT(*) FILTER (WHERE status = 'rejected')           AS rows_rejected,
+                MAX(record_date)                                      AS last_record_date,
+                MAX(record_date) FILTER (WHERE status = ANY($1))      AS last_counted_date
+           FROM daily_reports
+          GROUP BY form_type`,
+        [REPORTED_STATUSES]
+      ),
+      /* Rows whose form_type is not a form any more. VALID_FORMS gates
+         WRITES only, so a retired or mistyped form_type keeps its rows
+         forever and no read path ever looks at them again — invisible data
+         that still occupies the table. */
+      db.query(
+        `SELECT form_type, COUNT(*) AS rows_total,
+                MIN(record_date) AS first_record_date,
+                MAX(record_date) AS last_record_date
+           FROM daily_reports
+          WHERE NOT (form_type = ANY($1))
+          GROUP BY form_type
+          ORDER BY form_type`,
+        [VALID_FORMS]
+      ),
+    ]);
+
+    const byForm = new Map(perForm.rows.map(r => [r.form_type, r]));
+    const today  = new Date();
+    const daysSince = (d) => d === null || d === undefined
+      ? null
+      : Math.floor((today - new Date(String(d).slice(0, 10) + 'T00:00:00Z')) / 86400000);
+
+    const forms = VALID_FORMS.map((formType) => {
+      const r = byForm.get(formType);
+      if (!r) {
+        return { formType, status: 'never_received', rowsTotal: 0, rowsCounted: 0,
+                 note: 'no row has ever been submitted for this form' };
+      }
+      const counted   = Number(r.rows_counted);
+      const ageAll    = daysSince(r.last_record_date);
+      const ageCount  = daysSince(r.last_counted_date);
+
+      /* Order matters: "arriving but not counting" is a different failure
+         from "not arriving", and reporting it as merely stale would send an
+         operator looking for a missing upload that is in fact already there. */
+      let status, note;
+      if (counted === 0) {
+        status = 'not_counting';
+        note = `${r.rows_total} row(s) present but none in a reported status — `
+             + `${r.rows_draft} draft, ${r.rows_pending} pending, ${r.rows_rejected} rejected. `
+             + 'These do not reach any KPI, the MIS pack or Entry Completeness.';
+      } else if (ageCount !== null && ageCount > SILENT_AFTER_DAYS) {
+        status = 'silent';
+        note = `last reported day is ${ageCount} days old`
+             + (ageAll !== null && ageAll < ageCount
+                 ? ` — newer rows exist (${ageAll}d) but are not in a reported status`
+                 : '');
+      } else {
+        status = 'ok';
+        note = null;
+      }
+
+      return {
+        formType, status, note,
+        rowsTotal:   Number(r.rows_total),
+        rowsCounted: counted,
+        rowsDraft:   Number(r.rows_draft),
+        rowsPending: Number(r.rows_pending),
+        rowsRejected: Number(r.rows_rejected),
+        lastRecordDate:  r.last_record_date  ? String(r.last_record_date).slice(0, 10)  : null,
+        lastCountedDate: r.last_counted_date ? String(r.last_counted_date).slice(0, 10) : null,
+        daysSinceLastRecord:  ageAll,
+        daysSinceLastCounted: ageCount,
+      };
+    });
+
+    res.json({
+      generatedAt: new Date().toISOString(),
+      silentAfterDays: SILENT_AFTER_DAYS,
+      reportedStatuses: REPORTED_STATUSES,
+      summary: {
+        ok:            forms.filter(f => f.status === 'ok').length,
+        silent:        forms.filter(f => f.status === 'silent').length,
+        notCounting:   forms.filter(f => f.status === 'not_counting').length,
+        neverReceived: forms.filter(f => f.status === 'never_received').length,
+      },
+      forms,
+      /* Empty array is the healthy answer, and an empty array is what the UI
+         should show as "none" rather than hiding the section. */
+      orphanFormTypes: orphans.rows.map(r => ({
+        formType: r.form_type,
+        rowsTotal: Number(r.rows_total),
+        firstRecordDate: String(r.first_record_date).slice(0, 10),
+        lastRecordDate:  String(r.last_record_date).slice(0, 10),
+        note: 'form_type is not in config/forms.js VALID_FORMS — no read path sees these rows',
+      })),
     });
   } catch (err) { next(err); }
 });
