@@ -297,6 +297,59 @@
     return res.json();
   }
 
+  /* ── Stores / Raw Material (backend/routes/stores.js) ─────────────
+     Reads the tables odooStoresSync.js fills, never Odoo directly — the
+     upstream endpoints take 15-55s, so a page that called them would hang.
+     syncStores() is the deliberate exception and is why the caller should
+     drive LCLoader.steps() while it runs. */
+  async function getRawMaterialDay(date) {
+    const qs = date ? '?date=' + encodeURIComponent(date) : '';
+    const res = await fetch(BASE + '/stores/raw-material' + qs, { headers: _headers() });
+    if (!res.ok) throw _httpError('getRawMaterialDay', date || 'today', res);
+    return res.json();
+  }
+
+  async function getStoresIssues(date, product) {
+    const p = new URLSearchParams();
+    if (date) p.set('date', date);
+    if (product) p.set('product', product);
+    const qs = p.toString();
+    const res = await fetch(BASE + '/stores/issues' + (qs ? '?' + qs : ''), { headers: _headers() });
+    if (!res.ok) throw _httpError('getStoresIssues', date || 'today', res);
+    return res.json();
+  }
+
+  async function getStoresValuation(from, to) {
+    const qs = '?from=' + encodeURIComponent(from) + '&to=' + encodeURIComponent(to);
+    const res = await fetch(BASE + '/stores/valuation' + qs, { headers: _headers() });
+    if (!res.ok) throw _httpError('getStoresValuation', from + '..' + to, res);
+    return res.json();
+  }
+
+  async function getStoresFreshness() {
+    const res = await fetch(BASE + '/stores/freshness', { headers: _headers() });
+    if (!res.ok) throw _httpError('getStoresFreshness', '', res);
+    return res.json();
+  }
+
+  /* 207 means some datasets synced and some failed — a real outcome, not an
+     error, so it resolves with the partial result and the caller reports
+     which feeds are stale. 409 means another sync holds the lock. */
+  async function syncStores(days) {
+    const res = await fetch(BASE + '/stores/sync', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, _headers()),
+      body: JSON.stringify(days ? { days: days } : {}),
+    });
+    if (res.status === 409) {
+      const e = new Error('A stores sync is already running — try again shortly.');
+      e.code = 'SYNC_IN_PROGRESS';
+      throw e;
+    }
+    if (!res.ok && res.status !== 207) throw _httpError('syncStores', String(days || 7) + 'd', res);
+    return res.json();
+  }
+
   /* ── Approvals (backend/routes/reports.js + routes/approvals.js) ──
      Officer/Senior submissions land as 'pending_approval'; only their
      department's HOD (or admin/md) may approve/reject. See approvals.html. */
@@ -592,6 +645,7 @@
     quarryImportTickets, quarryGetTickets,
     getSalesTerritories, getSalesDashboard, setSalesTarget,
     getPurchasesDashboard,
+    getRawMaterialDay, getStoresIssues, getStoresValuation, getStoresFreshness, syncStores,
     getApprovals, approveReport, rejectReport,
     requestAmendment, getAmendments, grantAmendment, declineAmendment, withdrawAmendment, getAmendmentHistory,
     getMisEmployees, getMisItAssets, getMisVehicles, getMisComplianceCerts,

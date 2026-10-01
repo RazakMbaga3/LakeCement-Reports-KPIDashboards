@@ -1692,6 +1692,49 @@ body.period-full .sk-delta { opacity: 0; }
 }
 .lcl-skip:hover { color: var(--navy); }
 
+/* ── Step checklist ────────────────────────────────────────────────
+   Shown only by a page that calls LCLoader.steps() for multi-stage work
+   (an Odoo sync is 15-55s — a bare spinner over that reads as a hang).
+   No percentage: these stages have no honest proportion to each other,
+   so the list states what is running rather than inventing a number. */
+.lcl-steps {
+  list-style: none; margin: 10px 0 0; padding: 0;
+  display: flex; flex-direction: column; gap: 6px;
+  text-align: left; min-width: 210px; max-width: 280px;
+}
+.lcl-step {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text-muted);
+  transition: color .2s ease;
+}
+.lcl-step-dot {
+  flex: 0 0 auto; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--border); transition: background .2s ease, box-shadow .2s ease;
+}
+.lcl-step-label { flex: 1 1 auto; }
+.lcl-step-note {
+  flex: 0 0 auto; font-variant-numeric: tabular-nums;
+  font-size: 11px; color: var(--text-muted); opacity: .85;
+}
+/* Running: the accent already chosen for this page's sidebar group, so the
+   loader keeps reading as one object rather than introducing a new hue. */
+.lcl-step.is-run { color: var(--navy); font-weight: 600; }
+.lcl-step.is-run .lcl-step-dot {
+  background: var(--lcl-accent, var(--orange));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--lcl-accent, var(--orange)) 22%, transparent);
+  animation: lcl-step-pulse 1.1s ease-in-out infinite;
+}
+.lcl-step.is-ok { color: var(--text-muted); }
+.lcl-step.is-ok .lcl-step-dot { background: var(--green, #239557); }
+/* Failure is a colour AND a ring, never colour alone — the "one dimension,
+   one channel" rule from the 2026-09-10 visual audit. */
+.lcl-step.is-fail { color: var(--red-ink, #B0392F); font-weight: 600; }
+.lcl-step.is-fail .lcl-step-dot {
+  background: var(--red-ink, #B0392F);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--red-ink, #B0392F) 20%, transparent);
+}
+@keyframes lcl-step-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+
 /* Residual wait: a page that painted fast but is still filling its live
    formula cards. Only the cards actually awaiting /api/formula/eval pulse
    (.sk-card[data-formula-key]); illustrative and NOT CONNECTED cards are
@@ -1704,6 +1747,7 @@ html.lcl-loading .sk-card[data-formula-key] .sk-value {
 @media (prefers-reduced-motion: reduce) {
   .lcl-ring { animation-duration: 2.4s; }
   html.lcl-loading .sk-card[data-formula-key] .sk-value { animation: none; }
+  .lcl-step.is-run .lcl-step-dot { animation: none; }
   .lcl-load, .lcl-load-inner, .lcl-bar, .lcl-bar-fill, .lcl-caption {
     transition-duration: .01ms !important;
   }

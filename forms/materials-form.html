@@ -17,6 +17,38 @@
   <script src="../a11y.js?v=1"></script>
   <script src="../mobile-shell.js?v=1"></script>
   <script src="mobile-entry.js?v=1"></script>
+<style>
+  /* ── Odoo prefill ────────────────────────────────────────────────
+     A third legend dot beside Manual and Formula: a cell whose number came
+     from the gate log reads differently from one the officer typed, and the
+     report is signed off on that distinction. */
+  .ld-o { background: #7C5CBF; }
+  input[data-odoo="1"] { background: color-mix(in srgb, #7C5CBF 9%, transparent); }
+
+  .mf-odoo-note {
+    display: none; margin: 0 0 10px; padding: 9px 12px;
+    border-radius: 8px; font-size: 12.5px; line-height: 1.5;
+    border: 1px solid var(--border); background: var(--off-white); color: var(--text-muted);
+  }
+  .mf-odoo-note.is-busy, .mf-odoo-note.is-ok,
+  .mf-odoo-note.is-warn, .mf-odoo-note.is-err { display: block; }
+  .mf-odoo-note.is-ok   { border-color: var(--green); color: var(--navy); }
+  /* Warn and error differ by border AND wording, never colour alone. */
+  .mf-odoo-note.is-warn { border-color: var(--orange); color: var(--navy); }
+  .mf-odoo-note.is-err  { border-color: #B0392F; color: #B0392F; }
+
+  .mf-odoo-exceptions {
+    margin: 0 0 12px; padding: 10px 12px; border-radius: 8px;
+    border: 1px dashed var(--orange); background: var(--off-white);
+  }
+  .mf-exc-h {
+    font-size: 11px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: .5px; color: var(--navy); margin: 2px 0 6px;
+  }
+  .mf-exc { margin: 0 0 8px; padding-left: 18px; font-size: 12.5px; line-height: 1.6; }
+  .mf-exc:last-child { margin-bottom: 0; }
+  .mf-exc-why { color: var(--text-muted); }
+</style>
 </head>
 <body>
 
@@ -46,8 +78,10 @@
   <div class="tb-leg">
     <div class="leg"><div class="ld ld-m"></div>Manual</div>
     <div class="leg"><div class="ld ld-f"></div>Formula</div>
+    <div class="leg"><div class="ld ld-o"></div>From Odoo</div>
   </div>
   <div class="btn-grp">
+    <button class="btn btn-out" id="mf-odoo-fill" type="button"><i data-lucide="download-cloud" class="btn-icon"></i> Fill from Odoo</button>
     <button class="btn btn-out" data-persist="history"><i data-lucide="folder-open" class="btn-icon"></i> Load Previous</button>
     <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
     <button class="btn btn-sub"><i data-lucide="check-circle" class="btn-icon"></i> Submit Report</button>
@@ -56,6 +90,11 @@
 
 <!-- ══════════════════ MAIN ══════════════════ -->
 <main class="fm-main">
+
+  <!-- Result of the last "Fill from Odoo". Empty until used, so the form
+       looks exactly as it did for anyone who never presses it. -->
+  <div class="mf-odoo-note" id="mf-odoo-note" role="status" aria-live="polite"></div>
+  <div class="mf-odoo-exceptions" id="mf-odoo-exceptions" hidden></div>
 
   <!-- ══ KPI SUMMARY STRIP (all live-computed from the tables below) ══ -->
   <div class="kpi-strip">
@@ -657,6 +696,156 @@ window.MATERIALS_SECTIONS = MATERIALS_SECTIONS;
 <script src="client-errors.js"></script>
 <script src="form-persist.js?v=5"></script>
 <script>initFormPersist('materials');</script>
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   Odoo prefill — received tonnage and pending GRN, per row.
+
+   Fills only two of the ten columns: `rcvd` (what arrived that day) and
+   `grn` (what arrived but has no GRN yet). Opening stock, consumption and
+   the min/max levels are NOT Odoo's to know — opening comes from
+   yesterday's close and consumption is read off the plant's own meters —
+   so they are left exactly as the officer or the previous day left them.
+
+   Never overwrites a value silently. A cell the officer has already typed
+   is left alone and reported in the summary line; only empty or
+   zero cells are filled, and every filled cell is tagged data-odoo so the
+   legend can mark it. The officer stays the author of the number.
+   ══════════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+  if (!window.NyatiAPI || !NyatiAPI.getRawMaterialDay) return;
+
+  var dateEl = document.querySelector('[data-field="date"]');
+  var btn    = document.getElementById('mf-odoo-fill');
+  var noteEl = document.getElementById('mf-odoo-note');
+  if (!btn || !noteEl) return;
+
+  function setNote(text, kind) {
+    noteEl.textContent = text;
+    noteEl.className = 'mf-odoo-note' + (kind ? ' is-' + kind : '');
+  }
+
+  /* The grid is built by inp() in the table-rendering script above, which
+     tags each cell with data-field="<row>_<col>" and no name attribute.
+     Selecting on [name] found nothing and the prefill silently filled zero
+     cells while still reporting success — caught by the browser spec. */
+  function fieldEl(row, col) {
+    return document.querySelector('[data-field="' + row + '_' + col + '"]');
+  }
+
+  /* An officer's typed figure outranks Odoo's. Only an empty cell, or one
+     still holding a literal 0, is treated as unfilled. */
+  function isUnset(el) {
+    if (!el) return false;
+    var v = String(el.value || '').trim();
+    return v === '' || Number(v) === 0;
+  }
+
+  async function fill() {
+    var date = dateEl && dateEl.value;
+    if (!date) { setNote('Pick a report date first.', 'warn'); return; }
+
+    btn.disabled = true;
+    var L = window.LCLoader;
+    if (L && L.steps) {
+      L.hold();
+      L.caption('Reading the gate log…');
+      L.steps(['Gate entries & GRN status', 'Matching suppliers to rows', 'Filling received + pending GRN']);
+      L.step(0, 'run');
+    }
+    setNote('Reading Odoo…', 'busy');
+
+    try {
+      var d = await NyatiAPI.getRawMaterialDay(date);
+      if (L && L.step) { L.step(0, 'ok', (d.rows || []).length + ' rows'); L.step(1, 'run'); }
+
+      var filled = 0, kept = 0, missing = [];
+      (d.rows || []).forEach(function (r) {
+        var rc = fieldEl(r.row, 'rcvd');
+        var gr = fieldEl(r.row, 'grn');
+        if (!rc) { missing.push(r.label || r.row); return; }
+        if (isUnset(rc)) {
+          rc.value = r.mt;
+          rc.setAttribute('data-odoo', '1');
+          rc.dispatchEvent(new Event('input', { bubbles: true }));
+          filled++;
+        } else if (Number(rc.value) !== Number(r.mt)) {
+          kept++;
+        }
+        if (gr && isUnset(gr) && r.pending_grn_mt) {
+          gr.value = r.pending_grn_mt;
+          gr.setAttribute('data-odoo', '1');
+          gr.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+
+      /* No explicit recompute() call: it lives inside the table script's
+         IIFE and is unreachable from here. It does not need to be — that
+         script registers a document-level 'input' listener, and every cell
+         filled above dispatches a bubbling input event, so the closing-stock
+         and sub-total columns recalculate on their own. */
+      if (L && L.step) { L.step(1, 'ok'); L.step(2, 'run'); }
+      if (L && L.step) L.step(2, 'ok', filled + ' cells');
+
+      /* Say what was NOT filled as loudly as what was. A silent partial
+         prefill is how a wrong total gets signed off. */
+      var bits = [filled + ' cell' + (filled === 1 ? '' : 's') + ' filled from Odoo'];
+      if (kept) bits.push(kept + ' kept (you had already typed a different figure)');
+      if ((d.unassigned || []).length) {
+        var t = d.unassigned.reduce(function (a, u) { return a + u.mt; }, 0);
+        bits.push(d.unassigned.length + ' truck(s) totalling ' + t.toFixed(2)
+                  + ' MT could not be matched to a row — see below');
+      }
+      if (missing.length) bits.push('no row on this form for: ' + missing.join(', '));
+      setNote(bits.join(' · '), (d.unassigned || []).length || missing.length ? 'warn' : 'ok');
+
+      renderUnassigned(d.unassigned || [], d.pending_grn || []);
+    } catch (err) {
+      if (L && L.step) L.step(0, 'fail');
+      setNote('Could not read Odoo: ' + (err && err.message ? err.message : 'unknown error'), 'err');
+    } finally {
+      btn.disabled = false;
+      if (L && L.done) L.done();
+    }
+  }
+
+  /* Unmatched trucks and overdue GRNs are rendered as real rows, not a
+     count — the officer needs the token and supplier to act on them. */
+  function renderUnassigned(unassigned, pending) {
+    var box = document.getElementById('mf-odoo-exceptions');
+    if (!box) return;
+    var html = '';
+    if (unassigned.length) {
+      html += '<div class="mf-exc-h">Not matched to any row</div><ul class="mf-exc">';
+      unassigned.forEach(function (u) {
+        html += '<li><b>' + escHtml(u.material || '—') + '</b> ' + u.mt + ' MT · '
+             + escHtml(u.vendor || '') + (u.vendor_code ? ' [' + escHtml(u.vendor_code) + ']' : '')
+             + ' · <span class="mf-exc-why">' + escHtml(u.reason) + '</span></li>';
+      });
+      html += '</ul>';
+    }
+    var overdue = pending.filter(function (p) { return p.overdue; });
+    if (overdue.length) {
+      html += '<div class="mf-exc-h">GRN overdue (more than 5 days)</div><ul class="mf-exc">';
+      overdue.forEach(function (p) {
+        html += '<li><b>' + escHtml(p.material || '—') + '</b> ' + p.mt + ' MT · '
+             + escHtml(p.token) + ' · ' + p.days_pending + ' days</li>';
+      });
+      html += '</ul>';
+    }
+    box.innerHTML = html;
+    box.hidden = !html;
+  }
+
+  function escHtml(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  btn.addEventListener('click', fill);
+}());
+</script>
 <script src="nav-status.js?v=2"></script>
 <script src="collapsible.js"></script>
 <script src="excel-import.js?v=4"></script>

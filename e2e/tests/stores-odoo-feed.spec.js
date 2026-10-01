@@ -131,7 +131,7 @@ test.describe('Odoo stores feed', () => {
     /* Each mapped row's rcvd cell should now hold the API's tonnage, and
        carry the data-odoo marker the legend explains. */
     for (const r of api.body.rows) {
-      const cell = page.locator(`[name="${r.row}_rcvd"]`);
+      const cell = page.locator(`[data-field="${r.row}_rcvd"]`);
       if (await cell.count() === 0) continue;      // row not on this form
       const val = await cell.inputValue();
       expect(Number(val), `${r.row} received`).toBeCloseTo(r.mt, 2);
@@ -151,7 +151,7 @@ test.describe('Odoo stores feed', () => {
        integration plan), and the test then skips without proving anything. */
     let target = null, cell = null;
     for (const r of api.body.rows.filter(x => x.mt > 0)) {
-      const c = page.locator(`[name="${r.row}_rcvd"]`);
+      const c = page.locator(`[data-field="${r.row}_rcvd"]`);
       if (await c.count() > 0) { target = r; cell = c; break; }
     }
     test.skip(!target, 'no non-zero receipt maps to a row on this form');

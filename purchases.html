@@ -51,6 +51,39 @@
 
     .tbl-scroll { overflow-x: auto; }
 
+    /* ── Odoo stores feed ─────────────────────────────────────────── */
+    .sv-tbl td { font-variant-numeric: tabular-nums; }
+    .sv-tbl td:first-child { white-space: normal; }
+    .sv-dest {
+      font-size: 11px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 9px; background: var(--section-bg); color: var(--text-muted);
+    }
+    .sv-dest.kiln { background: var(--st-warn-bg); color: var(--orange-ink); }
+    .sv-dest.cpp  { background: var(--green-bg);   color: var(--green-ink); }
+    .sv-refresh {
+      margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid var(--border); background: var(--white, #fff);
+      border-radius: 8px; padding: 4px 10px; font: inherit; font-size: 12px;
+      color: var(--navy); cursor: pointer;
+    }
+    .sv-refresh:hover:not(:disabled) { border-color: var(--orange); }
+    .sv-refresh:disabled { opacity: .55; cursor: default; }
+    .sv-refresh i { width: 14px; height: 14px; }
+    /* A feed that has not updated is said in words, not implied by an old
+       number — the fabricated-zero rule from the 2026-09-30 audit. */
+    .sv-stale {
+      margin-bottom: 10px; padding: 8px 11px; border-radius: 8px;
+      border: 1px solid var(--orange); background: var(--st-warn-bg);
+      font-size: 12.5px; color: var(--navy);
+    }
+    .sv-exceptions {
+      margin-top: 10px; padding: 9px 12px; border-radius: 8px;
+      border: 1px dashed var(--orange); background: var(--off-white);
+      font-size: 12.5px; line-height: 1.6;
+    }
+    .sv-exceptions ul { margin: 4px 0 0; padding-left: 18px; }
+    .sv-exc-h { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: var(--navy); }
+
     /* ── Stores / Inventory ─────────────────────────────────────── */
     .st-divider {
       display: flex; align-items: center; gap: 10px;
@@ -221,6 +254,65 @@
     <span class="st-divider-title">Stores &amp; Inventory</span>
     <span class="st-chip" id="st-source-chip">MIS</span>
     <span class="in-section-sub" id="st-asof"></span>
+  </div>
+
+  <!-- ══ ODOO STORES FEED ═══════════════════════════════════════════
+       Receipts, consumption and valuation read from the tables
+       odooStoresSync.js fills. Separate from the MIS block below, and
+       labelled as such, because the two answer different questions: this
+       is what the gate and the store issued; that is what the officer
+       reported on the daily form. -->
+  <div class="in-section-hdr">
+    <span class="in-section-title">Goods Received — by Material</span>
+    <span class="in-section-sub" id="sv-recv-sub">— from the Odoo gate log</span>
+    <button type="button" class="sv-refresh" id="sv-sync" title="Pull the latest from Odoo now">
+      <i data-lucide="refresh-cw"></i> Sync now
+    </button>
+  </div>
+  <div class="in-card">
+    <div class="sv-stale" id="sv-stale" hidden></div>
+    <div class="tbl-scroll">
+      <table class="cat-grid sv-tbl">
+        <thead><tr>
+          <th>Material / Supplier</th><th>Destination</th><th>Trucks</th>
+          <th>Received (MT)</th><th>Pending GRN (MT)</th>
+        </tr></thead>
+        <tbody id="sv-receipts"></tbody>
+      </table>
+    </div>
+    <div class="in-empty" id="sv-recv-empty" style="display:none"></div>
+    <div class="sv-exceptions" id="sv-exceptions" hidden></div>
+  </div>
+
+  <div class="in-section-hdr">
+    <span class="in-section-title">Diesel Issued — by Department</span>
+    <span class="in-section-sub" id="sv-diesel-sub">— from Odoo material issues</span>
+  </div>
+  <div class="in-card">
+    <div class="sk-row" id="sv-diesel-hero" style="margin-bottom:14px"></div>
+    <div class="tbl-scroll">
+      <table class="cat-grid sv-tbl">
+        <thead><tr><th>Department</th><th>Issued</th><th>Lines</th><th>Value (TZS)</th></tr></thead>
+        <tbody id="sv-diesel"></tbody>
+      </table>
+    </div>
+    <div class="in-empty" id="sv-diesel-empty" style="display:none"></div>
+  </div>
+
+  <div class="in-section-hdr">
+    <span class="in-section-title">Stock Valuation — GRN Booked</span>
+    <span class="in-section-sub" id="sv-val-sub">— rate &times; quantity, this month</span>
+  </div>
+  <div class="in-card">
+    <div class="tbl-scroll">
+      <table class="cat-grid sv-tbl">
+        <thead><tr>
+          <th>Item</th><th>Qty</th><th>Weighted rate</th><th>Value (TZS)</th><th>Landed (TZS)</th>
+        </tr></thead>
+        <tbody id="sv-valuation"></tbody>
+      </table>
+    </div>
+    <div class="in-empty" id="sv-val-empty" style="display:none"></div>
   </div>
 
   <!-- Closing stock by category -->
@@ -822,8 +914,163 @@
     drawTrend();
   }
 
+  /* ══ Odoo stores feed ═══════════════════════════════════════════
+     Three independent reads. Deliberately NOT bundled with the main
+     dashboard call: these query local Postgres and answer in
+     milliseconds, while the purchase dashboard waits on Odoo. Blocking
+     the fast half on the slow half would make the whole page feel dead. */
+  function svSetRows(tbodyId, emptyId, html, emptyMsg) {
+    var tb = document.getElementById(tbodyId), em = document.getElementById(emptyId);
+    tb.innerHTML = html;
+    em.textContent = emptyMsg || '';
+    em.style.display = html ? 'none' : 'block';
+  }
+
+  function renderReceipts(d) {
+    var html = (d.rows || []).map(function (r) {
+      var dest = r.destination
+        ? '<span class="sv-dest ' + r.destination + '">' + (r.destination === 'cpp' ? 'CPP' : 'Kiln') + '</span>'
+        : '<span class="sv-dest">&mdash;</span>';
+      return '<tr><td>' + esc(r.label) + '</td><td>' + dest + '</td><td>' + fmt(r.trucks) + '</td>'
+        + '<td>' + fmt(r.mt) + '</td><td>' + (r.pending_grn_mt ? fmt(r.pending_grn_mt) : '&mdash;') + '</td></tr>';
+    }).join('');
+    svSetRows('sv-receipts', 'sv-recv-empty', html,
+      'No raw material receipts recorded for ' + d.date + '.');
+    document.getElementById('sv-recv-sub').textContent = '— ' + d.date + ', from the Odoo gate log';
+
+    /* Unmatched trucks and overdue GRNs are the reason this panel exists:
+       a total that silently drops them would be wrong and look right. */
+    var box = document.getElementById('sv-exceptions'), parts = '';
+    if ((d.unassigned || []).length) {
+      parts += '<div class="sv-exc-h">Not matched to a report row</div><ul>'
+        + d.unassigned.map(function (u) {
+            return '<li>' + esc(u.material || '—') + ' · ' + fmt(u.mt) + ' MT · '
+              + esc(u.vendor || '') + ' — ' + esc(u.reason) + '</li>';
+          }).join('') + '</ul>';
+    }
+    var overdue = (d.pending_grn || []).filter(function (p) { return p.overdue; });
+    if (overdue.length) {
+      parts += '<div class="sv-exc-h">GRN overdue (over 5 days)</div><ul>'
+        + overdue.map(function (p) {
+            return '<li>' + esc(p.material || '—') + ' · ' + fmt(p.mt) + ' MT · '
+              + esc(p.token) + ' · ' + p.days_pending + ' days</li>';
+          }).join('') + '</ul>';
+    }
+    box.innerHTML = parts;
+    box.hidden = !parts;
+
+    renderStale(d.freshness || []);
+  }
+
+  /* "No trucks today" and "the sync stopped on Tuesday" look identical in
+     a table of zeroes. This says which it is. */
+  function renderStale(feeds) {
+    var el = document.getElementById('sv-stale');
+    var today = new Date().toISOString().slice(0, 10);
+    var behind = feeds.filter(function (f) { return !f.latest_day || f.latest_day < today; });
+    if (!behind.length) { el.hidden = true; return; }
+    el.textContent = 'Latest data: '
+      + behind.map(function (f) { return f.feed + ' to ' + (f.latest_day || 'never'); }).join(' · ')
+      + '. Figures below are as of those dates, not today.';
+    el.hidden = false;
+  }
+
+  function renderDiesel(d) {
+    var html = (d.by_department || []).map(function (x) {
+      return '<tr><td>' + esc(x.key) + '</td><td>' + fmt(x.qty) + '</td><td>' + fmt(x.lines) + '</td>'
+        + '<td>' + (x.value_tzs ? tzs(x.value_tzs) : '&mdash;') + '</td></tr>';
+    }).join('');
+    svSetRows('sv-diesel', 'sv-diesel-empty', html, 'No diesel issued on ' + d.date + '.');
+    document.getElementById('sv-diesel-sub').textContent = '— ' + d.date + ', from Odoo material issues';
+    document.getElementById('sv-diesel-hero').innerHTML = d.total_qty === null ? '' : sk({
+      label: 'Total issued', value: fmt(d.total_qty), unit: d.uom || '',
+      status: d.lines + ' issue line(s)'
+    });
+  }
+
+  function renderValuation(v) {
+    var html = (v.items || []).map(function (i) {
+      return '<tr><td>' + esc(i.item_name || i.item_code) + '</td><td>' + fmt(i.qty) + '</td>'
+        + '<td>' + (i.weighted_rate ? tzs(i.weighted_rate) : '&mdash;') + '</td>'
+        + '<td>' + tzs(i.value_tzs) + '</td>'
+        + '<td>' + (i.landed_tzs ? tzs(i.landed_tzs) : '&mdash;') + '</td></tr>';
+    }).join('');
+    svSetRows('sv-valuation', 'sv-val-empty', html, 'No GRNs booked in this period.');
+    document.getElementById('sv-val-sub').textContent = '— ' + v.from + ' to ' + v.to + ', rate x quantity';
+  }
+
+  async function loadStoresFeed() {
+    if (!NyatiAPI.getRawMaterialDay) return;
+    var p = periodParams();
+    /* Receipts and diesel are DAY figures, so they follow the end of
+       whatever period is selected; valuation spans the whole range. */
+    var day = p.to || new Date().toISOString().slice(0, 10);
+    var from = p.from || day, to = p.to || day;
+    if (!p.mode || p.mode === 'month') {
+      var y = Number(p.year) || new Date().getFullYear();
+      var m = Number(p.month) || (new Date().getMonth() + 1);
+      from = y + '-' + String(m).padStart(2, '0') + '-01';
+      to = new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
+      day = to;
+    }
+    /* allSettled, not all: a valuation failure must not blank the receipts
+       table that loaded fine. Each panel reports its own state. */
+    var r = await Promise.allSettled([
+      NyatiAPI.getRawMaterialDay(day),
+      NyatiAPI.getStoresIssues(day, 'FUEL DIESEL'),
+      NyatiAPI.getStoresValuation(from, to)
+    ]);
+    if (r[0].status === 'fulfilled') renderReceipts(r[0].value);
+    if (r[1].status === 'fulfilled') renderDiesel(r[1].value);
+    if (r[2].status === 'fulfilled') renderValuation(r[2].value);
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  /* Manual sync — the one place this page waits on Odoo (15-55s), so it
+     drives the loader's step list instead of leaving a dead button. */
+  (function wireSync() {
+    var btn = document.getElementById('sv-sync');
+    if (!btn) return;
+    btn.addEventListener('click', async function () {
+      if (!NyatiAPI.syncStores) return;
+      btn.disabled = true;
+      var L = window.LCLoader;
+      if (L && L.steps) {
+        L.hold();
+        L.caption('Pulling the last 7 days from Odoo…');
+        L.steps(['Gate entries', 'GRN register', 'Material issues', 'Refreshing the page']);
+        L.step(0, 'run');
+      }
+      try {
+        var out = await NyatiAPI.syncStores(7);
+        /* The server keeps going when one dataset fails, so each step is
+           marked from its own outcome rather than one overall verdict. */
+        ['gate-entries', 'grn-register', 'material-issues'].forEach(function (name, i) {
+          var hit = (out.results || []).filter(function (x) { return x.dataset === name; })[0];
+          if (L && L.step) L.step(i, hit ? 'ok' : 'fail', hit ? hit.written + ' rows' : 'failed');
+        });
+        if (L && L.step) L.step(3, 'run');
+        await loadStoresFeed();
+        if (L && L.step) L.step(3, 'ok');
+      } catch (e) {
+        if (L && L.step) L.step(0, 'fail', e && e.code === 'SYNC_IN_PROGRESS' ? 'already running' : '');
+        var stale = document.getElementById('sv-stale');
+        stale.textContent = (e && e.code === 'SYNC_IN_PROGRESS')
+          ? 'Another sync is already running — this page will show its result once it finishes.'
+          : 'Could not sync from Odoo: ' + ((e && e.message) ? e.message : 'unknown error');
+        stale.hidden = false;
+      } finally {
+        btn.disabled = false;
+        if (L && L.done) L.done();
+      }
+    });
+  }());
+
   async function load() {
     document.getElementById('pd-source').textContent = 'Loading…';
+    /* Fire and forget: the stores panels own their own error states, and
+       making the Odoo-bound dashboard wait on them helps nobody. */
+    loadStoresFeed().catch(function () { /* panels report their own state */ });
     try {
       var d = await NyatiAPI.getPurchasesDashboard(periodParams());
       document.getElementById('pd-source').textContent = (!d.po_value_trend.ok)

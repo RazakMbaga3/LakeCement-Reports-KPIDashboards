@@ -163,6 +163,7 @@
           '</div>' +
           '<div class="lcl-title"></div>' +
           '<div class="lcl-caption"></div>' +
+          '<ol class="lcl-steps" hidden></ol>' +
           '<button type="button" class="lcl-skip" hidden>Continue anyway</button>' +
         '</div>';
 
@@ -176,6 +177,7 @@
         title:   cover.querySelector('.lcl-title'),
         caption: cover.querySelector('.lcl-caption'),
         icon:    cover.querySelector('.lcl-mark-icon'),
+        steps:   cover.querySelector('.lcl-steps'),
         skip:    cover.querySelector('.lcl-skip')
       };
       els.skip.addEventListener('click', finish);
@@ -497,7 +499,9 @@
     if (u2) arm(u2, oc);
   }, false);
 
-  window.addEventListener('pageshow', function (e) { if (e.persisted) reset(); });
+  window.addEventListener('pageshow', function (e) {
+    if (e.persisted) { stepState = []; reset(); }
+  });
   window.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && shown) finish();
   });
@@ -505,10 +509,76 @@
   /* Public surface — a page with a long tail of work after load can hold the
      cover and release it itself. Nothing is required to; the fetch tracking
      above already covers all 27 pages unassisted. */
+  /* ── Step list ────────────────────────────────────────────────
+     For work the fetch tracker cannot time: a page that pulls several
+     datasets in sequence, or asks the server to run an Odoo sync that
+     takes 15-55s. A spinner alone over that long reads as a hang; naming
+     the stage that is actually running is what makes a long wait legible.
+
+     Deliberately NOT a percentage bar. These steps have no honest
+     proportion — a gate-entry pull is 15s and a GRN pull 4s against the
+     same ERP, and inventing a percent would be a number the page cannot
+     stand behind. A checklist says the same thing truthfully.
+
+     The caption keeps working alongside it; steps are additive. */
+  var stepState = [];
+
+  function paintSteps() {
+    build(function () {
+      if (!stepState.length) { els.steps.hidden = true; return; }
+      els.steps.hidden = false;
+      els.steps.innerHTML = stepState.map(function (st) {
+        /* textContent, not innerHTML, for the label — these can carry a
+           dataset name that came back from the server. */
+        var li = document.createElement('li');
+        li.className = 'lcl-step is-' + st.state;
+        var dot = document.createElement('span');
+        dot.className = 'lcl-step-dot';
+        dot.setAttribute('aria-hidden', 'true');
+        var txt = document.createElement('span');
+        txt.className = 'lcl-step-label';
+        txt.textContent = st.label;
+        li.appendChild(dot);
+        li.appendChild(txt);
+        if (st.note) {
+          var note = document.createElement('span');
+          note.className = 'lcl-step-note';
+          note.textContent = st.note;
+          li.appendChild(note);
+        }
+        return li.outerHTML;
+      }).join('');
+      /* Screen readers get the running step announced, not the whole list
+         re-read on every repaint. */
+      var active = stepState.filter(function (s) { return s.state === 'run'; })[0];
+      els.steps.setAttribute('aria-label',
+        active ? 'Now: ' + active.label : 'Progress');
+    });
+  }
+
   window.LCLoader = {
     done:    finish,
     caption: function (text) { baseCaption = text; setCaption(text); },
-    hold:    function () { loadedAt = 0; }
+    hold:    function () { loadedAt = 0; },
+
+    /* steps(['Reading the gate log', 'Matching GRNs', …]) — all pending. */
+    steps: function (labels) {
+      stepState = (labels || []).map(function (l) {
+        return { label: String(l), state: 'wait', note: '' };
+      });
+      paintSteps();
+      return window.LCLoader;
+    },
+    /* step(i, 'run'|'ok'|'fail', optional note like '181 lines') */
+    step: function (index, state, note) {
+      var st = stepState[index];
+      if (!st) return window.LCLoader;
+      st.state = state || 'run';
+      if (note !== undefined) st.note = String(note);
+      paintSteps();
+      return window.LCLoader;
+    },
+    clearSteps: function () { stepState = []; paintSteps(); return window.LCLoader; }
   };
 
   boot();
