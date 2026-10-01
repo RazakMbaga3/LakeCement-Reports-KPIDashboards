@@ -146,10 +146,25 @@ async function checkOdooSync() {
   const mining     = require('./odooMiningClient').isConfigured();
   const dispatch   = !!process.env.ODOO_DISPATCH_URL;
   const production = require('./odooProductionClient').isConfigured();
+  /* The stores endpoints derive their URLs, so only the client can say
+     whether they are usable — same rule as mining above. */
+  const storesClient = require('./odooStoresClient');
+  const stores = storesClient.isConfigured('gate')
+    && storesClient.isConfigured('grn')
+    && storesClient.isConfigured('issues');
+
+  /* This list is the one place a pull can be forgotten and nobody notices:
+     a pull missing here is simply absent from /api/health, so "is it
+     running?" has no answer rather than a wrong one. The stores pull was
+     added to odooSync.js and LIVE_PULLS on 2026-10-01 and did NOT appear
+     here until it was caught by reading the health output — exactly the
+     restated-list trap config/odooPulls.js was written to prevent. Adding a
+     pull means adding it here too. */
   const wanted = [
     dispatch   && 'dispatch-daily-summary',
     mining     && 'mining-weighbridge-tickets',
     production && 'production-report-autofill',
+    stores     && 'stores-gate-grn-issues',
   ].filter(Boolean);
   if (!wanted.length) return {};
 
