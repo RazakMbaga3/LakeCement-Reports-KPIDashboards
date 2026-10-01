@@ -111,49 +111,65 @@ test('known non-cement movements are skipped quietly, not flagged as unmapped', 
 });
 
 /* ── The status contract ──────────────────────────────────────────────
-   The sync inserted new days as 'approved'. Separately, routes/reports.js
-   started refusing a submit over an 'approved' OR 'pending_approval'
-   report. Neither change was wrong alone; together they locked the
-   Dispatch & SO form on all 208 stored days, so SO Pendency, Bags Packed,
-   Burst Bag Rate and the vehicle queue — the half Odoo cannot supply —
-   could not be entered by anyone, ever. Nothing failed; the data was just
-   permanently absent. These tests pin the contract so the pair cannot
-   drift back into conflict silently. */
+   This pair has broken twice, in opposite directions, and both times the
+   damage was silent — no error, just a screen that was wrong.
 
-test('the sync inserts a fresh day as a draft, so the form stays writable', () => {
+   Round 1: the sync wrote 'approved' while routes/reports.js refused any
+   submit over an 'approved' report. Each was reasonable alone; together
+   they locked the Dispatch & SO form on every stored day, so SO Pendency,
+   Bags Packed, Burst Bag Rate and the vehicle queue could not be entered
+   by anyone, ever.
+
+   Round 2: the sync was changed to 'draft' to escape that lock. Entry
+   worked — and the dashboard went blank, because 'draft' is outside
+   REPORTED_STATUSES, so dispatch.html counted no day at all and showed
+   "a draft exists but it has not been submitted" on all 211 dates.
+
+   The resolution (DEC-008): `status` never meant "signed", `approved_by`
+   does. The lock now tests approved_by, so an ERP row can say the true
+   thing about itself AND stay writable. These tests pin both halves —
+   either one alone is an outage. */
+
+test('the sync inserts a fresh day as approved, so the dashboard counts it', () => {
   /* To end-of-line, not to the first ')': the VALUES list contains NOW(),
      which would truncate the match before the status literal. */
   const insert = SYNC_SRC.match(/INSERT INTO daily_reports[\s\S]*?VALUES \(.*/);
   assert.ok(insert, "could not find the sync's INSERT statement");
-  assert.match(insert[0], /'draft'/,
-    "odooDispatchSync must insert new days as 'draft'. 'approved' and " +
-    "'pending_approval' are both refused by the REPORT_LOCKED check in " +
-    'routes/reports.js, which makes the manual half of the form unfillable.');
+  const status = insert[0].match(/'(draft|approved|pending_approval)'\s*\)?\s*$/);
+  assert.ok(status, 'could not read the status literal out of the INSERT');
+  assert.ok(REPORTED_STATUSES.includes(status[1]),
+    `the sync inserts '${status[1]}', which is outside REPORTED_STATUSES ` +
+    `(${REPORTED_STATUSES.join(', ')}) — dispatch.html and the KPI engine ` +
+    'would then skip every synced day, which is what blanked the dashboard ' +
+    'on 2026-09-28.');
 });
 
-test('the statuses reports.js locks are exactly the ones the sync must avoid', () => {
-  /* Read the lock predicate out of the route rather than restating it, so
-     this test tracks the real rule if it ever changes. */
+test('the write-lock turns on a human signature, not on status alone', () => {
+  /* Read the predicate out of the route rather than restating it, so this
+     tracks the real rule. The sync writes a REPORTED status, so the ONLY
+     thing keeping the form writable is that the lock also requires a human
+     approver. If that condition is dropped, the packing plant is locked out
+     of every date again and nothing else here will catch it. */
   const pred = REPORTS_SRC.match(/const lockedStatus\s*=[\s\S]*?;/);
   assert.ok(pred, 'could not find the lockedStatus predicate in routes/reports.js');
-  const locked = [...pred[0].matchAll(/status === '(\w+)'/g)].map(m => m[1]).sort();
-  assert.deepEqual(locked, ['approved', 'pending_approval'],
-    'the set of write-locking statuses changed — re-check what ' +
-    'odooDispatchSync.js inserts against it');
 
-  const insert = SYNC_SRC.match(/INSERT INTO daily_reports[\s\S]*?VALUES \(.*/)[0];
-  for (const s of locked) {
-    assert.ok(!insert.includes(`'${s}'`),
-      `the sync inserts '${s}', which routes/reports.js write-locks`);
-  }
+  assert.match(pred[0], /humanSigned/,
+    'the lock no longer consults humanSigned/approved_by. With the sync ' +
+    'writing an approved status, a status-only lock makes SO Pendency, ' +
+    'Bags Packed, Burst Bag Rate and the vehicle queue unfillable on every ' +
+    'date — see DEC-008.');
+
+  const signed = REPORTS_SRC.match(/const humanSigned\s*=.*/);
+  assert.ok(signed, 'humanSigned is referenced but never defined');
+  assert.match(signed[0], /approved_by/,
+    'humanSigned must be derived from approved_by — the column that records ' +
+    'that a PERSON signed the report');
 });
 
-test("the cost of 'draft' is acknowledged: synced days are not reported until submitted", () => {
-  /* Not a complaint — a pin. 'draft' is deliberately outside
-     REPORTED_STATUSES, so an Odoo-written day counts in the KPI engine and
-     the MIS pack only once an officer submits it, exactly as the Production
-     autofill already works. If someone adds 'draft' to REPORTED_STATUSES to
-     "fix" the gap, that silently re-reports half-empty days. */
+test('REPORTED_STATUSES still excludes draft, so a real draft stays uncounted', () => {
+  /* The other guardrail: with the sync back on 'approved', nobody should
+     "fix" anything by widening REPORTED_STATUSES. A genuine human draft —
+     somebody still typing — must not reach the dashboard. */
   assert.deepEqual([...REPORTED_STATUSES].sort(), ['approved', 'pending_approval']);
   assert.ok(!REPORTED_STATUSES.includes('draft'));
 });

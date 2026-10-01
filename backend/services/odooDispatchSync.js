@@ -152,8 +152,33 @@ function buildDayMaps(rows) {
    deliberately re-pulls a 5-day trailing window every run) is mid-flight
    for that same day, silently discarding whichever write lost the race. */
 async function upsertDay(date, odooFields) {
-  /* status 'draft' for a day nobody has touched — changed 2026-09-28, see
-     DEC-007. This sync used to insert new days as 'approved', reasoning
+  /* status 'approved' — restored 2026-10-01, see DEC-008. This has moved
+     twice, and the history is the point.
+
+     It was 'approved' originally, which is right for what the dashboard
+     needs: an ERP figure is reported fact, and 'draft' sits outside
+     REPORTED_STATUSES so the review page and the KPI engine skip it. On
+     2026-09-28 it became 'draft' to escape the write-lock in
+     routes/reports.js, which was refusing the packing plant's manual
+     entries on every date. That unlocked the form and broke the dashboard:
+     every Dispatch & SO day dropped out of the reports management reads,
+     showing "a draft exists for this date, but it has not been submitted"
+     in place of the plant's own figures.
+
+     Both problems came from one wrong assumption — that status alone says
+     whether a report has been signed. It does not. The fix belongs in the
+     lock, which now tests approved_by: an ERP row has approved_by IS NULL,
+     so there is no human signature to protect and the day stays writable.
+     A day a person approves gets approved_by set and locks normally.
+
+     So this can be 'approved' — which is simply true, Odoo already
+     approved it — AND the packing plant can still add SO Pendency, Bags
+     Packed, Burst Bag Rate and the vehicle queue on top. The two goals
+     were never actually in conflict; the old comment below explains what
+     made them look like they were.
+
+     ─── superseded reasoning, kept because it was nearly right ───
+     This sync used to insert new days as 'approved', reasoning
      that an ERP figure is authoritative reported data with no human in the
      loop to sign it off, and that a 'draft' would be invisible to the KPI
      engine, the MIS pack and Entry Completeness (REPORTED_STATUSES in
@@ -170,25 +195,18 @@ async function upsertDay(date, odooFields) {
      entry, an impossible one. Zero dispatch rows have ever had a human
      submitter.
 
-     'draft' is the only status that leaves the day writable, and it is the
-     same answer odooProductionAutofill.js reached for the same problem
-     (decision B, 2026-09-21): a day Odoo has data for, that nobody has
-     touched, is a draft the officer still opens, completes and submits
-     through the normal HOD step. Using it here means one autofill workflow
-     in this codebase instead of two.
-
-     The cost is deliberate and known: a dispatch day counts in the KPI
-     engine and the MIS pack only once the officer submits it. That is the
-     same bargain Production already makes, and it is the honest one — the
-     alternative is a report that claims to be signed off while half of it
-     was never filled in, and that nobody could ever fix.
+     'draft' was then the only status that left the day writable, so that is
+     what this used — at the cost of the day no longer counting anywhere.
+     That cost turned out to be the bigger problem: it is the dashboard
+     management actually reads. The lock is what was wrong, not the status.
+     ─── end superseded reasoning ───
 
      ON CONFLICT still leaves status alone: once an operator has submitted
      a day, or an HOD approved or rejected it, the sync's fresher figures
      merge in without overriding the human decision about the record. */
   await db.query(`
     INSERT INTO daily_reports (form_type, record_date, shift, data, submitted_at, status)
-    VALUES ('dispatch', $1, 'day', $2, NOW(), 'draft')
+    VALUES ('dispatch', $1, 'day', $2, NOW(), 'approved')
     ON CONFLICT (form_type, record_date, shift)
     DO UPDATE SET data = daily_reports.data || EXCLUDED.data, updated_at = NOW()
   `, [date, JSON.stringify(odooFields)]);

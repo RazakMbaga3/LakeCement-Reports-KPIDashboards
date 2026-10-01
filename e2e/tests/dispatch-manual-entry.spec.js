@@ -11,9 +11,18 @@
   every date that existed, so the four review-page cards reading "No data"
   were reporting an impossibility rather than an omission.
 
-  The sync now creates untouched days as 'draft'. This proves the whole path
-  works for the role that actually does the work: Odoo's tonnage is already
-  on the day, the officer adds the manual half, it saves, and it comes back.
+  That was first fixed by making the sync write 'draft' instead — which
+  unlocked entry and broke the dashboard, since 'draft' is outside
+  REPORTED_STATUSES and dispatch.html then counted no day at all. The real
+  error was reading `status` as the record of whether a report had been
+  signed. It is not; `approved_by` is. Since 2026-10-01 the lock tests
+  approved_by, so an ERP row (approved_by NULL) stays writable while saying
+  the true thing about itself — Odoo approved this — and the dashboard reads
+  it. See DEC-008.
+
+  This proves the whole path works for the role that does the work: Odoo's
+  tonnage is already on the day, the officer adds the manual half, it saves,
+  and it comes back.
 
   Writes to a 1999 date, cleaned up here and by global-teardown.
 */
@@ -42,9 +51,9 @@ async function cleanup() {
 async function seedOdooDay() {
   await pool.query(
     `INSERT INTO daily_reports (form_type, record_date, shift, data, submitted_at, status)
-     VALUES ('dispatch', $1, 'day', $2::jsonb, NOW(), 'draft')
+     VALUES ('dispatch', $1, 'day', $2::jsonb, NOW(), 'approved')
      ON CONFLICT (form_type, record_date, shift)
-     DO UPDATE SET data = EXCLUDED.data, status = 'draft',
+     DO UPDATE SET data = EXCLUDED.data, status = 'approved',
                    submitted_by = NULL, approved_by = NULL, updated_by = NULL`,
     [D, JSON.stringify({ dispatch_reg_425r: 2271.5, dispatch_reg_425nbm: 150 })]);
 }
@@ -87,13 +96,41 @@ test('a packing officer can fill the manual half of an Odoo-synced day', async (
   expect(row.status).toBe('pending_approval');
 });
 
-test('the pre-2026-09-28 regression: an approved synced day refuses the manual half', async ({ page }) => {
-  /* Recreates the exact state the sync used to leave behind. If someone
-     sets the sync back to 'approved', this is what the packing plant hits —
-     a 409 they cannot clear, on every single date. */
-  await pool.query(
-    `UPDATE daily_reports SET status='approved'
+/* The lock tests approved_by, not status (2026-10-01, DEC-008). These two
+   are the pair that has to hold together: an ERP row is writable even though
+   it says 'approved', and a row a PERSON approved is not. Getting either one
+   wrong is a real outage — the first locks the packing plant out of their own
+   report, the second lets anyone silently overwrite a signed-off one. */
+
+test("a day the ERP approved is still writable — there is no human signature to protect", async ({ page }) => {
+  /* This is the state the sync leaves behind on every date: status
+     'approved', approved_by NULL. Before DEC-008 this returned a 409 the
+     packing plant could not clear, on all 211 days. */
+  const { rows: before } = await pool.query(
+    `SELECT status, approved_by FROM daily_reports
      WHERE form_type='dispatch' AND record_date=$1 AND shift='day'`, [D]);
+  expect(before[0].status).toBe('approved');
+  expect(before[0].approved_by, 'the ERP signs nothing').toBeNull();
+
+  await loginAs(page, 'packing_officer');
+  await page.goto('/index.html');
+
+  const r = await post(page, { date: D, shift: 'day', data: MANUAL });
+  expect(r.status, JSON.stringify(r.body)).toBe(200);
+
+  const { rows } = await pool.query(
+    `SELECT data FROM daily_reports WHERE form_type='dispatch' AND record_date=$1 AND shift='day'`, [D]);
+  expect(Number(rows[0].data.bags_pl1)).toBe(MANUAL.bags_pl1);
+});
+
+test('a day a PERSON approved is still locked — the signature is what the lock protects', async ({ page }) => {
+  /* The case the write-lock was actually written for. Same status as the
+     test above; the only difference is that approved_by is set. */
+  const { rows: approver } = await pool.query(
+    `SELECT id FROM users WHERE username = $1`, ['e2e_logistics']);
+  await pool.query(
+    `UPDATE daily_reports SET status='approved', approved_by=$2, approved_at=NOW()
+     WHERE form_type='dispatch' AND record_date=$1 AND shift='day'`, [D, approver[0].id]);
 
   await loginAs(page, 'packing_officer');
   await page.goto('/index.html');
@@ -104,5 +141,5 @@ test('the pre-2026-09-28 regression: an approved synced day refuses the manual h
 
   const { rows } = await pool.query(
     `SELECT data FROM daily_reports WHERE form_type='dispatch' AND record_date=$1 AND shift='day'`, [D]);
-  expect(rows[0].data.bags_pl1, 'nothing of the manual half got through').toBeUndefined();
+  expect(rows[0].data.bags_pl1, 'a signed-off report must not be overwritten').toBeUndefined();
 });

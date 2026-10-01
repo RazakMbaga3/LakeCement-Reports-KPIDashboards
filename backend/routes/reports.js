@@ -280,9 +280,27 @@ router.post('/:formType',
            un-approve it — the same silent overwrite by another name, and
            the easier one to reach because it carries no amendReason field
            at all. Autosave is already refused by its own WHERE clause
-           further up; this is the explicit-save twin of that rule. */
+           further up; this is the explicit-save twin of that rule.
+
+           A row the ERP wrote and no person ever signed is NOT locked —
+           added 2026-10-01, see DEC-008. The lock exists to protect a
+           HUMAN's signature: the comment above says so in every one of its
+           three exceptions. An Odoo-synced dispatch day carries
+           approved_by IS NULL, because no one approved it; the status is
+           'approved' only to say "this is ERP fact, not somebody's
+           unfinished typing". Treating that as a signature locked the
+           packing plant out of the half of the Dispatch & SO report Odoo
+           cannot supply — SO Pendency, Bags Packed, Burst Bag Rate, the
+           8 AM vehicle queue — on every date that existed.
+
+           So the test is approved_by, not status. The moment a person
+           approves a day, approved_by is set and the row locks normally,
+           which is the case this rule was written for. Nothing about a
+           human-signed report changes. */
+        const humanSigned = !!(prior && prior.approved_by);
         const lockedStatus =
-          prior && (prior.status === 'approved' || prior.status === 'pending_approval')
+          prior && humanSigned &&
+          (prior.status === 'approved' || prior.status === 'pending_approval')
             ? prior.status : null;
 
         /* Who may overwrite a reported report, with a written reason.
