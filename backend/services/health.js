@@ -59,7 +59,14 @@ function checkOdoo() {
   const mining     = require('./odooMiningClient').isConfigured();
   const dashboard  = !!process.env.ODOO_DASHBOARD_URL;
   const production = require('./odooProductionClient').isConfigured();
-  if (!generic && !dispatch && !mining && !dashboard && !production) return 'not_configured';
+  /* Same reasoning as mining: the stores endpoints derive their URL from
+     whichever bespoke pair is set, so only the client can answer
+     truthfully. All three share one host today, so one flag covers them. */
+  const storesClient = require('./odooStoresClient');
+  const stores = storesClient.isConfigured('gate')
+    && storesClient.isConfigured('grn')
+    && storesClient.isConfigured('issues');
+  if (!generic && !dispatch && !mining && !dashboard && !production && !stores) return 'not_configured';
   /* "configured" only — this used to say "pulling on schedule", which was
      a claim about the cron that nothing here checked (URLs set + cron off
      read identically). Whether a pull is actually running is what
@@ -71,6 +78,7 @@ function checkOdoo() {
     mining:     mining     ? 'configured'                        : 'not_configured',
     dashboard:  dashboard  ? 'configured, read on demand'        : 'not_configured',
     production: production ? 'configured'                        : 'not_configured',
+    stores:     stores     ? 'configured'                        : 'not_configured',
   };
 }
 

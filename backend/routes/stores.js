@@ -21,7 +21,7 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 const { validate, z } = require('../middleware/validate');
 const report = require('../services/storesReport');
 const storesSync = require('../services/odooStoresSync');
-const { RAWMAT_VIEW_ROLES } = require('../../forms/access-registry.js');
+const { RAWMAT_VIEW_ROLES, PURCHASE_VIEW_ROLES } = require('../../forms/access-registry.js');
 const log = require('../services/logger');
 
 const router = express.Router();
@@ -29,7 +29,25 @@ const router = express.Router();
 const zDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'expected YYYY-MM-DD');
 const today = () => new Date().toISOString().slice(0, 10);
 
-const canRead = [requireAuth, requireRole(...RAWMAT_VIEW_ROLES)];
+/* RAWMAT_VIEW_ROLES (who may see raw-material stock) UNION
+   PURCHASE_VIEW_ROLES (who may open the Purchases dashboard).
+
+   The union, not either list alone, and the reason is concrete: these
+   figures are rendered in two places with two different gates. The Raw
+   Material form is gated on RAWMAT_VIEW_ROLES, which omits `purchase`;
+   purchases.html is gated on PURCHASE_VIEW_ROLES, which omits `admin`,
+   `finance`, `mining` and `production`. Gating this route on RAWMAT alone
+   left the `purchase` role — the department that actually raises the POs —
+   looking at three permanently empty tables on its own dashboard, because
+   every panel 403'd. Caught by e2e/tests/stores-odoo-feed.spec.js.
+
+   This widens nothing in practice: every role here could already read the
+   same numbers through one of those two surfaces. It just stops the data
+   disappearing depending on which page you opened it from. */
+const STORES_READ_ROLES = Object.freeze(
+  [...new Set([...RAWMAT_VIEW_ROLES, ...PURCHASE_VIEW_ROLES])]);
+
+const canRead = [requireAuth, requireRole(...STORES_READ_ROLES)];
 
 router.get('/raw-material',
   ...canRead,
