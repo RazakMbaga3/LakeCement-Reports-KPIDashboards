@@ -561,12 +561,38 @@
     caption: function (text) { baseCaption = text; setCaption(text); },
     hold:    function () { loadedAt = 0; },
 
-    /* steps(['Reading the gate log', 'Matching GRNs', …]) — all pending. */
+    /* steps(['Reading the gate log', 'Matching GRNs', …]) — all pending.
+
+       This RAISES the cover. It used to only paint, which meant nothing
+       appeared at all: the cover sits at opacity:0/visibility:hidden until
+       it gets the .on class, and showCover() is reached from exactly one
+       place — a sidebar navigation intent. A button that starts slow work
+       in the current page (Sync now, Fill from Odoo) has no intent, so the
+       steps were being drawn into an invisible element and the caller saw
+       a frozen page instead of a checklist.
+
+       A caller only asks for steps when it knows the work is slow, so
+       showing the cover immediately is the whole point — there is no
+       cold-delay guess to make. */
     steps: function (labels) {
       stepState = (labels || []).map(function (l) {
         return { label: String(l), state: 'wait', note: '' };
       });
+      /* finished latches true once a page has settled, and showCover()
+         refuses to run after that — so an in-page action late in the
+         page's life would be silently ignored. Reopening is correct here:
+         new work has genuinely started. */
+      finished = false;
       paintSteps();
+      /* Raise it directly rather than via showCover(). A finish() from a
+         just-settled page load leaves `shown` true for up to MIN_SHOW ms
+         while its fade-out timeout is pending, and showCover() returns
+         early on `shown` — so routing through it drops the cover exactly
+         when a user clicks a slow button right after the page settles. */
+      build(function () {
+        shown = true; shownAt = now();
+        els.cover.classList.add('on');
+      });
       return window.LCLoader;
     },
     /* step(i, 'run'|'ok'|'fail', optional note like '181 lines') */
