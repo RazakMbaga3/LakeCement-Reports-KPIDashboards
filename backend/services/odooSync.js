@@ -73,6 +73,7 @@ const { fireAlert } = require('./watchdog');
 const { pullDispatchDailySummary } = require('./odooDispatchSync');
 const { pullMiningTickets } = require('./odooMiningSync');
 const { pullAndAutofillProduction } = require('./odooProductionAutofill');
+const { pullAllStores } = require('./odooStoresSync');
 
 // How many trailing days each scheduled run re-pulls — wide enough that a
 // skipped/failed run (server down, Odoo unreachable) self-heals within a
@@ -91,6 +92,15 @@ const MINING_LOOKBACK_DAYS = 5;
 // entries for several consecutive days that later filled in), so a 5-day
 // window risks permanently missing a late entry once it falls out of range.
 const PRODUCTION_LOOKBACK_DAYS = 7;
+
+// Widest of the four, and the reason is measured rather than cautious: a GRN
+// is booked 0.1-5.1 days after the truck physically arrives (mean 1.5), over
+// the 2026-09-16 sample. A day's rows are therefore NOT final when that day
+// ends — a gate entry that was pending-GRN on Monday gets its GRN on
+// Wednesday and the Monday row has to change. 7 days covers the observed
+// maximum lag with headroom; anything shorter would freeze some trucks as
+// permanently "pending GRN" once they fell out of the window.
+const STORES_LOOKBACK_DAYS = 7;
 
 function isoDate(d) { return d.toISOString().slice(0, 10); }
 
@@ -128,6 +138,17 @@ const PULLS = [
     run: () => {
       const { from, to } = lookbackRange(PRODUCTION_LOOKBACK_DAYS);
       return pullAndAutofillProduction(from, to);
+    },
+  },
+  {
+    /* Gate entries + GRN lines + material issues, feeding the Raw Material
+       and Stores reports. pullAllStores runs the three sequentially and
+       survives one failing — see odooStoresSync.js for why parallel is the
+       wrong call against this ERP. */
+    name: 'stores-gate-grn-issues',
+    run: () => {
+      const { from, to } = lookbackRange(STORES_LOOKBACK_DAYS);
+      return pullAllStores(from, to);
     },
   },
 ];
