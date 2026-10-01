@@ -262,14 +262,14 @@
        labelled as such, because the two answer different questions: this
        is what the gate and the store issued; that is what the officer
        reported on the daily form. -->
-  <div class="in-section-hdr">
+  <div class="in-section-hdr" data-keep-on-error>
     <span class="in-section-title">Goods Received — by Material</span>
     <span class="in-section-sub" id="sv-recv-sub">— from the Odoo gate log</span>
     <button type="button" class="sv-refresh" id="sv-sync" title="Pull the latest from Odoo now">
       <i data-lucide="refresh-cw"></i> Sync now
     </button>
   </div>
-  <div class="in-card">
+  <div class="in-card" data-keep-on-error>
     <div class="sv-stale" id="sv-stale" hidden></div>
     <div class="tbl-scroll">
       <table class="cat-grid sv-tbl">
@@ -284,11 +284,11 @@
     <div class="sv-exceptions" id="sv-exceptions" hidden></div>
   </div>
 
-  <div class="in-section-hdr">
+  <div class="in-section-hdr" data-keep-on-error>
     <span class="in-section-title">Diesel Issued — by Department</span>
     <span class="in-section-sub" id="sv-diesel-sub">— from Odoo material issues</span>
   </div>
-  <div class="in-card">
+  <div class="in-card" data-keep-on-error>
     <div class="sk-row" id="sv-diesel-hero" style="margin-bottom:14px"></div>
     <div class="tbl-scroll">
       <table class="cat-grid sv-tbl">
@@ -299,11 +299,11 @@
     <div class="in-empty" id="sv-diesel-empty" style="display:none"></div>
   </div>
 
-  <div class="in-section-hdr">
+  <div class="in-section-hdr" data-keep-on-error>
     <span class="in-section-title">Stock Valuation — GRN Booked</span>
     <span class="in-section-sub" id="sv-val-sub">— rate &times; quantity, this month</span>
   </div>
-  <div class="in-card">
+  <div class="in-card" data-keep-on-error>
     <div class="tbl-scroll">
       <table class="cat-grid sv-tbl">
         <thead><tr>
@@ -466,11 +466,16 @@
   /* Custom range defaults to the month already selected, so switching to it
      shows the same figures rather than an empty page waiting for two dates. */
   (function seedCustom() {
-    var y = now.getFullYear(), m = now.getMonth() + 1;
-    var last = new Date(y, m, 0).getDate();
+    /* Month-to-date, not the whole calendar month. The old seed ran to the
+       LAST day of the current month, so on 1 October the custom range
+       opened as 1-31 Oct and every panel header read "to 2026-10-31" — a
+       window three weeks into the future for a report about what has
+       already arrived and been issued. Ending at today keeps the default
+       range to days that can actually contain data. */
     var pad = function (n) { return String(n).padStart(2, '0'); };
+    var y = now.getFullYear(), m = now.getMonth() + 1;
     fromInput.value = y + '-' + pad(m) + '-01';
-    toInput.value   = y + '-' + pad(m) + '-' + pad(last);
+    toInput.value   = y + '-' + pad(m) + '-' + pad(now.getDate());
   }());
 
   /* Which controls belong to which period type. Year is shown for every
@@ -1095,8 +1100,19 @@
     var main = document.querySelector('.in-main');
     var panel = document.getElementById('pd-failed');
     if (!main || !panel) return;
+    /* Hide only what actually depended on the failed call. This used to
+       hide EVERY child of .in-main, which was right when the whole page
+       came from one Odoo request — but the stores sections (goods
+       received, diesel issued, stock valuation) read local Postgres
+       through /api/stores and are still perfectly valid when the purchase
+       dashboard's Odoo call fails. Wiping them out meant an Odoo outage
+       blanked three panels that had already loaded correct figures, and
+       told the reader "no figures are shown" while the data sat in the
+       DOM. Sections opt out with data-keep-on-error. */
     Array.prototype.forEach.call(main.children, function (el) {
-      if (el !== panel) el.hidden = true;
+      if (el === panel) return;
+      if (el.hasAttribute && el.hasAttribute('data-keep-on-error')) return;
+      el.hidden = true;
     });
     panel.hidden = false;
 
@@ -1121,7 +1137,7 @@
     if (denied) return;
     panel.querySelector('#pd-retry').addEventListener('click', function () {
       Array.prototype.forEach.call(main.children, function (el) {
-        if (el !== panel) el.hidden = false;
+        if (el !== panel) el.hidden = false;   // kept sections were never hidden
       });
       panel.hidden = true; panel.innerHTML = '';
       load();
