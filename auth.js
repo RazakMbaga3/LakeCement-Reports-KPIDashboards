@@ -486,6 +486,26 @@ function canEditSales() { return _getPerms().commercial?.sales === 'edit'; }
 function canViewPurchases() { const p = _getPerms().commercial?.purchase; return p === 'view' || p === 'edit'; }
 function canEditPurchases() { return _getPerms().commercial?.purchase === 'edit'; }
 
+/* A commercial-only role: holds a Sales and/or Purchases grant but no
+   plant KPI department beyond the shared 'summary' landing dept, and no
+   plant daily-report nav of its own. For such a user the plant-wide
+   Analytics dashboards (Operational Summary, Power & Heat, Reliability &
+   Stoppage) and the Entry Summary completeness grid are all about
+   departments they neither fill nor own, so the sidebar drops them and
+   leads with their own dashboard instead (2026-10-02, asked for directly
+   by Sales). Derived from the permission shape rather than a role name so
+   a future commercial role inherits it without another edit here.
+   This is a NAVIGATION rule only — those pages remain reachable by URL and
+   are still gated by their own checks; nothing here grants or revokes
+   access. */
+function isCommercialOnly() {
+  const p = _getPerms();
+  const depts = p.kpi?.depts;
+  if (!Array.isArray(depts)) return false;                 // 'all' or absent → not commercial-only
+  if (depts.some(d => d !== 'summary')) return false;       // owns a real plant dept
+  return (p.commercial?.sales || p.commercial?.purchase) ? true : false;
+}
+
 /* MIS Dashboard (mis.html). Management-only — see MIS_VIEW_ROLES above.
    Enforced in three places, because a hidden nav link is not a permission:
    the sidebar hides the group, mis.html redirects on load, and

@@ -180,6 +180,9 @@ function renderSidebar() {
      role list rather than mis_tabs.length means a role that keeps a tab
      entry for some other reason can't quietly re-earn the whole group. */
   const hasMIS = canViewMIS();
+  /* Sales/Purchase-only user: no plant department of their own. Reorders and
+     trims the nav below so their own dashboard leads — see auth.js. */
+  const commercialOnly = isCommercialOnly();
 
   /* Same fallback rule index.html's own bootstrap uses for an incoming
      ?dept= — kept in sync so the sidebar's initial active row already
@@ -212,7 +215,10 @@ function renderSidebar() {
      self-extends the day such a form is added. */
   const canSeeApprovals = user.role === 'admin' || user.role === 'md' ||
     (user.level === 'hod' && getMyFormAccess().length > 0);
-  const showEntrySummary = hasKPI;
+  /* Entry Summary (completeness.html) is a plant-wide daily-fill grid. A
+     commercial-only role fills none of those reports, so the row is dropped
+     for them (2026-10-02) — see isCommercialOnly() in auth.js. */
+  const showEntrySummary = hasKPI && !commercialOnly;
   const dailyItems = _sbBuildDailyGroup();
   /* The Purchase dashboard sits at the foot of this group as the Purchase &
      Stores button (2026-09-22, asked for directly). It is NOT an entry in
@@ -302,9 +308,21 @@ function renderSidebar() {
      standalone pages (Purchases, Sales) — see _SB_KPI_ORDER above for why
      "Raw Materials & Purchases" and "Sales & Dispatch" are provisional
      links rather than new combined reports. */
-  const kpiRows = _SB_KPI_ORDER.filter(entry =>
+  let kpiRows = _SB_KPI_ORDER.filter(entry =>
     entry.type === 'dept' ? isDeptVisible(entry.dept) : entry.visible()
   );
+  /* _SB_KPI_ORDER is in manufacturing-flow order, which puts Sales & Dispatch
+     ninth — correct for a plant user reading the flow, wrong for a Sales user
+     whose own dashboard it is. For a commercial-only role the commercial rows
+     are hoisted to the top of the group, in place, so Sales & Dispatch is the
+     first thing they can click (2026-10-02, asked for directly). Flow order is
+     untouched for every other role. */
+  if (commercialOnly) {
+    kpiRows = [
+      ...kpiRows.filter(e => e.type === 'link'),
+      ...kpiRows.filter(e => e.type !== 'link'),
+    ];
+  }
   if (kpiRows.length) {
     html += _sbGroupLabelHTML('kpi');
     kpiRows.forEach(entry => {
@@ -336,7 +354,7 @@ function renderSidebar() {
      is one row pointing at the primary page (reliability.html); Stoppage
      Insights (insights.html) is reached from an in-page switcher there
      (report-switcher.js), not its own row — see _SB_RELIABILITY_PAIR. */
-  if (hasKPI) {
+  if (hasKPI && !commercialOnly) {
     html += _sbGroupLabelHTML('analytics');
     _SB_ANALYTICS_ITEMS.forEach(l => {
       html += _sbItemHTML({
