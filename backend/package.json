@@ -55,7 +55,7 @@
     "seed:kpi": "node scripts/import-kpi-monthly-xlsx.js",
     "seed:kpi:dry": "node scripts/import-kpi-monthly-xlsx.js --dry-run",
     "seed:kpi:verify": "node scripts/import-kpi-monthly-xlsx.js --verify",
-    "test": "npm run lint && npm run test:formulas && npm run test:engine-shifts && npm run test:facts && npm run test:access && npm run test:approval && npm run test:stores && npm run test:kpi-keys && npm run test:form-facts && npm run test:form-hooks && npm run test:kpi-level && npm run test:auth-tokens && npm run test:auth-mail && npm run test:mailer && npm run test:odoo-production && npm run test:odoo-production-autofill && npm run test:revisions && npm run test:amendments && npm run test:excel && npm run test:odoo-sync-health && npm run test:odoo-dispatch-map && npm run test:dashboard-cache && npm run smoke",
+    "test": "npm run lint && npm run test:formulas && npm run test:engine-shifts && npm run test:facts && npm run test:access && npm run test:approval && npm run test:stores && npm run test:kpi-keys && npm run test:form-facts && npm run test:form-hooks && npm run test:kpi-level && npm run test:auth-tokens && npm run test:auth-mail && npm run test:mailer && npm run test:odoo-production && npm run test:odoo-production-autofill && npm run test:revisions && npm run test:amendments && npm run test:excel && npm run test:odoo-sync-health && npm run test:odoo-dispatch-map && npm run test:dashboard-cache && npm run test:sales-aggregation && npm run smoke",
     "test:auth-tokens": "node --test test/auth-tokens.test.js",
     "test:auth-mail": "node --test test/auth-mail.test.js",
     "test:mailer": "node --test test/mailer.test.js",
@@ -66,6 +66,7 @@
     "test:odoo-sync-health": "node --test test/odoo-sync-health.test.js",
     "test:odoo-dispatch-map": "node --test test/odoo-dispatch-map.test.js",
     "test:dashboard-cache": "node --test test/dashboard-cache.test.js",
+    "test:sales-aggregation": "node --test test/sales-aggregation.test.js",
     "accept:amendments": "node scripts/accept-amendments.js",
     "test:amendments": "node --test test/report-amendments.test.js",
     "accept:it-assets": "node scripts/accept-it-assets.js"

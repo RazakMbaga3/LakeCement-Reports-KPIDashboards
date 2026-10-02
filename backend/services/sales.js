@@ -103,7 +103,7 @@ async function getDashboard(year, month) {
       _sumProjections(fmt(firstOfMonth), fmt(mtdEnd), territories),
       _sumProjections(fmt(today), fmt(today), territories),
       salesOdoo.fetchMtdSales(fmt(firstOfMonth), fmt(mtdEnd)),
-      salesOdoo.fetchCollections(fmt(firstOfMonth), fmt(mtdEnd)),
+      salesOdoo.fetchCollections(fmt(firstOfMonth), fmt(mtdEnd), daysElapsed),
       salesOdoo.fetchReceivedUncollectable(),
       salesOdoo.fetchPayable(),
       salesOdoo.fetchAdvance(fmt(firstOfMonth), fmt(mtdEnd)),
@@ -133,6 +133,7 @@ async function getDashboard(year, month) {
   const momDeltaPct = (momDeltaMt != null && prevActual) ? Math.round((momDeltaMt / prevActual) * 1000) / 10 : null;
 
   const grades = _buildGradeMix(mtdSales);
+  const gradeTrend = _buildGradeMixByDay(mtdSales);
 
   // See this function's doc comment: null on purpose, not stale data.
   const performance = _buildPerformance(territories, projRange, targetsRes.byOfficer, {});
@@ -145,6 +146,34 @@ async function getDashboard(year, month) {
     const actual = mtdSales.ok ? Math.round((mtdSales.value.mt_by_date[key] || 0) * 10) / 10 : null;
     dailyTrend.push({ date: key, projected: Math.round((projRange.byDate[key] || 0) * 10) / 10, actual });
   }
+
+  /* Best/worst day this month — derived from the same mt_by_date that feeds
+     dailyTrend, so it can never disagree with the chart. Only days that have
+     actually elapsed are eligible (mt_by_date only contains days Odoo has
+     orders for, but an elapsed day with zero orders is a real zero that
+     should still be eligible as a "worst day" candidate, not silently
+     skipped — so this walks the same elapsed-day range as dailyTrend rather
+     than just Object.keys(mt_by_date)). Null (not a fabricated day) when
+     Odoo is unreachable or no day has elapsed yet. */
+  let bestDay = null, worstDay = null;
+  if (mtdSales.ok) {
+    for (const t of dailyTrend) {
+      if (t.actual == null) continue;
+      if (!bestDay || t.actual > bestDay.mt) bestDay = { date: t.date, mt: t.actual };
+      if (!worstDay || t.actual < worstDay.mt) worstDay = { date: t.date, mt: t.actual };
+    }
+  }
+
+  /* Avg order size — trivial division, degrades to null the same way every
+     other mtdSales-derived figure does when Odoo didn't answer, and to null
+     (not 0) specifically when order_count is 0 so a monthless order average
+     is never reported as a real zero-size order. */
+  const avgOrderSizeMt = (mtdSales.ok && mtdSales.value.order_count)
+    ? Math.round((mtdSales.value.qty_mt / mtdSales.value.order_count) * 10) / 10
+    : null;
+
+  const activeCustomers = mtdSales.ok ? mtdSales.value.active_customers : null;
+  const topCustomers = _buildTopCustomers(mtdSales);
 
   return {
     period: {
@@ -168,9 +197,13 @@ async function getDashboard(year, month) {
       days_elapsed: daysElapsed, days_remaining: daysRemaining, days_in_month: daysInMonth,
       daily_run_rate: dailyRunRate, projected_eom_mt: projectedEomMt, required_daily_mt: requiredDaily,
       prev_month_actual_mt: prevActual, mom_delta_mt: momDeltaMt, mom_delta_pct: momDeltaPct,
+      avg_order_size_mt: avgOrderSizeMt, active_customers: activeCustomers,
+      best_day: bestDay, worst_day: worstDay,
     },
     grades,
+    grade_trend: gradeTrend,
     daily_trend: dailyTrend,
+    top_customers: topCustomers,
     performance,
     /* Real officer actual-vs-target, sourced entirely from Odoo — see
        salesOdoo.fetchOfficerAchievement() for the customer-target join
@@ -185,7 +218,7 @@ async function getDashboard(year, month) {
       source: targetsRes.source,
       as_of: fmt(firstOfMonth),
     },
-    collections: _publicOdooResult(collections, ['invoice_count', 'total_collected_tzs', 'outstanding_tzs', 'collection_rate_pct']),
+    collections: _publicOdooResult(collections, ['invoice_count', 'total_collected_tzs', 'outstanding_tzs', 'collection_rate_pct', 'dso_lite_days', 'dso_basis_note']),
     financials: {
       received_uncollectable: _publicOdooResult(uncollectable),
       payable: _publicOdooResult(payable),
@@ -210,6 +243,17 @@ function _publicOdooResult(result, valueKeys) {
   return { ok: true, ...value, as_of: result.as_of, source: result.source };
 }
 
+/* Tonnes for one order line, unwrapping the [id, name] UoM pair this
+   service's line shapes carry and delegating the actual bag->tonne rule to
+   salesOdoo._lineMt(). Every MT figure in this file goes through here, so
+   grade shares, top-customer totals and the on-date split can never drift
+   from the qty_mt that salesOdoo computes with the same rule. */
+function _mtOfLine(line) {
+  const uom = line.product_uom;
+  const uomName = (Array.isArray(uom) ? uom[1] : uom) || '';
+  return salesOdoo._lineMt(uomName, line.product_uom_qty || 0);
+}
+
 /* Today's actual is a subset of the already-fetched MTD orders/lines — no
    second Odoo round trip, matching the standalone app's same optimization
    (dashboard.py: today_orders = [o for o in live_orders if date matches]). */
@@ -224,10 +268,7 @@ function _todayActualFromOrders(mtdValue, todayStr) {
   });
   let total = 0;
   for (const line of todayLines) {
-    const uom = line.product_uom;
-    const uomName = (Array.isArray(uom) ? uom[1] : uom) || '';
-    const qty = line.product_uom_qty || 0;
-    total += /MT|TON|TONNE/i.test(uomName) ? qty : qty / 20;
+    total += _mtOfLine(line);
   }
   return Math.round(total * 10) / 10;
 }
@@ -268,10 +309,7 @@ function _buildGradeMix(mtdSales) {
   const byGrade = Object.fromEntries(SALES_GRADES.map(g => [g.key, 0]));
   let unmatched = 0;
   for (const line of mtdSales.value.lines) {
-    const uom = line.product_uom;
-    const uomName = (Array.isArray(uom) ? uom[1] : uom) || '';
-    const qty = line.product_uom_qty || 0;
-    const mt = /MT|TON|TONNE/i.test(uomName) ? qty : qty / 20;
+    const mt = _mtOfLine(line);
     const productName = Array.isArray(line.product_id) ? line.product_id[1] : '';
     const key = _matchGrade(productName);
     if (key) byGrade[key] += mt;
@@ -289,6 +327,76 @@ function _buildGradeMix(mtdSales) {
       share_pct: total ? Math.round((unmatched / total) * 1000) / 10 : 0 });
   }
   return graded;
+}
+
+/* Per-day-per-grade breakdown for the Grade Mix Trend chart — same join
+   (line -> order_id -> order.date_order) fetchMtdSales() already does for
+   mt_by_date, and the same _matchGrade() + MT conversion _buildGradeMix()
+   uses, just bucketed by day instead of collapsed to one MTD total. Lines
+   that don't resolve to a known grade are folded into "Unmatched product"
+   per day, same honest-signal convention as the MTD snapshot — never
+   silently dropped. Returns [] (not null) when Odoo didn't answer, so the
+   chart can render its own "no data" state without a separate ok flag;
+   sales.js keeps that flag on the sibling `grades` field already. */
+function _buildGradeMixByDay(mtdSales) {
+  if (!mtdSales.ok) return [];
+
+  const dateOfOrder = new Map(
+    mtdSales.value.orders.map(o => [o.id, String(o.date_order || '').slice(0, 10)]));
+
+  const byDate = new Map(); // date -> { gradeKey -> mt }
+  for (const line of mtdSales.value.lines) {
+    const orderId = Array.isArray(line.order_id) ? line.order_id[0] : line.order_id;
+    const date = dateOfOrder.get(orderId);
+    if (!date) continue;
+
+    const mt = _mtOfLine(line);
+    const productName = Array.isArray(line.product_id) ? line.product_id[1] : '';
+    const key = _matchGrade(productName) || 'unmatched';
+
+    if (!byDate.has(date)) byDate.set(date, {});
+    const dayBucket = byDate.get(date);
+    dayBucket[key] = (dayBucket[key] || 0) + mt;
+  }
+
+  return Array.from(byDate.keys()).sort().map(date => {
+    const dayBucket = byDate.get(date);
+    const row = { date };
+    for (const g of SALES_GRADES) row[g.key] = Math.round((dayBucket[g.key] || 0) * 10) / 10;
+    if (dayBucket.unmatched) row.unmatched = Math.round(dayBucket.unmatched * 10) / 10;
+    return row;
+  });
+}
+
+/* Top customers by MT this month — group lines by their order's customer
+   (same order_id -> orders join as _todayActualFromOrders), sum MT per
+   customer with the same conversion _buildGradeMix() uses, sort desc, cap
+   at 10. Real Odoo customer names — sales.html must escape them the same
+   way it already escapes territory fields. Returns [] when Odoo didn't
+   answer; the frontend's own `grades`/mtdSales ok-flag already carries the
+   pending/unreachable state for this section. */
+function _buildTopCustomers(mtdSales) {
+  if (!mtdSales.ok) return [];
+
+  const customerOfOrder = new Map(
+    mtdSales.value.orders.map(o => [o.id, Array.isArray(o.partner_id) ? o.partner_id : [null, null]]));
+
+  const byCustomer = new Map(); // partner_id -> { name, mt }
+  for (const line of mtdSales.value.lines) {
+    const orderId = Array.isArray(line.order_id) ? line.order_id[0] : line.order_id;
+    const [partnerId, partnerName] = customerOfOrder.get(orderId) || [null, null];
+    if (partnerId == null) continue;
+
+    const mt = _mtOfLine(line);
+
+    if (!byCustomer.has(partnerId)) byCustomer.set(partnerId, { name: partnerName || 'Unknown customer', mt: 0 });
+    byCustomer.get(partnerId).mt += mt;
+  }
+
+  return Array.from(byCustomer.values())
+    .map(c => ({ name: c.name, mt: Math.round(c.mt * 10) / 10 }))
+    .sort((a, b) => b.mt - a.mt)
+    .slice(0, 10);
 }
 
 /* Division -> Zone/Officer rollup for the LOCAL manual-projection system
@@ -360,4 +468,9 @@ async function _getTargets(firstOfMonth) {
   return { companyTotal, byOfficer, source };
 }
 
-module.exports = { getDashboard, getTerritories };
+module.exports = {
+  getDashboard, getTerritories,
+  // Exported for test/sales-aggregation.test.js (pure functions, no DB/Odoo) —
+  // same pattern as services/odooProductionMapper.js's mapDay/flattenReport.
+  _buildGradeMix, _buildGradeMixByDay, _buildTopCustomers, _matchGrade,
+};

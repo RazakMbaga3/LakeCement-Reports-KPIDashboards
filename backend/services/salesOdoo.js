@@ -105,6 +105,10 @@ async function fetchMtdSales(from, to) {
     return s + mt;
   }, 0);
 
+  /* Distinct customers with at least one order in the period — a simple
+     partner_id count, no further Odoo round trip. */
+  const activeCustomers = new Set(orders.map(o => Array.isArray(o.partner_id) ? o.partner_id[0] : o.partner_id)).size;
+
   return {
     ok: true,
     value: {
@@ -112,15 +116,26 @@ async function fetchMtdSales(from, to) {
       qty_mt: Math.round(qtyMt * 10) / 10,
       value_tzs: Math.round(orders.reduce((s, o) => s + (o.amount_total || 0), 0)),
       mt_by_date: mtByDate,
-      orders, lines, // handed to services/sales.js for grade mix / on-date split
+      active_customers: activeCustomers,
+      orders, lines, // handed to services/sales.js for grade mix / on-date split / top customers
     },
     as_of: bundle.as_of,
     source: bundle.source,
   };
 }
 
-/* Invoiced / collected / outstanding for the period. */
-async function fetchCollections(from, to) {
+/* Invoiced / collected / outstanding for the period, plus a DSO-lite
+   approximation.
+
+   dso_lite_days = outstanding / (total_invoiced / days_elapsed), i.e. "at
+   the current average daily invoicing rate, how many days of unpaid
+   invoicing does the outstanding balance represent". This is NOT a true
+   Days Sales Outstanding against due dates — same caveat as
+   fetchAgewiseOutstanding(), for the same reason: the endpoint's invoices
+   carry only invoice_date, no due date, so there is no way to measure
+   actual overdue-ness, only an invoice-date-basis approximation. Callers
+   must label it accordingly rather than present it as a textbook DSO. */
+async function fetchCollections(from, to, daysElapsed) {
   const bundle = await client.fetchSaleBundle(from, to);
   if (!bundle.ok) return _fail(bundle);
 
@@ -128,6 +143,11 @@ async function fetchCollections(from, to) {
   const totalInvoiced = invoices.reduce((s, i) => s + (i.total_amount || 0), 0);
   const totalOutstanding = invoices.reduce((s, i) => s + (i.residual_amount || 0), 0);
   const totalCollected = totalInvoiced - totalOutstanding;
+
+  const avgDailyInvoiced = (daysElapsed && totalInvoiced) ? totalInvoiced / daysElapsed : null;
+  const dsoLiteDays = (avgDailyInvoiced && totalOutstanding)
+    ? Math.round((totalOutstanding / avgDailyInvoiced) * 10) / 10
+    : (avgDailyInvoiced != null ? 0 : null);
 
   return {
     ok: true,
@@ -137,6 +157,10 @@ async function fetchCollections(from, to) {
       total_collected_tzs: Math.round(totalCollected),
       outstanding_tzs: Math.round(totalOutstanding),
       collection_rate_pct: totalInvoiced ? Math.round((totalCollected / totalInvoiced) * 1000) / 10 : 0,
+      dso_lite_days: dsoLiteDays,
+      dso_basis_note: 'Approximate — outstanding balance divided by the average daily invoiced ' +
+                      'amount this month. The Odoo endpoint returns no due date, only invoice_date, ' +
+                      'so this is not a true Days Sales Outstanding against payment terms.',
     },
     as_of: bundle.as_of,
     source: bundle.source,
@@ -336,4 +360,9 @@ module.exports = {
   fetchMtdSales, fetchCollections,
   fetchReceivedUncollectable, fetchPayable, fetchAdvance, fetchAgewiseOutstanding,
   fetchOfficerAchievement,
+  /* Exported so services/sales.js shares this one definition of the
+     bag->tonne rule instead of keeping its own inline copies; the grade
+     shares and top-customer totals must reconcile against qty_mt, which
+     is computed here. */
+  _lineMt,
 };

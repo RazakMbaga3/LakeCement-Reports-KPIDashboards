@@ -130,6 +130,7 @@
 
   <!-- ── HERO ─────────────────────────────────────────────── -->
   <div class="sk-row" id="sd-hero"></div>
+  <div class="sk-row" id="sd-hero-2" style="margin-top:14px"></div>
 
   <!-- ── GRADE MIX ────────────────────────────────────────── -->
   <div class="in-section-hdr">
@@ -149,6 +150,35 @@
   <div class="in-card">
     <div class="in-chart-wrap"><canvas id="chart-trend"></canvas></div>
     <div class="in-empty" id="sd-trend-empty" style="display:none">No projections entered yet this month.</div>
+    <div class="sk-row" style="grid-template-columns:repeat(2,minmax(0,220px));margin-top:14px" id="sd-best-worst"></div>
+  </div>
+
+  <!-- ── GRADE MIX TREND ──────────────────────────────────── -->
+  <div class="in-section-hdr">
+    <span class="in-section-title">Grade Mix Trend</span>
+    <span class="in-section-sub">— daily volume by product line, this month</span>
+  </div>
+  <div class="in-card">
+    <div class="in-chart-wrap"><canvas id="chart-grade-trend"></canvas></div>
+    <div class="in-empty" id="sd-grade-trend-empty" style="display:none">No graded sales recorded yet this month.</div>
+  </div>
+
+  <!-- ── CUSTOMERS ────────────────────────────────────────── -->
+  <div class="in-section-hdr">
+    <span class="in-section-title">Customers</span>
+    <span class="in-section-sub">— active customers and top volumes this month, from Odoo</span>
+  </div>
+  <div class="in-card">
+    <div class="sk-row" id="sd-customer-summary" style="margin-bottom:16px"></div>
+    <div class="tbl-scroll">
+      <table class="rt" style="min-width:420px">
+        <thead>
+          <tr><th class="tl">Rank</th><th class="tl">Customer</th><th class="num">MT (MTD)</th></tr>
+        </thead>
+        <tbody id="sd-top-customers"></tbody>
+      </table>
+    </div>
+    <div class="in-empty" id="sd-top-customers-empty" style="display:none"></div>
   </div>
 
   <!-- ── COLLECTIONS ──────────────────────────────────────── -->
@@ -157,7 +187,7 @@
     <span class="in-section-sub">— from Odoo, month to date</span>
   </div>
   <div class="in-card">
-    <div class="sk-row sk-row-3" id="sd-collections"></div>
+    <div class="sk-row" id="sd-collections"></div>
   </div>
 
   <!-- ── RECEIVABLES & PAYABLES ───────────────────────────── -->
@@ -300,6 +330,7 @@
   }
 
   var trendChart = null;
+  var gradeTrendChart = null;
 
   function sk(opts) {
     /* opts: {label, deptTag, value, unit, delta, target, pctVal, status,
@@ -356,6 +387,45 @@
       status: mtd.mom_delta_pct != null ? (mtd.mom_delta_pct >= 0 ? '▲ ' : '▼ ') + Math.abs(mtd.mom_delta_pct).toFixed(1) + '% vs ' + d.period.prev_label : null,
     });
     document.getElementById('sd-hero').innerHTML = html;
+
+    var html2 = '';
+    html2 += sk({
+      label: 'Avg Daily Sales (MTD)', deptTag: 'Run Rate',
+      value: fmt(mtd.daily_run_rate), unit: 'MT/day',
+      pending: mtd.daily_run_rate == null, pendingMsg: 'Odoo ' + (d.sources.sales_volume === 'not_configured' ? 'not configured' : 'unreachable'),
+      status: mtd.actual_mt != null ? fmt(mtd.actual_mt) + ' MT over ' + mtd.days_elapsed + ' days' : null,
+    });
+    html2 += sk({
+      label: 'Avg Order Size', deptTag: 'MTD',
+      value: fmt(mtd.avg_order_size_mt), unit: 'MT/order',
+      pending: mtd.avg_order_size_mt == null, pendingMsg: 'Odoo ' + (d.sources.sales_volume === 'not_configured' ? 'not configured' : 'unreachable'),
+    });
+    document.getElementById('sd-hero-2').innerHTML = html2;
+  }
+
+  /* Best/worst day — a small stat pair under the Daily Sales Trend chart.
+     A day with real zero orders is a legitimate "worst day" (an elapsed
+     day with no sales), distinct from mtd.best_day/worst_day being null
+     outright when Odoo could not be reached — sk()'s own pending path
+     already tells those two states apart. */
+  function renderBestWorst(mtd) {
+    var el = document.getElementById('sd-best-worst');
+    var pendingMsg = 'No day has elapsed yet, or Odoo is unreachable';
+    var html = sk({
+      label: 'Best Day (MTD)', deptTag: 'Peak',
+      value: mtd.best_day ? fmt(mtd.best_day.mt) : null, unit: 'MT',
+      pending: !mtd.best_day, pendingMsg: pendingMsg,
+      status: mtd.best_day ? new Date(mtd.best_day.date + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }) : null,
+      cls: mtd.best_day ? 'on-track' : '',
+    });
+    html += sk({
+      label: 'Worst Day (MTD)', deptTag: 'Low',
+      value: mtd.worst_day ? fmt(mtd.worst_day.mt) : null, unit: 'MT',
+      pending: !mtd.worst_day, pendingMsg: pendingMsg,
+      status: mtd.worst_day ? new Date(mtd.worst_day.date + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }) : null,
+      cls: mtd.worst_day && mtd.worst_day.mt === 0 ? 'concern' : '',
+    });
+    el.innerHTML = html;
   }
 
   function renderGrades(grades) {
@@ -409,15 +479,101 @@
   function renderCollections(c) {
     var html;
     if (!c.ok) {
-      html = ['MTD Collected', 'Outstanding', 'Collection Rate'].map(function (label) {
+      html = ['MTD Collected', 'Outstanding', 'Collection Rate', 'DSO (approx.)'].map(function (label) {
         return sk({ label: label, pending: true, pendingMsg: c.message });
       }).join('');
     } else {
       html = sk({ label: 'MTD Collected', value: tzs(c.total_collected_tzs), status: (c.invoice_count || 0) + ' invoices' })
         + sk({ label: 'Outstanding', value: tzs(c.outstanding_tzs), cls: (c.collection_rate_pct || 0) >= 90 ? 'on-track' : 'watch' })
-        + sk({ label: 'Collection Rate', value: pct(c.collection_rate_pct), pctVal: c.collection_rate_pct, cls: achClass(c.collection_rate_pct) });
+        + sk({ label: 'Collection Rate', value: pct(c.collection_rate_pct), pctVal: c.collection_rate_pct, cls: achClass(c.collection_rate_pct) })
+        // DSO-lite is an invoice-date-basis approximation, NOT a true Days
+        // Sales Outstanding against payment terms — same honesty pattern
+        // as fetchAgewiseOutstanding's basis_note. c.dso_basis_note carries
+        // the exact caveat from the backend rather than restating it here.
+        + sk({
+            label: 'DSO (approx.)', deptTag: 'Est.',
+            value: fmt(c.dso_lite_days), unit: 'days',
+            pending: c.dso_lite_days == null, pendingMsg: 'No invoices yet this month',
+            status: c.dso_basis_note,
+          });
     }
     document.getElementById('sd-collections').innerHTML = html;
+  }
+
+  /* Active Customers + Top Customers by Volume — real Odoo customer names,
+     escaped via esc() exactly like territory fields elsewhere on this page. */
+  function renderCustomers(mtd, topCustomers, sourcesOk) {
+    var summaryHtml = sk({
+      label: 'Active Customers (MTD)', deptTag: 'Sales',
+      value: fmt(mtd.active_customers), unit: 'customers',
+      pending: mtd.active_customers == null, pendingMsg: 'Odoo ' + (sourcesOk ? 'unreachable' : 'not configured'),
+    });
+    document.getElementById('sd-customer-summary').innerHTML = summaryHtml;
+
+    var tbody = document.getElementById('sd-top-customers');
+    var empty = document.getElementById('sd-top-customers-empty');
+    if (!topCustomers || !topCustomers.length) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+      empty.textContent = mtd.active_customers == null
+        ? 'Odoo ' + (sourcesOk ? 'unreachable' : 'not configured') + ' — top customers pending.'
+        : 'No customer sales recorded yet this month.';
+      return;
+    }
+    empty.style.display = 'none';
+    tbody.innerHTML = topCustomers.map(function (c, i) {
+      return '<tr><td class="tl">' + (i + 1) + '</td><td class="tl">' + esc(c.name) + '</td>' +
+        '<td class="num">' + fmt(c.mt) + '</td></tr>';
+    }).join('');
+  }
+
+  function renderGradeTrend(gradeTrend, grades) {
+    var canvas = document.getElementById('chart-grade-trend');
+    var empty = document.getElementById('sd-grade-trend-empty');
+    if (!gradeTrend || !gradeTrend.length) {
+      empty.style.display = 'block'; canvas.style.display = 'none';
+      if (gradeTrendChart) { gradeTrendChart.destroy(); gradeTrendChart = null; }
+      return;
+    }
+    empty.style.display = 'none'; canvas.style.display = 'block';
+    if (gradeTrendChart) gradeTrendChart.destroy();
+
+    // Reuse the exact grade colors already shown in the tiles/share bar
+    // above (config/salesGrades.js via forms/sales-grades.js) — these four
+    // colors already identify these four grades consistently elsewhere on
+    // this page, so this chart keeps the same mapping rather than drawing
+    // from the general categorical series.
+    var known = grades.filter(function (g) { return g.key !== 'unmatched'; });
+    var hasUnmatched = gradeTrend.some(function (r) { return r.unmatched > 0; });
+    var datasets = known.map(function (g) {
+      return {
+        label: g.label,
+        data: gradeTrend.map(function (r) { return r[g.key] || 0; }),
+        backgroundColor: g.color, borderColor: g.color, borderWidth: 1,
+        stack: 'grade',
+      };
+    });
+    if (hasUnmatched) {
+      datasets.push({
+        label: 'Unmatched product',
+        data: gradeTrend.map(function (r) { return r.unmatched || 0; }),
+        backgroundColor: '#9CA3AF', borderColor: '#9CA3AF', borderWidth: 1,
+        stack: 'grade',
+      });
+    }
+
+    gradeTrendChart = new Chart(canvas, {
+      type: 'bar',
+      data: { labels: gradeTrend.map(function (r) { return r.date.slice(5); }), datasets: datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { font: { size: 12 }, boxWidth: 12 } } },
+        scales: {
+          x: { stacked: true, grid: { display: false }, ticks: { font: { size: 12 } } },
+          y: { stacked: true, ticks: { font: { size: 12 } }, title: { display: true, text: 'MT', font: { size: 12 } } },
+        },
+      },
+    });
   }
 
   function renderFinancials(f) {
@@ -557,6 +713,9 @@
       renderHero(d);
       renderGrades(d.grades);
       renderTrend(d.daily_trend);
+      renderBestWorst(d.mtd);
+      renderGradeTrend(d.grade_trend, d.grades);
+      renderCustomers(d.mtd, d.top_customers, d.sources.sales_volume !== 'not_configured');
       renderCollections(d.collections);
       renderFinancials(d.financials);
       renderTarget(d.targets, d.mtd);
