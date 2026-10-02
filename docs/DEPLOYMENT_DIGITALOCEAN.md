@@ -335,10 +335,11 @@ four are read by the deploy job at `deploy.yml:97-100`:
 | `DO_SSH_KEY` | yes | the **private** half of the CI key from §2.3 |
 | `DO_PORT` | only if SSH doesn't run on 22 | the SSH port (the workflow defaults to 22) |
 
-That's it — the workflow is already written and will start deploying on
-the next push to `main`. The `test` job itself needs no secrets, so it is
-already running on every push today; only the `deploy` job is waiting on
-the table above.
+These secrets are **set, and both jobs run today** — verified 2026-10-02,
+when a push to `main` ran the suite and auto-deployed to
+smr.lakecement.co.tz without anyone touching the droplet (the backend's
+`uptime_s` in `/api/health` reset, and the new code was served). Treat the
+table above as the record of what is configured, not as outstanding setup.
 
 ### Rollback
 

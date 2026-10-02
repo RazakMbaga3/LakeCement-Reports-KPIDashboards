@@ -990,8 +990,15 @@ const _DAILY_ACCESS = {
                 nav:  ['daily-report.html','mines-report.html'] },
   production: { edit: ['daily-report.html'],
                 nav:  'all' },
+  /* Dispatch & SO is read-only for Sales: the nav row grants the VIEW
+     badge and dispatch.html's own canView gate, while submit rights stay
+     with Logistics and Packing (_FORM_TYPE_ACCESS has no `dispatch` for
+     sales), so the entry CTA stays hidden. Sales owns the orders this
+     report fulfils and needs to see what actually shipped against them —
+     dispatch.html's denial copy already named sales as an intended
+     audience, but the nav row backing that claim was never added. */
   sales:      { edit: [],
-                nav:  ['sales-projection-form.html'] },
+                nav:  ['sales-projection-form.html','dispatch-form.html'] },
   /* Raw Materials is the Purchase & Stores department's daily report (see
      FORM_ACCESS.stores), so Purchase gets the nav row for it — before this
      the role's nav was empty and a purchase user opened the app to a Daily
