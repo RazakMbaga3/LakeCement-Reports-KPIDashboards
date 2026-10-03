@@ -10,6 +10,7 @@
 */
 const db = require('../db');
 const salesOdoo = require('./salesOdoo');
+const salesDelivered = require('./salesDelivered');
 const { SALES_GRADES } = require('../config/salesGrades');
 
 /* Every calendar day counts as a selling day (Lake Cement sells 7 days a
@@ -98,7 +99,7 @@ async function getDashboard(year, month) {
 
   const territories = await getTerritories();
 
-  const [projRange, projToday, mtdSales, collections, uncollectable, payable, advance, agewise, targetsRes, officerAchievement] =
+  const [projRange, projToday, mtdSales, collections, uncollectable, payable, advance, agewise, targetsRes, officerAchievement, delivered] =
     await Promise.all([
       _sumProjections(fmt(firstOfMonth), fmt(mtdEnd), territories),
       _sumProjections(fmt(today), fmt(today), territories),
@@ -110,10 +111,27 @@ async function getDashboard(year, month) {
       salesOdoo.fetchAgewiseOutstanding(fmt(firstOfMonth), fmt(mtdEnd)),
       _getTargets(firstOfMonth),
       salesOdoo.fetchOfficerAchievement(fmt(firstOfMonth), fmt(mtdEnd)),
+      salesDelivered.getDeliveredTonnage(fmt(firstOfMonth), fmt(mtdEnd)),
     ]);
 
-  const mtdActual = mtdSales.ok ? mtdSales.value.qty_mt : null;
-  const todayActual = mtdSales.ok ? _todayActualFromOrders(mtdSales.value, fmt(today)) : null;
+  /* HEADLINE TONNAGE = DELIVERED, not ordered.
+     Reconciled against the Sales team's own September 2026 Sale Register
+     (Grand MT 59,548.76): delivered 59,578.8 (+30.0, 0.05%, one CEMENT
+     32.5 month-boundary item) vs ordered 60,764.1 (+1,215.3, +2.0%).
+     See services/salesDelivered.js for the full working. `ordered_mt` is
+     kept alongside so the two bases stay visible and comparable rather
+     than one silently replacing the other. */
+  const orderedMt = mtdSales.ok ? mtdSales.value.qty_mt : null;
+  const deliveredMt = delivered.days_with_data ? delivered.total_mt : null;
+  const mtdActual = deliveredMt != null ? deliveredMt : null;
+  /* Today's figure follows the same delivered basis as the headline — a
+     delivered MTD beside an ordered on-date number would be two different
+     measures in one row of tiles. Null (not 0) when the dispatch sync has
+     nothing for today yet, which is normal early in the day: the sync runs
+     every 30 min and a day with no deliveries recorded is not evidence of
+     a day with no deliveries. */
+  const todayRow = delivered.by_date[fmt(today)];
+  const todayActual = todayRow ? todayRow.mt : null;
   const monthlyTarget = targetsRes.companyTotal;
 
   const dailyRunRate   = mtdActual != null && daysElapsed ? Math.round((mtdActual / daysElapsed) * 10) / 10 : null;
@@ -127,13 +145,21 @@ async function getDashboard(year, month) {
   const pmy = month === 1 ? year - 1 : year;
   const prevFirst = new Date(Date.UTC(pmy, pm - 1, 1));
   const prevLast  = new Date(Date.UTC(pmy, pm, 0));
-  const prevMtdSales = await salesOdoo.fetchMtdSales(fmt(prevFirst), fmt(prevLast));
-  const prevActual = prevMtdSales.ok ? prevMtdSales.value.qty_mt : null;
+  /* Previous month on the SAME delivered basis as this month. Comparing a
+     delivered MTD against an ordered previous month would make the MoM
+     delta a measure of the basis change, not of performance — on
+     September's numbers that alone would read as a spurious -2%. */
+  const prevDelivered = await salesDelivered.getDeliveredTonnage(fmt(prevFirst), fmt(prevLast));
+  const prevActual = prevDelivered.days_with_data ? prevDelivered.total_mt : null;
   const momDeltaMt  = (mtdActual != null && prevActual != null) ? Math.round((mtdActual - prevActual) * 10) / 10 : null;
   const momDeltaPct = (momDeltaMt != null && prevActual) ? Math.round((momDeltaMt / prevActual) * 1000) / 10 : null;
 
-  const grades = _buildGradeMix(mtdSales);
-  const gradeTrend = _buildGradeMixByDay(mtdSales);
+  /* Grade mix and its daily trend follow the delivered basis too, so the
+     four tiles sum to the headline MTD figure. The September Register
+     confirms this mapping independently: its CEMENT 42.5 R / B-M 42.5 N /
+     OPC 42.5 N totals match the dispatch grades to the decimal. */
+  const grades = _buildDeliveredGradeMix(delivered);
+  const gradeTrend = _buildDeliveredGradeTrend(delivered);
 
   // See this function's doc comment: null on purpose, not stale data.
   const performance = _buildPerformance(territories, projRange, targetsRes.byOfficer, {});
@@ -141,9 +167,12 @@ async function getDashboard(year, month) {
   const dailyTrend = [];
   for (let d = new Date(firstOfMonth); d <= mtdEnd; d = new Date(d.getTime() + 86400000)) {
     const key = fmt(d);
-    /* A day with no orders is a real 0 when Odoo answered; null only when
-       Odoo itself could not be reached, so the chart never draws a fake zero. */
-    const actual = mtdSales.ok ? Math.round((mtdSales.value.mt_by_date[key] || 0) * 10) / 10 : null;
+    /* Delivered tonnage for the day. A day the sync HAS a row for and which
+       totals zero is a real 0; a day with no row at all is null, because
+       the dispatch sync not having written a day is not evidence that
+       nothing shipped. Same rule as before, different source. */
+    const row = delivered.by_date[key];
+    const actual = row ? row.mt : null;
     dailyTrend.push({ date: key, projected: Math.round((projRange.byDate[key] || 0) * 10) / 10, actual });
   }
 
@@ -205,6 +234,31 @@ async function getDashboard(year, month) {
     daily_trend: dailyTrend,
     top_customers: topCustomers,
     performance,
+    /* Which measure the headline tonnage is on, and what the alternative
+       reads, so the page can label the basis instead of leaving a reader
+       to discover the difference by reconciling against the Register. */
+    tonnage_basis: {
+      basis: 'delivered',
+      label: 'Delivered (dispatch notes)',
+      note: 'Tonnage is what was DELIVERED in the period, matching the Sales Register. '
+          + 'Ordered tonnage is shown for comparison — orders booked in one month are '
+          + 'commonly delivered in the next, so the two differ by a few percent.',
+      delivered_mt: deliveredMt,
+      ordered_mt: orderedMt,
+      variance_mt: (deliveredMt != null && orderedMt != null)
+        ? Math.round((orderedMt - deliveredMt) * 10) / 10 : null,
+      by_channel: delivered.by_channel,
+      /* Dispatch tonnage on the plain 42.5 N field, which has no Sales
+         product line. Counted in the headline (the Register counts it)
+         but not in the grade mix. Non-zero means a grade is shipping that
+         the four tiles do not represent. */
+      unclassified_mt: delivered.other_mt,
+      days_with_data: delivered.days_with_data,
+      /* Customer-attributed figures below CANNOT move to the delivered
+         basis: dispatch_report carries no customer. Flagged so the UI can
+         say so rather than implying one consistent basis page-wide. */
+      customer_figures_basis: 'ordered',
+    },
     /* Real officer actual-vs-target, sourced entirely from Odoo — see
        salesOdoo.fetchOfficerAchievement() for the customer-target join
        that makes this correct without needing sale_orders.salesperson
@@ -252,25 +306,6 @@ function _mtOfLine(line) {
   const uom = line.product_uom;
   const uomName = (Array.isArray(uom) ? uom[1] : uom) || '';
   return salesOdoo._lineMt(uomName, line.product_uom_qty || 0);
-}
-
-/* Today's actual is a subset of the already-fetched MTD orders/lines — no
-   second Odoo round trip, matching the standalone app's same optimization
-   (dashboard.py: today_orders = [o for o in live_orders if date matches]). */
-function _todayActualFromOrders(mtdValue, todayStr) {
-  const todayOrderIds = new Set(
-    mtdValue.orders.filter(o => String(o.date_order || '').slice(0, 10) === todayStr).map(o => o.id)
-  );
-  if (!todayOrderIds.size) return 0;
-  const todayLines = mtdValue.lines.filter(l => {
-    const orderId = Array.isArray(l.order_id) ? l.order_id[0] : l.order_id;
-    return todayOrderIds.has(orderId);
-  });
-  let total = 0;
-  for (const line of todayLines) {
-    total += _mtOfLine(line);
-  }
-  return Math.round(total * 10) / 10;
 }
 
 /* Product-name -> grade matching, checked against the real Odoo catalogue
@@ -329,6 +364,41 @@ function _buildGradeMix(mtdSales) {
   return graded;
 }
 
+/* Grade mix on the DELIVERED basis. Shares SALES_GRADES (label, colour,
+   grade tag) with the ordered-basis builder below so the tiles look
+   identical; only the source changes. Shares are of the cement total, so
+   they always sum to 100% across the four lines.
+
+   There is no "Unmatched product" bucket here, unlike the ordered-basis
+   version: odooDispatchSync.js resolves every row to a known field or
+   skips it as non-cement at write time, so nothing unmatched can reach
+   daily_reports. `other_mt` (the plain 42.5 N field, which has no Sales
+   product line) is reported separately on the payload instead. */
+function _buildDeliveredGradeMix(delivered) {
+  const base = SALES_GRADES.map(g => ({ ...g, mtd_actual_mt: null, share_pct: null }));
+  if (!delivered.days_with_data) return base;
+
+  const total = delivered.total_mt || 0;
+  return base.map(g => ({
+    ...g,
+    mtd_actual_mt: delivered.by_grade[g.key] ?? 0,
+    share_pct: total ? Math.round((delivered.by_grade[g.key] / total) * 1000) / 10 : 0,
+  }));
+}
+
+/* Per-day-per-grade rows for the Grade Mix Trend chart, delivered basis.
+   Shape matches _buildGradeMixByDay()'s output ({date, <gradeKey>: mt})
+   so sales.html renders it unchanged. */
+function _buildDeliveredGradeTrend(delivered) {
+  if (!delivered.days_with_data) return [];
+  return Object.keys(delivered.by_date).sort().map(date => {
+    const row = delivered.by_date[date];
+    const out = { date };
+    for (const g of SALES_GRADES) out[g.key] = row[g.key] ?? 0;
+    return out;
+  });
+}
+
 /* Per-day-per-grade breakdown for the Grade Mix Trend chart — same join
    (line -> order_id -> order.date_order) fetchMtdSales() already does for
    mt_by_date, and the same _matchGrade() + MT conversion _buildGradeMix()
@@ -369,7 +439,7 @@ function _buildGradeMixByDay(mtdSales) {
 }
 
 /* Top customers by MT this month — group lines by their order's customer
-   (same order_id -> orders join as _todayActualFromOrders), sum MT per
+   (joining each line's order_id back to its order's customer), sum MT per
    customer with the same conversion _buildGradeMix() uses, sort desc, cap
    at 10. Real Odoo customer names — sales.html must escape them the same
    way it already escapes territory fields. Returns [] when Odoo didn't

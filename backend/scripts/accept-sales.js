@@ -164,10 +164,43 @@ async function main() {
     check('dashboard 200s', dash.status === 200, `got ${dash.status}`);
     const d = dash.body || {};
     check('mtd.projected_mt includes the submitted 42.5 MT', d.mtd && d.mtd.projected_mt >= 42.5, JSON.stringify(d.mtd));
-    check('mtd.actual_mt is null (Odoo not configured), not a fabricated number', d.mtd && d.mtd.actual_mt === null);
+    /* Tonnage is now the DELIVERED figure, read from daily_reports (what
+       odooDispatchSync.js wrote), not from a live Odoo call — so "Odoo not
+       configured" no longer implies it must be null. The invariant that
+       still matters, and is what this check was always protecting, is that
+       the number is never fabricated: null when no dispatch day exists for
+       the period, a real total when one does, and never a silent 0
+       standing in for absent data. Both branches are asserted so a
+       regression in either direction fails here. */
+    check('mtd.actual_mt is honest: null when no dispatch data, a real total when there is',
+      d.mtd && (
+        d.tonnage_basis.days_with_data === 0
+          ? d.mtd.actual_mt === null
+          : (typeof d.mtd.actual_mt === 'number' && d.mtd.actual_mt === d.tonnage_basis.delivered_mt)
+      ),
+      JSON.stringify({ actual_mt: d.mtd && d.mtd.actual_mt, basis: d.tonnage_basis }));
+    check('tonnage_basis says delivered, and carries the ordered figure for comparison',
+      d.tonnage_basis && d.tonnage_basis.basis === 'delivered'
+        && 'ordered_mt' in d.tonnage_basis
+        && d.tonnage_basis.customer_figures_basis === 'ordered',
+      JSON.stringify(d.tonnage_basis));
     check('collections reports not_configured, not an error or fake value', d.collections && d.collections.ok === false && d.collections.status === 'not_configured', JSON.stringify(d.collections));
     check('financials.payable reports not_mapped (no Odoo model identified)', d.financials && d.financials.payable.ok === false && d.financials.payable.status === 'not_mapped', JSON.stringify(d.financials && d.financials.payable));
-    check('grades come back with 4 known keys, values null (no Odoo)', d.grades && d.grades.filter(g => g.key !== 'unmatched').length === 4 && d.grades.every(g => g.key === 'unmatched' || g.mtd_actual_mt === null));
+    /* Same shift as actual_mt above: grades are delivered-basis now, so
+       they carry real values whenever dispatch data exists. The shape
+       (exactly the 4 known product lines) is asserted always; the values
+       are asserted null only when there is genuinely no dispatch day, and
+       otherwise must sum to the headline — which is the stronger property,
+       since it catches a grade mix that silently disagrees with the total. */
+    check('grades come back with the 4 known product lines', d.grades && d.grades.filter(g => g.key !== 'unmatched').length === 4,
+      JSON.stringify(d.grades && d.grades.map(g => g.key)));
+    check('grade values are null with no dispatch data, else they sum to the headline',
+      d.grades && (
+        d.tonnage_basis.days_with_data === 0
+          ? d.grades.every(g => g.mtd_actual_mt === null)
+          : Math.abs(d.grades.reduce((s, g) => s + (g.mtd_actual_mt || 0), 0) - d.mtd.actual_mt) < 0.15
+      ),
+      JSON.stringify({ sum: d.grades && d.grades.reduce((s, g) => s + (g.mtd_actual_mt || 0), 0), headline: d.mtd && d.mtd.actual_mt }));
     check('targets.source defaults to manual before any target is set', d.targets && d.targets.source === 'manual');
     check('sources.sales_volume propagates the real status (not hardcoded)', d.sources && d.sources.sales_volume === 'not_configured', JSON.stringify(d.sources));
 
