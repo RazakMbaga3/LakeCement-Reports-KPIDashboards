@@ -201,7 +201,7 @@
     <span class="in-section-sub">— pending Odoo mapping, see status on each tile</span>
   </div>
   <div class="in-card">
-    <div class="sk-row" id="sd-financials"></div>
+    <div class="sk-row sk-row-3" id="sd-financials"></div>
   </div>
 
   <!-- ── TARGET VS ACHIEVEMENT ────────────────────────────── -->
@@ -432,7 +432,14 @@
       status: mtd.actual_mt != null ? fmt(mtd.actual_mt) + ' MT over ' + mtd.days_elapsed + ' days' : null,
     });
     html2 += sk({
-      label: 'Avg Order Size', deptTag: 'MTD',
+      /* Unlike its neighbour above, this can ONLY be ordered-basis: dispatch
+         notes (the delivered source) carry per-day/grade/channel totals with
+         no concept of an individual order, so there is no delivered-basis
+         figure to fall back to. The renderBasis() banner's "figures further
+         down remain on the ordered basis" line doesn't cover this tile — it
+         sits in the hero row, not "further down" — so it needs its own
+         label rather than silently differing from the tile beside it. */
+      label: 'Avg Order Size', deptTag: 'Ordered — MTD',
       value: fmt(mtd.avg_order_size_mt), unit: 'MT/order',
       pending: mtd.avg_order_size_mt == null, pendingMsg: 'Odoo ' + (d.sources.sales_volume === 'not_configured' ? 'not configured' : 'unreachable'),
     });
@@ -613,7 +620,11 @@
   }
 
   function renderFinancials(f) {
-    var labels = { received_uncollectable: 'Received Uncollectable', payable: 'Payable', advance: 'Advance', agewise_outstanding: 'Agewise Outstanding' };
+    /* The "Advance" tile was removed 2026-10-06 (asked for directly): it
+       summed every inbound customer receipt, not advances, and always read
+       "0 invoices" because it carried receipt_count, not invoice_count.
+       Advances now sit under "Sales Payable (Advances)". */
+    var labels = { received_uncollectable: 'Sales Receivable against Invoice', payable: 'Sales Payable (Advances)', agewise_outstanding: 'Agewise Outstanding' };
     var html = Object.keys(labels).map(function (key) {
       var r = f[key];
       if (r.ok) {

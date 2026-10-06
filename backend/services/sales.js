@@ -99,7 +99,7 @@ async function getDashboard(year, month) {
 
   const territories = await getTerritories();
 
-  const [projRange, projToday, mtdSales, collections, uncollectable, payable, advance, agewise, targetsRes, officerAchievement, delivered] =
+  const [projRange, projToday, mtdSales, collections, uncollectable, payable, agewise, targetsRes, officerAchievement, delivered] =
     await Promise.all([
       _sumProjections(fmt(firstOfMonth), fmt(mtdEnd), territories),
       _sumProjections(fmt(today), fmt(today), territories),
@@ -107,7 +107,6 @@ async function getDashboard(year, month) {
       salesOdoo.fetchCollections(fmt(firstOfMonth), fmt(mtdEnd), daysElapsed),
       salesOdoo.fetchReceivedUncollectable(),
       salesOdoo.fetchPayable(),
-      salesOdoo.fetchAdvance(fmt(firstOfMonth), fmt(mtdEnd)),
       salesOdoo.fetchAgewiseOutstanding(fmt(firstOfMonth), fmt(mtdEnd)),
       _getTargets(firstOfMonth),
       salesOdoo.fetchOfficerAchievement(fmt(firstOfMonth), fmt(mtdEnd)),
@@ -276,7 +275,6 @@ async function getDashboard(year, month) {
     financials: {
       received_uncollectable: _publicOdooResult(uncollectable),
       payable: _publicOdooResult(payable),
-      advance: _publicOdooResult(advance),
       agewise_outstanding: _publicOdooResult(agewise),
     },
     sources: {

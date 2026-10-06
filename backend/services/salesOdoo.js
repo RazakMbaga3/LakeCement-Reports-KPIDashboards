@@ -26,8 +26,9 @@
 
   ── Known server-side defects this file works around or refuses to hide ─
     - customer_receipts IGNORES the date filter (95% of rows came back
-      outside the requested range on test). fetchAdvance() therefore
-      filters client-side; remove that once the endpoint is fixed.
+      outside the requested range on test). Nothing reads customer_receipts
+      any more — the Advance tile that summed them (fetchAdvance) was
+      removed 2026-10-06 — so this only matters if a future tile does.
     - sale_orders.salesperson returns the ORDER-ENTRY CLERK, not the field
       sales officer (6 distinct names on orders vs 13 on targets, only 1
       in common). Not actually a blocker, though: see
@@ -209,36 +210,6 @@ async function fetchAgewiseOutstanding(from, to) {
   };
 }
 
-/* Customer receipts in the period.
-
-   Works around the endpoint returning receipts far outside the requested
-   range (95% of rows on test): the filter is re-applied here. Without
-   this the figure would silently include years of unrelated receipts. */
-async function fetchAdvance(from, to) {
-  const bundle = await client.fetchSaleBundle(from, to);
-  if (!bundle.ok) return _fail(bundle);
-
-  const all = bundle.data.customer_receipts || [];
-  const inRange = all.filter(r =>
-    r.payment_type === 'inbound' && r.receipt_date && r.receipt_date >= from && r.receipt_date <= to);
-
-  return {
-    ok: true,
-    value: {
-      receipt_count: inRange.length,
-      total_tzs: Math.round(inRange.reduce((s, r) => s + (r.amount || 0), 0)),
-      filtered_client_side: true,
-      rows_returned_by_odoo: all.length,
-      note: all.length > inRange.length
-        ? `Odoo returned ${all.length} receipts for this request and ignored the date filter; ` +
-          `${inRange.length} actually fall inside the period and only those are counted.`
-        : null,
-    },
-    as_of: bundle.as_of,
-    source: bundle.source,
-  };
-}
-
 /* Officer achievement for the month — the CORRECT attribution model,
    confirmed by the Sales team 2026-09-03 after the salesperson-field
    defect was reported: targets in Odoo (custom.sales.target) are set per
@@ -345,20 +316,30 @@ async function fetchOfficerAchievement(from, to) {
   };
 }
 
-/* No source in either endpoint. */
+/* No source in either endpoint. Tile relabeled 2026-10-06 to "Sales
+   Receivable against Invoice" (was "Received Uncollectable") — label only,
+   the gap is unchanged: still nothing in sale_dashboard_report answers it. */
 async function fetchReceivedUncollectable() {
-  return _notMapped('Received Uncollectable is not included in the Odoo dashboard endpoint.');
+  return _notMapped('Sales Receivable against Invoice is not included in the Odoo dashboard endpoint.');
 }
 
+/* Tile relabeled 2026-10-06 to "Sales Payable (Advances)" (was "Payable").
+   Not just a rename — the new name is a different idea than the old one:
+   "Payable" meant vendor payables (money LCL owes suppliers); "Sales
+   Payable (Advances)" reads as money LCL owes back to customers (e.g.
+   prepayments not yet earned) — a liability, not the customer receipts
+   coming IN that the since-removed Advance tile used to sum.
+   Neither endpoint has ever returned anything for this, under either
+   name, so the message stays a plain "not available" instead of keeping
+   the old vendor-specific wording, which no longer matches what this
+   tile claims to show. */
 async function fetchPayable() {
-  return _notMapped(
-    'Vendor payables are not included in either Odoo dashboard endpoint — the sales endpoint ' +
-    'returns customer invoices only, and the purchase endpoint returns no vendor bills.');
+  return _notMapped('Sales Payable (Advances) is not available from either Odoo dashboard endpoint.');
 }
 
 module.exports = {
   fetchMtdSales, fetchCollections,
-  fetchReceivedUncollectable, fetchPayable, fetchAdvance, fetchAgewiseOutstanding,
+  fetchReceivedUncollectable, fetchPayable, fetchAgewiseOutstanding,
   fetchOfficerAchievement,
   /* Exported so services/sales.js shares this one definition of the
      bag->tonne rule instead of keeping its own inline copies; the grade
