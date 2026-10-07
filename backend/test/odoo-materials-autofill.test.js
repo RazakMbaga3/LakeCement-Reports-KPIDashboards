@@ -184,3 +184,98 @@ test('carryForwardOpening: writes opening only — never receipts or consumption
     assert.ok(key.endsWith('_open'), `carry-forward wrote '${key}', which is not an opening`);
   }
 });
+
+// ── Consumption, from the production feed ────────────────────────────────
+
+test('odooFieldsFor: writes consumption for the three mapped rows', () => {
+  const f = odooFieldsFor(receipts([]), { gypsum: 94.8, iron_ore: 89, clinker: 1791.88 });
+  assert.equal(f.gypsum_cons, 94.8);
+  assert.equal(f.iron_ore_cons, 89);
+  assert.equal(f.clinker_cons, 1791.88);
+});
+
+test('odooFieldsFor: a positively-reported zero consumption IS written', () => {
+  /* Unlike a receipt. consumptionForDate() omits a material Odoo said
+     nothing about, so anything reaching here is a real statement that the
+     mills ran and took none. */
+  const f = odooFieldsFor(receipts([]), { iron_ore: 0 });
+  assert.equal(f.iron_ore_cons, 0);
+});
+
+test('odooFieldsFor: consumption and receipts coexist on the same row', () => {
+  const f = odooFieldsFor(receipts([row('gypsum', 127.92, 31.9)]), { gypsum: 94.8 });
+  assert.equal(f.gypsum_rcvd, 127.92);
+  assert.equal(f.gypsum_grn, 31.9);
+  assert.equal(f.gypsum_cons, 94.8);
+});
+
+test('odooFieldsFor: no consumption argument leaves every _cons cell alone', () => {
+  const f = odooFieldsFor(receipts([row('gypsum', 127.92)]));
+  assert.equal(Object.keys(f).some(k => k.endsWith('_cons')), false);
+});
+
+test('odooFieldsFor: coal consumption is never written, whatever is passed', () => {
+  /* Coal has no supplier split in Odoo and no CPP burn in any feed, so a
+     kiln total would understate the burn and overstate the pile. If a
+     future change maps it, config/odooMaterialConsumption.js must be read
+     first — this test is the tripwire. */
+  const { CONSUMPTION_ROWS } = require('../config/odooMaterialConsumption');
+  for (const r of CONSUMPTION_ROWS) {
+    assert.ok(!r.startsWith('ck_') && !r.startsWith('cc_'),
+      `'${r}' is a coal row; coal consumption cannot be filled from one Odoo total`);
+  }
+});
+
+// ── carryForwardOpening: the negative guard ──────────────────────────────
+
+test('carryForwardOpening: a negative closing is NOT carried', () => {
+  /* Stock cannot go below zero. A negative here means the chain was
+     started with no real opening balance, not that the yard is in deficit
+     — carrying it compounds the error daily (clinker hit −10,409 MT). */
+  const open = carryForwardOpening(
+    { iron_ore_open: 0, iron_ore_rcvd: 30, iron_ore_cons: 109 },
+    '2026-09-01', '2026-09-02');
+  assert.equal('iron_ore_open' in open, false);
+});
+
+test('carryForwardOpening: a zero closing IS carried (a genuinely empty pile)', () => {
+  const open = carryForwardOpening(
+    { gypsum_open: 50, gypsum_rcvd: 0, gypsum_cons: 50 }, '2026-10-01', '2026-10-02');
+  assert.equal(open.gypsum_open, 0);
+});
+
+test('carryForwardOpening: one negative row does not block the others', () => {
+  const open = carryForwardOpening(
+    { iron_ore_open: 0, iron_ore_cons: 109, gypsum_open: 100, gypsum_cons: 40 },
+    '2026-10-01', '2026-10-02');
+  assert.equal('iron_ore_open' in open, false);
+  assert.equal(open.gypsum_open, 60);
+});
+
+// ── Own production joins the received column ─────────────────────────────
+
+test('odooFieldsFor: clinker production is ADDED to gate receipts, not substituted', () => {
+  /* The report's own tile reads "own production + purchased receipts". A
+     plant that both burns its own and buys in must show the sum. */
+  const f = odooFieldsFor(receipts([row('clinker', 5)]), {}, { clinker: 1703 });
+  assert.equal(f.clinker_rcvd, 1708);
+});
+
+test('odooFieldsFor: production fills the received column when nothing was bought', () => {
+  const f = odooFieldsFor(receipts([]), {}, { clinker: 1703 });
+  assert.equal(f.clinker_rcvd, 1703);
+});
+
+test('odooFieldsFor: only clinker has a production source — gypsum/iron ore are bought', () => {
+  const { PRODUCTION_SOURCES } = require('../config/odooMaterialConsumption');
+  assert.deepEqual(Object.keys(PRODUCTION_SOURCES), ['clinker']);
+});
+
+test('odooFieldsFor: a clinker day with a draw but no kiln entry still writes the draw', () => {
+  /* Today's kiln entry often posts after the mills'. The draw is real and
+     is written; the resulting negative closing is caught by the opening
+     guard rather than propagated to tomorrow. */
+  const f = odooFieldsFor(receipts([]), { clinker: 1013.306 }, {});
+  assert.equal(f.clinker_cons, 1013.306);
+  assert.equal('clinker_rcvd' in f, false);
+});

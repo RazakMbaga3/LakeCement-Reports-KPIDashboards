@@ -66,6 +66,9 @@
   .cv.is-provisional::after, .kt-val.is-provisional::after {
     content: ' *'; font-weight: 800; color: var(--orange);
   }
+  /* The same mark, inline in the banner's own text, so the sentence can
+     point at the thing the reader is looking for. */
+  .mf-prov-key { font-weight: 800; color: var(--orange); }
 </style>
 </head>
 <body>
@@ -117,10 +120,11 @@
        burn. This banner says so, rather than letting the number be read as
        final. It hides itself the moment any consumption is entered. -->
   <div class="mf-provisional" id="mf-provisional" role="status" aria-live="polite" hidden>
-    <b>Closing stock is provisional.</b>
-    Received quantities came from Odoo, but no consumption has been entered for this day yet —
-    so every closing figure below is short of today&rsquo;s kiln and CPP draws.
-    Enter consumption to make these final.
+    <b>Coal closing stock is provisional.</b>
+    Odoo supplies the coal received, but not what was burned &mdash; it reports one total with no
+    supplier split, and the CPP draw is not in any feed. So the coal figures marked
+    <span class="mf-prov-key">*</span> are short of today&rsquo;s kiln and CPP draws until someone
+    enters them. Gypsum, iron ore and clinker consumption came from Odoo and are complete.
   </div>
 
   <!-- Result of the last "Fill from Odoo". Empty until used, so the form
@@ -704,30 +708,46 @@ window.MATERIALS_SECTIONS = MATERIALS_SECTIONS;
     }
 
     /* ── Provisional closing stock ───────────────────────────────
-       Closing = opening + received − consumed. Odoo fills the received
-       half on its own; consumption comes off plant meters and never
-       reaches Odoo. So a day that has receipts but no consumption typed
-       yet is overstating every closing figure by one day's burn.
+       Closing = opening + received − consumed, so a closing figure is only
+       final once that day's draws are in.
 
-       The test is deliberately "has receipts AND no consumption at all",
-       not "has any empty consumption cell": most of the ~60 rows are
-       dormant suppliers that are legitimately zero every day, so flagging
-       on those would mean the banner never switched off and would be
-       ignored. One real consumption figure anywhere means the officer has
-       started entering the day, and the number stops being the robot's. */
-    const anyReceived = MATERIALS_SECTIONS.some(sec =>
-      sec.rows.some(r => !r.consOnly && g(r.f, 'rcvd') > 0));
-    const anyConsumed = MATERIALS_SECTIONS.some(sec =>
+       Odoo fills three of them outright — gypsum, iron ore and clinker,
+       from the production feed (backend/config/odooMaterialConsumption.js).
+       COAL it cannot: Odoo reports one total with no supplier split, and
+       the CPP burn is absent from every feed. So the coal piles are the
+       rows that still need a human, and they are the biggest stock on the
+       page.
+
+       The test is therefore coal-specific. Flagging on "any empty
+       consumption cell" would never switch off — most of the ~48 coal rows
+       are dormant suppliers that are legitimately zero every day. Flagging
+       on "no consumption anywhere" (the original test, before the
+       production feed was wired in) would now switch off the moment Odoo
+       filled gypsum, while the coal draw was still missing — exactly the
+       false reassurance this banner exists to prevent.
+
+       So: coal is provisional when the piles hold stock or took deliveries
+       but nobody has recorded a draw from any of them. */
+    const coalSections = MATERIALS_SECTIONS.filter(s => s.id === 'ck' || s.id === 'cc');
+    const coalHasStock = coalSections.some(sec =>
+      sec.rows.some(r => !r.consOnly && (g(r.f, 'open') > 0 || g(r.f, 'rcvd') > 0)));
+    const coalConsumed = coalSections.some(sec =>
       sec.rows.some(r => g(r.f, 'cons') > 0));
-    const provisional = anyReceived && !anyConsumed;
+    const provisional = coalHasStock && !coalConsumed;
 
     const banner = document.getElementById('mf-provisional');
     if (banner) banner.hidden = !provisional;
-    /* Both the in-table closing cells AND the six KPI tiles at the top —
-       the tiles are what gets read at a glance (and screenshotted), so
-       marking only the table would leave the most-read figures unmarked. */
-    document.querySelectorAll('.cv[data-calc$="_close"], .kt-val[data-calc^="kpi_"]')
-      .forEach(el => { el.classList.toggle('is-provisional', provisional); });
+    /* Only the figures the missing coal draw actually distorts: the coal
+       rows, their sub-totals and the coal KPI tile. Gypsum, iron ore and
+       clinker are complete once Odoo has filled them, and marking those
+       too would teach the reader to ignore the asterisk. */
+    const coalCalcs = ['ck_sub_close', 'cc_sub_close', 'coal_tot_close', 'kpi_coal'];
+    document.querySelectorAll('[data-calc]').forEach(el => {
+      const id = el.getAttribute('data-calc');
+      const isCoalRow = /^(ck|cc)_/.test(id) && id.endsWith('_close');
+      el.classList.toggle('is-provisional',
+        provisional && (isCoalRow || coalCalcs.includes(id)));
+    });
 
     /* KPI strip */
     if (ck && cc)      put('kpi_coal',    ck.close + cc.close);

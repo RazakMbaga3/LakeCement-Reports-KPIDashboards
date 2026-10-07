@@ -18,30 +18,45 @@
   rendered zeros over live data, which is the fabricated-zero failure the
   2026-09-30 integrity audit named.
 
-  ── Decision (Razak, 2026-10-07): live receipts, manual consumption ────
-  Odoo knows what ARRIVED. It does not know what was BURNED. Verified on
-  2026-10-07 against stores_issues: every issued line is diesel, lubricant,
-  PPE or a spare part — there is no coal, clinker or gypsum draw in the
-  feed, because kiln and CPP consumption is read off the plant's own meters
-  and never passes through a stores issue.
+  ── What this writes, and from which of TWO Odoo feeds ─────────────────
+  Receipts and consumption are different questions answered by different
+  endpoints, and conflating them is the trap this header exists to mark.
 
-  Closing stock = opening + received − consumed. So a day assembled from
-  Odoo alone has a CORRECT received column and an OVERSTATED closing stock,
-  because it is implicitly claiming zero burn. This file therefore writes
-  exactly two columns per row:
+      <row>_rcvd   on-date received tonnage   ] stores gate entries
+      <row>_grn    of that, still pending GRN ] (rm_gate_entries)
+      <row>_open   carried from yesterday's close (computed here)
+      <row>_cons   on-date consumption        ] production_report
+      <row>_rcvd   PLUS own production, for   ] (odoo_production_entries)
+                   clinker — the plant makes  ]
+                   it rather than buying it   ]
 
-      <row>_rcvd   on-date received tonnage (gate entries, net weight)
-      <row>_grn    of that, the part with no GRN booked yet
+  Consumption was originally believed to be unavailable, on the strength of
+  stores_issues — where every line really is diesel, lubricant, PPE or a
+  spare part, because kiln and mill draws never pass through a stores issue.
+  That was the wrong table to judge by. Re-checked 2026-10-07: the
+  production_report feed carries real daily MT for limestone, coal, fine
+  coal, raw meal, clinker, gypsum, iron ore, clay and bauxite, back to
+  2024-01-01.
 
-  and NOTHING else. It never writes opening, consumption, min/max or any
-  closing figure. Consumption stays the officer's to enter, and until they
-  do, the day's closing stock is provisional — flagged as such on the form
-  and in the API (see `provisional` below), never presented as final.
+  Only THREE of those are written here — gypsum, iron ore and clinker —
+  because they are the only ones that are one row on the report and one
+  code in Odoo, so a total is the whole truth. Coal is excluded on two
+  independent grounds (no supplier split, and no CPP burn in any feed);
+  config/odooMaterialConsumption.js carries the full reasoning and must be
+  read before anyone adds a fourth row.
 
-  Writing a zero into the consumption cells to "complete" the row would be
-  the exact bug the integrity audit exists to prevent: a fabricated zero is
-  indistinguishable from a real quiet day, and here it would silently
-  inflate stock on hand by a full day's burn — thousands of tonnes a week.
+  Everything else stays the officer's: min/max, and the consumption of
+  every row not in that config. Closing stock = opening + received −
+  consumed, so a day whose coal burn is still unentered is OVERSTATED, and
+  the form says so — a "provisional" banner and a marker on every affected
+  figure, including the KPI tiles, until a human fills the rest in.
+
+  Writing a zero into a consumption cell merely to "complete" a row would
+  be the exact bug the 2026-09-30 integrity audit exists to prevent: a
+  fabricated zero is indistinguishable from a real quiet day, and here it
+  would silently inflate stock on hand by a full day's burn — thousands of
+  tonnes a week. A zero is written ONLY where Odoo positively reported one
+  (the mills ran and took none), never to fill a silence.
 
   ── Status: 'pending_approval', mirroring decision B′ ──────────────────
   A day this writer CREATES lands as 'pending_approval', not 'draft'. The
@@ -66,6 +81,7 @@ const { recordRevision } = require('./reportRevisions');
 const { receiptsForDate } = require('./storesReport');
 const { pullAllStores } = require('./odooStoresSync');
 const { SECTIONS, ROWS } = require('../config/storeMaterials');
+const { CONSUMPTION_SOURCES, PRODUCTION_SOURCES } = require('../config/odooMaterialConsumption');
 /* The closing-stock rule itself is NOT re-derived here. services/stores.js
    already mirrors recompute() in forms/materials-form.html, including the
    two cases that are easy to get wrong — a CPP `pair` row drawing off its
@@ -86,7 +102,81 @@ const EQUAL_TOLERANCE = 0.0005;
 /* The ONLY two column suffixes this writer is allowed to touch. Kept as a
    frozen list rather than inlined, so that "what may the robot write" is
    one grep away and a future change to it is a visible diff. */
-const ODOO_OWNED_SUFFIXES = Object.freeze(['rcvd', 'grn']);
+const ODOO_OWNED_SUFFIXES = Object.freeze(['rcvd', 'grn', 'cons']);
+
+/* ── Consumption, from the production feed ──────────────────────────────
+   One day's consumption for the three rows Odoo can fill without
+   apportioning anything (config/odooMaterialConsumption.js explains which
+   and why coal is not among them).
+
+   Reads the odoo_production_entries mirror that odooProductionSync.js
+   already keeps — no extra Odoo call, and the same rows the Production
+   report is built from, so the two reports cannot disagree about how much
+   gypsum the mills took.
+
+   `withdrawn_at IS NULL` is the live filter: an entry Odoo later retracts
+   is marked withdrawn rather than deleted, and counting a retracted entry
+   would hold consumption that the plant has since said did not happen.
+
+   Returns { <row>: mt }, omitting a row Odoo said nothing about. A row
+   with no entry is NOT zero — "Odoo has nothing yet" and "Odoo says zero"
+   are different facts, and only the caller can tell which matters. */
+async function consumptionForDate(date) {
+  const { rows } = await db.query(
+    `SELECT i->>'code'                            AS code,
+            e.stage                               AS stage,
+            sum((i->>'input_quantity')::numeric)  AS qty
+       FROM odoo_production_entries e,
+            jsonb_array_elements(e.consumed_items) i
+      WHERE e.withdrawn_at IS NULL
+        AND e.production_date = $1
+      GROUP BY 1, 2`,
+    [date]);
+
+  const out = {};
+  for (const [field, rule] of Object.entries(CONSUMPTION_SOURCES)) {
+    const hits = rows.filter(r => r.code === rule.code && rule.stages.includes(r.stage));
+    if (!hits.length) continue;
+    const mt = hits.reduce((s, r) => s + (Number(r.qty) || 0), 0);
+    /* Round to the 3dp the receipts side already uses, so a figure written
+       by this writer and one written by the gate feed carry the same
+       precision on the same row. */
+    out[field] = Math.round(mt * 1000) / 1000;
+  }
+  return out;
+}
+
+/* Own production for the rows the plant MAKES rather than buys — in
+   practice clinker alone (config/odooMaterialConsumption.js).
+
+   This lands in the row's RECEIVED column, which the report's own Clinker
+   Stock tile already describes as "own production + purchased receipts".
+   Without it the ledger has clinker leaving for the mills and nothing
+   arriving from the kiln, and the tile goes negative within a day.
+
+   Produced quantity is the entry's own produced_qty, not a consumed item,
+   so it is a separate query rather than another filter over the same rows. */
+async function productionForDate(date) {
+  const stages = [...new Set(Object.values(PRODUCTION_SOURCES))];
+  if (!stages.length) return {};
+
+  const { rows } = await db.query(
+    `SELECT stage, sum(produced_qty) AS qty
+       FROM odoo_production_entries
+      WHERE withdrawn_at IS NULL
+        AND production_date = $1
+        AND stage = ANY($2::varchar[])
+      GROUP BY 1`,
+    [date, stages]);
+
+  const byStage = new Map(rows.map(r => [r.stage, Number(r.qty) || 0]));
+  const out = {};
+  for (const [field, stage] of Object.entries(PRODUCTION_SOURCES)) {
+    if (!byStage.has(stage)) continue;
+    out[field] = Math.round(byStage.get(stage) * 1000) / 1000;
+  }
+  return out;
+}
 
 function asNumber(v) {
   if (v === null || v === undefined || v === '') return null;
@@ -101,12 +191,30 @@ function asNumber(v) {
    blank), while an explicit 0 would overwrite a figure they typed and
    assert "nothing arrived" on a day we may simply have no gate rows for
    yet. Only materials that actually appeared at the gate are reported. */
-function odooFieldsFor(receipts) {
+function odooFieldsFor(receipts, consumption = {}, production = {}) {
   const out = {};
   for (const r of receipts.rows || []) {
     if (!r.row) continue;
     if (r.mt) out[`${r.row}_rcvd`] = r.mt;
     if (r.pending_grn_mt) out[`${r.row}_grn`] = r.pending_grn_mt;
+  }
+  /* Consumption for the three rows Odoo can fill outright. A zero IS
+     written here, unlike a receipt: the production feed having an entry
+     for the day that consumed none of this material is a positive
+     statement ("the mills ran and took no iron ore"), whereas an absent
+     row means Odoo said nothing and is skipped by consumptionForDate()
+     before it ever reaches this function. */
+  for (const [field, mt] of Object.entries(consumption)) {
+    out[`${field}_cons`] = mt;
+  }
+  /* Own production joins the RECEIVED column. Added to whatever the gate
+     feed reported for the same row rather than replacing it, because the
+     report's clinker line is explicitly "own production + purchased
+     receipts" — a plant that both burns its own and buys in must show the
+     sum, not whichever source happened to be written last. */
+  for (const [field, mt] of Object.entries(production)) {
+    const key = `${field}_rcvd`;
+    out[key] = Math.round(((out[key] || 0) + mt) * 1000) / 1000;
   }
   return out;
 }
@@ -153,6 +261,27 @@ function carryForwardOpening(prevData, prevDate, date) {
        supplier's kiln pile), so they have no opening to carry. */
     const closing = _closing(prevData, row, tankDrawBySection[row.section]);
     if (closing === null || !Number.isFinite(closing)) continue;
+
+    /* A NEGATIVE closing is never carried, and this is the guard that keeps
+       the whole chain honest.
+
+       Stock cannot go below zero. When this computes one it is not telling
+       us the yard is in deficit, it is telling us the chain was started
+       without a real opening balance and has been subtracting consumption
+       from nothing ever since. That happened for real: the gate feed begins
+       2026-08-31 while the last typed report is 2026-06-30, so the first
+       Odoo day opened at zero, and once consumption was added the error
+       compounded daily — clinker reached −10,409 MT before this guard
+       existed, and every closing figure downstream inherited it.
+
+       Writing the number anyway would be the fabricated-zero bug wearing a
+       minus sign: arithmetically faithful to a premise nobody checked, and
+       far harder to spot than a blank. Leaving the cell empty makes the
+       missing baseline visible exactly where someone can fix it — by typing
+       the real opening stock for the first day, after which the chain is
+       correct from there on. */
+    if (closing < 0) continue;
+
     out[`${row.f}_open`] = Math.round(closing * 1000) / 1000;
   }
   return out;
@@ -195,10 +324,12 @@ function reconcileDay(existingData, odooFields) {
    saving the same day from the form, so a concurrent save cannot be
    half-overwritten. dryRun takes the same read-and-decide path and rolls
    back, so a preview can never diverge from a real run. */
-async function upsertDay(date, receipts, { dryRun = false } = {}) {
-  const odooFields = odooFieldsFor(receipts);
+async function upsertDay(date, receipts, consumption = {}, production = {}, { dryRun = false } = {}) {
+  const odooFields = odooFieldsFor(receipts, consumption, production);
   if (!Object.keys(odooFields).length) {
-    return { action: 'no_receipts', fieldsWritten: 0, conflicts: 0, conflictDetail: [], openingCarried: 0 };
+    /* Named for the common case, but it now means "Odoo had nothing at all
+       for this day" — no receipts AND no production consumption. */
+    return { action: 'no_receipts', fieldsWritten: 0, conflicts: 0, conflictDetail: [], openingCarried: 0, consumptionFilled: 0 };
   }
 
   const client = await db.connect();
@@ -230,6 +361,7 @@ async function upsertDay(date, receipts, { dryRun = false } = {}) {
     const { toWrite, conflicts } = reconcileDay(
       row ? row.data : null, { ...opening, ...odooFields });
     const openingCarried = Object.keys(toWrite).filter(k => k.endsWith('_open')).length;
+    const consumptionFilled = Object.keys(toWrite).filter(k => k.endsWith('_cons')).length;
 
     let action = 'unchanged';
     if (Object.keys(toWrite).length && !dryRun) {
@@ -279,6 +411,7 @@ async function upsertDay(date, receipts, { dryRun = false } = {}) {
       action,
       fieldsWritten: Object.keys(toWrite).length,
       openingCarried,
+      consumptionFilled,
       conflicts: conflicts.length,
       conflictDetail: conflicts,
       unassigned: (receipts.unassigned || []).length,
@@ -306,15 +439,20 @@ async function syncMaterialsRangeToReports(from, to, { dryRun = false } = {}) {
   const summary = {
     from, to, dryRun,
     days: 0, created: 0, updated: 0, unchanged: 0, noReceipts: 0,
-    fieldsWritten: 0, openingCarried: 0, conflicts: 0, conflictDays: [], unassignedDays: [],
+    fieldsWritten: 0, openingCarried: 0, consumptionFilled: 0,
+    conflicts: 0, conflictDays: [], unassignedDays: [],
   };
 
   for (let d = new Date(`${from}T00:00:00Z`); d <= new Date(`${to}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + 1)) {
     const date = d.toISOString().slice(0, 10);
     summary.days++;
 
-    const receipts = await receiptsForDate(date);
-    const r = await upsertDay(date, receipts, { dryRun });
+    const [receipts, consumption, production] = await Promise.all([
+      receiptsForDate(date),
+      consumptionForDate(date),
+      productionForDate(date),
+    ]);
+    const r = await upsertDay(date, receipts, consumption, production, { dryRun });
 
     if (r.action === 'created_pending' || r.action === 'would_create_pending') summary.created++;
     else if (r.action === 'filled_blanks' || r.action === 'would_fill_blanks') summary.updated++;
@@ -323,6 +461,7 @@ async function syncMaterialsRangeToReports(from, to, { dryRun = false } = {}) {
 
     summary.fieldsWritten += r.fieldsWritten;
     summary.openingCarried += r.openingCarried || 0;
+    summary.consumptionFilled += r.consumptionFilled || 0;
     summary.conflicts += r.conflicts;
     if (r.conflicts) summary.conflictDays.push({ date, conflicts: r.conflictDetail });
     if (r.unassigned) summary.unassignedDays.push({ date, trucks: r.unassigned });
@@ -363,6 +502,8 @@ module.exports = {
   odooFieldsFor,
   reconcileDay,
   carryForwardOpening,
+  consumptionForDate,
+  productionForDate,
   upsertDay,
   syncMaterialsRangeToReports,
   pullAndAutofillMaterials,
