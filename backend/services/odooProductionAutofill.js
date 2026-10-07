@@ -18,12 +18,40 @@
      re-signed anything. Since 2026-09-24 each such write also lands in
      report_revisions as an ODOO_AUTOFILL row, so the robot's corrections
      sit in the same history as a person's — see upsertDay().
-  B. A day Odoo has data for, that nobody has touched yet, is created as a
-     'draft' — never 'approved' or 'pending_approval'. The officer still
-     has to open it, add what Odoo cannot supply (run hours, receipts,
-     opening stock) and submit it through the normal HOD approval step.
-     This mirrors the officer/HOD workflow every other form already uses
-     (routes/reports.js) rather than inventing a second one.
+  B. (SUPERSEDED 2026-10-07 — see B′ below.) A day Odoo has data for, that
+     nobody has touched yet, was created as a 'draft' — never 'approved' or
+     'pending_approval'. The officer still had to open it, add what Odoo
+     cannot supply (run hours, receipts, opening stock) and submit it
+     through the normal HOD approval step.
+
+  B′. (Razak, 2026-10-07) A day Odoo filled that NO HUMAN HAS TOUCHED is
+     created as 'pending_approval', not 'draft', so its figures count
+     immediately. The reasoning that replaced B: these entries are already
+     approved in Odoo by the plant's own people before the API ever returns
+     them, so requiring a second, local approval of the same numbers was
+     asking the same question twice. In practice the backlog it created was
+     the whole problem — 85 days queued at once on 2026-09-29, and the
+     Production Report screen reading "No data" while real tonnage sat in
+     the table, because 'draft' is not in REPORTED_STATUSES
+     (config/forms.js) and no KPI counts it.
+
+     What this deliberately does NOT do:
+       - It does not mark anything 'approved'. 'pending_approval' is in
+         REPORTED_STATUSES, so the figures count, but the day still appears
+         in the HOD's queue and a human can still approve or reject it.
+         Nothing here claims a person signed off.
+       - It does not touch a day a human has started (submitted_by or
+         updated_by set) — same no-human-fingerprint test
+         scripts/queue-production-backlog.js already uses. An officer's own
+         draft stays a draft.
+       - It does not change the status of any EXISTING row, in any status.
+         Only the INSERT of a brand-new day is affected. A correction to an
+         already-stored day still moves data alone (decision A).
+
+     The officer's remaining job is unchanged: open the day and add what
+     Odoo cannot supply. The difference is that Odoo's 24 fields are
+     readable by everyone with Production access from the moment they land,
+     instead of waiting on an approval of numbers Odoo already approved.
   C. Odoo reports Raw Meal as one combined stream; the form has mill-level
      rm1_prod_mt/rm2_prod_mt (and a kiln-feed rm1_cons_mt with no rm2
      counterpart). Forcing a combined number into a mill-specific field
@@ -122,11 +150,16 @@ async function upsertDay(date, dayResult, { dryRun = false } = {}) {
     let action = 'unchanged';
     if (Object.keys(toWrite).length && !dryRun) {
       if (!row) {
+        /* 'pending_approval', not 'draft' — decision B′ in the header. These
+           figures are already approved in Odoo, and 'draft' is not in
+           REPORTED_STATUSES, so a draft would leave the Production Report
+           reading "No data" over real tonnage. It still lands in the HOD
+           queue; it is simply counted while it sits there. */
         await client.query(
           `INSERT INTO daily_reports (form_type, record_date, shift, data, status)
-           VALUES ($1, $2, $3, $4::jsonb, 'draft')`,
+           VALUES ($1, $2, $3, $4::jsonb, 'pending_approval')`,
           [FORM_TYPE, date, SHIFT, JSON.stringify(toWrite)]);
-        action = 'created_draft';
+        action = 'created_pending';
       } else {
         // Only `data`/`updated_at` move. status/approved_by/approved_at/
         // submitted_by are untouched — see decision A in the header.
@@ -182,7 +215,7 @@ async function upsertDay(date, dayResult, { dryRun = false } = {}) {
           values);
       }
     } else if (Object.keys(toWrite).length && dryRun) {
-      action = row ? (overrides.length ? 'would_override' : 'would_fill_blanks') : 'would_create_draft';
+      action = row ? (overrides.length ? 'would_override' : 'would_fill_blanks') : 'would_create_pending';
     }
 
     if (dryRun) await client.query('ROLLBACK');
@@ -214,7 +247,7 @@ async function syncProductionRangeToReports(from, to, { dryRun = false } = {}) {
 
   for (const date of dates) {
     const r = await upsertDay(date, byDay[date], { dryRun });
-    if (r.action === 'created_draft' || r.action === 'would_create_draft') summary.created++;
+    if (r.action === 'created_pending' || r.action === 'would_create_pending') summary.created++;
     else if (r.action === 'overrode' || r.action === 'filled_blanks'
            || r.action === 'would_override' || r.action === 'would_fill_blanks') summary.updated++;
     else summary.unchanged++;
