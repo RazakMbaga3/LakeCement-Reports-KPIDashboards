@@ -299,7 +299,7 @@
       .setup-grid { grid-template-columns:repeat(4,1fr); }
     }
     @media (min-width:1024px) {
-      .signoff { grid-template-columns:repeat(3,1fr); gap:20px; padding:20px 24px; }
+      .signoff { grid-template-columns:repeat(2,1fr); gap:20px; padding:20px 24px; }
       .contr-grid { grid-template-columns:repeat(4,1fr); gap:12px; padding:16px; }
       .setup-grid { grid-template-columns:repeat(4,1fr); }
     }
@@ -481,11 +481,7 @@
           <input type="text" id="so-sup" placeholder="Name &amp; Signature" />
         </div>
         <div class="sign-slot">
-          <label>Quarry Engineer</label>
-          <input type="text" id="so-eng" placeholder="Name &amp; Signature" />
-        </div>
-        <div class="sign-slot">
-          <label>Quarry Manager / HOD</label>
+          <label>Quarry HOD</label>
           <input type="text" id="so-mgr" placeholder="Name &amp; Signature" />
         </div>
       </div>
@@ -1447,9 +1443,9 @@
   /* ── sign-off ── */
   function renderSignoff() {
     var so = store.manual.signoff[selDate] || {};
-    $('so-sup').value = so.sup || ''; $('so-eng').value = so.eng || ''; $('so-mgr').value = so.mgr || '';
+    $('so-sup').value = so.sup || ''; $('so-mgr').value = so.mgr || '';
   }
-  ['so-sup', 'so-eng', 'so-mgr'].forEach(function (id) {
+  ['so-sup', 'so-mgr'].forEach(function (id) {
     document.addEventListener('change', function (e) {
       if (e.target.id !== id) return;
       var rec = store.manual.signoff[selDate] || (store.manual.signoff[selDate] = {});

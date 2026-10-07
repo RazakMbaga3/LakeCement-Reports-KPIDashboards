@@ -324,7 +324,7 @@
     /* Desktop: 4-col sign-off, 6-col strip */
     @media (min-width:1024px) {
       .kpi-strip { grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:16px; }
-      .signoff   { grid-template-columns:repeat(4,1fr); }
+      .signoff   { grid-template-columns:repeat(2,1fr); }
     }
 
     /* ── Inline edit panels ── */
@@ -1556,24 +1556,14 @@
     <div style="padding:2px 16px 8px;font-size:12px;color:var(--text-muted)">For the printed record only — does not replace the <a href="approvals.html" style="color:var(--orange-ink)">Approvals</a> workflow.</div>
     <div class="signoff">
       <div class="so-cell">
-        <div class="so-role">Production Head</div>
+        <div class="so-role">Shift In-charge</div>
+        <input class="so-in" data-field="sig_shift_name" placeholder="Full name…" />
+        <input class="so-time" data-field="sig_shift_time" placeholder="Time signed" />
+      </div>
+      <div class="so-cell">
+        <div class="so-role">Production HOD</div>
         <input class="so-in" data-field="sig_prod_head_name" placeholder="Full name…" />
-        <input class="so-time" data-field="sig_prod_head_time" placeholder="Time signed" />
-      </div>
-      <div class="so-cell">
-        <div class="so-role">Plant Manager</div>
-        <input class="so-in" data-field="sig_plant_mgr_name" placeholder="Full name…" />
-        <input class="so-time" data-field="sig_plant_mgr_time" placeholder="Time reviewed" />
-      </div>
-      <div class="so-cell">
-        <div class="so-role">Technical Manager</div>
-        <input class="so-in" data-field="sig_tech_mgr_name" placeholder="Full name…" />
-        <input class="so-time" data-field="sig_tech_mgr_time" placeholder="Time approved" />
-      </div>
-      <div class="so-cell">
-        <div class="so-role">General Manager</div>
-        <input class="so-in" data-field="sig_gen_mgr_name" placeholder="Full name…" />
-        <input class="so-time" data-field="sig_gen_mgr_time" placeholder="Time approved" />
+        <input class="so-time" data-field="sig_prod_head_time" placeholder="Time approved" />
       </div>
     </div>
     <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;">

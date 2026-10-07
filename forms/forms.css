@@ -181,8 +181,13 @@ td.cf .cv { color:var(--f-fg); }
 .pr { background:var(--red-bg); color:var(--red); }
 .po { background:#FFF3E0; color:var(--orange-ink); }
 
-/* ── SIGN-OFF ────────────────────────────────────────────────── */
-.signoff { display:grid; grid-template-columns:repeat(2,1fr); gap:0; }
+/* ── SIGN-OFF ─────────────────────────────────────────────────
+   auto-fit rather than a hardcoded column count: since the
+   2026-09-23 sign-off simplification (HOD is the highest rank
+   required; Plant Manager/General Manager dropped) different
+   reports carry different signer counts — 1 to 3 — and a fixed
+   repeat(4,1fr) would leave visibly empty trailing cells. */
+.signoff { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:0; }
 .so-cell { padding:16px 16px; border-right:1px solid var(--border); text-align:center; }
 .so-cell:last-child { border-right:none; }
 .so-role { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:var(--text-muted); margin-bottom:12px; }
@@ -416,7 +421,6 @@ td.cf .cv { color:var(--f-fg); }
   .leg-chip   { font-size:12px; padding:2px 8px 2px 6px; }
   .rcard-hdr  { padding:8px 12px; }
   .rcard-title { font-size:12px; letter-spacing:.8px; }
-  .signoff    { grid-template-columns:repeat(2,1fr); }
   .forms-grid { grid-template-columns:1fr; }
   .sec-nav    { top:0; position:relative; }
   .notes-grid { grid-template-columns:1fr; }
@@ -434,7 +438,6 @@ td.cf .cv { color:var(--f-fg); }
 
 @media (min-width:1024px) {
   .forms-grid { grid-template-columns:repeat(3,1fr); }
-  .signoff    { grid-template-columns:repeat(4,1fr); }
   .notes-grid { grid-template-columns:1fr 1fr; }
   .notes-col  { border-bottom:none; border-right:1px solid var(--border); padding:14px 20px; }
   .notes-col:last-child { border-right:none; }
@@ -694,7 +697,7 @@ td.cm .ci:focus {
   .rt thead th { font-size:12px; padding:4px 6px; }
   .rt tbody td { padding:3px 4px; }
 
-  .signoff { grid-template-columns:repeat(4,1fr); page-break-inside:avoid; }
+  .signoff { page-break-inside:avoid; }
 
   a[href]::after { content:none !important; }
 }
