@@ -1,0 +1,369 @@
+/*
+  services/odooMaterialsAutofill.js — writes the Odoo Stores feed
+  (rm_gate_entries / rm_grn_lines, migration 031) into daily_reports
+  (form_type='materials'), so the Raw Material Report carries the day's
+  receipts without anyone opening the form and pressing a button.
+
+  This is the Raw Material counterpart of odooProductionAutofill.js, and it
+  follows that file's decisions deliberately rather than inventing its own.
+
+  ── Why this exists at all ─────────────────────────────────────────────
+  Before it, the ONLY path from Odoo onto this report was the "Fill from
+  Odoo" button in forms/materials-form.html: an officer had to open the
+  form, pick the date and click. The stores pull itself has run every 30
+  minutes since 2026-10-01 (config/odooPulls.js), so the data was already
+  in Postgres — it just never reached a report anybody reads. Measured on
+  2026-10-07: rm_gate_entries held 1,086 rows up to 2026-10-02, while
+  daily_reports held no 'materials' row newer than 2026-06-30. The report
+  rendered zeros over live data, which is the fabricated-zero failure the
+  2026-09-30 integrity audit named.
+
+  ── Decision (Razak, 2026-10-07): live receipts, manual consumption ────
+  Odoo knows what ARRIVED. It does not know what was BURNED. Verified on
+  2026-10-07 against stores_issues: every issued line is diesel, lubricant,
+  PPE or a spare part — there is no coal, clinker or gypsum draw in the
+  feed, because kiln and CPP consumption is read off the plant's own meters
+  and never passes through a stores issue.
+
+  Closing stock = opening + received − consumed. So a day assembled from
+  Odoo alone has a CORRECT received column and an OVERSTATED closing stock,
+  because it is implicitly claiming zero burn. This file therefore writes
+  exactly two columns per row:
+
+      <row>_rcvd   on-date received tonnage (gate entries, net weight)
+      <row>_grn    of that, the part with no GRN booked yet
+
+  and NOTHING else. It never writes opening, consumption, min/max or any
+  closing figure. Consumption stays the officer's to enter, and until they
+  do, the day's closing stock is provisional — flagged as such on the form
+  and in the API (see `provisional` below), never presented as final.
+
+  Writing a zero into the consumption cells to "complete" the row would be
+  the exact bug the integrity audit exists to prevent: a fabricated zero is
+  indistinguishable from a real quiet day, and here it would silently
+  inflate stock on hand by a full day's burn — thousands of tonnes a week.
+
+  ── Status: 'pending_approval', mirroring decision B′ ──────────────────
+  A day this writer CREATES lands as 'pending_approval', not 'draft'. The
+  reasoning is odooProductionAutofill.js's, and it applies verbatim here:
+  these receipts are already approved in Odoo by the plant's own Purchase &
+  Stores people before the API returns them, so holding them behind a
+  second local approval asks the same question twice — and 'draft' is not
+  in REPORTED_STATUSES (config/forms.js), so a drafted day shows as "No
+  data" on every surface while real tonnage sits in the table.
+
+  What it does NOT do, exactly as the production writer:
+    - never marks anything 'approved' — nothing here claims a human signed
+    - never changes the status of an EXISTING row, in any status
+    - never touches a day a human has started (submitted_by/updated_by set)
+      beyond the two Odoo-owned columns
+    - never overwrites a figure an officer typed; see reconcileDay()
+*/
+
+const db = require('../db');
+const logger = require('./logger');
+const { recordRevision } = require('./reportRevisions');
+const { receiptsForDate } = require('./storesReport');
+const { pullAllStores } = require('./odooStoresSync');
+const { SECTIONS, ROWS } = require('../config/storeMaterials');
+/* The closing-stock rule itself is NOT re-derived here. services/stores.js
+   already mirrors recompute() in forms/materials-form.html, including the
+   two cases that are easy to get wrong — a CPP `pair` row drawing off its
+   supplier's kiln pile, and the diesel `tank` absorbing the whole section's
+   issues. Importing it means the carry-forward below can never drift from
+   what the form and the Stores dashboard compute. */
+const { _closing } = require('./stores');
+
+const FORM_TYPE = 'materials';
+const SHIFT = 'day';
+
+/* Tonnages are rounded to 3dp upstream (storesReport.js's round()), so a
+   difference below half a thousandth is float noise, not a disagreement
+   anybody would act on. Matches EQUAL_TOLERANCE's role in the production
+   writer, scaled to this report's precision. */
+const EQUAL_TOLERANCE = 0.0005;
+
+/* The ONLY two column suffixes this writer is allowed to touch. Kept as a
+   frozen list rather than inlined, so that "what may the robot write" is
+   one grep away and a future change to it is a visible diff. */
+const ODOO_OWNED_SUFFIXES = Object.freeze(['rcvd', 'grn']);
+
+function asNumber(v) {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+/* One day's receipts -> { field: value } over the Odoo-owned columns only.
+
+   A row with no receipts is OMITTED, not written as zero. The distinction
+   matters: an absent key leaves whatever the officer has (or an untouched
+   blank), while an explicit 0 would overwrite a figure they typed and
+   assert "nothing arrived" on a day we may simply have no gate rows for
+   yet. Only materials that actually appeared at the gate are reported. */
+function odooFieldsFor(receipts) {
+  const out = {};
+  for (const r of receipts.rows || []) {
+    if (!r.row) continue;
+    if (r.mt) out[`${r.row}_rcvd`] = r.mt;
+    if (r.pending_grn_mt) out[`${r.row}_grn`] = r.pending_grn_mt;
+  }
+  return out;
+}
+
+/* Yesterday's closing stock -> today's opening, per row.
+
+   ── Why this is here at all ────────────────────────────────────────────
+   Closing = opening + received − consumed. Odoo supplies received; the
+   officer supplies consumed; NOBODY supplies opening, because on paper it
+   was always just the previous day's closing figure carried down the page.
+   A day written from the feed alone therefore has no opening at all, and
+   the whole report computes closing stock from zero — measured on
+   2026-10-07, the Stores dashboard read "Coal closing 0 MT" on a day with
+   three live coal piles behind it. That is a fabricated zero of exactly
+   the kind the 2026-09-30 integrity audit named, and it is worse than a
+   blank because a reader cannot tell it from a real empty yard.
+
+   ── What it does and does not assume ───────────────────────────────────
+   It carries forward ONLY from an immediately-preceding day (prevDate must
+   be the calendar day before). It never reaches further back to find the
+   last day with data: across a gap, the intervening receipts and draws are
+   unknown, so an older closing figure is not this day's opening — it is a
+   stale number wearing today's date. A gap leaves opening absent, the
+   report shows what it actually knows, and the officer fills it in.
+
+   Returns {} when there is nothing trustworthy to carry. */
+function carryForwardOpening(prevData, prevDate, date) {
+  if (!prevData) return {};
+  const day = (s) => new Date(`${s}T00:00:00Z`).getTime();
+  const ONE_DAY = 86400000;
+  if (day(date) - day(prevDate) !== ONE_DAY) return {};
+
+  /* The diesel tank absorbs its whole section's on-date issues, so the
+     section totals have to be computed before any row's closing. */
+  const tankDrawBySection = {};
+  for (const sec of SECTIONS) {
+    tankDrawBySection[sec.id] = sec.rows.reduce(
+      (s, r) => s + (asNumber(prevData[`${r.f}_cons`]) || 0), 0);
+  }
+
+  const out = {};
+  for (const row of ROWS) {
+    /* consOnly rows hold no stock of their own (the stock sits in the same
+       supplier's kiln pile), so they have no opening to carry. */
+    const closing = _closing(prevData, row, tankDrawBySection[row.section]);
+    if (closing === null || !Number.isFinite(closing)) continue;
+    out[`${row.f}_open`] = Math.round(closing * 1000) / 1000;
+  }
+  return out;
+}
+
+/* Pure — no I/O, unit-tested directly.
+
+   The rule that separates this from the production writer: here Odoo does
+   NOT win a disagreement. If a stored value differs from Odoo's, the
+   officer's figure is KEPT and the difference is reported as a conflict.
+
+   Why the opposite call: a production tonnage is a single machine-measured
+   fact that Odoo owns outright, so decision A lets Odoo correct it. A
+   received tonnage is not — the gate feed lags, a truck can be weighed
+   after cut-off, and the officer reconciling against delivery notes is
+   frequently right where the feed is merely incomplete. Overwriting them
+   would retype their corrections away every 30 minutes, which is worse
+   than showing a conflict they can resolve.
+
+   So: fill blanks, leave everything else, and surface the disagreement. */
+function reconcileDay(existingData, odooFields) {
+  const toWrite = {};
+  const conflicts = [];
+  for (const [field, odooValue] of Object.entries(odooFields)) {
+    const previous = existingData ? asNumber(existingData[field]) : null;
+    /* A literal 0 counts as unfilled, matching isUnset() in the form's own
+       prefill — the grid is seeded with zeros, so treating 0 as "the
+       officer said nothing arrived" would make the autofill a no-op on
+       every untouched row. */
+    if (previous === null || previous === 0) {
+      toWrite[field] = odooValue;
+    } else if (Math.abs(previous - odooValue) > EQUAL_TOLERANCE) {
+      conflicts.push({ field, stored_value: previous, odoo_value: odooValue });
+    }
+  }
+  return { toWrite, conflicts };
+}
+
+/* One day -> one transaction. FOR UPDATE serialises against an officer
+   saving the same day from the form, so a concurrent save cannot be
+   half-overwritten. dryRun takes the same read-and-decide path and rolls
+   back, so a preview can never diverge from a real run. */
+async function upsertDay(date, receipts, { dryRun = false } = {}) {
+  const odooFields = odooFieldsFor(receipts);
+  if (!Object.keys(odooFields).length) {
+    return { action: 'no_receipts', fieldsWritten: 0, conflicts: 0, conflictDetail: [], openingCarried: 0 };
+  }
+
+  const client = await db.connect();
+  try {
+    await client.query('BEGIN');
+
+    const existing = await client.query(
+      `SELECT data, status, approved_by, approved_at
+         FROM daily_reports
+        WHERE form_type = $1 AND record_date = $2 AND shift = $3 FOR UPDATE`,
+      [FORM_TYPE, date, SHIFT]);
+    const row = existing.rows[0] || null;
+
+    /* Opening stock, carried from the immediately-preceding day. Read
+       inside the same transaction so a concurrent write to yesterday
+       cannot leave today opening from a figure that no longer exists.
+       Only the previous day is considered — see carryForwardOpening(). */
+    const prev = await client.query(
+      `SELECT record_date::text AS record_date, data
+         FROM daily_reports
+        WHERE form_type = $1 AND shift = $2 AND record_date = $3::date - INTERVAL '1 day'`,
+      [FORM_TYPE, SHIFT, date]);
+    const opening = prev.rows[0]
+      ? carryForwardOpening(prev.rows[0].data, prev.rows[0].record_date, date)
+      : {};
+
+    /* Opening goes through the SAME reconcile as the receipts, so it can
+       never overwrite a figure an officer typed either. */
+    const { toWrite, conflicts } = reconcileDay(
+      row ? row.data : null, { ...opening, ...odooFields });
+    const openingCarried = Object.keys(toWrite).filter(k => k.endsWith('_open')).length;
+
+    let action = 'unchanged';
+    if (Object.keys(toWrite).length && !dryRun) {
+      if (!row) {
+        /* 'pending_approval', not 'draft' — see the header. The day counts
+           immediately and still appears in the HOD's queue. */
+        await client.query(
+          `INSERT INTO daily_reports (form_type, record_date, shift, data, status)
+           VALUES ($1, $2, $3, $4::jsonb, 'pending_approval')`,
+          [FORM_TYPE, date, SHIFT, JSON.stringify(toWrite)]);
+        action = 'created_pending';
+      } else {
+        /* Only `data`/`updated_at` move — status, approved_by, approved_at
+           and submitted_by are untouched. A correction is not a
+           re-approval, and this must never look like a human re-signed. */
+        await client.query(
+          `UPDATE daily_reports SET data = data || $4::jsonb, updated_at = NOW()
+            WHERE form_type = $1 AND record_date = $2 AND shift = $3`,
+          [FORM_TYPE, date, SHIFT, JSON.stringify(toWrite)]);
+        action = 'filled_blanks';
+      }
+
+      /* Same history as a human's edits (services/reportRevisions.js), from
+         the pre-image already read above. This writer bypasses
+         routes/reports.js — it writes daily_reports directly — which is
+         exactly why the revision matters: otherwise "why did this number
+         change" has one answer for people and no answer for the robot. */
+      await recordRevision(client, {
+        formType: FORM_TYPE, recordDate: date, shift: SHIFT, action: 'ODOO_AUTOFILL',
+        priorData: row ? row.data : null,
+        priorStatus: row ? row.status : null,
+        priorApprovedBy: row ? row.approved_by : null,
+        priorApprovedAt: row ? row.approved_at : null,
+        changedFields: Object.keys(toWrite).sort(),
+        actorId: null,                 // no human did this
+        actorName: 'odoo-sync',
+        reason: `Odoo stores gate entries for ${date}`,
+      });
+    } else if (Object.keys(toWrite).length && dryRun) {
+      action = row ? 'would_fill_blanks' : 'would_create_pending';
+    }
+
+    if (dryRun) await client.query('ROLLBACK');
+    else await client.query('COMMIT');
+
+    return {
+      action,
+      fieldsWritten: Object.keys(toWrite).length,
+      openingCarried,
+      conflicts: conflicts.length,
+      conflictDetail: conflicts,
+      unassigned: (receipts.unassigned || []).length,
+    };
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => { /* the original error is what matters */ });
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+/* [from, to] inclusive. Walks real calendar days rather than only the days
+   the gate table happens to have rows for — a day with no receipts is a
+   legitimate answer ('no_receipts') and must not be silently skipped, or a
+   genuinely quiet Sunday becomes indistinguishable from a sync that never
+   ran.
+
+   STRICTLY ASCENDING, and that ordering is load-bearing, not incidental:
+   each day's opening stock is carried from the day before, so a day must
+   be written before the day after it is computed. Reversing this loop, or
+   running the days concurrently, would silently leave every opening blank
+   except the first. */
+async function syncMaterialsRangeToReports(from, to, { dryRun = false } = {}) {
+  const summary = {
+    from, to, dryRun,
+    days: 0, created: 0, updated: 0, unchanged: 0, noReceipts: 0,
+    fieldsWritten: 0, openingCarried: 0, conflicts: 0, conflictDays: [], unassignedDays: [],
+  };
+
+  for (let d = new Date(`${from}T00:00:00Z`); d <= new Date(`${to}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + 1)) {
+    const date = d.toISOString().slice(0, 10);
+    summary.days++;
+
+    const receipts = await receiptsForDate(date);
+    const r = await upsertDay(date, receipts, { dryRun });
+
+    if (r.action === 'created_pending' || r.action === 'would_create_pending') summary.created++;
+    else if (r.action === 'filled_blanks' || r.action === 'would_fill_blanks') summary.updated++;
+    else if (r.action === 'no_receipts') summary.noReceipts++;
+    else summary.unchanged++;
+
+    summary.fieldsWritten += r.fieldsWritten;
+    summary.openingCarried += r.openingCarried || 0;
+    summary.conflicts += r.conflicts;
+    if (r.conflicts) summary.conflictDays.push({ date, conflicts: r.conflictDetail });
+    if (r.unassigned) summary.unassignedDays.push({ date, trucks: r.unassigned });
+  }
+
+  /* Both of these are warnings, not errors: the day still loaded. They are
+     logged loudly because each one means a number on the report is
+     knowably incomplete, and silence is how that gets signed off. */
+  if (summary.conflicts) {
+    logger.warn({ count: summary.conflicts, days: summary.conflictDays, dryRun },
+      'odoo materials autofill: Odoo disagrees with a stored figure — the officer\'s value was KEPT, nothing was overwritten');
+  }
+  if (summary.unassignedDays.length) {
+    logger.warn({ days: summary.unassignedDays },
+      'odoo materials autofill: trucks could not be matched to a report row — see config/odooMaterialMap.js');
+  }
+  return summary;
+}
+
+/* The single entry point every caller (CLI, the live cron, a manual sync)
+   uses: refresh the three stores tables, then reconcile them into
+   daily_reports. Two summaries, not merged, because they answer different
+   questions — "what did Odoo send" vs "what changed on the report". */
+async function pullAndAutofillMaterials(from, to, { dryRun = false } = {}) {
+  const pull = await pullAllStores(from, to);
+  const autofill = await syncMaterialsRangeToReports(from, to, { dryRun });
+  return {
+    pull, autofill,
+    /* Flat aliases so odooSync.js's generic "did anything get dropped"
+       check sees this pull too, without a materials-specific branch. */
+    rowsRejected: pull.errors ? pull.errors.length : 0,
+    rowsUnmapped: autofill.unassignedDays.length,
+  };
+}
+
+module.exports = {
+  ODOO_OWNED_SUFFIXES,
+  odooFieldsFor,
+  reconcileDay,
+  carryForwardOpening,
+  upsertDay,
+  syncMaterialsRangeToReports,
+  pullAndAutofillMaterials,
+};

@@ -73,7 +73,7 @@ const { fireAlert } = require('./watchdog');
 const { pullDispatchDailySummary } = require('./odooDispatchSync');
 const { pullMiningTickets } = require('./odooMiningSync');
 const { pullAndAutofillProduction } = require('./odooProductionAutofill');
-const { pullAllStores } = require('./odooStoresSync');
+const { pullAndAutofillMaterials } = require('./odooMaterialsAutofill');
 
 // How many trailing days each scheduled run re-pulls — wide enough that a
 // skipped/failed run (server down, Odoo unreachable) self-heals within a
@@ -144,11 +144,18 @@ const PULLS = [
     /* Gate entries + GRN lines + material issues, feeding the Raw Material
        and Stores reports. pullAllStores runs the three sequentially and
        survives one failing — see odooStoresSync.js for why parallel is the
-       wrong call against this ERP. */
+       wrong call against this ERP.
+
+       Since 2026-10-07 this also autofills the Raw Material daily report
+       from what it just pulled (odooMaterialsAutofill.js). It is the SAME
+       pull, extended — deliberately not a second entry in this list, which
+       would run the three expensive Odoo calls (~33 s) twice per tick for
+       one set of rows. The autofill itself is pure Postgres, so the added
+       cost is a handful of upserts. */
     name: 'stores-gate-grn-issues',
     run: () => {
       const { from, to } = lookbackRange(STORES_LOOKBACK_DAYS);
-      return pullAllStores(from, to);
+      return pullAndAutofillMaterials(from, to);
     },
   },
 ];

@@ -48,6 +48,24 @@
   .mf-exc { margin: 0 0 8px; padding-left: 18px; font-size: 12.5px; line-height: 1.6; }
   .mf-exc:last-child { margin-bottom: 0; }
   .mf-exc-why { color: var(--text-muted); }
+
+  /* Provisional-closing warning. Carries its own left rule and the word
+     "provisional" in bold — the state is legible without relying on the
+     colour, per the design system's one-dimension-one-channel rule. */
+  .mf-provisional {
+    margin: 0 0 12px; padding: 10px 12px 10px 14px;
+    border: 1px solid var(--orange); border-left-width: 4px;
+    border-radius: 8px; background: var(--off-white);
+    font-size: 12.5px; line-height: 1.55; color: var(--navy);
+  }
+  .mf-provisional[hidden] { display: none; }
+
+  /* A closing cell nobody can finalise yet is marked on the figure itself,
+     not only in the banner above — the tables scroll and the banner does
+     not stay in view. */
+  .cv.is-provisional::after, .kt-val.is-provisional::after {
+    content: ' *'; font-weight: 800; color: var(--orange);
+  }
 </style>
 </head>
 <body>
@@ -90,6 +108,20 @@
 
 <!-- ══════════════════ MAIN ══════════════════ -->
 <main class="fm-main">
+
+  <!-- Closing stock is opening + received − consumed. Odoo supplies the
+       received half automatically; consumption is read off the plant's own
+       meters and never reaches Odoo. So on a day whose receipts arrived
+       from the feed but whose consumption nobody has typed yet, every
+       closing figure on this page is an OVERSTATEMENT by exactly one day's
+       burn. This banner says so, rather than letting the number be read as
+       final. It hides itself the moment any consumption is entered. -->
+  <div class="mf-provisional" id="mf-provisional" role="status" aria-live="polite" hidden>
+    <b>Closing stock is provisional.</b>
+    Received quantities came from Odoo, but no consumption has been entered for this day yet —
+    so every closing figure below is short of today&rsquo;s kiln and CPP draws.
+    Enter consumption to make these final.
+  </div>
 
   <!-- Result of the last "Fill from Odoo". Empty until used, so the form
        looks exactly as it did for anyone who never presses it. -->
@@ -405,7 +437,26 @@
    RAW MATERIAL REPORT — row catalogue + live calculation engine
    ─────────────────────────────────────────────────────────────────
    Mirrors "7. Materials Report" Excel workbook 1:1 — every section,
-   row and column. Baked values are the 21.04.2026 reference day.
+   row and column.
+
+   ── The eight data columns are EMPTY on purpose (2026-10-07) ────────
+   They used to carry the 21.04.2026 reference day's figures as baked-in
+   defaults, which was harmless while every day was typed from scratch and
+   actively wrong the moment the report went live from Odoo. The autofill
+   writes only `rcvd` and `grn`; restore (forms/form-persist.js) overrides
+   only the keys a saved report actually contains. So on an Odoo-filled day
+   every untouched cell kept its April mock value, and the live page
+   computed closing stock from a consumption figure nobody had entered —
+   iron ore 47, gypsum 49.75, clinker 728.6 MT of pure fiction, silently
+   feeding the KPI tiles the MD reads.
+
+   A blank cell is the honest default: it says "nobody has reported this
+   yet", which is exactly true. NEVER put sample figures back here — put
+   them in a fixture if a demo needs them.
+
+   min and max ARE still populated: those are the reorder bands Purchase &
+   Stores maintain as policy, not observations of a particular day, and the
+   stock-level variance chips read them.
 
    Row value array v = [ open, rcvd, rcvdMTD, rcvdYTD,
                          cons, consMTD, consYTD, grn, min, max ]
@@ -421,77 +472,77 @@
 
 const MATERIALS_SECTIONS = [
   { id:'main', tbody:'tb-main', sub:null, rows:[
-    { f:'iron_ore', label:'Iron Ore', v:[4479.45,0,0,0,47,932,932,0,3000,6000] },
-    { f:'gypsum',   label:'Gypsum',   v:[7514.83,22.96,1879.42,1879.42,49.75,1835.2,1835.2,0,3000,6000] },
-    { f:'clinker',  label:'Clinker',  v:[21531.47,1665.42,38360.14,38360.14,728.6,28025.26,28025.26,178.76,'',''] },
+    { f:'iron_ore', label:'Iron Ore', v:['','','','','','','','',3000,6000] },
+    { f:'gypsum',   label:'Gypsum',   v:['','','','','','','','',3000,6000] },
+    { f:'clinker',  label:'Clinker',  v:['','','','','','','','','',''] },
   ]},
   { id:'ck', tbody:'tb-ck', sub:'Sub Total — Coal Kiln', rows:[
-    { f:'ck_tancoal',   label:'Tancoal Energy Limited',  pair:'cc_tancoal',   v:[0,0,0,0,0,0,0,0,'',''] },
-    { f:'ck_ruvuma',    label:'Ruvuma Coal Limited',     pair:'cc_ruvuma',    v:[6350.89,0,0,0,163,3617.99,3617.99,0,'',''] },
-    { f:'ck_market',    label:'Market Insight Limited',                       v:[4708.95,0,181.5,181.5,41,1007.65,1007.65,0,'',''] },
-    { f:'ck_ariim',     label:'Ariim Coal',              pair:'cc_ariim',     v:[0,0,0,0,0,0,0,0,'',''] },
-    { f:'ck_coalash',   label:'Coal Ash',                                     v:[0,0,0,0,0,0,0,0,'',''] },
-    { f:'ck_stamico',   label:'State Mining Corporation',                     v:[0,0,0,0,0,0,0,0,1500,3000] },
-    { f:'ck_jitegemee', label:'Jitegemee coal',          pair:'cc_jitegemee', v:[0.3,0,0,0,0,0,0,0,5000,9000] },
-    { f:'ck_maxcoal',   label:'Max coal',                pair:'cc_maxcoal',   v:[0,0,0,0,0,0,0,0,'',''] },
-    { f:'ck_melt',      label:'MELT coal',               pair:'cc_melt',      v:[0,0,0,0,0,0,0,0,'',''] },
-    { f:'ck_ibrico',    label:'IBRICO coal',             pair:'cc_ibrico',    v:[0,0,0,0,0,0,0,0,'',''] },
-    { f:'ck_megacj',    label:'Mega CJ',                 pair:'cc_megacj',    v:[0,0,0,0,0,0,0,0,'',''] },
-    { f:'ck_mabenga',   label:'Mabenga coal',                                 v:[0,0,0,0,0,0,0,0,'',''] },
-    { f:'ck_yongda',    label:'Yongda',                  pair:'cc_yongda',    v:[0,0,0,0,0,0,0,0,'',''] },
-    { f:'ck_kindaini',  label:'Kindaini coal',           pair:'cc_kindaini',  v:[0,0,0,0,0,0,0,0,'',''] },
-    { f:'ck_montreal',  label:'Montreal',                pair:'cc_montreal',  v:[306,0,0,0,0,0,0,0,'',''] },
-    { f:'ck_ludewa',    label:'Ludewa coal',             pair:'cc_ludewa',    v:[0,0,0,0,0,0,0,0,'',''] },
-    { f:'ck_mchekane',  label:'Mchekane',                pair:'cc_mchekane',  v:[0,0,0,0,0,0,0,0,5000,9000] },
-    { f:'ck_siaas',     label:'SIAAS',                                        v:[0,0,0,0,0,0,0,0,'',''] },
+    { f:'ck_tancoal',   label:'Tancoal Energy Limited',  pair:'cc_tancoal',   v:['','','','','','','','','',''] },
+    { f:'ck_ruvuma',    label:'Ruvuma Coal Limited',     pair:'cc_ruvuma',    v:['','','','','','','','','',''] },
+    { f:'ck_market',    label:'Market Insight Limited',                       v:['','','','','','','','','',''] },
+    { f:'ck_ariim',     label:'Ariim Coal',              pair:'cc_ariim',     v:['','','','','','','','','',''] },
+    { f:'ck_coalash',   label:'Coal Ash',                                     v:['','','','','','','','','',''] },
+    { f:'ck_stamico',   label:'State Mining Corporation',                     v:['','','','','','','','',1500,3000] },
+    { f:'ck_jitegemee', label:'Jitegemee coal',          pair:'cc_jitegemee', v:['','','','','','','','',5000,9000] },
+    { f:'ck_maxcoal',   label:'Max coal',                pair:'cc_maxcoal',   v:['','','','','','','','','',''] },
+    { f:'ck_melt',      label:'MELT coal',               pair:'cc_melt',      v:['','','','','','','','','',''] },
+    { f:'ck_ibrico',    label:'IBRICO coal',             pair:'cc_ibrico',    v:['','','','','','','','','',''] },
+    { f:'ck_megacj',    label:'Mega CJ',                 pair:'cc_megacj',    v:['','','','','','','','','',''] },
+    { f:'ck_mabenga',   label:'Mabenga coal',                                 v:['','','','','','','','','',''] },
+    { f:'ck_yongda',    label:'Yongda',                  pair:'cc_yongda',    v:['','','','','','','','','',''] },
+    { f:'ck_kindaini',  label:'Kindaini coal',           pair:'cc_kindaini',  v:['','','','','','','','','',''] },
+    { f:'ck_montreal',  label:'Montreal',                pair:'cc_montreal',  v:['','','','','','','','','',''] },
+    { f:'ck_ludewa',    label:'Ludewa coal',             pair:'cc_ludewa',    v:['','','','','','','','','',''] },
+    { f:'ck_mchekane',  label:'Mchekane',                pair:'cc_mchekane',  v:['','','','','','','','',5000,9000] },
+    { f:'ck_siaas',     label:'SIAAS',                                        v:['','','','','','','','','',''] },
   ]},
   { id:'cc', tbody:'tb-cc', sub:'Sub Total — Coal CPP', rows:[
-    { f:'cc_edenville',  label:'Edenville International Limited',        v:[0,0,0,0,0,0,0,0,'',''] },
-    { f:'cc_mathayo',    label:"Mathayo Sons's Enterprises Limited",     v:[0,0,0,0,0,0,0,0,'',''] },
-    { f:'cc_elita',      label:'Elita Company',                          v:[0,0,0,0,0,0,0,0,'',''] },
-    { f:'cc_market',     label:'Market Insight Limited',                 v:[0,0,0,0,0,20,20,0,'',''] },
-    { f:'cc_mbuyu',      label:'Mbuyu Investement Limited',              v:[0,0,0,0,0,0,0,0,'',''] },
-    { f:'cc_ruvuma',     label:'Ruvuma Coal Limited',     consOnly:true, v:['','','','',66,274,274,'','',''] },
-    { f:'cc_tancoal',    label:'Tancoal Energy Limited',  consOnly:true, v:['','','','',0,0,0,'','',''] },
-    { f:'cc_ariim',      label:'Ariim Coal',              consOnly:true, v:['','','','',0,0,0,'','',''] },
-    { f:'cc_lik',        label:'Lik & Lambert coal',      consOnly:true, v:['','','','',0,0,0,'','',''] },
-    { f:'cc_jitegemee',  label:'Jitegemee coal',          consOnly:true, v:['','','','',0,0,0,'','',''] },
-    { f:'cc_maxcoal',    label:'Max coal',                consOnly:true, v:['','','','',0,0,0,'','',''] },
-    { f:'cc_melt',       label:'MELT coal',               consOnly:true, v:['','','','',0,0,0,'','',''] },
-    { f:'cc_ibrico',     label:'IBRICO coal',             consOnly:true, v:['','','','',0,0,0,'','',''] },
-    { f:'cc_megacj',     label:'Mega CJ',                 consOnly:true, v:['','','','',0,0,0,'','',''] },
-    { f:'cc_yongda',     label:'Yongda',                  consOnly:true, v:['','','','',0,0,0,'','',''] },
-    { f:'cc_kindaini',   label:'Kindaini',                consOnly:true, v:['','','','',0,0,0,'','',''] },
-    { f:'cc_montreal',   label:'Montreal',                consOnly:true, v:['','','','',0,0,0,'','',''] },
-    { f:'cc_ludewa',     label:'Ludewa',                  consOnly:true, v:['','','','',0,0,0,'','',''] },
-    { f:'cc_mchekane',   label:'Mchekane',                consOnly:true, v:['','','','',0,0,0,'','',''] },
-    { f:'cc_rutanza',    label:'Rutanza',                                v:[0.05,0,0,0,0,0,0,0,1500,3000] },
-    { f:'cc_tenco',      label:'TENCO',                                  v:[0,0,0,0,0,0,0,0,'',''] },
-    { f:'cc_scolastica', label:'Scolastica',                             v:[0,0,0,0,0,0,0,0,'',''] },
-    { f:'cc_stamico',    label:'State Mining Corporation',               v:[10574.65,0,155.05,155.05,66,2432,2432,0,1500,3000] },
-    { f:'cc_godmwanga',  label:'God Mwanga Gems Limited',                v:[0,0,0,0,0,0,0,0,'',''] },
+    { f:'cc_edenville',  label:'Edenville International Limited',        v:['','','','','','','','','',''] },
+    { f:'cc_mathayo',    label:"Mathayo Sons's Enterprises Limited",     v:['','','','','','','','','',''] },
+    { f:'cc_elita',      label:'Elita Company',                          v:['','','','','','','','','',''] },
+    { f:'cc_market',     label:'Market Insight Limited',                 v:['','','','','','','','','',''] },
+    { f:'cc_mbuyu',      label:'Mbuyu Investement Limited',              v:['','','','','','','','','',''] },
+    { f:'cc_ruvuma',     label:'Ruvuma Coal Limited',     consOnly:true, v:['','','','','','','','','',''] },
+    { f:'cc_tancoal',    label:'Tancoal Energy Limited',  consOnly:true, v:['','','','','','','','','',''] },
+    { f:'cc_ariim',      label:'Ariim Coal',              consOnly:true, v:['','','','','','','','','',''] },
+    { f:'cc_lik',        label:'Lik & Lambert coal',      consOnly:true, v:['','','','','','','','','',''] },
+    { f:'cc_jitegemee',  label:'Jitegemee coal',          consOnly:true, v:['','','','','','','','','',''] },
+    { f:'cc_maxcoal',    label:'Max coal',                consOnly:true, v:['','','','','','','','','',''] },
+    { f:'cc_melt',       label:'MELT coal',               consOnly:true, v:['','','','','','','','','',''] },
+    { f:'cc_ibrico',     label:'IBRICO coal',             consOnly:true, v:['','','','','','','','','',''] },
+    { f:'cc_megacj',     label:'Mega CJ',                 consOnly:true, v:['','','','','','','','','',''] },
+    { f:'cc_yongda',     label:'Yongda',                  consOnly:true, v:['','','','','','','','','',''] },
+    { f:'cc_kindaini',   label:'Kindaini',                consOnly:true, v:['','','','','','','','','',''] },
+    { f:'cc_montreal',   label:'Montreal',                consOnly:true, v:['','','','','','','','','',''] },
+    { f:'cc_ludewa',     label:'Ludewa',                  consOnly:true, v:['','','','','','','','','',''] },
+    { f:'cc_mchekane',   label:'Mchekane',                consOnly:true, v:['','','','','','','','','',''] },
+    { f:'cc_rutanza',    label:'Rutanza',                                v:['','','','','','','','',1500,3000] },
+    { f:'cc_tenco',      label:'TENCO',                                  v:['','','','','','','','','',''] },
+    { f:'cc_scolastica', label:'Scolastica',                             v:['','','','','','','','','',''] },
+    { f:'cc_stamico',    label:'State Mining Corporation',               v:['','','','','','','','',1500,3000] },
+    { f:'cc_godmwanga',  label:'God Mwanga Gems Limited',                v:['','','','','','','','','',''] },
   ]},
   { id:'bag', tbody:'tb-bag', sub:'Total — Cement Bags', rows:[
-    { f:'bag_425r',    label:'42.5 R',       v:[1359532,0,821500,821500,0,513537,513537,'',400000,800000] },
-    { f:'bag_325n',    label:'32.5 N',       v:[423301,0,49000,49000,0,25981,25981,'',100000,250000] },
-    { f:'bag_425n',    label:'42.5 N',       v:[445924,0,76500,76500,0,36631,36631,'',50000,150000] },
-    { f:'bag_425nopc', label:'42.5 N OPC',   v:[78879,0,0,0,0,4822,4822,'','',''] },
-    { f:'bag_j425r',   label:'Jumbo 42.5 R', v:[0,0,0,0,0,0,0,'',1000,5000] },
-    { f:'bag_j325n',   label:'Jumbo 32.5 N', v:[0,0,0,0,0,0,0,'',500,2000] },
+    { f:'bag_425r',    label:'42.5 R',       v:['','','','','','','','',400000,800000] },
+    { f:'bag_325n',    label:'32.5 N',       v:['','','','','','','','',100000,250000] },
+    { f:'bag_425n',    label:'42.5 N',       v:['','','','','','','','',50000,150000] },
+    { f:'bag_425nopc', label:'42.5 N OPC',   v:['','','','','','','','','',''] },
+    { f:'bag_j425r',   label:'Jumbo 42.5 R', v:['','','','','','','','',1000,5000] },
+    { f:'bag_j325n',   label:'Jumbo 32.5 N', v:['','','','','','','','',500,2000] },
   ]},
   { id:'ga', tbody:'tb-ga', sub:'Total — Grinding Aid', rows:[
-    { f:'ga_starex', label:'Starex', v:[0,0,0,0,0,0,0,'','',''] },
-    { f:'ga_mapie',  label:'Mapie',  v:[0,0,0,0,0,0,0,'','',''] },
+    { f:'ga_starex', label:'Starex', v:['','','','','','','','','',''] },
+    { f:'ga_mapie',  label:'Mapie',  v:['','','','','','','','','',''] },
   ]},
   { id:'dsl', tbody:'tb-dsl', sub:'Total — Diesel', rows:[
-    { f:'dsl_plant',     label:'Plant (Main Tank)', xl:'Plant', tank:true, v:[38986,0,30000,30000,0,0,0,'',30000,60000] },
-    { f:'dsl_kiln',      label:'Kiln',                          v:[0,0,0,0,0,13000,13000,'','',''] },
-    { f:'dsl_genset',    label:'Genset',                        v:[0,0,0,0,0,433,433,'','',''] },
-    { f:'dsl_mining',    label:'Mining Vehicles',               v:[0,0,0,0,0,14550,14550,'','',''] },
-    { f:'dsl_pmh',       label:'Plant Material Handling',       v:[0,0,0,0,553,12675,12675,'','',''] },
-    { f:'dsl_admin',     label:'Admin Vehicles',                v:[0,0,0,0,0,0,0,'','',''] },
-    { f:'dsl_logistics', label:'Logistics Division',            v:[0,0,0,0,0,0,0,'','',''] },
-    { f:'dsl_others',    label:'Others (Crane, Tanker, Bouser..etc)', v:[0,0,0,0,0,0,0,'','',''] },
+    { f:'dsl_plant',     label:'Plant (Main Tank)', xl:'Plant', tank:true, v:['','','','','','','','',30000,60000] },
+    { f:'dsl_kiln',      label:'Kiln',                          v:['','','','','','','','','',''] },
+    { f:'dsl_genset',    label:'Genset',                        v:['','','','','','','','','',''] },
+    { f:'dsl_mining',    label:'Mining Vehicles',               v:['','','','','','','','','',''] },
+    { f:'dsl_pmh',       label:'Plant Material Handling',       v:['','','','','','','','','',''] },
+    { f:'dsl_admin',     label:'Admin Vehicles',                v:['','','','','','','','','',''] },
+    { f:'dsl_logistics', label:'Logistics Division',            v:['','','','','','','','','',''] },
+    { f:'dsl_others',    label:'Others (Crane, Tanker, Bouser..etc)', v:['','','','','','','','','',''] },
   ]},
 ];
 /* excel-import.js reads this to map workbook rows → data-fields */
@@ -651,6 +702,32 @@ window.MATERIALS_SECTIONS = MATERIALS_SECTIONS;
       put('coal_tot_close', ck.close + cc.close);
       putVar('coal_tot_var', ck.close + cc.close, (ck.min + cc.min) > 0 ? (ck.min + cc.min) : '');
     }
+
+    /* ── Provisional closing stock ───────────────────────────────
+       Closing = opening + received − consumed. Odoo fills the received
+       half on its own; consumption comes off plant meters and never
+       reaches Odoo. So a day that has receipts but no consumption typed
+       yet is overstating every closing figure by one day's burn.
+
+       The test is deliberately "has receipts AND no consumption at all",
+       not "has any empty consumption cell": most of the ~60 rows are
+       dormant suppliers that are legitimately zero every day, so flagging
+       on those would mean the banner never switched off and would be
+       ignored. One real consumption figure anywhere means the officer has
+       started entering the day, and the number stops being the robot's. */
+    const anyReceived = MATERIALS_SECTIONS.some(sec =>
+      sec.rows.some(r => !r.consOnly && g(r.f, 'rcvd') > 0));
+    const anyConsumed = MATERIALS_SECTIONS.some(sec =>
+      sec.rows.some(r => g(r.f, 'cons') > 0));
+    const provisional = anyReceived && !anyConsumed;
+
+    const banner = document.getElementById('mf-provisional');
+    if (banner) banner.hidden = !provisional;
+    /* Both the in-table closing cells AND the six KPI tiles at the top —
+       the tiles are what gets read at a glance (and screenshotted), so
+       marking only the table would leave the most-read figures unmarked. */
+    document.querySelectorAll('.cv[data-calc$="_close"], .kt-val[data-calc^="kpi_"]')
+      .forEach(el => { el.classList.toggle('is-provisional', provisional); });
 
     /* KPI strip */
     if (ck && cc)      put('kpi_coal',    ck.close + cc.close);
