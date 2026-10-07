@@ -8,6 +8,17 @@
 
   POST /api/quarry/tickets/import  → bulk upsert parsed Excel rows
   GET  /api/quarry/tickets         → all tickets, or ?from=&to= a date range
+  GET  /api/quarry/tickets/summary → per (date, movement, product, vendor)
+                                      sums — see that route's comment
+
+  I-19 / I-32 (RAID_LOG.md, 2026-09-15 → 2026-10-07): mines-report.html
+  used to call GET /tickets with no range on every load — fine at 3,909
+  test-host tickets, a real outage at 52,285 (20 MB raw, 868 KB gzip,
+  2026-10-07 — the Managing Director opened the report to "No weighbridge
+  data"). The summary route exists so the page can load the whole fiscal
+  year as 1,388 pre-summed rows (216 KB raw, 14 KB gzip — a 98% cut) and
+  fetch one real day's raw tickets on demand only when the Ticket Audit
+  inspector is opened for it.
 */
 
 const express = require('express');
@@ -152,6 +163,37 @@ router.get('/tickets',
         params.push(from, to);
       }
       query += ' ORDER BY ticket_date ASC, ticket_no ASC';
+
+      const result = await db.query(query, params);
+      res.json(result.rows);
+    } catch (err) { next(err); }
+  });
+
+/* GET /api/quarry/tickets/summary?from=&to= — same rows as GET /tickets,
+   collapsed to one row per (ticket_date, movement_type, product, vendor)
+   with SUM(net_qty) and a ticket count. Every figure mines-report.html
+   renders from the bulk load is itself a SUM over some grouping of these
+   four columns (TMH_COLS/MIS_GROUPS group by date+movement+product; the
+   contractor breakdown groups by date+vendor) — summing this aggregate
+   is mathematically identical to summing the raw rows, so nothing the
+   page currently computes from the bulk load loses accuracy. What it
+   cannot serve is a specific ticket (number, vehicle, weighing time) —
+   the page fetches those from GET /tickets for one day at a time, only
+   when a cell's drill-down is actually opened. */
+router.get('/tickets/summary',
+  requireAuth,
+  validate(z.object({ from: zDate.optional(), to: zDate.optional() }), 'query'),
+  async (req, res, next) => {
+    try {
+      const { from, to } = req.validated.query;
+      let query  = `SELECT ticket_date, movement_type, product, vendor, SUM(net_qty)::numeric AS net_qty, COUNT(*)::int AS n
+                     FROM weighbridge_tickets`;
+      const params = [];
+      if (from && to) {
+        query += ' WHERE ticket_date BETWEEN $1 AND $2';
+        params.push(from, to);
+      }
+      query += ' GROUP BY ticket_date, movement_type, product, vendor ORDER BY ticket_date ASC';
 
       const result = await db.query(query, params);
       res.json(result.rows);

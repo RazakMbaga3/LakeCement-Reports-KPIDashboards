@@ -16,6 +16,11 @@
        month config / opening stock / manual daily fields — see the
        'all' vs 'day' shift convention in mines-report.html) still
        round-trip correctly, since the new page depends on them too
+    6. GET /tickets/summary (RAID I-19/I-32) aggregates correctly: same
+       auth gate, range filter, and — the one that matters — its
+       SUM(net_qty) and row-level ticket counts match the raw log
+       exactly, since mines-report.html now trusts this instead of the
+       raw rows for every figure it renders
 
   Cleans up after itself. Exits 0 only if all checks pass.
   Usage: node scripts/accept-quarry.js
@@ -162,6 +167,42 @@ async function main() {
     const allNos = new Set((all.body || []).map(t => t.ticket_no));
     check('unranged GET returns the whole log, including DATE_B (AQ-3)',
       all.status === 200 && ['AQ-1', 'AQ-2', 'AQ-3', 'AQ-4'].every(n => allNos.has(n)));
+
+    // ── GET /tickets/summary — collapses to one row per date+movement+
+    //    product+vendor, SUM(net_qty) == the raw rows it stands in for
+    //    (RAID I-19/I-32: this is what mines-report.html's bulk load now
+    //    calls instead of GET /tickets with no range) ──
+    const anonSummary = await api('GET', '/quarry/tickets/summary');
+    check('GET tickets/summary rejects anonymous (401)', anonSummary.status === 401, `got ${anonSummary.status}`);
+
+    const summaryA = await api('GET', `/quarry/tickets/summary?from=${DATE_A}&to=${DATE_A}`, { token: miningTok });
+    const crusherRow = (summaryA.body || []).find(r => r.movement_type === 'South Mine to Pile (through Crusher)' && r.product === 'HG');
+    const stockRow   = (summaryA.body || []).find(r => r.movement_type === 'Stock Yard to Pile (through Crusher)' && r.product === 'HG');
+    check('ranged summary collapses AQ-1 (111) + AQ-4 (5) into one 116 MT / 2-ticket row',
+      summaryA.status === 200 && crusherRow && Number(crusherRow.net_qty) === 116 && crusherRow.n === 2,
+      JSON.stringify(summaryA.body));
+    check('ranged summary keeps AQ-2 (different movement_type) as its own 50 MT row',
+      stockRow && Number(stockRow.net_qty) === 50 && stockRow.n === 1);
+    check('ranged summary excludes DATE_B (AQ-3, WASTE)',
+      !(summaryA.body || []).some(r => r.product === 'WASTE'));
+
+    const summaryAll = await api('GET', '/quarry/tickets/summary', { token: miningTok });
+    const wasteRow = (summaryAll.body || []).find(r => r.product === 'WASTE');
+    const summedTickets = (summaryAll.body || []).reduce((n, r) => n + r.n, 0);
+    const summedQty     = (summaryAll.body || []).reduce((s, r) => s + Number(r.net_qty), 0);
+    const rawTotalQty = (all.body || []).reduce((s, t) => s + Number(t.net_qty), 0);
+    check('unranged summary includes DATE_B (AQ-3, WASTE, 40 MT)',
+      summaryAll.status === 200 && wasteRow && Number(wasteRow.net_qty) === 40 && wasteRow.n === 1);
+    check('summary ticket count matches the raw log\'s row count (4)',
+      summedTickets === (all.body || []).length, `summary counted ${summedTickets}, raw log has ${(all.body || []).length}`);
+    // This DB is shared with whatever real data a prior backfill left in
+    // it (not wiped between runs), so both totals are sums over tens of
+    // thousands of rows — the two summation orders (Postgres NUMERIC
+    // server-side vs. JS float64 reduce here) can differ in the last
+    // couple of decimal places of a million-plus MT total. 0.001 MT is
+    // still six orders of magnitude tighter than that noise floor.
+    check('summary net_qty total matches the raw log\'s total (aggregation loses no tonnage)',
+      Math.abs(summedQty - rawTotalQty) < 1e-3, `summary ${summedQty} vs raw ${rawTotalQty}`);
 
     // ── reused daily_reports/'mines' endpoints (month config + daily manual) ──
     const monthSubmit = await api('POST', '/reports/mines', {

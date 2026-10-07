@@ -785,6 +785,18 @@
       t.movement_type, t.product, t.ticket_date, +t.net_qty, t.gross_datetime || ''];
   }
 
+  /* A /tickets/summary row (one per date+movement+product+vendor, already
+     summed) packed into the SAME 9-element shape ticketToRow produces, so
+     rebuildIndex() and renderContractors() — which only ever read indices
+     1 (vendor), 4 (movement_type), 5 (product), 6 (date) and 7 (qty) —
+     work unchanged on either source. Indices with no meaning for an
+     aggregate (ticket_no, vehicle, transfer_type, weighed-at time) are
+     null, which is also the signal that a row is a SUM, not a real
+     ticket — see dayTickets(), which never reads these rows at all. */
+  function summaryToRow(s) {
+    return [null, s.vendor || '', null, null, s.movement_type, s.product, s.ticket_date, +s.net_qty, null];
+  }
+
   /* Monthly config + opening stock share one record per month (shift 'all' —
      it isn't shift-specific, it's month-level). Daily manual haulage figures
      + sign-off share one record per day (shift 'day'). Both reuse the
@@ -807,13 +819,20 @@
   async function loadStore() {
     var today = isoOf(new Date());
     var results = await Promise.all([
-      NyatiAPI.quarryGetTickets(),
+      NyatiAPI.quarryGetTicketsSummary(DATA_EPOCH, today),
       NyatiAPI.getFormRange(QUARRY_FORM, DATA_EPOCH, today, 'all'),
       NyatiAPI.getFormRange(QUARRY_FORM, DATA_EPOCH, today, 'day')
     ]);
-    var tickets = results[0], monthRows = results[1], dayRows = results[2];
+    var summary = results[0], monthRows = results[1], dayRows = results[2];
 
-    store.txns = { v:1, meta:{}, rows: tickets.map(ticketToRow) };
+    /* Pre-summed rows, not raw tickets (RAID I-19/I-32) — 52,285 raw
+       tickets is 868 KB gzipped and growing every day; the same range
+       summed per date+movement+product+vendor is 14 KB and never grows
+       faster than real activity does. ticketCount is tracked separately
+       (summary.n per row) purely so the data chip still reports a real
+       ticket count, not the much smaller row count of this array. */
+    var ticketCount = summary.reduce(function (a, s) { return a + (s.n || 0); }, 0);
+    store.txns = { v:1, meta:{ ticketCount: ticketCount }, rows: summary.map(summaryToRow) };
     store.openings = {};
     store.manual = { daily:{}, monthly:{}, signoff:{} };
 
@@ -862,10 +881,18 @@
   }
 
   /* ── aggregation index ────────────────────────────────────────
-     idx[date][colId] = qty ;  tickets[date][colId] = [row,…]      */
-  var idx = {}, tickets = {}, dataDates = [];
+     idx[date][colId] = qty, summed from store.txns.rows (itself already
+     summed server-side per date+movement+product+vendor — see loadStore()
+     — or, for an Excel import, real per-ticket rows; either way the SUM
+     by (date,movement,product) this index needs comes out identical).
+
+     Real per-ticket rows for the Ticket Audit drill-down are NOT built
+     here any more (RAID I-19/I-32) — dayTickets() below fetches just the
+     one day being inspected, on demand, into ticketCache. */
+  var idx = {}, dataDates = [];
+  var ticketCache = {}; // dateISO -> Promise<raw ticket rows for that day>
   function rebuildIndex() {
-    idx = {}; tickets = {}; dataDates = [];
+    idx = {}; dataDates = []; ticketCache = {};
     if (!store.txns || !store.txns.rows) return;
     var mvpr = {}; /* movement|product → colId */
     TMH_COLS.forEach(function (c) { mvpr[c.mv + '|' + c.pr] = c.id; });
@@ -873,9 +900,8 @@
       var col = mvpr[r[4] + '|' + r[5]];
       if (!col) return;                        /* unmapped movement/product — ignored like Excel */
       var d = r[6];
-      if (!idx[d]) { idx[d] = {}; tickets[d] = {}; }
+      if (!idx[d]) idx[d] = {};
       idx[d][col] = (idx[d][col] || 0) + (+r[7] || 0);
-      (tickets[d][col] = tickets[d][col] || []).push(r);
     });
     dataDates = Object.keys(idx).sort();
   }
@@ -896,11 +922,27 @@
     reportDates(dateISO).forEach(function (d) { if (idx[d]) s += idx[d][colId] || 0; });
     return s;
   }
-  function dayTickets(colId, dateISO) {
+  /* Real per-ticket rows for ONE calendar date, fetched from the server on
+     demand (not from the bulk load, which only ever carries sums — see
+     rebuildIndex()). ticketCache dedupes repeat opens of the same day/cell
+     within a page view; it is reset on every reload by rebuildIndex(). */
+  function dayRawTickets(dateISO) {
+    if (!ticketCache[dateISO]) {
+      ticketCache[dateISO] = NyatiAPI.quarryGetTickets(dateISO, dateISO).then(function (rows) {
+        return rows.map(ticketToRow);
+      });
+    }
+    return ticketCache[dateISO];
+  }
+  async function dayTickets(colId, dateISO) {
     var out = [];
-    reportDates(dateISO).forEach(function (d, i, arr) {
+    var dates = reportDates(dateISO);
+    var byDate = await Promise.all(dates.map(dayRawTickets));
+    dates.forEach(function (d, i, arr) {
       var spill = arr.length > 1 && i === 0;
-      ((tickets[d] || {})[colId] || []).forEach(function (r) { out.push({ r:r, spill:spill }); });
+      byDate[i].forEach(function (r) {
+        if (r[4] === COL_BY_ID[colId].mv && r[5] === COL_BY_ID[colId].pr) out.push({ r:r, spill:spill });
+      });
     });
     return out;
   }
@@ -1012,7 +1054,12 @@
       return;
     }
     chip.classList.add('has-data');
-    txt.innerHTML = '<strong>' + store.txns.rows.length.toLocaleString() + '</strong> tickets · ' +
+    /* ticketCount (real ticket count, from the API pull) when the bulk
+       load is the pre-summed server call; store.txns.rows.length (an
+       Excel import's own raw rows) otherwise — see loadStore(). */
+    var count = (store.txns.meta && store.txns.meta.ticketCount != null)
+      ? store.txns.meta.ticketCount : store.txns.rows.length;
+    txt.innerHTML = '<strong>' + count.toLocaleString() + '</strong> tickets · ' +
       dataDates[0] + ' → ' + dataDates[dataDates.length - 1] +
       (store.txns.meta && store.txns.meta.importedAt ? ' · imported ' + store.txns.meta.importedAt.slice(0, 10) : '');
   }
@@ -1411,15 +1458,40 @@
     });
   });
 
-  /* ── ticket inspector ── */
-  function openInspectorMulti(colIds, dateISO) {
-    var list = [];
-    colIds.forEach(function (id) { dayTickets(id, dateISO).forEach(function (t) { list.push(t); }); });
-    showInspector(list, colIds.map(function (id) {
+  /* ── ticket inspector ──
+     dayTickets() now fetches real rows from the server per date (RAID
+     I-19/I-32), so opening this is no longer instant — the modal opens
+     straight away with a loading state, then fills in once the fetch
+     resolves. Guarded by a request token so a second click (a different
+     cell) while the first fetch is still in flight can't let the slower
+     response overwrite the faster, more recent one. */
+  var _inspReq = 0;
+  async function openInspectorMulti(colIds, dateISO) {
+    var subtitle = colIds.map(function (id) {
       var c = COL_BY_ID[id]; return c ? c.pr + ' · ' + c.mv : id;
-    }).join('  |  '), dateISO);
+    }).join('  |  ');
+    var myReq = ++_inspReq;
+    showInspectorLoading(subtitle, dateISO);
+    var lists = await Promise.all(colIds.map(function (id) { return dayTickets(id, dateISO); }))
+      .catch(function (err) {
+        if (myReq !== _inspReq) return null;
+        $('insp-body').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">'
+          + escHtml(humanError(err, 'Could not load tickets for this cell.')) + '</div>';
+        return null;
+      });
+    if (lists === null || myReq !== _inspReq) return; // a newer open (or a failure already shown) wins
+    var list = [];
+    lists.forEach(function (l) { list = list.concat(l); });
+    showInspector(list, subtitle, dateISO);
   }
   function openInspector(colId, dateISO) { openInspectorMulti([colId], dateISO); }
+  function showInspectorLoading(subtitle, dateISO) {
+    $('insp-title').textContent = 'Ticket Audit — ' + dateISO;
+    $('insp-sub').textContent = subtitle;
+    $('insp-body').innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">Loading tickets…</div>';
+    $('insp-tot').textContent = '';
+    $('insp-bg').classList.add('open');
+  }
   function showInspector(list, subtitle, dateISO) {
     list.sort(function (a, b) { return (a.r[8] || '').localeCompare(b.r[8] || ''); });
     var tot = 0;

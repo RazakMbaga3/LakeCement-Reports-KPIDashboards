@@ -235,11 +235,27 @@
     return res.json();
   }
 
-  /* GET /api/quarry/tickets?from=&to= — omit both to fetch the whole log */
+  /* GET /api/quarry/tickets?from=&to= — omit both to fetch the whole log.
+     Only ever call this with an explicit (short) range now — see
+     quarryGetTicketsSummary for the bulk/report-wide load; an unranged
+     call here is the exact mistake that made mines-report.html try to
+     download 52,285 raw tickets in one go (RAID I-19/I-32). */
   async function quarryGetTickets(from, to) {
     const qs = (from && to) ? ('?' + new URLSearchParams({ from, to })) : '';
     const res = await fetch(BASE + '/quarry/tickets' + qs, { headers: _headers() });
     if (!res.ok) throw _httpError('quarryGetTickets', from + '..' + to, res);
+    return res.json();
+  }
+
+  /* GET /api/quarry/tickets/summary?from=&to= — pre-summed per (date,
+     movement_type, product, vendor), for the bulk/report-wide load every
+     chart and KPI on mines-report.html actually needs (they only ever sum
+     net_qty grouped by some subset of those columns). ~98% smaller than
+     the raw ticket log for the same range. */
+  async function quarryGetTicketsSummary(from, to) {
+    const qs = (from && to) ? ('?' + new URLSearchParams({ from, to })) : '';
+    const res = await fetch(BASE + '/quarry/tickets/summary' + qs, { headers: _headers() });
+    if (!res.ok) throw _httpError('quarryGetTicketsSummary', from + '..' + to, res);
     return res.json();
   }
 
@@ -642,7 +658,7 @@
     getStoppageInsights, getEquipmentStoppageDetail,
     getStoppageReasons, addStoppageReason,
     getPowerTargets, setPowerTarget,
-    quarryImportTickets, quarryGetTickets,
+    quarryImportTickets, quarryGetTickets, quarryGetTicketsSummary,
     getSalesTerritories, getSalesDashboard, setSalesTarget,
     getPurchasesDashboard,
     getRawMaterialDay, getStoresIssues, getStoresValuation, getStoresFreshness, syncStores,
