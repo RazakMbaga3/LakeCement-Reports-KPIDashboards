@@ -1,3 +1,9 @@
+> **SUPERSEDED 2026-10-08 — do not send.** Odoo delivered this as a reshape of
+> `sale_dashboard_report` before it went out. Two things below were also wrong:
+> the Register is filtered by **invoice date**, not DN date (462.9 MT of the
+> September Register was delivered in August), and the 30 MT on CEMENT 32.5 is
+> credit note CRN/2026/09/00052, not a month-boundary item. See draft 05.
+
 # Draft mail — please expose the Sale Register as an API endpoint
 
 **To:** Odoo Development / Admin Team
