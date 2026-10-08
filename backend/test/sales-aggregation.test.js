@@ -25,7 +25,6 @@ const assert = require('node:assert/strict');
 
 const sales     = require('../services/sales');
 const salesOdoo = require('../services/salesOdoo');
-const client    = require('../services/odooDashboardClient');
 
 // ── fixtures: Odoo-RPC shapes as re-shaped by salesOdoo._shapeOrdersAndLines ──
 const order = (id, date, partnerId, partnerName, amount = 1000) => ({
@@ -149,92 +148,53 @@ test('_buildTopCustomers caps at 10 customers', () => {
   assert.equal(top[0].name, 'Customer 0');
 });
 
-// ── services/salesOdoo.js: fetch is stubbed ─────────────────────────────
+// ── services/salesOdoo.js after the 2026-10-08 sales-feed reshape ───────
+//
+// Odoo replaced sale_dashboard_report's payload; the arrays these functions
+// parsed no longer exist and, defaulted to [], read as ZERO. They now stop
+// calling Odoo and degrade honestly. These pin both halves: no fabricated
+// zero reaches the dashboard, and no request reaches the production ERP.
 
-function stubBundle(data) {
+const OLD_FEED_READERS = [
+  ['fetchMtdSales',           () => salesOdoo.fetchMtdSales('2026-10-01', '2026-10-08')],
+  ['fetchCollections',        () => salesOdoo.fetchCollections('2026-10-01', '2026-10-08', 8)],
+  ['fetchAgewiseOutstanding', () => salesOdoo.fetchAgewiseOutstanding('2026-10-01', '2026-10-08')],
+  ['fetchOfficerAchievement', () => salesOdoo.fetchOfficerAchievement('2026-10-01', '2026-10-08')],
+];
+
+// Each case pins its own Odoo env so the result doesn't depend on whether
+// the machine running it has a .env (CI has none).
+async function withOdooEnv(configured, fn) {
+  const saved = { url: process.env.ODOO_DASHBOARD_URL, key: process.env.ODOO_DASHBOARD_API_KEY };
   const realFetch = global.fetch;
-  global.fetch = async () => ({ ok: true, text: async () => JSON.stringify({ status: true, data }) });
-  return () => { global.fetch = realFetch; };
+  if (configured) { process.env.ODOO_DASHBOARD_URL = 'https://odoo.invalid'; process.env.ODOO_DASHBOARD_API_KEY = 'k'; }
+  else { delete process.env.ODOO_DASHBOARD_URL; delete process.env.ODOO_DASHBOARD_API_KEY; }
+  const seen = { requests: 0 };
+  global.fetch = async () => { seen.requests++; throw new Error('must not be called'); };
+  try { return await fn(seen); }
+  finally {
+    global.fetch = realFetch;
+    for (const [k, v] of [['ODOO_DASHBOARD_URL', saved.url], ['ODOO_DASHBOARD_API_KEY', saved.key]]) {
+      if (v === undefined) delete process.env[k]; else process.env[k] = v;
+    }
+  }
 }
 
-test('fetchMtdSales: active_customers counts distinct partner_id, not order count', async () => {
-  client._clearCache();
-  const restore = stubBundle({
-    sale_orders: [
-      { sale_order_id: 1, sale_order: 'SO1', order_date: '2026-10-01', customer_id: 10, customer: 'Acme Ltd', salesperson_id: 1, salesperson: 'Clerk', total_amount: 1000, status: 'sale' },
-      { sale_order_id: 2, sale_order: 'SO2', order_date: '2026-10-02', customer_id: 10, customer: 'Acme Ltd', salesperson_id: 1, salesperson: 'Clerk', total_amount: 1000, status: 'sale' },
-      { sale_order_id: 3, sale_order: 'SO3', order_date: '2026-10-01', customer_id: 11, customer: 'Beta Co', salesperson_id: 1, salesperson: 'Clerk', total_amount: 1000, status: 'sale' },
-    ],
-    sale_order_lines: [
-      { sale_order_id: 1, sale_order: 'SO1', product_id: 100, product: SUPER42, quantity: 10, uom_id: 1, uom: 'MT' },
-      { sale_order_id: 2, sale_order: 'SO2', product_id: 100, product: SUPER42, quantity: 5, uom_id: 1, uom: 'MT' },
-      { sale_order_id: 3, sale_order: 'SO3', product_id: 100, product: SUPER42, quantity: 7, uom_id: 1, uom: 'MT' },
-    ],
-    products: [],
-  });
-  try {
-    const r = await salesOdoo.fetchMtdSales('2026-10-01', '2026-10-31');
-    assert.equal(r.ok, true);
-    assert.equal(r.value.order_count, 3);
-    assert.equal(r.value.active_customers, 2, '3 orders but only 2 distinct customers');
-  } finally { restore(); }
-});
+for (const [name, call] of OLD_FEED_READERS) {
+  test(`${name}: reports format_changed (never a zero-filled ok:true) and makes no Odoo request`, () =>
+    withOdooEnv(true, async (seen) => {
+      const r = await call();
+      assert.equal(r.ok, false);
+      assert.equal(r.status, 'format_changed');
+      assert.match(r.message, /changed the sales feed format/);
+      assert.equal(seen.requests, 0, 'the reshaped endpoint must not be called on a page load');
+    }));
 
-test('fetchMtdSales: active_customers is null (via ok:false), not 0, when Odoo is unreachable', async () => {
-  client._clearCache();
-  const realFetch = global.fetch;
-  global.fetch = async () => { throw new Error('ECONNREFUSED'); };
-  try {
-    const r = await salesOdoo.fetchMtdSales('2026-10-01', '2026-10-31');
-    assert.equal(r.ok, false);
-    assert.equal(r.status, 'unreachable');
-  } finally { global.fetch = realFetch; }
-});
-
-test('fetchCollections: dso_lite_days approximates outstanding / avg-daily-invoiced, with an honest basis note', async () => {
-  client._clearCache();
-  const restore = stubBundle({
-    customer_invoices: [
-      { total_amount: 300000, residual_amount: 150000, invoice_date: '2026-10-01' }, // half paid
-      { total_amount: 300000, residual_amount: 0, invoice_date: '2026-10-05' },      // fully paid
-    ],
-  });
-  try {
-    // 10 days elapsed, 600,000 total invoiced -> avg daily invoiced = 60,000
-    // outstanding 150,000 / 60,000 = 2.5 days
-    const r = await salesOdoo.fetchCollections('2026-10-01', '2026-10-10', 10);
-    assert.equal(r.ok, true);
-    assert.equal(r.value.dso_lite_days, 2.5);
-    assert.match(r.value.dso_basis_note, /not a true Days Sales Outstanding/);
-  } finally { restore(); }
-});
-
-test('fetchCollections: dso_lite_days is 0 (a real zero) when outstanding is fully collected, not null', async () => {
-  client._clearCache();
-  const restore = stubBundle({
-    customer_invoices: [{ total_amount: 100000, residual_amount: 0, invoice_date: '2026-10-01' }],
-  });
-  try {
-    const r = await salesOdoo.fetchCollections('2026-10-01', '2026-10-10', 10);
-    assert.equal(r.value.dso_lite_days, 0);
-  } finally { restore(); }
-});
-
-test('fetchCollections: dso_lite_days is null when there is nothing invoiced yet (no rate to divide by)', async () => {
-  client._clearCache();
-  const restore = stubBundle({ customer_invoices: [] });
-  try {
-    const r = await salesOdoo.fetchCollections('2026-10-01', '2026-10-10', 10);
-    assert.equal(r.value.dso_lite_days, null);
-  } finally { restore(); }
-});
-
-test('fetchCollections: dso_lite_days is null when Odoo is unreachable, never a fabricated number', async () => {
-  client._clearCache();
-  const realFetch = global.fetch;
-  global.fetch = async () => { throw new Error('ECONNREFUSED'); };
-  try {
-    const r = await salesOdoo.fetchCollections('2026-10-01', '2026-10-10', 10);
-    assert.equal(r.ok, false);
-  } finally { global.fetch = realFetch; }
-});
+  test(`${name}: still reports not_configured when Odoo is not set up`, () =>
+    withOdooEnv(false, async (seen) => {
+      const r = await call();
+      assert.equal(r.ok, false);
+      assert.equal(r.status, 'not_configured');
+      assert.equal(seen.requests, 0);
+    }));
+}

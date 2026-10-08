@@ -312,6 +312,15 @@
   // than reimplementing the same escaping logic a third time in this file.
   function esc(s) { return escHtml(s); }
 
+  /* Why an Odoo-sourced figure is missing, from the backend's real status.
+     "format_changed" is the 8 Oct 2026 sales-feed reshape: Odoo is up, the
+     old feed is simply gone, so "unreachable" would be untrue. */
+  function odooMsg(status) {
+    if (status === 'not_configured') return 'Odoo not configured';
+    if (status === 'format_changed') return 'Odoo sales feed being re-wired';
+    return 'Odoo unreachable';
+  }
+
   /* ── Period selectors ─────────────────────────────────────────── */
   var MONTHS = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
   var now = new Date();
@@ -428,7 +437,7 @@
     html2 += sk({
       label: 'Avg Daily Sales (MTD)', deptTag: 'Run Rate',
       value: fmt(mtd.daily_run_rate), unit: 'MT/day',
-      pending: mtd.daily_run_rate == null, pendingMsg: 'Odoo ' + (d.sources.sales_volume === 'not_configured' ? 'not configured' : 'unreachable'),
+      pending: mtd.daily_run_rate == null, pendingMsg: odooMsg(d.sources.sales_volume),
       status: mtd.actual_mt != null ? fmt(mtd.actual_mt) + ' MT over ' + mtd.days_elapsed + ' days' : null,
     });
     html2 += sk({
@@ -441,7 +450,7 @@
          label rather than silently differing from the tile beside it. */
       label: 'Avg Order Size', deptTag: 'Ordered — MTD',
       value: fmt(mtd.avg_order_size_mt), unit: 'MT/order',
-      pending: mtd.avg_order_size_mt == null, pendingMsg: 'Odoo ' + (d.sources.sales_volume === 'not_configured' ? 'not configured' : 'unreachable'),
+      pending: mtd.avg_order_size_mt == null, pendingMsg: odooMsg(d.sources.sales_volume),
     });
     document.getElementById('sd-hero-2').innerHTML = html2;
   }
@@ -545,11 +554,11 @@
 
   /* Active Customers + Top Customers by Volume — real Odoo customer names,
      escaped via esc() exactly like territory fields elsewhere on this page. */
-  function renderCustomers(mtd, topCustomers, sourcesOk) {
+  function renderCustomers(mtd, topCustomers, salesStatus) {
     var summaryHtml = sk({
       label: 'Active Customers (MTD)', deptTag: 'Sales',
       value: fmt(mtd.active_customers), unit: 'customers',
-      pending: mtd.active_customers == null, pendingMsg: 'Odoo ' + (sourcesOk ? 'unreachable' : 'not configured'),
+      pending: mtd.active_customers == null, pendingMsg: odooMsg(salesStatus),
     });
     document.getElementById('sd-customer-summary').innerHTML = summaryHtml;
 
@@ -559,7 +568,7 @@
       tbody.innerHTML = '';
       empty.style.display = 'block';
       empty.textContent = mtd.active_customers == null
-        ? 'Odoo ' + (sourcesOk ? 'unreachable' : 'not configured') + ' — top customers pending.'
+        ? odooMsg(salesStatus) + ' — top customers pending.'
         : 'No customer sales recorded yet this month.';
       return;
     }
@@ -763,7 +772,7 @@
       renderTrend(d.daily_trend);
       renderBestWorst(d.mtd);
       renderGradeTrend(d.grade_trend, d.grades);
-      renderCustomers(d.mtd, d.top_customers, d.sources.sales_volume !== 'not_configured');
+      renderCustomers(d.mtd, d.top_customers, d.sources.sales_volume);
       renderCollections(d.collections);
       renderFinancials(d.financials);
       renderTarget(d.targets, d.mtd);

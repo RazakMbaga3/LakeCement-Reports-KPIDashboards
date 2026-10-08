@@ -40,7 +40,28 @@
       is by invoice date and says so rather than implying it is overdue
       ageing. See fetchAgewiseOutstanding().
 */
-const client = require('./odooDashboardClient');
+/* 2026-10-08: Odoo replaced sale_dashboard_report's payload with an
+   invoice-centric Sale Register feed (data.invoices[] with nested lines,
+   deliveries and receipts). None of the arrays read below (sale_orders,
+   sale_order_lines, customer_invoices, sales_targets, products) exist any
+   more, and every reader here defaults a missing array to [] -- so against
+   the new payload these functions did not fail, they reported ZERO
+   customers, zero collections and "no targets". A full month also now
+   takes ~9 minutes to return, and one page load fired several of these at
+   once against the production ERP.
+
+   So the old endpoint is no longer called at all. Every function degrades
+   through its existing _fail() path to an honest `format_changed` status
+   until the new feed is mirrored into Postgres and read from there. */
+const FEED_RESHAPED_MESSAGE =
+  'Odoo changed the sales feed format on 8 Oct 2026. This figure returns once the new feed is wired in.';
+const { isConfigured } = require('./odooDashboardClient');
+async function _saleBundle() {
+  if (!isConfigured()) {
+    return { ok: false, status: 'not_configured', message: 'The Odoo dashboard API is not configured on this server yet.' };
+  }
+  return { ok: false, status: 'format_changed', message: FEED_RESHAPED_MESSAGE };
+}
 
 function _notMapped(message) {
   return { ok: false, status: 'not_mapped', message };
@@ -88,7 +109,7 @@ function _shapeOrdersAndLines(data) {
 
 /* MTD / on-date sales volume and value. */
 async function fetchMtdSales(from, to) {
-  const bundle = await client.fetchSaleBundle(from, to);
+  const bundle = await _saleBundle(from, to);
   if (!bundle.ok) return _fail(bundle);
 
   const { orders, lines } = _shapeOrdersAndLines(bundle.data);
@@ -137,7 +158,7 @@ async function fetchMtdSales(from, to) {
    actual overdue-ness, only an invoice-date-basis approximation. Callers
    must label it accordingly rather than present it as a textbook DSO. */
 async function fetchCollections(from, to, daysElapsed) {
-  const bundle = await client.fetchSaleBundle(from, to);
+  const bundle = await _saleBundle(from, to);
   if (!bundle.ok) return _fail(bundle);
 
   const invoices = bundle.data.customer_invoices || [];
@@ -176,7 +197,7 @@ async function fetchCollections(from, to, daysElapsed) {
    the due date) and the label says so, rather than quietly presenting one
    as the other. Ask the Odoo team for invoice_date_due to fix this. */
 async function fetchAgewiseOutstanding(from, to) {
-  const bundle = await client.fetchSaleBundle(from, to);
+  const bundle = await _saleBundle(from, to);
   if (!bundle.ok) return _fail(bundle);
 
   const invoices = (bundle.data.customer_invoices || []).filter(i => (i.residual_amount || 0) > 0);
@@ -235,7 +256,7 @@ async function fetchAgewiseOutstanding(from, to) {
    guessed at -- the same honest-degradation pattern as the grade mix's
    "Unmatched product" bucket. */
 async function fetchOfficerAchievement(from, to) {
-  const bundle = await client.fetchSaleBundle(from, to);
+  const bundle = await _saleBundle(from, to);
   if (!bundle.ok) return _fail(bundle);
 
   const targetRows = bundle.data.sales_targets || [];
