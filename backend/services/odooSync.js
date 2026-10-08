@@ -74,6 +74,7 @@ const { pullDispatchDailySummary } = require('./odooDispatchSync');
 const { pullMiningTickets } = require('./odooMiningSync');
 const { pullAndAutofillProduction } = require('./odooProductionAutofill');
 const { pullAndAutofillMaterials } = require('./odooMaterialsAutofill');
+const { pullSalesRegisterLive } = require('./odooSalesSync');
 
 // How many trailing days each scheduled run re-pulls — wide enough that a
 // skipped/failed run (server down, Odoo unreachable) self-heals within a
@@ -157,6 +158,15 @@ const PULLS = [
       const { from, to } = lookbackRange(STORES_LOOKBACK_DAYS);
       return pullAndAutofillMaterials(from, to);
     },
+  },
+  {
+    /* The Sale Register feed (sale_dashboard_report, reshaped 2026-10-08),
+       mirrored into the odoo_sale_* tables the Sales dashboard reads. Not a
+       lookbackRange window like the others: a day costs 25-60 s on the ERP,
+       so each run pulls today, yesterday and ONE older day from a rotating,
+       persisted cursor — see odooSalesSync.pullSalesRegisterLive. */
+    name: 'sales-register',
+    run: () => pullSalesRegisterLive(),
   },
 ];
 

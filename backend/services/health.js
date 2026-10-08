@@ -152,6 +152,7 @@ async function checkOdooSync() {
   const stores = storesClient.isConfigured('gate')
     && storesClient.isConfigured('grn')
     && storesClient.isConfigured('issues');
+  const sales = require('./odooDashboardClient').isConfigured();
 
   /* This list is the one place a pull can be forgotten and nobody notices:
      a pull missing here is simply absent from /api/health, so "is it
@@ -165,6 +166,7 @@ async function checkOdooSync() {
     mining     && 'mining-weighbridge-tickets',
     production && 'production-report-autofill',
     stores     && 'stores-gate-grn-issues',
+    sales      && 'sales-register',
   ].filter(Boolean);
   if (!wanted.length) return {};
 

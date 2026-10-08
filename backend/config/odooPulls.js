@@ -37,11 +37,18 @@
   one request at a time rather than three at once.
 */
 
+/* sales-register joined on 2026-10-08, when the Sale Register feed replaced
+   the old sales endpoint. It is now the most expensive member: three days at
+   25-60 s each, ~1.5-3 min per run. Accepted for the same reason as stores —
+   the Sales dashboard is read during the day and the feed is far too slow
+   to read on a page load — and bounded by design: never more than three
+   single-day requests, one after another. */
 const LIVE_PULLS = Object.freeze([
   'dispatch-daily-summary',
   'mining-weighbridge-tickets',
   'production-report-autofill',
   'stores-gate-grn-issues',
+  'sales-register',
 ]);
 
 module.exports = { LIVE_PULLS };

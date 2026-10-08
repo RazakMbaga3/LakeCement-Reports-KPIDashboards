@@ -113,14 +113,18 @@ function isConfigured() { return config() !== null; }
 /* Never throws — mirrors the {ok:false,status,message} contract the
    dashboard services already use, so one unreachable endpoint degrades a
    tile instead of the whole page. */
-async function fetchBundle(endpoint, from, to) {
+/* opts.noCache — bypass the page cache both ways. The scheduled sales sync
+   (odooSalesSync.js) needs a fresh answer every time it re-pulls a day to
+   pick up payment-status changes, and parking its bundles in the shared,
+   byte-bounded cache would only evict ones a page might actually re-read. */
+async function fetchBundle(endpoint, from, to, opts = {}) {
   const cfg = config();
   if (!cfg) {
     return { ok: false, status: 'not_configured', message: 'The Odoo dashboard API is not configured on this server yet.' };
   }
 
   const key = `${endpoint}|${from}|${to}`;
-  const hit = _cache.get(key);
+  const hit = opts.noCache ? null : _cache.get(key);
   if (hit && Date.now() - hit.at < hit.ttl) {
     _cache.delete(key); _cache.set(key, hit);   // refresh recency for the LRU
     return hit.result;
@@ -186,6 +190,7 @@ async function fetchBundle(endpoint, from, to) {
   }
 
   const result = { ok: true, data: json.data || {}, as_of: new Date().toISOString(), source: `odoo:${endpoint}` };
+  if (opts.noCache) return result;
 
   /* A range wholly in the past can't change, so cache it far longer —
      this is what makes a 12-month trend viable at ~5s per uncached month. */
@@ -197,7 +202,7 @@ async function fetchBundle(endpoint, from, to) {
 }
 
 const fetchPurchaseBundle = (from, to) => fetchBundle('purchase_dashboard_report', from, to);
-const fetchSaleBundle     = (from, to) => fetchBundle('sale_dashboard_report', from, to);
+const fetchSaleBundle     = (from, to, opts) => fetchBundle('sale_dashboard_report', from, to, opts);
 
 function _clearCache() { _cache.clear(); } // tests only
 function _cacheStats() {                   // tests / diagnostics only
