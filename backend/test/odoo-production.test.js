@@ -22,9 +22,24 @@ const { fetchProductionReport, isConfigured } = require('../services/odooProduct
 const item = (product, input, dry = input, uom = 'MT') => ({
   product, uom, input_quantity: input, stock_available: 100, moisture: 0, final_qty_after_moisture: dry, cost: 1,
 });
+/* `picking_type` is left undefined so the GROUP KEY names the stage, which is
+   how Crusher entries arrive (they carry no picking_type at all).
+
+   It used to be set to a junk string with the note "ignored — the group key
+   wins". That stopped being true on 2026-10-08: Odoo shortened the group keys
+   to 'Cement', which cannot distinguish CM1 from CM2, so normalizeEntry now
+   PREFERS the entry's own picking_type and falls back to the group key.
+   entryWithPicking() below covers that preferred path. */
 const entry = (name, product, produced, items = [], date = '15/06/2026') => ({
-  name, production_date: date, picking_type: 'ignored — the group key wins', product, uom: 'MT',
+  name, production_date: date, product, uom: 'MT',
   total_input_qty: produced, produced_qty: produced, consumed_items: items,
+});
+
+/* An entry carrying its own picking_type, as every non-Crusher entry does.
+   `groupKey` is what the response nests it under — deliberately a short,
+   ambiguous label here, to prove the entry's own field is what decides. */
+const entryWithPicking = (pickingType, name, product, produced, items = [], date = '15/06/2026') => ({
+  ...entry(name, product, produced, items, date), picking_type: pickingType,
 });
 const toMapperEntries = (rows) => rows.map(r => ({
   ref: r.entry_ref, stage: r.stage, product_code: r.product_code,
@@ -183,7 +198,8 @@ test('mapDay: a full day maps every rule, on the wet basis, summed across entrie
   assert.deepEqual(d.provisional, { rm1_cons_mt: 2000 });
   assert.deepEqual(d.extras, { raw_meal_prod_mt: 2000 });
   assert.deepEqual(d.stagesPresent, ['raw_meal', 'clinker', 'fine_coal', 'cm1', 'cm2']);
-  assert.deepEqual(d.missingStages, []);
+  // 'crusher' joined ALL_STAGES on 2026-10-08; this fixture has no crusher entry.
+  assert.deepEqual(d.missingStages, ['crusher']);
   assert.deepEqual(d.unmapped, [], 'power units and a 0-qty coal ash line are known and ignored');
   assert.equal(d.entryCount, 8);
   assert.deepEqual(d.refs, ['CEM/1', 'CEM/2', 'CEM/3', 'CEM/4', 'CEM/5', 'CLK/1', 'CLM/1', 'RML/1']);
@@ -192,7 +208,7 @@ test('mapDay: a full day maps every rule, on the wet basis, summed across entrie
 test('mapDay: a stage with no entry contributes no facts — nothing is defaulted to 0', () => {
   const onlyCm1 = dayFrom({ [CM1]: FULL_DAY[CM1] });
   assert.deepEqual(onlyCm1.stagesPresent, ['cm1']);
-  assert.deepEqual(onlyCm1.missingStages, ['raw_meal', 'clinker', 'fine_coal', 'cm2']);
+  assert.deepEqual(onlyCm1.missingStages, ['raw_meal', 'clinker', 'fine_coal', 'cm2', 'crusher']);
   for (const k of ['kiln_prod_mt', 'coalmill_prod_mt', 'rmm_limestone_cons', 'coal_kiln', 'cm2_425r_mt', 'coalmill_cons_mt']) {
     assert.equal(k in onlyCm1.facts, false, `${k} must be absent when its stage has no entry`);
   }
@@ -311,3 +327,85 @@ test('client: failures are named so an operator can act on them', withClient(asy
   global.fetch = async () => reply(200, { status: true, data: 'a string' });
   await assert.rejects(fetchProductionReport('2026-09-01', '2026-09-02'), /unexpected shape/);
 }));
+
+/* ── the 2026-10-08 Odoo payload change ──────────────────────────────────
+   Odoo renamed most of the response in one deploy and shortened the group
+   keys. Every entry was rejected for a day before it was noticed, because
+   health reported the pull itself as "ok". These lock the new shape in. */
+
+test('the renamed 2026-10-08 payload parses, and the old names still do', () => {
+  const nu = mapper.normalizeEntry('Clinker', {
+    name: 'CLK/2026/00182', production_date: '07/10/2026',
+    picking_type: 'CEMENT: Clinker Production',
+    product_id: '[WIP003] CLINKER', uom_id: 'MT',
+    production_qty: 1810, total_input_qty: 3065.5,
+    coal_ncv: 5598, running_hours: 23.833333333333332, tph: 75.944,
+    line_items: [{ product_id: '[WIP002] RAW MEAL', uom_id: 'MT', quantity: 2805.5,
+      qty_available: 4723.56, moisture_percent: 0, final_qty: 2805.5, standard_price: 5891.77 }],
+  });
+  assert.equal(nu.reject, undefined);
+  assert.equal(nu.row.stage, 'clinker');
+  assert.equal(nu.row.produced_qty, 1810, 'production_qty is read as produced_qty');
+  assert.equal(nu.row.coal_ncv, 5598);
+  assert.equal(nu.row.consumed_items[0].input_quantity, 2805.5, 'line quantity is read');
+
+  // The pre-2026-10-08 names must keep working, so a rollback cannot break us.
+  const old = mapper.normalizeEntry('CEMENT: Clinker Production',
+    entry('CLK/1', '[WIP003] CLINKER', 1000, [item(CLINKER, 500)]));
+  assert.equal(old.reject, undefined);
+  assert.equal(old.row.produced_qty, 1000);
+  assert.equal(old.row.consumed_items[0].input_quantity, 500);
+});
+
+test("the entry's own picking_type beats the group key, so CM1 and CM2 stay apart", () => {
+  // Both nested under the short 'Cement' key Odoo now uses, which cannot
+  // name a mill. Merging them would halve each mill's reported tonnage.
+  const day = dayFrom({
+    Cement: [
+      entryWithPicking(CM1, 'CEM/1', '[FG001] CEMENT 42.5 R', 100, [item(CLINKER, 80)]),
+      entryWithPicking(CM2, 'CEM/2', '[FG001] CEMENT 42.5 R', 250, [item(CLINKER, 200)]),
+    ],
+  });
+  assert.deepEqual(day.stagesPresent, ['cm1', 'cm2']);
+  assert.equal(day.facts.cm1_425r_mt, 100);
+  assert.equal(day.facts.cm2_425r_mt, 250);
+});
+
+test('NCV is a weighted mean, never a sum, and an absent reading is not zero', () => {
+  const twoRuns = mapper.mapDay([
+    { ref: 'CLK/1', stage: 'clinker', produced_qty: 1000, consumed_items: [], coal_ncv: 5000, running_hours: 12 },
+    { ref: 'CLK/2', stage: 'clinker', produced_qty: 3000, consumed_items: [], coal_ncv: 6000, running_hours: 10 },
+  ]);
+  // (5000*1000 + 6000*3000) / 4000 = 5750 — not 11000, and not the plain mean 5500.
+  assert.equal(twoRuns.facts.coal_ncv, 5750);
+  assert.equal(twoRuns.facts.kiln_run_hrs, 22, 'hours are a quantity, so they sum');
+
+  const noNcv = mapper.mapDay([
+    { ref: 'CLK/3', stage: 'clinker', produced_qty: 1000, consumed_items: [], coal_ncv: null },
+  ]);
+  assert.equal('coal_ncv' in noNcv.facts, false,
+    'no NCV reported must stay absent — a fabricated 0 would feed a divisor');
+});
+
+test('a Crusher entry keeps its header output and drops its weighbridge lines', () => {
+  // Crusher line_items are tickets (product_uom_qty, ticket_no), not
+  // consumption: running them through the item mapper rejected the entry.
+  const { row, reject } = mapper.normalizeEntry('Crusher', {
+    name: 'CRU/2026/00191', production_date: '07/10/2026',
+    product: '[WIP001] LIMESTONE MINING', uom: 'MT',
+    production_qty: 2806.2, running_hours: 18.866666666666667,
+    line_items: [
+      { product_id: '[WIP001] LIMESTONE MINING', uom_id: 'MT', product_uom_qty: 20, ticket_no: 'MN06102605' },
+      { product_id: '[WIP001] LIMESTONE MINING', uom_id: 'MT', product_uom_qty: 22, ticket_no: 'MN06102606' },
+    ],
+  });
+  assert.equal(reject, undefined, 'a ticket line must not reject the whole entry');
+  assert.equal(row.stage, 'crusher');
+  assert.equal(row.produced_qty, 2806.2);
+  assert.deepEqual(row.consumed_items, [], 'tickets are not consumption — the quarry pipeline owns those');
+
+  const day = mapper.mapDay([{ ref: row.entry_ref, stage: 'crusher', produced_qty: 2806.2,
+    consumed_items: [], running_hours: 18.866666666666667 }]);
+  assert.equal(day.facts.ls_crusher_prod_mt, 2806.2);
+  assert.equal(day.facts.ls_crusher_run_hrs, 18.87);
+});

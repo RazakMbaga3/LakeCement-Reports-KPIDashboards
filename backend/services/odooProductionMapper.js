@@ -48,20 +48,43 @@ function num(v) {
   return Number.isFinite(n) ? n : null;
 }
 
+/* First non-null of several possible source keys.
+
+   On 2026-10-08 the Odoo team shipped the fields we had asked for (coal_ncv,
+   running_hours, tph, state/approval_status, write_date) and renamed almost
+   everything else in the same deploy: produced_qty -> production_qty,
+   consumed_items -> line_items, and every line key (input_quantity ->
+   quantity, final_qty_after_moisture -> final_qty, stock_available ->
+   qty_available, moisture -> moisture_percent, product -> product_id, uom ->
+   uom_id, cost -> standard_price).
+
+   The old names are kept as fallbacks rather than replaced. The endpoint has
+   now changed shape under us once with no notice; reading both costs nothing
+   and means a rollback on their side, or one stage still serving the old
+   shape, does not stop production data again. */
+function pick(obj, ...keys) {
+  for (const k of keys) {
+    const v = obj[k];
+    if (v !== undefined && v !== null && v !== '') return v;
+  }
+  return undefined;
+}
+
 function normalizeItem(c) {
   if (!c || typeof c !== 'object') return { reject: 'a consumed item is not an object' };
-  const qty = num(c.input_quantity);
-  if (qty === null) return { reject: `consumed item ${JSON.stringify(c.product)} has no numeric input_quantity` };
+  const product = pick(c, 'product', 'product_id');
+  const qty = num(pick(c, 'input_quantity', 'quantity'));
+  if (qty === null) return { reject: `consumed item ${JSON.stringify(product)} has no numeric input_quantity/quantity` };
   return {
     item: {
-      product:                  String(c.product ?? '').trim(),
-      code:                     codeOf(c.product),
-      uom:                      c.uom ? String(c.uom) : null,
+      product:                  String(product ?? '').trim(),
+      code:                     codeOf(product),
+      uom:                      pick(c, 'uom', 'uom_id') ? String(pick(c, 'uom', 'uom_id')) : null,
       input_quantity:           qty,
-      final_qty_after_moisture: num(c.final_qty_after_moisture),
-      moisture:                 num(c.moisture),
-      stock_available:          num(c.stock_available),
-      cost:                     num(c.cost),
+      final_qty_after_moisture: num(pick(c, 'final_qty_after_moisture', 'final_qty')),
+      moisture:                 num(pick(c, 'moisture', 'moisture_percent')),
+      stock_available:          num(pick(c, 'stock_available', 'qty_available')),
+      cost:                     num(pick(c, 'cost', 'standard_price')),
     },
   };
 }
@@ -74,6 +97,11 @@ function contentHash(e) {
   const canon = JSON.stringify([
     e.stage, e.picking_type, e.production_date, e.product_name, e.product_code, e.uom,
     e.produced_qty, e.total_input_qty,
+    /* Added 2026-10-08 with the fields themselves. These MUST be in the hash:
+       a corrected NCV or run-hours figure with an unchanged tonnage would
+       otherwise look like an unchanged entry and never be re-read. */
+    e.coal_ncv, e.running_hours, e.tph, e.kiln_feed_value,
+    e.state, e.approval_status, e.mill_type,
     e.consumed_items.map(i => [i.product, i.uom, i.input_quantity, i.final_qty_after_moisture,
       i.moisture, i.stock_available, i.cost]),
   ]);
@@ -92,31 +120,75 @@ function normalizeEntry(pickingType, raw) {
   const date = parseEntryDate(raw.production_date);
   if (!date) return { reject: `unparseable production_date ${JSON.stringify(raw.production_date)}` };
 
-  const produced = num(raw.produced_qty);
-  if (produced === null || produced < 0) return { reject: `produced_qty is not a non-negative number (${JSON.stringify(raw.produced_qty)})` };
+  const rawProduced = pick(raw, 'produced_qty', 'production_qty');
+  const produced = num(rawProduced);
+  if (produced === null || produced < 0) return { reject: `produced_qty/production_qty is not a non-negative number (${JSON.stringify(rawProduced)})` };
 
-  if (raw.consumed_items !== undefined && !Array.isArray(raw.consumed_items)) {
-    return { reject: 'consumed_items is not a list' };
+  /* An entry carrying BOTH keys as empty lists is legitimate (a day with no
+     consumption booked yet); only a non-list is a shape error. */
+  const rawLines = raw.line_items !== undefined ? raw.line_items : raw.consumed_items;
+  if (rawLines !== undefined && !Array.isArray(rawLines)) {
+    return { reject: 'consumed_items/line_items is not a list' };
   }
+
+  /* Crusher's lines are NOT consumption lines. The group arrived 2026-10-08
+     (we had asked for it) and its line_items are weighbridge tickets —
+     ticket_no, vehicle_no, gross_wt/tare_wt, product_uom_qty — one per truck
+     into the crusher, with no `quantity` key at all. Running them through
+     normalizeItem() rejects the whole entry, which is how the first pull
+     after the change lost CRU/2026/00191 while its header still carried a
+     real production_qty of 2,806.2 MT.
+
+     So: keep the header (crusher output IS the number we want) and drop the
+     ticket lines rather than mis-read them as consumption. The quarry
+     weighbridge pipeline already models those tickets properly
+     (odooMiningSync.js); duplicating them here as fake consumed items would
+     double-count limestone. If a crusher consumption figure is ever needed,
+     it needs its own mapping, not this one. */
+  const isCrusher = /crusher/i.test(String(pickingType ?? ''));
+
   const items = [];
-  for (const c of raw.consumed_items || []) {
+  for (const c of (isCrusher ? [] : rawLines) || []) {
     const { item, reject } = normalizeItem(c);
     if (reject) return { reject };
     items.push(item);
   }
 
-  const picking = String(pickingType ?? '').trim();
+  /* Prefer the entry's OWN picking_type over the response group key. Since
+     2026-10-08 the group key is a short label ('Cement') that cannot tell CM1
+     from CM2, while the entry still carries the long form that can. Crusher
+     entries have no picking_type at all, so the group key remains the
+     fallback — see config/odooProductionMap.js. */
+  const picking = String(pick(raw, 'picking_type') ?? pickingType ?? '').trim()
+               || String(pickingType ?? '').trim();
+  const product = pick(raw, 'product', 'product_id');
+  const uom     = pick(raw, 'uom', 'uom_id');
   const row = {
     entry_ref:       ref,
     production_date: date,
     picking_type:    picking,
     stage:           MAP.STAGE_BY_PICKING_TYPE[picking] || null,
-    product_code:    codeOf(raw.product) || null,
-    product_name:    nameOf(raw.product) || null,
-    uom:             raw.uom ? String(raw.uom) : null,
+    product_code:    codeOf(product) || null,
+    product_name:    nameOf(product) || null,
+    uom:             uom ? String(uom) : null,
     produced_qty:    produced,
     total_input_qty: num(raw.total_input_qty),
     consumed_items:  items,
+
+    /* Delivered 2026-10-08, after being asked for in
+       docs/email-drafts/03-odoo-production-missing-fields.md. Captured here
+       so the mirror holds them; which ones reach daily_reports is
+       config/odooProductionMap.js's decision, not this function's.
+
+       running_hours arrives as decimal hours (23.833…), not the 'HH:MM' the
+       form view shows — they answered that question in the payload. */
+    coal_ncv:        num(raw.coal_ncv),
+    running_hours:   num(raw.running_hours),
+    tph:             num(raw.tph),
+    kiln_feed_value: num(raw.kiln_feed_value),
+    state:           raw.state ? String(raw.state).trim() : null,
+    approval_status: raw.approval_status ? String(raw.approval_status).trim() : null,
+    mill_type:       raw.mill_type ? String(raw.mill_type).trim() : null,
   };
   row.content_hash = contentHash(row);
   return { row };
@@ -191,8 +263,36 @@ function mapDay(entries) {
     if (rule.stages.some(s => present.has(s))) bucketFor(rule)[rule.fact] = 0;
   }
 
+  /* Header-level fields (NCV, run hours, crusher output), added 2026-10-08.
+     Accumulated separately because a 'mean' rule needs the weights kept until
+     every entry is seen; a sum could go straight into `facts`. */
+  const headerAcc = new Map(); // fact -> { sum, weight, agg }
+  for (const rule of MAP.HEADER_FACTS) {
+    if (present.has(rule.stage)) headerAcc.set(rule.fact, { sum: 0, weight: 0, agg: rule.agg });
+  }
+
   for (const e of entries) {
     if (!e.stage) { unmapped.push({ kind: 'stage', ref: e.ref, qty: e.produced_qty }); continue; }
+
+    for (const rule of MAP.HEADER_FACTS) {
+      if (rule.stage !== e.stage) continue;
+      const v = e[rule.field];
+      if (v === null || v === undefined) continue;
+      const acc = headerAcc.get(rule.fact);
+      if (!acc) continue;
+      if (rule.agg === 'mean') {
+        /* Weight by the entry's own tonnage. A zero-tonnage entry would
+           contribute nothing and make the mean undefined, so it is skipped
+           rather than counted as weight 0 against a real reading. */
+        const w = Number(e.produced_qty) || 0;
+        if (w <= 0) continue;
+        acc.sum += v * w;
+        acc.weight += w;
+      } else {
+        acc.sum += v;
+        acc.weight += 1;
+      }
+    }
 
     if (MAP.PRODUCED_BY_STAGE[e.stage]) add(facts, MAP.PRODUCED_BY_STAGE[e.stage], e.produced_qty);
     if (MAP.EXTRA_PRODUCED_BY_STAGE[e.stage]) add(extras, MAP.EXTRA_PRODUCED_BY_STAGE[e.stage], e.produced_qty);
@@ -212,6 +312,16 @@ function mapDay(entries) {
 
   for (const d of MAP.DERIVED_FACTS) {
     if (d.stages.some(s => present.has(s))) facts[d.fact] = d.sumOf.reduce((sum, k) => sum + (facts[k] || 0), 0);
+  }
+
+  /* Resolve the header accumulators. A fact whose stage was present but whose
+     entries carried no value (weight 0) is dropped rather than emitted as 0:
+     "Odoo reported no NCV today" is not "the coal had no calorific value",
+     and a fabricated zero in a divisor is the bug class this codebase has
+     already been bitten by. */
+  for (const [fact, acc] of headerAcc) {
+    if (acc.weight <= 0) continue;
+    facts[fact] = acc.agg === 'mean' ? acc.sum / acc.weight : acc.sum;
   }
 
   for (const bucket of [facts, provisional, extras]) for (const k of Object.keys(bucket)) bucket[k] = r2(bucket[k]);
@@ -234,6 +344,7 @@ function emittableFactKeys() {
   for (const s of MAP.CEMENT_STAGES) for (const g of MAP.GRADE_SUFFIXES) keys.add(`${s}_${g}_mt`);
   for (const r of MAP.CONSUMPTION_RULES) keys.add(r.fact);
   for (const d of MAP.DERIVED_FACTS) keys.add(d.fact);
+  for (const h of MAP.HEADER_FACTS) keys.add(h.fact);
   return [...keys].sort();
 }
 

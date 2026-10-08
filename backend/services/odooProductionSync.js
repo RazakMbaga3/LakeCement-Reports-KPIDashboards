@@ -35,8 +35,13 @@ const SWEEP_MAX_FRACTION   = 0.25;
 const SWEEP_ALWAYS_ALLOWED = 5;
 const INSERT_BATCH         = 200;
 
+/* The header fields from 'coal_ncv' on arrived with the Odoo team's
+   2026-10-08 deploy (migration 033). They are stored even though only some
+   reach daily_reports today: the mirror's job is to hold what Odoo said, and
+   config/odooProductionMap.js decides separately what becomes a fact. */
 const COLS = ['entry_ref', 'production_date', 'picking_type', 'stage', 'product_code',
-  'product_name', 'uom', 'produced_qty', 'total_input_qty', 'consumed_items', 'content_hash'];
+  'product_name', 'uom', 'produced_qty', 'total_input_qty', 'consumed_items', 'content_hash',
+  'coal_ncv', 'running_hours', 'tph', 'kiln_feed_value', 'state', 'approval_status', 'mill_type'];
 
 /* Writes one window's entries and sweeps that window, in one transaction: a
    half-applied window would leave a day's tonnage wrong, which is worse than
@@ -70,7 +75,9 @@ async function storeEntries(rows, from, to, { alsoPresent = [] } = {}) {
       const values = [];
       const tuples = chunk.map((r, j) => {
         values.push(r.entry_ref, r.production_date, r.picking_type, r.stage, r.product_code,
-          r.product_name, r.uom, r.produced_qty, r.total_input_qty, JSON.stringify(r.consumed_items), r.content_hash);
+          r.product_name, r.uom, r.produced_qty, r.total_input_qty, JSON.stringify(r.consumed_items), r.content_hash,
+          r.coal_ncv ?? null, r.running_hours ?? null, r.tph ?? null, r.kiln_feed_value ?? null,
+          r.state ?? null, r.approval_status ?? null, r.mill_type ?? null);
         const base = j * COLS.length;
         return '(' + COLS.map((c, k) => '$' + (base + k + 1) + (c === 'consumed_items' ? '::jsonb' : '')).join(',') + ')';
       });
@@ -87,6 +94,13 @@ async function storeEntries(rows, from, to, { alsoPresent = [] } = {}) {
           produced_qty    = EXCLUDED.produced_qty,
           total_input_qty = EXCLUDED.total_input_qty,
           consumed_items  = EXCLUDED.consumed_items,
+          coal_ncv        = EXCLUDED.coal_ncv,
+          running_hours   = EXCLUDED.running_hours,
+          tph             = EXCLUDED.tph,
+          kiln_feed_value = EXCLUDED.kiln_feed_value,
+          state           = EXCLUDED.state,
+          approval_status = EXCLUDED.approval_status,
+          mill_type       = EXCLUDED.mill_type,
           revision   = CASE WHEN odoo_production_entries.content_hash IS DISTINCT FROM EXCLUDED.content_hash
                             THEN odoo_production_entries.revision + 1 ELSE odoo_production_entries.revision END,
           updated_at = CASE WHEN odoo_production_entries.content_hash IS DISTINCT FROM EXCLUDED.content_hash
@@ -182,7 +196,11 @@ async function pullProductionEntries(from, to, { fetchReport = fetchProductionRe
 async function loadRangeFacts(from, to) {
   const { rows } = await db.query(`
     SELECT entry_ref, production_date::text AS day, stage, product_code,
-           produced_qty::float8 AS produced_qty, consumed_items
+           produced_qty::float8 AS produced_qty, consumed_items,
+           coal_ncv::float8        AS coal_ncv,
+           running_hours::float8   AS running_hours,
+           tph::float8             AS tph,
+           kiln_feed_value::float8 AS kiln_feed_value
     FROM odoo_production_entries
     WHERE production_date BETWEEN $1 AND $2 AND withdrawn_at IS NULL
     ORDER BY production_date, entry_ref
@@ -193,6 +211,8 @@ async function loadRangeFacts(from, to) {
     (byDay[r.day] ||= []).push({
       ref: r.entry_ref, stage: r.stage, product_code: r.product_code,
       produced_qty: r.produced_qty, consumed_items: r.consumed_items,
+      coal_ncv: r.coal_ncv, running_hours: r.running_hours,
+      tph: r.tph, kiln_feed_value: r.kiln_feed_value,
     });
   }
   const out = {};

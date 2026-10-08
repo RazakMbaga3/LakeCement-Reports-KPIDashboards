@@ -13,8 +13,13 @@ const mapper   = require('../services/odooProductionMapper');
 const { odooFieldsFor, reconcileDay } = require('../services/odooProductionAutofill');
 
 const item = (product, input) => ({ product, uom: 'MT', input_quantity: input, stock_available: 1, moisture: 0, final_qty_after_moisture: input, cost: 1 });
+/* No picking_type: the group key names the stage. It used to carry a junk
+   string with the note "ignored — the group key wins", which stopped being
+   true on 2026-10-08 — normalizeEntry now prefers the entry's own
+   picking_type, because Odoo's shortened group key ('Cement') cannot tell
+   CM1 from CM2. See test/odoo-production.test.js. */
 const entry = (name, product, produced, items = [], date = '15/06/2026') => ({
-  name, production_date: date, picking_type: 'ignored — the group key wins', product, uom: 'MT',
+  name, production_date: date, product, uom: 'MT',
   total_input_qty: produced, produced_qty: produced, consumed_items: items,
 });
 const toMapperEntries = (rows) => rows.map(r => ({

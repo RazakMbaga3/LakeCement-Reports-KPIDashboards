@@ -148,7 +148,26 @@
     // submission, not just backfilled data.
     kiln_prod_mt:   { source: 'manual', form: 'production', field: 'kiln_prod_mt', unit: 'MT' },
     kiln_coal_cons: { source: 'manual', form: 'production', field: 'coal_kiln',    unit: 'MT' },
-    kiln_coal_ncv:  { source: 'manual', form: 'limestone',  field: 'ncv',          unit: 'kcal/kg' },
+
+    /* NCV moved from the limestone form to the production report on
+       2026-10-08, when Odoo began returning `coal_ncv` on every clinker
+       entry (5,598 kcal/kg on CLK/2026/00182) — the field we had been
+       asking for in docs/email-drafts/03.
+
+       Two reasons it had to move rather than be written to both:
+       buildEntries() resolves a fact only from the form named here
+       (`fact.form !== row.form_type` skips everything else), so an ncv key
+       written into the production report while this said 'limestone' would
+       be stored and never read. And the limestone form has had no
+       submission since 2026-06-30, which is why Specific Thermal Energy
+       Consumption has read null for over three months with clinker and
+       coal both present.
+
+       The target field is `coal_ncv`, which already exists on the production
+       report (the Specific Heat Consumption panel) and happens to match
+       Odoo's own field name — so no new input was needed and an officer can
+       still type it on a day Odoo has no clinker entry. */
+    kiln_coal_ncv:  { source: 'odoo', form: 'production', field: 'coal_ncv', unit: 'kcal/kg' },
 
     // power consumption form
     pwr_crusher_kwh:   { source: 'manual', form: 'power-cons', field: 'pwr_crusher_kwh',   unit: 'kWh' },
