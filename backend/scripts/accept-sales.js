@@ -1,7 +1,7 @@
 /*
   scripts/accept-sales.js — Sales dashboard acceptance tests
   (see the Sales Dashboard plan — backend/routes/sales.js,
-  backend/services/{sales,salesOdoo}.js, db/migrations/006_sales.sql).
+  backend/services/{sales,salesRegister}.js, db/migrations/006_sales.sql).
 
   Proves the new endpoints end-to-end WITHOUT real Odoo credentials —
   that's the point: the dashboard must degrade honestly (not_configured/
@@ -164,45 +164,53 @@ async function main() {
     check('dashboard 200s', dash.status === 200, `got ${dash.status}`);
     const d = dash.body || {};
     check('mtd.projected_mt includes the submitted 42.5 MT', d.mtd && d.mtd.projected_mt >= 42.5, JSON.stringify(d.mtd));
-    /* Tonnage is now the DELIVERED figure, read from daily_reports (what
-       odooDispatchSync.js wrote), not from a live Odoo call — so "Odoo not
-       configured" no longer implies it must be null. The invariant that
-       still matters, and is what this check was always protecting, is that
-       the number is never fabricated: null when no dispatch day exists for
-       the period, a real total when one does, and never a silent 0
-       standing in for absent data. Both branches are asserted so a
-       regression in either direction fails here. */
-    check('mtd.actual_mt is honest: null when no dispatch data, a real total when there is',
+    /* Since 2026-10-08 tonnage comes from the Sale Register mirror (invoiced
+       basis), falling back to dispatch notes when the period is unsynced, and
+       to null when neither exists. This suite runs against whatever the
+       database holds (empty in CI, real mirrored rows on a dev machine), so
+       each check asserts the invariant for the basis actually in effect:
+       a real, internally consistent number when there is data, and null —
+       never a silent 0 — when there is not. */
+    const tb = d.tonnage_basis || {};
+    check('tonnage_basis names its basis and its day coverage',
+      ['invoiced', 'delivered', null].includes(tb.basis) && tb.coverage
+        && Number.isInteger(tb.coverage.days_synced) && Number.isInteger(tb.coverage.days_expected),
+      JSON.stringify(tb));
+    check('mtd.actual_mt is honest: the basis figure when there is data, null when there is none',
       d.mtd && (
-        d.tonnage_basis.days_with_data === 0
-          ? d.mtd.actual_mt === null
-          : (typeof d.mtd.actual_mt === 'number' && d.mtd.actual_mt === d.tonnage_basis.delivered_mt)
+        tb.basis === 'invoiced' ? d.mtd.actual_mt === tb.register_mt
+          : tb.basis === 'delivered' ? d.mtd.actual_mt === tb.delivered_mt
+          : d.mtd.actual_mt === null
       ),
-      JSON.stringify({ actual_mt: d.mtd && d.mtd.actual_mt, basis: d.tonnage_basis }));
-    check('tonnage_basis says delivered, and carries the ordered figure for comparison',
-      d.tonnage_basis && d.tonnage_basis.basis === 'delivered'
-        && 'ordered_mt' in d.tonnage_basis
-        && d.tonnage_basis.customer_figures_basis === 'ordered',
-      JSON.stringify(d.tonnage_basis));
-    check('collections reports not_configured, not an error or fake value', d.collections && d.collections.ok === false && d.collections.status === 'not_configured', JSON.stringify(d.collections));
-    check('financials.payable reports not_mapped (no Odoo model identified)', d.financials && d.financials.payable.ok === false && d.financials.payable.status === 'not_mapped', JSON.stringify(d.financials && d.financials.payable));
-    /* Same shift as actual_mt above: grades are delivered-basis now, so
-       they carry real values whenever dispatch data exists. The shape
-       (exactly the 4 known product lines) is asserted always; the values
-       are asserted null only when there is genuinely no dispatch day, and
-       otherwise must sum to the headline — which is the stronger property,
-       since it catches a grade mix that silently disagrees with the total. */
+      JSON.stringify({ actual_mt: d.mtd && d.mtd.actual_mt, basis: tb.basis }));
+    check('collections: real figures only on the invoiced basis, otherwise an honest status, never zeros',
+      d.collections && (
+        tb.basis === 'invoiced'
+          ? d.collections.ok === true && d.collections.total_collected_tzs + d.collections.outstanding_tzs === d.collections.invoiced_tzs
+          : d.collections.ok === false && ['not_configured', 'not_synced'].includes(d.collections.status)
+      ),
+      JSON.stringify(d.collections));
+    check('financials.payable reports not_mapped (no Odoo field for it)', d.financials && d.financials.payable.ok === false && d.financials.payable.status === 'not_mapped', JSON.stringify(d.financials && d.financials.payable));
     check('grades come back with the 4 known product lines', d.grades && d.grades.filter(g => g.key !== 'unmatched').length === 4,
       JSON.stringify(d.grades && d.grades.map(g => g.key)));
-    check('grade values are null with no dispatch data, else they sum to the headline',
+    check('grade values are null with no data, else they sum to the headline',
       d.grades && (
-        d.tonnage_basis.days_with_data === 0
+        tb.basis === null
           ? d.grades.every(g => g.mtd_actual_mt === null)
           : Math.abs(d.grades.reduce((s, g) => s + (g.mtd_actual_mt || 0), 0) - d.mtd.actual_mt) < 0.15
       ),
       JSON.stringify({ sum: d.grades && d.grades.reduce((s, g) => s + (g.mtd_actual_mt || 0), 0), headline: d.mtd && d.mtd.actual_mt }));
+    check('customer figures exist only on the invoiced basis (dispatch notes carry no customer)',
+      tb.basis === 'invoiced'
+        ? Number.isInteger(d.mtd.active_customers) && Array.isArray(d.top_customers)
+        : d.mtd.active_customers === null && d.top_customers.length === 0,
+      JSON.stringify({ basis: tb.basis, active: d.mtd && d.mtd.active_customers }));
     check('targets.source defaults to manual before any target is set', d.targets && d.targets.source === 'manual');
-    check('sources.sales_volume propagates the real status (not hardcoded)', d.sources && d.sources.sales_volume === 'not_configured', JSON.stringify(d.sources));
+    /* This suite boots the server with the Odoo env stripped, so an empty
+       mirror must say not_configured; mirrored rows are still real data. */
+    check('sources.sales_volume propagates the real status (not hardcoded)',
+      d.sources && d.sources.sales_volume === (tb.basis === 'invoiced' ? 'odoo:sale_register' : 'not_configured'),
+      JSON.stringify(d.sources));
 
     // ── regression: a blank field must NOT count as "reported" ─────
     check('today.officers_reported is 1, not 2 (officer 2 left blank)', d.today && d.today.officers_reported === 1, JSON.stringify(d.today));

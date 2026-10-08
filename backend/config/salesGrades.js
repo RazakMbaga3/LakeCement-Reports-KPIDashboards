@@ -2,10 +2,10 @@
   config/salesGrades.js — server-side mirror of forms/sales-grades.js.
   Keep both in sync (same convention as config/forms.js <-> auth.js).
 
-  Used to shape the grade-mix breakdown in the Sales dashboard aggregate
-  once Odoo sale.order/account.move data is wired up (see
-  services/salesOdoo.js) — grade actuals come from Odoo, not manual entry
-  (Projections are a single daily total per officer, no grade split).
+  Shapes the grade-mix breakdown in the Sales dashboard aggregate
+  (services/sales.js). Grade actuals come from Odoo's Sale Register feed,
+  resolved by product code at sync time (odooSalesSync.js), not from manual
+  entry — projections are a single daily total per officer, no grade split.
 */
 const SALES_GRADES = [
   { key: 'super42',   label: 'SUPER 42',   grade: '42.5R',       color: '#F49545' },

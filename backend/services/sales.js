@@ -2,15 +2,22 @@
   services/sales.js — Sales dashboard aggregation.
 
   Mirrors the standalone sales app's dashboard.py math (MTD/EOM run-rate
-  forecast, MoM delta) but ported onto this app's conventions: Postgres
-  for manual daily projections (daily_reports, form_type='sales-projection'),
-  services/salesOdoo.js for everything Odoo-sourced. Every Odoo-sourced
-  field degrades to an honest {ok:false, status, message} instead of a
-  fabricated number when Odoo isn't configured/reachable/mapped yet.
+  forecast, MoM delta) on this app's conventions: Postgres for the manual
+  daily projections (daily_reports, form_type='sales-projection') and, since
+  2026-10-08, for every Odoo-sourced sales figure too — read from the Sale
+  Register mirror (services/salesRegister.js over migrations 034/035, filled
+  on the live schedule by odooSalesSync.js). Nothing here calls Odoo.
+
+  Basis is INVOICE DATE, cement only — the Sales team's Register. Where a
+  period has not been synced at all (droplet history before its backfill),
+  tonnage falls back to Odoo dispatch notes (salesDelivered.js) and the
+  payload says so in `tonnage_basis`; customer, money and territory figures
+  have no dispatch equivalent and report `not_synced` instead of a number.
 */
 const db = require('../db');
-const salesOdoo = require('./salesOdoo');
+const salesRegister = require('./salesRegister');
 const salesDelivered = require('./salesDelivered');
+const odooDashboardClient = require('./odooDashboardClient');
 const { SALES_GRADES } = require('../config/salesGrades');
 
 /* Every calendar day counts as a selling day (Lake Cement sells 7 days a
@@ -97,68 +104,91 @@ async function getDashboard(year, month) {
     ? _daysInclusive(new Date(mtdEnd.getTime() + 86400000), lastOfMonth)
     : 0;
 
-  const territories = await getTerritories();
-
-  const [projRange, projToday, mtdSales, collections, uncollectable, payable, agewise, targetsRes, officerAchievement, delivered] =
-    await Promise.all([
-      _sumProjections(fmt(firstOfMonth), fmt(mtdEnd), territories),
-      _sumProjections(fmt(today), fmt(today), territories),
-      salesOdoo.fetchMtdSales(fmt(firstOfMonth), fmt(mtdEnd)),
-      salesOdoo.fetchCollections(fmt(firstOfMonth), fmt(mtdEnd), daysElapsed),
-      salesOdoo.fetchReceivedUncollectable(),
-      salesOdoo.fetchPayable(),
-      salesOdoo.fetchAgewiseOutstanding(fmt(firstOfMonth), fmt(mtdEnd)),
-      _getTargets(firstOfMonth),
-      salesOdoo.fetchOfficerAchievement(fmt(firstOfMonth), fmt(mtdEnd)),
-      salesDelivered.getDeliveredTonnage(fmt(firstOfMonth), fmt(mtdEnd)),
-    ]);
-
-  /* HEADLINE TONNAGE = DELIVERED, not ordered.
-     Reconciled against the Sales team's own September 2026 Sale Register
-     (Grand MT 59,548.76): delivered 59,578.8 (+30.0, 0.05%, one CEMENT
-     32.5 month-boundary item) vs ordered 60,764.1 (+1,215.3, +2.0%).
-     See services/salesDelivered.js for the full working. `ordered_mt` is
-     kept alongside so the two bases stay visible and comparable rather
-     than one silently replacing the other. */
-  const orderedMt = mtdSales.ok ? mtdSales.value.qty_mt : null;
-  const deliveredMt = delivered.days_with_data ? delivered.total_mt : null;
-  const mtdActual = deliveredMt != null ? deliveredMt : null;
-  /* Today's figure follows the same delivered basis as the headline — a
-     delivered MTD beside an ordered on-date number would be two different
-     measures in one row of tiles. Null (not 0) when the dispatch sync has
-     nothing for today yet, which is normal early in the day: the sync runs
-     every 30 min and a day with no deliveries recorded is not evidence of
-     a day with no deliveries. */
-  const todayRow = delivered.by_date[fmt(today)];
-  const todayActual = todayRow ? todayRow.mt : null;
-  const monthlyTarget = targetsRes.companyTotal;
-
-  const dailyRunRate   = mtdActual != null && daysElapsed ? Math.round((mtdActual / daysElapsed) * 10) / 10 : null;
-  const projectedEomMt = dailyRunRate != null ? Math.round(dailyRunRate * daysInMonth * 10) / 10 : null;
-  const requiredDaily  = (mtdActual != null && daysRemaining && monthlyTarget)
-    ? Math.round(((monthlyTarget - mtdActual) / daysRemaining) * 10) / 10
-    : null;
-
-  /* MoM: previous month's Odoo actual, same live-pull-on-request pattern. */
   const pm  = month === 1 ? 12 : month - 1;
   const pmy = month === 1 ? year - 1 : year;
   const prevFirst = new Date(Date.UTC(pmy, pm - 1, 1));
   const prevLast  = new Date(Date.UTC(pmy, pm, 0));
-  /* Previous month on the SAME delivered basis as this month. Comparing a
-     delivered MTD against an ordered previous month would make the MoM
-     delta a measure of the basis change, not of performance — on
-     September's numbers that alone would read as a spurious -2%. */
-  const prevDelivered = await salesDelivered.getDeliveredTonnage(fmt(prevFirst), fmt(prevLast));
-  const prevActual = prevDelivered.days_with_data ? prevDelivered.total_mt : null;
+  const prevDays  = prevLast.getUTCDate();
+
+  const territories = await getTerritories();
+  const [projRange, projToday, reg, prevReg, delivered, prevDelivered, targetsRes] = await Promise.all([
+    _sumProjections(fmt(firstOfMonth), fmt(mtdEnd), territories),
+    _sumProjections(fmt(today), fmt(today), territories),
+    salesRegister.getRegisterPeriod(fmt(firstOfMonth), fmt(mtdEnd), { today: fmt(today) }),
+    salesRegister.getRegisterPeriod(fmt(prevFirst), fmt(prevLast), { today: fmt(today) }),
+    salesDelivered.getDeliveredTonnage(fmt(firstOfMonth), fmt(mtdEnd)),
+    salesDelivered.getDeliveredTonnage(fmt(prevFirst), fmt(prevLast)),
+    _getTargets(firstOfMonth),
+  ]);
+
+  /* ── Basis ────────────────────────────────────────────────────────────
+     'invoiced'  — the Sale Register mirror has at least one synced day in
+                   the period. Reconciled for September 2026 invoice by
+                   invoice against the Sales team's Register.
+     'delivered' — nothing synced for the period at all (droplet history
+                   before its backfill) but the dispatch sync has days:
+                   tonnage only, labelled; within ~0.05% of the Register in
+                   September.
+     null        — neither: every figure is null, never a fabricated 0.
+     A partly synced period stays 'invoiced' and reports its coverage —
+     mixing the two bases day by day would make the total neither. */
+  const synced = new Set(reg.coverage.synced_days);
+  const basis = synced.size ? 'invoiced' : (delivered.days_with_data ? 'delivered' : null);
+  const invoiced = basis === 'invoiced';
+  /* Mirrored rows are real data whether or not this server can reach Odoo
+     right now, so they are shown either way; "not configured" only explains
+     an EMPTY mirror. */
+  const salesStatus = invoiced ? 'odoo:sale_register'
+    : !odooDashboardClient.isConfigured() ? 'not_configured' : 'not_synced';
+  const notSynced = {
+    ok: false,
+    status: salesStatus === 'not_configured' ? 'not_configured' : 'not_synced',
+    message: salesStatus === 'not_configured'
+      ? 'The Odoo sales feed is not configured on this server yet.'
+      : 'The Odoo Sale Register has not been synced for this period yet.',
+  };
+
+  const mtdActual = invoiced ? reg.mt
+    : basis === 'delivered' ? delivered.total_mt : null;
+
+  /* A synced day with no invoices is a real 0; an unsynced day is null —
+     the sync not having pulled a day is not evidence nothing was sold. */
+  const dayActual = key => {
+    if (invoiced) return synced.has(key) ? (reg.by_date[key] || 0) : null;
+    if (basis === 'delivered') { const r = delivered.by_date[key]; return r ? r.mt : null; }
+    return null;
+  };
+  const todayActual = dayActual(fmt(today));
+  const monthlyTarget = targetsRes.companyTotal;
+
+  /* Daily run rate — the Sales team's DRR: MTD over days elapsed. */
+  const dailyRunRate   = mtdActual != null && daysElapsed ? Math.round((mtdActual / daysElapsed) * 10) / 10 : null;
+  /* A closed month's "projection" is its actual — rebuilding it from the
+     rounded run rate read 59,580 for September's 59,578.8. */
+  const projectedEomMt = !isCurrentMonth ? mtdActual
+    : dailyRunRate != null ? Math.round(dailyRunRate * daysInMonth * 10) / 10 : null;
+  const requiredDaily  = (mtdActual != null && daysRemaining && monthlyTarget)
+    ? Math.round(((monthlyTarget - mtdActual) / daysRemaining) * 10) / 10
+    : null;
+
+  /* MoM only against a previous month on the SAME basis and fully present:
+     a half-synced previous month would make the delta measure the sync,
+     not sales. */
+  let prevActual = null, prevNote = null;
+  if (invoiced) {
+    if (prevReg.coverage.days_synced >= prevDays) prevActual = prevReg.mt;
+    else prevNote = `previous month only ${prevReg.coverage.days_synced} of ${prevDays} days synced`;
+  } else if (basis === 'delivered' && prevDelivered.days_with_data) {
+    prevActual = prevDelivered.total_mt;
+  }
   const momDeltaMt  = (mtdActual != null && prevActual != null) ? Math.round((mtdActual - prevActual) * 10) / 10 : null;
   const momDeltaPct = (momDeltaMt != null && prevActual) ? Math.round((momDeltaMt / prevActual) * 1000) / 10 : null;
 
-  /* Grade mix and its daily trend follow the delivered basis too, so the
-     four tiles sum to the headline MTD figure. The September Register
-     confirms this mapping independently: its CEMENT 42.5 R / B-M 42.5 N /
-     OPC 42.5 N totals match the dispatch grades to the decimal. */
-  const grades = _buildDeliveredGradeMix(delivered);
-  const gradeTrend = _buildDeliveredGradeTrend(delivered);
+  const grades = invoiced ? _buildRegisterGradeMix(reg)
+    : basis === 'delivered' ? _buildDeliveredGradeMix(delivered)
+    : SALES_GRADES.map(g => ({ ...g, mtd_actual_mt: null, share_pct: null }));
+  const gradeTrend = invoiced ? _buildRegisterGradeTrend(reg)
+    : basis === 'delivered' ? _buildDeliveredGradeTrend(delivered) : [];
 
   // See this function's doc comment: null on purpose, not stale data.
   const performance = _buildPerformance(territories, projRange, targetsRes.byOfficer, {});
@@ -166,46 +196,24 @@ async function getDashboard(year, month) {
   const dailyTrend = [];
   for (let d = new Date(firstOfMonth); d <= mtdEnd; d = new Date(d.getTime() + 86400000)) {
     const key = fmt(d);
-    /* Delivered tonnage for the day. A day the sync HAS a row for and which
-       totals zero is a real 0; a day with no row at all is null, because
-       the dispatch sync not having written a day is not evidence that
-       nothing shipped. Same rule as before, different source. */
-    const row = delivered.by_date[key];
-    const actual = row ? row.mt : null;
-    dailyTrend.push({ date: key, projected: Math.round((projRange.byDate[key] || 0) * 10) / 10, actual });
+    dailyTrend.push({ date: key, projected: Math.round((projRange.byDate[key] || 0) * 10) / 10, actual: dayActual(key) });
   }
 
-  /* Best/worst day this month — derived from the same mt_by_date that feeds
-     dailyTrend, so it can never disagree with the chart. Only days that have
-     actually elapsed are eligible (mt_by_date only contains days Odoo has
-     orders for, but an elapsed day with zero orders is a real zero that
-     should still be eligible as a "worst day" candidate, not silently
-     skipped — so this walks the same elapsed-day range as dailyTrend rather
-     than just Object.keys(mt_by_date)). Null (not a fabricated day) when
-     Odoo is unreachable or no day has elapsed yet. */
+  /* Best/worst day over the same series the chart draws, so they can never
+     disagree; a synced zero-sales day is a legitimate "worst day". */
   let bestDay = null, worstDay = null;
-  if (mtdSales.ok) {
-    for (const t of dailyTrend) {
-      if (t.actual == null) continue;
-      if (!bestDay || t.actual > bestDay.mt) bestDay = { date: t.date, mt: t.actual };
-      if (!worstDay || t.actual < worstDay.mt) worstDay = { date: t.date, mt: t.actual };
-    }
+  for (const t of dailyTrend) {
+    if (t.actual == null) continue;
+    if (!bestDay || t.actual > bestDay.mt) bestDay = { date: t.date, mt: t.actual };
+    if (!worstDay || t.actual < worstDay.mt) worstDay = { date: t.date, mt: t.actual };
   }
 
-  /* Avg order size — trivial division, degrades to null the same way every
-     other mtdSales-derived figure does when Odoo didn't answer, and to null
-     (not 0) specifically when order_count is 0 so a monthless order average
-     is never reported as a real zero-size order. */
-  const avgOrderSizeMt = (mtdSales.ok && mtdSales.value.order_count)
-    ? Math.round((mtdSales.value.qty_mt / mtdSales.value.order_count) * 10) / 10
-    : null;
-
-  const activeCustomers = mtdSales.ok ? mtdSales.value.active_customers : null;
-  const topCustomers = _buildTopCustomers(mtdSales);
+  const drr = mt => (daysElapsed ? Math.round((mt / daysElapsed) * 10) / 10 : null);
+  const expectedDays = isCurrentMonth ? daysElapsed : daysInMonth;
 
   return {
     period: {
-      year, month,
+      year, month, is_current_month: isCurrentMonth,
       label: firstOfMonth.toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }),
       prev_label: prevFirst.toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }),
     },
@@ -224,151 +232,140 @@ async function getDashboard(year, month) {
       vs_target_pct: (mtdActual != null && monthlyTarget) ? Math.round((mtdActual / monthlyTarget) * 1000) / 10 : null,
       days_elapsed: daysElapsed, days_remaining: daysRemaining, days_in_month: daysInMonth,
       daily_run_rate: dailyRunRate, projected_eom_mt: projectedEomMt, required_daily_mt: requiredDaily,
-      prev_month_actual_mt: prevActual, mom_delta_mt: momDeltaMt, mom_delta_pct: momDeltaPct,
-      avg_order_size_mt: avgOrderSizeMt, active_customers: activeCustomers,
+      prev_month_actual_mt: prevActual, prev_month_note: prevNote,
+      mom_delta_mt: momDeltaMt, mom_delta_pct: momDeltaPct,
+      invoice_count: invoiced ? reg.invoices : null,
+      avg_invoice_size_mt: (invoiced && reg.invoices) ? Math.round((reg.mt / reg.invoices) * 10) / 10 : null,
+      active_customers: invoiced ? reg.customers : null,
+      net_sales_tzs: invoiced ? reg.net_tzs : null,
+      price_per_mt_tzs: invoiced ? reg.price_per_mt_tzs : null,
       best_day: bestDay, worst_day: worstDay,
     },
     grades,
     grade_trend: gradeTrend,
     daily_trend: dailyTrend,
-    top_customers: topCustomers,
+    top_customers: invoiced ? reg.top_customers : [],
+    /* The Sales team's TOTAL DIV WISE view, without targets — Odoo's feed
+       no longer carries per-customer targets. */
+    territory: invoiced
+      ? {
+          ok: true,
+          by_division: reg.by_division.map(d => ({ ...d, drr: drr(d.mt) })),
+          by_zone: reg.by_zone.map(z => ({ ...z, drr: drr(z.mt) })),
+        }
+      : notSynced,
     performance,
-    /* Which measure the headline tonnage is on, and what the alternative
-       reads, so the page can label the basis instead of leaving a reader
-       to discover the difference by reconciling against the Register. */
     tonnage_basis: {
-      basis: 'delivered',
-      label: 'Delivered (dispatch notes)',
-      note: 'Tonnage is what was DELIVERED in the period, matching the Sales Register. '
-          + 'Ordered tonnage is shown for comparison — orders booked in one month are '
-          + 'commonly delivered in the next, so the two differ by a few percent.',
-      delivered_mt: deliveredMt,
-      ordered_mt: orderedMt,
-      variance_mt: (deliveredMt != null && orderedMt != null)
-        ? Math.round((orderedMt - deliveredMt) * 10) / 10 : null,
+      basis,
+      label: invoiced ? 'Invoiced (Sale Register)' : basis === 'delivered' ? 'Delivered (dispatch notes)' : null,
+      note: invoiced
+        ? 'Tonnage and value are by INVOICE date, cement only — the same basis as the Sales team\'s Sale Register. '
+          + 'Credit notes are not in Odoo\'s feed yet, so a month with a return reads slightly above the Register.'
+        : basis === 'delivered'
+          ? 'The Sale Register has not been synced for this period, so tonnage is from Odoo dispatch notes '
+            + '(within ~0.05% of the Register in September 2026). Customer, value and territory figures need the Register.'
+          : null,
+      coverage: {
+        days_synced: synced.size, days_expected: expectedDays,
+        complete: synced.size >= expectedDays, last_synced: reg.coverage.last_synced,
+      },
+      register_mt: invoiced ? reg.mt : null,
+      /* Dispatch tonnage for the same period, kept as an independent
+         cross-check: two Odoo feeds agreeing is evidence; one is a claim. */
+      delivered_mt: delivered.days_with_data ? delivered.total_mt : null,
       by_channel: delivered.by_channel,
-      /* Dispatch tonnage on the plain 42.5 N field, which has no Sales
-         product line. Counted in the headline (the Register counts it)
-         but not in the grade mix. Non-zero means a grade is shipping that
-         the four tiles do not represent. */
-      unclassified_mt: delivered.other_mt,
-      days_with_data: delivered.days_with_data,
-      /* Customer-attributed figures below CANNOT move to the delivered
-         basis: dispatch_report carries no customer. Flagged so the UI can
-         say so rather than implying one consistent basis page-wide. */
-      customer_figures_basis: 'ordered',
+      unclassified_mt: invoiced ? reg.by_grade.other : delivered.other_mt,
+      customer_figures_basis: invoiced ? 'invoiced' : null,
     },
-    /* Real officer actual-vs-target, sourced entirely from Odoo — see
-       salesOdoo.fetchOfficerAchievement() for the customer-target join
-       that makes this correct without needing sale_orders.salesperson
-       fixed. This is the authoritative achievement view; `performance`
-       above is the separate local-projection habit tracker. */
-    officer_achievement: officerAchievement.ok
-      ? { ok: true, ...officerAchievement.value, as_of: officerAchievement.as_of, source: officerAchievement.source }
-      : { ok: false, status: officerAchievement.status, message: officerAchievement.message },
+    officer_achievement: {
+      ok: false,
+      status: 'pending_officer_list',
+      message: 'Officer achievement is being rebuilt on Odoo\'s new sales feed, which no longer includes '
+        + 'per-customer targets. It returns once the officer list and targets are confirmed with Sales.',
+    },
     targets: {
       ok: targetsRes.companyTotal != null,
       source: targetsRes.source,
       as_of: fmt(firstOfMonth),
     },
-    collections: _publicOdooResult(collections, ['invoice_count', 'total_collected_tzs', 'outstanding_tzs', 'collection_rate_pct', 'dso_lite_days', 'dso_basis_note']),
+    collections: invoiced
+      ? {
+          ok: true,
+          ...reg.collections,
+          /* outstanding / (invoiced per elapsed day). Not a true DSO: the
+             feed has no due date, only invoice_date. */
+          dso_lite_days: (reg.collections.invoiced_tzs && daysElapsed)
+            ? Math.round((reg.collections.outstanding_tzs / (reg.collections.invoiced_tzs / daysElapsed)) * 10) / 10
+            : null,
+          dso_basis_note: 'Approximate — outstanding on this period\'s invoices divided by the average daily '
+            + 'invoiced amount. Odoo sends no due date, so this is not a true Days Sales Outstanding.',
+          basis_note: 'Collected ON this period\'s invoices (paid = invoiced − still outstanding). Not cash received '
+            + 'in the period: receipts paying other months\' invoices are not in Odoo\'s sales feed.',
+          as_of: reg.coverage.last_synced,
+          source: 'odoo:sale_register',
+        }
+      : notSynced,
     financials: {
-      received_uncollectable: _publicOdooResult(uncollectable),
-      payable: _publicOdooResult(payable),
-      agewise_outstanding: _publicOdooResult(agewise),
+      received_uncollectable: { ok: false, status: 'not_mapped',
+        message: 'Sales Receivable against Invoice is not included in the Odoo sales feed.' },
+      payable: { ok: false, status: 'not_mapped',
+        message: 'Sales Payable (Advances) is not available from the Odoo sales feed.' },
+      agewise_outstanding: invoiced
+        ? {
+            ok: true,
+            ...reg.ageing,
+            total_tzs: reg.ageing.d0_30 + reg.ageing.d31_60 + reg.ageing.d61_90 + reg.ageing.d91_120 + reg.ageing.older,
+            ageing_basis: 'invoice_date',
+            basis_note: 'Aged by invoice date — Odoo sends no due date, so these are not days-overdue buckets.',
+            as_of: reg.coverage.last_synced,
+            source: 'odoo:sale_register',
+          }
+        : notSynced,
     },
     sources: {
-      /* Propagate the real status (not_configured vs unreachable), not a
-         hardcoded literal — sales.html's ternary on this value only
-         makes sense if it can actually see both cases. */
-      sales_volume: mtdSales.ok ? 'odoo:sale.order' : mtdSales.status,
-      collections: collections.ok ? 'odoo:account.move' : collections.status,
+      sales_volume: salesStatus,
+      collections: invoiced ? 'odoo:sale_register' : notSynced.status,
     },
   };
 }
 
-/* Only expose what the frontend needs from an salesOdoo.js result — never
-   leak raw Odoo rows (mtdSales.value.orders/lines) into the API response. */
-function _publicOdooResult(result, valueKeys) {
-  if (!result.ok) return { ok: false, status: result.status, message: result.message };
-  const value = valueKeys ? Object.fromEntries(valueKeys.map(k => [k, result.value[k]])) : result.value;
-  return { ok: true, ...value, as_of: result.as_of, source: result.source };
-}
-
-/* Tonnes for one order line, unwrapping the [id, name] UoM pair this
-   service's line shapes carry and delegating the actual bag->tonne rule to
-   salesOdoo._lineMt(). Every MT figure in this file goes through here, so
-   grade shares, top-customer totals and the on-date split can never drift
-   from the qty_mt that salesOdoo computes with the same rule. */
-function _mtOfLine(line) {
-  const uom = line.product_uom;
-  const uomName = (Array.isArray(uom) ? uom[1] : uom) || '';
-  return salesOdoo._lineMt(uomName, line.product_uom_qty || 0);
-}
-
-/* Product-name -> grade matching, checked against the real Odoo catalogue
-   2026-08-24 (Products list: 5 Finished Goods — FG001 CEMENT 42.5 R,
-   FG002 CEMENT 32.5, FG003 CEMENT 42.5 N, FG004 CEMENT OPC 42.5 N,
-   FG005 CEMENT B-M 42.5 N). Confirmed by opening FG001/FG002: their
-   Sales Description ("CEM II A – L 42.5 R" / "CEM II B – L 32.5 N")
-   matches SUPER 42 / MAX 32 exactly.
-
-   The generic "contains 42.5" rule this used to fall back to was a real
-   bug against this catalogue: FG003 and FG005 both contain "42.5" too,
-   so their volumes were silently folding into the SUPER 42 bucket
-   alongside FG001, overcounting it. Pinning SUPER 42 to the one
-   confirmed code (FG001) instead — FG003 correctly falls through to the
-   "Unmatched product" bucket until its own identity is confirmed.
-   FG005's identity WAS confirmed 2026-09-09: it's the Duramax 42 marketing
-   name, which (as already suspected here) appears nowhere in FG005's
-   actual Odoo name "CEMENT B-M 42.5 N" — a plain "DURAMAX" substring
-   check could never have found it, so FG005 is pinned by product code
-   below, the same way FG001 is. "OPC"/"PREMIUM" checks are kept as
-   literal, unambiguous substrings of the real names where they apply
-   (only FG004 contains "OPC" — no false-positive risk like the 42.5 case). */
-function _matchGrade(productName) {
-  const n = (productName || '').toUpperCase();
-  if (n.includes('[FG005]')) return 'duramax42'; // CEMENT B-M 42.5 N — confirmed 2026-09-09
-  if (n.includes('OPC') || n.includes('PREMIUM')) return 'premiumopc';
-  if (n.includes('32.5')) return 'max32';
-  if (n.includes('[FG001]')) return 'super42';
-  return null;
-}
-
-function _buildGradeMix(mtdSales) {
-  const base = SALES_GRADES.map(g => ({ ...g, mtd_actual_mt: null, share_pct: null }));
-  if (!mtdSales.ok) return base;
-
-  const byGrade = Object.fromEntries(SALES_GRADES.map(g => [g.key, 0]));
-  let unmatched = 0;
-  for (const line of mtdSales.value.lines) {
-    const mt = _mtOfLine(line);
-    const productName = Array.isArray(line.product_id) ? line.product_id[1] : '';
-    const key = _matchGrade(productName);
-    if (key) byGrade[key] += mt;
-    else unmatched += mt;
-  }
-  const total = mtdSales.value.qty_mt || 0;
-  const graded = base.map(g => ({
-    ...g,
-    mtd_actual_mt: Math.round(byGrade[g.key] * 10) / 10,
-    share_pct: total ? Math.round((byGrade[g.key] / total) * 1000) / 10 : 0,
+/* Grade mix on the INVOICED basis (Sale Register mirror). Shares are of
+   the cement total, so the four tiles plus any "other cement" sum to the
+   headline. Grades are keyed on Odoo product code (config/salesGrades.js
+   PRODUCT_CODE_GRADE), resolved once at sync time. Cement with no Sales
+   product line (FG003, plain 42.5 N) gets its own bucket, never folded
+   into a neighbouring grade. */
+function _buildRegisterGradeMix(reg) {
+  const total = reg.mt || 0;
+  const share = v => (total ? Math.round((v / total) * 1000) / 10 : 0);
+  const graded = SALES_GRADES.map(g => ({
+    ...g, mtd_actual_mt: reg.by_grade[g.key] ?? 0, share_pct: share(reg.by_grade[g.key] || 0),
   }));
-  if (unmatched > 0.5) {
-    graded.push({ key: 'unmatched', label: 'Unmatched product', grade: '', color: '#9CA3AF',
-      mtd_actual_mt: Math.round(unmatched * 10) / 10,
-      share_pct: total ? Math.round((unmatched / total) * 1000) / 10 : 0 });
+  if (reg.by_grade.other > 0.5) {
+    graded.push({ key: 'unmatched', label: 'Other cement', grade: '', color: '#9CA3AF',
+      mtd_actual_mt: reg.by_grade.other, share_pct: share(reg.by_grade.other) });
   }
   return graded;
 }
 
-/* Grade mix on the DELIVERED basis. Shares SALES_GRADES (label, colour,
-   grade tag) with the ordered-basis builder below so the tiles look
-   identical; only the source changes. Shares are of the cement total, so
+/* {date, <gradeKey>: mt} rows for the Grade Mix Trend chart. */
+function _buildRegisterGradeTrend(reg) {
+  return Object.keys(reg.by_date_grade).sort().map(date => {
+    const row = reg.by_date_grade[date];
+    const out = { date };
+    for (const g of SALES_GRADES) out[g.key] = row[g.key] || 0;
+    if (row.other) out.unmatched = row.other;
+    return out;
+  });
+}
+
+/* Grade mix on the DELIVERED basis — the fallback for a period the Sale
+   Register has not been synced for. Shares SALES_GRADES (label, colour,
+   grade tag) with _buildRegisterGradeMix() so the tiles look identical;
+   only the source changes. Shares are of the cement total, so
    they always sum to 100% across the four lines.
 
-   There is no "Unmatched product" bucket here, unlike the ordered-basis
-   version: odooDispatchSync.js resolves every row to a known field or
+   There is no "Unmatched product" bucket here: odooDispatchSync.js resolves every row to a known field or
    skips it as non-cement at write time, so nothing unmatched can reach
    daily_reports. `other_mt` (the plain 42.5 N field, which has no Sales
    product line) is reported separately on the payload instead. */
@@ -385,8 +382,8 @@ function _buildDeliveredGradeMix(delivered) {
 }
 
 /* Per-day-per-grade rows for the Grade Mix Trend chart, delivered basis.
-   Shape matches _buildGradeMixByDay()'s output ({date, <gradeKey>: mt})
-   so sales.html renders it unchanged. */
+   Same shape as _buildRegisterGradeTrend() ({date, <gradeKey>: mt}) so
+   sales.html renders either. */
 function _buildDeliveredGradeTrend(delivered) {
   if (!delivered.days_with_data) return [];
   return Object.keys(delivered.by_date).sort().map(date => {
@@ -397,86 +394,14 @@ function _buildDeliveredGradeTrend(delivered) {
   });
 }
 
-/* Per-day-per-grade breakdown for the Grade Mix Trend chart — same join
-   (line -> order_id -> order.date_order) fetchMtdSales() already does for
-   mt_by_date, and the same _matchGrade() + MT conversion _buildGradeMix()
-   uses, just bucketed by day instead of collapsed to one MTD total. Lines
-   that don't resolve to a known grade are folded into "Unmatched product"
-   per day, same honest-signal convention as the MTD snapshot — never
-   silently dropped. Returns [] (not null) when Odoo didn't answer, so the
-   chart can render its own "no data" state without a separate ok flag;
-   sales.js keeps that flag on the sibling `grades` field already. */
-function _buildGradeMixByDay(mtdSales) {
-  if (!mtdSales.ok) return [];
-
-  const dateOfOrder = new Map(
-    mtdSales.value.orders.map(o => [o.id, String(o.date_order || '').slice(0, 10)]));
-
-  const byDate = new Map(); // date -> { gradeKey -> mt }
-  for (const line of mtdSales.value.lines) {
-    const orderId = Array.isArray(line.order_id) ? line.order_id[0] : line.order_id;
-    const date = dateOfOrder.get(orderId);
-    if (!date) continue;
-
-    const mt = _mtOfLine(line);
-    const productName = Array.isArray(line.product_id) ? line.product_id[1] : '';
-    const key = _matchGrade(productName) || 'unmatched';
-
-    if (!byDate.has(date)) byDate.set(date, {});
-    const dayBucket = byDate.get(date);
-    dayBucket[key] = (dayBucket[key] || 0) + mt;
-  }
-
-  return Array.from(byDate.keys()).sort().map(date => {
-    const dayBucket = byDate.get(date);
-    const row = { date };
-    for (const g of SALES_GRADES) row[g.key] = Math.round((dayBucket[g.key] || 0) * 10) / 10;
-    if (dayBucket.unmatched) row.unmatched = Math.round(dayBucket.unmatched * 10) / 10;
-    return row;
-  });
-}
-
-/* Top customers by MT this month — group lines by their order's customer
-   (joining each line's order_id back to its order's customer), sum MT per
-   customer with the same conversion _buildGradeMix() uses, sort desc, cap
-   at 10. Real Odoo customer names — sales.html must escape them the same
-   way it already escapes territory fields. Returns [] when Odoo didn't
-   answer; the frontend's own `grades`/mtdSales ok-flag already carries the
-   pending/unreachable state for this section. */
-function _buildTopCustomers(mtdSales) {
-  if (!mtdSales.ok) return [];
-
-  const customerOfOrder = new Map(
-    mtdSales.value.orders.map(o => [o.id, Array.isArray(o.partner_id) ? o.partner_id : [null, null]]));
-
-  const byCustomer = new Map(); // partner_id -> { name, mt }
-  for (const line of mtdSales.value.lines) {
-    const orderId = Array.isArray(line.order_id) ? line.order_id[0] : line.order_id;
-    const [partnerId, partnerName] = customerOfOrder.get(orderId) || [null, null];
-    if (partnerId == null) continue;
-
-    const mt = _mtOfLine(line);
-
-    if (!byCustomer.has(partnerId)) byCustomer.set(partnerId, { name: partnerName || 'Unknown customer', mt: 0 });
-    byCustomer.get(partnerId).mt += mt;
-  }
-
-  return Array.from(byCustomer.values())
-    .map(c => ({ name: c.name, mt: Math.round(c.mt * 10) / 10 }))
-    .sort((a, b) => b.mt - a.mt)
-    .slice(0, 10);
-}
-
 /* Division -> Zone/Officer rollup for the LOCAL manual-projection system
    (sales_territories + daily "sales-projection" reports + the interim
    local sales_targets table) — a separate, still-useful thing from the
-   real Odoo achievement view below. actual_mt here stays null: this
+   Odoo-sourced `officer_achievement`. actual_mt here stays null: this
    table's officer roster is placeholder data (sales_territories was
    never backfilled with the real names/codes), and matching it against
-   Odoo's own officer names would be a fragile guess, not the confirmed
-   join salesOdoo.fetchOfficerAchievement() does via customer_id. Use
-   `officer_achievement` (Odoo-sourced, real officer names, real targets)
-   for actual-vs-target; this table is for the daily projection habit. */
+   Odoo's own officer names would be a fragile guess. This table is for
+   the daily projection habit, not actual-vs-target. */
 function _buildPerformance(territories, projRange, targetByOfficer, actualByOfficer) {
   const byDivision = new Map();
   for (const t of territories) {
@@ -538,7 +463,6 @@ async function _getTargets(firstOfMonth) {
 
 module.exports = {
   getDashboard, getTerritories,
-  // Exported for test/sales-aggregation.test.js (pure functions, no DB/Odoo) —
-  // same pattern as services/odooProductionMapper.js's mapDay/flattenReport.
-  _buildGradeMix, _buildGradeMixByDay, _buildTopCustomers, _matchGrade,
+  // Exported for test/sales-aggregation.test.js (pure functions).
+  _buildRegisterGradeMix, _buildRegisterGradeTrend,
 };

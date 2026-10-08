@@ -11,7 +11,7 @@
     • Engineering & Spare stock, stock ageing, and gate-pass/requisition
       activity (RGP/NRGP/MRQ) live only in Odoo and are NOT wired yet —
       they return the same {ok:false, status:'not_mapped'|'not_configured'}
-      shape used by salesOdoo.js/purchasesOdoo.js so the page renders each
+      shape used by purchasesOdoo.js and the Sales dashboard so the page renders each
       tile's real state instead of one integration blanking the section.
 
   Closing-stock arithmetic is a deliberate mirror of the entry form's

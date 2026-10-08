@@ -140,7 +140,7 @@
   <!-- ── GRADE MIX ────────────────────────────────────────── -->
   <div class="in-section-hdr">
     <span class="in-section-title">MTD Sales — Grade Mix</span>
-    <span class="in-section-sub">— all four product lines, delivered tonnage from Odoo dispatch notes</span>
+    <span class="in-section-sub" id="sd-grade-sub">— all four product lines</span>
   </div>
   <div class="in-card">
     <div class="sk-row" id="sd-grades"></div>
@@ -171,14 +171,14 @@
   <!-- ── CUSTOMERS ────────────────────────────────────────── -->
   <div class="in-section-hdr">
     <span class="in-section-title">Customers</span>
-    <span class="in-section-sub">— active customers and top volumes this month, on ordered tonnage (dispatch notes carry no customer)</span>
+    <span class="in-section-sub">— active customers and top volumes this month, by invoice (Odoo Sale Register)</span>
   </div>
   <div class="in-card">
     <div class="sk-row" id="sd-customer-summary" style="margin-bottom:16px"></div>
     <div class="tbl-scroll">
       <table class="rt" style="min-width:420px">
         <thead>
-          <tr><th class="tl">Rank</th><th class="tl">Customer</th><th class="num">MT (MTD)</th></tr>
+          <tr><th class="tl">Rank</th><th class="tl">Customer</th><th class="num">MT (MTD)</th><th class="num">Invoices</th></tr>
         </thead>
         <tbody id="sd-top-customers"></tbody>
       </table>
@@ -186,10 +186,37 @@
     <div class="in-empty" id="sd-top-customers-empty" style="display:none"></div>
   </div>
 
+  <!-- ── DIVISION & ZONE ─────────────────────────────────── -->
+  <!-- The Sales team's TOTAL DIV WISE view, from Odoo's division/zone on
+       each invoice. Targets join once the Sales team's officer/target list
+       is agreed — Odoo's feed no longer carries per-customer targets. -->
+  <div class="in-section-hdr">
+    <span class="in-section-title">Division &amp; Zone</span>
+    <span class="in-section-sub">— invoiced tonnage and daily run rate by territory, month to date (targets to follow)</span>
+  </div>
+  <div class="in-card">
+    <div class="tbl-scroll">
+      <table class="rt perf-table" style="min-width:640px">
+        <thead>
+          <tr>
+            <th class="tl grp-hdr">Division / Zone</th>
+            <th class="num grp-hdr">MTD MT</th>
+            <th class="num grp-hdr">Share</th>
+            <th class="num grp-hdr">Run rate (MT/day)</th>
+            <th class="num grp-hdr">Invoices</th>
+            <th class="num grp-hdr">Customers</th>
+          </tr>
+        </thead>
+        <tbody id="sd-territory"></tbody>
+      </table>
+    </div>
+    <div class="in-empty" id="sd-territory-empty" style="display:none"></div>
+  </div>
+
   <!-- ── COLLECTIONS ──────────────────────────────────────── -->
   <div class="in-section-hdr">
     <span class="in-section-title">Collection &amp; Outstanding</span>
-    <span class="in-section-sub">— from Odoo, month to date</span>
+    <span class="in-section-sub">— on this month's invoices, from Odoo's Sale Register (not cash received in the month)</span>
   </div>
   <div class="in-card">
     <div class="sk-row" id="sd-collections"></div>
@@ -198,7 +225,7 @@
   <!-- ── RECEIVABLES & PAYABLES ───────────────────────────── -->
   <div class="in-section-hdr">
     <span class="in-section-title">Receivables &amp; Payables</span>
-    <span class="in-section-sub">— pending Odoo mapping, see status on each tile</span>
+    <span class="in-section-sub">— outstanding ageing from the Sale Register; the other two have no Odoo field yet</span>
   </div>
   <div class="in-card">
     <div class="sk-row sk-row-3" id="sd-financials"></div>
@@ -214,7 +241,7 @@
   <!-- ── OFFICER ACHIEVEMENT (real, Odoo-sourced) ─────────── -->
   <div class="in-section-hdr">
     <span class="in-section-title">Officer Achievement</span>
-    <span class="in-section-sub" id="sd-oa-sub">— ordered tonnage vs target, attributed via each customer's assigned officer (dispatch notes carry no customer, so this stays on the ordered basis)</span>
+    <span class="in-section-sub" id="sd-oa-sub">— actual sales vs target per sales officer</span>
   </div>
   <div class="in-card">
     <div class="tbl-scroll">
@@ -313,11 +340,12 @@
   function esc(s) { return escHtml(s); }
 
   /* Why an Odoo-sourced figure is missing, from the backend's real status.
-     "format_changed" is the 8 Oct 2026 sales-feed reshape: Odoo is up, the
-     old feed is simply gone, so "unreachable" would be untrue. */
+     "not_synced": Odoo is configured but the Sale Register mirror holds
+     nothing for this period yet (history not backfilled), which is not
+     the same as Odoo being down. */
   function odooMsg(status) {
     if (status === 'not_configured') return 'Odoo not configured';
-    if (status === 'format_changed') return 'Odoo sales feed being re-wired';
+    if (status === 'not_synced') return 'Sale Register not synced for this period';
     return 'Odoo unreachable';
   }
 
@@ -368,101 +396,124 @@
     '</div>';
   }
 
-  /* The tonnage-basis banner. States the measure, and quantifies the
-     ordered/delivered gap for THIS period rather than describing it in
-     the abstract — the gap is what prompted the change, and its size
-     varies month to month. */
+  /* The basis banner: which measure the page is on, how complete it is,
+     and the dispatch-note cross-check. Sales reconcile this page against
+     their own Sale Register, so the basis is stated, not left to be
+     discovered. */
   function renderBasis(d) {
     var el = document.getElementById('sd-basis');
-    var tb = d.tonnage_basis;
-    if (!tb || tb.delivered_mt == null) { el.style.display = 'none'; return; }
-    var bits = '<strong style="color:var(--navy)">Tonnage shown is DELIVERED</strong> '
-      + '— what actually left the plant on dispatch notes, the same basis as the Sale Register.';
-    if (tb.ordered_mt != null && tb.variance_mt != null) {
-      bits += ' Ordered tonnage for this period was ' + fmt(tb.ordered_mt) + ' MT ('
-        + (tb.variance_mt >= 0 ? '+' : '') + fmt(tb.variance_mt) + ' MT), because orders booked '
-        + 'in one month are commonly delivered in the next.';
+    var tb = d.tonnage_basis || {};
+    var gsub = document.getElementById('sd-grade-sub');
+    if (!tb.basis) { el.style.display = 'none'; gsub.textContent = '— all four product lines'; return; }
+    var cov = tb.coverage || {};
+    var bits;
+    if (tb.basis === 'invoiced') {
+      bits = '<strong style="color:var(--navy)">Figures are from Odoo\'s Sale Register</strong> — by invoice date, '
+        + 'cement only: the same basis as the Sales team\'s register.';
+      if (!cov.complete) {
+        bits += ' <span style="color:var(--orange-ink)">' + cov.days_synced + ' of ' + cov.days_expected
+          + ' days synced so far — totals rise as the rest arrive.</span>';
+      }
+      if (tb.delivered_mt != null) {
+        bits += ' Dispatch notes for the same days: ' + fmt(tb.delivered_mt) + ' MT (counted by dispatch date).';
+      }
+      bits += ' Credit notes are not in Odoo\'s feed yet.';
+      gsub.textContent = '— all four product lines, invoiced tonnage (Sale Register)';
+    } else {
+      bits = '<strong style="color:var(--navy)">Tonnage is from Odoo dispatch notes</strong> — the Sale Register '
+        + 'has not been synced for this period, so customer, value and territory figures are not available.';
+      gsub.textContent = '— all four product lines, from Odoo dispatch notes';
     }
     if (tb.unclassified_mt) {
       bits += ' <span style="color:var(--orange-ink)">' + fmt(tb.unclassified_mt)
-        + ' MT shipped on a grade with no product line below, so it is in the total but not the mix.</span>';
+        + ' MT is cement with no product line below — in the total, not the mix.</span>';
     }
-    bits += ' Customer, officer and division figures further down remain on the <em>ordered</em> '
-      + 'basis — dispatch notes carry no customer.';
     el.innerHTML = bits;
     el.style.display = 'block';
   }
 
   function renderHero(d) {
     var mtd = d.mtd, today = d.today;
-    var html = '';
-    /* Tonnage is DELIVERED, matching the Sales Register. The tile says so,
-       because the number visibly changed when the basis moved and a reader
-       who remembers the old figure needs to know why. */
     var tb = d.tonnage_basis || {};
+    var basisTag = tb.basis === 'invoiced' ? 'Invoiced' : tb.basis === 'delivered' ? 'Delivered' : 'Sales';
+    var missing = odooMsg(d.sources.sales_volume);
+    var html = '';
     html += sk({
-      label: 'MTD Sales', deptTag: 'Delivered',
+      label: 'MTD Sales', deptTag: basisTag,
       value: fmt(mtd.actual_mt), unit: 'MT',
-      pending: mtd.actual_mt == null, pendingMsg: 'No dispatch data synced for this period yet',
+      pending: mtd.actual_mt == null, pendingMsg: missing,
       target: mtd.target_mt ? fmt(mtd.target_mt) + ' MT target' : null,
       pctVal: mtd.vs_target_pct, cls: achClass(mtd.vs_target_pct),
-      status: mtd.actual_mt != null
-        ? 'Delivered basis — matches Sales Register'
-        : null,
+      status: mtd.actual_mt == null ? null
+        : tb.basis === 'invoiced' ? fmt(mtd.invoice_count) + ' invoices — Sale Register'
+        : 'From dispatch notes',
     });
     html += sk({
-      label: 'Sales On Date', deptTag: 'Delivered',
+      label: 'Sales On Date', deptTag: basisTag,
       value: fmt(today.actual_mt), unit: 'MT',
-      pending: today.actual_mt == null, pendingMsg: 'No deliveries synced for today yet',
+      pending: today.actual_mt == null || !d.period.is_current_month,
+      pendingMsg: !d.period.is_current_month ? 'Today is not in the selected month'
+        : tb.basis ? 'Today not synced yet' : missing,
       status: 'Projected today: ' + fmt(today.projected_mt) + ' MT',
     });
     html += sk({
       label: 'Projected EOM', deptTag: 'Forecast',
       value: fmt(mtd.projected_eom_mt), unit: 'MT',
-      pending: mtd.projected_eom_mt == null, pendingMsg: 'Needs Odoo MTD actual to compute',
+      pending: mtd.projected_eom_mt == null, pendingMsg: 'Needs an MTD actual to compute',
       target: mtd.target_mt ? fmt(mtd.target_mt) + ' MT target' : null,
-      status: mtd.daily_run_rate != null ? fmt(mtd.daily_run_rate) + ' MT/day run rate' : null,
+      status: !d.period.is_current_month ? (mtd.projected_eom_mt != null ? 'Month closed — actual' : null)
+        : mtd.daily_run_rate != null ? 'At ' + fmt(mtd.daily_run_rate) + ' MT/day' : null,
     });
     html += sk({
       label: 'Achievement vs Target', deptTag: 'MTD',
       value: pct(mtd.vs_target_pct), unit: '',
       pending: mtd.vs_target_pct == null,
-      pendingMsg: mtd.target_mt ? 'Awaiting Odoo actual' : 'No target set for this month',
+      pendingMsg: mtd.target_mt ? 'Awaiting an MTD actual' : 'No target set for this month',
       cls: achClass(mtd.vs_target_pct),
-      status: mtd.mom_delta_pct != null ? (mtd.mom_delta_pct >= 0 ? '▲ ' : '▼ ') + Math.abs(mtd.mom_delta_pct).toFixed(1) + '% vs ' + d.period.prev_label : null,
+      status: mtd.mom_delta_pct != null
+        ? (mtd.mom_delta_pct >= 0 ? '▲ ' : '▼ ') + Math.abs(mtd.mom_delta_pct).toFixed(1) + '% vs ' + d.period.prev_label
+        : (mtd.prev_month_note ? 'No comparison: ' + mtd.prev_month_note : null),
     });
     document.getElementById('sd-hero').innerHTML = html;
 
+    /* Second row. Daily run rate works on either basis; the other three need
+       the Sale Register (dispatch notes carry no invoice, customer or value)
+       and say so rather than borrowing a number from elsewhere. */
     var html2 = '';
     html2 += sk({
       label: 'Avg Daily Sales (MTD)', deptTag: 'Run Rate',
       value: fmt(mtd.daily_run_rate), unit: 'MT/day',
-      pending: mtd.daily_run_rate == null, pendingMsg: odooMsg(d.sources.sales_volume),
+      pending: mtd.daily_run_rate == null, pendingMsg: missing,
       status: mtd.actual_mt != null ? fmt(mtd.actual_mt) + ' MT over ' + mtd.days_elapsed + ' days' : null,
     });
     html2 += sk({
-      /* Unlike its neighbour above, this can ONLY be ordered-basis: dispatch
-         notes (the delivered source) carry per-day/grade/channel totals with
-         no concept of an individual order, so there is no delivered-basis
-         figure to fall back to. The renderBasis() banner's "figures further
-         down remain on the ordered basis" line doesn't cover this tile — it
-         sits in the hero row, not "further down" — so it needs its own
-         label rather than silently differing from the tile beside it. */
-      label: 'Avg Order Size', deptTag: 'Ordered — MTD',
-      value: fmt(mtd.avg_order_size_mt), unit: 'MT/order',
-      pending: mtd.avg_order_size_mt == null, pendingMsg: odooMsg(d.sources.sales_volume),
+      label: 'Avg Invoice Size', deptTag: 'MTD',
+      value: fmt(mtd.avg_invoice_size_mt), unit: 'MT/invoice',
+      pending: mtd.avg_invoice_size_mt == null, pendingMsg: missing,
+      status: mtd.invoice_count != null ? fmt(mtd.invoice_count) + ' invoices' : null,
+    });
+    html2 += sk({
+      label: 'Net Sales (ex-VAT)', deptTag: 'Value',
+      value: tzs(mtd.net_sales_tzs), unit: '',
+      pending: mtd.net_sales_tzs == null, pendingMsg: missing,
+      status: 'Includes excise; cement only',
+    });
+    html2 += sk({
+      label: 'Avg Price per MT', deptTag: 'Realisation',
+      value: tzs(mtd.price_per_mt_tzs), unit: '',
+      pending: mtd.price_per_mt_tzs == null, pendingMsg: missing,
+      /* Not the Register's NCR: Odoo's feed does not split freight out. */
+      status: 'Ex-VAT and excise; freight still included',
     });
     document.getElementById('sd-hero-2').innerHTML = html2;
   }
 
   /* Best/worst day — a small stat pair under the Daily Sales Trend chart.
-     A day with real zero orders is a legitimate "worst day" (an elapsed
-     day with no sales), distinct from mtd.best_day/worst_day being null
-     outright when Odoo could not be reached — sk()'s own pending path
-     already tells those two states apart. */
+     A synced day with no sales is a legitimate "worst day"; an unsynced day
+     is null and never eligible (the backend's daily series draws that line). */
   function renderBestWorst(mtd) {
     var el = document.getElementById('sd-best-worst');
-    var pendingMsg = 'No day has elapsed yet, or Odoo is unreachable';
+    var pendingMsg = 'No synced day yet this month';
     var html = sk({
       label: 'Best Day (MTD)', deptTag: 'Peak',
       value: mtd.best_day ? fmt(mtd.best_day.mt) : null, unit: 'MT',
@@ -528,20 +579,23 @@
     });
   }
 
+  /* Collected = invoiced − still outstanding, on THIS month's invoices. Not
+     cash received in the month: receipts that pay other months' invoices are
+     not in Odoo's sales feed (c.basis_note carries the exact caveat). */
   function renderCollections(c) {
     var html;
     if (!c.ok) {
-      html = ['MTD Collected', 'Outstanding', 'Collection Rate', 'DSO (approx.)'].map(function (label) {
+      html = ['Collected on MTD Invoices', 'Outstanding', 'Collection Rate', 'DSO (approx.)'].map(function (label) {
         return sk({ label: label, pending: true, pendingMsg: c.message });
       }).join('');
     } else {
-      html = sk({ label: 'MTD Collected', value: tzs(c.total_collected_tzs), status: (c.invoice_count || 0) + ' invoices' })
-        + sk({ label: 'Outstanding', value: tzs(c.outstanding_tzs), cls: (c.collection_rate_pct || 0) >= 90 ? 'on-track' : 'watch' })
-        + sk({ label: 'Collection Rate', value: pct(c.collection_rate_pct), pctVal: c.collection_rate_pct, cls: achClass(c.collection_rate_pct) })
-        // DSO-lite is an invoice-date-basis approximation, NOT a true Days
-        // Sales Outstanding against payment terms — same honesty pattern
-        // as fetchAgewiseOutstanding's basis_note. c.dso_basis_note carries
-        // the exact caveat from the backend rather than restating it here.
+      html = sk({ label: 'Collected on MTD Invoices', value: tzs(c.total_collected_tzs),
+                  status: 'of ' + tzs(c.invoiced_tzs) + ' invoiced' })
+        + sk({ label: 'Outstanding', value: tzs(c.outstanding_tzs),
+               cls: (c.collection_rate_pct || 0) >= 90 ? 'on-track' : 'watch',
+               status: fmt(c.open_invoices) + ' of ' + fmt(c.invoice_count) + ' invoices still open' })
+        + sk({ label: 'Collection Rate', value: pct(c.collection_rate_pct), pctVal: c.collection_rate_pct,
+               cls: achClass(c.collection_rate_pct), status: 'Share of invoiced value already paid' })
         + sk({
             label: 'DSO (approx.)', deptTag: 'Est.',
             value: fmt(c.dso_lite_days), unit: 'days',
@@ -574,8 +628,39 @@
     }
     empty.style.display = 'none';
     tbody.innerHTML = topCustomers.map(function (c, i) {
-      return '<tr><td class="tl">' + (i + 1) + '</td><td class="tl">' + esc(c.name) + '</td>' +
-        '<td class="num">' + fmt(c.mt) + '</td></tr>';
+      return '<tr><td class="tl">' + (i + 1) + '</td><td class="tl">' + esc(c.name)
+        + (c.code ? ' <span style="color:var(--text-muted);font-weight:500">' + esc(c.code) + '</span>' : '') + '</td>'
+        + '<td class="num">' + fmt(c.mt) + '</td><td class="num">' + fmt(c.invoices) + '</td></tr>';
+    }).join('');
+  }
+
+  /* Division -> zone rows, the Sales team's TOTAL DIV WISE layout. Zone and
+     division names come from Odoo and are escaped like every other Odoo
+     string on this page. Customers are only shown per zone: one customer can
+     buy in two zones, so summing zones would double-count them. */
+  function renderTerritory(t, salesStatus) {
+    var tbody = document.getElementById('sd-territory');
+    var empty = document.getElementById('sd-territory-empty');
+    if (!t || !t.ok || !t.by_division.length) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+      empty.textContent = (t && t.ok) ? 'No invoices yet this month.' : ((t && t.message) || odooMsg(salesStatus));
+      return;
+    }
+    empty.style.display = 'none';
+    var total = t.by_division.reduce(function (s, d) { return s + (d.mt || 0); }, 0);
+    var share = function (mt) { return total ? (mt / total * 100).toFixed(1) + '%' : '—'; };
+    tbody.innerHTML = t.by_division.map(function (d) {
+      var zones = t.by_zone.filter(function (z) { return z.division === d.division; });
+      return '<tr class="div-row"><td class="tl">' + esc(d.division) + '</td>'
+        + '<td class="num">' + fmt(d.mt) + '</td><td class="num">' + share(d.mt) + '</td>'
+        + '<td class="num">' + fmt(d.drr) + '</td><td class="num">' + fmt(d.invoices) + '</td><td class="num"></td></tr>'
+        + zones.map(function (z) {
+            return '<tr class="zone-row"><td class="tl">' + esc(z.zone) + '</td>'
+              + '<td class="num">' + fmt(z.mt) + '</td><td class="num">' + share(z.mt) + '</td>'
+              + '<td class="num">' + fmt(z.drr) + '</td><td class="num">' + fmt(z.invoices) + '</td>'
+              + '<td class="num">' + fmt(z.customers) + '</td></tr>';
+          }).join('');
     }).join('');
   }
 
@@ -637,7 +722,8 @@
     var html = Object.keys(labels).map(function (key) {
       var r = f[key];
       if (r.ok) {
-        return sk({ label: labels[key], value: tzs(r.total_tzs), status: (r.invoice_count || 0) + ' invoices' });
+        return sk({ label: labels[key], value: tzs(r.total_tzs),
+                    status: (r.invoice_count || 0) + ' open invoices, aged by invoice date (Odoo sends no due date)' });
       }
       return sk({ label: labels[key], pending: true, pendingMsg: r.message });
     }).join('');
@@ -773,6 +859,7 @@
       renderBestWorst(d.mtd);
       renderGradeTrend(d.grade_trend, d.grades);
       renderCustomers(d.mtd, d.top_customers, d.sources.sales_volume);
+      renderTerritory(d.territory, d.sources.sales_volume);
       renderCollections(d.collections);
       renderFinancials(d.financials);
       renderTarget(d.targets, d.mtd);

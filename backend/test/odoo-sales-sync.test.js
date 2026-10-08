@@ -98,6 +98,15 @@ test('mapInvoice: an unconvertible cement UoM is reported, not silently counted'
   assert.equal(m.invoice[25], 0, 'cement_mt excludes the line it could not convert');
 });
 
+test('mapInvoice: a NON-cement line in an odd unit is not reported (it affects no figure)', () => {
+  const inv = invoice();
+  inv.invoice_lines.push({ line_id: 900000109, product_id: 1, product: 'INSURANCE CLAIM PASSED',
+    product_code: 'X', quantity: 1, uom: 'PCS', rate: 5, amount: 5, taxed_amount: 5 });
+  const m = sync.mapInvoice(inv);
+  assert.equal(m.unknownUom.length, 0);
+  assert.equal(m.invoice[25], 32, 'cement tonnage unchanged');
+});
+
 test('mapInvoice: a row without id/number/date is rejected, not stored with nulls', () => {
   assert.equal(sync.mapInvoice(invoice({ invoice_date: null })).rejected, true);
   assert.equal(sync.mapInvoice(invoice({ invoice_id: null })).rejected, true);
@@ -109,6 +118,7 @@ const DAY = '2001-01-15';
 async function clean() {
   await db.query("DELETE FROM odoo_sale_invoices WHERE invoice_date BETWEEN '2001-01-01' AND '2001-12-31'");
   await db.query('DELETE FROM odoo_sale_receipts WHERE receipt_id BETWEEN 900000000 AND 900000999');
+  await db.query("DELETE FROM odoo_sale_sync_days WHERE sync_day BETWEEN '2001-01-01' AND '2001-12-31'");
 }
 test.before(clean);
 test.after(async () => { await clean(); });
@@ -163,4 +173,12 @@ test('storeDay: a receipt shared by two invoices is stored once and linked twice
   })]);
   assert.equal(await count('SELECT count(*) c FROM odoo_sale_receipts WHERE receipt_id = 900000201'), 1);
   assert.equal(await count('SELECT count(*) c FROM odoo_sale_invoice_receipts WHERE receipt_id = 900000201'), 2);
+});
+
+test('storeDay: marks the day synced, counting what the table holds (so a skipped prune is not under-counted)', async () => {
+  await sync.storeDay('2001-01-16', []);
+  const empty = (await db.query("SELECT invoices FROM odoo_sale_sync_days WHERE sync_day = '2001-01-16'")).rows[0];
+  assert.equal(empty.invoices, 0, 'a genuinely empty day is recorded as synced with 0 invoices');
+  const held = (await db.query('SELECT invoices FROM odoo_sale_sync_days WHERE sync_day = $1', [DAY])).rows[0];
+  assert.ok(held.invoices >= 1);
 });

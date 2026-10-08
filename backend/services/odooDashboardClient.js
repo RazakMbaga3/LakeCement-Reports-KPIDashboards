@@ -56,7 +56,8 @@
        PRODUCTION: ~1 s/month purchase, ~8-15 s/month sales.
     3. sale_dashboard_report's `customer_receipts` ignores the date filter
        entirely (95% of rows came back outside the requested range).
-       Consumers must filter it client-side — see salesOdoo.js.
+       Consumers must filter it client-side. (Superseded 2026-10-08: the
+       reshaped feed nests receipts per invoice — see odooSalesSync.js.)
        PRODUCTION: STILL BROKEN — a 2-day window returned 15,826 receipts
        dating back to 2024-04-01 (99% out of range) and that one array is
        ~3 of the response's 3.8 MB; a month returns ~30,700.

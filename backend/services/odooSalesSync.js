@@ -91,7 +91,12 @@ function mapInvoice(inv) {
     }
     const cement = isCementProduct(l.product);
     const mt = lineTonnes(l.quantity, l.uom);
-    if (mt === null) unknownUom.push({ invoice: inv.invoice_number, product: l.product, uom: l.uom });
+    /* Only a CEMENT line with an unconvertible unit is reported: that is the
+       one case where a figure the dashboard shows is affected. Non-cement
+       lines in odd units (an "INSURANCE CLAIM PASSED" line in PCS appeared
+       on 2026-10-03) touch nothing reported, and warning on them would bury
+       the warning that matters. */
+    if (mt === null) { if (cement) unknownUom.push({ invoice: inv.invoice_number, product: l.product, uom: l.uom }); }
     else if (cement) { cementMt += mt; cementLines++; }
     else nonCementMt += mt;
     const code = s(l.product_code) || null;
@@ -216,6 +221,16 @@ async function storeDay(dateStr, invoices) {
     await insertRows(dbc, 'odoo_sale_invoice_receipts', ['invoice_id', 'receipt_id'], links,
       'ON CONFLICT DO NOTHING');
 
+    /* Mark the day synced (migration 035), from what the table now holds for
+       it — not from this response, which an empty answer may not have pruned. */
+    await dbc.query(
+      `INSERT INTO odoo_sale_sync_days (sync_day, invoices, cement_mt, synced_at)
+       SELECT $1::date, count(*), coalesce(sum(cement_mt), 0), now()
+       FROM odoo_sale_invoices WHERE invoice_date = $1::date
+       ON CONFLICT (sync_day) DO UPDATE
+         SET invoices = EXCLUDED.invoices, cement_mt = EXCLUDED.cement_mt, synced_at = now()`,
+      [dateStr]);
+
     await dbc.query('COMMIT');
 
     if (unknownUom.length) log.warn({ date: dateStr, unknownUom }, 'odoo sales: product lines with an unconverted UoM');
@@ -265,21 +280,33 @@ function daysAgo(n, from = new Date()) {
 /* Inclusive range, one day at a time, SEQUENTIALLY — never in parallel
    against an ERP that also serves the plant's own users. One bad day does
    not stop the rest; the run fails only if every day failed. */
-async function pullSalesRange(from, to, { onDay } = {}) {
+/* `stopAfterFailures` — give up after that many CONSECUTIVE failed days and
+   report where to resume. On 2026-10-08 a backfill ran into a short ERP
+   outage and spent it failing 23 days in a row; once the ERP stops
+   answering, every further request is wasted, and a stopped run with a
+   resume point beats a "finished" run with holes scattered through it. */
+async function pullSalesRange(from, to, { onDay, stopAfterFailures = Infinity } = {}) {
   const days = [];
   for (let d = new Date(`${from}T00:00:00Z`); isoDay(d) <= to; d.setUTCDate(d.getUTCDate() + 1)) days.push(isoDay(d));
   const results = [], errors = [];
+  let streak = 0, stoppedAt = null;
   for (const dStr of days) {
     try {
       const r = await pullSalesDay(dStr);
       results.push(r);
+      streak = 0;
       if (onDay) onDay(r);
     } catch (err) {
       log.error({ err, date: dStr }, 'odoo sales pull failed for day');
       errors.push({ date: dStr, error: err.message });
       if (onDay) onDay({ date: dStr, error: err.message });
+      if (++streak >= stopAfterFailures) {
+        stoppedAt = errors[errors.length - stopAfterFailures].date;
+        break;
+      }
     }
   }
+  if (stoppedAt) return { from, to, days: days.length, results, errors, stoppedAt };
   if (days.length && !results.length) {
     throw new Error(`Odoo sales pull failed for every day ${from}..${to}: ${errors[0].error}`);
   }

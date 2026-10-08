@@ -33,6 +33,7 @@ async function main() {
   const t0 = Date.now();
   let mt = 0;
   const res = await pullSalesRange(from, to, {
+    stopAfterFailures: 3,
     onDay: r => {
       if (r.error) { console.log(`${r.date}  ERROR  ${r.error}`); return; }
       mt += r.cementMt;
@@ -44,6 +45,10 @@ async function main() {
   });
   console.log(`\n${res.days} day(s), ${res.results.length} ok, ${res.errors.length} failed — `
     + `${mt.toFixed(2)} MT cement — ${Math.round((Date.now() - t0) / 1000)}s`);
+  if (res.stoppedAt) {
+    console.log('STOPPED after 3 consecutive failures — Odoo is not answering. Resume with:\n'
+      + `  npm run odoo:sales-pull -- ${res.stoppedAt} ${to}`);
+  }
   await db.end();
   process.exit(res.errors.length ? 1 : 0);
 }

@@ -1,200 +1,172 @@
 /*
-  test/sales-aggregation.test.js — the new Sales dashboard aggregation
-  added for Avg Daily Sales/Best-Worst Day, Active/Top Customers, Avg Order
-  Size/DSO-lite, and the Grade Mix Trend chart (see sales.js/salesOdoo.js).
+  test/sales-aggregation.test.js — Sales dashboard aggregation on the Sale
+  Register mirror (services/salesRegister.js + services/sales.js).
 
-  Covers:
-    - services/sales.js: _buildGradeMixByDay, _buildTopCustomers (pure,
-      exported alongside the existing _buildGradeMix/_matchGrade)
-    - services/salesOdoo.js: fetchMtdSales's active_customers count,
-      fetchCollections's dso_lite_days approximation — fetch is stubbed,
-      same pattern as test/dashboard-cache.test.js
-
-  Every case pins the honest-degradation rule from the task: Odoo
-  unreachable -> null/[], a day or order with genuinely zero volume -> a
-  real 0, never fabricated.
-
-  No database.
-  Usage: node --test test/sales-aggregation.test.js   (from backend/)
+  Pure tests cover the grade builders. DB tests load a sandbox through the
+  real sync path (odooSalesSync.storeDay) — March 2001 as the month under
+  test, February 2001 as a partly synced previous month, May 2001 as a month
+  with nothing at all, synthetic ids 9100000xx — then run getDashboard() and
+  pin the rules that keep it honest:
+    - a synced day with no invoices is a real 0; an unsynced day is null
+    - non-cement invoices are excluded, as the Register excludes them
+    - collections come from invoiced − outstanding, never from the feed's
+      shared-receipt collection_amount
+    - month-on-month only against a FULLY synced previous month
+    - a month with no data reports null and honest statuses, never zeros
 */
-process.env.ODOO_DASHBOARD_URL     = 'https://odoo.invalid';
-process.env.ODOO_DASHBOARD_API_KEY = 'test-key';
-
 const test   = require('node:test');
 const assert = require('node:assert/strict');
+const db     = require('../db');
+const sales  = require('../services/sales');
+const { storeDay } = require('../services/odooSalesSync');
 
-const sales     = require('../services/sales');
-const salesOdoo = require('../services/salesOdoo');
+// ── pure: grade builders ─────────────────────────────────────────────
 
-// ── fixtures: Odoo-RPC shapes as re-shaped by salesOdoo._shapeOrdersAndLines ──
-const order = (id, date, partnerId, partnerName, amount = 1000) => ({
-  id, date_order: date, partner_id: [partnerId, partnerName], amount_total: amount, state: 'sale',
-});
-const line = (orderId, productId, productName, qty, uomName = 'MT') => ({
-  order_id: [orderId, 'SO' + orderId],
-  product_id: [productId, productName],
-  product_uom_qty: qty,
-  product_uom: [1, uomName],
+const reg = (byGrade, mt) => ({
+  mt, by_grade: { super42: 0, max32: 0, duramax42: 0, premiumopc: 0, other: 0, ...byGrade },
 });
 
-const SUPER42  = '[FG001] CEMENT 42.5 R';
-const MAX32    = '[FG002] CEMENT 32.5';
-const DURAMAX  = '[FG005] CEMENT B-M 42.5 N';
-const UNKNOWN  = '[XX999] SCRAP METAL';
-
-// ── services/sales.js pure helpers ──────────────────────────────────────
-
-test('_matchGrade pins known product codes (regression for the 42.5 overcount bug)', () => {
-  assert.equal(sales._matchGrade(SUPER42), 'super42');
-  assert.equal(sales._matchGrade(MAX32), 'max32');
-  assert.equal(sales._matchGrade(DURAMAX), 'duramax42');
-  assert.equal(sales._matchGrade(UNKNOWN), null);
+test('_buildRegisterGradeMix: four product lines, shares of the cement total', () => {
+  const g = sales._buildRegisterGradeMix(reg({ super42: 75, max32: 25 }, 100));
+  assert.deepEqual(g.map(x => x.key), ['super42', 'max32', 'duramax42', 'premiumopc']);
+  assert.equal(g[0].share_pct, 75);
+  assert.equal(g[1].mtd_actual_mt, 25);
 });
 
-test('_buildGradeMixByDay returns [] when Odoo did not answer, not a fabricated series', () => {
-  assert.deepEqual(sales._buildGradeMixByDay({ ok: false, status: 'unreachable' }), []);
+test('_buildRegisterGradeMix: cement with no product line gets its own bucket, never folded into a grade', () => {
+  const g = sales._buildRegisterGradeMix(reg({ super42: 90, other: 10 }, 100));
+  const other = g.find(x => x.key === 'unmatched');
+  assert.ok(other);
+  assert.equal(other.mtd_actual_mt, 10);
+  assert.equal(g.find(x => x.key === 'super42').mtd_actual_mt, 90);
 });
 
-test('_buildGradeMixByDay buckets lines by order date and grade, unmatched lines fold into "unmatched"', () => {
-  const mtdSales = {
-    ok: true,
-    value: {
-      orders: [
-        order(1, '2026-10-01', 10, 'Acme Ltd'),
-        order(2, '2026-10-01', 11, 'Beta Co'),
-        order(3, '2026-10-02', 10, 'Acme Ltd'),
-      ],
-      lines: [
-        line(1, 100, SUPER42, 50),
-        line(2, 101, MAX32, 20),
-        line(3, 100, SUPER42, 30),
-        line(3, 999, UNKNOWN, 40),
-      ],
-    },
+test('_buildRegisterGradeTrend: one row per day, sorted, every grade present', () => {
+  const rows = sales._buildRegisterGradeTrend({
+    by_date_grade: { '2001-03-11': { max32: 5 }, '2001-03-10': { super42: 30, other: 2 } },
+  });
+  assert.deepEqual(rows.map(r => r.date), ['2001-03-10', '2001-03-11']);
+  assert.equal(rows[0].super42, 30);
+  assert.equal(rows[0].max32, 0);
+  assert.equal(rows[0].unmatched, 2);
+});
+
+// ── DB: getDashboard over a sandbox loaded through storeDay ──────────
+
+let nextId = 910000001;
+const id = () => nextId++;
+
+function invoice({ date, code, product, productCode, qty, uom = '50 KG BAG', total, residual,
+  payment = 'paid', division = 'D1', zone = 'Zone A', receiptId }) {
+  const invId = id();
+  return {
+    invoice_id: invId, invoice_number: `INV/SANDBOX/${invId}`, invoice_date: date,
+    customer_id: Number(code.replace(/\D/g, '')), customer: `Customer ${code}`, customer_code: code,
+    sale_order_id: invId, sale_order: `SO/${invId}`, sale_order_ids: `SO/${invId}`, sale_order_date: date,
+    status: 'posted', payment_status: payment, salesperson_id: 1, salesperson: 'OFFICER',
+    division_id: 1, division, zone_id: 1, zone, region_id: 1, region: 'R',
+    total_amount: total, untaxed_amount: Math.round(total / 1.18), tax_amount: total - Math.round(total / 1.18),
+    residual_amount: residual,
+    collection_amount: 999999999,   // the shared-receipt trap: must never be summed
+    currency: 'TZS', quantity: qty * 2,
+    invoice_lines: [
+      { line_id: id(), product_id: 1, product, product_code: productCode, quantity: qty, uom,
+        rate: 1, amount: Math.round(total / 1.18) - 1000, taxed_amount: total },
+      { line_id: id(), product_id: false, product: '', product_code: '', quantity: qty, uom: '',
+        rate: 1080, amount: 1000, taxed_amount: 1180 },
+    ],
+    customer_receipts: receiptId ? [{ receipt_id: receiptId, receipt_number: `R/${receiptId}`,
+      receipt_date: date, amount: 999999999, payment_type: 'inbound', currency: 'TZS' }] : [],
+    delivery_details: [],
   };
-  const trend = sales._buildGradeMixByDay(mtdSales);
-  assert.equal(trend.length, 2, 'two distinct order dates');
-
-  const day1 = trend.find(r => r.date === '2026-10-01');
-  const day2 = trend.find(r => r.date === '2026-10-02');
-  assert.equal(day1.super42, 50);
-  assert.equal(day1.max32, 20);
-  assert.equal(day1.duramax42, 0);
-  assert.equal(day1.unmatched, undefined, 'no unmatched volume on day 1 -> key omitted');
-
-  assert.equal(day2.super42, 30);
-  assert.equal(day2.unmatched, 40, 'the scrap-metal line folds into unmatched, not dropped');
-});
-
-test('_buildGradeMixByDay converts bag UoM lines (20 bags = 1 MT), same rule as _buildGradeMix', () => {
-  const mtdSales = {
-    ok: true,
-    value: {
-      orders: [order(1, '2026-10-05', 10, 'Acme Ltd')],
-      lines: [line(1, 100, SUPER42, 200, 'Bags')], // 200 bags -> 10 MT
-    },
-  };
-  const trend = sales._buildGradeMixByDay(mtdSales);
-  assert.equal(trend[0].super42, 10);
-});
-
-test('_buildGradeMixByDay drops lines whose order date cannot be resolved, never crashes', () => {
-  const mtdSales = {
-    ok: true,
-    value: {
-      orders: [order(1, '2026-10-01', 10, 'Acme Ltd')],
-      lines: [line(2, 100, SUPER42, 50)], // order_id 2 has no matching order
-    },
-  };
-  assert.deepEqual(sales._buildGradeMixByDay(mtdSales), []);
-});
-
-test('_buildTopCustomers returns [] when Odoo did not answer', () => {
-  assert.deepEqual(sales._buildTopCustomers({ ok: false, status: 'not_configured' }), []);
-});
-
-test('_buildTopCustomers sums MT per customer across multiple orders/lines and sorts desc', () => {
-  const mtdSales = {
-    ok: true,
-    value: {
-      orders: [
-        order(1, '2026-10-01', 10, 'Acme Ltd'),
-        order(2, '2026-10-02', 10, 'Acme Ltd'),   // same customer, second order
-        order(3, '2026-10-01', 11, 'Beta Co'),
-      ],
-      lines: [
-        line(1, 100, SUPER42, 50),
-        line(2, 101, MAX32, 20),
-        line(3, 100, SUPER42, 200),               // Beta Co: biggest single line
-      ],
-    },
-  };
-  const top = sales._buildTopCustomers(mtdSales);
-  assert.equal(top.length, 2);
-  assert.equal(top[0].name, 'Beta Co');
-  assert.equal(top[0].mt, 200);
-  assert.equal(top[1].name, 'Acme Ltd');
-  assert.equal(top[1].mt, 70, 'Acme Ltd aggregated across both its orders: 50 + 20');
-});
-
-test('_buildTopCustomers caps at 10 customers', () => {
-  const orders = []; const lines = [];
-  for (let i = 0; i < 15; i++) {
-    orders.push(order(i, '2026-10-01', i, 'Customer ' + i, 1000));
-    lines.push(line(i, 100, SUPER42, 15 - i)); // descending MT so the order is deterministic
-  }
-  const top = sales._buildTopCustomers({ ok: true, value: { orders, lines } });
-  assert.equal(top.length, 10);
-  assert.equal(top[0].name, 'Customer 0');
-});
-
-// ── services/salesOdoo.js after the 2026-10-08 sales-feed reshape ───────
-//
-// Odoo replaced sale_dashboard_report's payload; the arrays these functions
-// parsed no longer exist and, defaulted to [], read as ZERO. They now stop
-// calling Odoo and degrade honestly. These pin both halves: no fabricated
-// zero reaches the dashboard, and no request reaches the production ERP.
-
-const OLD_FEED_READERS = [
-  ['fetchMtdSales',           () => salesOdoo.fetchMtdSales('2026-10-01', '2026-10-08')],
-  ['fetchCollections',        () => salesOdoo.fetchCollections('2026-10-01', '2026-10-08', 8)],
-  ['fetchAgewiseOutstanding', () => salesOdoo.fetchAgewiseOutstanding('2026-10-01', '2026-10-08')],
-  ['fetchOfficerAchievement', () => salesOdoo.fetchOfficerAchievement('2026-10-01', '2026-10-08')],
-];
-
-// Each case pins its own Odoo env so the result doesn't depend on whether
-// the machine running it has a .env (CI has none).
-async function withOdooEnv(configured, fn) {
-  const saved = { url: process.env.ODOO_DASHBOARD_URL, key: process.env.ODOO_DASHBOARD_API_KEY };
-  const realFetch = global.fetch;
-  if (configured) { process.env.ODOO_DASHBOARD_URL = 'https://odoo.invalid'; process.env.ODOO_DASHBOARD_API_KEY = 'k'; }
-  else { delete process.env.ODOO_DASHBOARD_URL; delete process.env.ODOO_DASHBOARD_API_KEY; }
-  const seen = { requests: 0 };
-  global.fetch = async () => { seen.requests++; throw new Error('must not be called'); };
-  try { return await fn(seen); }
-  finally {
-    global.fetch = realFetch;
-    for (const [k, v] of [['ODOO_DASHBOARD_URL', saved.url], ['ODOO_DASHBOARD_API_KEY', saved.key]]) {
-      if (v === undefined) delete process.env[k]; else process.env[k] = v;
-    }
-  }
 }
 
-for (const [name, call] of OLD_FEED_READERS) {
-  test(`${name}: reports format_changed (never a zero-filled ok:true) and makes no Odoo request`, () =>
-    withOdooEnv(true, async (seen) => {
-      const r = await call();
-      assert.equal(r.ok, false);
-      assert.equal(r.status, 'format_changed');
-      assert.match(r.message, /changed the sales feed format/);
-      assert.equal(seen.requests, 0, 'the reshaped endpoint must not be called on a page load');
-    }));
-
-  test(`${name}: still reports not_configured when Odoo is not set up`, () =>
-    withOdooEnv(false, async (seen) => {
-      const r = await call();
-      assert.equal(r.ok, false);
-      assert.equal(r.status, 'not_configured');
-      assert.equal(seen.requests, 0);
-    }));
+async function clean() {
+  await db.query("DELETE FROM odoo_sale_invoices WHERE invoice_date BETWEEN '2001-02-01' AND '2001-05-31'");
+  await db.query("DELETE FROM odoo_sale_sync_days WHERE sync_day BETWEEN '2001-02-01' AND '2001-05-31'");
+  await db.query('DELETE FROM odoo_sale_receipts WHERE receipt_id BETWEEN 910000000 AND 910000999');
 }
+
+let d;   // the March 2001 dashboard
+test.before(async () => {
+  await clean();
+  const shared = 910000900;
+  await storeDay('2001-03-10', [
+    invoice({ date: '2001-03-10', code: 'CUS001', product: 'CEMENT 42.5 R', productCode: 'FG001',
+      qty: 600, total: 10000000, residual: 0, receiptId: shared }),                   // 30 MT
+    invoice({ date: '2001-03-10', code: 'CUS002', product: 'CEMENT B-M 42.5 N', productCode: 'FG005',
+      qty: 640, total: 12000000, residual: 4000000, payment: 'partial', division: 'D2',
+      zone: 'Zone B', receiptId: shared }),                                             // 32 MT
+    invoice({ date: '2001-03-10', code: 'CUS003', product: 'FLY ASH', productCode: 'FA1',
+      qty: 5, uom: 'MT', total: 500000, residual: 500000, payment: 'not_paid' }),       // non-cement
+  ]);
+  await storeDay('2001-03-11', []);        // synced, genuinely no invoices
+  // 2001-03-12 never synced
+  await storeDay('2001-02-05', [
+    invoice({ date: '2001-02-05', code: 'CUS001', product: 'CEMENT 42.5 R', productCode: 'FG001',
+      qty: 200, total: 3000000, residual: 0 }),
+  ]);                                       // February: 1 of 28 days synced
+  d = await sales.getDashboard(2001, 3);
+});
+test.after(clean);
+
+test('getDashboard: invoiced basis, with honest coverage of a partly synced month', () => {
+  assert.equal(d.tonnage_basis.basis, 'invoiced');
+  assert.equal(d.tonnage_basis.coverage.days_synced, 2);
+  assert.equal(d.tonnage_basis.coverage.days_expected, 31);
+  assert.equal(d.tonnage_basis.coverage.complete, false);
+});
+
+test('getDashboard: cement only — the fly ash invoice is excluded, excise lines never counted', () => {
+  assert.equal(d.mtd.actual_mt, 62);
+  assert.equal(d.mtd.invoice_count, 2);
+  assert.equal(d.mtd.active_customers, 2);
+});
+
+test('getDashboard: a synced empty day is 0, an unsynced day is null', () => {
+  const day = k => d.daily_trend.find(t => t.date === k).actual;
+  assert.equal(day('2001-03-10'), 62);
+  assert.equal(day('2001-03-11'), 0);
+  assert.equal(day('2001-03-12'), null);
+  assert.equal(d.mtd.worst_day.mt, 0, 'a synced zero day is a legitimate worst day');
+});
+
+test('getDashboard: grade mix sums to the headline, keyed by product code', () => {
+  const g = Object.fromEntries(d.grades.map(x => [x.key, x.mtd_actual_mt]));
+  assert.equal(g.super42, 30);
+  assert.equal(g.duramax42, 32);
+  assert.equal(d.grades.reduce((s, x) => s + (x.mtd_actual_mt || 0), 0), d.mtd.actual_mt);
+});
+
+test('getDashboard: collections are invoiced − outstanding; the shared receipt is never summed', () => {
+  assert.equal(d.collections.ok, true);
+  assert.equal(d.collections.invoiced_tzs, 22000000);
+  assert.equal(d.collections.outstanding_tzs, 4000000);
+  assert.equal(d.collections.total_collected_tzs, 18000000);
+  assert.equal(d.collections.collection_rate_pct, 81.8);
+});
+
+test('getDashboard: top customers and territory come from the same cement rows', () => {
+  assert.deepEqual(d.top_customers.map(c => c.code), ['CUS002', 'CUS001']);
+  const div = Object.fromEntries(d.territory.by_division.map(x => [x.division, x.mt]));
+  assert.deepEqual(div, { D1: 30, D2: 32 });
+  assert.equal(d.territory.by_division[0].drr, Math.round((30 / 31) * 10) / 10);
+});
+
+test('getDashboard: no month-on-month against a partly synced previous month', () => {
+  assert.equal(d.mtd.prev_month_actual_mt, null);
+  assert.equal(d.mtd.mom_delta_pct, null);
+  assert.match(d.mtd.prev_month_note, /1 of 28 days synced/);
+});
+
+test('getDashboard: a month with no data reports null and honest statuses, never zeros', async () => {
+  const empty = await sales.getDashboard(2001, 5);
+  assert.equal(empty.tonnage_basis.basis, null);
+  assert.equal(empty.mtd.actual_mt, null);
+  assert.equal(empty.mtd.active_customers, null);
+  assert.ok(empty.grades.every(g => g.mtd_actual_mt === null));
+  assert.equal(empty.top_customers.length, 0);
+  assert.equal(empty.collections.ok, false);
+  assert.ok(['not_configured', 'not_synced'].includes(empty.collections.status));
+  assert.ok(empty.daily_trend.every(t => t.actual === null));
+});
