@@ -211,6 +211,16 @@
     }
     h += '</div>';
 
+    /* Why there is no number, when the caller knows. A card that reads only
+       "No data" is indistinguishable from a broken page: the Production
+       Report had three such cards for months, two of them waiting on a form
+       nobody was submitting and one on a field Odoo did not expose, and
+       nothing on screen said so. Only shown when the value is genuinely
+       absent — a real number never carries an excuse. */
+    if (!hasVal && spec.emptyReason) {
+      h += '<div class="n-kpi-why">' + esc(spec.emptyReason) + '</div>';
+    }
+
     /* Period — never leave a reader guessing which number this is. */
     if (spec.period) h += '<div class="n-kpi-unit">' + esc(spec.period) + '</div>';
 

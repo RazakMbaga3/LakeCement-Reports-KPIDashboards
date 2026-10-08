@@ -726,8 +726,67 @@
         name: t.name,
         href: 'daily-report.html',
         hrefLabel: "Open the Production Report",
+        emptyReason: value === null ? emptyReasonFor(t.key, factRows) : null,
       });
     });
+  }
+
+  /* Why a KPI has no number, worked out from the facts actually present
+     rather than written down as a fixed sentence.
+
+     The point is that it stays true on its own. Three of these six cards read
+     a bare "No data" for months — two waiting on the power-cons form, which
+     has had no submission since 30 June 2026, one on a figure Odoo does not
+     publish — and nothing on screen distinguished that from a broken page. A
+     hardcoded explanation would have become a lie the day a feed came back;
+     naming the missing inputs cannot, because the moment they arrive the
+     card has a value and this never runs. */
+  function emptyReasonFor(key, factRows) {
+    var formula = (window.NyatiFormulas && window.NyatiFormulas.FORMULAS[key]) || null;
+    var FACTS   = (window.NyatiFormulas && window.NyatiFormulas.FACTS) || {};
+    if (!formula || !formula.inputs || !formula.inputs.length) return null;
+
+    if (!factRows || !factRows.length) {
+      return 'No Production Report has been recorded for this period yet.';
+    }
+
+    /* factRows are PRODUCTION rows only (getFormRange('production', …)), and
+       each carries its raw `data` object, not resolved facts. So presence can
+       only be judged for inputs this form owns; an input belonging to another
+       form is reported as missing by provenance, never by looking in a row
+       that could not contain it. Checking `data` for a power field would mark
+       it missing even on a day Power Consumption was filled perfectly. */
+    var missing = formula.inputs.filter(function (k) {
+      var owner = (FACTS[k] && FACTS[k].form) || null;
+      if (owner && owner !== 'production') return true;     // not ours to see
+      var field = (FACTS[k] && FACTS[k].field) || k;
+      return !factRows.some(function (row) {
+        var v = row && row.data ? row.data[field] : undefined;
+        return v !== null && v !== undefined && v !== '';
+      });
+    });
+    if (!missing.length) return null;
+
+    // Group by the form that owns each missing input — that is the thing a
+    // reader can actually act on ("Power Consumption hasn't been filled").
+    var forms = {};
+    missing.forEach(function (k) {
+      var owner = (FACTS[k] && FACTS[k].form) || 'another report';
+      (forms[owner] = forms[owner] || []).push(k);
+    });
+    var names = Object.keys(forms);
+
+    var LABEL = {
+      'power-cons': 'Power Consumption', production: 'Production Report',
+      dispatch: 'Dispatch & SO', limestone: 'Limestone & Coal',
+      quality: 'Quality', cpp: 'Power Plant', materials: 'Raw Materials',
+    };
+    var pretty = names.map(function (n) { return LABEL[n] || n; });
+    var list = pretty.length === 1 ? pretty[0]
+             : pretty.slice(0, -1).join(', ') + ' and ' + pretty[pretty.length - 1];
+
+    return 'Waiting on ' + list + ' — ' + missing.length
+         + (missing.length === 1 ? ' figure is' : ' figures are') + ' not recorded for this period.';
   }
 
   /* ══ CARD FRAME ═══════════════════════════════════════════════════ */

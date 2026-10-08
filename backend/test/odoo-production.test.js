@@ -409,3 +409,26 @@ test('a Crusher entry keeps its header output and drops its weighbridge lines', 
   assert.equal(day.facts.ls_crusher_prod_mt, 2806.2);
   assert.equal(day.facts.ls_crusher_run_hrs, 18.87);
 });
+
+test('a 0 calorific value is a placeholder, not a reading, and never dilutes a real one', () => {
+  // Odoo sends coal_ncv: 0 on every Raw Meal / Cement / Coal Mill entry, and
+  // on a clinker entry before the lab figure is keyed in. Taken literally it
+  // makes Specific Thermal Energy Consumption read 0 kcal/kg.
+  const placeholder = mapper.mapDay([
+    { ref: 'CLK/A', stage: 'clinker', produced_qty: 1500, consumed_items: [], coal_ncv: 0, running_hours: 20 },
+  ]);
+  assert.equal('coal_ncv' in placeholder.facts, false, '0 NCV must not be stored as a reading');
+  assert.equal(placeholder.facts.kiln_run_hrs, 20, 'the rest of the entry still maps');
+
+  const mixed = mapper.mapDay([
+    { ref: 'CLK/B', stage: 'clinker', produced_qty: 1000, consumed_items: [], coal_ncv: 0 },
+    { ref: 'CLK/C', stage: 'clinker', produced_qty: 1000, consumed_items: [], coal_ncv: 5500 },
+  ]);
+  assert.equal(mixed.facts.coal_ncv, 5500, 'a placeholder must not halve a real reading to 2750');
+
+  // A genuine zero for a QUANTITY is real information and must survive.
+  const idle = mapper.mapDay([
+    { ref: 'CLM/A', stage: 'fine_coal', produced_qty: 200, consumed_items: [], running_hours: 0 },
+  ]);
+  assert.equal(idle.facts.coalmill_run_hrs, 0, 'a mill that ran 0 hours really ran 0 hours');
+});

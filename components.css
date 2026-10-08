@@ -349,6 +349,16 @@ button.n-kpi:hover { box-shadow: var(--el-2); border-color: var(--accent-gray); 
 }
 .n-kpi-flag svg { width: 12px; height: 12px; }
 
+/* Why a card has no number. Muted, not alarming: a known, explained gap is
+   not an error state, and styling it like one would cry wolf on a page that
+   legitimately carries a few of these. */
+.n-kpi-why {
+  font-size: var(--fs-xs);
+  line-height: 1.4;
+  color: var(--text-muted);
+  margin-top: var(--sp-1);
+}
+
 .n-kpi-more {
   position: absolute;
   right: var(--sp-3);

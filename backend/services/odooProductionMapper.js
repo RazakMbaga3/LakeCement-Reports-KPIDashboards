@@ -278,6 +278,19 @@ function mapDay(entries) {
       if (rule.stage !== e.stage) continue;
       const v = e[rule.field];
       if (v === null || v === undefined) continue;
+
+      /* Odoo sends 0 as a PLACEHOLDER for a measured property it has no
+         reading for: coal_ncv is 0 on every Raw Meal, Cement and Coal Mill
+         entry (verified 2026-10-08), and a clinker entry can carry 0 too
+         before the lab figure is keyed in. Zero is not a calorific value —
+         taking it literally would make Specific Thermal Energy Consumption
+         read 0 kcal/kg, a fabricated number on a plant head's screen, which
+         is the exact failure mode logged in project-data-integrity-audit.
+
+         Only 'mean' facts get this treatment: a genuine 0 for a SUM (a mill
+         that ran 0 hours) is real information and must be kept. */
+      if (rule.agg === 'mean' && Number(v) === 0) continue;
+
       const acc = headerAcc.get(rule.fact);
       if (!acc) continue;
       if (rule.agg === 'mean') {
