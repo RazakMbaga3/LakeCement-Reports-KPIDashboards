@@ -56,15 +56,16 @@ async function loginToken(username) {
 }
 
 /* ── Test data — chosen so every aggregate is easy to verify by hand ── */
-// prod (production form) / coal_kiln (production form, real field name — see
-// formula-registry.js FACTS.kiln_coal_cons) / ncv (limestone form, submitted
-// separately below — the two facts live on different forms in the real app)
+// prod / coal_kiln / coal_ncv, all on the production report (formula-registry.js
+// FACTS.kiln_coal_cons / kiln_coal_ncv). NCV used to come from the limestone
+// form's `ncv`; since 2026-10-08 (84ec124) kiln_coal_ncv reads the production
+// report's Odoo-fed coal_ncv instead, so the fixture supplies it there — exactly
+// where the Odoo autofill writes it in real use.
 const KILN = [
-  { kiln_prod_mt: 2000, coal_kiln: 250 },
-  { kiln_prod_mt: 2100, coal_kiln: 260 },
-  { kiln_prod_mt: 1900, coal_kiln: 240 },
+  { kiln_prod_mt: 2000, coal_kiln: 250, coal_ncv: 4800 },
+  { kiln_prod_mt: 2100, coal_kiln: 260, coal_ncv: 4900 },
+  { kiln_prod_mt: 1900, coal_kiln: 240, coal_ncv: 4700 },
 ];
-const NCV = [{ ncv: 4800 }, { ncv: 4900 }, { ncv: 4700 }];
 const QUALITY = [
   { free_lime: 2.5, blaine_425r: 3400, strength_28d: 42 },
   { free_lime: 2.8, blaine_425r: 3500, strength_28d: 43 },
@@ -222,7 +223,6 @@ async function main() {
     for (let i = 0; i < DATES.length; i++) {
       // kiln + cement-mill fields now live on the Production Report — one combined submit
       await submit(tok.production, 'production',   DATES[i], { ...KILN[i], ...CEMENT_MILL[i] });
-      await submit(tok.production, 'limestone',    DATES[i], NCV[i]);
       await submit(tok.production, 'quality',      DATES[i], QUALITY[i]);
       await submit(tok.logistics,  'dispatch',     DATES[i], DISPATCH[i]);
       await submit(tok.pm,         'power-cons',   DATES[i], POWER[i]);
