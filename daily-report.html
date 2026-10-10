@@ -1649,8 +1649,11 @@ initKpiLive([
   { kpi:'cm1_total_prod', fmt:'n0',
     compute: function(f,n){ return n(f.cm1_325n_mt)+n(f.cm1_425r_mt)+n(f.cm1_425n_mt)+n(f.cm1_opc_mt)+n(f.cm1_425n_bm_mt); }
   },
+  /* All five CM-2 grades. OPC was missing until 2026-10-10, so this row read
+     below the sum of the five rows directly above it on any day CM-2 ground
+     OPC (95 MT on 2026-10-06) — see CM_GRADES in forms/formula-registry.js. */
   { kpi:'cm2_total_prod', fmt:'n0',
-    compute: function(f,n){ return n(f.cm2_325n_mt)+n(f.cm2_425r_mt)+n(f.cm2_425n_mt)+n(f.cm2_425n_bm_mt); }
+    compute: function(f,n){ return n(f.cm2_325n_mt)+n(f.cm2_425r_mt)+n(f.cm2_425n_mt)+n(f.cm2_opc_mt)+n(f.cm2_425n_bm_mt); }
   },
 
   /* ── LS Crusher / Raw Mill / Coal Mill — stock ledgers (mirrors kiln_closing_stock) ── */
@@ -1894,15 +1897,18 @@ initKpiLive([
   { kpi:'cm_limestone_cons_display', field:'cm_limestone_cons', fmt:'n0' },
   { kpi:'cm_limestone_pct', fmt:'n1',
     compute: function(f,n){
+      // All ten grades (CM-2 OPC added 2026-10-10): limestone consumed is
+      // summed over every cement batch, so the divisor must be too.
       var cmTotalProd = n(f.cm1_325n_mt)+n(f.cm1_425r_mt)+n(f.cm1_425n_mt)+n(f.cm1_opc_mt)+n(f.cm1_425n_bm_mt)
-                       + n(f.cm2_325n_mt)+n(f.cm2_425r_mt)+n(f.cm2_425n_mt)+n(f.cm2_425n_bm_mt);
+                       + n(f.cm2_325n_mt)+n(f.cm2_425r_mt)+n(f.cm2_425n_mt)+n(f.cm2_opc_mt)+n(f.cm2_425n_bm_mt);
       return cmTotalProd > 0 ? n(f.cm_limestone_cons)/cmTotalProd*100 : null;
     }
   },
   { kpi:'cm_gypsum_pct', fmt:'n1',
     compute: function(f,n){
+      // All ten grades (CM-2 OPC added 2026-10-10) — see cm_limestone_pct.
       var cmTotalProd = n(f.cm1_325n_mt)+n(f.cm1_425r_mt)+n(f.cm1_425n_mt)+n(f.cm1_opc_mt)+n(f.cm1_425n_bm_mt)
-                       + n(f.cm2_325n_mt)+n(f.cm2_425r_mt)+n(f.cm2_425n_mt)+n(f.cm2_425n_bm_mt);
+                       + n(f.cm2_325n_mt)+n(f.cm2_425r_mt)+n(f.cm2_425n_mt)+n(f.cm2_opc_mt)+n(f.cm2_425n_bm_mt);
       return cmTotalProd > 0 ? n(f.cm_gypsum_cons)/cmTotalProd*100 : null;
     }
   },

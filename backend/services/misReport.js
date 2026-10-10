@@ -249,16 +249,14 @@ function fiscalYearStart(date) {
 }
 function monthStart(date) { return date.slice(0, 8) + '01'; }
 
-/* The Production Report's cement total. Deliberately the same eight fields
-   as forms/formula-registry.js's CM_GRADES so this figure and the
-   clinker-factor KPI cannot drift apart. CM-1's 42.5N BM production has no
-   field on the form at all — only its opening, run-hours and stock-ledger
-   consumption exist, and no stored row carries cm1_425n_bm_mt — so that
-   mill-grade is absent from both, not just from here. */
-const CEMENT_GRADE_FIELDS = [
-  'cm1_425r_mt', 'cm1_425n_mt', 'cm1_325n_mt', 'cm1_opc_mt',
-  'cm2_425r_mt', 'cm2_425n_mt', 'cm2_425n_bm_mt', 'cm2_325n_mt',
-];
+/* The Production Report's cement total — read from the registry rather than
+   restated here. This used to be a local eight-field copy kept "deliberately
+   the same as CM_GRADES so the two cannot drift apart", justified by CM-1
+   42.5N BM having no form field and no stored value. Both stopped being true
+   once the Odoo autofill began filling cm1_425n_bm_mt, and because the copy
+   matched the registry, both stayed wrong together. One list removes the
+   possibility of that, rather than relying on two being kept in step. */
+const { CEMENT_GRADES: CEMENT_GRADE_FIELDS } = require('../../forms/formula-registry.js');
 
 const PRODUCTION_ROWS = [
   { key: 'clinker',      label: 'Clinker',          unit: 'MT', fields: ['kiln_prod_mt'] },

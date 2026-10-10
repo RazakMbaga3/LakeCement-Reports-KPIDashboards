@@ -209,6 +209,15 @@
     cm2_425n_bm_mt:  { source: 'manual', form: 'production', field: 'cm2_425n_bm_mt',  unit: 'MT' },
     cm2_325n_mt:     { source: 'manual', form: 'production', field: 'cm2_325n_mt',     unit: 'MT' },
 
+    /* CM-1's fifth grade (42.5N BM, the Duramax product). Declared 2026-10-10.
+       Its absence was justified elsewhere (services/misReport.js) by "no field
+       on the form at all, and no stored row carries cm1_425n_bm_mt" — true
+       when written, false since: daily-report.html has the input, and the Odoo
+       production autofill fills it (700 MT on 2026-10-06). Meanwhile the
+       cement-produced-day notes already claimed CM-1 included 42.5N BM while
+       the code left it out, so the KPI disagreed with its own description. */
+    cm1_425n_bm_mt:  { source: 'manual', form: 'production', field: 'cm1_425n_bm_mt',  unit: 'MT' },
+
     /* CM-2's fifth grade and its per-grade Running Hours column — declared
        2026-09-24 so cement-mill-2-output (TPH) can be computed from the same
        report that already supplies the tonnages. All six have been real
@@ -217,11 +226,11 @@
        — ON DATE) and J (PRODUCTION — ON DATE) for rows 40–44, whose TOTAL —
        CM-2 row 45 carries the TPH the plant reports (Q45 = J45 ÷ F45).
 
-       cm2_opc_mt is deliberately NOT added to CM_GRADES below: doing so
-       would silently change cement-produced-day and the clinker factor
-       inside specific-power-consumption-total, which is a separate change
-       needing its own source trace and version bump. See the data-gap note
-       on cement-mill-2-output for what that omission currently costs. */
+       cm2_opc_mt was held out of CM_GRADES until 2026-10-10 because adding it
+       moves cement-produced-day and the clinker factor inside
+       specific-power-consumption-total, and that deserved its own traced
+       change rather than riding along with the CM-2 TPH work. That change
+       has now been made (both formulas version-bumped; see CM_GRADES). */
     cm2_opc_mt:          { source: 'manual', form: 'production', field: 'cm2_opc_mt',          unit: 'MT' },
     cm2_325n_run_hrs:    { source: 'manual', form: 'production', field: 'cm2_325n_run_hrs',    unit: 'Hrs' },
     cm2_425r_run_hrs:    { source: 'manual', form: 'production', field: 'cm2_425r_run_hrs',    unit: 'Hrs' },
@@ -302,13 +311,25 @@
   var KWH_DOWNSTREAM = ['pwr_cm1_kwh', 'pwr_cm2_kwh', 'pwr_packing_kwh', 'pwr_packing2_kwh',
                         'pwr_lighting_kwh'];
   var KWH_GRINDING  = ['pwr_cm1_kwh', 'pwr_cm2_kwh'];
-  var CM_GRADES     = ['cm1_425r_mt', 'cm1_425n_mt', 'cm1_325n_mt', 'cm1_opc_mt',
-                       'cm2_425r_mt', 'cm2_425n_mt', 'cm2_425n_bm_mt', 'cm2_325n_mt'];
-  /* CM-2 alone, all FIVE grades including OPC — the source Excel's rows 40–44,
-     whose TOTAL — CM-2 row (45) is what the plant reports CM-2 output from.
-     Note this is a superset of CM_GRADES' CM-2 half, which omits cm2_opc_mt
-     (see that fact's declaration above). Used only by the two cement-mill-2-*
-     formulas, so no existing KPI's value moves. */
+  /* Every grade of both mills — the Production Report's TOTAL — CM-1 plus
+     TOTAL — CM-2, which is what "cement produced" means to the plant.
+
+     Until 2026-10-10 this held eight of the ten: cm1_425n_bm_mt and cm2_opc_mt
+     were missing. On 2026-10-06 the page's own mill totals read 1,170 + 1,410
+     = 2,580 MT while the Cement Produced card read 1,785 — short by exactly
+     CM-1 42.5N BM (700) + CM-2 OPC (95). It also skewed Specific Power: Odoo's
+     clinker consumption is summed over every cement entry, BM and OPC batches
+     included, so the clinker factor (clinker consumed ÷ cement produced) had
+     those batches' clinker on top and their tonnage missing underneath.
+
+     Apr–Jun rows came from the plant's Excel, which never recorded either
+     grade, so those days do not move; Jul onward comes from Odoo, which does. */
+  var CM_GRADES     = ['cm1_425r_mt', 'cm1_425n_mt', 'cm1_325n_mt', 'cm1_opc_mt', 'cm1_425n_bm_mt',
+                       'cm2_425r_mt', 'cm2_425n_mt', 'cm2_425n_bm_mt', 'cm2_325n_mt', 'cm2_opc_mt'];
+  /* CM-2 alone, all five grades — the source Excel's rows 40–44, whose
+     TOTAL — CM-2 row (45) is what the plant reports CM-2 output from. Now
+     exactly CM_GRADES' CM-2 half; kept separate because the cement-mill-2-*
+     formulas must not pick up CM-1. */
   var CM2_GRADES    = ['cm2_325n_mt', 'cm2_425r_mt', 'cm2_425n_mt', 'cm2_opc_mt', 'cm2_425n_bm_mt'];
   var CM2_RUN_HRS   = ['cm2_325n_run_hrs', 'cm2_425r_run_hrs', 'cm2_425n_run_hrs',
                        'cm2_opc_run_hrs', 'cm2_425n_bm_run_hrs'];
@@ -418,9 +439,9 @@
        total (a period total is answerable separately, by summing the daily
        series over the range, same as any other 'avg'-aggregated KPI). */
     'cement-produced-day': {
-      label: 'Cement Produced (CM-1 + CM-2)', unit: 'MT', dp: 0, version: 1,
+      label: 'Cement Produced (CM-1 + CM-2)', unit: 'MT', dp: 0, version: 2,
       target: null, signage: null, targetLabel: null,
-      notes: 'Cement produced that day by both cement mills combined, summed across every grade on the Production Report — CM-1 (32.5N, 42.5R, 42.5N, OPC, 42.5N BM) and CM-2 (32.5N, 42.5R, 42.5N, 42.5N BM) — matching the source Excel\'s J42+J48 total exactly, and the same CM_GRADES sum specific-power-consumption-total already uses for its clinker-factor arithmetic. No target is declared anywhere in the plant\'s reporting for total cement-mill throughput, so none is invented here (contrast Kiln Output, which does have a stated 2,000 MT/day target). Monthly figure is the mean of the days that reported — a rate, matching Kiln Output\'s and Despatch/Day\'s own convention — not a period total.',
+      notes: 'v2 (2026-10-10): now sums all ten grades. v1 summed eight — CM-1 42.5N BM and CM-2 OPC were missing, although these notes already listed CM-1 42.5N BM — so on days either grade ran the card read below the Production Report\'s own TOTAL — CM-1 + TOTAL — CM-2 (2026-10-06: 1,785 shown against 2,580 actual). Apr–Jun values are unchanged (the plant\'s Excel never recorded those grades); Jul onward rises by exactly the BM and OPC tonnage Odoo reports.\n\nCement produced that day by both cement mills combined, summed across every grade on the Production Report — CM-1 (32.5N, 42.5R, 42.5N, OPC, 42.5N BM) and CM-2 (32.5N, 42.5R, 42.5N, OPC, 42.5N BM) — matching the source Excel\'s J42+J48 total exactly, and the same CM_GRADES sum specific-power-consumption-total already uses for its clinker-factor arithmetic. No target is declared anywhere in the plant\'s reporting for total cement-mill throughput, so none is invented here (contrast Kiln Output, which does have a stated 2,000 MT/day target). Monthly figure is the mean of the days that reported — a rate, matching Kiln Output\'s and Despatch/Day\'s own convention — not a period total.',
       inputs: CM_GRADES,
       daily: function (f) { return pos(totalCementProd(f)); },
       monthlyAgg: 'avg',
@@ -477,11 +498,11 @@
     },
 
     'specific-power-consumption-total': {
-      label: 'Specific Power Consumption – Total', unit: 'kWh/MT eq. cement', dp: 2, version: 4,
+      label: 'Specific Power Consumption – Total', unit: 'kWh/MT eq. cement', dp: 2, version: 5,
       target: null, signage: '<', targetLabel: null,
       provisional: true,
       provisionalNote: 'Understates true power — Compressed Air/Utilities kWh is no longer captured (removed 2026-07-24) and isn’t allocated into this figure. See the formula notes below before trusting the trend.',
-      notes: 'Mirrors the source Excel’s 3-layer build (M54): upstream-of-clinker kWh (crusher, raw mills, coal mill, kiln) is expressed per ton of clinker, then scaled to a per-ton-cement basis by the clinker factor (total clinker consumed, own + purchased, ÷ total cement produced by both mills); downstream kWh (cement mills, packing, lighting) is divided by cement produced directly and added. v4: Compressed Air/Utilities is no longer a tracked fact (removed from the power-cons form), so it no longer contributes here — this KPI now understates true total power by whatever utilities used to draw.',
+      notes: 'v5 (2026-10-10): cement produced now includes CM-1 42.5N BM and CM-2 OPC (see cement-produced-day v2). The clinker consumed in the numerator of the clinker factor was already summed over every cement entry, those batches included, so v4 divided their clinker by a cement total that left their tonnage out — overstating the clinker factor, and with it this KPI, on every day either grade ran.\n\nMirrors the source Excel’s 3-layer build (M54): upstream-of-clinker kWh (crusher, raw mills, coal mill, kiln) is expressed per ton of clinker, then scaled to a per-ton-cement basis by the clinker factor (total clinker consumed, own + purchased, ÷ total cement produced by both mills); downstream kWh (cement mills, packing, lighting) is divided by cement produced directly and added. v4: Compressed Air/Utilities is no longer a tracked fact (removed from the power-cons form), so it no longer contributes here — this KPI now understates true total power by whatever utilities used to draw.',
       inputs: KWH_CLINKER.concat(KWH_DOWNSTREAM, ['pwr_kiln_prod_mt', 'cm_clinker_own_cons', 'cm_clinker_purch_cons'], CM_GRADES),
       // Matches source Excel's 3-layer build (row 54, M54): upstream-of-clinker
       // kWh (crusher/raw mill/coal mill/kiln) is expressed per ton clinker, then
@@ -813,7 +834,11 @@
     },
   };
 
-  var api = { FACTS: FACTS, FORMULAS: FORMULAS, REGISTRY_VERSION: 1 };
+  /* CEMENT_GRADES is exported so backend/services/misReport.js can sum the
+     same fields instead of keeping its own copy. It had one — an eight-field
+     list "deliberately the same as CM_GRADES so the two cannot drift apart" —
+     which is exactly how both ended up missing the same two grades. */
+  var api = { FACTS: FACTS, FORMULAS: FORMULAS, CEMENT_GRADES: CM_GRADES.slice(), REGISTRY_VERSION: 1 };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else global.NyatiFormulas = api;
