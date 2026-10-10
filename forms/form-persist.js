@@ -930,6 +930,15 @@
       } else if (lastAmendment && lastAmendment.status === 'expired') {
         text += '  A correction window closed unused, so the figures were restored.';
       }
+      /* Say where the way out is. "Approved" with a locked form and nothing
+         else is exactly the screen people reported as "there is no means to
+         correct it" — the button existed, at the far end of the toolbar,
+         and nothing pointed at it. Not said to a role that cannot file this
+         form: _paintAmendUI offers them no button either. */
+      if (meta.locked && !(amendment && amendment.status === 'requested') &&
+          !document.getElementById('dr-view-only-banner')) {
+        text += '  Found a mistake? Use “Request a correction” in the toolbar.';
+      }
     }
 
     const banner = document.createElement('div');
@@ -1433,6 +1442,19 @@
     _ensurePersistCSS();
     _nameAnonymous(body);      // first thing — before mobile-entry.js starts moving inputs into cards
     _watchAddedInputs();
+
+    /* A link can name the day: ?date=YYYY-MM-DD opens the form on it. This
+       is how corrections.html's "Fix it now" and the review pages land the
+       person on the report they are correcting, instead of on today with an
+       instruction to go and find the right date themselves — which is the
+       step people did not know to take. Anything that is not a real date is
+       ignored, and a future day is never opened. */
+    let linked = null;
+    try { linked = new URLSearchParams(location.search).get('date'); } catch (e) { /* no URL API — fine */ }
+    if (dateInput && linked && /^\d{4}-\d{2}-\d{2}$/.test(linked) &&
+        !isNaN(Date.parse(linked)) && linked <= _todayStr()) {
+      dateInput.value = linked;
+    }
 
     /* Default to today, not whatever demo date is baked into the HTML —
        a daily report should open on the current day, every day. */

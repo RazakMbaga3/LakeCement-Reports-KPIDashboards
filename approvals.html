@@ -8,8 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <script src="auth.js?v=13"></script>
-  <script src="sidebar.js?v=5"></script>
-  <script src="loader.js?v=2"></script>
+  <script src="sidebar.js?v=6"></script>
+  <script src="loader.js?v=3"></script>
   <style>
     .apv-main { max-width: 1200px; margin: 0 auto; padding: 20px 28px 64px; }
     .apv-intro { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
@@ -54,11 +54,25 @@
   .amd-note { font-size:12px; color:var(--text-muted,#64748B); }
   .apv-btn-grant { background:var(--st-good); color:white; }
   .apv-btn-grant:hover { background:#0F6039; }
+
+  /* Several days asked for at once (corrections.html can file a week in one
+     go) are granted at once: one prompt for the window, not one per row. */
+  .amd-pick { width:1%; }
+  table.apv-table th.amd-pick, table.apv-table td.amd-pick { padding-right:0; }
+  /* The selection column costs width the Action column had; the reason wraps
+     a little sooner instead of pushing Decline off the edge at 1440px. */
+  #amd-table .apv-remarks { max-width:200px; }
+  .amd-pick input { width:18px; height:18px; margin:0; accent-color:var(--navy,#173158); cursor:pointer; }
+  .amd-pick.is-off input { visibility:hidden; }
+  .amd-bulk { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 10px;
+              font-size:12px; font-weight:700; color:var(--navy,#173158); }
+  .amd-bulk[hidden] { display:none; }
+  @media (pointer: coarse) { .amd-pick input { width:24px; height:40px; } }
 </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
-  <link rel="stylesheet" href="design-system.css?v=1" />
+  <link rel="stylesheet" href="design-system.css?v=2" />
   <script src="a11y.js?v=1"></script>
-  <script src="mobile-shell.js?v=1"></script>
+  <script src="mobile-shell.js?v=2"></script>
 </head>
 <body>
 
@@ -95,15 +109,36 @@
   <section id="amd-section" hidden aria-labelledby="amd-title">
     <h2 class="apv-h2" id="amd-title">Correction requests</h2>
     <p class="apv-intro" id="amd-intro"></p>
+    <div class="amd-bulk" id="amd-bulk" hidden>
+      <span id="amd-bulk-n"></span>
+      <button class="apv-btn apv-btn-grant" type="button" id="amd-bulk-grant">Grant selected</button>
+    </div>
     <div class="apv-table-wrap" id="amd-table-wrap">
       <table class="apv-table" id="amd-table">
         <thead>
-          <tr><th>Report</th><th>Date</th><th>Requested By</th><th>Requested At</th><th>Status</th><th>Why</th><th>Figures</th><th>Action</th></tr>
+          <tr><th class="amd-pick" id="amd-pick-th"><input type="checkbox" id="amd-pick-all" aria-label="Select every request you can grant" /></th><th>Report</th><th>Date</th><th>Requested By</th><th>Requested At</th><th>Status</th><th>Why</th><th>Figures</th><th>Action</th></tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
     <div id="amd-state" hidden></div>
+  </section>
+
+  <!-- Monthly KPI reopen requests (routes/kpi.js, migration 036). A submitted
+       KPI month is locked; its HOD asks for it back from corrections.html and
+       only admin/MD may reopen it. Hidden until the first response. -->
+  <section id="kpi-section" hidden aria-labelledby="kpi-title">
+    <h2 class="apv-h2" id="kpi-title">Monthly KPI reopen requests</h2>
+    <p class="apv-intro" id="kpi-intro"></p>
+    <div class="apv-table-wrap" id="kpi-table-wrap">
+      <table class="apv-table" id="kpi-table">
+        <thead>
+          <tr><th>Department</th><th>Month</th><th>Requested By</th><th>Requested At</th><th>Why</th><th>KPI rows</th><th>Action</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div id="kpi-state" hidden></div>
   </section>
 </main>
 
@@ -122,7 +157,7 @@
   requireAuth();
   applyApprovalsPermissions();
 </script>
-<script src="forms/api-client.js?v=5"></script>
+<script src="forms/api-client.js?v=6"></script>
 <script src="forms/client-errors.js"></script>
 <script>
 (function () {
@@ -149,7 +184,8 @@
   /* The two tables this page shows. Each has its own wrapper, panel and column
      count: showState used to hardcode the first one's ids and colspan="8". */
   var APV = { wrap: 'apv-table-wrap', panel: 'apv-state', table: 'apv-table', cols: 8 };
-  var AMD = { wrap: 'amd-table-wrap', panel: 'amd-state', table: 'amd-table', cols: 8 };
+  var AMD = { wrap: 'amd-table-wrap', panel: 'amd-state', table: 'amd-table', cols: 9 };
+  var KPI = { wrap: 'kpi-table-wrap', panel: 'kpi-state', table: 'kpi-table', cols: 7 };
 
   /* isError: true = failure panel, false = empty panel, null = show the
      table again. The table and the panel are never both on screen.
@@ -346,15 +382,18 @@
       }
 
       var detail = fields.length
-        ? '<tr class="apv-detail" id="amd-d' + i + '" hidden><td colspan="8">' +
+        ? '<tr class="apv-detail" id="amd-d' + i + '" hidden><td colspan="9">' +
             '<div class="apv-fields">' + fields.map(function (f) {
               return '<div class="apv-field"><span class="apv-field-k">' + escHtml(f.label) +
                      '</span><span class="apv-field-v">' + escHtml(String(f.value)) + '</span></div>';
             }).join('') + '</div></td></tr>'
         : '';
 
+      var grantable = r.status === 'requested' && !mine && isApprover;
       return '<tr data-id="' + escHtml(r.id) + '" data-form-type="' + escHtml(r.form_type) + '" data-date="' + escHtml(r.record_date) +
              '" data-label="' + escHtml(labelFor(r)) + '">' +
+        '<td class="amd-pick">' + (grantable
+          ? '<input type="checkbox" data-pick aria-label="Select ' + escHtml(labelFor(r)) + ', ' + escHtml(r.record_date) + '" />' : '') + '</td>' +
         '<td class="apv-form-label">' + escHtml(labelFor(r)) + '</td>' +
         '<td>' + escHtml(r.record_date) + '</td>' +
         '<td>' + escHtml(r.requested_by_name || '—') + '</td>' +
@@ -367,7 +406,55 @@
         '<td class="apv-actions">' + action + '</td>' +
       '</tr>' + detail;
     }).join('');
+    /* The select-all box only where there is something to select. */
+    document.getElementById('amd-pick-th').classList.toggle('is-off', !tbody.querySelector('input[data-pick]'));
+    paintAmdBulk();
   }
+
+  function pickedRows() {
+    return Array.prototype.slice.call(document.querySelectorAll('#amd-table input[data-pick]:checked'))
+      .map(function (cb) { return cb.closest('tr'); });
+  }
+  function paintAmdBulk() {
+    var n = pickedRows().length;
+    var all = document.querySelectorAll('#amd-table input[data-pick]').length;
+    document.getElementById('amd-bulk').hidden = n < 1;
+    document.getElementById('amd-bulk-n').textContent = n + ' request' + (n === 1 ? '' : 's') + ' selected';
+    var head = document.getElementById('amd-pick-all');
+    head.checked = all > 0 && n === all;
+    head.indeterminate = n > 0 && n < all;
+  }
+  document.querySelector('#amd-table').addEventListener('change', function (ev) {
+    if (ev.target.id === 'amd-pick-all') {
+      document.querySelectorAll('#amd-table input[data-pick]').forEach(function (cb) { cb.checked = ev.target.checked; });
+    }
+    paintAmdBulk();
+  });
+  document.getElementById('amd-bulk-grant').addEventListener('click', async function () {
+    var btn = this;
+    var rows = pickedRows();
+    if (!rows.length) return;
+    var raw = window.prompt(
+      'Open a correction window on ' + rows.length + ' report' + (rows.length === 1 ? '' : 's') + '.\n\n' +
+      '• Each report stays approved and keeps counting in the KPIs while its window is open.\n' +
+      '• Their current figures are saved first, and restored automatically if nothing is resubmitted.\n\n' +
+      'How many hours should the windows stay open? (1–72)', rows.length > 3 ? '48' : '24');
+    if (raw === null) return;
+    var hours = parseInt(raw, 10);
+    if (!(hours >= 1 && hours <= 72) || String(hours) !== raw.trim()) {
+      alert('Enter a whole number of hours between 1 and 72.'); return;
+    }
+    btn.disabled = true;
+    var failed = [];
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      try { await NyatiAPI.grantAmendment(r.dataset.formType, r.dataset.date, r.dataset.id, hours); }
+      catch (e) { failed.push(r.dataset.label + ' ' + r.dataset.date + ': ' + amdError(e, 'not granted')); }
+    }
+    btn.disabled = false;
+    if (failed.length) alert('Some requests were not granted:\n\n' + failed.join('\n'));
+    loadAmendments();
+  });
 
   document.querySelector('#amd-table').addEventListener('click', async function (ev) {
     var btn = ev.target.closest('button[data-action]');
@@ -418,8 +505,92 @@
     }
   });
 
+  /* ══ Monthly KPI reopen requests ══════════════════════════════════════
+     A department HOD asks (corrections.html); only admin/MD reopen — the
+     rule routes/kpi.js has always had. Reopening copies the month's figures
+     aside first (migration 036). An HOD sees their own department's
+     requests here only to follow or withdraw them. */
+  var KPI_DEPT_LABEL = { production: 'Production', mines: 'Quarrying', packing: 'Packing', mechanical: 'Mechanical',
+                         ei: 'E & I', stores: 'Stores', powerplant: 'Power Plant', minesworkshop: 'Quarry Workshop' };
+  var MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var privileged = me.role === 'admin' || me.role === 'md';
+
+  async function loadKpiReopens() {
+    var section = document.getElementById('kpi-section');
+    var tbody = document.querySelector('#kpi-table tbody');
+    var rows;
+    try { rows = await NyatiAPI.getKpiReopenRequests('open'); }
+    catch (e) { section.hidden = true; return; }
+
+    if (!rows.length && !privileged) { section.hidden = true; return; }
+    section.hidden = false;
+    document.getElementById('kpi-intro').textContent = privileged
+      ? 'A department HOD asked for a submitted KPI month back. Reopening lets them edit and submit it again; a copy of the figures as they stand is kept first. Declining needs a reason, which they will see.'
+      : 'Your department asked for these submitted KPI months to be reopened. An administrator or the MD decides.';
+    if (!rows.length) {
+      showState(false, 'check-circle', 'No KPI months waiting to be reopened',
+        'When a department HOD asks for a submitted month back, it appears here.', KPI);
+      return;
+    }
+    showState(null, null, null, null, KPI);
+    tbody.innerHTML = rows.map(function (r) {
+      var mine = r.requested_by && me.userId === r.requested_by;
+      var action = privileged
+        ? '<button class="apv-btn apv-btn-grant" data-kaction="reopen">Reopen</button>' +
+          '<button class="apv-btn apv-btn-reject" data-kaction="decline">Decline</button>'
+        : (mine ? '<button class="apv-btn apv-btn-reject" data-kaction="withdraw">Withdraw</button>' : '<span class="amd-note">Waiting</span>');
+      return '<tr data-id="' + escHtml(r.id) + '" data-dept="' + escHtml(r.department) + '" data-year="' + escHtml(r.year) +
+             '" data-month="' + escHtml(r.month) + '" data-reason="' + escHtml(r.reason) + '">' +
+        '<td class="apv-form-label">' + escHtml(KPI_DEPT_LABEL[r.department] || r.department) + '</td>' +
+        '<td>' + escHtml(MONTH_NAMES[r.month - 1] + ' ' + r.year) + '</td>' +
+        '<td>' + escHtml(r.requested_by_name || '—') + '</td>' +
+        '<td>' + fmtDateTime(r.requested_at) + '</td>' +
+        '<td class="apv-remarks">' + escHtml(r.reason) + '</td>' +
+        '<td>' + escHtml(r.kpi_rows) + '</td>' +
+        '<td class="apv-actions">' + action + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  document.querySelector('#kpi-table').addEventListener('click', async function (ev) {
+    var btn = ev.target.closest('button[data-kaction]');
+    if (!btn) return;
+    var row = btn.closest('tr');
+    var d = row.dataset, act = btn.dataset.kaction;
+    var what = (KPI_DEPT_LABEL[d.dept] || d.dept) + ' ' + MONTH_NAMES[d.month - 1] + ' ' + d.year;
+    function lock(on) { row.querySelectorAll('button').forEach(function (b) { b.disabled = on; }); }
+    try {
+      if (act === 'reopen') {
+        var reason = window.prompt('Reopen ' + what + '?\n\nThe HOD can then edit it and submit it again. A copy of the figures as they stand now is kept.\n\nReason (at least 10 characters):',
+          'Granting the HOD’s request: ' + d.reason);
+        if (reason === null) return;
+        reason = reason.trim();
+        if (reason.length < 10) { alert('Please give a reason of at least 10 characters.'); return; }
+        lock(true);
+        await NyatiAPI.reopenKpiMonth(d.dept, d.year, d.month, reason);
+      } else if (act === 'decline') {
+        var note = window.prompt('Why is this reopen request being declined?\n(At least 10 characters — the HOD who asked will read it.)');
+        if (note === null) return;
+        note = note.trim();
+        if (note.length < 10) { alert('Please give a reason of at least 10 characters.'); return; }
+        lock(true);
+        await NyatiAPI.declineKpiReopen(d.dept, d.year, d.month, d.id, note);
+      } else if (act === 'withdraw') {
+        if (!window.confirm('Withdraw this reopen request?')) return;
+        lock(true);
+        await NyatiAPI.withdrawKpiReopen(d.dept, d.year, d.month, d.id);
+      }
+      loadKpiReopens();
+    } catch (e) {
+      alert(amdError(e, 'That could not be completed.'));
+      lock(false);
+      loadKpiReopens();
+    }
+  });
+
   load();
   loadAmendments();
+  loadKpiReopens();
 
   var _dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
   var fEl = document.getElementById('footer-date');

@@ -82,6 +82,7 @@
     'daily-report.html':        ['Daily Report',       'Production'],
     'analytics.html':           ['Operational Summary','Analytics'],
     'approvals.html':           ['Approvals',          'Pending'],
+    'corrections.html':         ['Corrections',        'Daily Reports'],
     'sales.html':               ['Sales &amp; Dispatch', 'Commercial'],
     'purchases.html':           ['Raw Mat’ls &amp; Purchases', 'Commercial'],
     'reliability.html':         ['Reliability',        'Maintenance'],
@@ -196,16 +197,28 @@
      says how much work is waiting rather than merely that some is. */
   function loadApprovalBadge() {
     const slot = document.querySelector('.ms-bn-item[data-badge="approvals"]');
-    if (!slot || typeof window.apiGet !== 'function') return;
-    Promise.resolve(window.apiGet('/approvals/pending'))
-      .then(res => {
-        const list = Array.isArray(res) ? res : (res && (res.rows || res.data || res.pending));
-        const n = Array.isArray(list) ? list.length : 0;
+    if (!slot) return;
+    /* This used to ask window.apiGet('/approvals/pending') — a helper no page
+       defines, for a route the server never had — so the badge never once
+       appeared. It now reads GET /api/approvals/counts, the same answer
+       sidebar.js puts on the Approvals row (shared via window.NyatiCounts, so
+       the page asks once), which also counts the correction and KPI-reopen
+       requests waiting on this approver. */
+    let counts = window.NyatiCounts;
+    if (!counts) {
+      if (typeof getAuthToken !== 'function' || typeof _API_BASE === 'undefined') return;
+      counts = window.NyatiCounts = fetch(_API_BASE + '/approvals/counts', {
+        headers: { Authorization: 'Bearer ' + getAuthToken() },
+      }).then(r => (r.ok ? r.json() : null)).catch(() => null);
+    }
+    Promise.resolve(counts)
+      .then(c => {
+        const n = c ? c.total : 0;
         if (!n) return;
         const b = document.createElement('span');
         b.className = 'ms-bn-badge';
         b.textContent = n > 99 ? '99+' : String(n);
-        b.setAttribute('aria-label', `${n} report${n === 1 ? '' : 's'} awaiting approval`);
+        b.setAttribute('aria-label', `${n} item${n === 1 ? '' : 's'} waiting for your decision`);
         slot.appendChild(b);
       })
       .catch(() => { /* a badge is a nicety; never surface its failure */ });

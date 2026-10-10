@@ -72,6 +72,7 @@
     "test:sales-aggregation": "node --test test/sales-aggregation.test.js",
     "test:odoo-sales-sync": "node --test test/odoo-sales-sync.test.js",
     "accept:amendments": "node scripts/accept-amendments.js",
+    "accept:corrections": "node scripts/accept-corrections.js",
     "test:amendments": "node --test test/report-amendments.test.js",
     "accept:it-assets": "node scripts/accept-it-assets.js"
   },

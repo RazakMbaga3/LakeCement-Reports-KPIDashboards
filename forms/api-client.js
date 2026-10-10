@@ -509,13 +509,10 @@
     return body;
   }
 
-  async function reopenKpiMonth(dept, year, month, reason) {
-    const res = await fetch(BASE + '/kpi/' + encodeURIComponent(dept) + '/' + year + '/' + month + '/reopen', {
-      method: 'POST', headers: _headers(), body: JSON.stringify({ reason }),
-    });
-    const body = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(body.error || ('Reopen failed (' + res.status + ')'));
-    return body;
+  /* admin/MD only. Also grants the month's open reopen request, if any.
+     Errors carry the server's status and wording (see _kpiReq below). */
+  function reopenKpiMonth(dept, year, month, reason) {
+    return _kpiReq('POST', '/' + encodeURIComponent(dept) + '/' + year + '/' + month + '/reopen', { reason });
   }
 
   /* ── Correction requests (routes/amendments.js) ────────────────────
@@ -565,6 +562,58 @@
   /* GET — a day's requests and the revision trail behind it (no figures). */
   function getAmendmentHistory(formType, date) {
     return _amend('GET', _ap(formType, date));
+  }
+  /* GET — every reported day of one form in a range (at most 92 days), with
+     its sign-off, a count of its figures, and every correction request
+     touching it. corrections.html's day picker. */
+  function getCorrectionDays(formType, from, to) {
+    const qs = new URLSearchParams({ from, to });
+    return _amend('GET', '/days/' + encodeURIComponent(formType) + '?' + qs.toString());
+  }
+
+  /* GET /api/approvals/counts — how much is waiting on me: reports to sign
+     off, corrections and KPI reopens to decide, and correction windows open
+     for me. Read by the sidebar on every page, so it is counts only. */
+  async function getApprovalCounts() {
+    const res = await fetch(BASE + '/approvals/counts', { headers: _headers() });
+    if (!res.ok) throw _httpError('getApprovalCounts', '', res);
+    return res.json();
+  }
+
+  /* ── Monthly KPI reopen requests (routes/kpi.js, migration 036) ──────
+     The department HOD asks for a submitted month back; admin/MD decide
+     (reopenKpiMonth above is the grant). Errors carry the server's code, the
+     same way the daily-report corrections do. */
+  async function _kpiReq(method, path, body) {
+    const res = await fetch(BASE + '/kpi' + path, {
+      method, headers: _headers(), body: body ? JSON.stringify(body) : undefined,
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok) {
+      const err = new Error((json && json.error) || ('KPI request failed (' + res.status + ')'));
+      err.status = res.status; err.code = json && json.code; err.body = json;
+      throw err;
+    }
+    return json;
+  }
+  const _kp = (dept, year, month) => '/' + encodeURIComponent(dept) + '/' + year + '/' + month;
+  function requestKpiReopen(dept, year, month, reason) {
+    return _kpiReq('POST', _kp(dept, year, month) + '/reopen-request', { reason });
+  }
+  function withdrawKpiReopen(dept, year, month, id) {
+    return _kpiReq('POST', _kp(dept, year, month) + '/reopen-request/' + id + '/withdraw', {});
+  }
+  function declineKpiReopen(dept, year, month, id, note) {
+    return _kpiReq('POST', _kp(dept, year, month) + '/reopen-request/' + id + '/decline', { note });
+  }
+  function getKpiReopenRequests(state, days) {
+    const qs = new URLSearchParams({ state: state || 'open' });
+    if (days) qs.set('days', days);
+    return _kpiReq('GET', '/reopen-requests?' + qs.toString());
+  }
+  /* `from`/`to` are 'YYYY-MM'. */
+  function getKpiSubmissions(dept, from, to) {
+    return _kpiReq('GET', '/submissions/' + encodeURIComponent(dept) + '?' + new URLSearchParams({ from, to }).toString());
   }
 
   /* ── Admin: user provisioning (admin-users.html) ───────────────────
@@ -664,6 +713,8 @@
     getRawMaterialDay, getStoresIssues, getStoresValuation, getStoresFreshness, syncStores,
     getApprovals, approveReport, rejectReport,
     requestAmendment, getAmendments, grantAmendment, declineAmendment, withdrawAmendment, getAmendmentHistory,
+    getCorrectionDays, getApprovalCounts,
+    requestKpiReopen, withdrawKpiReopen, declineKpiReopen, getKpiReopenRequests, getKpiSubmissions,
     getMisEmployees, getMisItAssets, getMisVehicles, getMisComplianceCerts,
     itAssetsOverview, itAssetsList, itAssetCreate, itAssetUpdate, itAssetDelete, itAssetsImport,
     getKpiSubmission, submitKpiMonth, reopenKpiMonth,

@@ -8,6 +8,15 @@
   GET  /api/kpi/:dept/:year/:month        → get KPIs for a dept/month
   PUT  /api/kpi/:dept/:year/:month        → save KPI targets or actuals
 
+  Monthly submission lock, and the way back through it (migration 036):
+  GET  /api/kpi/submissions/:dept?from=YYYY-MM&to=YYYY-MM   → each month's lock state
+  GET  /api/kpi/reopen-requests?state=open|all              → reopen requests I made / decide
+  POST /api/kpi/:dept/:year/:month/submit                   → HOD declares the month final
+  POST /api/kpi/:dept/:year/:month/reopen-request           → HOD asks for it back
+  POST /api/kpi/:dept/:year/:month/reopen-request/:id/withdraw
+  POST /api/kpi/:dept/:year/:month/reopen-request/:id/decline   (admin/md)
+  POST /api/kpi/:dept/:year/:month/reopen                   → admin/md reopens (grants)
+
   Every request is validated (middleware/validate.js) before it touches SQL;
   handlers read the parsed (coerced-to-number) values from req.validated.
 
@@ -25,7 +34,7 @@ const db      = require('../db');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { requireKpiDeptAccess, requireKpiPeriodOpen } = require('../middleware/kpiAccess');
 const { validate, z, zNumeric } = require('../middleware/validate');
-const { KPI_DEPTS } = require('../config/kpiAccess');
+const { KPI_DEPTS, ROLE_KPI_EDIT_DEPTS } = require('../config/kpiAccess');
 
 const router = express.Router();
 
@@ -144,6 +153,109 @@ router.get('/range/:dept',
         [dept, lo, hi]
       );
       res.json(result.rows);
+    } catch (err) { next(err); }
+  });
+
+/* ══════════════════════════════════════════════════════════════════════
+   REOPEN REQUESTS — reads. Registered ahead of the generic
+   /:dept/:year/:month for the reason /fiscal and /range give.
+══════════════════════════════════════════════════════════════════════ */
+
+const isPrivileged = u => u.role === 'admin' || u.role === 'md';
+const actorName = req => req.user.name || req.user.username;
+/* Departments whose KPI months this user may file — and so ask to reopen. */
+function editableDepts(user) {
+  const allowed = ROLE_KPI_EDIT_DEPTS[user.role] || [];
+  if (allowed === 'all') return KPI_DEPTS.slice();
+  return user.level === 'hod' || user.role === 'admin' ? allowed : [];
+}
+
+const REQUEST_COLUMNS = `
+  q.id, q.department, q.year, q.month, q.status, q.reason,
+  q.requested_by, q.requested_by_name, q.requested_at,
+  q.decided_by_name, q.decided_at, q.decision_note`;
+
+/* GET /api/kpi/submissions/:dept?from=YYYY-MM&to=YYYY-MM
+   Every month in the range that has figures or a lock, with its lock state
+   and any open reopen request — the month picker on corrections.html. */
+router.get('/submissions/:dept',
+  requireAuth, validate(z.object({ dept: zRealDept }), 'params'), validate(rangeQuery, 'query'),
+  async (req, res, next) => {
+    try {
+      const { dept } = req.validated.params;
+      const { from, to } = req.validated.query;
+      if (!isPrivileged(req.user) && !editableDepts(req.user).includes(dept)) {
+        return res.status(403).json({ error: `Role '${req.user.role}' does not file KPIs for '${dept}'.` });
+      }
+      const n = p => Number(p.slice(0, 4)) * 100 + Number(p.slice(5, 7));
+      const [lo, hi] = [n(from), n(to)].sort((a, b) => a - b);
+
+      const { rows } = await db.query(`
+        WITH months AS (
+          SELECT year, month, COUNT(*)::int AS kpi_rows,
+                 COUNT(actual)::int AS actuals
+            FROM kpi_monthly
+           WHERE department = $1 AND (year * 100 + month) BETWEEN $2 AND $3
+           GROUP BY year, month
+          UNION
+          SELECT year, month, 0, 0 FROM kpi_submissions
+           WHERE department = $1 AND (year * 100 + month) BETWEEN $2 AND $3
+        )
+        SELECT m.year, m.month, MAX(m.kpi_rows) AS kpi_rows, MAX(m.actuals) AS actuals,
+               COALESCE(s.status, 'open') AS status,
+               s.submitted_at, su.full_name AS submitted_by_name,
+               s.reopened_at, ru.full_name AS reopened_by_name, s.reopen_reason,
+               (SELECT row_to_json(x) FROM (
+                  SELECT ${REQUEST_COLUMNS} FROM kpi_reopen_requests q
+                   WHERE q.department = $1 AND q.year = m.year AND q.month = m.month
+                   ORDER BY q.id DESC LIMIT 1) x) AS last_request
+          FROM months m
+          LEFT JOIN kpi_submissions s
+            ON s.department = $1 AND s.year = m.year AND s.month = m.month
+          LEFT JOIN users su ON su.id = s.submitted_by
+          LEFT JOIN users ru ON ru.id = s.reopened_by
+         GROUP BY m.year, m.month, s.status, s.submitted_at, su.full_name,
+                  s.reopened_at, ru.full_name, s.reopen_reason
+         ORDER BY m.year DESC, m.month DESC`, [dept, lo, hi]);
+      res.json(rows);
+    } catch (err) { next(err); }
+  });
+
+/* GET /api/kpi/reopen-requests?state=open|all&days=N
+   admin/md: every request (they decide them). An HOD: requests on the
+   departments they file. Anyone else: nothing to see. */
+router.get('/reopen-requests',
+  requireAuth,
+  validate(z.object({
+    state: z.enum(['open', 'all']).default('open'),
+    days:  z.coerce.number().int().min(1).max(365).default(30),
+  }), 'query'),
+  async (req, res, next) => {
+    try {
+      const { state, days } = req.validated.query;
+      const params = [];
+      const where = [];
+      if (!isPrivileged(req.user)) {
+        const depts = editableDepts(req.user);
+        if (!depts.length) return res.json([]);
+        params.push(depts);
+        where.push(`q.department = ANY($${params.length})`);
+      }
+      if (state === 'open') {
+        where.push(`q.status = 'requested'`);
+      } else {
+        params.push(days);
+        where.push(`(q.status = 'requested' OR q.requested_at >= NOW() - ($${params.length}::int * INTERVAL '1 day'))`);
+      }
+      const { rows } = await db.query(`
+        SELECT ${REQUEST_COLUMNS},
+               (SELECT COUNT(*)::int FROM kpi_monthly k
+                 WHERE k.department = q.department AND k.year = q.year AND k.month = q.month) AS kpi_rows
+          FROM kpi_reopen_requests q
+         ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
+         ORDER BY (q.status = 'requested') DESC, q.requested_at DESC
+         LIMIT 200`, params);
+      res.json(rows);
     } catch (err) { next(err); }
   });
 
@@ -268,8 +380,20 @@ router.get('/:dept/:year/:month/submission',
            LEFT JOIN users ru ON ru.id = s.reopened_by
           WHERE s.department = $1 AND s.year = $2 AND s.month = $3`,
         [dept, year, month]);
+      /* The open reopen request, if any, and the last decided one if recent —
+         so the KPI page can say "reopen requested, waiting" or "your request
+         was declined: <why>" instead of offering the button again blind. */
+      const reqs = await db.query(`
+        SELECT ${REQUEST_COLUMNS} FROM kpi_reopen_requests q
+         WHERE q.department = $1 AND q.year = $2 AND q.month = $3
+           AND (q.status = 'requested' OR q.decided_at > NOW() - INTERVAL '14 days')
+         ORDER BY q.id DESC LIMIT 1`, [dept, year, month]);
+      const last = reqs.rows[0] || null;
       // No row at all is a normal, open period — not a 404.
-      res.json(rows[0] || { status: 'open', submitted_at: null, submitted_by: null });
+      res.json(Object.assign(
+        rows[0] || { status: 'open', submitted_at: null, submitted_by: null },
+        { reopen_request: last && last.status === 'requested' ? last : null,
+          last_reopen_request: last && last.status !== 'requested' ? last : null }));
     } catch (err) { next(err); }
   });
 
@@ -321,10 +445,144 @@ router.post('/:dept/:year/:month/submit',
     } catch (err) { next(err); }
   });
 
+/* Reopen REQUEST — the department's HOD asks for a submitted month back,
+   with a reason an admin/MD reads to decide. The lock's rule is unchanged
+   (only admin/MD reopen); what is new is that the HOD can ask from the
+   screen instead of having to know whom to phone. requireKpiDeptAccess is
+   the same gate as editing the month: whoever could file it may ask. */
+const reasonBody = z.object({
+  reason: z.string().trim().min(10, 'Say what is wrong in at least 10 characters').max(500),
+});
+const requestIdParams = deptYearMonthWrite.extend({ id: z.coerce.number().int().positive() });
+const label = (dept, year, month) => `${dept} ${year}-${String(month).padStart(2, '0')}`;
+
+router.post('/:dept/:year/:month/reopen-request',
+  requireAuth, requireKpiDeptAccess,
+  validate(deptYearMonthWrite, 'params'), validate(reasonBody, 'body'),
+  async (req, res, next) => {
+    try {
+      const { dept, year, month } = req.validated.params;
+      const { reason } = req.validated.body;
+      if (isPrivileged(req.user)) {
+        return res.status(409).json({
+          error: 'You can reopen this month yourself — use "Reopen month" rather than asking.',
+          code: 'REOPEN_DIRECTLY',
+        });
+      }
+
+      const out = await db.withTransaction(async (client) => {
+        const sub = await client.query(
+          `SELECT status FROM kpi_submissions WHERE department = $1 AND year = $2 AND month = $3 FOR UPDATE`,
+          [dept, year, month]);
+        if (!sub.rows[0] || sub.rows[0].status !== 'submitted') return { notLocked: true };
+
+        const ins = await client.query(`
+          INSERT INTO kpi_reopen_requests (department, year, month, reason, requested_by, requested_by_name)
+          VALUES ($1, $2, $3, $4, $5, $6)
+          ON CONFLICT (department, year, month) WHERE status = 'requested' DO NOTHING
+          RETURNING id`, [dept, year, month, reason, req.user.id, actorName(req)]);
+        const existing = !ins.rows[0];
+
+        if (!existing) {
+          await client.query(
+            `INSERT INTO audit_log (user_id, username, action, form_type, details, ip_address)
+             VALUES ($1,$2,'KPI_REOPEN_REQUEST',$3,$4,$5)`,
+            [req.user.id, req.user.username, `${dept}/${year}/${month}`, reason.slice(0, 4000), req.ip]);
+        }
+        const row = await client.query(
+          `SELECT ${REQUEST_COLUMNS} FROM kpi_reopen_requests q
+            WHERE q.department = $1 AND q.year = $2 AND q.month = $3 AND q.status = 'requested'`,
+          [dept, year, month]);
+        return { existing, request: row.rows[0] };
+      });
+
+      if (out.notLocked) {
+        return res.status(409).json({
+          error: `${label(dept, year, month)} is not submitted, so it is already open for editing.`,
+          code: 'NOT_LOCKED',
+        });
+      }
+      if (out.existing) {
+        return res.status(409).json({
+          error: 'A reopen request is already waiting for this month.',
+          code: 'REQUEST_ALREADY_OPEN', request: out.request,
+        });
+      }
+      res.status(201).json({ ok: true, request: out.request });
+    } catch (err) { next(err); }
+  });
+
+/* Lock the request row and check it belongs to the month in the path. */
+async function lockRequest(client, { id, dept, year, month }) {
+  const { rows } = await client.query(
+    'SELECT * FROM kpi_reopen_requests WHERE id = $1 FOR UPDATE', [id]);
+  const r = rows[0];
+  if (!r || r.department !== dept || r.year !== year || r.month !== month) return null;
+  return r;
+}
+
+router.post('/:dept/:year/:month/reopen-request/:id/withdraw',
+  requireAuth, validate(requestIdParams, 'params'),
+  async (req, res, next) => {
+    try {
+      const { dept, year, month, id } = req.validated.params;
+      const out = await db.withTransaction(async (client) => {
+        const r = await lockRequest(client, { id, dept, year, month });
+        if (!r) return { notFound: true };
+        if (r.status !== 'requested') return { notPending: r.status };
+        if (!isPrivileged(req.user) && r.requested_by !== req.user.id) return { forbidden: true };
+        await client.query(`UPDATE kpi_reopen_requests SET status = 'withdrawn' WHERE id = $1`, [id]);
+        await client.query(
+          `INSERT INTO audit_log (user_id, username, action, form_type, details, ip_address)
+           VALUES ($1,$2,'KPI_REOPEN_WITHDRAW',$3,$4,$5)`,
+          [req.user.id, req.user.username, `${dept}/${year}/${month}`, `Reopen request #${id} withdrawn`, req.ip]);
+        return { ok: true };
+      });
+      if (out.notFound) return res.status(404).json({ error: 'No such reopen request.', code: 'NOT_FOUND' });
+      if (out.notPending) return res.status(409).json({ error: `That request is already ${out.notPending}.`, code: 'NOT_PENDING' });
+      if (out.forbidden) return res.status(403).json({ error: 'Only the person who asked can withdraw a reopen request.', code: 'NOT_REQUESTER' });
+      res.json({ ok: true });
+    } catch (err) { next(err); }
+  });
+
+router.post('/:dept/:year/:month/reopen-request/:id/decline',
+  requireAuth, requireRole('admin', 'md'),
+  validate(requestIdParams, 'params'),
+  validate(z.object({ note: z.string().trim().min(10, 'Say why in at least 10 characters').max(500) }), 'body'),
+  async (req, res, next) => {
+    try {
+      const { dept, year, month, id } = req.validated.params;
+      const { note } = req.validated.body;
+      const out = await db.withTransaction(async (client) => {
+        const r = await lockRequest(client, { id, dept, year, month });
+        if (!r) return { notFound: true };
+        if (r.status !== 'requested') return { notPending: r.status };
+        await client.query(`
+          UPDATE kpi_reopen_requests SET status = 'declined', decided_by = $2, decided_by_name = $3,
+                 decided_at = NOW(), decision_note = $4
+           WHERE id = $1`, [id, req.user.id, actorName(req), note]);
+        await client.query(
+          `INSERT INTO audit_log (user_id, username, action, form_type, details, ip_address)
+           VALUES ($1,$2,'KPI_REOPEN_DECLINE',$3,$4,$5)`,
+          [req.user.id, req.user.username, `${dept}/${year}/${month}`, `Reopen request #${id} declined — ${note}`, req.ip]);
+        return { ok: true };
+      });
+      if (out.notFound) return res.status(404).json({ error: 'No such reopen request.', code: 'NOT_FOUND' });
+      if (out.notPending) return res.status(409).json({ error: `That request is already ${out.notPending}.`, code: 'NOT_PENDING' });
+      res.json({ ok: true });
+    } catch (err) { next(err); }
+  });
+
 /* Reopen — admin/MD only, reason mandatory. Kept off the department's own
    HOD on purpose: letting the submitter unlock their own month would make
    the lock advisory, and the point of it is that the figures management
-   read cannot change underneath them without someone else agreeing. */
+   read cannot change underneath them without someone else agreeing.
+
+   A reopen is also how a reopen REQUEST is granted: the open request for the
+   month, if there is one, is marked granted in the same transaction. Either
+   way the month's figures as they stood are copied into kpi_reopen_requests
+   .snapshot first — kpi_monthly keeps no history, so this is the only record
+   of what management had read before the correction. */
 const reopenBody = z.object({
   reason: z.string().trim().min(10, 'Give a reason of at least 10 characters').max(500),
 });
@@ -345,18 +603,42 @@ router.post('/:dept/:year/:month/reopen',
           [dept, year, month, req.user.id, reason]);
         if (!rows.length) return null;
 
+        const snap = await client.query(
+          `SELECT kpi_key, target, actual, unit, remarks FROM kpi_monthly
+            WHERE department = $1 AND year = $2 AND month = $3 ORDER BY kpi_key`,
+          [dept, year, month]);
+        const granted = await client.query(`
+          UPDATE kpi_reopen_requests
+             SET status = 'granted', decided_by = $4, decided_by_name = $5, decided_at = NOW(),
+                 decision_note = $6, snapshot = $7::jsonb
+           WHERE department = $1 AND year = $2 AND month = $3 AND status = 'requested'
+           RETURNING id`,
+          [dept, year, month, req.user.id, actorName(req), reason, JSON.stringify(snap.rows)]);
+        let requestId = granted.rows[0] ? granted.rows[0].id : null;
+        if (!requestId) {
+          const born = await client.query(`
+            INSERT INTO kpi_reopen_requests
+              (department, year, month, status, reason, requested_by, requested_by_name,
+               decided_by, decided_by_name, decided_at, decision_note, snapshot)
+            VALUES ($1, $2, $3, 'granted', $4, $5, $6, $5, $6, NOW(), $4, $7::jsonb)
+            RETURNING id`,
+            [dept, year, month, reason, req.user.id, actorName(req), JSON.stringify(snap.rows)]);
+          requestId = born.rows[0].id;
+        }
+
         await client.query(
           `INSERT INTO audit_log (user_id, username, action, form_type, details, ip_address)
            VALUES ($1,$2,$3,$4,$5,$6)`,
           [req.user.id, req.user.username, 'KPI_REOPEN', `${dept}/${year}/${month}`,
-           reason.slice(0, 4000), req.ip]);
+           (`${reason}` + (granted.rows[0] ? ` (grants reopen request #${requestId})` : '')
+             + ` — ${snap.rows.length} KPI row(s) snapshotted`).slice(0, 4000), req.ip]);
 
-        return rows[0];
+        return { ...rows[0], request_id: requestId, snapshot_rows: snap.rows.length };
       });
 
       if (!result) {
         return res.status(404).json({
-          error: `${dept} ${year}-${String(month).padStart(2, '0')} is not currently submitted, so there is nothing to reopen.`,
+          error: `${label(dept, year, month)} is not currently submitted, so there is nothing to reopen.`,
         });
       }
       res.json({ ok: true, ...result });

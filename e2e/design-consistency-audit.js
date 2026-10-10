@@ -50,7 +50,7 @@ const ALL_PAGES = [
   ['dispatch', 'dispatch.html'], ['production', 'production.html'],
   ['power-plant', 'power-plant.html'], ['power-plant-rpt', 'power-plant-report.html'],
   ['daily-report', 'daily-report.html'], ['analytics', 'analytics.html'],
-  ['approvals', 'approvals.html'], ['sales', 'sales.html'], ['purchases', 'purchases.html'],
+  ['approvals', 'approvals.html'], ['corrections', 'corrections.html'], ['sales', 'sales.html'], ['purchases', 'purchases.html'],
   ['reliability', 'reliability.html'], ['quarry', 'mines-report.html'],
   ['balance', 'balance.html'], ['insights', 'insights.html'],
   ['completeness', 'completeness.html'], ['reports-export', 'reports-export.html'],

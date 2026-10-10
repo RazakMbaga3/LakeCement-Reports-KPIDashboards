@@ -30,6 +30,67 @@ const { FORM_LABELS, prettifyField } = require('../services/misReport');
 
 const router = express.Router();
 
+/* The form types this user signs off: null = every one (admin/md), [] = none. */
+function approvableFormTypes({ role, level }) {
+  if (role === 'admin' || role === 'md') return null;
+  if (level !== 'hod') return [];
+  return Object.entries(OWNING_ROLE_BY_FORM_TYPE)
+    .filter(([, owningRole]) => owningRole === role)
+    .map(([formType]) => formType);
+}
+
+/* ── GET /api/approvals/counts ──────────────────────────────────────────
+   How much is waiting on this user, for the number on the sidebar's
+   Approvals row and the phone's Approve tab. Before this the only way an
+   approver learnt that somebody had asked for a correction was to open the
+   Approvals page and look — so a request could sit for days while the
+   person who filed it assumed it had been seen.
+
+     reports      pending_approval reports they may sign off
+     corrections  correction requests they may DECIDE — their own are left
+                  out, since mayDecide() would refuse them anyway
+     kpiReopens   monthly-KPI reopen requests (admin/md only — only they
+                  may reopen a submitted month)
+     myWindows    correction windows open for THIS user right now: the one
+                  thing an officer has to act on, and on a clock
+
+   Counts only, never rows: this is read on every page load. */
+router.get('/counts', requireAuth, async (req, res, next) => {
+  try {
+    const types = approvableFormTypes(req.user);
+    const privileged = types === null;
+    const none = Array.isArray(types) && types.length === 0;
+
+    const [reports, corrections, kpiReopens, mine] = await Promise.all([
+      none ? { rows: [{ n: 0 }] } : db.query(
+        `SELECT COUNT(*)::int AS n FROM daily_reports
+          WHERE status = 'pending_approval'${privileged ? '' : ' AND form_type = ANY($1)'}`,
+        privileged ? [] : [types]),
+      none ? { rows: [{ n: 0 }] } : db.query(
+        `SELECT COUNT(*)::int AS n FROM report_amendments
+          WHERE status = 'requested'
+            AND (requested_by IS NULL OR requested_by <> $1 OR $2)
+            ${privileged ? '' : 'AND form_type = ANY($3)'}`,
+        privileged ? [req.user.id, true] : [req.user.id, false, types]),
+      privileged
+        ? db.query(`SELECT COUNT(*)::int AS n FROM kpi_reopen_requests WHERE status = 'requested'`)
+        : { rows: [{ n: 0 }] },
+      db.query(
+        `SELECT COUNT(*)::int AS n FROM report_amendments
+          WHERE requested_by = $1 AND status = 'granted' AND expires_at > NOW()`, [req.user.id]),
+    ]);
+
+    const out = {
+      reports:     reports.rows[0].n,
+      corrections: corrections.rows[0].n,
+      kpiReopens:  kpiReopens.rows[0].n,
+      myWindows:   mine.rows[0].n,
+    };
+    out.total = out.reports + out.corrections + out.kpiReopens;
+    res.json(out);
+  } catch (err) { next(err); }
+});
+
 router.get('/', requireAuth, async (req, res, next) => {
   try {
     const { role, level } = req.user;

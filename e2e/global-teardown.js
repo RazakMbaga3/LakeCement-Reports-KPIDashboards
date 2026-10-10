@@ -12,6 +12,10 @@ const HARNESS_USERS = `SELECT id FROM users WHERE username LIKE 'e2e\_%'`;
 module.exports = async () => {
   // 1. The declared write sandboxes.
   await pool.query('DELETE FROM kpi_monthly WHERE year = 2001');
+  /* A submitted / reopened 2001 month (corrections-page.spec.js). kpi_submissions
+     .submitted_by is a plain REFERENCES users(id), so it must go before the users. */
+  await pool.query('DELETE FROM kpi_reopen_requests WHERE year = 2001');
+  await pool.query('DELETE FROM kpi_submissions WHERE year = 2001');
   await pool.query("DELETE FROM daily_reports WHERE record_date BETWEEN '1999-01-01' AND '1999-12-31'");
   /* 2098 is draft-reaccess.spec.js's sandbox: it must sort NEWEST, because the history
      panel only sees the newest 120 days of a form. */

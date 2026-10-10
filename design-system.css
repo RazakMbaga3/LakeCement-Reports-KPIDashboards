@@ -490,15 +490,17 @@
     top: 4px;
     left: 50%;
     margin-left: 4px;
-    min-width: 17px;
-    height: 17px;
+    min-width: 18px;
+    height: 18px;
     padding: 0 4px;
     border-radius: var(--r-pill);
     background: var(--st-bad);
     color: #fff;
-    font-size: 10px;
+    /* 12px, the floor. It was 10px — never noticed, because the badge never
+       once rendered until GET /api/approvals/counts existed (2026-10-10). */
+    font-size: var(--fs-xs);
     font-weight: var(--fw-heavy);
-    line-height: 17px;
+    line-height: 18px;
     text-align: center;
   }
 

@@ -5,6 +5,9 @@
   db/migrations/027_report_amendments.sql.
 
   GET  /api/amendments                                  → my requests / the requests I decide
+  GET  /api/amendments/days/:formType?from=&to=         → every reported day in a range, with
+                                                          its sign-off and its correction state
+                                                          (corrections.html's day picker)
   POST /api/amendments/:formType/:date                  → ask for a correction
   GET  /api/amendments/:formType/:date                  → that day's requests + its revision trail
   POST /api/amendments/:formType/:date/:id/grant        → open a time-boxed window   (approver)
@@ -68,6 +71,12 @@ const listQuery = z.object({
   state: z.enum(['open', 'all']).default('open'),
   days:  z.coerce.number().int().min(1).max(365).default(30),
 });
+const daysParams = z.object({ formType: z.enum(VALID_FORMS) });
+const daysQuery  = z.object({ from: zDate, to: zDate, shift: zShift.default('day') })
+  .refine(q => q.from <= q.to, 'from must not be after to')
+  /* A month is what the page asks for; a quarter is the most anyone needs to
+     scan for a run of bad days. Unbounded, this is a table scan of history. */
+  .refine(q => (Date.parse(q.to) - Date.parse(q.from)) / 86400000 <= 92, 'a range of at most 92 days');
 
 const actorName = req => req.user.name || req.user.username;
 
@@ -155,6 +164,81 @@ router.get('/', requireAuth, validate(listQuery, 'query'), async (req, res, next
     })));
   } catch (err) { next(err); }
 });
+
+/* ── GET /api/amendments/days/:formType?from=&to= ───────────────────────
+   The day picker behind corrections.html. "Which of last month's reports
+   are wrong?" used to be answerable only by opening the entry form and
+   stepping through the date field one day at a time — which is why a
+   report approved with every field at zero could sit there with nobody
+   finding the way to fix it. This answers it for a whole month in one read:
+   each reported day's status and sign-off, how many figures it carries and
+   how many of those are non-zero (a day that is all zeros or blanks is the
+   commonest mistake, and the page flags it), and every correction request
+   touching the range.
+
+   Registered BEFORE GET /:formType/:date, which would otherwise take
+   '/days/<form>' as formType='days' and 400 it.
+
+   Visibility is canSee(): whoever may file this form or decide its
+   corrections. The figures themselves are not returned — counts only. */
+router.get('/days/:formType',
+  requireAuth, validate(daysParams, 'params'), validate(daysQuery, 'query'),
+  async (req, res, next) => {
+    try {
+      const { formType } = req.validated.params;
+      const { from, to, shift } = req.validated.query;
+      if (!canSee(req.user, formType)) {
+        return res.status(403).json({ error: `Role '${req.user.role}' may not view '${formType}' reports.` });
+      }
+
+      const [days, ams] = await Promise.all([
+        db.query(`
+          SELECT r.record_date::text AS date, r.status,
+                 r.submitted_at, r.approved_at, r.updated_at,
+                 su.full_name AS submitted_by_name,
+                 au.full_name AS approved_by_name,
+                 (r.approved_by IS NOT NULL) AS human_signed,
+                 f.filled, f.nonzero
+            FROM daily_reports r
+            LEFT JOIN users su ON su.id = r.submitted_by
+            LEFT JOIN users au ON au.id = r.approved_by
+            CROSS JOIN LATERAL (
+              /* CASE, not AND: Postgres does not promise to test the regex
+                 before attempting the cast, and one stray "1.2.3" would 500
+                 the whole month. */
+              SELECT COUNT(*) FILTER (WHERE e.value IS NOT NULL AND e.value NOT IN ('', 'null'))::int AS filled,
+                     COUNT(*) FILTER (WHERE CASE WHEN e.value ~ '^-?[0-9]+(\\.[0-9]+)?$'
+                                                 THEN e.value::numeric <> 0 ELSE false END)::int AS nonzero
+                FROM jsonb_each_text(COALESCE(r.data, '{}'::jsonb)) e
+               WHERE e.key !~ '^_' AND e.key NOT IN ('date', 'shift', 'prepared_by')
+            ) f
+           WHERE r.form_type = $1 AND r.record_date BETWEEN $2 AND $3 AND r.shift = $4
+           ORDER BY r.record_date`, [formType, from, to, shift]),
+        db.query(`
+          SELECT ${A.PRESENT_COLUMNS}
+            FROM report_amendments a
+           WHERE a.form_type = $1 AND a.record_date BETWEEN $2 AND $3 AND a.shift = $4
+             AND (a.status = ANY($5) OR COALESCE(a.decided_at, a.requested_at) > NOW() - INTERVAL '30 days')
+           ORDER BY a.id DESC`, [formType, from, to, shift, A.OPEN_STATUSES]),
+      ]);
+
+      const owningRole = OWNING_ROLE_BY_FORM_TYPE[formType];
+      res.json({
+        form_type: formType,
+        label: FORM_LABELS[formType] || formType,
+        shift,
+        /* What the page needs to say who will decide a request. The owning
+           HOD cannot decide their own (mayDecide), so for them — and for the
+           shared department logins that self-certify — it is admin/the MD. */
+        approver_role: owningRole || null,
+        you_approve: req.user.level === 'hod' && req.user.role === owningRole,
+        can_request: (ROLE_FORM_ACCESS[req.user.role] || []).includes(formType),
+        locked_statuses: A.LOCKED_STATUSES,
+        days: days.rows,
+        amendments: ams.rows.map(present),
+      });
+    } catch (err) { next(err); }
+  });
 
 /* ── POST /api/amendments/:formType/:date ───────────────────────────────── */
 router.post('/:formType/:date',

@@ -86,6 +86,7 @@ jobs:
           npm run accept:quarry
           npm run accept:sales
           npm run accept:purchases
+          npm run accept:corrections
 
   deploy:
     needs: test

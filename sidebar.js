@@ -232,8 +232,10 @@ function renderSidebar() {
      today's filled/not-filled dot on; a dashboard has no daily fill state,
      so this row deliberately passes no `page` and gets no dot. */
   const showPurchases = canViewPurchases();
+  const showCorrections = user.role === 'admin' || user.role === 'md' ||
+    getMyFormAccess().length > 0 || (typeof canFillKPI === 'function' && canFillKPI());
 
-  if (dailyItems.length || canSeeApprovals || showEntrySummary || showPurchases) {
+  if (dailyItems.length || canSeeApprovals || showEntrySummary || showPurchases || showCorrections) {
     html += _sbGroupLabelHTML('daily');
 
     if (canSeeApprovals || showEntrySummary) {
@@ -242,6 +244,7 @@ function renderSidebar() {
         topPair.push({
           icon: 'check-square', label: 'Approvals',
           active: currentPage === 'approvals.html', href: base + 'approvals.html',
+          badgeHTML: '<span class="sb-count" data-sb-count="approvals" hidden></span>',
         });
       }
       if (showEntrySummary) {
@@ -251,6 +254,23 @@ function renderSidebar() {
         });
       }
       html += _sbPairHTML(topPair);
+    }
+
+    /* Corrections (2026-10-10). A report that is approved is locked, and the
+       way to fix one — ask for a correction, an approver grants a window —
+       was reachable only from inside the entry form, after first changing
+       its date to the wrong day. A CPP report approved with every figure at
+       zero sat there with the plant unable to find any way to correct it.
+       This row is the front door: pick the report and the day(s), say what
+       is wrong, follow the request. Shown to whoever files a daily report or
+       a monthly KPI, and to admin/md, who decide them. The count is
+       correction windows open for THIS user right now — work on a clock. */
+    if (showCorrections) {
+      html += _sbItemHTML({
+        icon: 'pen-line', label: 'Corrections',
+        active: currentPage === 'corrections.html', href: base + 'corrections.html',
+        badgeHTML: '<span class="sb-count" data-sb-count="windows" hidden></span>',
+      });
     }
 
     /* Manufacturing-flow order comes from _DAILY_NAV_ITEMS itself (see
@@ -430,6 +450,52 @@ function renderSidebar() {
   if (window.lucide && typeof window.lucide.createIcons === 'function') {
     window.lucide.createIcons();
   }
+  _sbLoadCounts(mount);
+}
+
+/* ── Waiting-work counts ─────────────────────────────────────────────
+   A number on Approvals (reports to sign off + corrections and KPI reopens
+   to decide) and on Corrections (windows open for me, on a clock). Fetched
+   once per page after the menu is drawn; the menu never waits for it and a
+   failure shows nothing — a count is a nicety, the pages themselves are the
+   truth. The promise is kept on window.NyatiCounts so mobile-shell.js's
+   Approve tab reads the same answer instead of asking twice. */
+const _SB_COUNT_CSS = `
+.sb-count{min-width:18px;height:18px;padding:0 5px;border-radius:9px;flex:none;
+  background:var(--orange,#F49545);color:var(--navy,#173158);
+  font-size:12px;font-weight:800;line-height:18px;text-align:center;}
+.sb-count[hidden]{display:none}
+.sb-pair .sb-item,.app-shell.sidebar-collapsed .sb-item{position:relative}
+.sb-pair .sb-count,.app-shell.sidebar-collapsed .sb-count{position:absolute;top:-6px;right:-4px;z-index:1;
+  height:16px;line-height:16px;min-width:16px;padding:0 4px;box-shadow:0 0 0 2px var(--navy,#173158)}`;
+
+function _sbLoadCounts(mount) {
+  const slots = mount.querySelectorAll('[data-sb-count]');
+  if (!slots.length || typeof getAuthToken !== 'function' || typeof _API_BASE === 'undefined') return;
+  if (!document.getElementById('_sb-count-css')) {
+    const st = document.createElement('style');
+    st.id = '_sb-count-css';
+    st.textContent = _SB_COUNT_CSS;
+    document.head.appendChild(st);
+  }
+  if (!window.NyatiCounts) {
+    window.NyatiCounts = fetch(_API_BASE + '/approvals/counts', {
+      headers: { Authorization: 'Bearer ' + getAuthToken() },
+    }).then(r => (r.ok ? r.json() : null)).catch(() => null);
+  }
+  window.NyatiCounts.then(c => {
+    if (!c) return;
+    slots.forEach(el => {
+      const kind = el.getAttribute('data-sb-count');
+      const n = kind === 'approvals' ? c.total : kind === 'windows' ? c.myWindows : 0;
+      if (!n) return;
+      el.textContent = n > 99 ? '99+' : String(n);
+      el.setAttribute('aria-label', kind === 'approvals'
+        ? `${n} item${n === 1 ? '' : 's'} waiting for your decision`
+        : `${n} correction window${n === 1 ? '' : 's'} open for you`);
+      el.hidden = false;
+    });
+  });
 }
 
 function toggleSidebar() {

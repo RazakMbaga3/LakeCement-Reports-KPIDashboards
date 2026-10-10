@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Lake Cement – Corrections</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="components.css?v=1" />
+  <script src="auth.js?v=13"></script>
+  <script src="sidebar.js?v=6"></script>
+  <script src="loader.js?v=3"></script>
+  <style>
+    /* ── How it works ─────────────────────────────────────────────── */
+    .cr-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-3); margin: 0 0 var(--sp-5); padding: 0; list-style: none; }
+    .cr-step {
+      display: flex; gap: var(--sp-3); align-items: flex-start;
+      background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg);
+      padding: var(--sp-3) var(--sp-4);
+    }
+    .cr-step-n {
+      flex: none; width: 26px; height: 26px; border-radius: 50%;
+      background: var(--navy); color: var(--white);
+      font-size: var(--fs-sm); font-weight: 800; display: grid; place-items: center;
+    }
+    .cr-step-t { font-size: var(--fs-sm); font-weight: 700; color: var(--navy); }
+    .cr-step-d { font-size: var(--fs-xs); color: var(--text-muted); margin-top: 2px; line-height: 1.45; }
+
+    .cr-tabs { margin-bottom: var(--sp-4); }
+    .cr-intro { font-size: var(--fs-sm); color: var(--text-muted); margin: 0 0 var(--sp-3); line-height: 1.5; max-width: 860px; }
+
+    /* ── The day / month tables ───────────────────────────────────── */
+    /* .n-tbl right-aligns for figures; this is a list of days and states. */
+    .n-tbl.cr-tbl td, .n-tbl.cr-tbl th { text-align: left; vertical-align: middle; }
+    .n-tbl.cr-tbl td.cr-num { text-align: right; font-variant-numeric: tabular-nums; }
+    .cr-date { font-weight: 700; color: var(--navy); white-space: nowrap; }
+    .cr-sub { font-size: var(--fs-xs); color: var(--text-muted); margin-top: 2px; white-space: normal; max-width: 300px; line-height: 1.4; }
+    .cr-sub-wide { max-width: none; }
+    /* Above the phone's bottom tab bar (--z-bottomnav 1100) and the drawer, or
+       the Send button sits underneath the tabs. Below toasts. */
+    .n-drill-back.cr-dlg-back { z-index: 1300; }
+    .n-drill-close { font-size: 20px; line-height: 1; }
+    .cr-act { display: flex; gap: var(--sp-2); align-items: center; flex-wrap: wrap; }
+    .cr-warn-txt { color: var(--st-warn); }
+    .cr-muted { font-size: var(--fs-xs); color: var(--text-muted); }
+    .cr-pick { width: 1%; }
+    .cr-pick input { width: 18px; height: 18px; margin: 0; accent-color: var(--navy); cursor: pointer; vertical-align: middle; }
+    tr.cr-hl td { background: #FFF4E8; }
+
+    /* ── Selection bar ────────────────────────────────────────────── */
+    .cr-bulk {
+      position: sticky; bottom: var(--sp-3); z-index: 5;
+      display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap;
+      background: var(--navy); color: var(--white);
+      border-radius: var(--r-lg); padding: var(--sp-3) var(--sp-4);
+      margin: var(--sp-3) 0 var(--sp-5); box-shadow: var(--el-4);
+    }
+    .cr-bulk[hidden] { display: none; }
+    .cr-bulk-n { font-size: var(--fs-sm); font-weight: 700; flex: 1 1 auto; }
+    .cr-bulk .n-btn { background: var(--white); }
+    .cr-bulk .n-btn.is-primary { background: var(--orange); }
+
+    /* ── Status line under the context bar ────────────────────────── */
+    .cr-flash {
+      font-size: var(--fs-sm); font-weight: 600; border-radius: var(--r-md);
+      padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-4);
+      background: var(--st-good-bg); color: var(--st-good); border: 1px solid var(--st-good-bd);
+    }
+    .cr-flash.is-warn { background: var(--st-warn-bg); color: var(--st-warn); border-color: var(--st-warn-bd); }
+    .cr-flash.is-bad  { background: var(--st-bad-bg);  color: var(--st-bad);  border-color: var(--st-bad-bd); }
+    .cr-flash[hidden] { display: none; }
+
+    .cr-callout {
+      display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap;
+      font-size: var(--fs-sm); color: var(--navy);
+      background: #EAF1FB; border: 1px solid #C3D6F0; border-radius: var(--r-md);
+      padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-4);
+    }
+    .cr-callout[hidden] { display: none; }
+    .cr-callout span { flex: 1 1 260px; }
+
+    /* ── The request dialog (n-drill frame) ───────────────────────── */
+    .cr-field { margin-bottom: var(--sp-4); }
+    .cr-field label { display: block; font-size: var(--fs-sm); font-weight: 700; color: var(--navy); margin-bottom: var(--sp-1); }
+    .cr-field .cr-hint { font-size: var(--fs-xs); color: var(--text-muted); margin-top: var(--sp-1); line-height: 1.45; }
+    .cr-field textarea, .cr-field input[type="text"] {
+      width: 100%; box-sizing: border-box; font-family: var(--font); font-size: var(--fs-base);
+      color: var(--text-main); background: var(--white);
+      border: 1px solid var(--border); border-radius: var(--r-sm); padding: var(--sp-2) var(--sp-3);
+    }
+    .cr-field textarea { min-height: 92px; resize: vertical; line-height: 1.45; }
+    .cr-field textarea:focus, .cr-field input:focus { outline: 2px solid var(--navy); outline-offset: 1px; }
+    .cr-quick { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-2); }
+    .cr-quick button {
+      font-family: var(--font); font-size: var(--fs-xs); font-weight: 600; color: var(--navy);
+      background: var(--off-white); border: 1px solid var(--border); border-radius: var(--r-pill);
+      padding: var(--sp-1) var(--sp-3); min-height: 32px; cursor: pointer;
+    }
+    .cr-quick button:hover { border-color: var(--accent-gray); }
+    .cr-days { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-top: var(--sp-1); }
+    .cr-who {
+      font-size: var(--fs-xs); line-height: 1.5; color: var(--text-main);
+      background: var(--off-white); border: 1px solid var(--border); border-radius: var(--r-md);
+      padding: var(--sp-3);
+    }
+    .cr-err { font-size: var(--fs-xs); font-weight: 600; color: var(--st-bad); margin-top: var(--sp-1); }
+    .cr-err[hidden] { display: none; }
+
+    @media (max-width: 959px) {
+      .cr-bulk { bottom: calc(var(--bottomnav-h, 60px) + var(--safe-b, 0px) + var(--sp-2)); }
+    }
+    @media (max-width: 720px) {
+      .cr-steps { grid-template-columns: 1fr; }
+    }
+    @media (pointer: coarse) {
+      /* components.css gives .n-ctx-ctl the in-grid 40px; these selects are
+         the page's main controls, so they get the full touch floor. */
+      html body select.n-ctx-ctl, html body input.n-ctx-ctl { min-height: var(--tap); }
+      .cr-pick input { width: 24px; height: 40px; }
+      .cr-quick button { min-height: var(--tap); }
+    }
+  </style>
+  <link rel="stylesheet" href="design-system.css?v=2" />
+  <script src="a11y.js?v=1"></script>
+  <script src="mobile-shell.js?v=2"></script>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="app-sidebar"></aside>
+  <script>renderSidebar();</script>
+
+  <div class="main">
+
+<header class="top-header" id="app-header"></header>
+<script>renderTopHeader();</script>
+
+<main class="n-page" id="corrections-page">
+
+  <div class="n-page-head">
+    <div>
+      <nav class="n-crumb" aria-label="Breadcrumb">
+        <a href="portal.html">Daily Reports</a>
+        <span class="n-crumb-sep" aria-hidden="true">/</span>
+        <span class="n-crumb-here">Corrections</span>
+      </nav>
+      <h1 class="n-title">Correct a submitted report</h1>
+      <p class="n-subtitle">
+        Approved reports are locked, so the figures management reads cannot change without anyone knowing.
+        To fix a mistake, ask for a correction here: an approver reopens the report for you, you fix it, and it is signed off again.
+        Every step is recorded, and the old figures are kept.
+      </p>
+    </div>
+    <div class="n-page-actions">
+      <a class="n-btn" href="approvals.html" id="cr-to-approvals" hidden>
+        <i data-lucide="check-square"></i> Approvals
+      </a>
+    </div>
+  </div>
+
+  <!-- ══ HOW IT WORKS ═══════════════════════════════════════════════ -->
+  <ol class="cr-steps" aria-label="How a correction works">
+    <li class="cr-step">
+      <span class="cr-step-n" aria-hidden="true">1</span>
+      <div><div class="cr-step-t">Pick the report and the day</div>
+        <div class="cr-step-d">Choose one day or several, and say what is wrong. Days whose figures are all zero or blank are flagged for you.</div></div>
+    </li>
+    <li class="cr-step">
+      <span class="cr-step-n" aria-hidden="true">2</span>
+      <div><div class="cr-step-t">An approver reopens it</div>
+        <div class="cr-step-d">Your HOD (or an administrator / the MD) sees the request on their Approvals page and opens a correction window — 24 hours by default.</div></div>
+    </li>
+    <li class="cr-step">
+      <span class="cr-step-n" aria-hidden="true">3</span>
+      <div><div class="cr-step-t">Fix it and submit again</div>
+        <div class="cr-step-d">Press <strong>Fix it now</strong>, correct the figures and submit. The report goes back for sign-off. If the window closes unused, nothing changes.</div></div>
+    </li>
+  </ol>
+
+  <div class="n-seg cr-tabs" id="cr-tabs" role="group" aria-label="What to correct">
+    <button type="button" class="n-seg-btn" data-value="daily" aria-pressed="true">Daily reports</button>
+    <button type="button" class="n-seg-btn" data-value="kpi" aria-pressed="false">Monthly KPIs</button>
+  </div>
+
+  <div class="cr-flash" id="cr-flash" role="status" aria-live="polite" hidden></div>
+
+  <!-- ══ DAILY REPORTS ══════════════════════════════════════════════ -->
+  <section id="cr-daily" aria-label="Daily reports">
+    <div class="n-ctx">
+      <div class="n-ctx-group">
+        <label class="n-ctx-lbl" for="cr-form">Report</label>
+        <select id="cr-form" class="n-ctx-ctl"></select>
+      </div>
+      <div class="n-ctx-sep" aria-hidden="true"></div>
+      <div class="n-ctx-group">
+        <label class="n-ctx-lbl" for="cr-month">Month</label>
+        <input type="month" id="cr-month" class="n-ctx-ctl" />
+      </div>
+      <span class="n-ctx-spacer"></span>
+      <div class="n-ctx-group" id="cr-summary"></div>
+    </div>
+
+    <div class="cr-callout" id="cr-decide" hidden>
+      <span id="cr-decide-text"></span>
+      <a class="n-btn is-primary" href="approvals.html"><i data-lucide="check-square"></i> Decide in Approvals</a>
+    </div>
+
+    <div id="cr-days"></div>
+
+    <div class="cr-bulk" id="cr-bulk" hidden>
+      <span class="cr-bulk-n" id="cr-bulk-n"></span>
+      <button type="button" class="n-btn" id="cr-bulk-clear">Clear</button>
+      <button type="button" class="n-btn is-primary" id="cr-bulk-go"><i data-lucide="pen-line"></i> Request correction</button>
+    </div>
+
+    <div id="cr-mine"></div>
+  </section>
+
+  <!-- ══ MONTHLY KPIs ═══════════════════════════════════════════════ -->
+  <section id="cr-kpi" aria-label="Monthly KPIs" hidden>
+    <p class="cr-intro" id="cr-kpi-intro"></p>
+    <div class="n-ctx">
+      <div class="n-ctx-group">
+        <label class="n-ctx-lbl" for="cr-dept">Department</label>
+        <select id="cr-dept" class="n-ctx-ctl"></select>
+      </div>
+      <div class="n-ctx-sep" aria-hidden="true"></div>
+      <div class="n-ctx-group">
+        <label class="n-ctx-lbl" for="cr-kto">12 months to</label>
+        <input type="month" id="cr-kto" class="n-ctx-ctl" />
+      </div>
+    </div>
+    <div id="cr-months"></div>
+  </section>
+
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span id="footer-date"></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+  </div><!-- /.main -->
+</div><!-- /.app-shell -->
+
+<script src="lucide-icons.js?v=1"></script>
+<script src="forms/api-client.js?v=6"></script>
+<script src="forms/client-errors.js"></script>
+<script src="components.js?v=1"></script>
+<script>
+(function () {
+  'use strict';
+
+  requireAuth();
+  var user = getCurrentUser();
+  if (!user) return;
+  var U = window.NyatiUI;
+  var PRIV = user.role === 'admin' || user.role === 'md';
+
+  /* ══ CATALOGUE ════════════════════════════════════════════════════
+     Every daily report a person types, in the sidebar's own words, and the
+     page they are entered on. `?date=` on an entry page opens it on that
+     day (forms/form-persist.js), so "Fix it now" lands on the right report
+     instead of on today. Quarrying keeps its own monthly grid, which has no
+     day link. */
+  var FORMS = {
+    'production':       { label: 'Production',        entry: 'daily-report.html' },
+    'cpp':              { label: 'Power Plant (CPP)', entry: 'power-plant-report.html' },
+    'dispatch':         { label: 'Dispatch & SO',     entry: 'forms/dispatch-form.html' },
+    'quality':          { label: 'Quality / Lab',     entry: 'forms/quality-form.html' },
+    'limestone':        { label: 'Limestone %',       entry: 'forms/limestone-form.html' },
+    'pile-quality':     { label: 'Pile Quality',      entry: 'forms/pile-quality-form.html' },
+    'stoppage':         { label: 'Stoppages',         entry: 'forms/stoppage-form.html' },
+    'power-cons':       { label: 'Power Consumption', entry: 'forms/power-form.html' },
+    'materials':        { label: 'Raw Materials',     entry: 'forms/materials-form.html' },
+    'sales-projection': { label: 'Sales Projection',  entry: 'forms/sales-projection-form.html' },
+    'mines':            { label: 'Quarrying',         entry: 'mines-report.html', noDayLink: true },
+  };
+  var ORDER = Object.keys(FORMS);
+  var myForms = getMyFormAccess();
+  var visibleForms = PRIV ? ORDER.slice() : ORDER.filter(function (f) { return myForms.indexOf(f) !== -1; });
+
+  /* KPI departments with a fillable month (index.html's sections). The two
+     with nothing to submit — the summary and the quarry workshop — are left
+     out, the same way app.js leaves them out of the submit lock. */
+  var DEPTS = [
+    ['production', 'Production'], ['mines', 'Quarrying'], ['packing', 'Packing'],
+    ['mechanical', 'Mechanical'], ['ei', 'E & I'], ['stores', 'Stores'], ['powerplant', 'Power Plant'],
+  ];
+  var myDepts = DEPTS.filter(function (d) {
+    return PRIV || (typeof canFillKPIDept === 'function' && canFillKPIDept(d[0]));
+  });
+
+  var el = function (id) { return document.getElementById(id); };
+  var esc = U.esc;
+
+  if (!visibleForms.length && !myDepts.length) {
+    el('cr-tabs').hidden = true;
+    el('cr-daily').hidden = true;
+    U.renderState(el('cr-flash').parentNode.appendChild(document.createElement('div')), {
+      kind: 'denied',
+      title: 'Nothing for you to correct here',
+      body: 'Corrections are asked for by the people who file a daily report or a monthly KPI. '
+          + 'If a figure you read is wrong, tell the department that reported it.',
+    });
+    return;
+  }
+  if (PRIV || user.level === 'hod') el('cr-to-approvals').hidden = false;
+
+  /* ══ SMALL HELPERS ════════════════════════════════════════════════ */
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function today() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function thisMonth() { return today().slice(0, 7); }
+  function monthEnd(ym) {
+    var y = +ym.slice(0, 4), m = +ym.slice(5, 7);
+    return ym + '-' + pad(new Date(y, m, 0).getDate());
+  }
+  function addMonths(ym, k) {
+    var y = +ym.slice(0, 4), m = +ym.slice(5, 7) - 1 + k;
+    y += Math.floor(m / 12); m = ((m % 12) + 12) % 12;
+    return y + '-' + pad(m + 1);
+  }
+  var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  function fmtDay(iso) {
+    var d = new Date(iso + 'T00:00:00');
+    return DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+  }
+  function fmtShort(iso) { var d = new Date(iso + 'T00:00:00'); return d.getDate() + ' ' + MONTHS[d.getMonth()]; }
+  function fmtMonth(y, m) { return MONTHS[m - 1] + ' ' + y; }
+  function fmtWhen(ts) {
+    if (!ts) return '';
+    var d = new Date(ts);
+    if (isNaN(d)) return '';
+    return d.getDate() + ' ' + MONTHS[d.getMonth()] + ', ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+  function timeLeft(secs) {
+    if (secs == null) return '';
+    var h = Math.floor(secs / 3600), m = Math.floor((secs % 3600) / 60);
+    return h > 0 ? h + ' h' + (m ? ' ' + m + ' min' : '') : Math.max(1, m) + ' min';
+  }
+  function chip(cls, text, title) {
+    return '<span class="n-chip ' + cls + '"' + (title ? ' title="' + esc(title) + '"' : '') + '>'
+         + '<span class="n-chip-dot"></span>' + esc(text) + '</span>';
+  }
+  function entryHref(form, date) {
+    var f = FORMS[form];
+    if (!f) return null;
+    return f.noDayLink ? f.entry : f.entry + '?date=' + encodeURIComponent(date);
+  }
+
+  var flashTimer = 0;
+  function flash(text, kind) {
+    var f = el('cr-flash');
+    clearTimeout(flashTimer);
+    f.className = 'cr-flash' + (kind ? ' is-' + kind : '');
+    f.textContent = text;
+    f.hidden = false;
+    if (kind !== 'bad') flashTimer = setTimeout(function () { f.hidden = true; }, 12000);
+  }
+  function errText(e, fallback) { return (e && e.status) ? e.message : humanError(e, fallback); }
+
+  /* ══ THE DIALOG ═══════════════════════════════════════════════════
+     One small modal for every "say why" in this page: asking for a
+     correction (one day or many), asking for a KPI month back, reopening
+     one, declining one. The n-drill frame from components.css, with its
+     focus kept inside and Escape to close. Resolves with the values, or
+     null on cancel. A reason is a governance act: at least ten characters,
+     checked here so the server's refusal is never the first the person
+     hears of it. */
+  var _dlgOpen = null, _dlgReturn = null;
+  function openDialog(opts) {
+    closeDialog();
+    _dlgReturn = document.activeElement;
+    return new Promise(function (resolve) {
+      var back = document.createElement('div');
+      back.className = 'n-drill-back cr-dlg-back';
+      var quick = (opts.quick || []).map(function (q) {
+        return '<button type="button" data-quick="' + esc(q) + '">' + esc(q) + '</button>';
+      }).join('');
+      back.innerHTML =
+        '<div class="n-drill" role="dialog" aria-modal="true" aria-labelledby="cr-dlg-title">' +
+          '<div class="n-drill-hdr">' +
+            '<div><div class="n-drill-title" id="cr-dlg-title">' + esc(opts.title) + '</div>' +
+              (opts.subtitle ? '<div class="cr-sub cr-sub-wide">' + opts.subtitle + '</div>' : '') + '</div>' +
+            '<button type="button" class="n-drill-close" data-close aria-label="Close">×</button>' +
+          '</div>' +
+          '<div class="n-drill-body">' +
+            (opts.summaryHTML || '') +
+            '<div class="cr-field">' +
+              '<label for="cr-dlg-reason">' + esc(opts.reasonLabel || 'What is wrong?') + '</label>' +
+              '<textarea id="cr-dlg-reason" maxlength="500" placeholder="' + esc(opts.placeholder || '') + '">' + esc(opts.prefill || '') + '</textarea>' +
+              (quick ? '<div class="cr-quick" aria-label="Common reasons">' + quick + '</div>' : '') +
+              '<div class="cr-hint">' + esc(opts.hint || 'At least 10 characters — the person deciding reads this.') + '</div>' +
+              '<div class="cr-err" id="cr-dlg-err" hidden></div>' +
+            '</div>' +
+            (opts.fieldsInput
+              ? '<div class="cr-field"><label for="cr-dlg-fields">Which figures are wrong? <span class="cr-muted">(optional)</span></label>' +
+                '<input type="text" id="cr-dlg-fields" maxlength="300" placeholder="e.g. Gross generation, coal consumed" />' +
+                '<div class="cr-hint">Separate several with commas.</div></div>'
+              : '') +
+            (opts.whoHTML ? '<div class="cr-who">' + opts.whoHTML + '</div>' : '') +
+          '</div>' +
+          '<div class="n-drill-foot">' +
+            '<span class="n-ctx-spacer"></span>' +
+            '<button type="button" class="n-btn" data-close>Cancel</button>' +
+            '<button type="button" class="n-btn is-primary" data-ok>' + esc(opts.okLabel || 'Send') + '</button>' +
+          '</div>' +
+        '</div>';
+      document.body.appendChild(back);
+      document.body.style.overflow = 'hidden';
+      _dlgOpen = { back: back, resolve: resolve };
+      if (window.lucide) lucide.createIcons();
+
+      var ta = back.querySelector('#cr-dlg-reason');
+      var err = back.querySelector('#cr-dlg-err');
+      back.addEventListener('click', function (e) {
+        if (e.target === back || (e.target.closest && e.target.closest('[data-close]'))) { finish(null); return; }
+        var q = e.target.closest && e.target.closest('[data-quick]');
+        if (q) { ta.value = q.getAttribute('data-quick'); ta.focus(); err.hidden = true; return; }
+        if (e.target.closest && e.target.closest('[data-ok]')) {
+          var reason = ta.value.trim();
+          if (reason.length < 10) {
+            err.textContent = 'Please say what is wrong in at least 10 characters.';
+            err.hidden = false; ta.focus(); return;
+          }
+          var fieldsEl = back.querySelector('#cr-dlg-fields');
+          var fields = fieldsEl ? fieldsEl.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 40) : [];
+          finish({ reason: reason, fields: fields });
+        }
+      });
+      back.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { finish(null); return; }
+        if (e.key !== 'Tab') return;
+        var f = back.querySelectorAll('button:not([disabled]), textarea, input');
+        if (!f.length) return;
+        var first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      });
+      ta.focus();
+
+      function finish(val) { closeDialog(); resolve(val); }
+    });
+  }
+  function closeDialog() {
+    if (!_dlgOpen) return;
+    _dlgOpen.back.remove();
+    _dlgOpen = null;
+    document.body.style.overflow = '';
+    if (_dlgReturn && _dlgReturn.focus && document.contains(_dlgReturn)) _dlgReturn.focus();
+    _dlgReturn = null;
+  }
+
+  /* ══ DAILY REPORTS ════════════════════════════════════════════════ */
+  var D = { form: null, month: thisMonth(), data: null, selected: {}, loading: false, focusDate: null, autoAsk: false };
+
+  var formSel = el('cr-form');
+  formSel.innerHTML = visibleForms.map(function (f) {
+    return '<option value="' + f + '">' + esc(FORMS[f].label) + '</option>';
+  }).join('');
+  var monthIn = el('cr-month');
+  monthIn.max = thisMonth();
+
+  /* Which open/last correction belongs to which day. `amendments` comes
+     newest first, so the first match is the latest. */
+  function correctionFor(date) {
+    var list = (D.data && D.data.amendments || []).filter(function (a) { return a.record_date === date; });
+    var open = null, last = null;
+    list.forEach(function (a) {
+      var live = a.status === 'requested' || (a.status === 'granted' && (a.seconds_left || 0) > 0);
+      if (live && !open) open = a;
+      else if (!live && !last) last = a;
+    });
+    return { open: open, last: last };
+  }
+
+  /* A day an approver must reopen before it can change: approved WITH a
+     person's signature, or waiting in an HOD's queue. An approved day with
+     no signature is an ERP row (routes/reports.js, DEC-008) and opens for
+     editing directly; a draft or a returned report is already editable. */
+  function needsCorrection(d) {
+    return (d.status === 'approved' && d.human_signed) || d.status === 'pending_approval';
+  }
+  function requestable(d) {
+    var c = correctionFor(d.date);
+    return !!(D.data && D.data.can_request) && needsCorrection(d) && !c.open;
+  }
+
+  function correctionCell(d, c) {
+    if (c.open && c.open.status === 'granted') {
+      return chip('is-good', 'Open for correction') +
+        '<div class="cr-sub">' + esc(timeLeft(c.open.seconds_left)) + ' left · granted by ' + esc(c.open.decided_by_name || 'an approver') + '</div>';
+    }
+    if (c.open) {
+      return chip('is-warn', 'Waiting for approver') +
+        '<div class="cr-sub">Asked by ' + esc(c.open.requested_by_name || '—') + ', ' + esc(fmtWhen(c.open.requested_at)) +
+        ' — “' + esc(c.open.reason) + '”</div>';
+    }
+    if (c.last) {
+      var a = c.last;
+      if (a.status === 'applied')  return chip('is-info', 'Corrected') + '<div class="cr-sub">' + esc(fmtWhen(a.applied_at)) + '</div>';
+      if (a.status === 'declined') return chip('is-bad', 'Declined') + '<div class="cr-sub">' + esc(a.decided_by_name || '') + (a.decision_note ? ': ' + esc(a.decision_note) : '') + '</div>';
+      if (a.status === 'expired' || a.status === 'granted') return chip('is-neutral', 'Window closed unused') + '<div class="cr-sub">The figures were left as approved.</div>';
+      if (a.status === 'withdrawn') return '<span class="cr-muted">Request withdrawn</span>';
+    }
+    return '<span class="cr-muted">—</span>';
+  }
+
+  function actionCell(d, c) {
+    var can = D.data && D.data.can_request;
+    var href = entryHref(D.form, d.date);
+    if (c.open && c.open.status === 'granted') {
+      return can && href
+        ? '<a class="n-btn is-primary" href="' + esc(href) + '"><i data-lucide="pencil"></i> Fix it now</a>'
+        : '<span class="cr-muted">Being corrected</span>';
+    }
+    if (c.open) {
+      if (c.open.requested_by === user.userId) {
+        return '<button type="button" class="n-btn" data-act="withdraw" data-id="' + esc(c.open.id) + '" data-date="' + esc(d.date) + '">Withdraw</button>';
+      }
+      var mayDecide = PRIV || (D.data.you_approve && c.open.requested_by !== user.userId);
+      return mayDecide
+        ? '<a class="n-btn" href="approvals.html"><i data-lucide="check-square"></i> Decide</a>'
+        : '<span class="cr-muted">Waiting</span>';
+    }
+    if (requestable(d)) {
+      return '<button type="button" class="n-btn" data-act="ask" data-date="' + esc(d.date) + '"><i data-lucide="pen-line"></i> Request correction</button>';
+    }
+    if (!can || !href) return '<span class="cr-muted">—</span>';
+    if (d.status === 'draft')    return '<a class="n-btn" href="' + esc(href) + '">Open draft</a>';
+    if (d.status === 'rejected') return '<a class="n-btn" href="' + esc(href) + '">Fix &amp; resubmit</a>';
+    if (d.status === 'approved' && !d.human_signed) return '<a class="n-btn" href="' + esc(href) + '" title="Filled from Odoo, not signed by a person — it can be edited directly">Edit</a>';
+    return '<span class="cr-muted">—</span>';
+  }
+
+  function figuresCell(d) {
+    if (!d.filled) return chip('is-warn', 'Empty', 'No figure on this report has a value.');
+    if (!d.nonzero) {
+      return chip('is-warn', 'All zero', 'Every figure on this report is zero or blank — the most common entry mistake.') +
+        '<div class="cr-sub">' + d.filled + ' field' + (d.filled === 1 ? '' : 's') + ' filled</div>';
+    }
+    return '<span class="cr-num">' + d.nonzero + '</span> <span class="cr-muted">non-zero of ' + d.filled + '</span>';
+  }
+
+  function renderDays() {
+    var mount = el('cr-days');
+    var label = FORMS[D.form] ? FORMS[D.form].label : D.form;
+    var y = +D.month.slice(0, 4), m = +D.month.slice(5, 7);
+
+    if (D.loading) {
+      U.renderState(mount, { kind: 'loading', title: 'Loading ' + label + ' for ' + fmtMonth(y, m) + '…' });
+      el('cr-summary').innerHTML = '';
+      return;
+    }
+    if (D.error) {
+      U.renderState(mount, {
+        kind: 'error', title: 'Could not load ' + label,
+        body: D.error, action: 'Try again', onAction: loadDays,
+      });
+      return;
+    }
+
+    var days = (D.data.days || []).slice().reverse();   // newest first
+    var flagged = days.filter(function (d) { return d.filled === 0 || d.nonzero === 0; }).length;
+    var locked = days.filter(needsCorrection).length;
+    el('cr-summary').innerHTML =
+      '<span class="n-ctx-lbl">' + days.length + ' report' + (days.length === 1 ? '' : 's') +
+      (flagged ? ' · <span class="cr-warn-txt">' + flagged + ' all zero or empty</span>' : '') + '</span>';
+
+    if (!days.length) {
+      U.renderState(mount, {
+        kind: 'nodata',
+        title: 'No ' + label + ' report was filed in ' + fmtMonth(y, m),
+        body: 'There is nothing to correct for this month. To file a missing day, open the report itself.',
+        action: D.data.can_request && FORMS[D.form] ? 'Open the ' + label + ' report' : null,
+        actionHref: D.data.can_request && FORMS[D.form] ? FORMS[D.form].entry : null,
+      });
+      return;
+    }
+
+    var anyPick = D.data.can_request && days.some(requestable);
+    var h = '<section class="n-card"><div class="n-card-hdr"><div>' +
+      '<div class="n-card-title"><i data-lucide="calendar"></i>' + esc(label) + ' — ' + esc(fmtMonth(y, m)) + '</div>' +
+      '<div class="n-card-sub">' + locked + ' locked (approved or awaiting sign-off). ' +
+        (anyPick ? 'Tick several days to ask for them in one go.' : '') + '</div>' +
+      '</div></div><div class="n-card-body is-flush"><div class="n-tbl-wrap">' +
+      '<table class="n-tbl cr-tbl"><thead><tr>' +
+        (anyPick ? '<th class="cr-pick"><input type="checkbox" id="cr-pick-all" aria-label="Select every day that can be corrected" /></th>' : '') +
+        '<th>Day</th><th>Status</th><th>Filed by</th><th>Figures</th><th>Correction</th><th>Action</th>' +
+      '</tr></thead><tbody>';
+
+    days.forEach(function (d) {
+      var c = correctionFor(d.date);
+      var pick = requestable(d);
+      h += '<tr data-date="' + esc(d.date) + '"' + (D.focusDate === d.date ? ' class="cr-hl"' : '') + '>' +
+        (anyPick ? '<td class="cr-pick">' + (pick
+          ? '<input type="checkbox" data-pick="' + esc(d.date) + '"' + (D.selected[d.date] ? ' checked' : '') +
+            ' aria-label="Select ' + esc(fmtDay(d.date)) + '" />'
+          : '') + '</td>' : '') +
+        '<td><div class="cr-date">' + esc(fmtDay(d.date)) + '</div></td>' +
+        '<td>' + U.workflowChipHTML(d.status) +
+          (d.status === 'approved' && d.approved_by_name ? '<div class="cr-sub">by ' + esc(d.approved_by_name) + '</div>' : '') +
+          (d.status === 'approved' && !d.human_signed ? '<div class="cr-sub">from Odoo</div>' : '') + '</td>' +
+        '<td>' + esc(d.submitted_by_name || '—') + '<div class="cr-sub">' + esc(fmtWhen(d.submitted_at)) + '</div></td>' +
+        '<td>' + figuresCell(d) + '</td>' +
+        '<td>' + correctionCell(d, c) + '</td>' +
+        '<td><div class="cr-act">' + actionCell(d, c) + '</div></td>' +
+      '</tr>';
+    });
+    h += '</tbody></table></div></div></section>';
+    mount.innerHTML = h;
+    if (window.lucide) lucide.createIcons();
+    paintBulk();
+
+    if (D.focusDate) {
+      var row = mount.querySelector('tr[data-date="' + D.focusDate + '"]');
+      if (row) row.scrollIntoView({ block: 'center' });
+    }
+  }
+
+  function selectedDates() {
+    return Object.keys(D.selected).filter(function (k) { return D.selected[k]; }).sort();
+  }
+  function paintBulk() {
+    var n = selectedDates().length;
+    el('cr-bulk').hidden = n === 0;
+    el('cr-bulk-n').textContent = n + ' day' + (n === 1 ? '' : 's') + ' selected';
+    el('cr-bulk-go').lastChild.textContent = ' Request correction' + (n > 1 ? ' for ' + n + ' days' : '');
+    var all = el('cr-pick-all');
+    if (all) {
+      var picks = el('cr-days').querySelectorAll('input[data-pick]');
+      all.checked = picks.length > 0 && n === picks.length;
+      all.indeterminate = n > 0 && n < picks.length;
+    }
+  }
+
+  async function loadDays() {
+    D.loading = true; D.error = null;
+    renderDays();
+    var from = D.month + '-01';
+    var to = monthEnd(D.month);
+    if (to > today()) to = today();
+    try {
+      D.data = await NyatiAPI.getCorrectionDays(D.form, from, to);
+    } catch (e) {
+      D.error = errText(e, 'The server did not answer.');
+    }
+    D.loading = false;
+    D.selected = {};
+    renderDays();
+    if (D.autoAsk && D.data && D.focusDate) {
+      D.autoAsk = false;
+      var day = (D.data.days || []).filter(function (d) { return d.date === D.focusDate; })[0];
+      if (day && requestable(day)) askFor([day.date]);
+    }
+  }
+
+  /* Who decides, in words — so nobody files a request and waits on a person
+     who is not going to see it. The owning HOD cannot decide their own
+     request (services/reportAmendments.js mayDecide), and that includes the
+     shared department logins whose submissions self-certify. */
+  function whoDecidesHTML() {
+    if (D.data && D.data.you_approve) {
+      return '<strong>Who decides:</strong> you sign this report off yourself, so the request goes to an '
+        + '<strong>administrator or the MD</strong>. They see it on their Approvals page.';
+    }
+    return '<strong>Who decides:</strong> the HOD who signs off ' + esc(FORMS[D.form].label)
+      + ' reports, on their Approvals page. If they are away, an administrator or the MD can decide it.'
+      + '<br>Until then the report stays as it is and keeps counting.';
+  }
+
+  async function askFor(dates) {
+    if (!dates.length) return;
+    var label = FORMS[D.form].label;
+    var empty = (D.data.days || []).some(function (d) { return dates.indexOf(d.date) !== -1 && (!d.filled || !d.nonzero); });
+    var quick = ['Figures were entered as zero — the real readings were not typed in',
+                 'A figure was typed wrongly', 'Figures were entered against the wrong date'];
+    if (!empty) quick.shift();
+    var val = await openDialog({
+      title: 'Request a correction',
+      subtitle: esc(label) + ' · ' + dates.length + ' day' + (dates.length === 1 ? '' : 's'),
+      summaryHTML: '<div class="cr-field"><label>Day' + (dates.length === 1 ? '' : 's') + '</label><div class="cr-days">' +
+        dates.map(function (d) { return chip('is-neutral', fmtDay(d)); }).join('') + '</div></div>',
+      placeholder: 'e.g. All CPP figures for 8 Oct were entered as zero. The shift log has the real readings.',
+      quick: quick,
+      fieldsInput: true,
+      whoHTML: whoDecidesHTML(),
+      okLabel: dates.length > 1 ? 'Send ' + dates.length + ' requests' : 'Send request',
+    });
+    if (!val) return;
+
+    el('cr-bulk-go').disabled = true;
+    var ok = 0, already = 0, failed = [];
+    for (var i = 0; i < dates.length; i++) {
+      try {
+        await NyatiAPI.requestAmendment(D.form, dates[i], val.reason, val.fields.length ? { fields: val.fields } : undefined);
+        ok++;
+      } catch (e) {
+        if (e && e.code === 'AMENDMENT_ALREADY_OPEN') already++;
+        else failed.push(fmtShort(dates[i]) + ': ' + errText(e, 'not sent'));
+      }
+    }
+    el('cr-bulk-go').disabled = false;
+
+    var msg = ok ? 'Correction requested for ' + ok + ' day' + (ok === 1 ? '' : 's') + '. '
+      + (D.data.you_approve ? 'An administrator or the MD will decide.' : 'Your HOD will decide.')
+      + ' This page shows the answer — come back and press “Fix it now” once it is granted.' : '';
+    if (already) msg += ' ' + already + ' day' + (already === 1 ? ' already had' : 's already had') + ' a request open.';
+    if (failed.length) msg += ' Not sent — ' + failed.join('; ');
+    flash(msg.trim(), failed.length ? (ok ? 'warn' : 'bad') : 'good');
+    await Promise.all([loadDays(), loadMine()]);
+  }
+
+  async function withdraw(id, date) {
+    if (!window.confirm('Withdraw this correction request? Nothing about the report changes.')) return;
+    try {
+      await NyatiAPI.withdrawAmendment(D.form, date, id);
+      flash('Request withdrawn for ' + fmtDay(date) + '.', 'good');
+    } catch (e) {
+      flash(errText(e, 'The withdrawal could not be sent.'), 'bad');
+    }
+    await Promise.all([loadDays(), loadMine()]);
+  }
+
+  el('cr-days').addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('button[data-act]');
+    if (!b) return;
+    if (b.getAttribute('data-act') === 'ask') askFor([b.getAttribute('data-date')]);
+    else if (b.getAttribute('data-act') === 'withdraw') withdraw(b.getAttribute('data-id'), b.getAttribute('data-date'));
+  });
+  el('cr-days').addEventListener('change', function (e) {
+    var t = e.target;
+    if (t.id === 'cr-pick-all') {
+      el('cr-days').querySelectorAll('input[data-pick]').forEach(function (cb) {
+        cb.checked = t.checked; D.selected[cb.getAttribute('data-pick')] = t.checked;
+      });
+      paintBulk(); return;
+    }
+    if (t.hasAttribute && t.hasAttribute('data-pick')) {
+      D.selected[t.getAttribute('data-pick')] = t.checked;
+      paintBulk();
+    }
+  });
+  el('cr-bulk-clear').addEventListener('click', function () {
+    D.selected = {};
+    el('cr-days').querySelectorAll('input[data-pick]').forEach(function (cb) { cb.checked = false; });
+    paintBulk();
+  });
+  el('cr-bulk-go').addEventListener('click', function () { askFor(selectedDates()); });
+
+  formSel.addEventListener('change', function () { D.form = formSel.value; D.focusDate = null; loadDays(); });
+  monthIn.addEventListener('change', function () {
+    if (!/^\d{4}-\d{2}$/.test(monthIn.value)) return;
+    D.month = monthIn.value > thisMonth() ? thisMonth() : monthIn.value;
+    D.focusDate = null;
+    loadDays();
+  });
+
+  /* ── Your requests, across every report ────────────────────────────
+     What became of what I asked for: the answer to "did anybody see it?".
+     For an approver, the requests waiting on them are counted with a link to
+     the place they are decided — Approvals — rather than decided twice. */
+  async function loadMine() {
+    var mount = el('cr-mine');
+    var rows;
+    try { rows = await NyatiAPI.getAmendments('all', 30); }
+    catch (e) { mount.innerHTML = ''; return; }
+
+    var mine = rows.filter(function (r) { return r.requested_by === user.userId; });
+    var toDecide = rows.filter(function (r) {
+      return r.status === 'requested' && r.requested_by !== user.userId && (PRIV || user.level === 'hod');
+    });
+    el('cr-decide').hidden = !toDecide.length;
+    el('cr-decide-text').textContent = toDecide.length
+      ? toDecide.length + ' correction request' + (toDecide.length === 1 ? ' is' : 's are') + ' waiting for your decision.'
+      : '';
+
+    if (!mine.length) { mount.innerHTML = ''; return; }
+    var STATUS = {
+      requested: ['is-warn', 'Waiting for approver'], granted: ['is-good', 'Open for correction'],
+      applied: ['is-info', 'Corrected'], declined: ['is-bad', 'Declined'],
+      withdrawn: ['is-neutral', 'Withdrawn'], expired: ['is-neutral', 'Window closed unused'],
+    };
+    var h = '<section class="n-card"><div class="n-card-hdr"><div>' +
+      '<div class="n-card-title"><i data-lucide="list-checks"></i>Your correction requests</div>' +
+      '<div class="n-card-sub">Last 30 days, every report. A granted request shows “Fix it now” until its window closes.</div>' +
+      '</div></div><div class="n-card-body is-flush"><div class="n-tbl-wrap"><table class="n-tbl cr-tbl"><thead><tr>' +
+      '<th>Report</th><th>Day</th><th>Asked</th><th>Status</th><th>Answer</th><th>Action</th></tr></thead><tbody>';
+    mine.forEach(function (r) {
+      var live = r.status === 'granted' && (r.seconds_left || 0) > 0;
+      var st = STATUS[r.status === 'granted' && !live ? 'expired' : r.status] || ['is-neutral', r.status];
+      var href = entryHref(r.form_type, r.record_date);
+      var act = '<span class="cr-muted">—</span>';
+      if (live && href) act = '<a class="n-btn is-primary" href="' + esc(href) + '"><i data-lucide="pencil"></i> Fix it now</a>';
+      else if (r.status === 'requested') act = '<button type="button" class="n-btn" data-act="withdraw-any" data-id="' + esc(r.id) + '" data-form="' + esc(r.form_type) + '" data-date="' + esc(r.record_date) + '">Withdraw</button>';
+      h += '<tr><td class="cr-date">' + esc(FORMS[r.form_type] ? FORMS[r.form_type].label : (r.label || r.form_type)) + '</td>' +
+        '<td>' + esc(fmtDay(r.record_date)) + '</td>' +
+        '<td>' + esc(fmtWhen(r.requested_at)) + '<div class="cr-sub">“' + esc(r.reason) + '”</div></td>' +
+        '<td>' + chip(st[0], st[1]) + (live ? '<div class="cr-sub">' + esc(timeLeft(r.seconds_left)) + ' left</div>' : '') + '</td>' +
+        '<td>' + (r.decided_by_name ? esc(r.decided_by_name) + (r.decision_note ? '<div class="cr-sub">' + esc(r.decision_note) + '</div>' : '') : '<span class="cr-muted">—</span>') + '</td>' +
+        '<td><div class="cr-act">' + act + '</div></td></tr>';
+    });
+    h += '</tbody></table></div></div></section>';
+    mount.innerHTML = h;
+    if (window.lucide) lucide.createIcons();
+  }
+  el('cr-mine').addEventListener('click', async function (e) {
+    var b = e.target.closest && e.target.closest('button[data-act="withdraw-any"]');
+    if (!b) return;
+    if (!window.confirm('Withdraw this correction request? Nothing about the report changes.')) return;
+    try {
+      await NyatiAPI.withdrawAmendment(b.getAttribute('data-form'), b.getAttribute('data-date'), b.getAttribute('data-id'));
+      flash('Request withdrawn.', 'good');
+    } catch (err) { flash(errText(err, 'The withdrawal could not be sent.'), 'bad'); }
+    await Promise.all([loadMine(), D.form ? loadDays() : null]);
+  });
+
+  /* ══ MONTHLY KPIs ═════════════════════════════════════════════════
+     A submitted month is locked for everyone; only an administrator or
+     the MD may reopen it (routes/kpi.js). The HOD asks here; admin/MD
+     reopen or decline here or on Approvals. Reopening keeps a copy of the
+     month's figures (migration 036) before anything can change. */
+  var K = { dept: null, to: thisMonth(), rows: null, loading: false, error: null };
+  var ktoIn = el('cr-kto');
+  ktoIn.max = thisMonth();
+  var deptSel = el('cr-dept');
+  deptSel.innerHTML = myDepts.map(function (d) { return '<option value="' + d[0] + '">' + esc(d[1]) + '</option>'; }).join('');
+  el('cr-kpi-intro').textContent = PRIV
+    ? 'A submitted month is locked. Reopen it here — with a reason, which is recorded — and the department HOD can edit and submit it again. A copy of the figures as they stood is kept.'
+    : 'A submitted month is locked. If a figure in it is wrong, ask for it to be reopened: an administrator or the MD decides. Once reopened, edit it on the KPI dashboard and submit it again.';
+
+  function deptLabel(key) { var d = DEPTS.filter(function (x) { return x[0] === key; })[0]; return d ? d[1] : key; }
+
+  async function loadMonths() {
+    var mount = el('cr-months');
+    K.loading = true;
+    U.renderState(mount, { kind: 'loading', title: 'Loading ' + deptLabel(K.dept) + '…' });
+    var to = K.to, from = addMonths(to, -11);
+    try { K.rows = await NyatiAPI.getKpiSubmissions(K.dept, from, to); K.error = null; }
+    catch (e) { K.error = errText(e, 'The server did not answer.'); }
+    K.loading = false;
+    renderMonths();
+  }
+
+  function renderMonths() {
+    var mount = el('cr-months');
+    if (K.error) {
+      U.renderState(mount, { kind: 'error', title: 'Could not load the KPI months', body: K.error, action: 'Try again', onAction: loadMonths });
+      return;
+    }
+    if (!K.rows.length) {
+      U.renderState(mount, { kind: 'nodata', title: 'No KPI figures for ' + deptLabel(K.dept) + ' in the 12 months to ' + fmtMonth(+K.to.slice(0, 4), +K.to.slice(5, 7)),
+        body: 'Nothing has been filed, so there is nothing to correct.' });
+      return;
+    }
+    var h = '<section class="n-card"><div class="n-card-hdr"><div>' +
+      '<div class="n-card-title"><i data-lucide="calendar"></i>' + esc(deptLabel(K.dept)) + ' — monthly KPIs</div>' +
+      '</div></div><div class="n-card-body is-flush"><div class="n-tbl-wrap"><table class="n-tbl cr-tbl"><thead><tr>' +
+      '<th>Month</th><th>Status</th><th>KPI figures</th><th>Reopen request</th><th>Action</th></tr></thead><tbody>';
+    K.rows.forEach(function (r) {
+      var q = r.last_request;
+      var waiting = q && q.status === 'requested' ? q : null;
+      var stat = r.status === 'submitted'
+        ? chip('is-good', 'Submitted — locked') + '<div class="cr-sub">by ' + esc(r.submitted_by_name || '—') + ', ' + esc(fmtWhen(r.submitted_at)) + '</div>'
+        : r.status === 'reopened'
+          ? chip('is-warn', 'Reopened — editable') + '<div class="cr-sub">by ' + esc(r.reopened_by_name || '—') + (r.reopen_reason ? ': ' + esc(r.reopen_reason) : '') + '</div>'
+          : chip('is-neutral', 'Open — not submitted');
+      var req = '<span class="cr-muted">—</span>';
+      if (waiting) req = chip('is-warn', 'Waiting for admin / MD') + '<div class="cr-sub">' + esc(waiting.requested_by_name || '') + ' — “' + esc(waiting.reason) + '”</div>';
+      else if (q && q.status === 'declined') req = chip('is-bad', 'Declined') + '<div class="cr-sub">' + esc(q.decided_by_name || '') + (q.decision_note ? ': ' + esc(q.decision_note) : '') + '</div>';
+      else if (q && q.status === 'granted') req = '<span class="cr-muted">Last reopened ' + esc(fmtWhen(q.decided_at)) + '</span>';
+
+      var act = '<span class="cr-muted">—</span>';
+      var attrs = ' data-year="' + r.year + '" data-month="' + r.month + '"' + (waiting ? ' data-id="' + esc(waiting.id) + '" data-reason="' + esc(waiting.reason) + '"' : '');
+      if (r.status === 'submitted') {
+        if (PRIV) {
+          act = '<button type="button" class="n-btn is-primary" data-kact="reopen"' + attrs + '>' + (waiting ? 'Reopen (grant)' : 'Reopen month') + '</button>' +
+                (waiting ? '<button type="button" class="n-btn" data-kact="decline"' + attrs + '>Decline</button>' : '');
+        } else if (waiting) {
+          act = waiting.requested_by === user.userId
+            ? '<button type="button" class="n-btn" data-kact="withdraw"' + attrs + '>Withdraw</button>'
+            : '<span class="cr-muted">Waiting</span>';
+        } else {
+          act = '<button type="button" class="n-btn" data-kact="ask"' + attrs + '><i data-lucide="pen-line"></i> Request reopen</button>';
+        }
+      } else if (!PRIV || user.role === 'admin') {
+        act = '<a class="n-btn" href="index.html?dept=' + encodeURIComponent(K.dept) + '">Edit on KPI dashboard</a>';
+      }
+      h += '<tr><td class="cr-date">' + esc(fmtMonth(r.year, r.month)) + '</td><td>' + stat + '</td>' +
+        '<td class="cr-num">' + (r.kpi_rows || 0) + ' <span class="cr-muted">(' + (r.actuals || 0) + ' actuals)</span></td>' +
+        '<td>' + req + '</td><td><div class="cr-act">' + act + '</div></td></tr>';
+    });
+    h += '</tbody></table></div></div></section>';
+    mount.innerHTML = h;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  el('cr-months').addEventListener('click', async function (e) {
+    var b = e.target.closest && e.target.closest('button[data-kact]');
+    if (!b) return;
+    var act = b.getAttribute('data-kact');
+    var year = +b.getAttribute('data-year'), month = +b.getAttribute('data-month');
+    var id = b.getAttribute('data-id');
+    var what = deptLabel(K.dept) + ' · ' + fmtMonth(year, month);
+    try {
+      if (act === 'ask') {
+        var v = await openDialog({
+          title: 'Ask for this month to be reopened', subtitle: esc(what),
+          placeholder: 'e.g. The clinker production actual was entered in tonnes instead of thousand tonnes.',
+          whoHTML: '<strong>Who decides:</strong> an administrator or the MD — only they may reopen a submitted month. '
+            + 'Once it is reopened you can edit it on the KPI dashboard and submit it again.',
+          okLabel: 'Send request',
+        });
+        if (!v) return;
+        await NyatiAPI.requestKpiReopen(K.dept, year, month, v.reason);
+        flash('Reopen requested for ' + what + '. An administrator or the MD will decide.', 'good');
+      } else if (act === 'withdraw') {
+        if (!window.confirm('Withdraw this reopen request?')) return;
+        await NyatiAPI.withdrawKpiReopen(K.dept, year, month, id);
+        flash('Request withdrawn.', 'good');
+      } else if (act === 'reopen') {
+        var r = await openDialog({
+          title: 'Reopen ' + what, subtitle: 'The department HOD can then edit it and submit it again.',
+          reasonLabel: 'Why is it being reopened?',
+          prefill: b.getAttribute('data-reason') ? 'Granting the HOD’s request: ' + b.getAttribute('data-reason') : '',
+          whoHTML: 'A copy of the month’s figures as they stand now is kept before anything can change, and the reopen is recorded in the audit trail.',
+          okLabel: 'Reopen month',
+        });
+        if (!r) return;
+        await NyatiAPI.reopenKpiMonth(K.dept, year, month, r.reason);
+        flash(what + ' reopened. The HOD can edit it now.', 'good');
+      } else if (act === 'decline') {
+        var d = await openDialog({
+          title: 'Decline the reopen request', subtitle: esc(what),
+          reasonLabel: 'Why is it being declined?', hint: 'At least 10 characters — the HOD who asked reads this.',
+          okLabel: 'Decline',
+        });
+        if (!d) return;
+        await NyatiAPI.declineKpiReopen(K.dept, year, month, id, d.reason);
+        flash('Request declined.', 'good');
+      }
+    } catch (err) {
+      flash(errText(err, 'That could not be completed.'), 'bad');
+    }
+    loadMonths();
+  });
+  deptSel.addEventListener('change', function () { K.dept = deptSel.value; loadMonths(); });
+  ktoIn.addEventListener('change', function () {
+    if (!/^\d{4}-\d{2}$/.test(ktoIn.value)) return;
+    K.to = ktoIn.value > thisMonth() ? thisMonth() : ktoIn.value;
+    loadMonths();
+  });
+
+  /* ══ TABS & ARRIVAL ═══════════════════════════════════════════════
+     ?form=cpp&date=2026-10-08   — opens that report's month, highlights the
+                                   day and, if it can be corrected, opens the
+                                   request straight away (the review pages'
+                                   "Correct this report" link).
+     ?tab=kpi&dept=powerplant    — the Monthly KPIs tab on one department
+     &kto=YYYY-MM                  (and the last of the 12 months shown). */
+  var tabs = el('cr-tabs');
+  var tabBtn = function (v) { return tabs.querySelector('[data-value="' + v + '"]'); };
+  if (!visibleForms.length) tabBtn('daily').hidden = true;
+  if (!myDepts.length) tabBtn('kpi').hidden = true;
+  if (!visibleForms.length || !myDepts.length) tabs.hidden = true;
+
+  var kpiLoaded = false;
+  function showTab(v) {
+    tabs.querySelectorAll('.n-seg-btn').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-value') === v)); });
+    el('cr-daily').hidden = v !== 'daily';
+    el('cr-kpi').hidden = v !== 'kpi';
+    if (v === 'kpi' && !kpiLoaded) { kpiLoaded = true; loadMonths(); }
+  }
+  U.wireSegmented(tabs, showTab);
+
+  var qs = new URLSearchParams(location.search);
+  var qForm = qs.get('form'), qDate = qs.get('date'), qTab = qs.get('tab'), qDept = qs.get('dept');
+
+  if (visibleForms.length) {
+    D.form = visibleForms.indexOf(qForm) !== -1 ? qForm : visibleForms[0];
+    if (qDate && /^\d{4}-\d{2}-\d{2}$/.test(qDate) && qDate <= today()) {
+      D.month = qDate.slice(0, 7);
+      D.focusDate = qDate;
+      D.autoAsk = qs.get('ask') === '1';
+    } else if (qs.get('month') && /^\d{4}-\d{2}$/.test(qs.get('month'))) {
+      D.month = qs.get('month') > thisMonth() ? thisMonth() : qs.get('month');
+    }
+    formSel.value = D.form;
+    monthIn.value = D.month;
+  }
+  if (myDepts.length) {
+    K.dept = myDepts.some(function (d) { return d[0] === qDept; }) ? qDept : myDepts[0][0];
+    var qTo = qs.get('kto');
+    if (qTo && /^\d{4}-\d{2}$/.test(qTo) && qTo <= thisMonth()) K.to = qTo;
+    ktoIn.value = K.to;
+    deptSel.value = K.dept;
+  }
+
+  if (visibleForms.length) { loadDays(); loadMine(); }
+  showTab((qTab === 'kpi' && myDepts.length) || !visibleForms.length ? 'kpi' : 'daily');
+
+  var fEl = el('footer-date');
+  if (fEl) fEl.textContent = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
+}());
+</script>
+</body>
+</html>

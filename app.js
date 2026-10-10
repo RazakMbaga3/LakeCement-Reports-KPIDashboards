@@ -596,10 +596,12 @@ async function refreshKpiLockState() {
   /* By id: #submit-monthly-btn above carries the same .fill-monthly-btn
      class for its styling, so the class selector is no longer unique. */
   const fillBtn   = document.getElementById('fill-monthly-btn');
+  const reopen    = document.getElementById('kpi-reopen-link');
   if (!submitBtn || !chip) return;
 
   submitBtn.style.display = 'none';
   chip.style.display      = 'none';
+  if (reopen) reopen.style.display = 'none';
 
   const p = _kpiSelectedPeriod();
   // Only a role that could edit this department has any use for the state.
@@ -622,6 +624,20 @@ async function refreshKpiLockState() {
     chip.textContent = `Submitted${when ? ' ' + when : ''} by ${who} — locked`;
     chip.title = 'These figures are final. An administrator or the MD must reopen the month before it can be edited.';
     chip.style.display = '';
+    /* The lock used to be the end of the road: a chip saying "locked" and no
+       way to ask for the month back. The HOD asks, an administrator or the
+       MD reopens — both on corrections.html (2026-10-10). */
+    if (reopen) {
+      const me = getCurrentUser() || {};
+      reopen.href = 'corrections.html?tab=kpi&dept=' + encodeURIComponent(p.dept);
+      document.getElementById('kpi-reopen-label').textContent =
+        (me.role === 'admin' || me.role === 'md') ? 'Reopen month'
+          : (sub.reopen_request ? 'Reopen requested — view' : 'Ask to reopen');
+      reopen.title = sub.reopen_request
+        ? 'You asked for this month back; an administrator or the MD will decide.'
+        : 'A figure in this submitted month is wrong? Ask for the month to be reopened.';
+      reopen.style.display = '';
+    }
   } else {
     submitBtn.style.display = '';
   }
@@ -634,7 +650,8 @@ async function submitMonthlyKPIs() {
   if (!confirm(
     `Submit ${label} as final?\n\n` +
     'These figures become the record management reads, and you will not be able to ' +
-    'edit them afterwards. Only an administrator or the MD can reopen the month.'
+    'edit them afterwards. If a figure turns out to be wrong, ask for the month to be ' +
+    'reopened (Corrections page) — an administrator or the MD decides.'
   )) return;
 
   const btn = document.getElementById('submit-monthly-btn');

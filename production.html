@@ -12,13 +12,13 @@
        the last word on legibility and touch size. -->
   <link rel="stylesheet" href="components.css?v=1" />
   <script src="auth.js?v=13"></script>
-  <script src="sidebar.js?v=5"></script>
-  <script src="loader.js?v=2"></script>
+  <script src="sidebar.js?v=6"></script>
+  <script src="loader.js?v=3"></script>
   <script src="forms/date-picker.js"></script>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
-  <link rel="stylesheet" href="design-system.css?v=1" />
+  <link rel="stylesheet" href="design-system.css?v=2" />
   <script src="a11y.js?v=1"></script>
-  <script src="mobile-shell.js?v=1"></script>
+  <script src="mobile-shell.js?v=2"></script>
 </head>
 <body>
 
@@ -114,7 +114,7 @@
 </div><!-- /.app-shell -->
 
 <script src="lucide-icons.js?v=1"></script>
-<script src="forms/api-client.js"></script>
+<script src="forms/api-client.js?v=6"></script>
 <script src="forms/formula-registry.js"></script>
 <script src="components.js?v=1"></script>
 <script src="forms/latest-period.js"></script>
@@ -814,6 +814,15 @@
       html += U.workflowChipHTML(rec ? rec.status : 'missing');
       if (rec && rec.submitted_by_name) {
         html += '<span class="n-ctx-lbl">by ' + U.esc(rec.submitted_by_name) + '</span>';
+      }
+      /* The way to fix a signed-off day, from where the mistake is seen
+         (2026-10-10). A locked report used to show its status and nothing
+         else here, so a day approved with every figure at zero looked
+         uncorrectable. Only for a day a person signed (an ERP-filled day is
+         edited directly) and only for someone who files this report. */
+      if (rec && canEnter && ((rec.status === 'approved' && rec.approved_by) || rec.status === 'pending_approval')) {
+        html += '<a class="n-btn" id="pr-correct" href="corrections.html?form=production&amp;date=' + encodeURIComponent(state.date) + '&amp;ask=1">'
+              + '<i data-lucide="pen-line"></i> Correct this report</a>';
       }
     } else {
       var statuses = {};

@@ -8,12 +8,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <script src="auth.js?v=13"></script>
-  <script src="sidebar.js?v=5"></script>
-  <script src="loader.js?v=2"></script>
+  <script src="sidebar.js?v=6"></script>
+  <script src="loader.js?v=3"></script>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
-  <link rel="stylesheet" href="design-system.css?v=1" />
+  <link rel="stylesheet" href="design-system.css?v=2" />
   <script src="a11y.js?v=1"></script>
-  <script src="mobile-shell.js?v=1"></script>
+  <script src="mobile-shell.js?v=2"></script>
   <!-- No charting library on this page, deliberately. Its only chart is the
        per-card sparkline, which is a polyline — drawing it with Chart.js cost
        205KB of UMD bundle and pushed the page from 748KB to 953KB against a
@@ -97,6 +97,13 @@
           Submit Month
         </button>
         <span class="summary-chip" id="kpi-lock-chip" style="display:none"></span>
+        <!-- The way back into a submitted month: the HOD asks, an
+             administrator or the MD reopens (corrections.html, Monthly KPIs).
+             Revealed by refreshKpiLockState() only on a locked month. -->
+        <a class="fill-monthly-btn" id="kpi-reopen-link" href="corrections.html?tab=kpi" style="display:none;text-decoration:none;margin-left:0">
+          <i data-lucide="pen-line" style="width:13px;height:13px;"></i>
+          <span id="kpi-reopen-label">Ask to reopen</span>
+        </a>
         <button class="print-btn" onclick="window.print()" title="Print / PDF">
           <i data-lucide="printer" style="width:13px;height:13px;"></i>
           Print / PDF
@@ -2074,11 +2081,11 @@
     </div><!-- /.main -->
   </div><!-- /.app-shell -->
 
-  <script src="forms/api-client.js"></script>
+  <script src="forms/api-client.js?v=6"></script>
   <script src="forms/latest-period.js"></script>
   <script src="forms/offline-queue.js"></script>
   <script src="forms/client-errors.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=2"></script>
   <script src="kpi-data.js"></script>
   <script src="lucide-icons.js?v=1"></script>
   <script>

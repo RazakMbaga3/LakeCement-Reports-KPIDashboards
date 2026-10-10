@@ -64,6 +64,7 @@ const ALL_PAGES = [
   ['daily-report',     'daily-report.html'],
   ['analytics',        'analytics.html'],
   ['approvals',        'approvals.html'],
+  ['corrections',      'corrections.html'],
   ['sales',            'sales.html'],
   ['purchases',        'purchases.html'],
   ['reliability',      'reliability.html'],
