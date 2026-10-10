@@ -79,9 +79,9 @@ const POWER = [
 ];
 // clinker consumed = 80% of total cement produced each day (clean clinker factor),
 // split own/purchased to also exercise totalClinkerCons() summing both facts
-// cm1_425r_cons_mt doubles as the despatch-day fixture: it's CM-1's stock-ledger
-// "Consumption" column, i.e. dispatch out of CM-1's stock (see formula-registry.js
-// despatch-day v4 — matches the Production Report's TOTAL — CM-1 On Date Consumption cell)
+// cm1_425r_cons_mt is CM-1's stock-ledger "Consumption" column. It fed
+// despatch-day under v4; since v5 (2026-10-10) despatch-day reads the Dispatch
+// & SO report instead — see DISPATCH below — so this value must NOT move it.
 // The cm2_*_run_hrs values are the cement-mill-2-output fixture: they are the
 // source Excel's RUNNING HOURS — ON DATE column for the CEMENT MILL -2 rows
 // (Production Report, PLANT OPERATIONS table), which is what the plant's own
@@ -92,6 +92,20 @@ const CEMENT_MILL = [
   { cm_clinker_own_cons: 440, cm_clinker_purch_cons: 200, cm1_425r_mt: 300, cm2_425r_mt: 500, cm1_425r_cons_mt: 2000, cm2_425r_run_hrs: 10 }, // total prod 800, total clinker 640
   { cm_clinker_own_cons: 520, cm_clinker_purch_cons:   0, cm1_425r_mt: 250, cm2_425r_mt: 400, cm1_425r_cons_mt: 1500, cm2_425r_run_hrs:  8 }, // total prod 650, total clinker 520
   { cm_clinker_own_cons: 300, cm_clinker_purch_cons: 340, cm1_425r_mt: 200, cm2_425r_mt: 600, cm1_425r_cons_mt: 2500, cm2_425r_run_hrs: 10 }, // total prod 800, total clinker 640
+];
+/* despatch-day v5 fixture — the Dispatch & SO report's channel × grade fields
+   plus clinker sold, i.e. what dispatch.html's "Cement Dispatched" card sums.
+   Spread across all three channels and the clinker line so a formula that
+   dropped any one of them would miss its total:
+     day 1: 1200 + 500 + 300            = 2000
+     day 2:  800 + 400 + 200 + 100      = 1500   (includes clinker)
+     day 3: 1000 + 900 + 400 + 200      = 2500
+   These deliberately differ from CEMENT_MILL's cm1_425r_cons_mt only in where
+   they live; equal totals keep EXPECTED unchanged from v4. */
+const DISPATCH = [
+  { dispatch_reg_425r: 1200, dispatch_blk_425nbm: 500, dispatch_bag_425r: 300 },
+  { dispatch_reg_325n: 800, dispatch_blk_425r: 400, dispatch_reg_opc425n: 200, dispatch_clinker: 100 },
+  { dispatch_reg_425r: 1000, dispatch_blk_425r: 900, dispatch_bag_425nbm: 400, dispatch_blk_opc425n: 200 },
 ];
 const PILE = [
   { cao_h1: 44, cao_h2: 46 }, // daily avg 45
@@ -106,13 +120,13 @@ const CPP = [
 ];
 
 const DAYS = [0, 1, 2].map(i => ({
-  ...KILN[i], ...QUALITY[i], ...POWER[i], ...CEMENT_MILL[i], ...PILE[i], ...CPP[i],
+  ...KILN[i], ...QUALITY[i], ...POWER[i], ...CEMENT_MILL[i], ...DISPATCH[i], ...PILE[i], ...CPP[i],
 }));
 
 const EXPECTED = {
   'kiln-output':        (2000 + 2100 + 1900) / 3,
   'clinker-free-lime':  (2.5 + 2.8 + 3.1) / 3,
-  'despatch-day':       (2000 + 1500 + 2500) / 3, // CM-1 cons_mt (dispatch) fixture, see CEMENT_MILL above
+  'despatch-day':       (2000 + 1500 + 2500) / 3, // Dispatch & SO fixture, see DISPATCH above (v5)
   'blaine-425r':        (3400 + 3500 + 3600) / 3,
   'strength-28d':       (42 + 43 + 44) / 3,
   'pile-cao-avg':       (45 + 43) / 2,
@@ -234,4 +248,17 @@ test('a cross-form partial day does not fabricate a zero', () => {
   const genuineZero = Object.assign({}, productionOnly, { pwr_cm1_kwh: 0 });
   assert.strictEqual(FORMULAS['specific-power-consumption-total'].daily(genuineZero), 0,
     'an explicitly recorded 0 kWh is a reading and must not be nulled');
+});
+
+test('despatch-day v5: reads the Dispatch report, blank when there is none, ledger ignored', () => {
+  const d = FORMULAS['despatch-day'].daily;
+  // Matches dispatch.html's "Cement Dispatched": every channel × grade, plus clinker.
+  assert.equal(d({ dispatch_reg_425r: 1846, dispatch_reg_325n: 119, dispatch_blk_325n: 30,
+                   dispatch_blk_425nbm: 89.4, dispatch_reg_425nbm: 152, dispatch_blk_opc425n: 30 }), 2266.4);
+  // No Dispatch report that day -> blank, so it is never averaged in as zero.
+  assert.equal(d({ kiln_prod_mt: 1800 }), null);
+  // A filed report that genuinely loaded nothing is a real 0.
+  assert.equal(d({ dispatch_reg_425r: 0 }), 0);
+  // The CM-1 stock ledger (v4's source) no longer moves it.
+  assert.equal(d({ cm1_425r_cons_mt: 2000, cm1_425n_bm_cons_mt: 500 }), null);
 });

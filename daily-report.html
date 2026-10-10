@@ -2007,11 +2007,10 @@ initReportLoader({
       }
     },
 
-    /* total_dispatch moved to the same-page initKpiLive block above (2026-07-31)
-       — it now reads CM-1's stock-ledger Consumption column directly, matching
-       despatch-day in forms/formula-registry.js, instead of the separate
-       Dispatch form. dispatch_clinker_display (clinker sold directly, outside
-       the cement mills) still comes from the Dispatch form below. */
+    /* Total dispatch is no longer shown on this form — production.html's Total
+       Dispatch card reads despatch-day, which since v5 (2026-10-10) sums the
+       Dispatch & SO report. dispatch_clinker_display (clinker sold directly,
+       outside the cement mills) still comes from the Dispatch form below. */
     { kpi: 'dispatch_clinker_display', fmt: 'n0',
       compute: function(d, n) { return n(d.dispatch_clinker) || null; }
     },

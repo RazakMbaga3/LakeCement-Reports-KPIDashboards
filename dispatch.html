@@ -118,7 +118,7 @@
 
 <script src="lucide-icons.js?v=1"></script>
 <script src="forms/api-client.js?v=6"></script>
-<script src="forms/formula-registry.js?v=20261010"></script>
+<script src="forms/formula-registry.js?v=20261010b"></script>
 <script src="components.js?v=1"></script>
 <script src="forms/latest-period.js"></script>
 <script>
@@ -332,12 +332,13 @@
     var period = PERIOD_LABEL[state.period];
     var isDay  = state.period === 'day';
 
-    /* Dispatch tonnage off THIS report's channel×grade breakdown. Note it
-       is deliberately not the 'despatch-day' registry KPI: that one was
-       re-pointed in v4 to CM-1's stock ledger on the Production Report so
-       Operations reconciles against a single figure. Both are correct
-       answers to different questions, and the drill-down says so rather
-       than letting a reader assume they should match. */
+    /* Dispatch tonnage off THIS report's channel×grade breakdown — the same
+       fourteen fields the 'despatch-day' registry KPI sums since its v5
+       (2026-10-10), so this card and the Production Report's Total Dispatch
+       now show the same On Date figure. (Between 2026-07-31 and 2026-10-10
+       the KPI read CM-1's stock ledger instead; that ledger stopped being
+       recorded in July.) The period totals here are SUMS; the registry KPI's
+       MTD/YTD is a per-day average, so those differ by design. */
     var dispatchTotal = sumFields(rows, DISPATCH_FIELDS);
     var mtdRows  = state.rows;
     var mtdTotal = sumFields(mtdRows, DISPATCH_FIELDS);
@@ -356,12 +357,10 @@
       target: null,
       targetNote: isDay ? 'No daily target set' : null,
       notes: 'Total tonnage leaving the plant over this period, summed across every channel and grade on '
-           + 'the Dispatch & SO report: Regular Bags, Bulker and Big Bags by grade, plus clinker. '
-           + 'This is the DISPATCH REPORT\'s own figure. It is not the same number as the "Despatch / Day" '
-           + 'KPI on the plant dashboard, which was re-pointed in 2026 to CM-1\'s stock-ledger consumption '
-           + 'column on the Production Report so that Operations reconciles against one figure. The two '
-           + 'answer different questions — what Sales loaded, and what left cement stock — and they are '
-           + 'not expected to agree exactly.',
+           + 'the Dispatch & SO report: Regular Bags, Bulker and Big Bags by grade, plus clinker sold directly. '
+           + 'Filled automatically from Odoo. For a single day this is the same figure as "Total Dispatch" on the '
+           + 'Production Report. Over a month this card shows the TOTAL tonnage; the Production Report shows '
+           + 'the average per day, so those two differ by design.',
       detail: [{ k: 'Reports counted', v: rows.length + (rows.length === 1 ? ' day' : ' days') }],
       href: 'forms/dispatch-form.html',
       hrefLabel: 'Open the Dispatch & SO report',

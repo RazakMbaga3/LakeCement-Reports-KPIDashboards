@@ -71,8 +71,10 @@ const QUALITY = [
   { free_lime: 2.8, blaine_425r: 3500, strength_28d: 43 },
   { free_lime: 3.1, blaine_425r: 3600, strength_28d: 44 },
 ];
-// Dispatch form data — still submitted below to exercise its own endpoint, but no
-// longer feeds despatch-day (see CEMENT_MILL's cm1_425r_cons_mt, v4 2026-07-31).
+// Dispatch form data — the despatch-day fixture since v5 (2026-10-10): the KPI
+// sums every channel × grade here, as dispatch.html's "Cement Dispatched" does.
+// Daily totals 2000 / 1500 / 2500 — deliberately the same as the CM-1 ledger
+// values below that fed it under v4, so EXPECTED did not need to change.
 const DISPATCH = [
   { dispatch_reg_425r: 1000, dispatch_reg_425n: 200, dispatch_blk_425r: 300, dispatch_bag_425r: 500 },
   { dispatch_reg_425r:  700, dispatch_reg_425n: 300, dispatch_blk_425r: 200, dispatch_bag_425r: 300 },
@@ -99,9 +101,8 @@ const POWER = [
 ];
 // clinker consumed = 80% of total cement produced each day (clean clinker factor),
 // split own/purchased to also exercise totalClinkerCons() summing both facts
-// cm1_425r_cons_mt doubles as the despatch-day fixture: CM-1's stock-ledger
-// "Consumption" column = dispatch out of CM-1's stock (formula-registry.js
-// despatch-day v4 — matches the Production Report's TOTAL — CM-1 On Date Consumption cell)
+// cm1_425r_cons_mt is CM-1's stock-ledger "Consumption" column. It fed
+// despatch-day under v4; since v5 the KPI reads DISPATCH above instead.
 const CEMENT_MILL = [
   { cm_clinker_own_cons: 440, cm_clinker_purch_cons: 200, cm1_425r_mt: 300, cm2_425r_mt: 500, cm1_425r_cons_mt: 2000 }, // total prod 800, total clinker 640
   { cm_clinker_own_cons: 520, cm_clinker_purch_cons:   0, cm1_425r_mt: 250, cm2_425r_mt: 400, cm1_425r_cons_mt: 1500 }, // total prod 650, total clinker 520
@@ -122,7 +123,7 @@ const PILE = [
 const EXPECTED = {
   'kiln-output':        (2000 + 2100 + 1900) / 3,                                     // 2000
   'clinker-free-lime':  (2.5 + 2.8 + 3.1) / 3,                                        // 2.8
-  'despatch-day':       (2000 + 1500 + 2500) / 3,      // 2000 — CM-1 cons_mt (dispatch) fixture, see CEMENT_MILL
+  'despatch-day':       (2000 + 1500 + 2500) / 3,      // 2000 — Dispatch & SO fixture, see DISPATCH (v5)
   'blaine-425r':        (3400 + 3500 + 3600) / 3,                                     // 3500
   'strength-28d':       (42 + 43 + 44) / 3,                                           // 43
   'pile-cao-avg':       (45 + 43) / 2,                                                // 44

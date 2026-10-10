@@ -4,14 +4,13 @@
   known field keys, and upserts into daily_reports (form_type='dispatch').
 
   Scope note: this feeds the standalone Dispatch report (dispatch-form.html)
-  with real channel×grade breakdowns. It does NOT feed the main dashboard's
-  "Despatch / Day" KPI card;
-  that formula was re-pointed to the Production Report's CM-1 stock ledger
-  on 2026-07-31 (see forms/formula-registry.js, 'despatch-day' v4) because
-  the Dispatch form's own numbers drifted from what Operations reconciles
-  against. The DISPATCH fact keys this writes into have no formula
-  consumer at all right now — populating them is still real value (the
-  report itself), just not a KPI-card fix.
+  with real channel×grade breakdowns, AND — since 2026-10-10 — the
+  "Despatch / Day" KPI ('despatch-day' v5 in forms/formula-registry.js),
+  which sums the same fields as dispatch.html's "Cement Dispatched" card.
+  Between 2026-07-31 and 2026-10-10 that KPI read the Production Report's
+  CM-1 stock ledger instead; the ledger stopped being recorded in July, so
+  this sync is now the KPI's only live source. If it stops, Total Dispatch
+  on the Production Report goes blank.
 
   Mapping confirmed against real Odoo test data pulled 2026-08-04/05, and
   re-confirmed against the PRODUCTION ERP 2026-09-23 after the endpoint

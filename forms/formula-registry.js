@@ -333,8 +333,9 @@
   var CM2_GRADES    = ['cm2_325n_mt', 'cm2_425r_mt', 'cm2_425n_mt', 'cm2_opc_mt', 'cm2_425n_bm_mt'];
   var CM2_RUN_HRS   = ['cm2_325n_run_hrs', 'cm2_425r_run_hrs', 'cm2_425n_run_hrs',
                        'cm2_opc_run_hrs', 'cm2_425n_bm_run_hrs'];
-  // no longer feeds despatch-day (see below) — kept because the Dispatch form
-  // still collects its own channel×grade report independently of the KPI.
+  // Every channel × grade on the Dispatch & SO report, plus clinker sold —
+  // exactly what dispatch.html's "Cement Dispatched" card sums. Feeds
+  // despatch-day again since v5 (2026-10-10); see that formula.
   var DISPATCH      = ['dispatch_reg_425r', 'dispatch_reg_425nbm', 'dispatch_reg_425n', 'dispatch_reg_325n', 'dispatch_reg_opc425n',
                        'dispatch_blk_425r', 'dispatch_blk_425nbm', 'dispatch_blk_425n', 'dispatch_blk_325n', 'dispatch_blk_opc425n',
                        'dispatch_bag_425r', 'dispatch_bag_425nbm', 'dispatch_bag_425n',
@@ -404,14 +405,38 @@
       monthlyAgg: 'avg',
     },
 
+    /* v5 (Razak, 2026-10-10): back on the Dispatch & SO report — the same
+       fourteen fields dispatch.html's "Cement Dispatched" card sums, so the
+       Production Report's Total Dispatch and the Dispatch page can no longer
+       show different figures for the same day.
+
+       v4 moved this to CM-1's stock ledger for two reasons. The Dispatch form
+       often went unfilled and read 0 on days cement plainly left the plant,
+       and Operations wanted one figure to reconcile against. Since then:
+
+       - The ledger stopped. Its five cm1_*_cons_mt fields were typed by hand
+         on the Production Report; Odoo's production feed does not carry them,
+         so not one row since 2026-07-01 has them and this KPI has been null
+         for every day since.
+       - The Dispatch report stopped going unfilled. Odoo's dispatch_report
+         fills it automatically — every day from March to October is present.
+       - They are the same figure. Over the 91 days both exist (Apr–Jun 2026)
+         they agree within 5% on all 91; May and June to the tonne, April
+         0.1% (44,862 vs 44,831 MT for the month).
+
+       So this is not a different answer to the question v4 asked: it is the
+       same number, from the source that is still being recorded. Changing
+       history here moves Apr–Jun by at most that 0.1%. */
     'despatch-day': {
-      label: 'Despatch / Day', unit: 'MT', dp: 0, version: 4,
+      label: 'Despatch / Day', unit: 'MT', dp: 0, version: 5,
       target: null, signage: null, targetLabel: null,
-      notes: 'Cement dispatched for the day = CM-1\'s stock-ledger "Consumption" column, summed across its five grades (32.5N, 42.5R, 42.5N, OPC, 42.5N BM) — this is exactly the Production Report\'s Plant Operations table, TOTAL — CM-1 row, On Date Consumption cell (stock ledger: opening + production − consumption(dispatch) = closing, so that column is cement leaving stock, i.e. dispatch). v4 (2026-07-31): previously sourced from the separate Dispatch form\'s channel×grade breakdown (Regular Bags/Bulker/Big Bags), which drifted from what Operations actually reconciles against on the Production Report and was known to read 0 on days the Dispatch form went unfilled even though CM-1\'s ledger had real consumption entered. Re-pointed to the Production Report figure per Operations\' direction so the two numbers can never disagree — the Dispatch form\'s channel×grade data still feeds its own report, just not this KPI.',
-      inputs: CM1_DISPATCH,
+      notes: 'v5 (2026-10-10): cement leaving the plant that day, as recorded on the Dispatch & SO report — Regular Bags, Bulker and Big Bags by grade, plus clinker sold directly — the same total as the "Cement Dispatched" card on the Dispatch page. Filled automatically from Odoo\'s dispatch_report. Moved back from the CM-1 stock ledger (v4) because that ledger has not been recorded since 2026-07-01 — Odoo does not supply it — which left this KPI blank for three months; over the 91 days both sources exist they agree within 5% on every day (May and June exactly, April within 0.1%), so this is the same figure from a source that is still kept. A day with no Dispatch report is null, not zero.\n\nHISTORY (v4, 2026-07-31): Cement dispatched for the day = CM-1\'s stock-ledger "Consumption" column, summed across its five grades (32.5N, 42.5R, 42.5N, OPC, 42.5N BM) — this is exactly the Production Report\'s Plant Operations table, TOTAL — CM-1 row, On Date Consumption cell (stock ledger: opening + production − consumption(dispatch) = closing, so that column is cement leaving stock, i.e. dispatch). v4 (2026-07-31): previously sourced from the separate Dispatch form\'s channel×grade breakdown (Regular Bags/Bulker/Big Bags), which drifted from what Operations actually reconciles against on the Production Report and was known to read 0 on days the Dispatch form went unfilled even though CM-1\'s ledger had real consumption entered. Re-pointed to the Production Report figure per Operations\' direction so the two numbers can never disagree — the Dispatch form\'s channel×grade data still feeds its own report, just not this KPI.',
+      inputs: DISPATCH,
       daily: function (f) {
-        var t = sumOf(CM1_DISPATCH, f);
-        return t > 0 ? t : null;
+        /* Null when the day has no Dispatch report at all, so a missing day
+           is never averaged in as a zero. A reported day that genuinely
+           loaded nothing stays 0. */
+        return anyReading(DISPATCH, f) ? sumOf(DISPATCH, f) : null;
       },
       monthlyAgg: 'avg',
     },
