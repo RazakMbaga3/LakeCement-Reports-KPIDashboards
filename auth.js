@@ -1146,6 +1146,37 @@ function getStandaloneFormType(page) { return _STANDALONE_FORM_TYPE[page]; }
    Call this on every daily-report page (daily-report.html,
    power-plant-report.html, mines-report.html, forms/*.html, etc.)
 ══════════════════════════════════════════════════════════════════════ */
+/* Human names for the departments that own a daily report. The banner
+   tells a reader who to go to, so it needs the name people actually use,
+   not the internal role key. */
+const _DEPT_LABELS = {
+  production: 'Production',
+  pm: 'Mechanical (P&amp;M)',
+  logistics: 'Logistics',
+  cpp: 'Power Plant (CPP)',
+  mining: 'Mining / Quarry',
+  stores: 'Purchase &amp; Stores',
+  sales: 'Sales',
+  ei: 'E&amp;I',
+  packing: 'Packing Plant',
+  quality: 'Quality / Lab',
+};
+
+/* Which department owns the report on this page. Derived from the SAME
+   _FORM_TYPE_ACCESS map that decides who may edit it, so the banner can
+   never name a department the access rules disagree with. Returns null
+   where there is no single owner — a hub page, or a form type two
+   departments share (dispatch, power-cons) — because naming one of two
+   owners would send the reader to the wrong desk half the time. */
+function _viewOnlyOwnerLabel(page) {
+  const formType = _STANDALONE_FORM_TYPE[page];
+  if (!formType) return null;
+  const owners = Object.keys(_FORM_TYPE_ACCESS)
+    .filter(r => (_FORM_TYPE_ACCESS[r] || []).includes(formType));
+  if (owners.length !== 1) return null;
+  return _DEPT_LABELS[owners[0]] || owners[0];
+}
+
 function applyDailyPermissions() {
   const user = getCurrentUser();
   if (!user) return;
@@ -1217,8 +1248,21 @@ function applyDailyPermissions() {
           'stroke="currentColor" stroke-width="2.2" aria-hidden="true">' +
           '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
         '<span class="ds-viewonly-text">' +
-          '<strong>View only &mdash; ' + user.dept + ' cannot edit this report.</strong>' +
-          '<span>Contact the department that owns it to have the data updated.</span>' +
+          /* Name the report's OWNER, not the reader's department. The old
+             wording interpolated user.dept, which rendered "View only — IT
+             cannot edit this report" for the admin account: that reads as a
+             claim about the report (it belongs to IT, and IT is locked out),
+             when the truth is the opposite — the report belongs to Purchase &
+             Stores, and `admin` has no reporting department of its own,
+             because FORM_ACCESS.admin is [] deliberately (it is the IT/system
+             account, not a plant department). Saying who DOES own it is both
+             true and the thing a reader needs in order to act. */
+          (_viewOnlyOwnerLabel(currentPage)
+            ? '<strong>View only &mdash; this report is owned by '
+                + _viewOnlyOwnerLabel(currentPage) + '.</strong>'
+              + '<span>Ask them to update the figures; you can still browse any date.</span>'
+            : '<strong>View only &mdash; you cannot edit this report.</strong>'
+              + '<span>Contact the department that owns it to have the data updated.</span>') +
         '</span>';
 
       /* Insert after the <header> element */
