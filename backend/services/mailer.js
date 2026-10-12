@@ -63,7 +63,7 @@ async function graphToken({ tenant, clientId, secret }) {
 
 function graphTransport(cfg) {
   return { kind: 'graph', t: {
-    async sendMail({ from, to, subject, html }) {
+    async sendMail({ from, fromName, to, subject, html }) {
       const token = await graphToken(cfg);
       const r = await graphFetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(from)}/sendMail`, {
         method: 'POST',
@@ -72,6 +72,9 @@ function graphTransport(cfg) {
           subject,
           body: { contentType: 'HTML', content: html },
           toRecipients: to.map(address => ({ emailAddress: { address } })),
+          /* Same mailbox, so no SendAs right is involved; Exchange may still
+             show the mailbox's own display name instead of this one. */
+          ...(fromName ? { from: { emailAddress: { address: from, name: fromName } } } : {}),
         } }),
       }, 30 * 1000);
       if (r.status === 202) return {};
@@ -132,7 +135,9 @@ function mailConfigured() {
    message — which can name internal hosts, mailboxes or tenant policy — is
    logged here and goes no further, since three callers hand their whole
    result straight to res.json(). */
-async function sendMail({ subject, html, to }) {
+/* `fromName` (optional) is the sender's display name — "Compliance Master
+   System" for the compliance reminders; the address is always SMTP_FROM. */
+async function sendMail({ subject, html, to, fromName }) {
   const list = (to || '').split(',').map(s => s.trim()).filter(Boolean);
   if (!list.length) return { sent: false, reason: 'no recipients configured' };
 
@@ -141,11 +146,10 @@ async function sendMail({ subject, html, to }) {
 
   let info;
   try {
-    info = await transport.t.sendMail({
-      from: process.env.SMTP_FROM || DEFAULT_FROM,
-      to: list,
-      subject, html,
-    });
+    const address = process.env.SMTP_FROM || DEFAULT_FROM;
+    info = await transport.t.sendMail(transport.kind === 'graph'
+      ? { from: address, fromName, to: list, subject, html }
+      : { from: fromName ? { name: fromName, address } : address, to: list, subject, html });
   } catch (err) {
     /* Required lazily: services/logger.js opens pino's rotating-file
        transport on require, and mailer.js is pulled into `node --test`

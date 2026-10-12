@@ -37,6 +37,10 @@ const ROLES = [
   { role: 'pm',         label: 'Projects & Maintenance',        department: 'P & M' },
   { role: 'production', label: 'Production & QC',               department: 'PRODUCTION & QC' },
   { role: 'purchase',   label: 'Purchase / Procurement',        department: 'PURCHASE' },
+  /* QC Manager and lab officers (DEC-005). Was missing here, so the role
+     existed only through db/seed.js and admin-users.html could not assign
+     it — the API 400'd it as unknown. */
+  { role: 'quality',    label: 'Quality Control (Lab)',         department: 'PRODUCTION & QC' },
   { role: 'sales',      label: 'Sales & Marketing',             department: 'SALES & MARKETING' },
   { role: 'stores',     label: 'Stores',                        department: 'STORES' },
 ];

@@ -87,6 +87,7 @@ jobs:
           npm run accept:sales
           npm run accept:purchases
           npm run accept:corrections
+          npm run accept:compliance
 
   deploy:
     needs: test

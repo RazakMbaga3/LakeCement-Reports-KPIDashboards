@@ -461,6 +461,331 @@ CREATE TABLE IF NOT EXISTS power_targets (
   updated_at    TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
+-- ── COMPLIANCE MASTER ────────────────────────────────────────
+-- Mirror of migrations/037_compliance_register.sql and
+-- 038_compliance_documents_reminders.sql — see them for the reasoning
+-- (status is computed, never stored; documents live in Postgres).
+CREATE TABLE IF NOT EXISTS compliance_contacts (
+  id               SERIAL       PRIMARY KEY,
+  name             VARCHAR(100) NOT NULL,
+  email            VARCHAR(120)
+    CHECK (email IS NULL OR email ~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'),
+  user_id          INTEGER      REFERENCES users(id) ON DELETE SET NULL,
+  aliases          TEXT[]       NOT NULL DEFAULT '{}',
+  active           BOOLEAN      NOT NULL DEFAULT true,
+  created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_by       INTEGER      REFERENCES users(id) ON DELETE SET NULL,
+  updated_by_name  VARCHAR(100)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS compliance_contacts_name_uniq ON compliance_contacts (LOWER(name));
+CREATE UNIQUE INDEX IF NOT EXISTS compliance_contacts_user_uniq ON compliance_contacts (user_id) WHERE user_id IS NOT NULL;
+
+-- ── Groups: a mining licence and its obligations, or a bundle (ISO set) ──
+CREATE TABLE IF NOT EXISTS compliance_groups (
+  id          SERIAL       PRIMARY KEY,
+  kind        VARCHAR(20)  NOT NULL CHECK (kind IN ('mining_licence','bundle')),
+  code        VARCHAR(60)  NOT NULL,
+  title       VARCHAR(200),
+  owner_role  VARCHAR(30)  NOT NULL,
+  entity      VARCHAR(10)  NOT NULL DEFAULT 'LCL',
+  attrs       JSONB        NOT NULL DEFAULT '{}',   -- location, licence type, resource, area: display only
+  import_key  VARCHAR(80)  UNIQUE,
+  created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  UNIQUE (kind, code)
+);
+
+-- ── The obligations ────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS compliance_items (
+  id                     SERIAL        PRIMARY KEY,
+  kind                   VARCHAR(10)   NOT NULL CHECK (kind IN ('validity','recurring','condition')),
+  owner_role             VARCHAR(30)   NOT NULL CHECK (owner_role ~ '^[a-z]+$'),
+  section_label          VARCHAR(60),
+  entity                 VARCHAR(10)   NOT NULL DEFAULT 'LCL' CHECK (entity IN ('LCL','BRL','UCL')),
+  group_id               INTEGER       REFERENCES compliance_groups(id) ON DELETE SET NULL,
+  title                  VARCHAR(200)  NOT NULL,
+  description            TEXT,
+  agency                 VARCHAR(200),
+  reference_no           VARCHAR(100),
+  custodian              VARCHAR(30),
+  criticality            VARCHAR(8)    NOT NULL DEFAULT 'normal' CHECK (criticality IN ('high','normal','low')),
+  frequency_label        VARCHAR(120),
+
+  -- validity
+  valid_from             DATE,
+  valid_to               DATE,
+  no_expiry              BOOLEAN       NOT NULL DEFAULT false,
+
+  -- recurrence (kind = 'recurring')
+  rec_unit               VARCHAR(10)   CHECK (rec_unit IN ('month','quarter','half','year','years','on_demand')),
+  rec_interval           SMALLINT      NOT NULL DEFAULT 1 CHECK (rec_interval BETWEEN 1 AND 20),
+  rec_due_day            SMALLINT      CHECK (rec_due_day BETWEEN 1 AND 31),
+  rec_due_month          SMALLINT      CHECK (rec_due_month BETWEEN 1 AND 12),
+  rec_anchor_date        DATE,
+  track_from             DATE,
+
+  -- condition
+  review_interval_months SMALLINT      CHECK (review_interval_months BETWEEN 1 AND 120),
+  next_review_on         DATE,
+  condition_result       VARCHAR(14)   CHECK (condition_result IN ('complied','partial','not_complied','not_applicable')),
+  condition_assessed_on  DATE,
+
+  -- reminders (NULL = the kind's default, from compliance_settings)
+  lead_days_1            SMALLINT      CHECK (lead_days_1 BETWEEN 0 AND 365),
+  lead_days_2            SMALLINT      CHECK (lead_days_2 BETWEEN 0 AND 365),
+  lead_days_3            SMALLINT      CHECK (lead_days_3 BETWEEN 0 AND 365),
+  reminders_enabled      BOOLEAN       NOT NULL DEFAULT true,
+
+  -- lifecycle and secondary flags (flags never change the computed status)
+  lifecycle              VARCHAR(10)   NOT NULL DEFAULT 'active' CHECK (lifecycle IN ('active','inactive','archived')),
+  inactive_reason        TEXT,
+  renewal_in_progress    BOOLEAN       NOT NULL DEFAULT false,
+  renewal_note           TEXT,
+  renewal_started_on     DATE,
+  next_due_on            DATE,          -- maintained by the service; an index, never the truth
+
+  verified_at            TIMESTAMPTZ,
+  verified_by            INTEGER       REFERENCES users(id) ON DELETE SET NULL,
+  verified_by_name       VARCHAR(100),
+
+  source                 VARCHAR(10)   NOT NULL DEFAULT 'manual' CHECK (source IN ('import','manual')),
+  import_key             VARCHAR(80),
+  source_sheet           VARCHAR(60),
+  source_row             INTEGER,
+  source_raw             JSONB,         -- the workbook cells as found: the "Sheet said" view
+  user_edited_at         TIMESTAMPTZ,   -- set by any in-app edit; re-import never overwrites such a row
+
+  fee_amount             NUMERIC(18,2),
+  fee_currency           CHAR(3),
+  remarks                TEXT,
+  created_at             TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  created_by             INTEGER       REFERENCES users(id) ON DELETE SET NULL,
+  created_by_name        VARCHAR(100),
+  updated_at             TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  updated_by             INTEGER       REFERENCES users(id) ON DELETE SET NULL,
+  updated_by_name        VARCHAR(100),
+
+  CHECK (lead_days_1 IS NULL OR lead_days_2 IS NULL OR lead_days_1 >= lead_days_2),
+  CHECK (lead_days_2 IS NULL OR lead_days_3 IS NULL OR lead_days_2 >= lead_days_3),
+  CHECK (NOT no_expiry OR valid_to IS NULL),
+  CHECK (valid_from IS NULL OR valid_to IS NULL OR valid_to >= valid_from),
+  CHECK (kind <> 'recurring' OR rec_unit IS NOT NULL)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS compliance_items_import_key_uniq ON compliance_items (import_key) WHERE import_key IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_compliance_items_owner   ON compliance_items (owner_role);
+CREATE INDEX IF NOT EXISTS idx_compliance_items_due     ON compliance_items (next_due_on) WHERE lifecycle = 'active';
+CREATE INDEX IF NOT EXISTS idx_compliance_items_group   ON compliance_items (group_id);
+
+-- Responsible person (tier 1, "Level 1" in the workbook) and supervisor
+-- (tier 2, "Level 2"). Several per tier: the workbook writes "Muneesh/ Rahul".
+CREATE TABLE IF NOT EXISTS compliance_item_responsibles (
+  item_id     INTEGER  NOT NULL REFERENCES compliance_items(id) ON DELETE CASCADE,
+  tier        SMALLINT NOT NULL CHECK (tier IN (1,2)),
+  contact_id  INTEGER  NOT NULL REFERENCES compliance_contacts(id) ON DELETE RESTRICT,
+  position    SMALLINT NOT NULL DEFAULT 0,
+  PRIMARY KEY (item_id, tier, contact_id)
+);
+
+-- One instance of a recurring obligation. A missed period stays 'open', so
+-- the item stays Overdue until that period is done or waived — a later
+-- period being generated never hides it.
+CREATE TABLE IF NOT EXISTS compliance_periods (
+  id             SERIAL        PRIMARY KEY,
+  item_id        INTEGER       NOT NULL REFERENCES compliance_items(id) ON DELETE CASCADE,
+  period_key     VARCHAR(12)   NOT NULL,    -- '2026-10', '2026-Q4', '2026-H2', '2026', 'adhoc-n'
+  due_on         DATE          NOT NULL,
+  status         VARCHAR(8)    NOT NULL DEFAULT 'open' CHECK (status IN ('open','done','waived')),
+  done_on        DATE,
+  done_by        INTEGER       REFERENCES users(id) ON DELETE SET NULL,
+  done_by_name   VARCHAR(100),
+  reference      VARCHAR(100),
+  amount         NUMERIC(18,2),
+  currency       CHAR(3),
+  note           TEXT,
+  waived_reason  TEXT,
+  source         VARCHAR(10)   NOT NULL DEFAULT 'auto' CHECK (source IN ('auto','import','manual')),
+  created_at     TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  updated_at     TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  UNIQUE (item_id, period_key),
+  CHECK (status <> 'done' OR done_on IS NOT NULL)
+);
+CREATE INDEX IF NOT EXISTS idx_compliance_periods_open ON compliance_periods (item_id, due_on) WHERE status = 'open';
+
+-- Append-only judgements on a condition item. assessed_on is unknown only
+-- for what the workbook said (source 'import').
+CREATE TABLE IF NOT EXISTS compliance_assessments (
+  id                SERIAL        PRIMARY KEY,
+  item_id           INTEGER       NOT NULL REFERENCES compliance_items(id) ON DELETE CASCADE,
+  assessed_on       DATE,
+  result            VARCHAR(14)   NOT NULL CHECK (result IN ('complied','partial','not_complied','not_applicable')),
+  note              TEXT,
+  raw_text          VARCHAR(200),
+  source            VARCHAR(10)   NOT NULL DEFAULT 'manual' CHECK (source IN ('import','manual')),
+  assessed_by       INTEGER       REFERENCES users(id) ON DELETE SET NULL,
+  assessed_by_name  VARCHAR(100),
+  created_at        TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  CHECK (source = 'import' OR assessed_on IS NOT NULL)
+);
+CREATE INDEX IF NOT EXISTS idx_compliance_assessments_item ON compliance_assessments (item_id, created_at DESC);
+
+-- What changed on an item, by whom — the record's own History tab.
+CREATE TABLE IF NOT EXISTS compliance_history (
+  id          BIGSERIAL     PRIMARY KEY,
+  item_id     INTEGER       NOT NULL REFERENCES compliance_items(id) ON DELETE CASCADE,
+  at          TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  actor_id    INTEGER       REFERENCES users(id) ON DELETE SET NULL,
+  actor_name  VARCHAR(100),
+  action      VARCHAR(30)   NOT NULL,
+  changes     JSONB,
+  note        TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_compliance_history_item ON compliance_history (item_id, at DESC);
+
+CREATE TABLE IF NOT EXISTS compliance_imports (
+  id           SERIAL        PRIMARY KEY,
+  at           TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  by_id        INTEGER       REFERENCES users(id) ON DELETE SET NULL,
+  by_name      VARCHAR(100),
+  file_name    VARCHAR(255),
+  file_sha256  CHAR(64),
+  counts       JSONB,
+  mapping      JSONB,
+  warnings     JSONB
+);
+
+-- Key/value settings. reminders_enabled starts FALSE: deploying the module
+-- sends nothing until someone with the authority switches it on.
+CREATE TABLE IF NOT EXISTS compliance_settings (
+  key              VARCHAR(60)   PRIMARY KEY,
+  value            JSONB         NOT NULL,
+  updated_at       TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  updated_by       INTEGER       REFERENCES users(id) ON DELETE SET NULL,
+  updated_by_name  VARCHAR(100)
+);
+INSERT INTO compliance_settings (key, value) VALUES ('reminders_enabled', 'false')
+ON CONFLICT (key) DO NOTHING;
+
+-- The central "Head" escalation list (one list for every department).
+CREATE TABLE IF NOT EXISTS compliance_head_recipients (
+  contact_id  INTEGER      PRIMARY KEY REFERENCES compliance_contacts(id) ON DELETE CASCADE,
+  label       VARCHAR(60)  NOT NULL,
+  position    SMALLINT     NOT NULL DEFAULT 0
+);
+
+-- One row per owning department per day, written by the daily job: the
+-- trend line, the KPI month-end figure and the adoption metrics read this.
+CREATE TABLE IF NOT EXISTS compliance_snapshots (
+  as_of       DATE         NOT NULL,
+  owner_role  VARCHAR(30)  NOT NULL,
+  active      INTEGER      NOT NULL DEFAULT 0,
+  due         INTEGER      NOT NULL DEFAULT 0,
+  overdue     INTEGER      NOT NULL DEFAULT 0,
+  undated     INTEGER      NOT NULL DEFAULT 0,
+  inactive    INTEGER      NOT NULL DEFAULT 0,
+  verified    INTEGER      NOT NULL DEFAULT 0,
+  total       INTEGER      NOT NULL DEFAULT 0,
+  PRIMARY KEY (as_of, owner_role)
+);
+
+CREATE TABLE IF NOT EXISTS compliance_blobs (
+  sha256      CHAR(64)     PRIMARY KEY,
+  size_bytes  INTEGER      NOT NULL CHECK (size_bytes BETWEEN 1 AND 10485760),
+  bytes       BYTEA        NOT NULL,
+  created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+-- PDFs and JPEGs are already compressed; EXTERNAL skips a pointless second
+-- compression and makes substring() chunk reads cheap for streaming.
+ALTER TABLE compliance_blobs ALTER COLUMN bytes SET STORAGE EXTERNAL;
+
+-- Every upload is a new version; nothing is ever overwritten or deleted.
+-- A mistaken upload is retracted (kept, marked, reason recorded).
+CREATE TABLE IF NOT EXISTS compliance_documents (
+  id                 SERIAL        PRIMARY KEY,
+  item_id            INTEGER       NOT NULL REFERENCES compliance_items(id) ON DELETE RESTRICT,
+  period_id          INTEGER       REFERENCES compliance_periods(id) ON DELETE SET NULL,
+  assessment_id      INTEGER       REFERENCES compliance_assessments(id) ON DELETE SET NULL,
+  version_no         INTEGER       NOT NULL CHECK (version_no >= 1),
+  doc_type           VARCHAR(12)   NOT NULL DEFAULT 'certificate'
+    CHECK (doc_type IN ('certificate','receipt','application','evidence','other')),
+  file_name          VARCHAR(255)  NOT NULL,
+  mime_type          VARCHAR(100)  NOT NULL,
+  size_bytes         INTEGER       NOT NULL,
+  blob_sha256        CHAR(64)      NOT NULL REFERENCES compliance_blobs(sha256) ON DELETE RESTRICT,
+  valid_from         DATE,
+  valid_to           DATE,
+  reference_no       VARCHAR(100),
+  note               TEXT,
+  uploaded_by        INTEGER       REFERENCES users(id) ON DELETE SET NULL,
+  uploaded_by_name   VARCHAR(100)  NOT NULL,
+  uploaded_at        TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  retracted_at       TIMESTAMPTZ,
+  retracted_by       INTEGER       REFERENCES users(id) ON DELETE SET NULL,
+  retracted_by_name  VARCHAR(100),
+  retracted_reason   TEXT
+);
+-- Version numbers are per item (period evidence shares the item's sequence).
+CREATE UNIQUE INDEX IF NOT EXISTS compliance_documents_version_uniq ON compliance_documents (item_id, version_no);
+CREATE INDEX IF NOT EXISTS idx_compliance_documents_item ON compliance_documents (item_id, uploaded_at DESC);
+
+-- ── Reminder job ────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS compliance_reminder_runs (
+  id             SERIAL        PRIMARY KEY,
+  started_at     TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  finished_at    TIMESTAMPTZ,
+  as_of          DATE          NOT NULL,
+  trigger        VARCHAR(8)    NOT NULL CHECK (trigger IN ('cron','manual')),
+  dry_run        BOOLEAN       NOT NULL DEFAULT false,
+  ok             BOOLEAN,
+  error          VARCHAR(500),
+  stats          JSONB,
+  duration_ms    INTEGER,
+  heap_delta_kb  INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_compliance_runs_started ON compliance_reminder_runs (started_at DESC);
+
+-- One row per email actually attempted (a consolidated email covers many
+-- notification rows).
+CREATE TABLE IF NOT EXISTS compliance_mail_log (
+  id               BIGSERIAL     PRIMARY KEY,
+  run_id           INTEGER       REFERENCES compliance_reminder_runs(id) ON DELETE SET NULL,
+  recipient_email  VARCHAR(120)  NOT NULL,
+  subject          VARCHAR(250),
+  item_count       INTEGER       NOT NULL DEFAULT 1,
+  sent             BOOLEAN       NOT NULL,
+  reason           VARCHAR(200),
+  transport        VARCHAR(8),
+  created_at       TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+);
+
+-- The outbox. One row per (item, deadline, stage, recipient): the UNIQUE key
+-- is what makes a reminder fire exactly once however often the job runs.
+-- Rows that cannot go out yet are kept with the reason (held while the
+-- record is unverified, no email for the person, reminders switched off), so
+-- the app can show who WOULD have been told — and a later run releases them
+-- once the reason is gone.
+CREATE TABLE IF NOT EXISTS compliance_notifications (
+  id               BIGSERIAL     PRIMARY KEY,
+  item_id          INTEGER       NOT NULL REFERENCES compliance_items(id) ON DELETE CASCADE,
+  deadline         DATE          NOT NULL,
+  stage            VARCHAR(6)    NOT NULL,    -- 'D', 'S', 'H', 'OD0', 'OD1', …
+  audience         VARCHAR(8)    NOT NULL CHECK (audience IN ('direct','second','head')),
+  recipient_key    VARCHAR(20)   NOT NULL,    -- 'c:<contactId>' or 'u:<userId>' (HOD fallback)
+  recipient_name   VARCHAR(100),
+  recipient_email  VARCHAR(120),
+  status           VARCHAR(18)   NOT NULL CHECK (status IN ('pending','sent','failed','gave_up','held_unverified',
+                                                           'skipped_no_email','skipped_disabled','superseded')),
+  attempts         SMALLINT      NOT NULL DEFAULT 0,
+  last_error       VARCHAR(200),
+  next_attempt_at  TIMESTAMPTZ,
+  sent_at          TIMESTAMPTZ,
+  mail_log_id      BIGINT        REFERENCES compliance_mail_log(id) ON DELETE SET NULL,
+  created_at       TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  UNIQUE (item_id, deadline, stage, recipient_key)
+);
+CREATE INDEX IF NOT EXISTS idx_compliance_notifications_status ON compliance_notifications (status, next_attempt_at);
+CREATE INDEX IF NOT EXISTS idx_compliance_notifications_item   ON compliance_notifications (item_id, created_at DESC);
+
 -- ── INDEXES (speeds up common queries) ──────────────────────
 CREATE INDEX IF NOT EXISTS idx_daily_reports_date     ON daily_reports(record_date);
 CREATE INDEX IF NOT EXISTS idx_daily_reports_form     ON daily_reports(form_type);

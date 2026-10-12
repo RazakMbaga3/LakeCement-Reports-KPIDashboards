@@ -225,8 +225,50 @@ async function checkBackup() {
   }
 }
 
+/* ── Compliance reminder job ─────────────────────────────────────────────
+   Read straight from compliance_reminder_runs — NOT by requiring the
+   service, which would pull mailer/watchdog into health and rebuild the
+   health → watchdog → health cycle config/odooPulls.js exists to break.
+   The job runs twice a day, so a successful real run older than 26 h is
+   stale. Mail failures are reported but do not degrade health: that is the
+   mail route's problem (RAID R-6), surfaced on the Settings page. */
+const COMPLIANCE_MAX_AGE_H = 26;
+function classifyComplianceRun(row, { scheduled }, { now = Date.now(), uptimeS = 0 } = {}) {
+  if (!scheduled) return { ok: false, status: 'not_scheduled', note: 'COMPLIANCE_REMINDER_CRON is off — no reminders are evaluated' };
+  const okAt  = row && row.last_success_at ? new Date(row.last_success_at).getTime() : null;
+  const errAt = row && row.last_error_at   ? new Date(row.last_error_at).getTime()   : null;
+  const base = { last_success_at: okAt ? new Date(okAt).toISOString() : null, max_age_hours: COMPLIANCE_MAX_AGE_H };
+  if (errAt && (!okAt || errAt > okAt)) return { ok: false, status: 'failing', ...base, last_error_at: new Date(errAt).toISOString() };
+  if (!okAt) {
+    return uptimeS < COMPLIANCE_MAX_AGE_H * 3600
+      ? { ok: true, status: 'starting', ...base, note: 'no run yet since start (runs 07:00 and 14:00 EAT)' }
+      : { ok: false, status: 'never_run', ...base };
+  }
+  if ((now - okAt) / 3600000 > COMPLIANCE_MAX_AGE_H) return { ok: false, status: 'stale', ...base };
+  return { ok: true, status: 'ok', ...base };
+}
+
+async function checkComplianceReminders() {
+  try {
+    const { rows: [r] } = await db.query(`
+      SELECT MAX(finished_at) FILTER (WHERE ok)       AS last_success_at,
+             MAX(finished_at) FILTER (WHERE ok = false) AS last_error_at
+        FROM compliance_reminder_runs WHERE NOT dry_run`);
+    const { rows: [m] } = await db.query(`
+      SELECT MAX(created_at) FILTER (WHERE sent) AS last_sent_at,
+             COUNT(*) FILTER (WHERE NOT sent AND created_at > NOW() - INTERVAL '7 days')::int AS failed_7d
+        FROM compliance_mail_log`);
+    const v = classifyComplianceRun(r, { scheduled: process.env.COMPLIANCE_REMINDER_CRON !== 'off' }, { uptimeS: process.uptime() });
+    v.mail = { last_sent_at: m.last_sent_at, failed_7d: m.failed_7d };
+    return v;
+  } catch {
+    // Tables missing (migration 038 not applied yet) — say so, don't fail health over it.
+    return { ok: true, status: 'unknown', note: 'compliance tables not present' };
+  }
+}
+
 async function deepHealth() {
-  const [dbCheck, disk, backup] = await Promise.all([checkDb(), checkDisk(), checkBackup()]);
+  const [dbCheck, disk, backup, compliance] = await Promise.all([checkDb(), checkDisk(), checkBackup(), checkComplianceReminders()]);
 
   const odoo = checkOdoo();
   if (odoo && odoo.ok && dbCheck.ok) {
@@ -241,7 +283,7 @@ async function deepHealth() {
   // 'not_configured' degrades too now (a plant with zero backups shouldn't
   // show perpetually green health) — backup.ok is undefined on that string,
   // so !backup.ok is already true for it; no separate branch needed.
-  if (!disk.ok || !backup.ok || (odoo && odoo.ok === false)) status = 'degraded';
+  if (!disk.ok || !backup.ok || (odoo && odoo.ok === false) || compliance.ok === false) status = 'degraded';
   if (!dbCheck.ok) status = 'down';
 
   return {
@@ -250,11 +292,11 @@ async function deepHealth() {
     version: '1.0.0',
     uptime_s: Math.round(process.uptime()),
     timestamp: new Date().toISOString(),
-    checks: { db: dbCheck, disk, backup, odoo },
+    checks: { db: dbCheck, disk, backup, odoo, compliance },
   };
 }
 
 /* checkOdoo is exported so scripts/odoo-test-connection.js reports exactly
    the same per-connector view as GET /api/health, instead of a second copy
    of these rules that can drift from this one. */
-module.exports = { deepHealth, checkOdoo, checkOdooSync, classifySync };
+module.exports = { deepHealth, checkOdoo, checkOdooSync, classifySync, classifyComplianceRun };

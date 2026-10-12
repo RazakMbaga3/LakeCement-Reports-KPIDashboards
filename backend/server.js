@@ -41,6 +41,7 @@ const approvalsRoutes = require('./routes/approvals');
 const amendmentsRoutes = require('./routes/amendments');
 const adminRoutes     = require('./routes/admin');
 const itAssetsRoutes  = require('./routes/itAssets');
+const complianceRoutes = require('./routes/compliance');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -151,6 +152,7 @@ app.use('/api/approvals', approvalsRoutes);
 app.use('/api/amendments', amendmentsRoutes);
 app.use('/api/admin',    adminRoutes);
 app.use('/api/it-assets', itAssetsRoutes);
+app.use('/api/compliance', complianceRoutes);
 app.use('/api/monitor',  monitorRouter);
 app.get('/api/metrics', metricsAuth, metricsHandler);
 
@@ -226,6 +228,31 @@ app.use('/api/client-errors', rateLimit({
       }
     });
     logger.info(`monthly restore drill scheduled (${spec})`);
+  }
+
+  // Compliance Master reminders (services/complianceReminders.js) — 07:00
+  // and 14:00 in Dar es Salaam: the morning run sends, the afternoon run only
+  // retries failures and releases reminders unblocked during the day (a
+  // record verified, an email added). Each (record, deadline, stage, person)
+  // is sent once however often this runs. Off only with
+  // COMPLIANCE_REMINDER_CRON=off; nothing runs at boot (RAID I-32 — a job
+  // that runs at startup re-runs on every crash-restart). Whether anything is
+  // actually emailed is the in-app master switch, which starts OFF. A crash
+  // fires an alert; the service itself never imports watchdog.js, so
+  // health.js can read its state without an import cycle.
+  if (process.env.COMPLIANCE_REMINDER_CRON !== 'off') {
+    const spec = process.env.COMPLIANCE_REMINDER_CRON || '0 7,14 * * *';
+    cron.schedule(spec, async () => {
+      try {
+        const r = await require('./services/complianceReminders').runReminders({ trigger: 'cron' });
+        logger.info({ compliance: r.stats, durationMs: r.durationMs, heapDeltaKb: r.heapDeltaKb }, 'compliance reminder run');
+      } catch (err) {
+        logger.error({ err }, 'compliance reminder run FAILED');
+        await require('./services/watchdog').fireAlert('compliance-reminders-failed',
+          'Compliance reminder run failed: ' + err.message).catch(() => {});
+      }
+    }, { timezone: 'Africa/Dar_es_Salaam', name: 'compliance-reminders', noOverlap: true });
+    logger.info(`compliance reminders scheduled (${spec}, Africa/Dar_es_Salaam)`);
   }
 
   if (process.env.WATCHDOG_CRON !== 'off') {

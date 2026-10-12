@@ -55,6 +55,20 @@ function approvableFormTypes({ role, level }) {
                   thing an officer has to act on, and on a clock
 
    Counts only, never rows: this is read on every page load. */
+async function complianceCounts(user) {
+  const A = require('../config/complianceAccess');
+  const D = require('../services/complianceData');
+  const S = require('../services/complianceStatus');
+  const settings = await D.loadSettings(db);
+  const items = await D.loadItems(db, { scope: A.scopeRole(user) });
+  const t = S.todayIn();
+  D.simulatePeriods(items, t, settings);
+  D.decorate(items, t, settings);
+  const due = items.filter(i => i.computed.status === 'due').length;
+  const overdue = items.filter(i => i.computed.status === 'overdue').length;
+  return { due, overdue, total: due + overdue };
+}
+
 router.get('/counts', requireAuth, async (req, res, next) => {
   try {
     const types = approvableFormTypes(req.user);
@@ -87,6 +101,11 @@ router.get('/counts', requireAuth, async (req, res, next) => {
       myWindows:   mine.rows[0].n,
     };
     out.total = out.reports + out.corrections + out.kpiReopens;
+    /* Compliance Master: due + overdue obligations in the caller's scope,
+       for the sidebar's own badge. Deliberately NOT added to `total` —
+       that number is "decisions waiting for you", and an expiring licence
+       is work, not a decision. Never allowed to break this endpoint. */
+    try { out.compliance = await complianceCounts(req.user); } catch { out.compliance = null; }
     res.json(out);
   } catch (err) { next(err); }
 });

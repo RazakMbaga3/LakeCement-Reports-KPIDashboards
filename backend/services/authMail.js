@@ -13,53 +13,19 @@
   rather than mailing out a localhost URL.
 */
 const { sendMail } = require('./mailer');
+const layout = require('./mailLayout');
 
-const NAVY   = '#173158';
-const ORANGE = '#F49545';
+const { NAVY, appUrl, esc } = layout;
 
-function appUrl() {
-  const raw = (process.env.APP_URL || '').trim().replace(/\/+$/, '');
-  return raw || null;
-}
-
-/* One shell for all three, so a change to the letterhead cannot leave the
-   emails looking like they came from different systems. */
+/* The shared letterhead (services/mailLayout.js) plus the one thing every
+   account email says: the link is single-use and expires. */
 function shell({ heading, lead, buttonLabel, buttonHref, footnote, expiry }) {
-  return `<!DOCTYPE html>
-<html><body style="margin:0;padding:0;background:#F4F6F9;font-family:Segoe UI,Helvetica,Arial,sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4F6F9;padding:28px 12px;">
-    <tr><td align="center">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:540px;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #E2E8F0;">
-        <tr><td style="background:${NAVY};padding:20px 28px;">
-          <div style="color:#ffffff;font-size:17px;font-weight:700;letter-spacing:.3px;">LAKE CEMENT LTD.</div>
-          <div style="color:#A9BBD4;font-size:11px;margin-top:2px;">Management Information System</div>
-        </td></tr>
-        <tr><td style="height:3px;background:${ORANGE};font-size:0;line-height:0;">&nbsp;</td></tr>
-        <tr><td style="padding:28px;">
-          <h1 style="margin:0 0 14px;font-size:19px;color:${NAVY};font-weight:700;">${heading}</h1>
-          <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#334155;">${lead}</p>
-          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
-            <tr><td style="background:${NAVY};border-radius:7px;">
-              <a href="${buttonHref}" style="display:inline-block;padding:12px 26px;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;">${buttonLabel}</a>
-            </td></tr>
-          </table>
-          <p style="margin:0 0 16px;font-size:12px;line-height:1.6;color:#64748B;">
-            This link can be used once and expires ${expiry}. If the button does not work, copy this address into your browser:<br>
-            <span style="color:${NAVY};word-break:break-all;">${buttonHref}</span>
-          </p>
-          <p style="margin:0;font-size:12px;line-height:1.6;color:#64748B;border-top:1px solid #E2E8F0;padding-top:14px;">${footnote}</p>
-        </td></tr>
-        <tr><td style="background:#F8FAFC;padding:14px 28px;font-size:11px;color:#94A3B8;border-top:1px solid #E2E8F0;">
-          Lake Cement Ltd. &middot; Nyati Cement &middot; This message was sent by the MIS. Please do not reply.
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body></html>`;
+  return layout.shell({
+    heading, lead, buttonLabel, buttonHref, footnote,
+    linkNote: `This link can be used once and expires ${expiry}. If the button does not work, copy this address into your browser:<br>
+            <span style="color:${NAVY};word-break:break-all;">${buttonHref}</span>`,
+  });
 }
-
-const esc = s => String(s == null ? '' : s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 /* Each sender returns mailer.js's result — { sent:false, reason } when SMTP
    is not configured, rather than throwing. The caller decides whether that
