@@ -165,14 +165,14 @@ app.use('/api/client-errors', rateLimit({
 }), clientErrorsRouter);
 
 // ── SCHEDULED JOBS ───────────────────────────────────────────
-// Morning digest (needs SMTP + recipients) and the alerting watchdog
+// Morning digest (needs a mail route + recipients) and the alerting watchdog
 // (always on — deep health, missed entries, disk, backup). Failures are
 // logged, never fatal. Manual triggers: POST /api/mis/digest/send,
 // POST /api/monitor/watchdog/run.
 {
   const cron = require('node-cron');
 
-  if (process.env.SMTP_HOST && process.env.DIGEST_TO) {
+  if (require('./services/mailer').mailConfigured() && process.env.DIGEST_TO) {
     const { sendDigest } = require('./services/digest');
     const spec = process.env.DIGEST_CRON || '0 6 * * *';
     cron.schedule(spec, async () => {

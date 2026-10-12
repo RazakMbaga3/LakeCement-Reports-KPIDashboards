@@ -36,6 +36,7 @@ const { validate, z } = require('../middleware/validate');
 const { ROLES, LEVELS, DEPARTMENTS, ROLE_KEYS, LEVEL_KEYS } = require('../config/orgCatalogue');
 const authTokens = require('../services/authTokens');
 const authMail   = require('../services/authMail');
+const { mailConfigured } = require('../services/mailer');
 const {
   FORM_ACCESS, KPI_EDIT_DEPTS, COMMERCIAL_VIEW_ROLES, PURCHASE_VIEW_ROLES, MIS_VIEW_ROLES,
 } = require('../../forms/access-registry.js');
@@ -449,7 +450,7 @@ router.get('/invite-readiness', ...adminOnly, async (req, res, next) => {
         count(*) FILTER (WHERE active AND department <> 'AUTOMATION' AND must_change_password)::int AS never_activated,
         count(*) FILTER (WHERE active AND department <> 'AUTOMATION' AND email_verified)::int     AS verified
       FROM users`);
-    res.json({ ...counts, mailConfigured: !!process.env.SMTP_HOST, appUrl: authMail.appUrl() });
+    res.json({ ...counts, mailConfigured: mailConfigured(), appUrl: authMail.appUrl() });
   } catch (err) { next(err); }
 });
 

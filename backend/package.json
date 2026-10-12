@@ -60,7 +60,7 @@
     "test": "npm run lint && npm run test:formulas && npm run test:engine-shifts && npm run test:facts && npm run test:access && npm run test:approval && npm run test:stores && npm run test:kpi-keys && npm run test:form-facts && npm run test:form-hooks && npm run test:kpi-level && npm run test:auth-tokens && npm run test:auth-mail && npm run test:mailer && npm run test:odoo-production && npm run test:odoo-production-autofill && npm run test:odoo-materials-autofill && npm run test:revisions && npm run test:amendments && npm run test:excel && npm run test:odoo-sync-health && npm run test:odoo-dispatch-map && npm run test:dashboard-cache && npm run test:sales-aggregation && npm run test:odoo-sales-sync && npm run test:nginx-allowlist && npm run smoke",
     "test:auth-tokens": "node --test test/auth-tokens.test.js",
     "test:auth-mail": "node --test test/auth-mail.test.js",
-    "test:mailer": "node --test test/mailer.test.js",
+    "test:mailer": "node --test test/mailer.test.js test/mailer-graph.test.js",
     "test:odoo-production": "node --test test/odoo-production.test.js",
     "test:odoo-production-autofill": "node --test test/odoo-production-autofill.test.js",
     "test:odoo-materials-autofill": "node --test test/odoo-materials-autofill.test.js",

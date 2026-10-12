@@ -1,14 +1,94 @@
 /*
   services/mailer.js — one transport for everything that emails
-  (digest.js, watchdog.js). SMTP settings live in .env; when SMTP_HOST is
-  empty, mail silently no-ops unless DIGEST_TRANSPORT=json, which swaps in
-  nodemailer's jsonTransport so tests can exercise the full pipeline
-  without a mail server.
+  (authMail.js, digest.js, watchdog.js). First match wins:
+
+    DIGEST_TRANSPORT=json      nodemailer's jsonTransport. Checked first
+                               because it is an explicit ask: the acceptance
+                               scripts load the real .env and set this so a
+                               test run never delivers real mail.
+    GRAPH_TENANT_ID +          Microsoft Graph sendMail, as SMTP_FROM. The
+    GRAPH_CLIENT_ID +          M365 tenant blocks SMTP AUTH (RAID R-6);
+    GRAPH_CLIENT_SECRET        Graph is the route it permits.
+    SMTP_HOST                  plain SMTP.
+
+  With none of these, nothing sends and sendMail returns { sent:false }.
 */
 
 const nodemailer = require('nodemailer');
 
+const DEFAULT_FROM = 'digital@lakecement.co.tz';
+
+function graphConfig() {
+  const { GRAPH_TENANT_ID: tenant, GRAPH_CLIENT_ID: clientId, GRAPH_CLIENT_SECRET: secret } = process.env;
+  return tenant && clientId && secret ? { tenant, clientId, secret } : null;
+}
+
+/* A token lasts an hour; fetching one per email would double every send's
+   latency and hammer the token endpoint during a bulk invite. */
+let tokenCache = null;
+
+/* fetch() failures carry no `code`, and sendMail's `reason` is built from
+   one — give network failures the same short codes nodemailer would. */
+async function graphFetch(url, init, timeoutMs) {
+  try {
+    return await fetch(url, { ...init, signal: AbortSignal.timeout(timeoutMs) });
+  } catch (err) {
+    const code = err.name === 'TimeoutError' ? 'ETIMEDOUT' : (err.cause && err.cause.code) || 'ENETWORK';
+    throw Object.assign(new Error(`Graph request failed: ${err.message}`), { code, cause: err });
+  }
+}
+
+async function graphToken({ tenant, clientId, secret }) {
+  const key = `${tenant}|${clientId}`;
+  if (tokenCache && tokenCache.key === key && tokenCache.expiresAt > Date.now() + 60 * 1000) {
+    return tokenCache.token;
+  }
+  const r = await graphFetch(`https://login.microsoftonline.com/${encodeURIComponent(tenant)}/oauth2/v2.0/token`, {
+    method: 'POST',
+    body: new URLSearchParams({
+      grant_type: 'client_credentials',
+      client_id: clientId,
+      client_secret: secret,
+      scope: 'https://graph.microsoft.com/.default',
+    }),
+  }, 10 * 1000);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.access_token) {
+    throw Object.assign(new Error(j.error_description || `token request failed (HTTP ${r.status})`),
+      { code: j.error || `HTTP ${r.status}` });
+  }
+  tokenCache = { key, token: j.access_token, expiresAt: Date.now() + j.expires_in * 1000 };
+  return j.access_token;
+}
+
+function graphTransport(cfg) {
+  return { kind: 'graph', t: {
+    async sendMail({ from, to, subject, html }) {
+      const token = await graphToken(cfg);
+      const r = await graphFetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(from)}/sendMail`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: {
+          subject,
+          body: { contentType: 'HTML', content: html },
+          toRecipients: to.map(address => ({ emailAddress: { address } })),
+        } }),
+      }, 30 * 1000);
+      if (r.status === 202) return {};
+      if (r.status === 401) tokenCache = null;
+      const j = await r.json().catch(() => ({}));
+      throw Object.assign(new Error((j.error && j.error.message) || `sendMail failed (HTTP ${r.status})`),
+        { code: (j.error && j.error.code) || `HTTP ${r.status}` });
+    },
+  } };
+}
+
 function makeTransport() {
+  if (process.env.DIGEST_TRANSPORT === 'json') {
+    return { kind: 'json', t: nodemailer.createTransport({ jsonTransport: true }) };
+  }
+  const graph = graphConfig();
+  if (graph) return graphTransport(graph);
   if (process.env.SMTP_HOST) {
     return { kind: 'smtp', t: nodemailer.createTransport({
       host: process.env.SMTP_HOST,
@@ -29,10 +109,13 @@ function makeTransport() {
       socketTimeout:     30 * 1000,
     }) };
   }
-  if (process.env.DIGEST_TRANSPORT === 'json') {
-    return { kind: 'json', t: nodemailer.createTransport({ jsonTransport: true }) };
-  }
   return null;
+}
+
+/* True when a real delivery route is set up — what the admin page's
+   invite-readiness check and the digest schedule should key off. */
+function mailConfigured() {
+  return !!(graphConfig() || process.env.SMTP_HOST);
 }
 
 /* Send an HTML mail to a comma-separated recipient list.
@@ -44,23 +127,23 @@ function makeTransport() {
    into an address-enumeration oracle (RAID R-7).
 
    `reason` is deliberately safe to put in a response: a short phrase plus
-   the transport's error code (EAUTH, ETIMEDOUT, 535 …), because several
-   admin endpoints already relay it. The server's raw error message — which
-   can name internal hosts, mailboxes or tenant policy — is logged here and
-   goes no further, since three callers hand their whole result straight to
-   res.json(). */
+   the transport's error code (EAUTH, ETIMEDOUT, 535, ErrorAccessDenied …),
+   because several admin endpoints already relay it. The server's raw error
+   message — which can name internal hosts, mailboxes or tenant policy — is
+   logged here and goes no further, since three callers hand their whole
+   result straight to res.json(). */
 async function sendMail({ subject, html, to }) {
   const list = (to || '').split(',').map(s => s.trim()).filter(Boolean);
   if (!list.length) return { sent: false, reason: 'no recipients configured' };
 
   const transport = makeTransport();
-  if (!transport) return { sent: false, reason: 'SMTP not configured' };
+  if (!transport) return { sent: false, reason: 'mail not configured' };
 
   let info;
   try {
     info = await transport.t.sendMail({
-      from: process.env.SMTP_FROM || 'digital@lakecement.co.tz',
-      to: list.join(', '),
+      from: process.env.SMTP_FROM || DEFAULT_FROM,
+      to: list,
       subject, html,
     });
   } catch (err) {
@@ -88,4 +171,4 @@ async function sendMail({ subject, html, to }) {
   };
 }
 
-module.exports = { sendMail, makeTransport };
+module.exports = { sendMail, makeTransport, mailConfigured };

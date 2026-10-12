@@ -540,7 +540,7 @@
 
     if (!ready.mailConfigured || !ready.appUrl) {
       return alert('Mail is not configured yet, so no invitation can be delivered.\n\n' +
-        (!ready.mailConfigured ? '• SMTP_HOST is not set in backend/.env\n' : '') +
+        (!ready.mailConfigured ? '• No mail route is set in backend/.env (GRAPH_* or SMTP_HOST)\n' : '') +
         (!ready.appUrl ? '• APP_URL is not set, so no link can be built\n' : '') +
         '\nSet those and try again.');
     }
@@ -566,7 +566,7 @@
     let r;
     try { r = await NyatiAPI.adminInviteReadiness(); } catch { return; }
     const problems = [];
-    if (!r.mailConfigured) problems.push('<strong>SMTP is not configured</strong> (<code>SMTP_HOST</code> in <code>backend/.env</code>)');
+    if (!r.mailConfigured) problems.push('<strong>Mail is not configured</strong> (<code>GRAPH_*</code> or <code>SMTP_HOST</code> in <code>backend/.env</code>)');
     if (!r.appUrl)         problems.push('<strong>APP_URL is not set</strong>, so no link can be built');
     if (!problems.length) return;
 

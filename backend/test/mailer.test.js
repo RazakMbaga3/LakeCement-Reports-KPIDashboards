@@ -66,6 +66,7 @@ test.before(async () => {
   port = server.address().port;
 
   delete process.env.DIGEST_TRANSPORT;   // force real SMTP, not jsonTransport
+  delete process.env.GRAPH_TENANT_ID;    // …and not Graph either
   process.env.SMTP_HOST = '127.0.0.1';
   process.env.SMTP_PORT = String(port);
   process.env.SMTP_USER = 'probe@example.test';

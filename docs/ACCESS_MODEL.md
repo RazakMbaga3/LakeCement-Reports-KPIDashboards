@@ -130,7 +130,7 @@ Three purposes, all single-use and time-boxed ([backend/services/authTokens.js](
 
 Two settings gate delivery, both in `backend/.env`:
 
-- `SMTP_HOST` (plus `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM`) — without it nothing sends.
+- A mail route — **Microsoft Graph** (`GRAPH_TENANT_ID` / `GRAPH_CLIENT_ID` / `GRAPH_CLIENT_SECRET`, sending as `SMTP_FROM`), which is what Lake Cement's tenant permits, or `SMTP_HOST` as a fallback. Without either, nothing sends.
 - **`APP_URL`** — where the links point. It has **no default on purpose**: a link built against the wrong host looks like it should work and doesn't. Unset, the account emails refuse to send and say why.
 
 When either is missing the admin screen shows a banner saying so and how many accounts are still on a password their owner never chose — an admin should not discover a broken mail config by sending 37 invitations.
