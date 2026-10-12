@@ -7,15 +7,35 @@ set -euo pipefail
 APP_DIR="/home/deploy/lake-cement-dashboard"
 cd "$APP_DIR"
 
-git fetch origin main
-git reset --hard origin/main
+if [ -z "${LCL_DEPLOY_REEXEC:-}" ]; then
+  git fetch origin main
+  git reset --hard origin/main
+  # bash keeps executing the copy of this file it opened, so without this a
+  # change to deploy.sh only took effect one deploy late (seen 2026-10-12).
+  # Run the freshly checked-out copy for every step after the reset.
+  LCL_DEPLOY_REEXEC=1 exec bash "$APP_DIR/deploy/deploy.sh"
+fi
 
-# The checkout is nginx's web root. nginx (www-data) needs only the frontend,
-# so keep secrets and server code unreadable to it even if the allowlist in
-# deploy/nginx-public-allowlist.conf is ever lost (2026-10-12: .env was
-# publicly downloadable). Everything here runs as `deploy`, which keeps access.
+# ── Web-root lockdown ───────────────────────────────────────────────────────
+# The checkout is nginx's web root. deploy/nginx-public-allowlist.conf is the
+# real guard, but it needs sudo to install (deploy/harden-webroot.sh), so file
+# permissions are the guard this unprivileged script can keep in force. nginx
+# reaches the checkout through the group here: removing only other-user
+# access left .git/ and backend/ served (measured 2026-10-12). So everything
+# at the top level that is not part of the frontend loses group and other
+# access. The deploy user (git, npm, pm2, backups) keeps full access.
 chmod 600 backend/.env 2>/dev/null || true
-chmod o-rwx .git backend
+shopt -s dotglob nullglob
+for entry in *; do
+  case "$entry" in forms|vendor) continue ;; esac
+  if [ -f "$entry" ]; then
+    case "$entry" in
+      *.html|*.js|*.css|*.png|*.jpg|*.jpeg|*.gif|*.svg|*.ico|*.webp|*.woff|*.woff2) continue ;;
+    esac
+  fi
+  chmod go-rwx -- "$entry"
+done
+shopt -u dotglob nullglob
 
 cd backend
 npm ci --omit=dev
