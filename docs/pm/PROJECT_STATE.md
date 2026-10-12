@@ -58,11 +58,45 @@ fixed rather than skipped; see RAID_LOG.md for detail.
 **Next up, in order:**
 1. **A fresh full e2e run** to confirm the I-28 fixes hold together with
    everything else built tonight — in progress, not yet reported.
-2. **R-7** (forgot-password address-enumeration — live, security) then
-   **RAID I-19** (the 12.8 MB quarry payload, four times worse than when it
-   was first logged).
+2. ~~**R-7**~~ closed (verified live 2026-09-30). **RAID I-19** remains —
+   the quarry payload re-measured **12.67 MB / 49,559 rows** on 2026-09-30,
+   still unbounded with no `LIMIT` and no pagination.
 3. **R-4/R-6** — both owned outside this repo (Lake Cement IT / whoever
    admins the Odoo Postgres).
+
+---
+
+## Launch readiness (2026-09-30)
+
+A full launch-readiness assessment was run on 2026-09-30 and its package
+lives in [`../launch/`](../launch/) — start at
+[`LAUNCH_READINESS_REPORT.md`](../launch/LAUNCH_READINESS_REPORT.md).
+
+**Verdict: GO WITH CONDITIONS.** The finding that matters most inverts the
+usual launch problem: **the software is in better shape than the
+organisation's readiness to use it.**
+
+What the audit re-verified by direct command, not by reading docs: `npm test`
+17 suites + smoke green; **76 of 81 API endpoints authorization-guarded**, the
+5 open ones being exactly the pre-login endpoints; HTTPS **live** (301→200);
+CI gate effective; and **all 12 ratio KPIs production-weighted, not
+averaged** — the defect this class of system most often has, and this one
+does not. Two entries in this very file were disproved by live testing and
+corrected: HTTPS and R-7 were both recorded as outstanding and are in fact
+done.
+
+Five launch blockers, only one of which is a coding problem:
+
+| # | Blocker | RAID | Owner |
+|---|---|---|---|
+| B-1 | **21 of 32 KPIs read "no data"** for 2026-08/09 — 5 streams silent since 2026-06-30 | **I-37** | Plant Head + HODs |
+| B-2 | 210 days of dispatch tonnage held as `draft`, invisible to every KPI | I-35 | Plant Head + Logistics/Packing |
+| B-3 | No user documentation existed | **I-40** | User (drafted) + HODs to review |
+| B-4 | Static pages carried **no** security headers — including `login.html` | **I-38** | Fixed in tree; needs droplet reload + live verify |
+| B-5 | Backups on the app's own disk; no restore ever demonstrated | **I-39** | deployment-engineer |
+
+B-1 and B-2 are business decisions and they set the launch date. Neither is
+the developer's to make.
 
 ---
 
@@ -106,8 +140,8 @@ Legend: 🟢 on track, evidence current · 🟡 partial/at risk · 🔴 blocked/
 
 | ID | Severity | Item | Owner |
 |---|---|---|---|
-| **R-7** | **High — security, live** | forgot-password leaks which emails have accounts (known → 500, unknown → 200) because a send failure throws instead of returning `{sent:false}` | `security-performance-auditor` |
-| R-6 | High | No email can send — tenant blocks SMTP AUTH | Lake Cement IT |
+| ~~R-7~~ | **CLOSED 2026-09-30** | forgot-password enumeration is fixed, and fixed more thoroughly than logged: both branches now reply `SAME_ANSWER` after a single lookup, *before* any token issue or SMTP round trip — which closes the timing oracle (~1.9s vs ~20ms) as well as the status-code one. ✅ verified **live**: unknown address → 200, malformed → 400 | `security-performance-auditor` |
+| ~~R-6~~ | **CLOSED 2026-10-12** | Mail now goes through Microsoft Graph, not SMTP; real send verified, `accept:phase6` 16/16. Droplet `.env` still needs the three `GRAPH_*` keys | You → droplet |
 | R-4 | High | `openpg` may still hold its default password | `security-performance-auditor` / You |
 | R-1 | Medium | Odoo dispatch and mining moved to production 2026-09-23, same host/key as production/sales/purchases; app-side done, droplet `.env` + its own backfill still pending (re-scoped 2026-09-23) | You → whoever holds droplet SSH access |
 | I-7 | Medium | No backups configured locally; droplet state unverified | `deployment-engineer` |
@@ -117,7 +151,7 @@ Full log: [`RAID_LOG.md`](RAID_LOG.md) — 14 open, 2 assumptions, 4 closed/corr
 
 ## Go-live blockers owned outside this repo
 
-- **Lake Cement IT:** enable SMTP AUTH for `digital@lakecement.co.tz`, or move the sender to Graph API (R-6)
+- **Lake Cement IT:** restrict the Graph app to `digital@lakecement.co.tz` with an application access policy (it can currently send as any mailbox), then rotate the client secret, which was shared over chat
 - **Odoo Team:** approval status, run hours and a crusher group on `production_report`; a Dispatch-report field for the "CEMENT B-M 42.5 N" (Duramax 42) grade; Purchases field names; network path droplet↔Odoo (D-1). (`dispatch_report`/`mining_report` on production — done 2026-09-23, see R-1.)
 - **Management / Plant Head:** who receives the daily digest and alerts (D-2); confirm the E&I approval decision (DEC-003)
 - **Whoever admins the Odoo-bundled Postgres:** `openpg` rotation (R-4)

@@ -1,0 +1,142 @@
+# Launch Package — Nyati Cement Reporting & MIS
+
+**Created:** 2026-09-30 · **Recommendation: GO WITH CONDITIONS**
+
+This folder holds the launch-readiness assessment and the documentation
+package for moving the system from developer-operated to
+organisationally-owned.
+
+---
+
+## Start here
+
+| Read this | If you are |
+|---|---|
+| [`LAUNCH_READINESS_REPORT.md`](LAUNCH_READINESS_REPORT.md) | Deciding whether to launch. **Start here.** Scorecard, 5 blockers, final recommendation |
+| [`LAUNCH_PLAN.md`](LAUNCH_PLAN.md) | Planning the rollout. Phases, pilot, training, launch-day runbook, go/no-go gate |
+| [`USER_GUIDE.md`](USER_GUIDE.md) | A member of staff who enters reports |
+| [`MANAGER_GUIDE.md`](MANAGER_GUIDE.md) | A department head or manager |
+| [`ADMINISTRATOR_GUIDE.md`](ADMINISTRATOR_GUIDE.md) | Operating the system |
+| [`UAT_PLAN.md`](UAT_PLAN.md) | Running acceptance testing — 80+ cases |
+| [`ROLLBACK_PLAN.md`](ROLLBACK_PLAN.md) | On call during a deployment |
+| [`SUPPORT_AND_INCIDENTS.md`](SUPPORT_AND_INCIDENTS.md) | Setting up or running support |
+| [`COMMUNICATIONS.md`](COMMUNICATIONS.md) | Announcing the launch |
+| [`FAQ.md`](FAQ.md) | Answering the same question for the fourth time |
+
+---
+
+## The headline
+
+**The software is in better shape than the organisation's readiness to use
+it.** That inverts the usual launch problem and it shapes everything here.
+
+Verified strengths: full test suite green (17 suites + smoke); 76 of 81 API
+endpoints authorization-guarded, the 5 open ones being exactly the
+pre-login endpoints; HTTPS live; CI gates deployment behind tests; and —
+unusually for a plant MIS — **every one of the 12 ratio KPIs is
+production-weighted rather than averaged**, which is the single most common
+serious defect in this class of system.
+
+Verified blockers: **21 of 32 KPIs read "no data" for the current month**
+because five reporting streams stopped being filed after 30 June 2026;
+**210 days of real dispatch tonnage** sit as drafts and reach no KPI; **no
+user documentation existed** before this package; static pages carried **no
+security headers**; and backups sit **on the application's own disk** with
+no restore ever demonstrated.
+
+Four of the five blockers are days of work or a single management decision.
+None is a deep technical problem.
+
+---
+
+## The five launch blockers
+
+| # | Blocker | Owner | Type |
+|---|---|---|---|
+| **B-1** | 21/32 KPIs read "no data" — 5 streams silent since 2026-06-30 | **Plant Head** + HODs | Business decision + reporting discipline |
+| **B-2** | 210 days of dispatch tonnage held as draft, invisible to all KPIs | **Plant Head** + Logistics/Packing | Business decision |
+| **B-3** | No user documentation | Developer (drafted here) + HODs to review | Authoring |
+| **B-4** | Static pages carry no security headers | Developer | **Fix applied — needs deploy + verify** |
+| **B-5** | Backups on the app's own disk; restore never demonstrated | Developer | Technical |
+
+---
+
+## What was changed in the codebase
+
+Deliberately minimal — the brief was to assess before changing, and
+blockers B-1 and B-2 are not the developer's to decide.
+
+| Change | File | Why |
+|---|---|---|
+| Security headers for static pages (HSTS, CSP, X-Frame-Options, Referrer-Policy, COOP) | `deploy/nginx.digitalocean.conf` | B-4. `helmet()` covers `/api/*` only; the login page carried nothing but `nosniff` |
+
+**The CSP is written against what the pages actually do**, not an ideal: it
+permits `'unsafe-inline'` for scripts because the pages carry inline
+`<script>` blocks and inline `onclick=` handlers (verified by count), and it
+allows exactly the two CDNs and the font host they really use. Shipping a
+stricter policy that breaks the app would be worse than an honest one.
+
+⚠️ **Not yet verified live.** nginx is not installed on the development
+machine, so the config was checked structurally (braces balanced, directives
+terminated) but **not** with `nginx -t`. Before reloading on the droplet:
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+curl -sI https://smr.lakecement.co.tz/login.html | grep -iE 'strict|frame|content-security|referrer'
+```
+
+The second command is the actual proof. There is a real inheritance trap
+here — documented in the config — where nginx's `add_header` is **not**
+additive: any `location` block declaring its own `add_header` discards all
+server-level ones. The `.html` and `.js|.css` locations already did, so the
+headers are repeated inside them on purpose.
+
+---
+
+## Deliberately NOT duplicated
+
+Three of the documents the brief requested already exist, are current, and
+two are **generated from live code** — which makes them more trustworthy
+than anything written by hand. Duplicating them would create a second
+version that drifts:
+
+| Requested document | Already exists as | Why not rewritten |
+|---|---|---|
+| KPI Data Dictionary | [`../KPI_REFERENCE.md`](../KPI_REFERENCE.md) | 54 KB, 32 KPIs / 170 facts, regenerated by `npm run docs:kpi` from the live registry |
+| Role & Permission Matrix | [`../ACCESS_MODEL.md`](../ACCESS_MODEL.md) | Plus `npm run access:matrix`, which exercises the **real middleware** — behaviour, not intent |
+| Technical Documentation | [`../TECHNICAL_SPEC.md`](../TECHNICAL_SPEC.md) | 27 KB and current |
+| Known Issues / Risk Register | [`../pm/RAID_LOG.md`](../pm/RAID_LOG.md) | 52 KB live register with permanent IDs |
+
+Change Request and Post-Launch Review templates are folded into
+`SUPPORT_AND_INCIDENTS.md` and `LAUNCH_PLAN.md` rather than issued as
+standalone near-empty forms.
+
+---
+
+## Business decisions required
+
+Ten items cannot be decided from the codebase. The two that set the launch
+date:
+
+1. **B-1** — backfill July–September for the five silent streams, or scope
+   the launch to live modules only and say so in the announcement?
+2. **B-2** — work the dispatch backlog, or change the autofill to land days
+   as `pending_approval` and accept partially-empty reports?
+
+Plus: the heat-metric definition (two defensible coal fields, ~11% apart),
+report deadlines, late-report consequences, alert recipients, named launch
+authorities, support staffing, and system ownership after handover.
+
+Full list: `LAUNCH_READINESS_REPORT.md` §3–4 and `LAUNCH_PLAN.md` §5.
+
+---
+
+## Evidence standard
+
+Every claim in this package is tagged **VERIFIED** (a command was run and
+its output quoted), **INFERRED** (read from code, not executed), or
+**REQUIRES BUSINESS CONFIRMATION**. No screenshots, user data, deployment
+results or business requirements are fabricated. Where the project's own
+docs disagreed with observed behaviour, the observed behaviour won and the
+discrepancy is noted — HTTPS and the forgot-password fix were both recorded
+as outstanding but are in fact live.
