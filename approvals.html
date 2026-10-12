@@ -31,7 +31,13 @@
     .apv-btn:disabled { opacity: .5; cursor: not-allowed; }
 
     .apv-empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
-  
+
+  /* Splits what a person submitted from what the Odoo pulls filled, so a
+     handful of human reports are not lost under a hundred automatic ones. */
+  table.apv-table tr.apv-group td { background: var(--off-white); font-size: 12px; font-weight: 700;
+    color: var(--navy,#173158); padding: 8px 14px; white-space: normal; }
+  .apv-auto { color: var(--text-muted,#64748B); }
+
   /* Figures column + the expandable panel behind it. An approver can now see
      the numbers on the row they are signing off, instead of only a remark. */
   .apv-btn-view { background:#F1F5F9; color:var(--navy,#173158); border:1px solid #CBD5E1; }
@@ -239,7 +245,20 @@
     }
     showState(null);
 
+    /* The server lists a person's submissions first, then Odoo-filled rows
+       (no submitted_by). A heading over each half says which is which. */
+    var nAuto = rows.filter(function (r) { return !r.submitted_by; }).length;
+    var nHuman = rows.length - nAuto;
+    function groupRow(text) {
+      return '<tr class="apv-group"><td colspan="8">' + escHtml(text) + '</td></tr>';
+    }
+
     tbody.innerHTML = rows.map(function (r, i) {
+      var head = '';
+      if (nHuman && nAuto && i === 0) head = groupRow('Submitted by staff · ' + nHuman);
+      if (nAuto && !r.submitted_by && (i === 0 || rows[i - 1].submitted_by)) {
+        head = groupRow('Filled automatically from Odoo · ' + nAuto);
+      }
       var remarks = (r.data && (r.data.remarks || r.data.notes)) || '';
       var fields  = r.fields || [];
       /* Signing off on figures you cannot see is not a review. This row used
@@ -252,11 +271,11 @@
                      '</span><span class="apv-field-v">' + escHtml(String(f.value)) + '</span></div>';
             }).join('') + '</div></td></tr>'
         : '';
-      return '<tr data-form-type="' + escHtml(r.form_type) + '" data-date="' + escHtml(r.record_date) + '" data-shift="' + escHtml(r.shift) + '">' +
+      return head + '<tr data-form-type="' + escHtml(r.form_type) + '" data-date="' + escHtml(r.record_date) + '" data-shift="' + escHtml(r.shift) + '">' +
         '<td class="apv-form-label">' + escHtml(labelFor(r)) + '</td>' +
         '<td>' + escHtml(r.record_date) + '</td>' +
         '<td>' + escHtml(r.shift) + '</td>' +
-        '<td>' + escHtml(r.submitted_by_name || '—') + '</td>' +
+        '<td>' + (r.submitted_by ? escHtml(r.submitted_by_name || '—') : '<span class="apv-auto">Odoo (automatic)</span>') + '</td>' +
         '<td>' + fmtDateTime(r.submitted_at) + '</td>' +
         '<td class="apv-remarks">' + escHtml(remarks) + '</td>' +
         '<td class="apv-figures">' + (fields.length

@@ -115,7 +115,12 @@ router.get('/', requireAuth, async (req, res, next) => {
       params.push(formTypes);
       query += ` AND r.form_type = ANY($${params.length})`;
     }
-    query += ` ORDER BY r.submitted_at ASC`;
+    /* A person's submission first, then the rows the Odoo pulls filled
+       (submitted_by IS NULL — they never set it). Oldest-first alone put a
+       Power Plant officer's 10 Oct report at row 138 of 138 for admin/MD,
+       under ~96 production and ~41 raw-material days the pulls leave
+       pending — the approver reported it "not in the queue" (2026-10-12). */
+    query += ` ORDER BY (r.submitted_by IS NULL), r.submitted_at ASC`;
 
     const result = await db.query(query, params);
 
