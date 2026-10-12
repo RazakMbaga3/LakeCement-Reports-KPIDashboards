@@ -9,3 +9,9 @@
 # Verify after any checkout with:
 #   sha256sum -c vendor/xlsx-0.18.5/SHA256SUMS
 vendor/** -text
+
+# Shell scripts and nginx snippets run on the Linux droplet, and are often
+# copied there straight from a Windows working copy (scp), where CRLF line
+# endings make bash fail with "command not found" on every line. Keep them LF.
+*.sh text eol=lf
+deploy/*.conf text eol=lf

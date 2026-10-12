@@ -38,10 +38,37 @@
   `DB_NAME=x npm run migrate` — still beats the file, which is dotenv's
   default and exactly what every call site had before this module existed.
 */
+const fs   = require('fs');
 const path = require('path');
 
+const ENV_PATH = path.join(__dirname, '..', '.env');
+
+/* The file holds every secret this app has, so it must be readable by its
+   owner only. On 2026-10-12 the droplet's copy was world-readable (which is
+   what `cp .env.example .env` gives you) and nginx, whose web root is the
+   checkout, served it to anyone. Whatever loads the file — server boot,
+   `npm run migrate` during a deploy, any script — re-asserts mode 600, so a
+   recreated or copied-over .env cannot stay exposed. POSIX only: Windows
+   has no such mode bits. Only the file's owner can chmod it, hence the uid
+   check; anyone else just gets the warning. */
+function tightenEnvFileMode() {
+  if (process.platform === 'win32') return;
+  let st;
+  try { st = fs.statSync(ENV_PATH); } catch { return; }   // no file: env comes from elsewhere (CI)
+  if ((st.mode & 0o077) === 0) return;
+  const was = (st.mode & 0o777).toString(8);
+  try {
+    if (st.uid !== process.getuid()) throw Object.assign(new Error('not the owner'), { code: 'EPERM' });
+    fs.chmodSync(ENV_PATH, 0o600);
+    console.warn(`[env] backend/.env was readable by other users (mode ${was}); tightened to 600`);
+  } catch (err) {
+    console.warn(`[env] backend/.env is readable by other users (mode ${was}) and could not be fixed (${err.code || err.message}): run chmod 600 on it`);
+  }
+}
+tightenEnvFileMode();
+
 require('dotenv').config({
-  path:  path.join(__dirname, '..', '.env'),
+  path:  ENV_PATH,
   quiet: true,
 });
 
