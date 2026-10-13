@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Lake Cement – Compliance Master</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="components.css?v=1" />
+  <script>
+    /* A reminder email links here as compliance.html?item=42. Keep that
+       through a sign-in round trip even before auth.js has run. */
+    try { var _q = new URLSearchParams(location.search); if (_q.get('item')) sessionStorage.setItem('cm_open_item', _q.get('item')); } catch (e) { /* storage blocked */ }
+  </script>
+  <script src="auth.js?v=14"></script>
+  <script src="sidebar.js?v=7"></script>
+  <script src="loader.js?v=4"></script>
+  <style>
+    /* ── Compliance Master (cm-) ─────────────────────────────────── */
+    .cm-banner { display:flex; gap:var(--sp-3); align-items:flex-start; background:#EAF1FB; border:1px solid #C3D6F0;
+      border-radius:var(--r-lg); padding:var(--sp-3) var(--sp-4); margin:0 0 var(--sp-4); font-size:var(--fs-sm); color:var(--navy); line-height:1.5; }
+    .cm-banner svg { width:18px; height:18px; flex:none; margin-top:1px; }
+    .cm-banner.is-warn { background:var(--st-warn-bg); border-color:var(--st-warn-bd); color:#5C3A00; }
+    .cm-tabs { margin-bottom:var(--sp-4); flex-wrap:wrap; }
+    .cm-flash { margin:0 0 var(--sp-3); padding:var(--sp-2) var(--sp-3); border-radius:var(--r-md); font-size:var(--fs-sm); font-weight:600; }
+    .cm-flash.ok { background:var(--st-good-bg); color:var(--st-good); border:1px solid var(--st-good-bd); }
+    .cm-flash.err { background:var(--st-bad-bg); color:var(--st-bad); border:1px solid var(--st-bad-bd); }
+
+    .cm-tiles { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:var(--sp-3); margin:0 0 var(--sp-4); }
+    .cm-tile { background:var(--white); border:1px solid var(--border); border-radius:var(--r-lg); padding:var(--sp-3) var(--sp-4); text-align:left;
+      font:inherit; color:inherit; cursor:pointer; min-height:92px; display:flex; flex-direction:column; gap:4px; }
+    .cm-tile:hover { border-color:var(--navy); }
+    .cm-tile[disabled] { cursor:default; }
+    .cm-tile-k { font-size:var(--fs-xs); font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; display:flex; align-items:center; gap:6px; }
+    .cm-tile-v { font-size:28px; font-weight:800; color:var(--navy); font-variant-numeric:tabular-nums; line-height:1.1; }
+    .cm-tile-s { font-size:var(--fs-xs); color:var(--text-muted); line-height:1.4; }
+    .cm-dot { width:10px; height:10px; border-radius:3px; flex:none; display:inline-block; }
+
+    .cm-grid2 { display:grid; grid-template-columns:minmax(0, 1.25fr) minmax(0, 1fr); gap:var(--sp-4); margin-bottom:var(--sp-4); }
+    .cm-grid2 > * { min-width:0; }
+    @media (max-width: 1100px) { .cm-grid2 { grid-template-columns:1fr; } }
+    .cm-chart-wrap { position:relative; }
+    .cm-legend { display:flex; flex-wrap:wrap; gap:var(--sp-3); font-size:var(--fs-xs); color:var(--text-muted); font-weight:600; margin:0 0 var(--sp-2); }
+    .cm-legend span { display:inline-flex; align-items:center; gap:6px; }
+
+    .n-tbl.cm-tbl td, .n-tbl.cm-tbl th { text-align:left; vertical-align:top; }
+    .n-tbl.cm-tbl td.cm-num, .n-tbl.cm-tbl th.cm-num { text-align:right; font-variant-numeric:tabular-nums; }
+    .cm-cell-link { background:none; border:0; padding:2px 6px; margin:-2px -6px; font:inherit; color:var(--navy); font-weight:700; cursor:pointer; border-radius:4px; text-decoration:underline; text-underline-offset:2px; text-align:left; }
+    .cm-cell-link:hover { background:#EAF1FB; }
+    .cm-zero { color:var(--text-muted); }
+    .cm-pivot th, .cm-pivot td { white-space:nowrap; }
+    .cm-pivot td.n-rowhdr { white-space:normal; min-width:140px; font-weight:700; color:var(--navy); }
+    .cm-title { font-weight:700; color:var(--navy); line-height:1.35; }
+    .cm-sub { font-size:var(--fs-xs); color:var(--text-muted); margin-top:2px; line-height:1.4; }
+    .cm-row { cursor:pointer; }
+    .cm-row:focus-visible { outline:2px solid var(--navy); outline-offset:-2px; }
+    .cm-flags { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
+    .cm-list { list-style:none; margin:0; padding:0; }
+    .cm-list li { display:flex; gap:var(--sp-3); align-items:flex-start; justify-content:space-between; padding:var(--sp-2) 0; border-bottom:1px solid var(--border); }
+    .cm-list li:last-child { border-bottom:0; }
+    .cm-empty { padding:var(--sp-5) var(--sp-4); text-align:center; color:var(--text-muted); font-size:var(--fs-sm); }
+    .cm-gaps { display:grid; grid-template-columns:repeat(auto-fill, minmax(190px, 1fr)); gap:var(--sp-2); }
+    .cm-gap { border:1px dashed var(--border); border-radius:var(--r-md); padding:var(--sp-2) var(--sp-3); font-size:var(--fs-sm); background:none; text-align:left; font:inherit; cursor:pointer; color:inherit; }
+    .cm-gap strong { display:block; font-size:var(--fs-lg); color:var(--navy); }
+
+    .cm-bulk { position:sticky; bottom:var(--sp-3); z-index:50; display:flex; gap:var(--sp-2); align-items:center; flex-wrap:wrap;
+      background:var(--navy); color:var(--white); padding:var(--sp-2) var(--sp-3); border-radius:var(--r-lg); margin-top:var(--sp-3); box-shadow:0 8px 24px rgba(15,23,42,.25); }
+    .cm-bulk .n-btn { background:var(--white); }
+    .cm-bulk .n-btn.is-primary { background:var(--orange); }
+    @media (max-width: 959px) { .cm-bulk { bottom:calc(var(--bottomnav-h, 60px) + var(--safe-b, 0px) + var(--sp-2)); } }
+
+    /* Register: table on desktop, cards on phones. */
+    @media (max-width: 767px) {
+      .cm-reg thead { display:none; }
+      .cm-reg, .cm-reg tbody, .cm-reg tr, .cm-reg td { display:block; width:100%; }
+      .cm-reg tr { border:1px solid var(--border); border-radius:var(--r-lg); margin-bottom:var(--sp-2); padding:var(--sp-2) var(--sp-3); background:var(--white); }
+      .cm-reg td { border:0 !important; padding:2px 0 !important; }
+      .cm-reg td[data-k]::before { content:attr(data-k) ": "; font-size:var(--fs-xs); color:var(--text-muted); font-weight:600; }
+      .cm-reg td.cm-pick { float:right; width:auto; }
+    }
+
+    /* ── Record drawer ─────────────────────────────────────────── */
+    .cm-scrim { position:fixed; inset:0; background:rgba(15,23,42,.45); z-index:1200; }
+    .cm-drawer { position:fixed; top:0; right:0; bottom:0; width:min(780px, 100vw); background:var(--white); z-index:1201;
+      display:flex; flex-direction:column; box-shadow:-12px 0 32px rgba(15,23,42,.25); }
+    .cm-drawer[hidden], .cm-scrim[hidden] { display:none; }
+    .cm-dh { padding:var(--sp-4); border-bottom:1px solid var(--border); display:flex; gap:var(--sp-3); align-items:flex-start; }
+    .cm-dh h2 { margin:0; font-size:var(--fs-lg); color:var(--navy); line-height:1.3; }
+    .cm-dh-meta { font-size:var(--fs-xs); color:var(--text-muted); margin-top:4px; }
+    .cm-close { margin-left:auto; flex:none; background:var(--off-white, #F1F5F9); border:1px solid var(--border); border-radius:8px; min-width:40px; min-height:40px; font-size:20px; line-height:1; cursor:pointer; color:var(--navy); }
+    .cm-db { overflow-y:auto; padding:var(--sp-4); flex:1; }
+    .cm-actions { display:flex; flex-wrap:wrap; gap:var(--sp-2); margin:0 0 var(--sp-3); }
+    .cm-statusbar { display:flex; border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; margin:0 0 var(--sp-3); }
+    .cm-step { flex:1; padding:var(--sp-2); text-align:center; font-size:var(--fs-xs); font-weight:700; color:var(--text-muted); background:#F8FAFC; border-right:1px solid var(--border); }
+    .cm-step:last-child { border-right:0; }
+    .cm-step.on.active { background:var(--st-good-bg); color:var(--st-good); }
+    .cm-step.on.due { background:var(--st-warn-bg); color:var(--st-warn); }
+    .cm-step.on.overdue { background:var(--st-bad-bg); color:var(--st-bad); }
+    .cm-step.on.undated, .cm-step.on.inactive, .cm-step.on.archived { background:var(--st-neutral-bg); color:var(--st-neutral); }
+    .cm-reason { font-size:var(--fs-sm); color:var(--text-main); margin:0 0 var(--sp-3); }
+    .cm-timeline { position:relative; height:28px; margin:0 0 var(--sp-4); border-radius:6px; background:var(--st-good-bg); border:1px solid var(--border); overflow:hidden; }
+    .cm-timeline .win { position:absolute; top:0; bottom:0; background:var(--st-warn-bg); border-left:2px dashed #C89200; }
+    .cm-timeline .over { position:absolute; top:0; bottom:0; background:var(--st-bad-bg); border-left:2px solid var(--st-bad); }
+    .cm-timeline .today { position:absolute; top:-2px; bottom:-2px; width:2px; background:var(--navy); }
+    .cm-timeline-lbl { display:flex; justify-content:space-between; font-size:var(--fs-xs); color:var(--text-muted); margin:-12px 0 var(--sp-4); }
+    .cm-dtabs { margin:0 0 var(--sp-3); flex-wrap:wrap; }
+    .cm-kv { display:grid; grid-template-columns:minmax(120px, 34%) 1fr; gap:6px var(--sp-3); font-size:var(--fs-sm); margin:0; }
+    .cm-kv dt { color:var(--text-muted); font-weight:600; }
+    .cm-kv dd { margin:0; color:var(--text-main); word-break:break-word; }
+    .cm-sec { font-size:var(--fs-sm); font-weight:800; color:var(--navy); margin:var(--sp-4) 0 var(--sp-2); text-transform:uppercase; letter-spacing:.04em; }
+    .cm-person { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border:1px solid var(--border); border-radius:var(--r-pill); font-size:var(--fs-sm); margin:0 6px 6px 0; }
+    .cm-raw { font-size:var(--fs-xs); background:#F8FAFC; border:1px solid var(--border); border-radius:var(--r-md); padding:var(--sp-3); white-space:pre-wrap; word-break:break-word; }
+
+    /* ── Form dialog ───────────────────────────────────────────── */
+    .cm-modal-scrim { position:fixed; inset:0; background:rgba(15,23,42,.5); z-index:1300; display:grid; place-items:center; padding:var(--sp-3); }
+    .cm-modal-scrim[hidden] { display:none; }
+    .cm-modal { background:var(--white); border-radius:var(--r-lg); width:min(560px, 100%); max-height:90vh; overflow-y:auto; box-shadow:0 24px 48px rgba(15,23,42,.3); }
+    .cm-modal h3 { margin:0; padding:var(--sp-4); border-bottom:1px solid var(--border); font-size:var(--fs-lg); color:var(--navy); }
+    .cm-modal form { padding:var(--sp-4); display:grid; gap:var(--sp-3); }
+    .cm-field { display:grid; gap:4px; }
+    .cm-field label { font-size:var(--fs-sm); font-weight:700; color:var(--navy); }
+    .cm-field .hint { font-size:var(--fs-xs); color:var(--text-muted); line-height:1.4; }
+    .cm-field input:not([type=checkbox]), .cm-field select, .cm-field textarea {
+      font:inherit; font-size:var(--fs-sm); padding:8px 10px; border:1.5px solid var(--border); border-radius:var(--r-md); width:100%; min-height:40px; background:var(--white); color:var(--text-main); }
+    .cm-field textarea { min-height:72px; resize:vertical; }
+    .cm-field.cb { grid-template-columns:auto 1fr; align-items:center; }
+    .cm-field.cb input { width:20px; height:20px; }
+    .cm-row2 { display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3); }
+    @media (max-width: 560px) { .cm-row2 { grid-template-columns:1fr; } }
+    .cm-modal-err { color:var(--st-bad); font-size:var(--fs-sm); font-weight:600; min-height:1em; }
+    .cm-modal-foot { display:flex; justify-content:flex-end; gap:var(--sp-2); }
+
+    .cm-switch { display:flex; gap:var(--sp-3); align-items:center; padding:var(--sp-3) var(--sp-4); border:1px solid var(--border); border-radius:var(--r-lg); background:var(--white); }
+    .cm-imp-sum { display:flex; gap:var(--sp-2); flex-wrap:wrap; margin:var(--sp-3) 0; }
+    .cm-filter-row { display:flex; flex-wrap:wrap; gap:var(--sp-2); align-items:flex-end; margin:0 0 var(--sp-3); }
+    .cm-filter-row .cm-field { min-width:150px; flex:1 1 150px; max-width:240px; }
+    .cm-filter-row .cm-field.grow { max-width:none; flex:3 1 240px; }
+    .cm-muted { color:var(--text-muted); font-size:var(--fs-sm); }
+    .cm-hidden { display:none !important; }
+    @media (pointer: coarse) {
+      .cm-cell-link { min-height:var(--tap); } .cm-row td { padding-top:12px; padding-bottom:12px; }
+      /* components.css gives .n-ctx-ctl the in-grid 40px; these are the page's main filters, so the full touch floor. */
+      html body select.n-ctx-ctl, html body input.n-ctx-ctl { min-height:var(--tap); }
+    }
+  </style>
+  <link rel="stylesheet" href="design-system.css?v=2" />
+  <script src="a11y.js?v=1"></script>
+  <script src="mobile-shell.js?v=3"></script>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar" id="app-sidebar"></aside>
+  <script>renderSidebar();</script>
+
+  <div class="main">
+
+<header class="top-header" id="app-header"></header>
+<script>renderTopHeader();</script>
+
+<main class="n-page" id="compliance-page">
+
+  <div class="n-page-head">
+    <div>
+      <nav class="n-crumb" aria-label="Breadcrumb">
+        <span>Reports &amp; Tools</span>
+        <span class="n-crumb-sep" aria-hidden="true">/</span>
+        <span class="n-crumb-here">Compliance Master</span>
+      </nav>
+      <h1 class="n-title">Compliance Master</h1>
+      <p class="n-subtitle">
+        Every licence, certificate, statutory filing and mining-lease condition, with its documents and reminders.
+        Status is worked out from the dates every time the page loads — it is never typed in, so it cannot go stale.
+      </p>
+    </div>
+    <div class="n-page-actions">
+      <button type="button" class="n-btn" id="cm-export"><i data-lucide="file-down"></i> Export to Excel</button>
+      <button type="button" class="n-btn is-primary" id="cm-add" hidden><i data-lucide="plus-circle"></i> Add obligation</button>
+    </div>
+  </div>
+
+  <div id="cm-banner"></div>
+  <div class="cm-flash" id="cm-flash" role="status" aria-live="polite" hidden></div>
+
+  <div class="n-seg cm-tabs" id="cm-tabs" role="group" aria-label="Compliance Master sections">
+    <button type="button" class="n-seg-btn" data-value="dashboard" aria-pressed="true">Dashboard</button>
+    <button type="button" class="n-seg-btn" data-value="register" aria-pressed="false">Register</button>
+    <button type="button" class="n-seg-btn" data-value="reminders" aria-pressed="false">Reminders</button>
+    <button type="button" class="n-seg-btn" data-value="settings" aria-pressed="false" hidden>Settings &amp; people</button>
+    <button type="button" class="n-seg-btn" data-value="import" aria-pressed="false" hidden>Import</button>
+  </div>
+
+  <!-- ══ DASHBOARD ═══════════════════════════════════════════════════ -->
+  <section id="cm-dashboard" aria-label="Dashboard">
+    <div class="n-ctx">
+      <div class="n-ctx-group">
+        <label class="n-ctx-lbl" for="f-timeframe">Deadlines in</label>
+        <select id="f-timeframe" class="n-ctx-ctl">
+          <option value="all">All tracked</option>
+          <option value="next30">Next 30 days</option>
+          <option value="next90">Next 90 days</option>
+          <option value="month">This month</option>
+          <option value="quarter">This quarter</option>
+          <option value="year">This year</option>
+          <option value="custom">Custom…</option>
+        </select>
+      </div>
+      <div class="n-ctx-group cm-hidden" id="f-custom">
+        <label class="n-ctx-lbl" for="f-from">From</label>
+        <input type="date" id="f-from" class="n-ctx-ctl" />
+        <label class="n-ctx-lbl" for="f-to">To</label>
+        <input type="date" id="f-to" class="n-ctx-ctl" />
+      </div>
+      <div class="n-ctx-sep" aria-hidden="true"></div>
+      <div class="n-ctx-group" id="f-dept-wrap" hidden>
+        <label class="n-ctx-lbl" for="f-dept">Department</label>
+        <select id="f-dept" class="n-ctx-ctl"><option value="">All departments</option></select>
+      </div>
+      <div class="n-ctx-group">
+        <label class="n-ctx-lbl" for="f-kind">Kind</label>
+        <select id="f-kind" class="n-ctx-ctl">
+          <option value="">All kinds</option>
+          <option value="validity">Licences &amp; certificates</option>
+          <option value="recurring">Filings &amp; payments</option>
+          <option value="condition">Standing conditions</option>
+        </select>
+      </div>
+      <div class="n-ctx-group">
+        <label class="n-ctx-lbl" for="f-groupby">Group by</label>
+        <select id="f-groupby" class="n-ctx-ctl">
+          <option value="department">Department</option>
+          <option value="section">Workbook section</option>
+        </select>
+      </div>
+    </div>
+    <p class="cm-muted" id="cm-range-note" style="margin:0 0 var(--sp-3)"></p>
+
+    <div class="cm-tiles" id="cm-tiles" aria-live="polite"></div>
+
+    <div class="cm-grid2">
+      <div class="n-card">
+        <div class="n-card-hdr"><div><div class="n-card-title"><i data-lucide="bar-chart-horizontal"></i> Status by department</div>
+          <div class="n-card-sub">Each bar is one department's obligations, split by status. Hover a bar for the numbers; click it to open those records.</div></div></div>
+        <div class="n-card-body">
+          <div class="cm-legend" id="cm-legend"></div>
+          <div class="cm-chart-wrap" id="cm-chart-wrap"><canvas id="cm-chart" role="img" aria-label="Compliance status by department — the table beside it lists the same numbers"></canvas></div>
+        </div>
+      </div>
+      <div class="n-card">
+        <div class="n-card-hdr"><div><div class="n-card-title"><i data-lucide="table-2"></i> Department × status</div>
+          <div class="n-card-sub">The same numbers as the chart. Click any count to see those records in the Register.</div></div></div>
+        <div class="n-card-body is-flush"><div class="n-tbl-wrap" id="cm-pivot"></div></div>
+      </div>
+    </div>
+
+    <div class="cm-grid2">
+      <div class="n-card">
+        <div class="n-card-hdr"><div><div class="n-card-title"><i data-lucide="alert-triangle"></i> Overdue</div>
+          <div class="n-card-sub">Longest overdue first.</div></div></div>
+        <div class="n-card-body"><ul class="cm-list" id="cm-overdue"></ul></div>
+      </div>
+      <div class="n-card">
+        <div class="n-card-hdr"><div><div class="n-card-title"><i data-lucide="calendar"></i> Coming up — next 30 days</div>
+          <div class="n-card-sub">Soonest first.</div></div></div>
+        <div class="n-card-body"><ul class="cm-list" id="cm-upcoming"></ul></div>
+      </div>
+    </div>
+
+    <div class="n-card">
+      <div class="n-card-hdr"><div><div class="n-card-title"><i data-lucide="list-checks"></i> Data to complete</div>
+        <div class="n-card-sub">What stops this register from being the single source of truth. Click a box to see those records.</div></div></div>
+      <div class="n-card-body"><div class="cm-gaps" id="cm-gaps"></div></div>
+    </div>
+  </section>
+
+  <!-- ══ REGISTER ═══════════════════════════════════════════════════ -->
+  <section id="cm-register" aria-label="Register" hidden>
+    <div class="cm-filter-row">
+      <div class="cm-field grow"><label for="r-q">Search</label><input id="r-q" type="search" placeholder="Title, agency, reference…" /></div>
+      <div class="cm-field"><label for="r-status">Status</label>
+        <select id="r-status"><option value="">Any status</option><option value="overdue">Overdue</option><option value="due">Due</option>
+          <option value="undated">No date set</option><option value="active">Active</option><option value="inactive">Inactive</option><option value="archived">Archived</option></select></div>
+      <div class="cm-field" id="r-dept-wrap" hidden><label for="r-dept">Department</label><select id="r-dept"><option value="">All departments</option></select></div>
+      <div class="cm-field"><label for="r-kind">Kind</label>
+        <select id="r-kind"><option value="">All kinds</option><option value="validity">Licences &amp; certificates</option><option value="recurring">Filings &amp; payments</option><option value="condition">Standing conditions</option></select></div>
+      <div class="cm-field"><label for="r-flag">Show only</label>
+        <select id="r-flag"><option value="">Everything</option><option value="unverified">Not yet verified</option><option value="verified">Verified</option>
+          <option value="renewal">Renewal in progress</option><option value="nodoc">No document attached</option><option value="noperson">No responsible person</option><option value="mine">Named on me</option></select></div>
+    </div>
+    <p class="cm-muted" id="r-count" style="margin:0 0 var(--sp-2)"></p>
+    <div class="n-card"><div class="n-card-body is-flush"><div class="n-tbl-wrap" id="r-table"></div></div></div>
+    <div class="cm-bulk" id="r-bulk" hidden>
+      <span id="r-bulk-n"></span>
+      <button type="button" class="n-btn" id="r-bulk-clear">Clear</button>
+      <button type="button" class="n-btn" id="r-bulk-verify"><i data-lucide="check-circle"></i> Verify selected</button>
+      <button type="button" class="n-btn is-primary" id="r-bulk-renew"><i data-lucide="upload"></i> Renew selected with one certificate</button>
+    </div>
+  </section>
+
+  <!-- ══ REMINDERS ═════════════════════════════════════════════════ -->
+  <section id="cm-reminders" aria-label="Reminders" hidden>
+    <p class="cm-muted" style="max-width:860px;margin:0 0 var(--sp-3)">
+      Every reminder the system has planned, sent or held back, and why. A reminder goes to the responsible person when the first
+      reminder day is reached, adds the supervisor at the second, and the central Head list at the third; once overdue all three are
+      reminded weekly. Each one is sent once. Records still waiting to be verified are <strong>held</strong> — they go out the day the department confirms the record.
+    </p>
+    <div class="cm-filter-row">
+      <div class="cm-field"><label for="m-status">Status</label>
+        <select id="m-status"><option value="">All</option><option value="sent">Sent</option><option value="pending">Waiting to send</option><option value="held_unverified">Held — record not verified</option>
+          <option value="skipped_no_email">No email address</option><option value="skipped_disabled">Reminders switched off</option><option value="failed">Failed — will retry</option>
+          <option value="gave_up">Gave up</option><option value="superseded">No longer needed</option></select></div>
+    </div>
+    <div class="cm-imp-sum" id="m-counts"></div>
+    <div class="n-card"><div class="n-card-body is-flush"><div class="n-tbl-wrap" id="m-table"></div></div></div>
+  </section>
+
+  <!-- ══ SETTINGS ══════════════════════════════════════════════════ -->
+  <section id="cm-settings" aria-label="Settings and people" hidden>
+    <div id="s-body"></div>
+  </section>
+
+  <!-- ══ IMPORT ════════════════════════════════════════════════════ -->
+  <section id="cm-import" aria-label="Import the workbook" hidden>
+    <div class="n-card">
+      <div class="n-card-hdr"><div><div class="n-card-title"><i data-lucide="file-spreadsheet"></i> Import the Compliance Master workbook</div>
+        <div class="n-card-sub">Upload "1. Compliance Master.xlsx". Nothing is saved until you review the preview and press Import. Re-importing never overwrites a record a department has edited or verified, and never deletes anything.</div></div></div>
+      <div class="n-card-body">
+        <div class="cm-filter-row">
+          <div class="cm-field grow"><label for="i-file">Workbook (.xlsx)</label><input type="file" id="i-file" accept=".xlsx" /></div>
+          <button type="button" class="n-btn is-primary" id="i-preview"><i data-lucide="search"></i> Preview</button>
+        </div>
+        <div id="i-result"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="dash-footer">
+  <span>Lake Cement Ltd. &copy; 2026 &nbsp;|&nbsp; Nyati Cement &nbsp;&bull;&nbsp; Hushika Haraka &nbsp;&bull;&nbsp; Hudumu Zaidi</span>
+  <span id="footer-date"></span>
+</footer>
+<div class="brand-accent-bar"></div>
+
+  </div><!-- /.main -->
+</div><!-- /.app-shell -->
+
+<!-- Record drawer -->
+<div class="cm-scrim" id="d-scrim" hidden></div>
+<aside class="cm-drawer" id="d-drawer" role="dialog" aria-modal="true" aria-labelledby="d-title" hidden>
+  <div class="cm-dh">
+    <div>
+      <h2 id="d-title">Record</h2>
+      <div class="cm-dh-meta" id="d-meta"></div>
+      <div class="cm-flags" id="d-flags"></div>
+    </div>
+    <button type="button" class="cm-close" id="d-close" aria-label="Close">&times;</button>
+  </div>
+  <div class="cm-db" id="d-body"></div>
+</aside>
+
+<!-- Form dialog -->
+<div class="cm-modal-scrim" id="f-scrim" hidden>
+  <div class="cm-modal" role="dialog" aria-modal="true" aria-labelledby="f-title">
+    <h3 id="f-title"></h3>
+    <form id="f-form" novalidate>
+      <div id="f-fields"></div>
+      <div class="cm-modal-err" id="f-err" role="alert"></div>
+      <div class="cm-modal-foot">
+        <button type="button" class="n-btn" id="f-cancel">Cancel</button>
+        <button type="submit" class="n-btn is-primary" id="f-submit">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="lucide-icons.js?v=1"></script>
+<script src="forms/api-client.js?v=7"></script>
+<script src="forms/client-errors.js"></script>
+<script src="components.js?v=1"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="chart-theme.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  requireAuth();
+  var user = getCurrentUser();
+  if (!user) return;
+  var API = window.NyatiAPI;
+  var esc = window.escHtml;
+  var $ = function (id) { return document.getElementById(id); };
+  var icons = function () { if (window.lucide) window.lucide.createIcons(); };
+
+  /* Status → its colour, chip class and plain-language label. The chart's
+     four colours were checked with the dataviz validator (CVD separation
+     ΔE ≥ 17 between neighbours): Due is a LIGHT amber so it never reads as
+     the red of Overdue to a colour-blind eye. Status is never shown by
+     colour alone — every chip and bar carries its label. */
+  var ST = {
+    overdue:  { label: 'Overdue',     chip: 'is-bad',     color: '#C0271F', icon: 'alert-octagon' },
+    due:      { label: 'Due',         chip: 'is-warn',    color: '#E8A317', icon: 'clock' },
+    undated:  { label: 'No date set', chip: 'is-neutral', color: '#A8AFBB', icon: 'info' },
+    active:   { label: 'Active',      chip: 'is-good',    color: '#157F4B', icon: 'check-circle' },
+    inactive: { label: 'Inactive',    chip: 'is-neutral', color: '#D5D9E0', icon: 'octagon-pause' },
+    archived: { label: 'Archived',    chip: 'is-neutral', color: '#D5D9E0', icon: 'lock' },
+  };
+  var KIND = { validity: 'Licence / certificate', recurring: 'Filing / payment', condition: 'Standing condition' };
+  var UNIT = { month: 'Monthly', quarter: 'Quarterly', half: 'Every 6 months', year: 'Yearly', years: 'Every few years', on_demand: 'As and when required' };
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var AUD = { direct: 'Responsible person', second: 'Supervisor', head: 'Head (escalation)' };
+  var NSTAT = { pending: 'Waiting to send', sent: 'Sent', failed: 'Failed — will retry', gave_up: 'Gave up', held_unverified: 'Held — not verified',
+    skipped_no_email: 'No email address', skipped_disabled: 'Reminders off', superseded: 'No longer needed' };
+
+  function fmtDate(s) {
+    if (!s || !/^\d{4}-\d{2}-\d{2}/.test(s)) return '—';
+    return (+s.slice(8, 10)) + ' ' + MONTHS[+s.slice(5, 7) - 1] + ' ' + s.slice(0, 4);
+  }
+  function fmtWhen(ts) {
+    if (!ts) return '—';
+    var d = new Date(ts);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }
+  function chip(status) {
+    var s = ST[status] || ST.undated;
+    return '<span class="n-chip ' + s.chip + '"><i data-lucide="' + s.icon + '" aria-hidden="true" style="width:12px;height:12px"></i>' + s.label + '</span>';
+  }
+  function flagChips(it) {
+    var out = [];
+    if (it.flags && it.flags.unverified) out.push('<span class="n-chip is-info">Not yet verified</span>');
+    if (it.renewal_in_progress) out.push('<span class="n-chip is-info">Renewal in progress' + (it.renewal_started_on ? ' since ' + esc(fmtDate(it.renewal_started_on)) : '') + '</span>');
+    if (it.flags && it.flags.missingDirect && it.status !== 'inactive') out.push('<span class="n-chip is-neutral">No responsible person</span>');
+    return out.join(' ');
+  }
+  function days(it) {
+    if (it.days_left == null) return '';
+    if (it.days_left < 0) return (-it.days_left) + ' day' + (it.days_left === -1 ? '' : 's') + ' overdue';
+    if (it.days_left === 0) return 'today';
+    return 'in ' + it.days_left + ' day' + (it.days_left === 1 ? '' : 's');
+  }
+  function errText(e) { return (e && e.serverMessage) || (e && e.message) || 'Something went wrong.'; }
+
+  var flashTimer = null;
+  function flash(msg, ok) {
+    var el = $('cm-flash');
+    el.textContent = msg; el.className = 'cm-flash ' + (ok === false ? 'err' : 'ok'); el.hidden = false;
+    clearTimeout(flashTimer); flashTimer = setTimeout(function () { el.hidden = true; }, ok === false ? 9000 : 5000);
+  }
+
+  /* ── State ───────────────────────────────────────────────────── */
+  var ME = null;              // capabilities from /api/compliance/me
+  var TAB = 'dashboard';
+  var chart = null;
+  var REG = { rows: [], selected: new Set() };
+
+  /* ═══ Tabs ════════════════════════════════════════════════════ */
+  function showTab(t) {
+    TAB = t;
+    ['dashboard', 'register', 'reminders', 'settings', 'import'].forEach(function (k) { $('cm-' + k).hidden = k !== t; });
+    $('cm-tabs').querySelectorAll('.n-seg-btn').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.value === t)); });
+    if (t === 'dashboard') loadDashboard();
+    if (t === 'register') loadRegister();
+    if (t === 'reminders') loadReminders();
+    if (t === 'settings') loadSettings();
+    try { var u = new URL(location.href); u.searchParams.set('tab', t); if (t !== 'register') { u.searchParams.delete('view'); } history.replaceState(null, '', u); } catch (e) { /* no history */ }
+  }
+  $('cm-tabs').addEventListener('click', function (e) { var b = e.target.closest('.n-seg-btn'); if (b) showTab(b.dataset.value); });
+
+  /* ═══ Dashboard ═══════════════════════════════════════════════ */
+  function dashQuery() {
+    var p = new URLSearchParams();
+    var tf = $('f-timeframe').value; p.set('timeframe', tf);
+    if (tf === 'custom') { if ($('f-from').value) p.set('from', $('f-from').value); if ($('f-to').value) p.set('to', $('f-to').value); }
+    if ($('f-dept').value) p.set('dept', $('f-dept').value);
+    if ($('f-kind').value) p.set('kind', $('f-kind').value);
+    p.set('groupBy', $('f-groupby').value);
+    return p;
+  }
+  ['f-timeframe', 'f-from', 'f-to', 'f-dept', 'f-kind', 'f-groupby'].forEach(function (id) {
+    $(id).addEventListener('change', function () {
+      $('f-custom').classList.toggle('cm-hidden', $('f-timeframe').value !== 'custom');
+      loadDashboard();
+    });
+  });
+
+  function tile(k, v, sub, opts) {
+    opts = opts || {};
+    var dot = opts.status ? '<span class="cm-dot" style="background:' + ST[opts.status].color + '"></span>' : '';
+    return '<button type="button" class="cm-tile"' + (opts.go ? ' data-go="' + esc(opts.go) + '"' : ' disabled') + '>' +
+      '<span class="cm-tile-k">' + dot + esc(k) + '</span><span class="cm-tile-v">' + (v == null ? '—' : esc(String(v))) + '</span>' +
+      (sub ? '<span class="cm-tile-s">' + sub + '</span>' : '') + '</button>';
+  }
+
+  function renderSkeleton() {
+    $('cm-tiles').innerHTML = new Array(7).join('<div class="cm-tile"><span class="n-skel n-skel-line" style="width:60%"></span><span class="n-skel n-skel-val"></span></div>');
+  }
+
+  function loadDashboard() {
+    renderSkeleton();
+    API.request('GET', '/compliance/summary?' + dashQuery().toString()).then(renderDashboard).catch(function (e) {
+      $('cm-tiles').innerHTML = '<div class="cm-empty">Could not load the dashboard: ' + esc(errText(e)) + '</div>';
+    });
+  }
+
+  function renderBanner(sum) {
+    var t = sum.tiles, parts = [];
+    if (sum.lastImport) {
+      parts.push('Imported ' + esc(fmtDate(String(sum.lastImport.at).slice(0, 10))) + ' from <em>' + esc(sum.lastImport.file_name || 'the workbook') + '</em>.');
+    }
+    parts.push('Statuses are computed from the dates as of ' + esc(fmtDate(sum.today)) + '.');
+    if (t.total) parts.push('<strong>' + esc(String(t.verifiedPct)) + '% verified</strong> (' + t.verified + ' of ' + t.total + ') by their departments.');
+    if (t.total && t.verified < t.total) parts.push('Reminders for records not yet verified are held until the owning department confirms them.');
+    $('cm-banner').innerHTML = t.total ? '<div class="cm-banner"><i data-lucide="info"></i><div>' + parts.join(' ') + '</div></div>'
+      : '<div class="cm-banner is-warn"><i data-lucide="info"></i><div>No compliance records yet.' + (ME && ME.canImport ? ' Import the Compliance Master workbook from the <strong>Import</strong> tab.' : (ME && ME.canCreate ? ' Add your department\'s first obligation with <strong>Add obligation</strong>.' : '')) + '</div></div>';
+  }
+
+  function renderDashboard(sum) {
+    renderBanner(sum);
+    var t = sum.tiles;
+    var r = sum.range;
+    $('cm-range-note').textContent = (r.from || r.to)
+      ? 'Showing deadlines from ' + fmtDate(r.from) + ' to ' + fmtDate(r.to) + (r.carryOverdue ? ', plus everything still overdue from before.' : '.') + ' Records with no date set are always included.'
+      : 'Showing every tracked record.';
+    $('cm-tiles').innerHTML = [
+      tile('Tracked', t.tracked, 'Inactive excluded', { go: '' }),
+      tile('Active', t.active, 'In date', { status: 'active', go: 'status=active' }),
+      tile('Due', t.due, 'Inside the reminder window', { status: 'due', go: 'status=due' }),
+      tile('Overdue', t.overdue, t.overdue ? (t.overdueWithRenewal + ' with renewal in progress · ' + t.overdueNoAction + ' with no action recorded') : 'None', { status: 'overdue', go: 'status=overdue' }),
+      tile('No date set', t.undated, 'Dates missing in the record', { status: 'undated', go: 'status=undated' }),
+      tile('Compliant', t.compliantPct == null ? '—' : t.compliantPct + '%', 'Of dated, active records: not overdue', {}),
+      tile('Verified', t.verifiedPct == null ? '—' : t.verifiedPct + '%', t.verified + ' of ' + t.total + ' confirmed by their department', { go: 'flag=unverified' }),
+      tile('Reminders held', sum.reminders ? sum.reminders.held : '—', sum.reminders ? (sum.reminders.sent7d + ' sent and ' + sum.reminders.failed7d + ' failed in the last 7 days') : '', { go: 'tab=reminders' }),
+    ].join('');
+    renderChart(sum.pivot);
+    renderPivot(sum.pivot);
+    renderList('cm-overdue', sum.overdue, 'Nothing is overdue.', t.overdue, 'status=overdue');
+    renderList('cm-upcoming', sum.upcoming, 'Nothing falls due in the next 30 days.', null, 'status=due');
+    var g = sum.gaps;
+    $('cm-gaps').innerHTML = [
+      ['Not yet verified', g.unverified, 'flag=unverified'], ['No date set', g.undated, 'status=undated'],
+      ['No responsible person', g.noResponsible, 'flag=noperson'], ['People without an email address', g.contactsWithoutEmail, ME && (ME.canContacts || ME.canSettings) ? 'tab=settings' : ''],
+      ['Licences with no document attached', g.noDocument, 'flag=nodoc&kind=validity'],
+    ].map(function (x) {
+      return '<button type="button" class="cm-gap"' + (x[2] ? ' data-go="' + x[2] + '"' : ' disabled') + '><strong>' + x[1] + '</strong>' + esc(x[0]) + '</button>';
+    }).join('');
+    icons();
+  }
+
+  function goFromString(s) {
+    var p = new URLSearchParams(s || '');
+    if (p.get('tab')) return showTab(p.get('tab'));
+    setRegisterFilters({ status: p.get('status') || '', flag: p.get('flag') || '', kind: p.get('kind') || $('f-kind').value || '', dept: p.get('dept') || $('f-dept').value || '' });
+    showTab('register');
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-go]');
+    if (b && !b.disabled && $('compliance-page').contains(b)) goFromString(b.getAttribute('data-go'));
+  });
+
+  var LIST_MAX = 8;
+  function renderList(id, all, emptyText, total, go) {
+    var rows = all.slice(0, LIST_MAX);
+    var more = (total != null ? total : all.length) - rows.length;
+    $(id).innerHTML = (rows.length ? rows.map(function (it) {
+      return '<li><div><button type="button" class="cm-cell-link" data-open="' + it.id + '">' + esc(it.title) + '</button>' +
+        '<div class="cm-sub">' + esc(it.department) + (it.agency ? ' · ' + esc(it.agency) : '') + (it.renewal_in_progress ? ' · renewal in progress' : '') + '</div></div>' +
+        '<div style="text-align:right;flex:none">' + chip(it.status) + '<div class="cm-sub">' + esc(fmtDate(it.deadline)) + (it.days_left != null ? ' · ' + esc(days(it)) : '') + '</div></div></li>';
+    }).join('') : '<li class="cm-empty">' + esc(emptyText) + '</li>') +
+      (more > 0 ? '<li><button type="button" class="cm-cell-link" data-go="' + go + '">See all ' + (rows.length + more) + ' in the Register</button></li>' : '');
+  }
+
+  var BUCKETS = ['overdue', 'due', 'undated', 'active'];
+  function renderChart(pivot) {
+    var rows = pivot.rows.filter(function (r) { return r.total - r.inactive > 0; });
+    $('cm-legend').innerHTML = BUCKETS.map(function (b) { return '<span><span class="cm-dot" style="background:' + ST[b].color + '"></span>' + ST[b].label + '</span>'; }).join('');
+    var wrap = $('cm-chart-wrap');
+    wrap.style.height = Math.max(140, rows.length * 34 + 40) + 'px';
+    if (chart) { chart.destroy(); chart = null; }
+    if (!rows.length || typeof Chart === 'undefined') {
+      wrap.innerHTML = '<div class="cm-empty">' + (rows.length ? 'The chart library did not load — the table shows the same numbers.' : 'No records match these filters.') + '</div>';
+      if (rows.length === 0) wrap.style.height = 'auto';
+      return;
+    }
+    if (!$('cm-chart')) wrap.innerHTML = '<canvas id="cm-chart" role="img" aria-label="Compliance status by department — the table beside it lists the same numbers"></canvas>';
+    var labels = rows.map(function (r) { return r.label; });
+    chart = new Chart($('cm-chart'), {
+      type: 'bar',
+      data: {
+        labels: labels.map(LCL_CHART.wrapTick || function (x) { return x; }),
+        datasets: BUCKETS.map(function (b) {
+          return { label: ST[b].label, data: rows.map(function (r) { return r[b]; }), backgroundColor: ST[b].color,
+            borderColor: '#FFFFFF', borderWidth: { right: 2, left: 0, top: 0, bottom: 0 }, borderSkipped: false, borderRadius: 2,
+            barThickness: 20, _bucket: b };
+        }),
+      },
+      options: LCL_CHART.merge({
+        indexAxis: 'y', maintainAspectRatio: false, animation: false,
+        plugins: { legend: { display: false },
+          tooltip: { mode: 'index', intersect: false, callbacks: {
+            title: function (items) { return labels[items[0].dataIndex]; },
+            label: function (c) { return ' ' + c.dataset.label + ': ' + c.raw; },
+            footer: function (items) { var r = rows[items[0].dataIndex]; return 'Total tracked: ' + (r.total - r.inactive) + (r.inactive ? ' (+' + r.inactive + ' inactive)' : ''); },
+          } } },
+        scales: { x: { stacked: true, beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#EDF0F5' } },
+          y: { stacked: true, grid: { display: false } } },
+        onClick: function (evt, els) {
+          if (!els.length) return;
+          var r = rows[els[0].index], b = chart.data.datasets[els[0].datasetIndex]._bucket;
+          var p = 'status=' + b + (pivot.groupBy === 'department' ? '&dept=' + r.key : '');
+          if (pivot.groupBy === 'section') { setRegisterFilters({ status: b }); REG.section = r.key; showTab('register'); return; }
+          goFromString(p);
+        },
+        onHover: function (evt, els) { evt.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
+      }),
+    });
+  }
+
+  function renderPivot(pivot) {
+    if (!pivot.rows.length) { $('cm-pivot').innerHTML = '<div class="cm-empty">No records match these filters.</div>'; return; }
+    var cols = ['active', 'due', 'overdue', 'undated', 'inactive'];
+    var cell = function (r, c) {
+      var n = r[c];
+      if (!n) return '<td class="cm-num cm-zero">0</td>';
+      var go = 'status=' + c + (pivot.groupBy === 'department' && r.key ? '&dept=' + r.key : '');
+      return '<td class="cm-num"><button type="button" class="cm-cell-link" data-go="' + esc(go) + '" aria-label="' + n + ' ' + ST[c].label + ' — ' + esc(r.label) + '">' + n + '</button></td>';
+    };
+    var SHORT = { active: 'Active', due: 'Due', overdue: 'Overdue', undated: 'No date', inactive: 'Inactive' };
+    var html = '<table class="n-tbl cm-tbl cm-pivot"><thead><tr><th scope="col" class="n-rowhdr n-tl">' + (pivot.groupBy === 'section' ? 'Workbook section' : 'Department') + '</th>' +
+      cols.map(function (c) { return '<th scope="col" class="cm-num"><span class="cm-dot" style="background:' + ST[c].color + ';margin-right:4px"></span>' + SHORT[c] + '</th>'; }).join('') +
+      '<th scope="col" class="cm-num">Total</th><th scope="col" class="cm-num">Verified</th></tr></thead><tbody>';
+    pivot.rows.forEach(function (r) {
+      html += '<tr><td class="n-rowhdr n-tl">' + esc(r.label) + '</td>' + cols.map(function (c) { return cell(r, c); }).join('') +
+        '<td class="cm-num"><strong>' + r.total + '</strong></td><td class="cm-num">' + Math.round(100 * r.verified / r.total) + '%</td></tr>';
+    });
+    var T = pivot.totals;
+    html += '<tr class="n-total"><td class="n-rowhdr n-tl">All</td>' + cols.map(function (c) { return '<td class="cm-num">' + T[c] + '</td>'; }).join('') +
+      '<td class="cm-num">' + T.total + '</td><td class="cm-num">' + (T.total ? Math.round(100 * T.verified / T.total) : 0) + '%</td></tr></tbody></table>';
+    $('cm-pivot').innerHTML = html;
+  }
+
+  /* ═══ Register ════════════════════════════════════════════════ */
+  function setRegisterFilters(f) {
+    $('r-status').value = f.status || '';
+    $('r-kind').value = f.kind || '';
+    $('r-dept').value = f.dept || '';
+    $('r-flag').value = f.flag || '';
+    if (f.q !== undefined) $('r-q').value = f.q;
+    REG.section = null;
+  }
+  var qTimer = null;
+  $('r-q').addEventListener('input', function () { clearTimeout(qTimer); qTimer = setTimeout(loadRegister, 250); });
+  ['r-status', 'r-kind', 'r-dept', 'r-flag'].forEach(function (id) { $(id).addEventListener('change', function () { REG.section = null; loadRegister(); }); });
+
+  function regQuery() {
+    var p = new URLSearchParams({ limit: '500' });
+    if ($('r-q').value.trim()) p.set('q', $('r-q').value.trim());
+    if ($('r-status').value) p.set('status', $('r-status').value);
+    if ($('r-kind').value) p.set('kind', $('r-kind').value);
+    if ($('r-dept').value) p.set('dept', $('r-dept').value);
+    if (REG.section) p.set('section', REG.section);
+    var f = $('r-flag').value;
+    if (f === 'unverified') p.set('verified', 'no'); else if (f === 'verified') p.set('verified', 'yes');
+    else if (f === 'mine') p.set('mine', '1'); else if (f) p.set('flag', f);
+    return p;
+  }
+
+  function loadRegister() {
+    $('r-table').innerHTML = '<div class="cm-empty">Loading…</div>';
+    API.request('GET', '/compliance/items?' + regQuery().toString()).then(function (r) {
+      REG.rows = r.rows;
+      REG.selected = new Set([...REG.selected].filter(function (id) { return r.rows.some(function (x) { return x.id === id; }); }));
+      renderRegister(r);
+    }).catch(function (e) { $('r-table').innerHTML = '<div class="cm-empty">Could not load the register: ' + esc(errText(e)) + '</div>'; });
+  }
+
+  function renderRegister(r) {
+    $('r-count').textContent = r.total + ' record' + (r.total === 1 ? '' : 's') + (REG.section ? ' in section "' + REG.section + '"' : '') + (r.total > r.rows.length ? ' (showing the first ' + r.rows.length + ')' : '');
+    if (!r.rows.length) { $('r-table').innerHTML = '<div class="cm-empty">No records match these filters.</div>'; updateBulk(); return; }
+    var selectable = ME && (ME.canCreate || ME.ownRole);
+    var html = '<table class="n-tbl cm-tbl cm-reg"><thead><tr>' + (selectable ? '<th scope="col" class="cm-pick"><input type="checkbox" id="r-all" aria-label="Select all shown"></th>' : '') +
+      '<th scope="col">Obligation</th><th scope="col">Department</th><th scope="col">Deadline</th><th scope="col">Status</th><th scope="col">Responsible</th><th scope="col" class="cm-num">Docs</th></tr></thead><tbody>';
+    r.rows.forEach(function (it) {
+      html += '<tr class="cm-row" tabindex="0" data-open="' + it.id + '">' +
+        (selectable ? '<td class="cm-pick"><input type="checkbox" data-pick="' + it.id + '"' + (REG.selected.has(it.id) ? ' checked' : '') + ' aria-label="Select ' + esc(it.title) + '"></td>' : '') +
+        '<td><div class="cm-title">' + esc(it.title) + '</div><div class="cm-sub">' + esc(KIND[it.kind]) + (it.agency ? ' · ' + esc(it.agency) : '') + (it.reference_no ? ' · Ref ' + esc(it.reference_no) : '') + '</div><div class="cm-flags">' + flagChips(it) + '</div></td>' +
+        '<td data-k="Department">' + esc(it.department) + (it.section_label && it.section_label !== it.department ? '<div class="cm-sub">' + esc(it.section_label) + '</div>' : '') + '</td>' +
+        '<td data-k="Deadline">' + esc(fmtDate(it.deadline)) + '<div class="cm-sub">' + esc(days(it)) + '</div></td>' +
+        '<td data-k="Status">' + chip(it.status) + '</td>' +
+        '<td data-k="Responsible">' + (it.direct.length ? esc(it.direct.map(function (p) { return p.name; }).join(', ')) : '<span class="cm-muted">—</span>') + '</td>' +
+        '<td data-k="Documents" class="cm-num">' + (it.doc_count || 0) + '</td></tr>';
+    });
+    $('r-table').innerHTML = html + '</tbody></table>';
+    icons();
+    updateBulk();
+  }
+
+  $('r-table').addEventListener('click', function (e) {
+    var cb = e.target.closest('input[type=checkbox]');
+    if (cb) {
+      if (cb.id === 'r-all') {
+        REG.rows.forEach(function (it) { if (cb.checked) REG.selected.add(it.id); else REG.selected.delete(it.id); });
+        $('r-table').querySelectorAll('[data-pick]').forEach(function (x) { x.checked = cb.checked; });
+      } else {
+        var id = +cb.dataset.pick;
+        if (cb.checked) REG.selected.add(id); else REG.selected.delete(id);
+      }
+      updateBulk();
+      return;
+    }
+    var row = e.target.closest('[data-open]');
+    if (row) openItem(+row.dataset.open);
+  });
+  $('r-table').addEventListener('keydown', function (e) {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('tr[data-open]')) { e.preventDefault(); openItem(+e.target.dataset.open); }
+  });
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-open]');
+    if (b) openItem(+b.dataset.open);
+  });
+
+  function updateBulk() {
+    var n = REG.selected.size;
+    $('r-bulk').hidden = n === 0;
+    $('r-bulk-n').textContent = n + ' selected';
+  }
+  $('r-bulk-clear').addEventListener('click', function () { REG.selected.clear(); loadRegister(); });
+  $('r-bulk-verify').addEventListener('click', function () {
+    var ids = [...REG.selected];
+    if (!confirm('Confirm that the ' + ids.length + ' selected records are correct as shown? This marks them verified by you, and releases any reminders they were holding.')) return;
+    API.request('POST', '/compliance/items/batch-verify', { ids: ids }).then(function (r) {
+      flash(r.verified + ' records verified.'); REG.selected.clear(); loadRegister();
+    }).catch(function (e) { flash(errText(e), false); });
+  });
+  $('r-bulk-renew').addEventListener('click', function () {
+    var ids = [...REG.selected];
+    openForm({
+      title: 'Renew ' + ids.length + ' records with one certificate',
+      intro: 'For example one TBS calibration certificate that covers several instruments. Each selected licence or certificate gets the new dates and the same document as a new version.',
+      fields: [
+        { name: 'file', label: 'Certificate (PDF, JPG, PNG, DOCX, XLSX — up to 10 MB)', type: 'file', accept: '.pdf,.jpg,.jpeg,.png,.docx,.xlsx' },
+        { row: [{ name: 'valid_from', label: 'Valid from', type: 'date' }, { name: 'valid_to', label: 'Valid to', type: 'date', required: true }] },
+        { name: 'reference_no', label: 'Certificate / reference number', type: 'text' },
+        { name: 'note', label: 'Note', type: 'textarea' },
+      ],
+      submitLabel: 'Renew ' + ids.length + ' records',
+      onSubmit: function (v, form) {
+        var fd = new FormData();
+        var file = form.querySelector('[name=file]').files[0];
+        if (file) fd.append('file', file);
+        fd.append('ids', JSON.stringify(ids));
+        ['valid_from', 'valid_to', 'reference_no', 'note'].forEach(function (k) { if (v[k]) fd.append(k, v[k]); });
+        return API.upload('/compliance/items/batch-renew', fd).then(function (r) {
+          flash(r.renewed + ' records renewed' + (r.documents ? ', certificate attached to each.' : '.')); REG.selected.clear(); loadRegister();
+        });
+      },
+    });
+  });
+
+  $('cm-export').addEventListener('click', function () {
+    var p = TAB === 'register' ? regQuery() : dashQuery();
+    API.download('/compliance/items/export.xlsx?' + p.toString(), 'compliance-register.xlsx').catch(function (e) { flash(errText(e), false); });
+  });
+
+  /* ═══ Form dialog ═════════════════════════════════════════════ */
+  var formCtx = null;
+  function fieldHTML(f) {
+    var id = 'ff-' + f.name, req = f.required ? ' required' : '';
+    var val = f.value == null ? '' : f.value;
+    var input;
+    if (f.type === 'select') {
+      input = '<select id="' + id + '" name="' + f.name + '"' + req + '>' + f.options.map(function (o) {
+        return '<option value="' + esc(o[0]) + '"' + (String(o[0]) === String(val) ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
+      }).join('') + '</select>';
+    } else if (f.type === 'textarea') {
+      input = '<textarea id="' + id + '" name="' + f.name + '"' + req + '>' + esc(val) + '</textarea>';
+    } else if (f.type === 'checkbox') {
+      return '<div class="cm-field cb"><input type="checkbox" id="' + id + '" name="' + f.name + '"' + (val ? ' checked' : '') + '><label for="' + id + '">' + esc(f.label) + '</label>' + (f.hint ? '<span class="hint" style="grid-column:2">' + esc(f.hint) + '</span>' : '') + '</div>';
+    } else if (f.type === 'file') {
+      input = '<input type="file" id="' + id + '" name="' + f.name + '"' + (f.accept ? ' accept="' + f.accept + '"' : '') + req + '>';
+    } else if (f.type === 'multi') {
+      input = '<select id="' + id + '" name="' + f.name + '" multiple size="' + Math.min(6, f.options.length || 1) + '">' + f.options.map(function (o) {
+        return '<option value="' + esc(o[0]) + '"' + ((f.value || []).map(String).indexOf(String(o[0])) >= 0 ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
+      }).join('') + '</select>';
+    } else {
+      input = '<input type="' + (f.type || 'text') + '" id="' + id + '" name="' + f.name + '" value="' + esc(val) + '"' + req + (f.min != null ? ' min="' + f.min + '"' : '') + (f.max != null ? ' max="' + f.max + '"' : '') + (f.placeholder ? ' placeholder="' + esc(f.placeholder) + '"' : '') + '>';
+    }
+    return '<div class="cm-field' + (f.hide ? ' cm-hidden' : '') + '" data-fname="' + f.name + '"><label for="' + id + '">' + esc(f.label) + (f.required ? ' *' : '') + '</label>' + input + (f.hint ? '<span class="hint">' + esc(f.hint) + '</span>' : '') + '</div>';
+  }
+  function openForm(ctx) {
+    formCtx = ctx;
+    $('f-title').textContent = ctx.title;
+    $('f-fields').innerHTML = (ctx.intro ? '<p class="cm-muted" style="margin:0">' + esc(ctx.intro) + '</p>' : '') + ctx.fields.map(function (f) {
+      return f.row ? '<div class="cm-row2">' + f.row.map(fieldHTML).join('') + '</div>' : fieldHTML(f);
+    }).join('');
+    $('f-submit').textContent = ctx.submitLabel || 'Save';
+    $('f-err').textContent = '';
+    $('f-scrim').hidden = false;
+    if (ctx.onRender) ctx.onRender($('f-form'));
+    var first = $('f-form').querySelector('input:not([type=hidden]),select,textarea');
+    if (first) first.focus();
+  }
+  function closeForm() { $('f-scrim').hidden = true; formCtx = null; }
+  $('f-cancel').addEventListener('click', closeForm);
+  $('f-scrim').addEventListener('click', function (e) { if (e.target === $('f-scrim')) closeForm(); });
+  $('f-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!formCtx) return;
+    var form = $('f-form'), v = {};
+    form.querySelectorAll('[name]').forEach(function (el) {
+      if (el.type === 'checkbox') v[el.name] = el.checked;
+      else if (el.multiple) v[el.name] = [...el.selectedOptions].map(function (o) { return o.value; });
+      else if (el.type !== 'file') v[el.name] = el.value.trim();
+    });
+    var missing = [...form.querySelectorAll('[required]')].filter(function (el) { return el.closest('.cm-hidden') == null && (el.type === 'file' ? !el.files.length : !el.value.trim()); });
+    if (missing.length) { $('f-err').textContent = 'Fill in the fields marked *.'; missing[0].focus(); return; }
+    $('f-submit').disabled = true; $('f-err').textContent = '';
+    Promise.resolve(formCtx.onSubmit(v, form)).then(function () { closeForm(); })
+      .catch(function (err) { $('f-err').textContent = errText(err); })
+      .finally(function () { $('f-submit').disabled = false; });
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (!$('f-scrim').hidden) closeForm(); else if (!$('d-drawer').hidden) closeItem();
+  });
+
+  /* ═══ Record drawer ═══════════════════════════════════════════ */
+  var D = { id: null, data: null, tab: 'general', lastFocus: null };
+  function openItem(id) {
+    D.id = id; D.tab = D.tab || 'general'; D.lastFocus = document.activeElement;
+    $('d-scrim').hidden = false; $('d-drawer').hidden = false;
+    $('d-title').textContent = 'Loading…'; $('d-meta').textContent = ''; $('d-flags').innerHTML = '';
+    $('d-body').innerHTML = '<div class="cm-empty">Loading…</div>';
+    try { var u = new URL(location.href); u.searchParams.set('item', id); history.replaceState(null, '', u); } catch (e) { /* no history */ }
+    reloadItem().then(function () { $('d-close').focus(); });
+  }
+  function closeItem() {
+    $('d-scrim').hidden = true; $('d-drawer').hidden = true; D.id = null;
+    try { var u = new URL(location.href); u.searchParams.delete('item'); history.replaceState(null, '', u); } catch (e) { /* no history */ }
+    if (D.lastFocus && D.lastFocus.focus) D.lastFocus.focus();
+    if (TAB === 'register') loadRegister(); else if (TAB === 'dashboard') loadDashboard();
+  }
+  $('d-close').addEventListener('click', closeItem);
+  $('d-scrim').addEventListener('click', closeItem);
+
+  function reloadItem() {
+    return API.request('GET', '/compliance/items/' + D.id).then(function (r) { D.data = r; renderItem(); })
+      .catch(function (e) {
+        $('d-title').textContent = e.status === 404 ? 'Record not found' : 'Could not load this record';
+        $('d-body').innerHTML = '<div class="cm-empty">' + esc(e.status === 404 ? 'This record does not exist, or it belongs to another department.' : errText(e)) + '</div>';
+      });
+  }
+
+  function statusBar(it) {
+    var steps = ['active', 'due', 'overdue'];
+    var cur = it.status;
+    var html = '<div class="cm-statusbar" role="img" aria-label="Status: ' + esc(ST[cur].label) + '">' + steps.map(function (s) {
+      return '<div class="cm-step' + (s === cur ? ' on ' + s : '') + '">' + ST[s].label + '</div>';
+    }).join('') + (['undated', 'inactive', 'archived'].indexOf(cur) >= 0 ? '<div class="cm-step on ' + cur + '">' + ST[cur].label + '</div>' : '') + '</div>';
+    html += '<p class="cm-reason"><strong>' + esc(it.reason || '') + '</strong>' + (it.days_left != null ? ' — ' + esc(days(it)) : '') + '</p>';
+    // A validity timeline: Valid From → Valid To, the first reminder window shaded, today marked.
+    if (it.kind === 'validity' && it.valid_to) {
+      var from = it.valid_from || it.valid_to, to = it.valid_to, todayS = ME.today;
+      var a = Date.parse(from), b = Date.parse(to), t = Date.parse(todayS);
+      var lo = Math.min(a, t), hi = Math.max(b, t) + 86400000 * 7;
+      if (hi > lo) {
+        var pc = function (x) { return Math.max(0, Math.min(100, 100 * (x - lo) / (hi - lo))); };
+        var win = b - (it.effective_leads ? it.effective_leads[0] : 45) * 86400000;
+        html += '<div class="cm-timeline" aria-hidden="true"><div class="win" style="left:' + pc(win) + '%;right:' + (100 - pc(b)) + '%"></div>' +
+          '<div class="over" style="left:' + pc(b + 86400000) + '%;right:0"></div><div class="today" style="left:' + pc(t) + '%" title="Today"></div></div>' +
+          '<div class="cm-timeline-lbl"><span>Valid from ' + esc(fmtDate(it.valid_from)) + '</span><span>Today</span><span>Expires ' + esc(fmtDate(it.valid_to)) + '</span></div>';
+      }
+    }
+    return html;
+  }
+
+  function renderItem() {
+    var it = D.data.item, can = D.data.can;
+    $('d-title').textContent = it.title;
+    $('d-meta').textContent = [it.department, KIND[it.kind], it.agency, it.entity !== 'LCL' ? it.entity : null].filter(Boolean).join(' · ');
+    $('d-flags').innerHTML = chip(it.status) + ' ' + flagChips(it) + (it.criticality === 'high' ? ' <span class="n-chip is-bad">High criticality</span>' : '');
+    var acts = [];
+    if (can.verify && !it.verified_at) acts.push('<button type="button" class="n-btn is-primary" data-act="verify"><i data-lucide="check-circle"></i> Verify — this record is correct</button>');
+    if (can.act && it.kind === 'validity') acts.push('<button type="button" class="n-btn' + (it.verified_at || !can.verify ? ' is-primary' : '') + '" data-act="renew"><i data-lucide="upload"></i> Upload renewed certificate</button>');
+    if (can.act && it.kind === 'recurring' && it.open_periods.length) acts.push('<button type="button" class="n-btn is-primary" data-act="file"><i data-lucide="file-check"></i> Record filing / payment</button>');
+    if (can.act && it.kind === 'condition') acts.push('<button type="button" class="n-btn is-primary" data-act="assess"><i data-lucide="clipboard-check"></i> Record a review</button>');
+    if (can.act && it.kind !== 'condition' && it.status !== 'inactive') acts.push('<button type="button" class="n-btn" data-act="renewal">' + (it.renewal_in_progress ? 'Clear "renewal in progress"' : 'Mark renewal in progress') + '</button>');
+    if (can.act) acts.push('<button type="button" class="n-btn" data-act="doc"><i data-lucide="file-plus"></i> Attach a document</button>');
+    if (can.edit) acts.push('<button type="button" class="n-btn" data-act="edit"><i data-lucide="pencil"></i> Edit</button>');
+    if (can.archive) acts.push('<button type="button" class="n-btn is-quiet" data-act="lifecycle">' + (it.lifecycle === 'active' ? 'Deactivate / archive' : 'Restore to active') + '</button>');
+    if (can.transfer) acts.push('<button type="button" class="n-btn is-quiet" data-act="transfer">Move to another department</button>');
+
+    var tabs = [['general', 'Details'], ['people', 'Responsibility'], [it.kind === 'recurring' ? 'periods' : it.kind === 'condition' ? 'reviews' : null, it.kind === 'recurring' ? 'Filings' : 'Reviews'],
+      ['docs', 'Documents & versions'], ['reminders', 'Reminders'], ['history', 'History']].filter(function (x) { return x[0]; });
+    if (it.source === 'import') tabs.push(['sheet', 'Sheet said']);
+    if (!tabs.some(function (x) { return x[0] === D.tab; })) D.tab = 'general';
+    $('d-body').innerHTML = statusBar(it) + (acts.length ? '<div class="cm-actions">' + acts.join('') + '</div>' : '') +
+      '<div class="n-seg cm-dtabs" role="group" aria-label="Record sections">' + tabs.map(function (t) {
+        return '<button type="button" class="n-seg-btn" data-dtab="' + t[0] + '" aria-pressed="' + (t[0] === D.tab) + '">' + esc(t[1]) + '</button>';
+      }).join('') + '</div><div id="d-tab"></div>';
+    renderDrawerTab();
+    icons();
+  }
+
+  $('d-body').addEventListener('click', function (e) {
+    var t = e.target.closest('[data-dtab]');
+    if (t) { D.tab = t.dataset.dtab; $('d-body').querySelectorAll('[data-dtab]').forEach(function (b) { b.setAttribute('aria-pressed', String(b === t)); }); renderDrawerTab(); return; }
+    var a = e.target.closest('[data-act]');
+    if (a) { itemAction(a.dataset.act, a.dataset); return; }
+    var dl = e.target.closest('[data-dl]');
+    if (dl) { API.download('/compliance/documents/' + dl.dataset.dl + '/download', dl.dataset.name).catch(function (er) { flash(errText(er), false); }); return; }
+  });
+
+  function kv(rows) {
+    return '<dl class="cm-kv">' + rows.filter(function (r) { return r && r[1] != null && r[1] !== ''; }).map(function (r) {
+      return '<dt>' + esc(r[0]) + '</dt><dd>' + (r[2] ? r[1] : esc(String(r[1]))) + '</dd>';
+    }).join('') + '</dl>';
+  }
+  function ruleText(it) {
+    if (it.kind === 'validity') return it.no_expiry ? 'No expiry' : (it.valid_to ? 'Expires ' + fmtDate(it.valid_to) : 'No expiry date set');
+    if (it.kind === 'condition') return 'Reviewed every ' + (it.review_interval_months || 3) + ' months' + (it.next_review_on ? ' — next ' + fmtDate(it.next_review_on) : '');
+    var u = UNIT[it.rec_unit] || it.rec_unit;
+    if (it.rec_unit === 'month') return u + (it.rec_due_day ? ', due on the ' + it.rec_due_day + ordinal(it.rec_due_day) : ' — due day not set');
+    if (it.rec_unit === 'quarter' || it.rec_unit === 'half') {
+      var step = it.rec_unit === 'quarter' ? 3 : 6, ms = [];
+      for (var m = (it.rec_due_month || 1); m <= 12; m += step) ms.push(MONTHS[m - 1]);
+      return u + (it.rec_due_day ? ', due on the ' + it.rec_due_day + ordinal(it.rec_due_day) + ' of ' + ms.join(' / ') : ' — due day not set');
+    }
+    if (it.rec_unit === 'year') return u + (it.rec_due_day && it.rec_due_month ? ', due ' + it.rec_due_day + ' ' + MONTHS[it.rec_due_month - 1] : ' — due date not set');
+    if (it.rec_unit === 'years') return 'Every ' + it.rec_interval + ' years' + (it.rec_anchor_date ? ' from ' + fmtDate(it.rec_anchor_date) : ' — next date not set');
+    return u;
+  }
+  function ordinal(n) { return (n % 10 === 1 && n !== 11) ? 'st' : (n % 10 === 2 && n !== 12) ? 'nd' : (n % 10 === 3 && n !== 13) ? 'rd' : 'th'; }
+
+  function renderDrawerTab() {
+    var it = D.data.item, el = $('d-tab');
+    if (D.tab === 'general') {
+      el.innerHTML = kv([
+        ['Obligation', it.title], ['Description', it.description && it.description !== it.title ? it.description : null],
+        ['Department', it.department], ['Workbook section', it.section_label], ['Agency', it.agency], ['Reference / certificate no.', it.reference_no],
+        ['Kind', KIND[it.kind]], ['Schedule', ruleText(it)], ['Frequency (as written)', it.frequency_label],
+        ['Valid from', it.kind === 'validity' ? fmtDate(it.valid_from) : null],
+        ['Reminder days', (it.effective_leads || []).join(' / ') + ' days before (responsible / supervisor / head)' + (it.lead_days && it.lead_days[0] == null ? ' — defaults' : '')],
+        ['Reminders', it.reminders_enabled ? 'On' : 'Off for this record'],
+        ['Original document kept at', it.custodian], ['Criticality', it.criticality === 'high' ? 'High' : it.criticality === 'low' ? 'Low' : 'Normal'],
+        ['Fee', it.fee_amount != null ? (it.fee_currency || '') + ' ' + Number(it.fee_amount).toLocaleString() : null],
+        ['Group', it.group ? it.group.title || it.group.code : null], ['Entity', it.entity],
+        ['Renewal note', it.renewal_note], ['Inactive because', it.inactive_reason], ['Remarks', it.remarks],
+        ['Verified', it.verified_at ? fmtWhen(it.verified_at) + ' by ' + (it.verified_by_name || '—') : 'Not yet — the owning department has not confirmed this record'],
+        ['Last changed', fmtWhen(it.updated_at) + (it.updated_by_name ? ' by ' + it.updated_by_name : '')],
+      ]);
+    } else if (D.tab === 'people') {
+      var pp = function (list) { return list.length ? list.map(function (p) { return '<span class="cm-person">' + esc(p.name) + (p.email ? '' : ' <span class="n-chip is-neutral">no email</span>') + '</span>'; }).join('') : '<span class="cm-muted">Nobody named</span>'; };
+      el.innerHTML = '<p class="cm-muted">The workbook called these "Level 1" and "Level 2". Here they are the people the reminders go to — not the MIS account levels.</p>' +
+        '<div class="cm-sec">Responsible person</div>' + pp(it.direct) + '<div class="cm-sub">Reminded from the first reminder day (' + ((it.effective_leads || [])[0]) + ' days before).</div>' +
+        '<div class="cm-sec">Supervisor</div>' + pp(it.second) + '<div class="cm-sub">Added from the second reminder day (' + ((it.effective_leads || [])[1]) + ' days before).</div>' +
+        '<div class="cm-sec">Head (central escalation list)</div><div class="cm-sub">One list for all departments, kept by the MD in Settings. Added from the third reminder day (' + ((it.effective_leads || [])[2]) + ' days before), and on every overdue reminder.</div>' +
+        (D.data.can.edit ? '<div class="cm-actions" style="margin-top:var(--sp-3)"><button type="button" class="n-btn" data-act="people"><i data-lucide="users"></i> Change people</button></div>' : '');
+    } else if (D.tab === 'periods') {
+      var ps = D.data.periods;
+      el.innerHTML = ps.length ? '<table class="n-tbl cm-tbl"><thead><tr><th>Instance</th><th>Due</th><th>Status</th><th>Done</th><th></th></tr></thead><tbody>' + ps.map(function (p) {
+        var st = p.status === 'done' ? '<span class="n-chip is-good">Done</span>' : p.status === 'waived' ? '<span class="n-chip is-neutral">Waived</span>'
+          : (p.due_on < ME.today ? '<span class="n-chip is-bad">Overdue</span>' : '<span class="n-chip is-warn">Open</span>');
+        var btns = '';
+        if (p.status === 'open' && D.data.can.act) btns += '<button type="button" class="n-btn" data-act="file" data-pid="' + p.id + '">Record</button> ';
+        if (p.status === 'open' && D.data.can.edit) btns += '<button type="button" class="n-btn is-quiet" data-act="waive" data-pid="' + p.id + '">Waive</button>';
+        if (p.status !== 'open' && D.data.can.edit) btns += '<button type="button" class="n-btn is-quiet" data-act="reopen" data-pid="' + p.id + '">Reopen</button>';
+        var docs = (p.documents || []).map(function (d) { return '<button type="button" class="cm-cell-link" data-dl="' + d.id + '" data-name="' + esc(d.file_name) + '">' + esc(d.file_name) + '</button>'; }).join(' ');
+        return '<tr><td>' + esc(p.period_key) + (p.note ? '<div class="cm-sub">' + esc(p.note) + '</div>' : '') + '</td><td>' + esc(fmtDate(p.due_on)) + '</td><td>' + st + '</td><td>' +
+          (p.done_on ? esc(fmtDate(p.done_on)) + (p.done_by_name ? '<div class="cm-sub">' + esc(p.done_by_name) + (p.reference ? ' · ' + esc(p.reference) : '') + '</div>' : '') : (p.waived_reason ? '<div class="cm-sub">' + esc(p.waived_reason) + '</div>' : '—')) +
+          (docs ? '<div class="cm-sub">' + docs + '</div>' : '') + '</td><td>' + btns + '</td></tr>';
+      }).join('') + '</tbody></table>' : '<div class="cm-empty">No instances yet. ' + (it.rec_unit === 'on_demand' ? 'Add one when it arises.' : 'Set the due day under Edit and they appear automatically.') + '</div>';
+      if (D.data.can.act && it.rec_unit === 'on_demand') el.innerHTML += '<div class="cm-actions" style="margin-top:var(--sp-3)"><button type="button" class="n-btn" data-act="adhoc">Add an instance</button></div>';
+    } else if (D.tab === 'reviews') {
+      var as = D.data.assessments;
+      var R = { complied: ['is-good', 'Complied'], partial: ['is-warn', 'Partially complied'], not_complied: ['is-bad', 'Not complied'], not_applicable: ['is-neutral', 'Not applicable'] };
+      el.innerHTML = as.length ? '<ul class="cm-list">' + as.map(function (a) {
+        return '<li><div><span class="n-chip ' + R[a.result][0] + '">' + R[a.result][1] + '</span>' + (a.note ? '<div class="cm-sub">' + esc(a.note) + '</div>' : '') +
+          (a.raw_text ? '<div class="cm-sub">Workbook said: "' + esc(a.raw_text) + '"</div>' : '') + '</div><div class="cm-sub" style="text-align:right">' +
+          (a.assessed_on ? esc(fmtDate(a.assessed_on)) : 'From the workbook') + (a.assessed_by_name ? '<br>' + esc(a.assessed_by_name) : '') + '</div></li>';
+      }).join('') + '</ul>' : '<div class="cm-empty">No reviews recorded yet.</div>';
+    } else if (D.tab === 'docs') {
+      el.innerHTML = '<div class="cm-empty">Loading…</div>';
+      API.request('GET', '/compliance/items/' + it.id + '/documents').then(function (r) {
+        if (!r.documents.length) { el.innerHTML = '<div class="cm-empty">No documents yet. ' + (D.data.can.act ? 'Upload the current certificate so the original is one click away.' : '') + '</div>'; return; }
+        el.innerHTML = '<table class="n-tbl cm-tbl"><thead><tr><th>Version</th><th>File</th><th>Uploaded</th><th>Validity</th><th></th></tr></thead><tbody>' + r.documents.map(function (d) {
+          return '<tr' + (d.retracted_at ? ' style="opacity:.6"' : '') + '><td><strong>v' + d.version_no + '</strong><div class="cm-sub">' + esc(d.doc_type) + (d.period_key ? ' · ' + esc(d.period_key) : '') + '</div></td>' +
+            '<td><button type="button" class="cm-cell-link" data-dl="' + d.id + '" data-name="' + esc(d.file_name) + '">' + esc(d.file_name) + '</button><div class="cm-sub">' + Math.max(1, Math.round(d.size_bytes / 1024)) + ' KB' + (d.reference_no ? ' · Ref ' + esc(d.reference_no) : '') + '</div>' +
+            (d.retracted_at ? '<div class="cm-sub"><strong>Retracted</strong> ' + esc(fmtWhen(d.retracted_at)) + ' by ' + esc(d.retracted_by_name || '') + ': ' + esc(d.retracted_reason || '') + '</div>' : '') + (d.note ? '<div class="cm-sub">' + esc(d.note) + '</div>' : '') + '</td>' +
+            '<td>' + esc(d.uploaded_by_name) + '<div class="cm-sub">' + esc(fmtWhen(d.uploaded_at)) + '</div></td>' +
+            '<td>' + (d.valid_to ? esc(fmtDate(d.valid_from)) + ' → ' + esc(fmtDate(d.valid_to)) : '—') + '</td>' +
+            '<td>' + (d.canRetract ? '<button type="button" class="n-btn is-quiet" data-act="retract" data-doc="' + d.id + '">Retract</button>' : '') + '</td></tr>';
+        }).join('') + '</tbody></table><p class="cm-sub" style="margin-top:var(--sp-2)">Every version is kept. A retracted version stays listed with the reason.</p>';
+      }).catch(function (e) { el.innerHTML = '<div class="cm-empty">' + esc(errText(e)) + '</div>'; });
+    } else if (D.tab === 'reminders') {
+      el.innerHTML = '<div class="cm-empty">Loading…</div>';
+      API.request('GET', '/compliance/items/' + it.id + '/reminders').then(function (r) {
+        el.innerHTML = r.reminders.length ? '<table class="n-tbl cm-tbl"><thead><tr><th>For deadline</th><th>Who</th><th>Status</th><th>When</th></tr></thead><tbody>' + r.reminders.map(function (n) {
+          return '<tr><td>' + esc(fmtDate(n.deadline)) + '<div class="cm-sub">' + esc(n.stage.indexOf('OD') === 0 ? 'Overdue reminder' : 'Before the deadline') + '</div></td><td>' + esc(n.recipient_name || '—') +
+            '<div class="cm-sub">' + esc(AUD[n.audience]) + (n.recipient_email ? ' · ' + esc(n.recipient_email) : '') + '</div></td><td>' + esc(NSTAT[n.status] || n.status) +
+            (n.last_error ? '<div class="cm-sub">' + esc(n.last_error) + '</div>' : '') + '</td><td>' + esc(fmtWhen(n.sent_at || n.updated_at)) + '</td></tr>';
+        }).join('') + '</tbody></table>' : '<div class="cm-empty">No reminders yet — they start on the first reminder day before the deadline.</div>';
+      }).catch(function (e) { el.innerHTML = '<div class="cm-empty">' + esc(errText(e)) + '</div>'; });
+    } else if (D.tab === 'history') {
+      el.innerHTML = '<div class="cm-empty">Loading…</div>';
+      API.request('GET', '/compliance/items/' + it.id + '/history').then(function (r) {
+        el.innerHTML = '<ul class="cm-list">' + r.history.map(function (h) {
+          var ch = h.changes ? Object.keys(h.changes).map(function (k) { var c = h.changes[k]; return esc(k.replace(/_/g, ' ')) + ': ' + esc(String(Array.isArray(c) ? (c[0] == null ? '—' : c[0]) : '')) + ' → ' + esc(String(Array.isArray(c) ? (c[1] == null ? '—' : c[1]) : c)); }).join('; ') : '';
+          return '<li><div><strong>' + esc(h.action.replace(/_/g, ' ')) + '</strong>' + (ch ? '<div class="cm-sub">' + ch + '</div>' : '') + (h.note ? '<div class="cm-sub">' + esc(h.note) + '</div>' : '') +
+            '</div><div class="cm-sub" style="text-align:right;flex:none">' + esc(h.actor_name || 'System') + '<br>' + esc(fmtWhen(h.at)) + '</div></li>';
+        }).join('') + '</ul>';
+      }).catch(function (e) { el.innerHTML = '<div class="cm-empty">' + esc(errText(e)) + '</div>'; });
+    } else if (D.tab === 'sheet') {
+      var raw = it.source_raw || {};
+      var labels = { sr: 'Sr. No.', dept: 'Department', agency: 'Agency', desc: 'Description', custodian: 'Custodian', freq: 'Frequency', l1: 'Level 1', l2: 'Level 2',
+        from: 'Valid from', to: 'Valid to', orig: 'Original', current: 'Current', status: 'Status', lead1: 'Mailer — direct', lead2: 'Mailer — 2nd level', lead3: 'Mailer — head',
+        remarks: 'Remarks', block: 'Licence block', due: 'Due next' };
+      el.innerHTML = '<p class="cm-muted">What the workbook said, cell by cell (' + esc(it.source_sheet || '') + ' row ' + esc(String(it.source_row || '')) + '), next to what the system computes now: <strong>' + esc(ST[it.status].label) + '</strong>. Use it to verify the record quickly.</p>' +
+        kv(Object.keys(labels).filter(function (k) { return raw[k] != null && raw[k] !== ''; }).map(function (k) { return [labels[k], raw[k]]; })) +
+        (raw.warnings && raw.warnings.length ? '<div class="cm-sec">Import notes</div><ul class="cm-list">' + raw.warnings.map(function (w) { return '<li>' + esc(w) + '</li>'; }).join('') + '</ul>' : '');
+    }
+    icons();
+  }
+
+  /* ── Record actions ───────────────────────────────────────── */
+  function after(promise, msg) {
+    return promise.then(function (r) {
+      if (r && r.item) { D.data.item = r.item; if (r.can) D.data.can = r.can; }
+      flash(msg); return reloadItem();
+    });
+  }
+  function itemAction(act, ds) {
+    var it = D.data.item, id = it.id;
+    if (act === 'verify') {
+      if (!confirm('You are confirming that this record — its dates, people and status — is correct. Continue?')) return;
+      return after(API.request('POST', '/compliance/items/' + id + '/verify'), 'Verified. Any held reminders will go out on the next run.').catch(function (e) { flash(errText(e), false); });
+    }
+    if (act === 'renew' || act === 'doc') {
+      var renew = act === 'renew';
+      return openForm({
+        title: renew ? 'Upload the renewed certificate' : 'Attach a document',
+        intro: renew ? 'The new dates become the record\'s dates, and "renewal in progress" is cleared. The previous certificate stays as an earlier version.' : 'Kept as a new version; nothing is ever overwritten.',
+        fields: [
+          { name: 'file', label: 'File (PDF, JPG, PNG, DOCX, XLSX — up to 10 MB)', type: 'file', required: true, accept: '.pdf,.jpg,.jpeg,.png,.docx,.xlsx' },
+          renew ? { name: 'doc_type', type: 'hidden', label: '', value: 'certificate', hide: true }
+            : { name: 'doc_type', label: 'Type', type: 'select', value: 'other', options: [['certificate', 'Certificate'], ['application', 'Application / correspondence'], ['receipt', 'Receipt'], ['evidence', 'Evidence'], ['other', 'Other']] },
+          renew ? { row: [{ name: 'valid_from', label: 'Valid from', type: 'date' }, { name: 'valid_to', label: 'Valid to', type: 'date', required: true }] } : null,
+          renew ? { name: 'no_expiry', label: 'This certificate has no expiry', type: 'checkbox' } : null,
+          { name: 'reference_no', label: 'Certificate / reference number', type: 'text' },
+          { name: 'note', label: 'Note', type: 'textarea' },
+        ].filter(Boolean),
+        submitLabel: renew ? 'Upload and renew' : 'Upload',
+        onRender: function (form) {
+          var ne = form.querySelector('[name=no_expiry]');
+          if (ne) ne.addEventListener('change', function () { var vt = form.querySelector('[name=valid_to]'); vt.required = !ne.checked; vt.closest('.cm-field').classList.toggle('cm-hidden', ne.checked); });
+        },
+        onSubmit: function (v, form) {
+          var fd = new FormData();
+          fd.append('file', form.querySelector('[name=file]').files[0]);
+          fd.append('doc_type', renew ? 'certificate' : v.doc_type);
+          if (!renew) fd.append('apply', 'false');
+          if (v.no_expiry) fd.append('no_expiry', 'true');
+          ['valid_from', 'valid_to', 'reference_no', 'note'].forEach(function (k) { if (v[k]) fd.append(k, v[k]); });
+          return after(API.upload('/compliance/items/' + id + '/documents', fd), renew ? 'Certificate uploaded — the record is renewed.' : 'Document attached.');
+        },
+      });
+    }
+    if (act === 'file') {
+      var open = it.open_periods.filter(function (p) { return p.id; });
+      var pid = ds.pid ? +ds.pid : (open[0] && open[0].id);
+      var per = (D.data.periods || []).find(function (p) { return p.id === pid; }) || open[0];
+      if (!pid) return flash('There is no open instance to record yet.', false);
+      return openForm({
+        title: 'Record filing / payment' + (per ? ' — ' + per.period_key : ''),
+        intro: per ? 'Due ' + fmtDate(per.due_on) + '. Attach the receipt or acknowledgement if you have it.' : '',
+        fields: [
+          { name: 'done_on', label: 'Filed / paid on', type: 'date', required: true, value: ME.today, max: ME.today },
+          { row: [{ name: 'reference', label: 'Receipt / acknowledgement no.', type: 'text' }, { name: 'amount', label: 'Amount', type: 'number', min: 0 }] },
+          { name: 'currency', label: 'Currency', type: 'select', value: 'TZS', options: [['TZS', 'TZS'], ['USD', 'USD'], ['EUR', 'EUR'], ['KES', 'KES'], ['UGX', 'UGX']] },
+          { name: 'file', label: 'Receipt (optional)', type: 'file', accept: '.pdf,.jpg,.jpeg,.png,.docx,.xlsx' },
+          { name: 'note', label: 'Note', type: 'textarea' },
+        ],
+        submitLabel: 'Record',
+        onSubmit: function (v, form) {
+          var fd = new FormData();
+          var f = form.querySelector('[name=file]').files[0]; if (f) fd.append('file', f);
+          ['done_on', 'reference', 'note'].forEach(function (k) { if (v[k]) fd.append(k, v[k]); });
+          if (v.amount) { fd.append('amount', v.amount); fd.append('currency', v.currency); }
+          return after(API.upload('/compliance/items/' + id + '/periods/' + pid + '/done', fd), 'Recorded. The next instance is now open.');
+        },
+      });
+    }
+    if (act === 'waive') {
+      return openForm({ title: 'Waive this instance', intro: 'Use when it genuinely did not apply (for example no activity that period). The reason is kept.',
+        fields: [{ name: 'reason', label: 'Reason', type: 'textarea', required: true }], submitLabel: 'Waive',
+        onSubmit: function (v) { return after(API.request('POST', '/compliance/items/' + id + '/periods/' + ds.pid + '/waive', { reason: v.reason }), 'Instance waived.'); } });
+    }
+    if (act === 'reopen') {
+      if (!confirm('Reopen this instance? It will count as open again.')) return;
+      return after(API.request('POST', '/compliance/items/' + id + '/periods/' + ds.pid + '/reopen'), 'Instance reopened.').catch(function (e) { flash(errText(e), false); });
+    }
+    if (act === 'adhoc') {
+      return openForm({ title: 'Add an instance', fields: [{ name: 'due_on', label: 'Due on', type: 'date', required: true }, { name: 'note', label: 'Note', type: 'text' }], submitLabel: 'Add',
+        onSubmit: function (v) { return after(API.request('POST', '/compliance/items/' + id + '/periods', { due_on: v.due_on, note: v.note || undefined }), 'Instance added.'); } });
+    }
+    if (act === 'assess') {
+      return openForm({
+        title: 'Record a review', intro: 'What did the check find? The next review date defaults to ' + (it.review_interval_months || 3) + ' months on.',
+        fields: [
+          { name: 'result', label: 'Result', type: 'select', required: true, value: 'complied', options: [['complied', 'Complied'], ['partial', 'Partially complied'], ['not_complied', 'Not complied'], ['not_applicable', 'Not applicable']] },
+          { row: [{ name: 'assessed_on', label: 'Reviewed on', type: 'date', required: true, value: ME.today, max: ME.today }, { name: 'next_review_on', label: 'Next review (optional)', type: 'date' }] },
+          { name: 'file', label: 'Evidence (optional)', type: 'file', accept: '.pdf,.jpg,.jpeg,.png,.docx,.xlsx' },
+          { name: 'note', label: 'Note', type: 'textarea' },
+        ],
+        submitLabel: 'Record review',
+        onSubmit: function (v, form) {
+          var fd = new FormData();
+          var f = form.querySelector('[name=file]').files[0]; if (f) fd.append('file', f);
+          ['result', 'assessed_on', 'next_review_on', 'note'].forEach(function (k) { if (v[k]) fd.append(k, v[k]); });
+          return after(API.upload('/compliance/items/' + id + '/assessments', fd), 'Review recorded.');
+        },
+      });
+    }
+    if (act === 'renewal') {
+      if (it.renewal_in_progress) return after(API.request('POST', '/compliance/items/' + id + '/renewal', { in_progress: false }), 'Cleared.').catch(function (e) { flash(errText(e), false); });
+      return openForm({ title: 'Mark renewal in progress', intro: 'Shows that the work has started (for example "Pending with TBS"). An expired licence still counts as overdue until the new certificate is uploaded, but reminders before the deadline stop and overdue reminders slow to fortnightly.',
+        fields: [{ name: 'note', label: 'Where it stands', type: 'text', placeholder: 'e.g. Application submitted 3 Oct, inspection done' }], submitLabel: 'Save',
+        onSubmit: function (v) { return after(API.request('POST', '/compliance/items/' + id + '/renewal', { in_progress: true, note: v.note || undefined }), 'Marked as renewal in progress.'); } });
+    }
+    if (act === 'retract') {
+      return openForm({ title: 'Retract this version', intro: 'It stays in the list, marked retracted, with your reason.', fields: [{ name: 'reason', label: 'Reason', type: 'text', required: true }], submitLabel: 'Retract',
+        onSubmit: function (v) { return API.request('POST', '/compliance/documents/' + ds.doc + '/retract', { reason: v.reason }).then(function () { flash('Version retracted.'); renderDrawerTab(); }); } });
+    }
+    if (act === 'lifecycle') {
+      if (it.lifecycle !== 'active') return after(API.request('POST', '/compliance/items/' + id + '/lifecycle', { lifecycle: 'active' }), 'Restored to active.').catch(function (e) { flash(errText(e), false); });
+      return openForm({ title: 'Deactivate or archive', fields: [
+        { name: 'lifecycle', label: 'Make it', type: 'select', value: 'inactive', options: [['inactive', 'Inactive — no longer applies, stays visible'], ['archived', 'Archived — hidden except under the Archived filter']] },
+        { name: 'reason', label: 'Why', type: 'textarea', required: true }], submitLabel: 'Save',
+        onSubmit: function (v) { return after(API.request('POST', '/compliance/items/' + id + '/lifecycle', { lifecycle: v.lifecycle, reason: v.reason }), 'Saved.'); } });
+    }
+    if (act === 'transfer') {
+      return openForm({ title: 'Move to another department', intro: 'The receiving department will need to verify it.', fields: [
+        { name: 'owner_role', label: 'Department', type: 'select', required: true, options: [['', 'Choose…']].concat(ME.departments.filter(function (d) { return d.role !== it.owner_role; }).map(function (d) { return [d.role, d.label]; })) },
+        { name: 'reason', label: 'Why', type: 'textarea', required: true }], submitLabel: 'Move',
+        onSubmit: function (v) { return API.request('POST', '/compliance/items/' + id + '/transfer', v).then(function (r) { flash('Moved to ' + r.department + '.'); closeItem(); }); } });
+    }
+    if (act === 'people') return editPeople(it);
+    if (act === 'edit') return editItem(it);
+  }
+
+  var CONTACTS = null;
+  function loadContacts(force) {
+    if (CONTACTS && !force) return Promise.resolve(CONTACTS);
+    return API.request('GET', '/compliance/contacts').then(function (r) { CONTACTS = r.contacts; return CONTACTS; });
+  }
+  function editPeople(it) {
+    loadContacts().then(function (cs) {
+      var opts = cs.filter(function (c) { return c.active; }).map(function (c) { return [c.id, c.name + (c.has_email ? '' : ' (no email)')]; });
+      openForm({ title: 'Responsible people', intro: 'Hold Ctrl (or ⌘) to choose more than one. Missing someone? Add them under Settings & people.',
+        fields: [
+          { name: 'direct', label: 'Responsible person ("Level 1")', type: 'multi', options: opts, value: it.direct.map(function (p) { return p.contactId; }) },
+          { name: 'second', label: 'Supervisor ("Level 2")', type: 'multi', options: opts, value: it.second.map(function (p) { return p.contactId; }) },
+        ], submitLabel: 'Save',
+        onSubmit: function (v) { return after(API.request('PUT', '/compliance/items/' + it.id + '/responsibles', { direct: v.direct.map(Number), second: v.second.map(Number) }), 'People updated.'); } });
+    }).catch(function (e) { flash(errText(e), false); });
+  }
+
+  function itemFields(it, creating) {
+    it = it || {};
+    var kind = it.kind || 'validity';
+    var unitOpts = [['month', 'Monthly'], ['quarter', 'Quarterly'], ['half', 'Every 6 months'], ['year', 'Yearly'], ['years', 'Every few years'], ['on_demand', 'As and when required']];
+    var monthOpts = [['', '—']].concat(MONTHS.map(function (m, i) { return [i + 1, m]; }));
+    var f = [
+      { name: 'title', label: 'Obligation', type: 'text', required: true, value: it.title },
+      creating && ME.role === 'admin' ? { name: 'owner_role', label: 'Department', type: 'select', required: true, options: [['', 'Choose…']].concat(ME.departments.map(function (d) { return [d.role, d.label]; })) } : null,
+      { name: 'kind', label: 'Kind', type: 'select', required: true, value: kind, options: [['validity', 'Licence / certificate (has a validity period)'], ['recurring', 'Filing / payment (repeats)'], ['condition', 'Standing condition (reviewed periodically)']] },
+      { row: [{ name: 'agency', label: 'Agency', type: 'text', value: it.agency }, { name: 'reference_no', label: 'Reference / certificate no.', type: 'text', value: it.reference_no }] },
+      { name: 'description', label: 'Description', type: 'textarea', value: it.description },
+      { row: [{ name: 'valid_from', label: 'Valid from', type: 'date', value: it.valid_from, k: 'validity' }, { name: 'valid_to', label: 'Valid to', type: 'date', value: it.valid_to, k: 'validity' }] },
+      { name: 'no_expiry', label: 'No expiry (a registration that does not lapse)', type: 'checkbox', value: it.no_expiry, k: 'validity' },
+      { row: [{ name: 'rec_unit', label: 'Repeats', type: 'select', value: it.rec_unit || 'month', options: unitOpts, k: 'recurring' }, { name: 'rec_due_day', label: 'Due day of the month', type: 'number', min: 1, max: 31, value: it.rec_due_day, k: 'recurring' }] },
+      { row: [{ name: 'rec_due_month', label: 'Due month (yearly) / first month of the cycle', type: 'select', value: it.rec_due_month || '', options: monthOpts, k: 'recurring' }, { name: 'rec_interval', label: 'Every how many years', type: 'number', min: 1, max: 20, value: it.rec_interval || 1, k: 'recurring' }] },
+      { name: 'rec_anchor_date', label: 'Next due date (for "every few years")', type: 'date', value: it.rec_anchor_date, k: 'recurring' },
+      { row: [{ name: 'review_interval_months', label: 'Review every (months)', type: 'number', min: 1, max: 120, value: it.review_interval_months || 3, k: 'condition' }, { name: 'next_review_on', label: 'Next review', type: 'date', value: it.next_review_on, k: 'condition' }] },
+      { row: [{ name: 'lead_days_1', label: 'Remind responsible (days before)', type: 'number', min: 0, max: 365, value: it.lead_days ? it.lead_days[0] : '', placeholder: 'default' },
+        { name: 'lead_days_2', label: 'Add supervisor (days before)', type: 'number', min: 0, max: 365, value: it.lead_days ? it.lead_days[1] : '', placeholder: 'default' }] },
+      { row: [{ name: 'lead_days_3', label: 'Add Head list (days before)', type: 'number', min: 0, max: 365, value: it.lead_days ? it.lead_days[2] : '', placeholder: 'default' },
+        { name: 'criticality', label: 'Criticality', type: 'select', value: it.criticality || 'normal', options: [['high', 'High — licence to operate'], ['normal', 'Normal'], ['low', 'Low']] }] },
+      { row: [{ name: 'custodian', label: 'Original kept at', type: 'text', value: it.custodian, placeholder: 'HO / Factory' }, { name: 'entity', label: 'Company', type: 'select', value: it.entity || 'LCL', options: [['LCL', 'Lake Cement Ltd'], ['BRL', 'BRL'], ['UCL', 'UCL']] }] },
+      { name: 'reminders_enabled', label: 'Send reminders for this record', type: 'checkbox', value: it.reminders_enabled !== false },
+      { name: 'remarks', label: 'Remarks', type: 'textarea', value: it.remarks },
+    ];
+    return f.filter(Boolean);
+  }
+  function kindToggle(form) {
+    var sel = form.querySelector('[name=kind]');
+    var apply = function () {
+      var k = sel.value;
+      form.querySelectorAll('[data-fname]').forEach(function (el) {
+        var name = el.getAttribute('data-fname');
+        var group = { valid_from: 'validity', valid_to: 'validity', no_expiry: 'validity', rec_unit: 'recurring', rec_due_day: 'recurring', rec_due_month: 'recurring', rec_interval: 'recurring', rec_anchor_date: 'recurring', review_interval_months: 'condition', next_review_on: 'condition' }[name];
+        if (group) el.classList.toggle('cm-hidden', group !== k);
+      });
+    };
+    sel.addEventListener('change', apply); apply();
+  }
+  function bodyFrom(v) {
+    var b = {};
+    ['title', 'kind', 'agency', 'reference_no', 'description', 'custodian', 'remarks', 'criticality', 'entity'].forEach(function (k) { if (v[k] !== undefined) b[k] = v[k] === '' ? null : v[k]; });
+    if (b.title === null) delete b.title;
+    var num = function (x) { return x === '' || x == null ? null : Number(x); };
+    var date = function (x) { return x ? x : null; };
+    if (v.kind === 'validity') { b.valid_from = date(v.valid_from); b.valid_to = v.no_expiry ? null : date(v.valid_to); b.no_expiry = !!v.no_expiry; }
+    if (v.kind === 'recurring') { b.rec_unit = v.rec_unit; b.rec_due_day = num(v.rec_due_day); b.rec_due_month = num(v.rec_due_month); b.rec_interval = num(v.rec_interval) || 1; b.rec_anchor_date = date(v.rec_anchor_date); }
+    if (v.kind === 'condition') { b.review_interval_months = num(v.review_interval_months); b.next_review_on = date(v.next_review_on); }
+    b.lead_days_1 = num(v.lead_days_1); b.lead_days_2 = num(v.lead_days_2); b.lead_days_3 = num(v.lead_days_3);
+    b.reminders_enabled = !!v.reminders_enabled;
+    return b;
+  }
+  function editItem(it) {
+    openForm({ title: 'Edit record', fields: itemFields(it, false), submitLabel: 'Save changes', onRender: kindToggle,
+      onSubmit: function (v) { var b = bodyFrom(v); b.expectedUpdatedAt = it.updated_at; return after(API.request('PATCH', '/compliance/items/' + it.id, b), 'Saved.'); } });
+  }
+  $('cm-add').addEventListener('click', function () {
+    openForm({ title: 'Add an obligation', intro: 'Added by your department, so it counts as verified by you.', fields: itemFields(null, true), submitLabel: 'Add', onRender: kindToggle,
+      onSubmit: function (v) {
+        var b = bodyFrom(v); if (v.owner_role) b.owner_role = v.owner_role;
+        return API.request('POST', '/compliance/items', b).then(function (r) { flash('Added.'); if (TAB === 'register') loadRegister(); else loadDashboard(); openItem(r.item.id); });
+      } });
+  });
+
+  /* ═══ Reminders tab ═══════════════════════════════════════════ */
+  $('m-status').addEventListener('change', loadReminders);
+  function loadReminders() {
+    var s = $('m-status').value;
+    $('m-table').innerHTML = '<div class="cm-empty">Loading…</div>';
+    API.request('GET', '/compliance/reminders?limit=300' + (s ? '&status=' + s : '')).then(function (r) {
+      $('m-counts').innerHTML = Object.keys(NSTAT).filter(function (k) { return r.counts[k]; }).map(function (k) {
+        return '<span class="n-chip is-' + (k === 'sent' ? 'good' : k === 'failed' || k === 'gave_up' ? 'bad' : 'neutral') + '">' + esc(NSTAT[k]) + ': ' + r.counts[k] + '</span>';
+      }).join('') || '<span class="cm-muted">No reminders yet.</span>';
+      $('m-table').innerHTML = r.reminders.length ? '<table class="n-tbl cm-tbl"><thead><tr><th>Record</th><th>For deadline</th><th>Who</th><th>Status</th><th>When</th>' + (ME.canRunReminders ? '<th></th>' : '') + '</tr></thead><tbody>' + r.reminders.map(function (n) {
+        return '<tr><td><button type="button" class="cm-cell-link" data-open="' + n.item_id + '">' + esc(n.title) + '</button><div class="cm-sub">' + esc(n.department) + '</div></td>' +
+          '<td>' + esc(fmtDate(n.deadline)) + '<div class="cm-sub">' + (n.stage.indexOf('OD') === 0 ? 'Overdue reminder' : 'Before the deadline') + '</div></td>' +
+          '<td>' + esc(n.recipient_name || '—') + '<div class="cm-sub">' + esc(AUD[n.audience]) + (n.recipient_email ? ' · ' + esc(n.recipient_email) : '') + '</div></td>' +
+          '<td>' + esc(NSTAT[n.status] || n.status) + (n.last_error ? '<div class="cm-sub">' + esc(n.last_error) + '</div>' : '') + '</td>' +
+          '<td>' + esc(fmtWhen(n.sent_at || n.updated_at)) + '</td>' +
+          (ME.canRunReminders ? '<td>' + (['failed', 'gave_up'].indexOf(n.status) >= 0 ? '<button type="button" class="n-btn is-quiet" data-retry="' + n.id + '">Retry</button>' : '') + '</td>' : '') + '</tr>';
+      }).join('') + '</tbody></table>' : '<div class="cm-empty">Nothing here.</div>';
+    }).catch(function (e) { $('m-table').innerHTML = '<div class="cm-empty">' + esc(errText(e)) + '</div>'; });
+  }
+  $('m-table').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-retry]');
+    if (b) API.request('POST', '/compliance/reminders/' + b.dataset.retry + '/retry').then(function (r) { flash(r.note); loadReminders(); }).catch(function (er) { flash(errText(er), false); });
+  });
+
+  /* ═══ Settings & people ═══════════════════════════════════════ */
+  function loadSettings() {
+    var el = $('s-body');
+    el.innerHTML = '<div class="cm-empty">Loading…</div>';
+    var wantSettings = ME.canSettings || ME.canViewAll;
+    Promise.all([wantSettings ? API.request('GET', '/compliance/settings') : Promise.resolve(null), loadContacts(true)]).then(function (res) {
+      var s = res[0], cs = res[1], html = '';
+      if (s) {
+        var on = s.settings.reminders_enabled === true;
+        html += '<div class="n-card" style="margin-bottom:var(--sp-4)"><div class="n-card-hdr"><div><div class="n-card-title"><i data-lucide="mail"></i> Reminder emails</div>' +
+          '<div class="n-card-sub">Sent through ' + (s.mail.transport === 'graph' ? 'Microsoft Graph as the MIS mailbox' : s.mail.transport ? esc(s.mail.transport) : '<strong>no mail route — nothing can be sent</strong>') +
+          ' · schedule ' + esc(s.mail.cron) + ' (Dar es Salaam)' + (s.mail.appUrl ? '' : ' · <strong>APP_URL not set: emails will carry no RENEW NOW button</strong>') + '</div></div></div><div class="n-card-body">' +
+          '<div class="cm-switch"><input type="checkbox" id="s-enabled" style="width:22px;height:22px"' + (on ? ' checked' : '') + (s.canEdit ? '' : ' disabled') + '><label for="s-enabled"><strong>Send reminder emails</strong><div class="cm-sub">' +
+          (on ? 'On — reminders go out for verified records.' : 'Off — reminders are planned and listed but nothing is emailed.') + '</div></label></div>' +
+          '<div class="cm-row2" style="margin-top:var(--sp-3)">' +
+          '<div class="cm-field"><label for="s-ocad">Overdue reminders every (days)</label><input id="s-ocad" type="number" min="1" max="60" value="' + (s.settings.overdue_cadence_days || 7) + '"' + (s.canEdit ? '' : ' disabled') + '></div>' +
+          '<div class="cm-field"><label for="s-rcad">…while a renewal is in progress (days)</label><input id="s-rcad" type="number" min="1" max="90" value="' + (s.settings.renewal_cadence_days || 14) + '"' + (s.canEdit ? '' : ' disabled') + '></div></div>' +
+          '<div class="cm-field cb" style="margin-top:var(--sp-2)"><input type="checkbox" id="s-hod"' + (s.settings.hod_fallback !== false ? ' checked' : '') + (s.canEdit ? '' : ' disabled') + '><label for="s-hod">When a record names nobody, remind the department\'s HOD instead</label></div>' +
+          (s.canEdit ? '<div class="cm-actions" style="margin-top:var(--sp-3)"><button type="button" class="n-btn is-primary" id="s-save">Save reminder settings</button><button type="button" class="n-btn" id="s-preview">Preview the next run</button>' +
+            (ME.canRunReminders ? '<button type="button" class="n-btn" id="s-run">Run now</button>' : '') + '</div>' : '') +
+          '<div id="s-preview-out"></div></div></div>';
+
+        html += '<div class="n-card" style="margin-bottom:var(--sp-4)"><div class="n-card-hdr"><div><div class="n-card-title"><i data-lucide="shield-alert"></i> Central Head list</div>' +
+          '<div class="n-card-sub">One escalation list for every department (decided 2026-10-12). Added on the third reminder and every overdue reminder.</div></div></div><div class="n-card-body">' +
+          (s.heads.length ? '<ul class="cm-list">' + s.heads.map(function (h) { return '<li><div><strong>' + esc(h.name) + '</strong><div class="cm-sub">' + esc(h.label) + (h.email ? ' · ' + esc(h.email) : ' · <strong>no email</strong>') + '</div></div></li>'; }).join('') + '</ul>'
+            : '<div class="cm-empty">Nobody yet — overdue items reach only their own department.</div>') +
+          (s.canEdit ? '<div class="cm-actions" style="margin-top:var(--sp-2)"><button type="button" class="n-btn" id="s-heads">Change the Head list</button></div>' : '') + '</div></div>';
+
+        html += '<div class="n-card" style="margin-bottom:var(--sp-4)"><div class="n-card-hdr"><div><div class="n-card-title"><i data-lucide="activity"></i> Recent runs</div></div></div><div class="n-card-body is-flush"><div class="n-tbl-wrap">' +
+          (s.runs.length ? '<table class="n-tbl cm-tbl"><thead><tr><th>Started</th><th>Kind</th><th class="cm-num">Emails sent</th><th class="cm-num">Held</th><th class="cm-num">Took</th><th>Result</th></tr></thead><tbody>' + s.runs.map(function (r) {
+            var st = r.stats || {};
+            return '<tr><td>' + esc(fmtWhen(r.started_at)) + '</td><td>' + esc(r.dry_run ? 'Preview' : r.trigger) + '</td><td class="cm-num">' + (st.emailsSent != null ? st.emailsSent : '—') + '</td><td class="cm-num">' + ((st.byStatus || {}).held_unverified || 0) + '</td><td class="cm-num">' + (r.duration_ms != null ? r.duration_ms + ' ms' : '—') + '</td><td>' + (r.ok ? 'OK' : r.ok === false ? 'Failed' : 'Running') + '</td></tr>';
+          }).join('') + '</tbody></table>' : '<div class="cm-empty">No runs yet.</div>') + '</div></div></div>';
+      }
+      var missing = cs.filter(function (c) { return c.active && c.item_count && !c.has_email; }).length;
+      html += '<div class="n-card"><div class="n-card-hdr"><div><div class="n-card-title"><i data-lucide="users"></i> People named on records</div>' +
+        '<div class="n-card-sub">' + (missing ? '<strong>' + missing + ' people have no email address</strong> — their reminders cannot be sent. ' : 'Everyone named has an email address. ') +
+        (ME.canContacts ? 'Fill in a missing address here; changing an existing one is for an administrator.' : '') + '</div></div>' +
+        (ME.canContacts ? '<div class="n-card-meta"><button type="button" class="n-btn" id="s-addc"><i data-lucide="user-plus"></i> Add a person</button></div>' : '') + '</div>' +
+        '<div class="n-card-body is-flush"><div class="n-tbl-wrap"><table class="n-tbl cm-tbl"><thead><tr><th>Name</th><th>Email</th><th class="cm-num">Records</th><th></th></tr></thead><tbody>' + cs.map(function (c) {
+          var canEdit = ME.canEditEmails || (ME.canContacts && !c.has_email);
+          return '<tr><td><strong>' + esc(c.name) + '</strong>' + (c.is_head ? ' <span class="n-chip is-info">Head list</span>' : '') + (c.user_name ? '<div class="cm-sub">MIS login: ' + esc(c.user_name) + '</div>' : '') + (c.aliases && c.aliases.length ? '<div class="cm-sub">Also written: ' + esc(c.aliases.join(', ')) + '</div>' : '') + '</td>' +
+            '<td>' + (c.email ? esc(c.email) : (c.has_email ? '<span class="cm-muted">on file</span>' : '<span class="n-chip is-warn">No email</span>')) + '</td><td class="cm-num">' + c.item_count + '</td>' +
+            '<td>' + (canEdit ? '<button type="button" class="n-btn is-quiet" data-cedit="' + c.id + '">' + (c.has_email ? 'Change' : 'Add email') + '</button>' : '') + '</td></tr>';
+        }).join('') + '</tbody></table></div></div></div>';
+      el.innerHTML = html;
+      icons();
+      wireSettings(s, cs);
+    }).catch(function (e) { el.innerHTML = '<div class="cm-empty">' + esc(errText(e)) + '</div>'; });
+  }
+  function wireSettings(s, cs) {
+    var save = $('s-save');
+    if (save) save.addEventListener('click', function () {
+      var on = $('s-enabled').checked;
+      if (on && !(s.settings.reminders_enabled === true) && !confirm('Switch reminder emails ON? Verified records that are due or overdue will be emailed on the next run.')) return;
+      API.request('PUT', '/compliance/settings', { reminders_enabled: on, overdue_cadence_days: +$('s-ocad').value, renewal_cadence_days: +$('s-rcad').value, hod_fallback: $('s-hod').checked })
+        .then(function () { flash('Reminder settings saved.'); loadSettings(); }).catch(function (e) { flash(errText(e), false); });
+    });
+    var pv = $('s-preview');
+    if (pv) pv.addEventListener('click', function () {
+      $('s-preview-out').innerHTML = '<div class="cm-empty">Working it out…</div>';
+      API.request('GET', '/compliance/reminders/preview').then(function (r) {
+        var st = r.stats;
+        $('s-preview-out').innerHTML = '<div class="cm-banner" style="margin-top:var(--sp-3)"><i data-lucide="info"></i><div>' +
+          (st.remindersEnabled ? '' : '<strong>Reminders are off</strong>, so the next run would email nobody. With them on: ') +
+          'the next run would email <strong>' + (st.wouldEmail || 0) + ' people</strong>' +
+          (st.byStatus.held_unverified ? '; <strong>' + st.byStatus.held_unverified + '</strong> reminders are held because their records are not verified yet' : '') +
+          (st.byStatus.skipped_no_email ? '; <strong>' + st.byStatus.skipped_no_email + '</strong> cannot be sent for lack of an email address' : '') + '.' +
+          (r.preview && r.preview.length ? '<ul class="cm-list">' + r.preview.slice(0, 20).map(function (p) { return '<li><span>' + esc(p.name || p.email) + '</span><span class="cm-sub">' + p.items.length + ' record' + (p.items.length === 1 ? '' : 's') + '</span></li>'; }).join('') + '</ul>' : '') + '</div></div>';
+        icons();
+      }).catch(function (e) { $('s-preview-out').innerHTML = '<div class="cm-empty">' + esc(errText(e)) + '</div>'; });
+    });
+    var run = $('s-run');
+    if (run) run.addEventListener('click', function () {
+      if (!confirm('Run the reminder job now?')) return;
+      API.request('POST', '/compliance/reminders/run', { dryRun: false }).then(function (r) {
+        flash('Run finished: ' + r.stats.emailsSent + ' emails sent, ' + r.stats.emailsFailed + ' failed (' + r.durationMs + ' ms).'); loadSettings();
+      }).catch(function (e) { flash(errText(e), false); });
+    });
+    var heads = $('s-heads');
+    if (heads) heads.addEventListener('click', function () {
+      var current = s.heads.map(function (h) { return h.contact_id; });
+      openForm({ title: 'Central Head list', intro: 'Choose the people who are told about every department\'s late items (for example the MD and the Unit Head). Hold Ctrl (or ⌘) for several.',
+        fields: [{ name: 'heads', label: 'People', type: 'multi', options: cs.filter(function (c) { return c.active; }).map(function (c) { return [c.id, c.name + (c.has_email ? '' : ' (no email)')]; }), value: current },
+          { name: 'label', label: 'Their role, as shown in the email', type: 'text', value: (s.heads[0] && s.heads[0].label) || 'Head (escalation)', required: true }],
+        submitLabel: 'Save',
+        onSubmit: function (v) {
+          return API.request('PUT', '/compliance/settings/head-recipients', { heads: v.heads.map(function (id) { return { contact_id: +id, label: v.label }; }) })
+            .then(function () { flash('Head list saved.'); loadSettings(); });
+        } });
+    });
+    var addc = $('s-addc');
+    if (addc) addc.addEventListener('click', function () {
+      openForm({ title: 'Add a person', fields: [{ name: 'name', label: 'Name', type: 'text', required: true }, { name: 'email', label: 'Email', type: 'email', placeholder: 'name@lakecement.co.tz' }], submitLabel: 'Add',
+        onSubmit: function (v) { return API.request('POST', '/compliance/contacts', { name: v.name, email: v.email || null }).then(function () { flash('Added.'); loadSettings(); }); } });
+    });
+    $('s-body').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-cedit]');
+      if (!b) return;
+      var c = cs.find(function (x) { return x.id === +b.dataset.cedit; });
+      openForm({ title: 'Email for ' + c.name, fields: [{ name: 'email', label: 'Email', type: 'email', value: c.email || '', required: true, placeholder: 'name@lakecement.co.tz' }], submitLabel: 'Save',
+        onSubmit: function (v) { return API.request('PATCH', '/compliance/contacts/' + c.id, { email: v.email }).then(function () { flash('Saved. Their held reminders are released on the next run.'); loadSettings(); }); } });
+    });
+  }
+
+  /* ═══ Import ══════════════════════════════════════════════════ */
+  var IMP = null;
+  $('i-preview').addEventListener('click', function () { runPreview({}); });
+  function runPreview(overrides) {
+    var file = $('i-file').files[0];
+    if (!file) return flash('Choose the workbook first.', false);
+    var fd = new FormData(); fd.append('file', file);
+    if (Object.keys(overrides).length) fd.append('sectionRoleOverrides', JSON.stringify(overrides));
+    $('i-result').innerHTML = '<div class="cm-empty">Reading the workbook…</div>';
+    API.upload('/compliance/import/preview', fd).then(function (r) { IMP = { r: r, overrides: overrides, file: file }; renderPreview(); })
+      .catch(function (e) { $('i-result').innerHTML = '<div class="cm-empty">' + esc(errText(e)) + '</div>'; });
+  }
+  function renderPreview() {
+    var r = IMP.r, c = r.counts;
+    var rec = Object.keys(r.reconciliation).map(function (k) { var x = r.reconciliation[k]; return esc(k) + ': ' + x.classified + ' of ' + x.nonBlankRows + ' non-blank rows accounted for' + (x.balanced ? ' ✓' : ' — MISMATCH'); }).join(' · ');
+    var st = r.statusTotals;
+    var html = '<div class="cm-imp-sum"><span class="n-chip is-good">' + c.new + ' new</span><span class="n-chip is-info">' + c.update + ' updated from the sheet</span>' +
+      '<span class="n-chip is-neutral">' + c.kept + ' kept (changed in the app)</span>' + (c.missingFromFile ? '<span class="n-chip is-warn">' + c.missingFromFile + ' in the app but not in this file (kept)</span>' : '') + '</div>' +
+      '<p class="cm-muted">' + rec + '</p>' +
+      '<p class="cm-muted">As of ' + esc(fmtDate(r.today)) + ' the dates say: ' + ['overdue', 'due', 'active', 'undated', 'inactive'].map(function (s) { return (st[s] || 0) + ' ' + ST[s].label.toLowerCase(); }).join(', ') + '. Every imported record arrives <strong>not yet verified</strong>; reminders for it are held until its department confirms it.</p>';
+    html += '<div class="cm-sec">Which department owns each workbook section</div><p class="cm-muted">Change a section here and press Preview again before importing.</p><table class="n-tbl cm-tbl"><thead><tr><th>Workbook section</th><th class="cm-num">Rows</th><th>Owned by</th></tr></thead><tbody>' +
+      r.sections.map(function (s) {
+        return '<tr><td>' + esc(s.label) + (s.ambiguous ? '<div class="cm-sub">⚠ ' + esc(s.ambiguous) + '</div>' : '') + '</td><td class="cm-num">' + s.count + '</td><td><select data-sec="' + esc(s.label) + '">' +
+          r.departments.map(function (d) { return '<option value="' + d.role + '"' + (d.role === s.role ? ' selected' : '') + '>' + esc(d.label) + '</option>'; }).join('') + '</select></td></tr>';
+      }).join('') + '</tbody></table><div class="cm-actions" style="margin-top:var(--sp-2)"><button type="button" class="n-btn" id="i-repreview">Preview again with these departments</button></div>';
+    var warned = r.rows.filter(function (x) { return x.warnings.length; });
+    html += '<div class="cm-sec">Rows (' + r.rows.length + ') — "sheet said" next to "computed now"</div><div class="n-tbl-wrap" style="max-height:480px;overflow:auto"><table class="n-tbl cm-tbl"><thead><tr><th>Row</th><th>Obligation</th><th>Department</th><th>Sheet said</th><th>Computed now</th><th>Action</th></tr></thead><tbody>' +
+      r.rows.map(function (x) {
+        return '<tr><td>' + esc(x.sheet) + ' ' + x.row + '</td><td><div class="cm-title">' + esc(x.title) + '</div>' + (x.warnings.length ? '<div class="cm-sub">⚠ ' + x.warnings.map(esc).join('<br>⚠ ') + '</div>' : '') + '</td>' +
+          '<td>' + esc(x.department || '—') + '</td><td>' + esc(x.sheetSaid || '—') + (x.sheetTo ? '<div class="cm-sub">To: ' + esc(String(x.sheetTo)) + '</div>' : '') + '</td><td>' + chip(x.computed) + '<div class="cm-sub">' + esc(x.reason || '') + '</div></td><td>' + esc(x.action) + (x.actionReason ? '<div class="cm-sub">' + esc(x.actionReason) + '</div>' : '') + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+    if (r.enrichment && r.enrichment.matched != null) html += '<p class="cm-muted">' + r.enrichment.matched + ' certificate numbers were filled in from the old MIS register; ' + r.enrichment.unmatched.length + ' entries there matched no row and were left out.</p>';
+    html += '<p class="cm-muted">' + warned.length + ' rows carry an import note — every one is shown on the record as "Sheet said", so nothing is hidden.</p>' +
+      '<div class="cm-actions"><button type="button" class="n-btn is-primary" id="i-commit"><i data-lucide="upload"></i> Import ' + (c.new + c.update) + ' records</button></div>';
+    $('i-result').innerHTML = html;
+    icons();
+    $('i-repreview').addEventListener('click', function () {
+      var ov = {};
+      $('i-result').querySelectorAll('[data-sec]').forEach(function (s) {
+        var orig = r.sections.find(function (x) { return x.label === s.dataset.sec; });
+        if (!orig || orig.role !== s.value) ov[s.dataset.sec] = s.value;
+      });
+      runPreview(Object.assign({}, IMP.overrides, ov));
+    });
+    $('i-commit').addEventListener('click', function () {
+      if (!confirm('Import ' + (c.new + c.update) + ' records now?')) return;
+      var fd = new FormData(); fd.append('file', IMP.file); fd.append('expectedSha256', r.sha256);
+      if (Object.keys(IMP.overrides).length) fd.append('sectionRoleOverrides', JSON.stringify(IMP.overrides));
+      $('i-commit').disabled = true;
+      API.upload('/compliance/import/commit', fd).then(function (res) {
+        $('i-result').innerHTML = '<div class="cm-banner"><i data-lucide="check-circle"></i><div><strong>Imported.</strong> ' + res.counts.new + ' new, ' + res.counts.update + ' updated, ' + res.counts.kept + ' kept. ' +
+          'Next: each department verifies its records (Register → "Not yet verified").</div></div>';
+        icons();
+      }).catch(function (e) { flash(errText(e), false); $('i-commit').disabled = false; });
+    });
+  }
+
+  /* ═══ Boot ════════════════════════════════════════════════════ */
+  API.request('GET', '/compliance/me').then(function (me) {
+    ME = me; ME.role = user.role;
+    var deptOpts = me.departments.map(function (d) { return '<option value="' + d.role + '">' + esc(d.label) + '</option>'; }).join('');
+    $('f-dept').insertAdjacentHTML('beforeend', deptOpts);
+    $('r-dept').insertAdjacentHTML('beforeend', deptOpts);
+    $('f-dept-wrap').hidden = !me.canViewAll;
+    $('r-dept-wrap').hidden = !me.canViewAll;
+    $('cm-add').hidden = !me.canCreate;
+    $('cm-tabs').querySelector('[data-value=settings]').hidden = !(me.canSettings || me.canViewAll || me.canContacts);
+    $('cm-tabs').querySelector('[data-value=import]').hidden = !me.canImport;
+    var q = new URLSearchParams(location.search);
+    var stashed = null;
+    try { stashed = sessionStorage.getItem('cm_open_item'); sessionStorage.removeItem('cm_open_item'); } catch (e) { /* storage blocked */ }
+    var tab = q.get('tab');
+    if (q.get('view') === 'mine') { setRegisterFilters({ flag: 'mine' }); tab = 'register'; }
+    var allowed = ['dashboard', 'register', 'reminders', 'settings', 'import'].filter(function (t) { return !$('cm-tabs').querySelector('[data-value=' + t + ']').hidden; });
+    showTab(allowed.indexOf(tab) >= 0 ? tab : 'dashboard');
+    var item = q.get('item') || stashed;
+    if (item && /^\d+$/.test(item)) openItem(+item);
+    icons();
+  }).catch(function (e) {
+    $('cm-banner').innerHTML = '<div class="cm-banner is-warn"><div>Could not load the Compliance Master: ' + esc(errText(e)) + '</div></div>';
+  });
+  var fd = $('footer-date'); if (fd) fd.textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}());
+</script>
+</body>
+</html>

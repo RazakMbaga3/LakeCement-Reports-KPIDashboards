@@ -7,12 +7,40 @@ in any session.** Maintained by the `project-manager` skill
 - **Last full audit:** 2026-09-13 (six specialist agents, every claim command-cited)
 - **Last hardening run:** 2026-09-24 — thirteen commits, every one gated on a real command's real output before it was made
 - **Last UI measurement:** 2026-09-24 — **responsive 88/88 checks pass** (22 pages x 4 viewports: 0 overflow, 0 text below the 12px floor of 5,649 nodes, 0 tap targets under 44px, 0 iOS-zoom triggers), **a11y 0 violations** across every page including all 5 correction-request UI states, perf 2 pages over budget (both pre-existing: `daily-report` 1404KB, `quarry` 12876KB / RAID I-19), design-consistency 4 inventory findings and 0 collisions
+- **Last feature gate:** 2026-10-12 — Compliance Master (see Current focus)
 - **Last validation gate:** 2026-09-24 — backend 17 unit suites + smoke green; acceptance **phase1 19, phase2 18, phase3 27, phase5 10, phase7 9, phase8 21, quarry 15, amendments 92** = 211 checks, 0 failed; the five e2e failures logged earlier tonight as "pre-existing" (I-28) were re-diagnosed and fixed same-night — see below; a fresh full e2e run is in progress as the closing gate
 - **Overall health:** 🟡 **Amber** — the write path is materially safer than it was yesterday and the correction-request workflow (I-29) is built and tested; remaining open items are the risks owned outside this repo (R-4, R-6, R-7) and I-19 (quarry payload)
 
 ---
 
 ## Current focus
+
+**2026-10-12 — Compliance Master built and verified** (branch `feature/compliance-master`).
+It replaces `1. Compliance Master.xlsx` with `compliance.html` + `/api/compliance`:
+- three kinds of obligation, with status computed from the dates;
+- documents and versions stored in Postgres;
+- tiered reminders sent through the Graph mailer, exactly once, held until each record is verified.
+
+Decisions are DEC-009–014. The guide and the go-live steps are in `docs/COMPLIANCE_MASTER.md`.
+
+Evidence (commands run 2026-10-12):
+- `npm test` green, with 4 new compliance suites.
+- `accept:compliance` **65/65** on the real workbook (203 records, every row reconciled) and **64/64** on the synthetic CI workbook, including a database built fresh from `schema.sql`.
+- `accept:phase6` 16/16, `accept:phase7` 9/9, `accept:corrections` 67/67 unchanged.
+- e2e `compliance.spec.js` **7/7**.
+- `audit:a11y` 0 violations; `audit:responsive` **100/100**.
+- `audit:perf`: compliance 742 KB / 24 requests, within budget (the two over-budget pages are pre-existing).
+
+**Go-live steps** (owners outside the code):
+1. Import the workbook in production (admin).
+2. Fill the 19 missing email addresses (D-3).
+3. The MD sets the Head list.
+4. Each department verifies its records (R-8).
+5. The MD switches reminders on.
+
+Open: I-43 (who owns the PRODUCTION calibrations).
+
+### Previous focus (2026-09-24)
 
 **The 2026-09-24 hardening run closed the largest integrity hole in the app.**
 Until this week, re-POSTing a report over an already-approved day merged

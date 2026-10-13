@@ -116,6 +116,53 @@ citation.
 **Consequences:** Migration `032` returns the 211 stored days to `approved` (re-asserting per row that `approved_by`/`submitted_by`/`updated_by` are NULL, so any day a person has since touched is left alone). Verified: 1 Sept now reports **1,721.6 MT** instead of the empty-state panel, and all 26 September days count (**59,579 MT** MTD). A day a **person** approves still locks exactly as before — that is the case the rule was written for, and it is unchanged. Note this makes the lock's behaviour depend on `approved_by` across **every** form type, not just dispatch; for human-submitted reports the two always move together, so nothing changes there. `backend/test/odoo-dispatch-map.test.js` now pins both halves (verified to fail when the `humanSigned` condition is removed) and `e2e/tests/dispatch-manual-entry.spec.js` proves the pair directly: an ERP-approved day is writable, a human-approved day returns 409.
 **Supersedes:** DEC-007's status choice. Its diagnosis of the lockout stands; only the remedy changed.
 
+### DEC-009 — Compliance Master: one register, three kinds of obligation, status computed from the dates
+**Date:** 2026-10-12
+**Decider (RACI Accountable):** You (sole developer / PM), answering the planning questions directly.
+**Context:** `1. Compliance Master.xlsx` held about 204 obligations in three different shapes: licences and certificates with Valid From/To, recurring filings and payments with rules like "20th every month", and the mining-lease conditions ("maintain 200 m…"). Its Status column was typed by hand and had drifted. As of 2026-10-12, 96 of the 106 dated rows were past their own "To" date and 66 of those still said "Active".
+**Options considered:** (a) **track all three kinds**; (b) licences plus filings only; (c) licences only.
+**Decision:** (a), with **status never stored**. `backend/services/complianceStatus.js` computes Active / Due / Overdue / No date set / Inactive from the dates on every read, so the dashboard, register, reminder emails and KPI hint cannot disagree. "No date set" is its own bucket, so a data gap is never presented as a verdict.
+**Consequences:** Migrations 037/038, `routes/compliance.js`, `compliance.html`; guide in `docs/COMPLIANCE_MASTER.md`. Recurring instances live in `compliance_periods`. A missed instance stays open, so the record stays Overdue until it is filed or waived.
+
+### DEC-010 — The "Head" reminder tier is one central list, kept by the MD
+**Date:** 2026-10-12
+**Decider (RACI Accountable):** You.
+**Context:** The workbook's reminder columns have three tiers (Direct / 2nd Level / Head). Its Level 2 is already mostly a department head: Pavan Gandhi on 87 rows, Sankalp on 38, Sajivkumar PS on 20.
+**Options considered:** (a) **one central configurable escalation list**; (b) each department's HOD; (c) a third named person on every record.
+**Decision:** (a). The list is set in Settings & people, and the MD (and admin) maintain it.
+**Consequences:** `compliance_head_recipients`. The list is added at the third reminder day and on every overdue reminder.
+
+### DEC-011 — Each department owns its own compliance records; admin may edit but never verify
+**Date:** 2026-10-12
+**Decider (RACI Accountable):** You.
+**Options considered:** (a) a central Compliance Officer role plus department owners; (b) the central officer only; (c) **each department owns its own**.
+**Decision:** (c). `owner_role` is the boundary, and a record outside the caller's department answers 404. md/management read every department and write nothing. Within a department, officers record work (certificates, filings, reviews), seniors edit and verify, and HODs archive and transfer. Admin may fix data and import, but **cannot verify**: verifying attests a department's facts (Separation of Duties). Admin-type workbook sections (Corporate - Admin, Admin/Safety, Training) belong to HR & Admin.
+**Consequences:** `backend/config/complianceAccess.js`. The matrix is in `docs/ACCESS_MODEL.md`. `quality` was added to `config/orgCatalogue.js` ROLES, where it had been missing.
+
+### DEC-012 — Import honestly: every imported record is unverified and its reminders are held
+**Date:** 2026-10-12
+**Decider (RACI Accountable):** You.
+**Options considered:** (a) **import as computed + unverified + held reminders + a "% verified" figure**; (b) a separate "needs verification" status; (c) clean the Excel first.
+**Decision:** (a). Day one shows the truth (101 Overdue), the import preview shows "Sheet said" next to "Computed now", and no reminder email goes out for a record its department has not confirmed.
+**Consequences:** A verification drive is the first go-live step (R-8). Re-import never overwrites a record edited or verified in the app, and never deletes.
+
+### DEC-013 — Compliance documents are stored in Postgres (bytea)
+**Date:** 2026-10-12
+**Decider (RACI Accountable):** You.
+**Context:** No file storage existed in the app. The nginx web root is the git checkout, which on the same day was found serving `.env` and `.git` (RAID I-42).
+**Options considered:** (a) **bytea in Postgres**, deduplicated by sha256; (b) a directory outside the checkout, served through an authenticated route.
+**Decision:** (a). pg_dump and the monthly restore drill already cover the database, and the drill now re-hashes the newest blob. Nothing sits under the web root, and a document row can never point at a missing file.
+**Consequences:** Volume is about 100–200 MB a year. Revisit at about 2 GB, or if backup time doubles; the separate `compliance_blobs` table keeps a move to object storage local. Uploads are capped at 10 MB, type-checked against the file's magic bytes, and limited to two in flight.
+
+### DEC-014 — Reminders go through the existing Graph mailer, exactly once, and start switched off
+**Date:** 2026-10-12
+**Decider (RACI Accountable):** You.
+**Decision:** The reminder job calls `mailer.sendMail` (Microsoft Graph, R-6 closed) with the sender name "Compliance Master System". The outbox `compliance_notifications` is keyed (item, deadline, stage, recipient), so each reminder is sent once however often the job runs (07:00 and 14:00 Africa/Dar_es_Salaam, never at boot).
+- There is one consolidated email per person per run.
+- Held, no-email and switched-off reminders are recorded with their reason and released when the reason clears.
+- The in-app master switch defaults **off**.
+**Consequences:** `GET /api/health` → `checks.compliance`. Each run records its duration and heap delta. On the real 203-record data set a run takes about 0.3 s.
+
 ---
 
 _Further decisions (RACI names confirmed, WBS priority calls, DoD criteria

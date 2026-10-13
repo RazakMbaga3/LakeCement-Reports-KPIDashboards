@@ -14,7 +14,8 @@
   GET  /api/mis/employees              → HR roster (mis.html "HR" tab)
   GET  /api/mis/it-assets              → IT asset register (mis.html "Assets" tab)
   GET  /api/mis/vehicles               → vehicle fleet register (mis.html "Assets" tab)
-  GET  /api/mis/compliance-certs       → licenses/certificates (mis.html "Compliance" tab)
+  (GET /api/mis/compliance-certs was retired 2026-10-12: the Compliance tab now
+   reads the live Compliance Master, /api/compliance.)
   POST /api/mis/digest/send           → send the digest now (admin/md;
                                         body {date?} for a specific day)
 */
@@ -37,7 +38,6 @@ const digest = require('../services/digest');
 const EMPLOYEES      = require('../data/mis/employees.json');
 const IT_ASSETS       = require('../data/mis/it-assets.json');
 const VEHICLES        = require('../data/mis/vehicles.json');
-const COMPLIANCE_CERTS = require('../data/mis/compliance-certs.json');
 
 const router = express.Router();
 
@@ -177,7 +177,6 @@ const misOnly = requireRole(...MIS_VIEW_ROLES);
 router.get('/employees',        requireAuth, misOnly, (req, res) => { res.json(EMPLOYEES); });
 router.get('/it-assets',        requireAuth, misOnly, (req, res) => { res.json(IT_ASSETS); });
 router.get('/vehicles',         requireAuth, misOnly, (req, res) => { res.json(VEHICLES); });
-router.get('/compliance-certs', requireAuth, misOnly, (req, res) => { res.json(COMPLIANCE_CERTS); });
 
 // ── Digest ───────────────────────────────────────────────────
 router.post('/digest/send',

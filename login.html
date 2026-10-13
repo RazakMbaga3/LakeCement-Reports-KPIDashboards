@@ -249,7 +249,7 @@
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="design-system.css?v=1" />
   <script src="a11y.js?v=1"></script>
-  <script src="mobile-shell.js?v=1"></script>
+  <script src="mobile-shell.js?v=3"></script>
 </head>
 <body>
 
@@ -369,12 +369,19 @@
 <p class="page-footer">&copy; 2026 Lake Cement Ltd &nbsp;·&nbsp; MIS v2.0</p>
 
 <script>
+  /* Where to go after signing in. Only a page of this app is accepted —
+     "page.html" or "forms/page.html", optionally with its own query (the
+     Compliance Master's ?item=42 links in reminder emails rely on it). A
+     full URL, //host or javascript: is refused: ?return= used to be passed
+     straight to location.href, an open redirect off the login page. */
+  function _safeReturn() {
+    const r = new URLSearchParams(window.location.search).get('return') || '';
+    return /^(forms\/)?[A-Za-z0-9_-]+\.html(\?[A-Za-z0-9_=&%.,:+-]*)?$/.test(r) ? r : 'portal.html';
+  }
+
   /* Redirect if already logged in */
   (function () {
-    if (getCurrentUser()) {
-      const p = new URLSearchParams(window.location.search);
-      window.location.href = p.get('return') || 'portal.html';
-    }
+    if (getCurrentUser()) window.location.href = _safeReturn();
   })();
 
   /* Held only between a mustChangePassword login and the change-password
@@ -384,8 +391,7 @@
   function _redirectAfterAuth(btn) {
     btn.style.background = '#10B981';
     btn.querySelector('.btn-label').textContent = 'Redirecting…';
-    const p = new URLSearchParams(window.location.search);
-    setTimeout(() => { window.location.href = p.get('return') || 'portal.html'; }, 400);
+    setTimeout(() => { window.location.href = _safeReturn(); }, 400);
   }
 
   function _showError(msg) {

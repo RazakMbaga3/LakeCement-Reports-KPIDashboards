@@ -401,8 +401,18 @@ function renderSidebar() {
 
   /* ── Reports & Tools (memory search, MIS export, ops monitor) ──── */
   const opsItems = _SB_OPS_ITEMS.filter(it => !it.auditOnly || perms.canViewAudit);
+  /* Compliance Master leads the group for every role: each department
+     owns its own statutory obligations, and md/management/admin read all
+     of them (backend/config/complianceAccess.js — the page asks
+     /api/compliance/me for what this user may do). Its badge is the number
+     due + overdue in the user's scope, from the same counts call. */
+  html += _sbGroupLabelHTML('ops');
+  html += _sbItemHTML({
+    icon: 'shield-check', label: 'Compliance Master',
+    active: currentPage === 'compliance.html', href: base + 'compliance.html',
+    badgeHTML: '<span class="sb-count" data-sb-count="compliance" hidden></span>',
+  });
   if (opsItems.length) {
-    html += _sbGroupLabelHTML('ops');
     opsItems.forEach(it => {
       html += _sbItemHTML({
         icon: it.icon, label: it.label,
@@ -487,12 +497,15 @@ function _sbLoadCounts(mount) {
     if (!c) return;
     slots.forEach(el => {
       const kind = el.getAttribute('data-sb-count');
-      const n = kind === 'approvals' ? c.total : kind === 'windows' ? c.myWindows : 0;
+      const n = kind === 'approvals' ? c.total : kind === 'windows' ? c.myWindows
+        : kind === 'compliance' ? (c.compliance ? c.compliance.total : 0) : 0;
       if (!n) return;
       el.textContent = n > 99 ? '99+' : String(n);
       el.setAttribute('aria-label', kind === 'approvals'
         ? `${n} item${n === 1 ? '' : 's'} waiting for your decision`
-        : `${n} correction window${n === 1 ? '' : 's'} open for you`);
+        : kind === 'compliance'
+          ? `${n} compliance item${n === 1 ? '' : 's'} due or overdue`
+          : `${n} correction window${n === 1 ? '' : 's'} open for you`);
       el.hidden = false;
     });
   });

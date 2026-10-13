@@ -43,6 +43,17 @@ module.exports = async () => {
         test left a real 2026 row behind and the user delete below failed on
         its foreign key. Nothing a real person did is ever attributed to an
         e2e_* account, so these rows are test artifacts by definition. */
+  /* Compliance Master (compliance.spec.js): every record a harness account
+     created, with its documents (the FK is RESTRICT, so documents first),
+     then any blob or contact nothing references any more. Records are matched
+     by author and by the "E2E " title prefix the spec uses. */
+  {
+    const items = `SELECT id FROM compliance_items WHERE created_by IN (${HARNESS_USERS}) OR title LIKE 'E2E %'`;
+    await pool.query(`DELETE FROM compliance_documents WHERE item_id IN (${items})`).catch(() => {});
+    await pool.query(`DELETE FROM compliance_items WHERE id IN (${items})`).catch(() => {});
+    await pool.query(`DELETE FROM compliance_blobs b WHERE NOT EXISTS (SELECT 1 FROM compliance_documents d WHERE d.blob_sha256 = b.sha256)`).catch(() => {});
+    await pool.query(`DELETE FROM compliance_contacts WHERE name LIKE 'E2E %'`).catch(() => {});
+  }
   await pool.query(`DELETE FROM daily_reports WHERE submitted_by IN (${HARNESS_USERS}) OR updated_by IN (${HARNESS_USERS})`);
   await pool.query(`UPDATE kpi_monthly SET updated_by = NULL WHERE updated_by IN (${HARNESS_USERS})`);
   /* Match on BOTH columns: audit_log.username is a denormalised copy, and

@@ -71,6 +71,7 @@ const PAGES = [
   ['form-quality',   'forms/quality-form.html'],
   ['form-dispatch',  'forms/dispatch-form.html'],
   ['form-pile-quality', 'forms/pile-quality-form.html'],
+  ['compliance',     'compliance.html'],
 ];
 
 const kb = b => Math.round(b / 1024);

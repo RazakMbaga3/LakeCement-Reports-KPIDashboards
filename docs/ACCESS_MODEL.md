@@ -75,6 +75,28 @@ on who *approves*, not on who may submit — so an HOD is never shown a report
 | KPI dashboard *view* | Per `PERMISSIONS[role].kpi.depts` | Management and finance see all; departments see their own plus summary |
 | Production's KPI section | `quality` (view only) | Added 2026-09-22 with the QC Manager role. The lab's readings roll up into Production's KPIs, so QC can see what its own figures become — but `KPI_EDIT_DEPTS.quality` is `[]`: the lab owns no department section of its own, and inventing one would create a KPI department with no targets, no history and nobody accountable for it |
 
+### Compliance Master (`compliance.html`, added 2026-10-12)
+
+Each department **owns its own statutory obligations**; there is no central
+compliance role (decided with the user, DEC-009). Enforced in
+`backend/config/complianceAccess.js` — the page asks `GET /api/compliance/me`
+for its capabilities, so there is no browser-side copy of these rules.
+
+| Action | Officer | Senior | HOD | md / management | admin |
+|---|---|---|---|---|---|
+| Read records, documents, history | own dept | own dept | own dept | **all** | **all** |
+| Upload a certificate / receipt, record a filing or review, flag a renewal | ✓ | ✓ | ✓ | – | ✓ |
+| Create, edit, set responsible people, verify, fill in a missing email | – | ✓ | ✓ | – | edit ✓ · **verify ✗** |
+| Deactivate / archive / move to another department | – | – | ✓ | – | ✓ |
+| Reminder settings, central Head list | – | – | – | **md** only | ✓ |
+| Import the workbook, run / retry reminders, change an existing email | – | – | – | – | ✓ |
+
+A record outside the caller's department answers **404**, not 403 — its
+existence is not leaked. Verify is attestation by the owning department, so
+admin (IT) cannot verify (Separation of Duties). md/management read every
+department and write nothing — the MD holds only the reminder settings,
+because the Head list is an escalation chain above departments.
+
 Two exceptions were **removed** on 2026-09-03:
 
 - **`sales` could view Purchases.** Purchases originally rode on Sales' gate for want of one of its own, and kept that access when it was split out. Sales has no business reason to read Purchases.

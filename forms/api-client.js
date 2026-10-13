@@ -42,6 +42,51 @@
     return err;
   }
 
+  /* ── Generic calls (Compliance Master and later pages) ─────────────
+     One JSON call, one multipart upload, one authenticated file download.
+     Errors carry err.status and the server's own message as
+     err.serverMessage, which every page shows instead of "HTTP 400". */
+  async function _errorFrom(fn, res) {
+    let msg = '';
+    try { msg = (await res.json()).error || ''; } catch (e) { /* non-JSON body */ }
+    const err = _httpError(fn, '', res);
+    if (msg) err.serverMessage = msg;
+    return err;
+  }
+  async function request(method, path, body) {
+    const res = await fetch(BASE + path, {
+      method: method, headers: _headers(), body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    if (!res.ok) throw await _errorFrom(method + ' ' + path, res);
+    return res.status === 204 ? null : res.json();
+  }
+  /* FormData upload — no Content-Type header, so the browser sets the
+     multipart boundary itself. */
+  async function upload(path, formData) {
+    const token = (typeof getAuthToken === 'function') ? getAuthToken() : null;
+    const res = await fetch(BASE + path, {
+      method: 'POST', headers: token ? { Authorization: 'Bearer ' + token } : {}, body: formData,
+    });
+    if (!res.ok) throw await _errorFrom('POST ' + path, res);
+    return res.json();
+  }
+  /* Authenticated download: fetch → blob → a temporary <a download>. A
+     plain link cannot carry the bearer token, and the CSP forbids framing a
+     blob, so this is how files leave the API. */
+  async function download(path, fallbackName) {
+    const token = (typeof getAuthToken === 'function') ? getAuthToken() : null;
+    const res = await fetch(BASE + path, { headers: token ? { Authorization: 'Bearer ' + token } : {} });
+    if (!res.ok) throw await _errorFrom('GET ' + path, res);
+    const cd = res.headers.get('Content-Disposition') || '';
+    const m = cd.match(/filename\*=UTF-8''([^;]+)/i) || cd.match(/filename="([^"]+)"/i);
+    const name = m ? decodeURIComponent(m[1]) : (fallbackName || 'download');
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement('a');
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 30000);
+    return name;
+  }
+
   /* POST /api/reports/:formType — submit/update a daily form */
   /* `opts.status` — 'draft' or 'submitted' (default). The server derives the
      approval state from it: a draft never enters an HOD's queue and is never
@@ -417,11 +462,6 @@
     if (!res.ok) throw _httpError('getMisVehicles', '', res);
     return res.json();
   }
-  async function getMisComplianceCerts() {
-    const res = await fetch(BASE + '/mis/compliance-certs', { headers: _headers() });
-    if (!res.ok) throw _httpError('getMisComplianceCerts', '', res);
-    return res.json();
-  }
 
   /* ── IT Asset Register (backend/routes/itAssets.js) ────────────────
      Database-backed, editable, Excel-importable — replaces the static
@@ -715,12 +755,13 @@
     requestAmendment, getAmendments, grantAmendment, declineAmendment, withdrawAmendment, getAmendmentHistory,
     getCorrectionDays, getApprovalCounts,
     requestKpiReopen, withdrawKpiReopen, declineKpiReopen, getKpiReopenRequests, getKpiSubmissions,
-    getMisEmployees, getMisItAssets, getMisVehicles, getMisComplianceCerts,
+    getMisEmployees, getMisItAssets, getMisVehicles,
     itAssetsOverview, itAssetsList, itAssetCreate, itAssetUpdate, itAssetDelete, itAssetsImport,
     getKpiSubmission, submitKpiMonth, reopenKpiMonth,
     adminGetCatalogue, adminListUsers, adminCreateUser, adminUpdateUser,
     adminResetPw, adminUnlockUser,
     adminInviteUser, adminInviteBulk, adminInviteReadiness,
+    request, upload, download,
   };
 
 }(window));

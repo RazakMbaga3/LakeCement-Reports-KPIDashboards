@@ -83,6 +83,7 @@
     'analytics.html':           ['Operational Summary','Analytics'],
     'approvals.html':           ['Approvals',          'Pending'],
     'corrections.html':         ['Corrections',        'Daily Reports'],
+    'compliance.html':          ['Compliance Master',  'Reports & Tools'],
     'sales.html':               ['Sales &amp; Dispatch', 'Commercial'],
     'purchases.html':           ['Raw Mat’ls &amp; Purchases', 'Commercial'],
     'reliability.html':         ['Reliability',        'Maintenance'],

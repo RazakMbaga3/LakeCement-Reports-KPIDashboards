@@ -67,6 +67,7 @@ const PAGES = [
   ['reliability',    'reliability.html'],
   ['approvals',      'approvals.html'],
   ['corrections',    'corrections.html'],
+  ['compliance',     'compliance.html'],
   ['quarry',         'mines-report.html'],
   ['balance',        'balance.html'],
   ['insights',       'insights.html'],

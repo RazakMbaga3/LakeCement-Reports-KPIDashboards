@@ -402,7 +402,10 @@ function getAuthToken() {
 function _loginUrl() {
   const inForms = window.location.pathname.includes('/forms/');
   const page    = window.location.pathname.split('/').pop() || 'index.html';
-  const ret     = inForms ? 'forms/' + page : page;
+  /* Keep the page's own query so a deep link (compliance.html?item=42 from
+     a reminder email) survives signing in. login.html accepts only an
+     in-app page as the return target. */
+  const ret     = (inForms ? 'forms/' + page : page) + (window.location.search || '');
   return (inForms ? '../' : '') + 'login.html?return=' + encodeURIComponent(ret);
 }
 

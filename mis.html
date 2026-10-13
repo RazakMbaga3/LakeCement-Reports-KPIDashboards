@@ -7,10 +7,10 @@
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
-  <script src="auth.js?v=13"></script>
-  <script src="forms/api-client.js?v=6"></script>
-  <script src="sidebar.js?v=6"></script>
-  <script src="loader.js?v=3"></script>
+  <script src="auth.js?v=14"></script>
+  <script src="forms/api-client.js?v=7"></script>
+  <script src="sidebar.js?v=7"></script>
+  <script src="loader.js?v=4"></script>
   <script src="forms/date-picker.js"></script>
   <script src="audit.js"></script>
   <style>
@@ -163,7 +163,7 @@
   <!-- Design system — loaded last so it settles equal-specificity ties -->
   <link rel="stylesheet" href="design-system.css?v=2" />
   <script src="a11y.js?v=1"></script>
-  <script src="mobile-shell.js?v=2"></script>
+  <script src="mobile-shell.js?v=3"></script>
 </head>
 <body>
 
@@ -1407,15 +1407,17 @@
 <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• COMPLIANCES â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
 <div class="mis-panel" id="panel-compliance">
 
-  <!-- KV strip -->
-  <div class="mis-kv-strip">
-    <div class="mis-kv"><div class="mis-kv-val">88</div><div class="mis-kv-lbl">Certificates & Licenses</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--green-ink)">37</div><div class="mis-kv-lbl">Active</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--amber-ink)">5</div><div class="mis-kv-lbl">Under Renewal</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--text-muted)">10</div><div class="mis-kv-lbl">Inactive</div></div>
-    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--amber-ink)">10</div><div class="mis-kv-lbl">Expiring</div><div class="mis-kv-sub">Within 6 months</div></div><div class="mis-kv"><div class="mis-kv-val" style="color:var(--red-ink)">26</div><div class="mis-kv-lbl">Expired</div></div><div class="mis-kv"><div class="mis-kv-val">5</div><div class="mis-kv-lbl">Mining Licenses</div><div class="mis-kv-sub">ML + PL</div></div>
-    <div class="mis-kv"><div class="mis-kv-val">4</div><div class="mis-kv-lbl">Legal Cases</div><div class="mis-kv-sub">Ongoing</div></div>
-    <div class="mis-kv"><div class="mis-kv-val">23</div><div class="mis-kv-lbl">Insurance Claims</div><div class="mis-kv-sub">TSH 382M received</div></div>
+  <!-- KV strip — licences and certificates come live from the Compliance
+       Master (compliance.html); Legal Cases and Insurance Claims are still a
+       static snapshot and say so. -->
+  <div class="mis-kv-strip" id="comp-kv">
+    <div class="mis-kv"><div class="mis-kv-val" id="ckv-total">…</div><div class="mis-kv-lbl">Licences &amp; certificates</div><div class="mis-kv-sub">Live · Compliance Master</div></div>
+    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--green-ink)" id="ckv-active">…</div><div class="mis-kv-lbl">Active</div></div>
+    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--amber-ink)" id="ckv-due">…</div><div class="mis-kv-lbl">Due for renewal</div></div>
+    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--red-ink)" id="ckv-overdue">…</div><div class="mis-kv-lbl">Overdue</div><div class="mis-kv-sub" id="ckv-overdue-sub"></div></div>
+    <div class="mis-kv"><div class="mis-kv-val" style="color:var(--text-muted)" id="ckv-undated">…</div><div class="mis-kv-lbl">No date set</div></div>
+    <div class="mis-kv"><div class="mis-kv-val">4</div><div class="mis-kv-lbl">Legal Cases</div><div class="mis-kv-sub">Ongoing · static snapshot</div></div>
+    <div class="mis-kv"><div class="mis-kv-val">23</div><div class="mis-kv-lbl">Insurance Claims</div><div class="mis-kv-sub">TSH 382M received · static snapshot</div></div>
   </div>
 
   <!-- Sub-tabs -->
@@ -1432,15 +1434,17 @@
       <div class="mis-sec-hdr">
         <i data-lucide="shield-check" class="mis-sec-icon"></i>
         <h3 class="mis-sec-title">Certificates &amp; Licenses Register</h3>
-        <span id="cert-total-lbl" style="margin-left:6px;font-size:12px;color:var(--text-muted)">88 items</span>
+        <span id="cert-total-lbl" style="margin-left:6px;font-size:12px;color:var(--text-muted)"></span>
+        <a href="compliance.html" style="margin-left:8px;font-size:12px;font-weight:700;color:var(--navy)">Open the Compliance Master &rarr;</a>
         <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <input type="text" id="cert-search" placeholder="Search description, agency…" oninput="filterCerts()" style="font-family:var(--font);font-size:12px;padding:4px 10px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none;width:220px" />
           <select id="cert-filter-status" onchange="filterCerts()" style="font-family:var(--font);font-size:12px;padding:4px 8px;border:1.5px solid var(--border);border-radius:var(--radius);outline:none">
             <option value="">All Status</option>
             <option value="active">Active</option>
-            <option value="expiring">Expiring</option>
-            <option value="expired">Expired</option>
-            <option value="renewal">Under Renewal</option>
+            <option value="due">Due for renewal</option>
+            <option value="overdue">Overdue</option>
+            <option value="renewal">Renewal in progress</option>
+            <option value="undated">No date set</option>
             <option value="inactive">Inactive</option>
           </select>
           <span id="cert-count-lbl" style="font-size:12px;color:var(--text-muted);white-space:nowrap"></span>
@@ -1468,201 +1472,12 @@
 
   <!-- â•â• ML / PL â•â• -->
   <div class="hr-panel" id="comp-mlpl">
-
-    <!-- License register -->
-    <div class="mis-section" style="margin-bottom:16px">
-      <div class="mis-sec-hdr">
-        <i data-lucide="map" class="mis-sec-icon"></i>
-        <h3 class="mis-sec-title">Mining Licenses Register</h3>
-      </div>
-      <div class="mis-table-wrap">
-        <table class="mis-table">
-          <thead><tr><th>#</th><th>License No.</th><th>Area</th><th>Location</th><th>Date Issued</th><th>Annual Rent</th></tr></thead>
-          <tbody><tr><td>1</td><td><strong>ML 395/10</strong></td><td>8.08 km2</td><td>Kimbiji, Temeke</td><td>24/05/10</td><td>US$12320</td></tr>
-<tr><td>2</td><td><strong>ML 509/14</strong></td><td>9.99 km2</td><td>Kijaka, Kimbiji</td><td>31/01/14</td><td>US$19980</td></tr>
-<tr><td>3</td><td><strong>ML 552/15</strong></td><td>5.06 km2</td><td>Tarawanda, Bagamoyo</td><td>30/09/15</td><td>US$10120 or TSH25603600</td></tr>
-<tr><td>4</td><td><strong>PL/31929/2025</strong></td><td>2.4757 km2</td><td>Tarawanda, Bagamoyo</td><td>2025-08-07 00:0</td><td>TSH538000</td></tr>
-<tr><td>5</td><td><strong>PL/11811/2022</strong></td><td>2.2312 km2</td><td>Kimbiji, Temeke(kigamboni)</td><td>2022-02-02 00:0</td><td>US$1140</td></tr>
-</tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Per-lease compliance -->
-    
-<div class="mis-section" style="margin-bottom:16px">
-  <div class="mis-sec-hdr">
-    <i data-lucide="shield" class="mis-sec-icon"></i>
-    <h3 class="mis-sec-title">ML 395/10 — Kimbiji, Kigamboni</h3>
-    <span style="margin-left:12px;font-size:12px;color:var(--text-muted)"> &nbsp;·&nbsp;  km²</span>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px">
-      <span style="color:var(--green-ink);font-weight:700">20 Complied</span>
-      <span style="color:var(--text-muted);font-weight:700">0 Not Complied</span>
-      <span style="color:var(--amber-ink);font-weight:700">3 Partial</span>
-      <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:87%;background:#F59E0B"></div></div>
-      <span style="font-weight:700;color:#F59E0B">87%</span>
-    </div>
-  </div>
-  <div class="mis-table-wrap" style="max-height:380px">
-    <table class="mis-table">
-      <thead><tr><th>Compliance Requirement</th><th>Frequency</th><th>Status</th><th style="text-align:center">Due Next</th><th>Responsible</th></tr></thead>
-      <tbody><tr><td style="white-space:normal;line-height:1.4;max-width:320px">License Type</td><td style="font-size:12px;color:var(--text-muted)">ML - Industrial Minerals</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)"></td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mining Lease (Date of Issue - 24/05/10)</td><td style="font-size:12px;color:var(--text-muted)">Every 10 Years</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">23 May 2030</td><td style="font-size:12px;color:var(--text-muted)">PSS Sajiv</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Rent @ US $12,320</td><td style="font-size:12px;color:var(--text-muted)">Annual</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">24 May 2026</td><td style="font-size:12px;color:var(--text-muted)">PSS Sajiv</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mining Royalty Returns</td><td style="font-size:12px;color:var(--text-muted)">Annual (before 15th Jan)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">15 Jan 2027</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mining Plan Compliance Report (before 30th Jan)</td><td style="font-size:12px;color:var(--text-muted)">Annual (before 30th Jan)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">30 Jan 2027</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Local Content Implementation Plan (before 15th Jan)</td><td style="font-size:12px;color:var(--text-muted)">Annual (before 15th Jan)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">15 Jan 2027</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Local Content Compliance Annual Report (before 30th Jan)</td><td style="font-size:12px;color:var(--text-muted)">Annual (before 30th Jan)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">30 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Submission of CSR Plan to Local Municipal Council / Ward for the next year (befo</td><td style="font-size:12px;color:var(--text-muted)">Annual (before July)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">07 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mines Closure Plan</td><td style="font-size:12px;color:var(--text-muted)">One-time, Review Every 3 yrs</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">04 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Hydrogeological Investigation</td><td style="font-size:12px;color:var(--text-muted)">Every 3 yrs</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Submission of compensation plan for the surface right owners within lease area t</td><td style="font-size:12px;color:var(--text-muted)">One-time, Review Every 3 yrs</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Demarcation of lease boundary with coordinates displayed at site</td><td style="font-size:12px;color:var(--text-muted)">One-time. To be reviewed annually</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Providing fence or rock bund along the lease boundary for prevention of unauthor</td><td style="font-size:12px;color:var(--text-muted)">One-time. To be reviewed annually</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mandatory Insurance of own mining assets, covering- environmental damage, third </td><td style="font-size:12px;color:var(--text-muted)">Should cover the lease period</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">Punit Aswala</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Monthly mining royalty returns in prescribed format</td><td style="font-size:12px;color:var(--text-muted)">Monthly (before 4th)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">12 Apr 2025</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Quarterly mining royalty returns prescribed format</td><td style="font-size:12px;color:var(--text-muted)">Quarterly - (Jan/Apr/July/Oct by 15th)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">15 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Maintain the records of all the boreholes drilled within lease area</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Display of Safety Signage at prominently and key locations as needed</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Compliance to the Environmental Act</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Maintain a distance of minimum 200 meters from any Govt. or public building alre</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Maintain a distance of at least 1000 meters from any aerodrome or Helipad</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Pollution control - Water sprinkling on all haul roads for dust suppression</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Payment of Ushuru to local Municipal Council for transport od sand from Kijaka</td><td style="font-size:12px;color:var(--text-muted)">As & when required</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">As & when required</td><td style="font-size:12px;color:var(--text-muted)">Pavan Gandhi</td></tr>
-</tbody>
-    </table>
-  </div>
-</div>
-<div class="mis-section" style="margin-bottom:16px">
-  <div class="mis-sec-hdr">
-    <i data-lucide="shield" class="mis-sec-icon"></i>
-    <h3 class="mis-sec-title">ML 552/15 — Tarawanda, Bagamoyo</h3>
-    <span style="margin-left:12px;font-size:12px;color:var(--text-muted)"> &nbsp;·&nbsp;  km²</span>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px">
-      <span style="color:var(--green-ink);font-weight:700">14 Complied</span>
-      <span style="color:var(--red-ink);font-weight:700">4 Not Complied</span>
-      <span style="color:var(--amber-ink);font-weight:700">5 Partial</span>
-      <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:61%;background:#EF4444"></div></div>
-      <span style="font-weight:700;color:var(--red-ink)">61%</span>
-    </div>
-  </div>
-  <div class="mis-table-wrap" style="max-height:380px">
-    <table class="mis-table">
-      <thead><tr><th>Compliance Requirement</th><th>Frequency</th><th>Status</th><th style="text-align:center">Due Next</th><th>Responsible</th></tr></thead>
-      <tbody><tr><td style="white-space:normal;line-height:1.4;max-width:320px">License Type</td><td style="font-size:12px;color:var(--text-muted)">ML - Industrial Minerals</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)"></td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mining Lease (Date of Issue - 30/09/15)</td><td style="font-size:12px;color:var(--text-muted)">Every 10 Years</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">30 Sep 2025</td><td style="font-size:12px;color:var(--text-muted)">PSS Sajiv</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Rent @ US$ 10,120 or Tsh 25,603,600</td><td style="font-size:12px;color:var(--text-muted)">Annual</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">24 May 2026</td><td style="font-size:12px;color:var(--text-muted)">PSS Sajiv</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mining Royalty Returns</td><td style="font-size:12px;color:var(--text-muted)">Annual (before 15th Jan)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">15 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mining Plan Compliance Report (before 30th Jan)</td><td style="font-size:12px;color:var(--text-muted)">Annual (before 30th Jan)</td><td><span class="mis-badge expired">Not Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">30 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Local Content Implementation Plan (before 15th Jan)</td><td style="font-size:12px;color:var(--text-muted)">Annual (before 15th Jan)</td><td><span class="mis-badge expired">Not Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">15 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Local Content Compliance Annual Report (before 30th Jan)</td><td style="font-size:12px;color:var(--text-muted)">Annual (before 30th Jan)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">30 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Submission of CSR Plan to Local Municipal Council / Ward for the next year (befo</td><td style="font-size:12px;color:var(--text-muted)">Annual (before July)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">07 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mines Closure Plan</td><td style="font-size:12px;color:var(--text-muted)">One-time, Review Every 3 yrs</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">04 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Hydrogeological Investigation</td><td style="font-size:12px;color:var(--text-muted)">Every 3 yrs</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Submission of compensation plan for the surface right owners within lease area t</td><td style="font-size:12px;color:var(--text-muted)">One-time, Review Every 3 yrs</td><td><span class="mis-badge expired">Not Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Demarcation of lease boundary with coordinates displayed at site</td><td style="font-size:12px;color:var(--text-muted)">One-time. To be reviewed annually</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">15 Jan 2015</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Providing fence or rock bund along the lease boundary for prevention of unauthor</td><td style="font-size:12px;color:var(--text-muted)">One-time. To be reviewed annually</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Mandatory Insurance of own mining assets, covering- environmental damage, third </td><td style="font-size:12px;color:var(--text-muted)">Should cover the lease period</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">Punit Aswala</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Monthly mining royalty returns in prescribed format</td><td style="font-size:12px;color:var(--text-muted)">Monthly (before 4th)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">12 Apr 2025</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Quarterly mining royalty returns prescribed format</td><td style="font-size:12px;color:var(--text-muted)">Quarterly - (Jan/Apr/July/Oct by 15th)</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">15 Jan 2026</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Maintain the records of all the boreholes drilled within lease area</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Display of Safety Signage at prominently and key locations as needed</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge expired">Not Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Compliance to the Environmental Act</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Maintain a distance of minimum 200 meters from any Govt. or public building alre</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Maintain a distance of at least 1000 meters from any aerodrome or Helipad</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">To be reviewed periodically</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Pollution control - Water sprinkling on all haul roads for dust suppression</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">One operations start</td><td style="font-size:12px;color:var(--text-muted)">Mukesh Agrawal</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Payment of Ushuru to local Municipal Council for transport od sand from Kijaka</td><td style="font-size:12px;color:var(--text-muted)">As & when required</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">As & when required</td><td style="font-size:12px;color:var(--text-muted)"></td></tr>
-</tbody>
-    </table>
-  </div>
-</div>
-<div class="mis-section" style="margin-bottom:16px">
-  <div class="mis-sec-hdr">
-    <i data-lucide="shield" class="mis-sec-icon"></i>
-    <h3 class="mis-sec-title">PL/31929/25 — Tarawanda, Bagamoyo</h3>
-    <span style="margin-left:12px;font-size:12px;color:var(--text-muted)"> &nbsp;·&nbsp;  km²</span>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px">
-      <span style="color:var(--green-ink);font-weight:700">0 Complied</span>
-      <span style="color:var(--text-muted);font-weight:700">0 Not Complied</span>
-      <span style="color:var(--amber-ink);font-weight:700">3 Partial</span>
-      <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:0%;background:#EF4444"></div></div>
-      <span style="font-weight:700;color:var(--red-ink)">0%</span>
-    </div>
-  </div>
-  <div class="mis-table-wrap" style="max-height:380px">
-    <table class="mis-table">
-      <thead><tr><th>Compliance Requirement</th><th>Frequency</th><th>Status</th><th style="text-align:center">Due Next</th><th>Responsible</th></tr></thead>
-      <tbody><tr><td style="white-space:normal;line-height:1.4;max-width:320px">License Type</td><td style="font-size:12px;color:var(--text-muted)">ML - Industrial Minerals</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)"></td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Prospective License (Date of Issue - xxxxxxx)</td><td style="font-size:12px;color:var(--text-muted)">1st renewal 4 yrs, 2nd renewal 3 yrs, 3rd renewal 2 yrs, ext</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">PSS Sajiv</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Rent @ Tsh 538,000</td><td style="font-size:12px;color:var(--text-muted)">Annual</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)">PSS Sajiv</td></tr>
-</tbody>
-    </table>
-  </div>
-</div>
-<div class="mis-section" style="margin-bottom:16px">
-  <div class="mis-sec-hdr">
-    <i data-lucide="shield" class="mis-sec-icon"></i>
-    <h3 class="mis-sec-title">PL/11811/2022 — Kimbiji, Kigamboni</h3>
-    <span style="margin-left:12px;font-size:12px;color:var(--text-muted)"> &nbsp;·&nbsp;  km²</span>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px">
-      <span style="color:var(--green-ink);font-weight:700">2 Complied</span>
-      <span style="color:var(--text-muted);font-weight:700">0 Not Complied</span>
-      <span style="color:var(--amber-ink);font-weight:700">1 Partial</span>
-      <div class="mis-bar-wrap" style="width:80px"><div class="mis-bar-fill" style="width:67%;background:#EF4444"></div></div>
-      <span style="font-weight:700;color:var(--red-ink)">67%</span>
-    </div>
-  </div>
-  <div class="mis-table-wrap" style="max-height:380px">
-    <table class="mis-table">
-      <thead><tr><th>Compliance Requirement</th><th>Frequency</th><th>Status</th><th style="text-align:center">Due Next</th><th>Responsible</th></tr></thead>
-      <tbody><tr><td style="white-space:normal;line-height:1.4;max-width:320px">License Type</td><td style="font-size:12px;color:var(--text-muted)">ML - Industrial Minerals</td><td><span class="mis-badge expiring">Partial</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)"></td><td style="font-size:12px;color:var(--text-muted)"></td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Prospective License (Date of Issue - 02/02/2022)</td><td style="font-size:12px;color:var(--text-muted)">1st renewal 4 yrs, 2nd renewal 3 yrs, 3rd renewal 2 yrs, ext</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">01 Feb 2026</td><td style="font-size:12px;color:var(--text-muted)">PSS Sajiv</td></tr>
-<tr><td style="white-space:normal;line-height:1.4;max-width:320px">Payment @ US$ 1,140</td><td style="font-size:12px;color:var(--text-muted)">Annual</td><td><span class="mis-badge valid">Complied</span></td><td class="tc" style="font-size:12px;color:var(--text-muted)">01 Feb 2026</td><td style="font-size:12px;color:var(--text-muted)">PSS Sajiv</td></tr>
-</tbody>
-    </table>
-  </div>
-</div>
-
-    <!-- Legal compliance requirements (ML Act) -->
-    <div class="mis-section">
-      <div class="mis-sec-hdr">
-        <i data-lucide="clipboard-list" class="mis-sec-icon"></i>
-        <h3 class="mis-sec-title">Legal Compliance Requirements — Mining Act (ML 395/10)</h3>
-      </div>
-      <div class="mis-table-wrap" style="max-height:420px">
-        <table class="mis-table">
-          <thead><tr><th>#</th><th>Legal Requirement</th><th>Frequency</th><th>Status</th></tr></thead>
-          <tbody><tr><td>1</td><td style="white-space:normal;line-height:1.4;max-width:360px">Mining Plan compliance report</td><td style="font-size:12px;color:var(--text-muted)">Every Year by 30th January</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>2</td><td style="white-space:normal;line-height:1.4;max-width:360px">Mining Lease</td><td style="font-size:12px;color:var(--text-muted)">Once in 10 Years</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>3</td><td style="white-space:normal;line-height:1.4;max-width:360px">Mines closure plan</td><td style="font-size:12px;color:var(--text-muted)">One time, Review once in 3 year</td><td><span class="mis-badge expiring">Partial</span></td></tr>
-<tr><td>4</td><td style="white-space:normal;line-height:1.4;max-width:360px">Hydrogeological investigation</td><td style="font-size:12px;color:var(--text-muted)">Every 3  years</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>5</td><td style="white-space:normal;line-height:1.4;max-width:360px">Demarcation of lease boundary with coordinates displayed at site</td><td style="font-size:12px;color:var(--text-muted)">One-time. To be reviewed annually</td><td><span class="mis-badge expiring">Partial</span></td></tr>
-<tr><td>6</td><td style="white-space:normal;line-height:1.4;max-width:360px">Providing fence or rock bund along the lease boundary for prevetion of unauthori</td><td style="font-size:12px;color:var(--text-muted)">One-time. To be reviewed annually</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>7</td><td style="white-space:normal;line-height:1.4;max-width:360px">Display of Safety Signage at prominently and key locations as needed</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>8</td><td style="white-space:normal;line-height:1.4;max-width:360px">Submission of Annual Local Content implementation plan</td><td style="font-size:12px;color:var(--text-muted)">Every year by 15t January</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>9</td><td style="white-space:normal;line-height:1.4;max-width:360px">Submission of Local Content compliance annual report in prescribed format</td><td style="font-size:12px;color:var(--text-muted)">Everty year by 30th Jaunuary</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>10</td><td style="white-space:normal;line-height:1.4;max-width:360px">Monthly mining royalty returns in prescribed format</td><td style="font-size:12px;color:var(--text-muted)">Every Month before 4th</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>11</td><td style="white-space:normal;line-height:1.4;max-width:360px">Quarterly mining royalty returns prescribed format</td><td style="font-size:12px;color:var(--text-muted)">Jan/Apr/July/Oct by 15th</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>12</td><td style="white-space:normal;line-height:1.4;max-width:360px">Annual mining royalty returns prescribed format</td><td style="font-size:12px;color:var(--text-muted)">Every year by 15th January</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>13</td><td style="white-space:normal;line-height:1.4;max-width:360px">Annual land rent payment (Municipal Council)</td><td style="font-size:12px;color:var(--text-muted)">Every Year</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>14</td><td style="white-space:normal;line-height:1.4;max-width:360px">Payment of City Service Levy (Municipal Council)</td><td style="font-size:12px;color:var(--text-muted)">Quarterly - Jan/Apr/July/Oct by 15th</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>15</td><td style="white-space:normal;line-height:1.4;max-width:360px">Payment of Ushuru to local Municipal Council for transport od sand from Kijaka</td><td style="font-size:12px;color:var(--text-muted)">As & when required</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>16</td><td style="white-space:normal;line-height:1.4;max-width:360px">Maintain a distance of minimum 200 meters from any Govt. or public building alrt</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>17</td><td style="white-space:normal;line-height:1.4;max-width:360px">Maintain a distance of atleast 1000 meters from any aerodrome or Helipad</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>18</td><td style="white-space:normal;line-height:1.4;max-width:360px">Submission of compensation plan for the surface right owners within lease area t</td><td style="font-size:12px;color:var(--text-muted)">One time, Review once in 3 year</td><td><span class="mis-badge expired">Not Complied</span></td></tr>
-<tr><td>19</td><td style="white-space:normal;line-height:1.4;max-width:360px">Submission of CSR Plan approved by local municipal council / Kimbiji ward for th</td><td style="font-size:12px;color:var(--text-muted)">Every Year before July</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>20</td><td style="white-space:normal;line-height:1.4;max-width:360px">Pollution control - Water sprinkling on all haul roads for dust suppression</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>21</td><td style="white-space:normal;line-height:1.4;max-width:360px">Mandatory insurance of own mining assets, to cover envronmental damage, thrird p</td><td style="font-size:12px;color:var(--text-muted)">Should cover the lease period</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>22</td><td style="white-space:normal;line-height:1.4;max-width:360px">Maintain the records of all the boreholes drilled within lease area</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td></tr>
-<tr><td>23</td><td style="white-space:normal;line-height:1.4;max-width:360px">Compliance to the Environmental Act</td><td style="font-size:12px;color:var(--text-muted)">Continuous</td><td><span class="mis-badge valid">Complied</span></td></tr>
-</tbody>
-        </table>
-      </div>
-    </div>
-
+    <!-- Mining leases and their obligations, live from the Compliance Master
+         (each licence is a group; its obligations are records owned by the
+         Quarry). Replaces a hardcoded copy of the workbook. -->
+    <div id="mlpl-live"><div style="padding:24px;color:var(--text-muted);font-size:13px">Loading the mining licences…</div></div>
   </div>
 
-  <!-- â•â• LEGAL CASES â•â• -->
   <div class="hr-panel" id="comp-legal">
     <div class="mis-section">
       <div class="mis-sec-hdr">
@@ -3081,43 +2896,52 @@ document.addEventListener('DOMContentLoaded', async () => {
 </script>
 
 <script>
-/* â•â• COMPLIANCE DATA â•â• */
+/* ══ COMPLIANCE DATA ══
+   Live from the Compliance Master API (backend/routes/compliance.js), which
+   management roles read across every department. Status is computed there
+   from the dates — this tab no longer shows the hand-typed status of a
+   static snapshot. Every value is escaped: the records are user-entered. */
 let CERT_DATA = [];
+const _ce = (typeof escHtml === 'function') ? escHtml : (x => String(x == null ? '' : x));
+const _CMON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const _cd = s => (s && /^\d{4}-\d{2}-\d{2}/.test(s)) ? (+s.slice(8, 10)) + ' ' + _CMON[+s.slice(5, 7) - 1] + ' ' + s.slice(0, 4) : '—';
 
-function certBadgeHtml(s) {
-  if (s === 'active')   return '<span class="mis-badge valid">Active</span>';
-  if (s === 'expiring') return '<span class="mis-badge expiring">Expiring</span>';
-  if (s === 'expired')  return '<span class="mis-badge expired">Expired</span>';
-  if (s === 'renewal')  return '<span class="mis-badge expiring" style="background:#FFF7ED;color:#92400E;border-color:var(--st-warn-bd)">Under Renewal</span>';
-  return '<span class="mis-badge" style="background:#F1F5F9;color:#64748B;border:1px solid #CBD5E1">Inactive</span>';
+function certBadgeHtml(c) {
+  const s = c.status;
+  let b;
+  if (s === 'active')       b = '<span class="mis-badge valid">Active</span>';
+  else if (s === 'due')     b = '<span class="mis-badge expiring">Due</span>';
+  else if (s === 'overdue') b = '<span class="mis-badge expired">Overdue</span>';
+  else if (s === 'undated') b = '<span class="mis-badge" style="background:#F1F5F9;color:#475569;border:1px solid #CBD5E1">No date set</span>';
+  else                      b = '<span class="mis-badge" style="background:#F1F5F9;color:#64748B;border:1px solid #CBD5E1">Inactive</span>';
+  return b + (c.renewal_in_progress ? '<div style="font-size:12px;color:var(--text-muted);margin-top:2px">Renewal in progress</div>' : '');
 }
 
 function renderCerts(data) {
   const tbody = document.getElementById('cert-tbody');
   if (!tbody) return;
-  tbody.innerHTML = data.map(c => `<tr>
-    <td style="color:var(--text-muted);font-size:12px">${c.n}</td>
-    <td style="white-space:normal;line-height:1.4;max-width:280px"><strong>${c.d}</strong></td>
-    <td style="font-size:12px">${c.a}</td>
-    <td style="font-size:12px;color:var(--text-muted)">${c.no}</td>
-    <td class="tc" style="font-size:12px;color:var(--text-muted)">${c.vf}</td>
-    <td class="tc" style="font-size:12px;color:var(--text-muted)">${c.vt}</td>
-    <td style="font-size:12px;color:var(--text-muted);max-width:200px;white-space:normal;line-height:1.4">${c.r}</td>
-    <td class="tc">${certBadgeHtml(c.s)}</td>
+  tbody.innerHTML = data.map((c, i) => `<tr>
+    <td style="color:var(--text-muted);font-size:12px">${i + 1}</td>
+    <td style="white-space:normal;line-height:1.4;max-width:280px"><a href="compliance.html?item=${+c.id}" style="color:var(--navy)"><strong>${_ce(c.title)}</strong></a><div style="font-size:12px;color:var(--text-muted)">${_ce(c.department)}</div></td>
+    <td style="font-size:12px">${_ce(c.agency || '')}</td>
+    <td style="font-size:12px;color:var(--text-muted)">${_ce(c.reference_no || '')}</td>
+    <td class="tc" style="font-size:12px;color:var(--text-muted)">${_ce(_cd(c.valid_from))}</td>
+    <td class="tc" style="font-size:12px;color:var(--text-muted)">${c.no_expiry ? 'No expiry' : _ce(_cd(c.valid_to))}</td>
+    <td style="font-size:12px;color:var(--text-muted);max-width:200px;white-space:normal;line-height:1.4">${_ce(c.renewal_note || c.remarks || '')}</td>
+    <td class="tc">${certBadgeHtml(c)}</td>
   </tr>`).join('');
   const lbl = document.getElementById('cert-count-lbl');
-  if (lbl) lbl.textContent = `${data.length} of 88`;
+  if (lbl) lbl.textContent = `${data.length} of ${CERT_DATA.length}`;
 }
 
 function filterCerts() {
-  const q  = (document.getElementById('cert-search')?.value||'').toLowerCase();
-  const st = document.getElementById('cert-filter-status')?.value||'';
-  const filtered = CERT_DATA.filter(c => {
-    const mq = !q || c.d.toLowerCase().includes(q) || c.a.toLowerCase().includes(q) || c.no.toLowerCase().includes(q);
-    const ms = !st || c.s === st;
-    return mq && ms;
-  });
-  renderCerts(filtered);
+  const q  = (document.getElementById('cert-search')?.value || '').toLowerCase();
+  const st = document.getElementById('cert-filter-status')?.value || '';
+  renderCerts(CERT_DATA.filter(c => {
+    const hay = `${c.title} ${c.agency || ''} ${c.reference_no || ''} ${c.department}`.toLowerCase();
+    const ms = !st || (st === 'renewal' ? c.renewal_in_progress : c.status === st);
+    return (!q || hay.includes(q)) && ms;
+  }));
 }
 
 function showCompTab(id) {
@@ -3127,13 +2951,63 @@ function showCompTab(id) {
   if (panel) panel.classList.add('active');
   const btn = [...document.querySelectorAll('#panel-compliance .hr-stab')].find(b => b.getAttribute('onclick')?.includes(id));
   if (btn) btn.classList.add('active');
-  if (id === 'certs') renderCerts(CERT_DATA);
+  if (id === 'certs') filterCerts();
+}
+
+function renderMlpl(groups) {
+  const el = document.getElementById('mlpl-live');
+  if (!el) return;
+  const mining = groups.filter(g => g.kind === 'mining_licence');
+  if (!mining.length) { el.innerHTML = '<div style="padding:24px;color:var(--text-muted);font-size:13px">No mining licences in the Compliance Master yet.</div>'; return; }
+  el.innerHTML = mining.map(g => {
+    const n = s => g.items.filter(i => i.status === s).length;
+    const a = g.attrs || {};
+    return `<div class="mis-section" style="margin-bottom:16px">
+      <div class="mis-sec-hdr">
+        <i data-lucide="shield" class="mis-sec-icon"></i>
+        <h3 class="mis-sec-title">${_ce(g.title || g.code)}</h3>
+        <span style="margin-left:12px;font-size:12px;color:var(--text-muted)">${_ce([a.licence_type, a.resource, a.area_km2 ? a.area_km2 + ' km²' : null].filter(Boolean).join(' · '))}</span>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px;flex-wrap:wrap">
+          <span style="color:var(--red-ink);font-weight:700">${n('overdue')} Overdue</span>
+          <span style="color:var(--amber-ink);font-weight:700">${n('due')} Due</span>
+          <span style="color:var(--green-ink);font-weight:700">${n('active')} Active</span>
+          ${n('undated') ? `<span style="color:var(--text-muted);font-weight:700">${n('undated')} No date set</span>` : ''}
+        </div>
+      </div>
+      <div class="mis-table-wrap"><table class="mis-table">
+        <thead><tr><th>Obligation</th><th>Frequency</th><th>Status</th><th style="text-align:center">Deadline</th><th>Responsible</th></tr></thead>
+        <tbody>${g.items.map(it => `<tr>
+          <td style="white-space:normal;line-height:1.4;max-width:320px"><a href="compliance.html?item=${+it.id}" style="color:var(--navy)">${_ce(it.title)}</a></td>
+          <td style="font-size:12px;color:var(--text-muted)">${_ce(it.frequency_label || '')}</td>
+          <td>${certBadgeHtml(it)}</td>
+          <td class="tc" style="font-size:12px;color:var(--text-muted)">${_ce(_cd(it.deadline))}</td>
+          <td style="font-size:12px;color:var(--text-muted)">${_ce(it.direct.map(p => p.name).join(', '))}</td></tr>`).join('')}</tbody>
+      </table></div></div>`;
+  }).join('');
+  if (window.lucide) lucide.createIcons();
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  try { CERT_DATA = await NyatiAPI.getMisComplianceCerts(); }
-  catch (e) { console.error('Failed to load compliance certificates', e); }
-  renderCerts(CERT_DATA);
+  if (!window.NyatiAPI || !NyatiAPI.request) return;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  try {
+    const [items, groups] = await Promise.all([
+      NyatiAPI.request('GET', '/compliance/items?kind=validity&limit=500&sort=department'),
+      NyatiAPI.request('GET', '/compliance/groups'),
+    ]);
+    CERT_DATA = items.rows;
+    const c = s => CERT_DATA.filter(x => x.status === s).length;
+    set('ckv-total', CERT_DATA.length); set('ckv-active', c('active')); set('ckv-due', c('due'));
+    set('ckv-overdue', c('overdue')); set('ckv-undated', c('undated'));
+    set('ckv-overdue-sub', CERT_DATA.filter(x => x.status === 'overdue' && x.renewal_in_progress).length + ' with renewal in progress');
+    set('cert-total-lbl', `${CERT_DATA.length} items`);
+    renderMlpl(groups.groups);
+  } catch (e) {
+    console.error('Failed to load the Compliance Master', e);
+    ['ckv-total', 'ckv-active', 'ckv-due', 'ckv-overdue', 'ckv-undated'].forEach(id => set(id, '—'));
+    const el = document.getElementById('mlpl-live'); if (el) el.innerHTML = '<div style="padding:24px;color:var(--text-muted)">Could not load the Compliance Master.</div>';
+  }
+  filterCerts();
 });
 </script>
 

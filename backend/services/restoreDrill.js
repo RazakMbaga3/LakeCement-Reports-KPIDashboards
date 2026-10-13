@@ -97,9 +97,26 @@ async function runRestoreDrill(dumpPathOverride) {
       const usersLive     = (await live.query('SELECT COUNT(*)::int AS c FROM users')).rows[0].c;
       const reportsRestored = (await drill.query('SELECT COUNT(*)::int AS c FROM daily_reports')).rows[0].c;
 
+      /* Compliance documents live in the database (migration 038), so the
+         backup IS their backup. Prove one restores byte-for-byte: the newest
+         blob's content must still hash to its own key. No blobs yet (or no
+         table, on an old dump) is not a failure. */
+      let blobs = { count: 0, newest_verified: null };
+      if (tables.includes('compliance_blobs')) {
+        const n = (await drill.query('SELECT COUNT(*)::int AS c FROM compliance_blobs')).rows[0].c;
+        blobs.count = n;
+        if (n) {
+          const r = (await drill.query(
+            `SELECT sha256 = encode(sha256(bytes), 'hex') AS ok FROM compliance_blobs ORDER BY created_at DESC LIMIT 1`)).rows[0];
+          blobs.newest_verified = !!r.ok;
+        }
+      }
+
       result = {
         ok: tables.includes('users') && tables.includes('daily_reports') &&
-            tables.includes('kpi_overrides') && usersRestored > 0 && usersRestored === usersLive,
+            tables.includes('kpi_overrides') && usersRestored > 0 && usersRestored === usersLive &&
+            blobs.newest_verified !== false,
+        compliance_blobs: blobs,
         dump: path.basename(dump),
         tables: tables.length,
         users_restored: usersRestored,

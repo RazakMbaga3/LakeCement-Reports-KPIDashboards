@@ -66,6 +66,7 @@
     'power-plant-report.html':   ['Power Plant Report',       'Reading the meters…',         'kpi'],
     'approvals.html':            ['Approvals',                'Opening the queue…',          'daily'],
     'corrections.html':          ['Corrections',              'Finding the reports…',        'daily'],
+    'compliance.html':           ['Compliance Master',        'Checking the licences…',      'ops'],
     'daily-report.html':         ['Daily Report',             'Fetching the latest data…',   'daily'],
     'mis.html':                  ['Management Info.',         'Building the report…',        'mis'],
     'sales.html':                ['Sales & Dispatch',         'Tallying the despatches…',    'kpi'],

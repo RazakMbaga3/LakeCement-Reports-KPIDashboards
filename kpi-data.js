@@ -1062,6 +1062,48 @@ async function loadManualValues(mo, yr) {
 async function loadKpiData(mo, yr) {
   await loadAutoCalcValues(mo, yr);
   await loadManualValues(mo, yr);
+  loadComplianceHints(mo, yr);   // not awaited: a hint must never delay the table
+}
+
+/* ─── Compliance Master hint on "Compliance to Legal Requirements" ──────
+   Four departments report this KPI by hand. The Compliance Master knows the
+   share of their tracked obligations that were not overdue at month end, so
+   it is offered beside the row as a SUGGESTION — the HOD still enters the
+   figure, and the monthly KPI lock is untouched. A department with no
+   obligations tracked gets no hint at all: null is never shown as 0 or 100.
+
+   The hint is a data attribute rendered by CSS ::after, NOT text in the cell:
+   kpiKeyOf() derives the row's stored key from the label cell's textContent,
+   so adding text there would silently re-key the row's saves. */
+const _COMPLIANCE_KPI_DEPTS = {
+  mines: 'compliance-to-legal-requirements', packing: 'compliance-to-legal-requirements',
+  powerplant: 'compliance-to-legal-requirement', stores: 'compliance-to-legal-requirements',
+};
+async function loadComplianceHints(mo, yr) {
+  if (!document.getElementById('_cm-hint-css')) {
+    const st = document.createElement('style');
+    st.id = '_cm-hint-css';
+    st.textContent = 'td[data-cm-hint]::after{content:" · " attr(data-cm-hint);font-size:12px;font-weight:600;color:var(--text-muted,#5A6270);white-space:nowrap}';
+    document.head.appendChild(st);
+  }
+  for (const [dept, key] of Object.entries(_COMPLIANCE_KPI_DEPTS)) {
+    const section = document.getElementById('dept-' + dept);
+    if (!section) continue;
+    const row = [...section.querySelectorAll('tr.data-row')].find(r => kpiKeyOf(r) === key);
+    const label = row && row.querySelector('td');
+    if (!label) continue;
+    delete label.dataset.cmHint;
+    label.removeAttribute('title');
+    try {
+      const res = await fetch(`${_kpiApiBase()}/compliance/kpi-suggestion/${dept}/${yr}/${mo}`, { headers: _kpiHeaders() });
+      if (!res.ok) continue;
+      const s = await res.json();
+      if (s.value == null) continue;
+      label.dataset.cmHint = `Compliance Master: ${s.value}%`;
+      label.title = `${s.compliant} of ${s.total} tracked obligations not overdue (${s.basis})` +
+        (s.undated ? `; ${s.undated} have no date set and are not counted` : '') + '. A suggestion — the figure you enter is what counts.';
+    } catch { /* a hint is optional */ }
+  }
 }
 
 /* ══════════════════════════════════════════════════════════

@@ -145,6 +145,27 @@ Restart-Service LakeCementMIS
 ```
 Frontend files are picked up by Nginx immediately (they're static).
 
+## 8a. Compliance Master — import, reminders, documents
+
+Full guide: `docs/COMPLIANCE_MASTER.md`.
+
+- **Import** the workbook from the page (admin → Compliance Master → Import:
+  preview, then Import). Keep `1. Compliance Master.xlsx` out of the
+  repository — the web root is the git checkout (RAID I-42).
+- **Reminder job**: `COMPLIANCE_REMINDER_CRON` (default `0 7,14 * * *`,
+  Africa/Dar_es_Salaam; `off` disables). It never runs at boot. Sending is
+  the in-app master switch, which starts **off**. Manual run, or a preview of
+  who would be emailed:
+  ```
+  npm run compliance:remind -- --dry-run      # plan only, writes nothing
+  npm run compliance:remind                   # real run
+  ```
+  `GET /api/health` → `checks.compliance` is `stale`/`failing` if the job has
+  not completed a run in 26 h; each run records duration and heap delta
+  (Settings & people → Recent runs).
+- **Documents** live in Postgres (`compliance_blobs`), so `pg_dump` and the
+  monthly restore drill cover them; the drill re-hashes the newest blob.
+
 ## 9. First-time server setup (checklist)
 
 1. Install Node 22+, Nginx; PostgreSQL already runs with Odoo.
