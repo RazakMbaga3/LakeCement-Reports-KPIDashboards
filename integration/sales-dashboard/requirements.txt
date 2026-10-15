@@ -1,0 +1,7 @@
+streamlit
+streamlit-autorefresh
+pandas
+plotly
+python-dotenv
+pg8000
+openpyxl

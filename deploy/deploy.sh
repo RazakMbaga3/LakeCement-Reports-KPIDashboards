@@ -42,3 +42,11 @@ npm ci --omit=dev
 npm run migrate
 
 pm2 reload "$APP_DIR/deploy/ecosystem.config.js" --update-env
+
+# Integration Package Sales Dashboard (Streamlit): only once
+# deploy/setup-sales-app.sh has installed it, and never able to fail the main
+# deploy — the dashboard above is already live by this point.
+if pm2 describe sales-app >/dev/null 2>&1; then
+  pm2 reload "$APP_DIR/deploy/sales-app.ecosystem.config.js" \
+    || echo "WARN: sales-app reload failed — the main dashboard is unaffected; check: pm2 logs sales-app"
+fi

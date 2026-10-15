@@ -10,6 +10,12 @@
 #   sha256sum -c vendor/xlsx-0.18.5/SHA256SUMS
 vendor/** -text
 
+# Same rule, same reason, for the collaborator's Integration Package (Python,
+# authored on Windows with CRLF): it is vendored byte-for-byte and checked
+# against integration/sales-dashboard/SHA256SUMS, so git must not rewrite it.
+#   sha256sum -c integration/sales-dashboard/SHA256SUMS
+integration/sales-dashboard/** -text
+
 # Shell scripts and nginx snippets run on the Linux droplet, and are often
 # copied there straight from a Windows working copy (scp), where CRLF line
 # endings make bash fail with "command not found" on every line. Keep them LF.

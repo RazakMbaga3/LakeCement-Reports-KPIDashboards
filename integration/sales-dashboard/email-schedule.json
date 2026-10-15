@@ -1,0 +1,31 @@
+{
+  "note": "Facts about the two e-mail reports, copied from the collaborator's Windows scripts, which are NOT vendored and do NOT run on this server. The e-mails are sent from the collaborator's Windows PC through desktop Outlook, by Windows Task Scheduler. This server only displays these facts. If the collaborator changes a schedule or recipient list, update this file (the source scripts' SHA-256 below tell you whether they changed).",
+  "sent_from": "The collaborator's Windows PC (desktop Outlook, signed-in mailbox) — not this server",
+  "reports": {
+    "vehicles": {
+      "title": "Vehicles At Factory Without Order",
+      "task_name": "Nyati Vehicles Without Order",
+      "schedule": "Every 2 hours, starting 10:00",
+      "content": "HTML table in the body + Excel attachment",
+      "recipients_source": "LIVE_TO / LIVE_CC in vehicles_without_order.py (read live from that file)",
+      "source": { "file": "install_scheduled_tasks.ps1", "sha256": "76f8c38182a0e0430f41407d32181ec4eb79100119b168fa5af9b67d223c6a63" }
+    },
+    "sales_vs_target": {
+      "title": "Sales vs Target – Daily Report",
+      "task_name": "Nyati Daily Sales Report",
+      "schedule": "Daily at 08:00 (runs when the PC is next on, if it was off); data up to yesterday",
+      "content": "One e-mail per salesperson (customer-wise MTD sales vs target); an extra e-mail to the administrator listing salespersons without an address",
+      "recipients_source": "outbox/Salesperson Matrix.xlsx (fallback email_master.csv): To = 'Sales person Email', CC = every '… Manager' and 'Back office' column, plus REPORT_ADMIN_EMAIL",
+      "duplicate_guard": "outbox/<date>/sent.log on the sending PC (per machine)",
+      "source": { "file": "install_scheduled_tasks.ps1", "sha256": "76f8c38182a0e0430f41407d32181ec4eb79100119b168fa5af9b67d223c6a63" }
+    },
+    "excel_dashboard": {
+      "title": "Sales Dashboard (Excel)",
+      "task_name": "Nyati Daily Sales Report (same task, after the salesperson mails)",
+      "schedule": "Daily, after the 08:00 salesperson mails; at most once per as-on date",
+      "content": "Sales Dashboard.xlsx built by build_dashboard_excel.py",
+      "to": ["mitesh.patel@lakecement.co.tz", "lclbackoffice@lakecement.co.tz"],
+      "source": { "file": "Sales_vs_Target_Daily_Report/send_excel.ps1", "sha256": "3c0b25451cc218ea74b258ee5eb6a63ba6eb1b210d5361196d50fd8e32a1d765" }
+    }
+  }
+}

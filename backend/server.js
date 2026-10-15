@@ -42,6 +42,7 @@ const amendmentsRoutes = require('./routes/amendments');
 const adminRoutes     = require('./routes/admin');
 const itAssetsRoutes  = require('./routes/itAssets');
 const complianceRoutes = require('./routes/compliance');
+const integrationRoutes = require('./routes/integration');
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -153,6 +154,7 @@ app.use('/api/amendments', amendmentsRoutes);
 app.use('/api/admin',    adminRoutes);
 app.use('/api/it-assets', itAssetsRoutes);
 app.use('/api/compliance', complianceRoutes);
+app.use('/api/integration', integrationRoutes);
 app.use('/api/monitor',  monitorRouter);
 app.get('/api/metrics', metricsAuth, metricsHandler);
 

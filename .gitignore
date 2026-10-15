@@ -40,3 +40,14 @@ e2e/.cache/
 # Design-audit output — hundreds of screenshots and JSON dumps, regenerated
 # by e2e/design-audit-screenshots.js and e2e/design-consistency-audit.js
 e2e/design-audit/
+
+# Integration Package (integration/sales-dashboard/): the collaborator's code is
+# committed, but its runtime state never is. .env (Odoo DB password) is already
+# ignored above; users.toml holds Streamlit password hashes; outbox/<date>/
+# folders would hold prepared mails if anyone ran the scripts here.
+integration/sales-dashboard/users.toml
+integration/sales-dashboard/.venv/
+integration/sales-dashboard/__pycache__/
+integration/sales-dashboard/outbox/*/
+integration/sales-dashboard/*.log
+integration/sales-dashboard/*.xlsx

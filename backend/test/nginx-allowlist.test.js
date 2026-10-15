@@ -61,6 +61,12 @@ test('secrets, source and business files are refused', () => {
     '/backups/lcl_mis-2026-10-12-0230.dump', '/backend/logs/app.log',
     '/vendor/xlsx-0.18.5/LICENSE', '/forms/notes.md', '/forms/.env',
     '/1. Compliance Master.xlsx', '/AppData/Local/x.html',
+    // Integration Package: the collaborator's code, its Odoo password (.env)
+    // and Streamlit password hashes (users.toml) live in the checkout.
+    '/integration/sales-dashboard/.env', '/integration/sales-dashboard/users.toml',
+    '/integration/sales-dashboard/app.py', '/integration/sales-dashboard/web_extract.py',
+    '/integration/sales-dashboard/outbox/Salesperson Matrix.xlsx',
+    '/integration/sales-dashboard/.venv/bin/python',
   ]) {
     assert.ok(refused(uri), `must be refused: ${uri}`);
   }
@@ -73,6 +79,7 @@ test('the frontend, the API and certbot challenges are served', () => {
     '/forms/forms.css', '/vendor/xlsx-0.18.5/xlsx.full.min.js',
     '/api/health', '/api/mis/monthly/export.xlsx', '/api/compliance/items/12',
     '/api/compliance/documents/3/download', '/.well-known/acme-challenge/abc123',
+    '/integration-package.html',
   ]) {
     assert.ok(!refused(uri), `must be served: ${uri}`);
   }
@@ -100,4 +107,19 @@ test('of every tracked file, exactly the frontend assets are public', (t) => {
   }
   const wrong = files.filter(rel => refused('/' + rel) === isPublicAsset(rel));
   assert.deepEqual(wrong, [], 'served/refused disagrees with the allowlist intent');
+});
+
+/* /sales-app/ is a top-level directory, so the allowlist alone 404s it; it is
+   reached only because deploy/nginx-sales-app.conf matches it first with a
+   `^~` prefix location (checked in integration-package-static.test.js). */
+test('the allowlist by itself refuses /sales-app/ — the ^~ location is what opens it', () => {
+  assert.ok(refused('/sales-app/'));
+  assert.ok(refused('/sales-app/_stcore/health'));
+});
+
+test('the production template includes the sales-app snippet right after the allowlist', () => {
+  const lines = fs.readFileSync(path.join(REPO, 'deploy', 'nginx.digitalocean.conf'), 'utf8')
+    .split(/\r?\n/).map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+  const i = lines.findIndex(l => /lcl-public-allowlist\.conf;$/.test(l));
+  assert.match(lines[i + 1], /^include\s+\S*lcl-sales-app\.conf;$/);
 });

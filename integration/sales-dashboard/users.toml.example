@@ -1,0 +1,12 @@
+﻿# Dashboard users. NO real users are shipped - the server keeps its own users.toml.
+# Create a password hash with:
+#   venv\Scripts\python.exe -c "import auth; print(auth.hash_password('NewPassword'))"
+# tabs: dashboard, daily, monthly, ytd, mis (or all). scope keys: team, zone, region, salesperson, customer.
+[users.example]
+name = "Example Admin"
+level = "Administrator"
+password = "PASTE_HASH_HERE"
+tabs = ["all"]
+downloads = true
+refresh = true
+[users.example.scope]

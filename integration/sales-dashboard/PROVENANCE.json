@@ -1,0 +1,43 @@
+{
+  "what": "Byte-for-byte copy of the collaborator's Integration Package (Nyati / Lake Cement Sales Dashboard), vendored so the Lake Cement MIS can host the Streamlit Sales Dashboard and read the two e-mail reports' live figures. Nothing here is edited; integrity is checked by SHA256SUMS in this folder.",
+  "package": "integration_package (prepared 14 Oct 2026; source on the collaborator's laptop: C:\\odoo-sales-dashboard)",
+  "received_as": "C:\\Users\\USER\\Downloads\\integration_package\\integration_package",
+  "vendored_on": "2026-10-15",
+  "layout": "Flat, as on the collaborator's laptop: every module finds .env and outbox/ relative to its own folder.",
+  "files": {
+    "app.py": "Existing_Sales_Dashboard/app.py",
+    "auth.py": "Existing_Sales_Dashboard/auth.py",
+    "logo.png": "Existing_Sales_Dashboard/logo.png",
+    "users.toml.example": "Existing_Sales_Dashboard/users.toml.example",
+    ".streamlit/config.toml": "Existing_Sales_Dashboard/.streamlit/config.toml",
+    "odoo_client.py": "shared_files/odoo_client.py",
+    "mis_report.py": "shared_files/mis_report.py",
+    "requirements.txt": "shared_files/requirements.txt",
+    "requirements-lock.txt": "shared_files/requirements-lock.txt",
+    ".env.example": "shared_files/.env.example",
+    "vehicles_without_order.py": "Vehicles_At_Factory_Without_Order/vehicles_without_order.py",
+    "daily_report.py": "Sales_vs_Target_Daily_Report/daily_report.py",
+    "email_master.csv": "Sales_vs_Target_Daily_Report/email_master.csv",
+    "outbox/Salesperson Matrix.xlsx": "Sales_vs_Target_Daily_Report/outbox/Salesperson Matrix.xlsx"
+  },
+  "deliberately_not_vendored": {
+    "why": "These send e-mail through desktop Outlook or register Windows scheduled tasks. The e-mails stay on the collaborator's Windows PC, unchanged; this server must never send them or schedule them, so the files are not here at all.",
+    "files": [
+      "Sales_vs_Target_Daily_Report/daily_report.bat",
+      "Sales_vs_Target_Daily_Report/send_outlook.ps1",
+      "Sales_vs_Target_Daily_Report/send_excel.ps1",
+      "Sales_vs_Target_Daily_Report/build_dashboard_excel.py",
+      "Vehicles_At_Factory_Without_Order/run_vehicles_report.bat",
+      "Existing_Sales_Dashboard/dashboard_service.bat",
+      "install_scheduled_tasks.ps1",
+      "deploy.ps1"
+    ]
+  },
+  "added_here_not_from_package": [
+    "web_extract.py — reads the two e-mail reports' live figures through the collaborator's own functions, read-only, no sending",
+    "sitecustomize_pg_ssl.py — switches the Odoo database connection to encrypted without editing odoo_client.py",
+    "email-schedule.json — the e-mail schedule facts, copied from the non-vendored scripts (with their SHA-256)",
+    "README.md — how it is hosted and operated",
+    "PROVENANCE.json, SHA256SUMS"
+  ]
+}
