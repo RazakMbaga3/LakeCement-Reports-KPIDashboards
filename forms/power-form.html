@@ -13,7 +13,7 @@
   <script src="date-picker.js"></script>
   <link rel="stylesheet" href="forms.css" />
   <!-- Design system — loaded last so it settles equal-specificity ties -->
-  <link rel="stylesheet" href="../design-system.css?v=2" />
+  <link rel="stylesheet" href="../design-system.css?v=3" />
   <script src="../a11y.js?v=1"></script>
   <script src="../mobile-shell.js?v=3"></script>
   <script src="mobile-entry.js?v=1"></script>
@@ -60,48 +60,56 @@
 
 
   <!-- ══ KPI SUMMARY STRIP ════════════════════════════════════════ -->
+  <!-- Every value and caption in this strip used to be typed into the HTML —
+       157,961 kWh, SPC 156.7 "4.5% above target", TANESCO 35,718 "CPP
+       shortfall" — and showed on every date until (or, for TANESCO, whatever)
+       the scripts below painted over them: a blank form for a day nobody had
+       entered read as a real, slightly-bad day. The SPC "targets" 150/61/27
+       are not targets anywhere (forms/formula-registry.js: target null). Values
+       now start as "—" and are painted only from this report's own fields or
+       the registry formulas; captions describe, they do not judge. -->
   <div class="kpi-strip">
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">Total Power Consumed</div>
-      <div class="kt-val" data-kpi="total_power">157,961</div>
+      <div class="kt-val" data-kpi="total_power">—</div>
       <div class="kt-unit">kWh / On Date</div>
-      <div class="kt-vs vs-wa">▲ Plant-wide — sum of all sections</div>
+      <div class="kt-vs vs-note">Plant-wide — sum of all sections</div>
     </div>
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">SPC — Total Cement</div>
-      <div class="kt-val" data-kpi="spc_total">156.7</div>
-      <div class="kt-unit">kWh/MT — Target 150</div>
-      <div class="kt-vs vs-ng">▼ 4.5% above target</div>
+      <div class="kt-val" data-kpi="spc_total">—</div>
+      <div class="kt-unit">kWh/MT eq. cement</div>
+      <div class="kt-vs vs-note">Same formula as the KPI dashboard</div>
     </div>
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">SPC — Clinker</div>
       <div class="kt-val" data-kpi="spc_clinker">—</div>
-      <div class="kt-unit">kWh/MT — Target 61</div>
-      <div class="kt-vs vs-ng">▼ 29.7% above target — kiln audit needed</div>
+      <div class="kt-unit">kWh/MT clinker</div>
+      <div class="kt-vs vs-note">Crusher, raw mills, coal mill, kiln</div>
     </div>
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">SPC — Cement Grinding</div>
       <div class="kt-val" data-kpi="spc_grinding">—</div>
-      <div class="kt-unit">kWh/MT — Target 27</div>
-      <div class="kt-vs vs-wa">▼ 7.8% above target</div>
+      <div class="kt-unit">kWh/MT cement</div>
+      <div class="kt-vs vs-note">Cement mills + packing</div>
     </div>
     <div class="kt kt-m">
       <span class="kt-badge">Manual</span>
       <div class="kt-lbl">TANESCO Import</div>
-      <div class="kt-val">35,718</div>
+      <div class="kt-val" data-kpi="pwr_tanesco_tile">—</div>
       <div class="kt-unit">kWh / On Date</div>
-      <div class="kt-vs vs-ng">▼ Grid dependency — CPP shortfall</div>
+      <div class="kt-vs vs-note">From Power Source below</div>
     </div>
     <div class="kt kt-f">
       <span class="kt-badge">Formula</span>
       <div class="kt-lbl">CPP Auxiliary %</div>
       <div class="kt-val" data-kpi="cpp_aux_pct_xform">—</div>
       <div class="kt-unit">% of Gross Generation</div>
-      <div class="kt-vs vs-ng">▼ Above 10% target — review aux loads</div>
+      <div class="kt-vs vs-note">Target &lt; 10% · from the CPP report</div>
     </div>
   </div>
 
@@ -292,7 +300,7 @@
           <!-- TOTAL -->
           <tr class="trow">
             <td class="ts" colspan="2" style="text-align:right;padding-right:12px;font-weight:700">TOTAL CONSUMPTION</td>
-            <td class="cf"><div class="cv" data-kpi="total_power">157,961</div></td>
+            <td class="cf"><div class="cv" data-kpi="total_power">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
             <td class="cf"><div class="cv">—</div></td>
@@ -431,7 +439,10 @@
             <td class="cf"><div class="cv" data-kpi="spc_total_mtd">—</div></td>
             <td class="cf"><div class="cv" data-kpi="spc_total_ytd">—</div></td>
             <td class="cm"><input class="ci" type="number" value="150" /></td>
-            <td class="cf"><div class="cv"><span class="var-chip var-r">Above target</span></div></td>
+            <!-- Status chips in this table were hard-coded ("Above target",
+                 "Slightly above") whatever the figures said; nothing computes
+                 them, so they now read "—" rather than assert a status. -->
+            <td class="cf"><div class="cv"><span class="var-chip var-na">—</span></div></td>
           </tr>
           <tr>
             <td class="tp">SPC Clinker (kWh/MT clinker)</td>
@@ -439,7 +450,7 @@
             <td class="cf"><div class="cv" data-kpi="spc_clinker_mtd">—</div></td>
             <td class="cf"><div class="cv" data-kpi="spc_clinker_ytd">—</div></td>
             <td class="cm"><input class="ci" type="number" value="61" /></td>
-            <td class="cf"><div class="cv"><span class="var-chip var-r">Above target</span></div></td>
+            <td class="cf"><div class="cv"><span class="var-chip var-na">—</span></div></td>
           </tr>
           <tr>
             <td class="tp">SPC Grinding (kWh/MT cement)</td>
@@ -447,7 +458,7 @@
             <td class="cf"><div class="cv" data-kpi="spc_grinding_mtd">—</div></td>
             <td class="cf"><div class="cv" data-kpi="spc_grinding_ytd">—</div></td>
             <td class="cm"><input class="ci" type="number" value="27" /></td>
-            <td class="cf"><div class="cv"><span class="var-chip var-a">Slightly above</span></div></td>
+            <td class="cf"><div class="cv"><span class="var-chip var-na">—</span></div></td>
           </tr>
           <tr>
             <td class="tp">CPP Auxiliary %</td>
@@ -455,7 +466,7 @@
             <td class="cf"><div class="cv" data-kpi="cpp_aux_pct_xform_mtd">—</div></td>
             <td class="cf"><div class="cv" data-kpi="cpp_aux_pct_xform_ytd">—</div></td>
             <td class="cm"><input class="ci" type="number" value="10" /></td>
-            <td class="cf"><div class="cv"><span class="var-chip var-r">Above target</span></div></td>
+            <td class="cf"><div class="cv"><span class="var-chip var-na">—</span></div></td>
           </tr>
         </tbody>
       </table>
@@ -479,10 +490,10 @@
       </div>
     </div>
     <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <span style="font-size:12px;color:var(--text-muted)">
-        Status: <strong style="color:var(--orange-ink)">DRAFT</strong> &nbsp;·&nbsp;
-        Date: <strong>21 April 2026</strong>
-      </span>
+      <!-- Removed a hardcoded "DRAFT · 21 April 2026" that showed on every report
+           whatever its real state (RAID I-62). The live status chip at the top of the
+           form is the single source of truth for this. -->
+      <span></span>
       <div style="display:flex;gap:8px">
         <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
         <button class="btn btn-sub"><i data-lucide="lock" class="btn-icon"></i> Submit &amp; Lock</button>
@@ -514,7 +525,7 @@
 <script src="api-client.js?v=7"></script>
 <script src="offline-queue.js?v=2"></script>
 <script src="client-errors.js"></script>
-<script src="form-persist.js?v=6"></script>
+<script src="form-persist.js?v=8"></script>
 <script>initFormPersist('power-cons');</script>
 <script src="nav-status.js?v=2"></script>
 <script src="collapsible.js"></script>
@@ -590,6 +601,8 @@ initKpiLive(EQUIPMENT_SPC_RULES.concat([
      the cross-form engine further down (needs production + cpp form data
      this form's own fields can't supply), not by kpi-live here. */
   /* Power source split — TANESCO import vs CPP generation */
+  /* The strip's TANESCO Import tile — was a typed-in 35,718 on every date. */
+  { kpi:'pwr_tanesco_tile', fmt:'n0', compute: function(f,n){ return n(f.pwr_tanesco_kwh) > 0 ? n(f.pwr_tanesco_kwh) : null; } },
   { kpi:'pwr_total_unit', fmt:'n0', compute: function(f,n){ return n(f.pwr_tanesco_kwh)+n(f.pwr_cpp_kwh); } },
   { kpi:'pwr_tanesco_pct', fmt:'pct1', compute: function(f,n){
       var t = n(f.pwr_tanesco_kwh)+n(f.pwr_cpp_kwh); return t > 0 ? n(f.pwr_tanesco_kwh)/t*100 : null;

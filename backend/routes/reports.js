@@ -53,6 +53,7 @@ const { validate, z, zDate, zShift, zNumeric } = require('../middleware/validate
 const { formSubmissions } = require('../services/metrics');
 const { shouldSnapshot, changedFields, recordRevision } = require('../services/reportRevisions');
 const amendments = require('../services/reportAmendments');
+const { syncAfterReportWrite } = require('../services/powerToProduction');
 const { FACTS } = require('../../forms/formula-registry.js');
 
 const router = express.Router();
@@ -459,6 +460,13 @@ router.post('/:formType',
 
       if (!isDraft) formSubmissions.inc({ form_type: formType });
 
+      /* A power-cons or production save re-runs the copy of Electrical's
+         section kWh into that day's Production Report (services/
+         powerToProduction.js). After the commit, in its own transaction;
+         it never fails this save. A no-op for every other form type.
+         Autosaves never get here — they return above. */
+      await syncAfterReportWrite(formType, date, shift);
+
       res.json({ success: true, record: outcome.record, amendment: outcome.amendment });
     } catch (err) { next(err); }
   });
@@ -521,6 +529,8 @@ router.post('/:formType/:date/approve',
       });
 
       if (!record) return res.status(409).json({ error: 'No pending_approval report found for this form/date/shift.' });
+      // Status-only change; re-run the power->production copy (no-op if already in step).
+      await syncAfterReportWrite(formType, date, shift);
       res.json({ success: true, record });
     } catch (err) { next(err); }
   });
@@ -581,6 +591,10 @@ router.post('/:formType/:date/reject',
       });
 
       if (!record) return res.status(409).json({ error: 'No pending_approval report found for this form/date/shift.' });
+      /* A rejected Power Consumption report is no longer a source: the copy
+         takes back the figures it put on that day's Production Report (only
+         those nobody has changed since — see services/powerToProduction.js). */
+      await syncAfterReportWrite(formType, date, shift);
       res.json({ success: true, record });
     } catch (err) { next(err); }
   });

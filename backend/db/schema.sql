@@ -111,7 +111,8 @@ CREATE TABLE IF NOT EXISTS report_revisions (
   action             VARCHAR(30)  NOT NULL CHECK (action IN (
                        'FORM_SUBMIT', 'FORM_DRAFT', 'FORM_APPROVE', 'FORM_REJECT',
                        'AMENDMENT_GRANT', 'AMENDMENT_EXPIRE_REVERT',
-                       'FORM_AMEND_DIRECT', 'ODOO_AUTOFILL')),
+                       'FORM_AMEND_DIRECT', 'ODOO_AUTOFILL',
+                       'POWER_AUTOFILL')),            -- migration 045, services/powerToProduction.js
   prior_data         JSONB,                     -- NULL = no report yet, or the action doesn't touch data
   prior_status       VARCHAR(20),
   prior_approved_by  INTEGER      REFERENCES users(id) ON DELETE SET NULL,
@@ -129,6 +130,27 @@ CREATE INDEX IF NOT EXISTS idx_report_revisions_report
   ON report_revisions(form_type, record_date, shift, revision DESC);
 CREATE INDEX IF NOT EXISTS idx_report_revisions_created
   ON report_revisions(created_at DESC);
+
+-- ── PRODUCTION ← POWER CONSUMPTION COPY ─────────────────────
+-- Per day and per spc_*_kwh field of the Production report: did
+-- services/powerToProduction.js write the value now there ('copied'), or does
+-- the report hold a different human-entered figure ('conflict')? The current
+-- picture only — the write history is in report_revisions (POWER_AUTOFILL).
+-- See migrations/045_production_power_copy.sql for the reasoning.
+CREATE TABLE IF NOT EXISTS production_power_copy (
+  record_date      DATE          NOT NULL,
+  shift            VARCHAR(10)   NOT NULL DEFAULT 'day',
+  field            VARCHAR(50)   NOT NULL,
+  state            VARCHAR(10)   NOT NULL CHECK (state IN ('copied', 'conflict')),
+  power_value      NUMERIC(14,2),
+  production_value NUMERIC(14,2),
+  copied_value     NUMERIC(14,2),
+  power_status     VARCHAR(20),
+  state_since      TIMESTAMP     NOT NULL DEFAULT NOW(),
+  checked_at       TIMESTAMP     NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (record_date, shift, field)
+);
+CREATE INDEX IF NOT EXISTS idx_production_power_copy_state ON production_power_copy(state, record_date);
 
 -- ── REPORT AMENDMENTS ───────────────────────────────────────
 -- Correction requests against a report that has already been reported. A
