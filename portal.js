@@ -172,7 +172,7 @@ const _CARDS = [
   /* ── Sales & Purchases ─────────────────────────────── */
   { id:'sales', cat:'commercial', badge:'VIEW',
     title:'Sales Dashboard',
-    sub:'MTD sales, grade mix, collections & territory performance',
+    sub:'Vehicles without an order, the Sales Dashboard app, and Sales vs Target',
     url:'sales.html',
     d:'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' },
 

@@ -7,94 +7,33 @@
   <link rel="icon" type="image/png" href="favicon.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="components.css?v=2" />
   <script src="auth.js?v=14"></script>
-  <script src="sidebar.js?v=7"></script>
+  <!-- v=8 here only: this page is new, so it must not get a cached sidebar
+       that predates its own nav item. Other pages keep v=7 until their next bump. -->
+  <script src="sidebar.js?v=8"></script>
   <script src="loader.js?v=4"></script>
-  <script src="forms/sales-grades.js"></script>
-  <style>
-    .in-bar {
-      background: white; border-bottom: 1px solid var(--border);
-      position: sticky; top: var(--header-h, 68px); z-index: 80; box-shadow: var(--shadow-sm);
-    }
-    .in-bar-inner { display: flex; align-items: center; gap: 14px; padding: 10px 28px; flex-wrap: wrap; }
-    .in-lbl { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); }
-    .in-input {
-      padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border);
-      background: var(--off-white); font-family: var(--font); font-size: 12px; font-weight: 600;
-      color: var(--navy); cursor: pointer;
-    }
-    .in-main { max-width: 1300px; margin: 0 auto; padding: 20px 28px 64px; }
-    .in-section-hdr { display: flex; align-items: center; gap: 8px; margin: 24px 0 12px; }
-    .in-section-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--navy); }
-    .in-section-sub { font-size: 12px; color: var(--text-muted); font-weight: 500; }
-    .in-card { background: white; border: 1.5px solid var(--border); border-radius: 14px; padding: 16px 16px; margin-bottom: 16px; }
-    .in-card-title { font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 2px; }
-    .in-card-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
-    .in-chart-wrap { height: 260px; }
-    .in-empty { text-align: center; padding: 30px 20px; color: var(--text-muted); font-size: 12px; }
-
-    .sk-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-    @media (max-width: 900px) { .sk-row { grid-template-columns: repeat(2, 1fr); } }
-    .sk-row-3 { grid-template-columns: repeat(3, 1fr); }
-    @media (max-width: 700px) { .sk-row, .sk-row-3 { grid-template-columns: 1fr; } }
-
-    /* Grade-mix tiles — accent color per product line */
-    .grade-tile { border-left: 4px solid var(--border); padding-left: 10px; }
-    .grade-tile .sk-value { font-size: 22px; }
-    .grade-share-bar { display: flex; height: 8px; border-radius: 6px; overflow: hidden; margin: 10px 0 4px; background: var(--section-bg); }
-
-    .cta-flash {
-      background: var(--orange); color:var(--on-orange); border: none; border-radius: 6px;
-      padding: 8px 16px; font-family: var(--font); font-size: 12px; font-weight: 700;
-      cursor: pointer; display: flex; align-items: center; gap: 6px;
-    }
-    .cta-flash:hover { background: #D97F30; }
-
-    .target-source-chip {
-      font-size: 12px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase;
-      padding: 2px 8px; border-radius: 9px; background: var(--section-bg); color: var(--text-muted);
-    }
-    .target-source-chip.odoo { background: var(--green-bg); color: var(--green-ink); }
-
-    .perf-table .div-row td { background: #F1F5FB; font-weight: 700; color: var(--navy); font-size: 12px; }
-    .perf-table .zone-row td:first-child { padding-left: 28px; color: var(--text-muted); }
-
-    /* ── Officer Achievement table (.rt) ────────────────────────────
-       Never styled: this page loads only styles.css, and .rt/.grp-hdr/
-       .tl are defined in forms/forms.css, which a dashboard page has no
-       reason to load (~700 lines of form-ENTRY styling for six lines of
-       table CSS). The table rendered with the browser's own default
-       borderless, unpadded style. Same gap, same local fix, as
-       purchases.html and every root-level report page that isn't under
-       forms/ (daily-report.html, power-plant-report.html). */
-    .rt { width:100%; border-collapse:collapse; font-size:12px; }
-    .rt thead th {
-      background:#F1F5FB; color:var(--navy); font-weight:700;
-      text-transform:uppercase; letter-spacing:.5px; padding:10px 12px;
-      text-align:center; white-space:nowrap;
-    }
-    .rt thead th.tl { text-align:left; padding-left:16px; }
-    .rt thead th.num { text-align:right; padding-right:16px; }
-    .rt thead .grp-hdr { background:var(--navy-light); color:rgba(255,255,255,.85); }
-    .rt tbody td {
-      padding:9px 12px; text-align:center; vertical-align:middle;
-      border-bottom:1px solid var(--border);
-    }
-    .rt tbody td.tl { text-align:left; padding-left:16px; font-weight:600; color:var(--navy); }
-    .rt tbody td.num { text-align:right; padding-right:16px; font-variant-numeric:tabular-nums; }
-    .rt tbody tr:last-child td { border-bottom:none; }
-    .rt tbody tr:hover td { background:var(--off-white); }
-    .rt tfoot td {
-      padding:10px 12px; text-align:center; font-weight:700; color:var(--navy);
-      background:var(--section-bg); border-top:2px solid var(--border);
-    }
-    .rt tfoot td.tl { text-align:left; padding-left:16px; }
-    .rt tfoot td.num { text-align:right; padding-right:16px; font-variant-numeric:tabular-nums; }
-  </style>
-  <!-- Design system — loaded last so it settles equal-specificity ties -->
-  <link rel="stylesheet" href="design-system.css?v=3" />
+  <link rel="stylesheet" href="design-system.css?v=2" />
   <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=3"></script>
+  <style>
+    .ip-panel[hidden] { display: none; }
+    .ip-note { font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.5; margin: 0; }
+    .ip-note strong { color: var(--navy); }
+    .ip-mail { display: grid; grid-template-columns: max-content 1fr; gap: var(--sp-2) var(--sp-4); font-size: var(--fs-sm); }
+    .ip-mail dt { font-weight: var(--fw-bold); color: var(--navy); }
+    .ip-mail dd { margin: 0; color: var(--text-main); word-break: break-word; }
+    .ip-addr { display: inline-block; background: var(--section-bg); border: 1px solid var(--border); border-radius: 6px;
+               padding: 1px 7px; margin: 2px 4px 2px 0; font-size: var(--fs-xs); white-space: nowrap; }
+    .ip-frame-wrap { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--white); }
+    .ip-frame { display: block; width: 100%; height: calc(100vh - 230px); min-height: 640px; border: 0; }
+    .ip-toolbar { display: flex; gap: var(--sp-3); align-items: center; flex-wrap: wrap; }
+    .ip-toolbar .n-ctx-ctl { min-width: 0; }
+    .ip-stack { display: flex; flex-direction: column; gap: var(--sp-4); }
+    .ip-cards-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--sp-4); }
+    @media (max-width: 900px) { .ip-cards-2 { grid-template-columns: minmax(0, 1fr); } .ip-frame { min-height: 520px; } }
+    .ip-tbl-scroll { max-height: 560px; overflow: auto; }
+  </style>
 </head>
 <body>
 
@@ -107,185 +46,121 @@
 <header class="top-header" id="app-header"></header>
 <script>renderTopHeader();</script>
 
-<div class="in-bar">
-  <div class="in-bar-inner">
-    <span class="in-lbl">Period</span>
-    <select id="sd-month" class="in-input"></select>
-    <select id="sd-year" class="in-input"></select>
-    <span class="in-lbl" id="sd-source" style="margin-left:8px"></span>
-    <a href="forms/sales-projection-form.html" class="cta-flash" id="sd-flash-cta" style="margin-left:auto;text-decoration:none;display:none">
-      <i data-lucide="plus-circle" style="width:13px;height:13px"></i> Enter Today's Projection
-    </a>
-  </div>
-</div>
+<main class="n-page" id="ip-page">
 
-<main class="in-main">
-
-  <div class="in-empty" id="sd-alert" style="display:none;background:var(--st-warn-bg);border:1px solid var(--st-warn-bd);border-radius:9px;color:var(--orange-ink);font-weight:600;padding:10px 16px;text-align:left;margin-bottom:16px"></div>
-
-  <!-- Shown INSTEAD of the sections below when the upstream is
-       unreachable; leaving eight empty captioned boxes on screen reads
-       as a broken page rather than as absent data. -->
-  <div id="sd-failed" hidden></div>
-
-  <!-- Says which measure the tonnage on this page is, and what the other
-       one reads. Sales reconcile this page against the Sale Register, so
-       the basis has to be stated rather than inferred. -->
-  <div id="sd-basis" style="display:none;background:var(--section-bg);border:1px solid var(--border);border-left:3px solid var(--navy);border-radius:9px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:var(--text-muted);line-height:1.5"></div>
-
-  <!-- ── HERO ─────────────────────────────────────────────── -->
-  <div class="sk-row" id="sd-hero"></div>
-  <div class="sk-row" id="sd-hero-2" style="margin-top:14px"></div>
-
-  <!-- ── GRADE MIX ────────────────────────────────────────── -->
-  <div class="in-section-hdr">
-    <span class="in-section-title">MTD Sales — Grade Mix</span>
-    <span class="in-section-sub" id="sd-grade-sub">— all four product lines</span>
-  </div>
-  <div class="in-card">
-    <div class="sk-row" id="sd-grades"></div>
-    <div class="grade-share-bar" id="sd-grade-bar"></div>
-  </div>
-
-  <!-- ── DAILY TREND ──────────────────────────────────────── -->
-  <div class="in-section-hdr">
-    <span class="in-section-title">Daily Sales Trend</span>
-    <span class="in-section-sub">— actual vs projected, this month</span>
-  </div>
-  <div class="in-card">
-    <div class="in-chart-wrap"><canvas id="chart-trend"></canvas></div>
-    <div class="in-empty" id="sd-trend-empty" style="display:none">No projections entered yet this month.</div>
-    <div class="sk-row" style="grid-template-columns:repeat(2,minmax(0,220px));margin-top:14px" id="sd-best-worst"></div>
-  </div>
-
-  <!-- ── GRADE MIX TREND ──────────────────────────────────── -->
-  <div class="in-section-hdr">
-    <span class="in-section-title">Grade Mix Trend</span>
-    <span class="in-section-sub">— daily volume by product line, this month</span>
-  </div>
-  <div class="in-card">
-    <div class="in-chart-wrap"><canvas id="chart-grade-trend"></canvas></div>
-    <div class="in-empty" id="sd-grade-trend-empty" style="display:none">No graded sales recorded yet this month.</div>
-  </div>
-
-  <!-- ── CUSTOMERS ────────────────────────────────────────── -->
-  <div class="in-section-hdr">
-    <span class="in-section-title">Customers</span>
-    <span class="in-section-sub">— active customers and top volumes this month, by invoice (Odoo Sale Register)</span>
-  </div>
-  <div class="in-card">
-    <div class="sk-row" id="sd-customer-summary" style="margin-bottom:16px"></div>
-    <div class="tbl-scroll">
-      <table class="rt" style="min-width:420px">
-        <thead>
-          <tr><th class="tl">Rank</th><th class="tl">Customer</th><th class="num">MT (MTD)</th><th class="num">Invoices</th></tr>
-        </thead>
-        <tbody id="sd-top-customers"></tbody>
-      </table>
+  <div class="n-page-head">
+    <div>
+      <h1 class="n-title">Sales</h1>
+      <p class="n-subtitle">
+        Vehicles at Factory Without Order, the full Sales Dashboard app, and Sales vs Target — the live
+        figures behind the two automatic e-mails. Read-only — figures come straight from Odoo.
+      </p>
     </div>
-    <div class="in-empty" id="sd-top-customers-empty" style="display:none"></div>
   </div>
 
-  <!-- ── DIVISION & ZONE ─────────────────────────────────── -->
-  <!-- The Sales team's TOTAL DIV WISE view, from Odoo's division/zone on
-       each invoice. Targets join once the Sales team's officer/target list
-       is agreed — Odoo's feed no longer carries per-customer targets. -->
-  <div class="in-section-hdr">
-    <span class="in-section-title">Division &amp; Zone</span>
-    <span class="in-section-sub">— invoiced tonnage and daily run rate by territory, month to date (targets to follow)</span>
-  </div>
-  <div class="in-card">
-    <div class="tbl-scroll">
-      <table class="rt perf-table" style="min-width:640px">
-        <thead>
-          <tr>
-            <th class="tl grp-hdr">Division / Zone</th>
-            <th class="num grp-hdr">MTD MT</th>
-            <th class="num grp-hdr">Share</th>
-            <th class="num grp-hdr">Run rate (MT/day)</th>
-            <th class="num grp-hdr">Invoices</th>
-            <th class="num grp-hdr">Customers</th>
-          </tr>
-        </thead>
-        <tbody id="sd-territory"></tbody>
-      </table>
+  <div class="n-ctx">
+    <div class="n-ctx-group">
+      <span class="n-ctx-lbl" id="ip-tabs-lbl">Report</span>
+      <div class="n-seg" id="ip-tabs" role="group" aria-labelledby="ip-tabs-lbl">
+        <button type="button" class="n-seg-btn" data-value="vehicles" aria-pressed="true">Vehicles at Factory Without Order</button>
+        <button type="button" class="n-seg-btn" data-value="sales-dashboard" aria-pressed="false">Sales Dashboard</button>
+        <button type="button" class="n-seg-btn" data-value="sales-vs-target" aria-pressed="false">Sales vs Target – Daily Report</button>
+      </div>
     </div>
-    <div class="in-empty" id="sd-territory-empty" style="display:none"></div>
+    <span class="n-ctx-spacer"></span>
+    <div class="n-ctx-group" id="ip-status"></div>
   </div>
 
-  <!-- ── COLLECTIONS ──────────────────────────────────────── -->
-  <div class="in-section-hdr">
-    <span class="in-section-title">Collection &amp; Outstanding</span>
-    <span class="in-section-sub">— on this month's invoices, from Odoo's Sale Register (not cash received in the month)</span>
-  </div>
-  <div class="in-card">
-    <div class="sk-row" id="sd-collections"></div>
-  </div>
-
-  <!-- ── RECEIVABLES & PAYABLES ───────────────────────────── -->
-  <div class="in-section-hdr">
-    <span class="in-section-title">Receivables &amp; Payables</span>
-    <span class="in-section-sub">— outstanding ageing from the Sale Register; the other two have no Odoo field yet</span>
-  </div>
-  <div class="in-card">
-    <div class="sk-row sk-row-3" id="sd-financials"></div>
-  </div>
-
-  <!-- ── TARGET VS ACHIEVEMENT ────────────────────────────── -->
-  <div class="in-section-hdr">
-    <span class="in-section-title">Target vs Achievement</span>
-    <span class="in-section-sub" id="sd-target-sub"></span>
-  </div>
-  <div class="in-card" id="sd-target-card"></div>
-
-  <!-- ── OFFICER ACHIEVEMENT (real, Odoo-sourced) ─────────── -->
-  <div class="in-section-hdr">
-    <span class="in-section-title">Officer Achievement</span>
-    <span class="in-section-sub" id="sd-oa-sub">— actual sales vs target per sales officer</span>
-  </div>
-  <div class="in-card">
-    <div class="tbl-scroll">
-      <table class="rt perf-table" style="min-width:820px">
-        <thead>
-          <tr>
-            <th class="tl grp-hdr">Sales Officer</th>
-            <th class="tl grp-hdr">Division / Zone</th>
-            <th class="num grp-hdr">Customers</th>
-            <th class="num grp-hdr">Target MT</th>
-            <th class="num grp-hdr">Actual MT</th>
-            <th class="num grp-hdr">Achievement %</th>
-          </tr>
-        </thead>
-        <tbody id="sd-oa-officers"></tbody>
-        <tfoot id="sd-oa-divisions"></tfoot>
-      </table>
+  <!-- ══ 1. VEHICLES AT FACTORY WITHOUT ORDER ═══════════════════════ -->
+  <section class="ip-panel ip-stack" id="panel-vehicles" data-panel="vehicles">
+    <div class="n-kpi-grid" id="veh-kpis"></div>
+    <div class="n-card">
+      <div class="n-card-hdr">
+        <div>
+          <div class="n-card-title">Vehicles at Factory Without Order</div>
+          <div class="n-card-sub" id="veh-sub">Sale tokens with no sale order linked and no gate-out yet.</div>
+        </div>
+        <div class="n-card-meta ip-toolbar">
+          <button type="button" class="n-btn" id="veh-refresh"><i data-lucide="refresh-cw"></i> Refresh</button>
+        </div>
+      </div>
+      <div class="n-card-body"><div id="veh-body"></div></div>
     </div>
-    <div class="in-empty" id="sd-oa-empty" style="display:none"></div>
-    <div id="sd-oa-unassigned" style="display:none;margin-top:10px;font-size:12px;color:var(--text-muted)"></div>
-  </div>
-
-  <!-- ── DIVISION / ZONE / OFFICER PERFORMANCE (manual projections) ── -->
-  <div class="in-section-hdr">
-    <span class="in-section-title">Divisional Manager / Sales Officer / Zone Performance</span>
-    <span class="in-section-sub">— daily manual projections vs interim local targets (a separate habit-tracker from Officer Achievement above)</span>
-  </div>
-  <div class="in-card">
-    <div class="tbl-scroll">
-      <table class="rt perf-table" style="min-width:760px">
-        <thead>
-          <tr>
-            <th class="tl grp-hdr">Division / Zone</th>
-            <th class="tl grp-hdr">Sales Officer / Manager</th>
-            <th class="num grp-hdr">Projected MT</th>
-            <th class="num grp-hdr">Target MT</th>
-            <th class="num grp-hdr">Achievement %</th>
-          </tr>
-        </thead>
-        <tbody id="sd-performance"></tbody>
-      </table>
+    <div class="n-card">
+      <div class="n-card-hdr"><div>
+        <div class="n-card-title">Automatic e-mail</div>
+        <div class="n-card-sub">Sent from the collaborator's Windows PC through Outlook — not from this dashboard.</div>
+      </div></div>
+      <div class="n-card-body"><dl class="ip-mail" id="veh-mail"></dl></div>
     </div>
-    <div class="in-empty" id="sd-perf-empty" style="display:none">No sales territories configured yet.</div>
-  </div>
+  </section>
+
+  <!-- ══ 2. SALES DASHBOARD (the collaborator's Streamlit app) ══════ -->
+  <section class="ip-panel ip-stack" id="panel-sales-dashboard" data-panel="sales-dashboard" hidden>
+    <div class="n-card">
+      <div class="n-card-hdr">
+        <div>
+          <div class="n-card-title">Sales Dashboard</div>
+          <div class="n-card-sub">Dashboard, Daily, Monthly, YTD, Budget vs Actual and MIS reports. It has its own login.</div>
+        </div>
+        <div class="n-card-meta ip-toolbar">
+          <a class="n-btn" id="sa-open" href="/sales-app/" target="_blank" rel="noopener">
+            <i data-lucide="external-link"></i> Open in new window
+          </a>
+        </div>
+      </div>
+    </div>
+    <div id="sa-body"></div>
+  </section>
+
+  <!-- ══ 3. SALES VS TARGET – DAILY REPORT ══════════════════════════ -->
+  <section class="ip-panel ip-stack" id="panel-sales-vs-target" data-panel="sales-vs-target" hidden>
+    <div class="n-ctx">
+      <div class="n-ctx-group">
+        <label class="n-ctx-lbl" for="svt-date">Report date</label>
+        <input type="date" id="svt-date" class="n-ctx-ctl" min="2026-04-01" />
+      </div>
+      <div class="n-ctx-sep" aria-hidden="true"></div>
+      <p class="ip-note">Month-to-date up to this date — the 08:00 e-mail covers <strong>yesterday</strong>.</p>
+    </div>
+    <div class="n-kpi-grid" id="svt-kpis"></div>
+    <div class="n-card">
+      <div class="n-card-hdr"><div>
+        <div class="n-card-title">By salesperson — and the e-mail each one receives</div>
+        <div class="n-card-sub" id="svt-sub">One e-mail per salesperson at 08:00, built from the e-mail matrix.</div>
+      </div></div>
+      <div class="n-card-body"><div id="svt-people"></div></div>
+    </div>
+    <div class="n-card">
+      <div class="n-card-hdr">
+        <div>
+          <div class="n-card-title">Customer detail</div>
+          <div class="n-card-sub">Customers with sales or a target this month — the rows of each salesperson's e-mail.</div>
+        </div>
+        <div class="n-card-meta ip-toolbar">
+          <label class="n-ctx-lbl" for="svt-person">Salesperson</label>
+          <select id="svt-person" class="n-ctx-ctl"><option value="">All</option></select>
+        </div>
+      </div>
+      <div class="n-card-body"><div id="svt-customers"></div></div>
+    </div>
+    <div class="ip-cards-2">
+      <div class="n-card">
+        <div class="n-card-hdr"><div>
+          <div class="n-card-title">E-mail matrix</div>
+          <div class="n-card-sub" id="svt-matrix-sub"></div>
+        </div></div>
+        <div class="n-card-body"><div id="svt-matrix"></div></div>
+      </div>
+      <div class="n-card">
+        <div class="n-card-hdr"><div>
+          <div class="n-card-title">Automatic e-mails</div>
+          <div class="n-card-sub">Sent from the collaborator's Windows PC through Outlook — not from this dashboard.</div>
+        </div></div>
+        <div class="n-card-body"><dl class="ip-mail" id="svt-mail"></dl></div>
+      </div>
+    </div>
+  </section>
 
 </main>
 
@@ -299,632 +174,341 @@
 </div><!-- /.app-shell -->
 
 <script src="lucide-icons.js?v=1"></script>
-<script>
-  lucide.createIcons();
-  requireAuth();
-  applySalesPermissions();
-</script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-<script src="chart-theme.js"></script>
-<script src="forms/api-client.js?v=7"></script>
-<script src="forms/client-errors.js"></script>
+<script src="components.js?v=2"></script>
 <script>
 (function () {
   'use strict';
 
-  /* Series colours from the validated palette; achievement colours from
-     the reserved status set. These are different jobs and must not share
-     a value — see chart-theme.js. */
-  var S    = LCL_CHART.series;
-  var ST   = LCL_CHART.status;
-  var GRAY = ST.neutral;
+  requireAuth();
+  var user = getCurrentUser();
+  if (!user) return;
 
-  function fmt(v) { return (v == null) ? '—' : v.toLocaleString(undefined, { maximumFractionDigits: 1 }); }
-  function pct(v) { return (v == null) ? '—' : v.toFixed(1) + '%'; }
-  function tzs(v) {
-    if (v == null) return '—';
-    if (Math.abs(v) >= 1e9) return 'TZS ' + (v / 1e9).toFixed(2) + 'B';
-    if (Math.abs(v) >= 1e6) return 'TZS ' + (v / 1e6).toFixed(1) + 'M';
-    return 'TZS ' + v.toLocaleString();
-  }
-  function achClass(pctVal) {
-    if (pctVal == null) return '';
-    return pctVal >= 100 ? 'on-track' : pctVal >= 80 ? 'watch' : 'concern';
-  }
-  /* Territory fields (division/zone/sales_officer/divisional_manager) are
-     admin-entered data, not user input from this page — but they're
-     rendered via innerHTML, so escape them anyway. No HTML-escape helper
-     exists elsewhere in this codebase; this one is scoped to this file. */
-  // esc() delegates to the shared escHtml() (forms/api-client.js) rather
-  // than reimplementing the same escaping logic a third time in this file.
-  function esc(s) { return escHtml(s); }
+  var U = window.NyatiUI;
+  var esc = U.esc;
+  var page = document.getElementById('ip-page');
 
-  /* Why an Odoo-sourced figure is missing, from the backend's real status.
-     "not_synced": Odoo is configured but the Sale Register mirror holds
-     nothing for this period yet (history not backfilled), which is not
-     the same as Odoo being down. */
-  function odooMsg(status) {
-    if (status === 'not_configured') return 'Odoo not configured';
-    if (status === 'not_synced') return 'Sale Register not synced for this period';
-    return 'Odoo unreachable';
+  /* Sales dashboard audience: md, management, sales. The API enforces it
+     too; this only spares other roles a page of errors. */
+  if (typeof canViewSales === 'function' && !canViewSales()) {
+    page.querySelectorAll('.n-ctx, .ip-panel').forEach(function (el) { el.remove(); });
+    var deny = document.createElement('div');
+    page.appendChild(deny);
+    U.renderState(deny, { kind: 'denied', title: 'You do not have access to the Sales dashboard',
+      body: 'It is limited to the Sales, Management and MD teams. Ask an administrator if you believe you should see it.' });
+    return;
   }
 
-  /* ── Period selectors ─────────────────────────────────────────── */
-  var MONTHS = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
-  var now = new Date();
-  var monthSel = document.getElementById('sd-month');
-  var yearSel  = document.getElementById('sd-year');
-  for (var m = 1; m <= 12; m++) {
-    var o = document.createElement('option'); o.value = m; o.textContent = MONTHS[m];
-    if (m === now.getMonth() + 1) o.selected = true;
-    monthSel.appendChild(o);
-  }
-  for (var y = now.getFullYear() - 1; y <= now.getFullYear() + 1; y++) {
-    var oy = document.createElement('option'); oy.value = y; oy.textContent = y;
-    if (y === now.getFullYear()) oy.selected = true;
-    yearSel.appendChild(oy);
-  }
-  monthSel.addEventListener('change', load);
-  yearSel.addEventListener('change', load);
-
-  if (typeof canEditSales === 'function' && canEditSales()) {
-    document.getElementById('sd-flash-cta').style.display = 'flex';
+  /* ── API ──────────────────────────────────────────────────────────── */
+  function api(path, opts) {
+    opts = opts || {};
+    var headers = { Authorization: 'Bearer ' + getAuthToken() };
+    return fetch(_API_BASE + '/integration' + path, { method: opts.method || 'GET', headers: headers })
+      .then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (body) {
+          if (res.status === 401) { body = { ok: false, status: 'unauthorized', message: 'Your session has expired — please log in again.' }; }
+          else if (res.status === 403) { body = { ok: false, status: 'forbidden', message: 'You do not have access to this report.' }; }
+          return body;
+        });
+      })
+      .catch(function () { return { ok: false, status: 'network', message: 'Could not reach the dashboard server.' }; });
   }
 
-  var trendChart = null;
-  var gradeTrendChart = null;
-
-  function sk(opts) {
-    /* opts: {label, deptTag, value, unit, delta, target, pctVal, status,
-       cls: 'on-track'|'watch'|'concern'|'', pending: bool, pendingMsg} */
-    var cls = opts.pending ? 'sk-pending' : (opts.cls || '');
-    var bar = (opts.pctVal != null && !opts.pending)
-      ? '<div class="sk-bar"><div class="sk-bar-fill" style="width:' + Math.min(opts.pctVal, 100) + '%"></div></div>'
-      : '';
-    var foot = (opts.target != null || opts.pctVal != null)
-      ? '<div class="sk-foot"><span class="sk-tgt">' + (opts.target || '') + '</span><span class="sk-pct">' + (opts.pctVal != null ? opts.pctVal.toFixed(1) + '%' : '') + '</span></div>'
-      : '';
-    var status = opts.pending
-      ? '<div class="sk-status"><span class="sk-status-dot"></span> ' + (opts.pendingMsg || 'Not connected') + '</div>'
-      : (opts.status ? '<div class="sk-status"><span class="sk-status-dot"></span> ' + opts.status + '</div>' : '');
-    return '<div class="sk-card ' + cls + '">' +
-      '<div class="sk-top"><div class="sk-label">' + opts.label + '</div>' +
-        (opts.deptTag ? '<span class="sk-dept-tag">' + opts.deptTag + '</span>' : '') + '</div>' +
-      '<div class="sk-value-row"><span class="sk-value">' + (opts.pending ? '—' : opts.value) + '</span>' +
-        (opts.unit && !opts.pending ? '<span class="sk-unit">' + opts.unit + '</span>' : '') + '</div>' +
-      bar + foot + status +
-    '</div>';
-  }
-
-  /* The basis banner: which measure the page is on, how complete it is,
-     and the dispatch-note cross-check. Sales reconcile this page against
-     their own Sale Register, so the basis is stated, not left to be
-     discovered. */
-  function renderBasis(d) {
-    var el = document.getElementById('sd-basis');
-    var tb = d.tonnage_basis || {};
-    var gsub = document.getElementById('sd-grade-sub');
-    if (!tb.basis) { el.style.display = 'none'; gsub.textContent = '— all four product lines'; return; }
-    var cov = tb.coverage || {};
-    var bits;
-    if (tb.basis === 'invoiced') {
-      bits = '<strong style="color:var(--navy)">Figures are from Odoo\'s Sale Register</strong> — by invoice date, '
-        + 'cement only: the same basis as the Sales team\'s register.';
-      if (!cov.complete) {
-        bits += ' <span style="color:var(--orange-ink)">' + cov.days_synced + ' of ' + cov.days_expected
-          + ' days synced so far — totals rise as the rest arrive.</span>';
-      }
-      if (tb.delivered_mt != null) {
-        bits += ' Dispatch notes for the same days: ' + fmt(tb.delivered_mt) + ' MT (counted by dispatch date).';
-      }
-      bits += ' Credit notes are not in Odoo\'s feed yet.';
-      gsub.textContent = '— all four product lines, invoiced tonnage (Sale Register)';
-    } else {
-      bits = '<strong style="color:var(--navy)">Tonnage is from Odoo dispatch notes</strong> — the Sale Register '
-        + 'has not been synced for this period, so customer, value and territory figures are not available.';
-      gsub.textContent = '— all four product lines, from Odoo dispatch notes';
-    }
-    if (tb.unclassified_mt) {
-      bits += ' <span style="color:var(--orange-ink)">' + fmt(tb.unclassified_mt)
-        + ' MT is cement with no product line below — in the total, not the mix.</span>';
-    }
-    el.innerHTML = bits;
-    el.style.display = 'block';
-  }
-
-  function renderHero(d) {
-    var mtd = d.mtd, today = d.today;
-    var tb = d.tonnage_basis || {};
-    var basisTag = tb.basis === 'invoiced' ? 'Invoiced' : tb.basis === 'delivered' ? 'Delivered' : 'Sales';
-    var missing = odooMsg(d.sources.sales_volume);
-    var html = '';
-    html += sk({
-      label: 'MTD Sales', deptTag: basisTag,
-      value: fmt(mtd.actual_mt), unit: 'MT',
-      pending: mtd.actual_mt == null, pendingMsg: missing,
-      target: mtd.target_mt ? fmt(mtd.target_mt) + ' MT target' : null,
-      pctVal: mtd.vs_target_pct, cls: achClass(mtd.vs_target_pct),
-      status: mtd.actual_mt == null ? null
-        : tb.basis === 'invoiced' ? fmt(mtd.invoice_count) + ' invoices — Sale Register'
-        : 'From dispatch notes',
-    });
-    html += sk({
-      label: 'Sales On Date', deptTag: basisTag,
-      value: fmt(today.actual_mt), unit: 'MT',
-      pending: today.actual_mt == null || !d.period.is_current_month,
-      pendingMsg: !d.period.is_current_month ? 'Today is not in the selected month'
-        : tb.basis ? 'Today not synced yet' : missing,
-      status: 'Projected today: ' + fmt(today.projected_mt) + ' MT',
-    });
-    html += sk({
-      label: 'Projected EOM', deptTag: 'Forecast',
-      value: fmt(mtd.projected_eom_mt), unit: 'MT',
-      pending: mtd.projected_eom_mt == null, pendingMsg: 'Needs an MTD actual to compute',
-      target: mtd.target_mt ? fmt(mtd.target_mt) + ' MT target' : null,
-      status: !d.period.is_current_month ? (mtd.projected_eom_mt != null ? 'Month closed — actual' : null)
-        : mtd.daily_run_rate != null ? 'At ' + fmt(mtd.daily_run_rate) + ' MT/day' : null,
-    });
-    html += sk({
-      label: 'Achievement vs Target', deptTag: 'MTD',
-      value: pct(mtd.vs_target_pct), unit: '',
-      pending: mtd.vs_target_pct == null,
-      pendingMsg: mtd.target_mt ? 'Awaiting an MTD actual' : 'No target set for this month',
-      cls: achClass(mtd.vs_target_pct),
-      status: mtd.mom_delta_pct != null
-        ? (mtd.mom_delta_pct >= 0 ? '▲ ' : '▼ ') + Math.abs(mtd.mom_delta_pct).toFixed(1) + '% vs ' + d.period.prev_label
-        : (mtd.prev_month_note ? 'No comparison: ' + mtd.prev_month_note : null),
-    });
-    document.getElementById('sd-hero').innerHTML = html;
-
-    /* Second row. Daily run rate works on either basis; the other three need
-       the Sale Register (dispatch notes carry no invoice, customer or value)
-       and say so rather than borrowing a number from elsewhere. */
-    var html2 = '';
-    html2 += sk({
-      label: 'Avg Daily Sales (MTD)', deptTag: 'Run Rate',
-      value: fmt(mtd.daily_run_rate), unit: 'MT/day',
-      pending: mtd.daily_run_rate == null, pendingMsg: missing,
-      status: mtd.actual_mt != null ? fmt(mtd.actual_mt) + ' MT over ' + mtd.days_elapsed + ' days' : null,
-    });
-    html2 += sk({
-      label: 'Avg Invoice Size', deptTag: 'MTD',
-      value: fmt(mtd.avg_invoice_size_mt), unit: 'MT/invoice',
-      pending: mtd.avg_invoice_size_mt == null, pendingMsg: missing,
-      status: mtd.invoice_count != null ? fmt(mtd.invoice_count) + ' invoices' : null,
-    });
-    html2 += sk({
-      label: 'Net Sales (ex-VAT)', deptTag: 'Value',
-      value: tzs(mtd.net_sales_tzs), unit: '',
-      pending: mtd.net_sales_tzs == null, pendingMsg: missing,
-      status: 'Includes excise; cement only',
-    });
-    html2 += sk({
-      label: 'Avg Price per MT', deptTag: 'Realisation',
-      value: tzs(mtd.price_per_mt_tzs), unit: '',
-      pending: mtd.price_per_mt_tzs == null, pendingMsg: missing,
-      /* Not the Register's NCR: Odoo's feed does not split freight out. */
-      status: 'Ex-VAT and excise; freight still included',
-    });
-    document.getElementById('sd-hero-2').innerHTML = html2;
-  }
-
-  /* Best/worst day — a small stat pair under the Daily Sales Trend chart.
-     A synced day with no sales is a legitimate "worst day"; an unsynced day
-     is null and never eligible (the backend's daily series draws that line). */
-  function renderBestWorst(mtd) {
-    var el = document.getElementById('sd-best-worst');
-    var pendingMsg = 'No synced day yet this month';
-    var html = sk({
-      label: 'Best Day (MTD)', deptTag: 'Peak',
-      value: mtd.best_day ? fmt(mtd.best_day.mt) : null, unit: 'MT',
-      pending: !mtd.best_day, pendingMsg: pendingMsg,
-      status: mtd.best_day ? new Date(mtd.best_day.date + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }) : null,
-      cls: mtd.best_day ? 'on-track' : '',
-    });
-    html += sk({
-      label: 'Worst Day (MTD)', deptTag: 'Low',
-      value: mtd.worst_day ? fmt(mtd.worst_day.mt) : null, unit: 'MT',
-      pending: !mtd.worst_day, pendingMsg: pendingMsg,
-      status: mtd.worst_day ? new Date(mtd.worst_day.date + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }) : null,
-      cls: mtd.worst_day && mtd.worst_day.mt === 0 ? 'concern' : '',
-    });
-    el.innerHTML = html;
-  }
-
-  function renderGrades(grades) {
-    var known = grades.filter(function (g) { return g.key !== 'unmatched'; });
-    var html = known.map(function (g) {
-      return '<div class="sk-card grade-tile ' + (g.mtd_actual_mt == null ? 'sk-pending' : '') + '" style="border-left-color:' + g.color + '">' +
-        '<div class="sk-top"><div class="sk-label">' + g.label + '</div><span class="sk-dept-tag">' + g.grade + '</span></div>' +
-        '<div class="sk-value-row"><span class="sk-value">' + (g.mtd_actual_mt == null ? '—' : fmt(g.mtd_actual_mt)) + '</span><span class="sk-unit">MT</span></div>' +
-        '<div class="sk-status"><span class="sk-status-dot"></span> ' + (g.share_pct == null ? 'Awaiting Odoo' : g.share_pct.toFixed(1) + '% of mix') + '</div>' +
-      '</div>';
-    }).join('');
-    document.getElementById('sd-grades').innerHTML = html;
-
-    var total = known.reduce(function (s, g) { return s + (g.mtd_actual_mt || 0); }, 0);
-    var barHtml = total > 0
-      ? known.map(function (g) {
-          var w = (g.mtd_actual_mt || 0) / total * 100;
-          return w > 0 ? '<div style="width:' + w + '%;background:' + g.color + '" title="' + g.label + ': ' + w.toFixed(1) + '%"></div>' : '';
-        }).join('')
-      : '';
-    document.getElementById('sd-grade-bar').innerHTML = barHtml;
-  }
-
-  function renderTrend(trend) {
-    var canvas = document.getElementById('chart-trend');
-    var empty = document.getElementById('sd-trend-empty');
-    var hasData = trend.some(function (t) { return t.projected > 0 || t.actual != null; });
-    if (!hasData) { empty.style.display = 'block'; canvas.style.display = 'none'; return; }
-    empty.style.display = 'none'; canvas.style.display = 'block';
-    if (trendChart) trendChart.destroy();
-    trendChart = new Chart(canvas, {
-      type: 'line',
-      data: {
-        labels: trend.map(function (t) { return t.date.slice(5); }),
-        datasets: [
-          { label: 'Projected', data: trend.map(function (t) { return t.projected; }), borderColor: '#cbd5e1', borderDash: [4, 3], borderWidth: 1.5, fill: false, tension: .3 },
-          { label: 'Actual', data: trend.map(function (t) { return t.actual; }), borderColor: S[1], backgroundColor: LCL_CHART.alpha(S[1], .13), borderWidth: 2.5, fill: true, tension: .3, spanGaps: true },
-        ],
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'top', labels: { font: { size: 12 }, boxWidth: 12 } } },
-        scales: {
-          x: { grid: { display: false }, ticks: { font: { size: 12 } } },
-          y: { ticks: { font: { size: 12 } }, title: { display: true, text: 'MT', font: { size: 12 } } },
-        },
-      },
+  /* Why a report has no data, in words a reader can act on. */
+  function failState(mount, r, retry) {
+    var titles = {
+      not_installed: 'Not installed on this server yet',
+      not_configured: 'Odoo connection not configured',
+      odoo_unreachable: 'Odoo did not answer',
+      timeout: 'Odoo took too long to answer',
+    };
+    U.renderState(mount, {
+      kind: r.status === 'not_installed' ? 'nodata' : 'error',
+      title: titles[r.status] || 'Could not load this report',
+      body: r.message || '',
+      action: retry ? 'Try again' : null, onAction: retry,
     });
   }
 
-  /* Collected = invoiced − still outstanding, on THIS month's invoices. Not
-     cash received in the month: receipts that pay other months' invoices are
-     not in Odoo's sales feed (c.basis_note carries the exact caveat). */
-  function renderCollections(c) {
-    var html;
-    if (!c.ok) {
-      html = ['Collected on MTD Invoices', 'Outstanding', 'Collection Rate', 'DSO (approx.)'].map(function (label) {
-        return sk({ label: label, pending: true, pendingMsg: c.message });
-      }).join('');
-    } else {
-      html = sk({ label: 'Collected on MTD Invoices', value: tzs(c.total_collected_tzs),
-                  status: 'of ' + tzs(c.invoiced_tzs) + ' invoiced' })
-        + sk({ label: 'Outstanding', value: tzs(c.outstanding_tzs),
-               cls: (c.collection_rate_pct || 0) >= 90 ? 'on-track' : 'watch',
-               status: fmt(c.open_invoices) + ' of ' + fmt(c.invoice_count) + ' invoices still open' })
-        + sk({ label: 'Collection Rate', value: pct(c.collection_rate_pct), pctVal: c.collection_rate_pct,
-               cls: achClass(c.collection_rate_pct), status: 'Share of invoiced value already paid' })
-        + sk({
-            label: 'DSO (approx.)', deptTag: 'Est.',
-            value: fmt(c.dso_lite_days), unit: 'days',
-            pending: c.dso_lite_days == null, pendingMsg: 'No invoices yet this month',
-            status: c.dso_basis_note,
-          });
-    }
-    document.getElementById('sd-collections').innerHTML = html;
+  function plantDateTime(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso.replace(' ', 'T'));
+    if (isNaN(d)) return iso;
+    return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+  function ageText(iso) {
+    if (!iso) return '';
+    var mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+    return mins < 1 ? 'just now' : mins < 60 ? mins + ' min ago' : Math.round(mins / 60) + ' h ago';
+  }
+  function addresses(list) {
+    if (!list || !list.length) return '<span class="n-nodata">—</span>';
+    return list.map(function (a) { return '<span class="ip-addr">' + esc(a) + '</span>'; }).join('');
+  }
+  function splitAddrs(s) { return String(s || '').split(';').map(function (x) { return x.trim(); }).filter(Boolean); }
+  function staleNote(r) {
+    return r.stale ? '<p class="ip-note" style="color:var(--orange-ink)"><strong>Showing the last good result from '
+      + esc(ageText(r.cached_at)) + '</strong> — the latest refresh failed: ' + esc(r.stale_reason || '') + '</p>' : '';
   }
 
-  /* Active Customers + Top Customers by Volume — real Odoo customer names,
-     escaped via esc() exactly like territory fields elsewhere on this page. */
-  function renderCustomers(mtd, topCustomers, salesStatus) {
-    var summaryHtml = sk({
-      label: 'Active Customers (MTD)', deptTag: 'Sales',
-      value: fmt(mtd.active_customers), unit: 'customers',
-      pending: mtd.active_customers == null, pendingMsg: odooMsg(salesStatus),
-    });
-    document.getElementById('sd-customer-summary').innerHTML = summaryHtml;
-
-    var tbody = document.getElementById('sd-top-customers');
-    var empty = document.getElementById('sd-top-customers-empty');
-    if (!topCustomers || !topCustomers.length) {
-      tbody.innerHTML = '';
-      empty.style.display = 'block';
-      empty.textContent = mtd.active_customers == null
-        ? odooMsg(salesStatus) + ' — top customers pending.'
-        : 'No customer sales recorded yet this month.';
-      return;
-    }
-    empty.style.display = 'none';
-    tbody.innerHTML = topCustomers.map(function (c, i) {
-      return '<tr><td class="tl">' + (i + 1) + '</td><td class="tl">' + esc(c.name)
-        + (c.code ? ' <span style="color:var(--text-muted);font-weight:500">' + esc(c.code) + '</span>' : '') + '</td>'
-        + '<td class="num">' + fmt(c.mt) + '</td><td class="num">' + fmt(c.invoices) + '</td></tr>';
-    }).join('');
-  }
-
-  /* Division -> zone rows, the Sales team's TOTAL DIV WISE layout. Zone and
-     division names come from Odoo and are escaped like every other Odoo
-     string on this page. Customers are only shown per zone: one customer can
-     buy in two zones, so summing zones would double-count them. */
-  function renderTerritory(t, salesStatus) {
-    var tbody = document.getElementById('sd-territory');
-    var empty = document.getElementById('sd-territory-empty');
-    if (!t || !t.ok || !t.by_division.length) {
-      tbody.innerHTML = '';
-      empty.style.display = 'block';
-      empty.textContent = (t && t.ok) ? 'No invoices yet this month.' : ((t && t.message) || odooMsg(salesStatus));
-      return;
-    }
-    empty.style.display = 'none';
-    var total = t.by_division.reduce(function (s, d) { return s + (d.mt || 0); }, 0);
-    var share = function (mt) { return total ? (mt / total * 100).toFixed(1) + '%' : '—'; };
-    tbody.innerHTML = t.by_division.map(function (d) {
-      var zones = t.by_zone.filter(function (z) { return z.division === d.division; });
-      return '<tr class="div-row"><td class="tl">' + esc(d.division) + '</td>'
-        + '<td class="num">' + fmt(d.mt) + '</td><td class="num">' + share(d.mt) + '</td>'
-        + '<td class="num">' + fmt(d.drr) + '</td><td class="num">' + fmt(d.invoices) + '</td><td class="num"></td></tr>'
-        + zones.map(function (z) {
-            return '<tr class="zone-row"><td class="tl">' + esc(z.zone) + '</td>'
-              + '<td class="num">' + fmt(z.mt) + '</td><td class="num">' + share(z.mt) + '</td>'
-              + '<td class="num">' + fmt(z.drr) + '</td><td class="num">' + fmt(z.invoices) + '</td>'
-              + '<td class="num">' + fmt(z.customers) + '</td></tr>';
-          }).join('');
-    }).join('');
-  }
-
-  function renderGradeTrend(gradeTrend, grades) {
-    var canvas = document.getElementById('chart-grade-trend');
-    var empty = document.getElementById('sd-grade-trend-empty');
-    if (!gradeTrend || !gradeTrend.length) {
-      empty.style.display = 'block'; canvas.style.display = 'none';
-      if (gradeTrendChart) { gradeTrendChart.destroy(); gradeTrendChart = null; }
-      return;
-    }
-    empty.style.display = 'none'; canvas.style.display = 'block';
-    if (gradeTrendChart) gradeTrendChart.destroy();
-
-    // Reuse the exact grade colors already shown in the tiles/share bar
-    // above (config/salesGrades.js via forms/sales-grades.js) — these four
-    // colors already identify these four grades consistently elsewhere on
-    // this page, so this chart keeps the same mapping rather than drawing
-    // from the general categorical series.
-    var known = grades.filter(function (g) { return g.key !== 'unmatched'; });
-    var hasUnmatched = gradeTrend.some(function (r) { return r.unmatched > 0; });
-    var datasets = known.map(function (g) {
-      return {
-        label: g.label,
-        data: gradeTrend.map(function (r) { return r[g.key] || 0; }),
-        backgroundColor: g.color, borderColor: g.color, borderWidth: 1,
-        stack: 'grade',
-      };
-    });
-    if (hasUnmatched) {
-      datasets.push({
-        label: 'Unmatched product',
-        data: gradeTrend.map(function (r) { return r.unmatched || 0; }),
-        backgroundColor: '#9CA3AF', borderColor: '#9CA3AF', borderWidth: 1,
-        stack: 'grade',
+  /* A generic read-only table from {columns, rows}. Text through esc(). */
+  function tableHTML(cols, rows, opts) {
+    opts = opts || {};
+    var num = opts.numeric || {};
+    var h = '<div class="n-tbl-wrap ip-tbl-scroll"><table class="n-tbl"><thead><tr>';
+    cols.forEach(function (c) { h += '<th class="' + (num[c] ? '' : 'n-tl') + '">' + esc(c) + '</th>'; });
+    h += '</tr></thead><tbody>';
+    rows.forEach(function (r) {
+      h += '<tr>';
+      r.forEach(function (v, i) {
+        var c = cols[i];
+        var shown = (opts.format && opts.format[c]) ? opts.format[c](v) : (num[c] ? U.cell(v, num[c] === true ? 2 : num[c]) : (v == null ? '<span class="n-nodata">—</span>' : esc(v)));
+        h += '<td class="' + (num[c] ? '' : 'n-tl') + '">' + shown + '</td>';
       });
-    }
+      h += '</tr>';
+    });
+    return h + '</tbody></table></div>';
+  }
 
-    gradeTrendChart = new Chart(canvas, {
-      type: 'bar',
-      data: { labels: gradeTrend.map(function (r) { return r.date.slice(5); }), datasets: datasets },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'top', labels: { font: { size: 12 }, boxWidth: 12 } } },
-        scales: {
-          x: { stacked: true, grid: { display: false }, ticks: { font: { size: 12 } } },
-          y: { stacked: true, ticks: { font: { size: 12 } }, title: { display: true, text: 'MT', font: { size: 12 } } },
-        },
-      },
+  /* ── Status line + the e-mail schedule facts ──────────────────────── */
+  var schedule = null;
+  var statusEl = document.getElementById('ip-status');
+  var statusP = api('/status').then(function (s) {
+    schedule = s.email_schedule || null;
+    var chip = !s.installed
+      ? '<span class="n-chip is-neutral" title="The Python package is not installed on this server yet."><span class="n-chip-dot"></span>Not installed</span>'
+      : '<span class="n-chip is-good" title="Live figures from Odoo."><span class="n-chip-dot"></span>Live from Odoo</span>';
+    statusEl.innerHTML = chip;
+    return s;
+  });
+
+  function scheduleFor(key) { return schedule && schedule.reports ? schedule.reports[key] : null; }
+
+  /* ── 1. Vehicles ──────────────────────────────────────────────────── */
+  var vehLoaded = false;
+  function loadVehicles() {
+    vehLoaded = true;
+    var body = document.getElementById('veh-body');
+    U.renderState(body, { kind: 'loading', title: 'Reading Odoo…', body: 'Open sale tokens without an order.', compact: true });
+    Promise.all([api('/vehicles'), statusP]).then(function (all) {
+      var r = all[0];
+      if (!r.ok) {
+        failState(body, r, loadVehicles);
+        U.renderKpis(document.getElementById('veh-kpis'), [U.adHoc({ name: 'Vehicles without an order', value: null,
+          drill: false, provenance: 'system', emptyReason: r.message, targetNote: 'Live from Odoo' })]);
+        renderVehMail(null);
+        return;
+      }
+      var d = r.data;
+      var cols = d.table.columns, rows = d.table.rows;
+      var iIssued = cols.indexOf('Token Issued');
+      var oldest = rows.length && iIssued >= 0 ? rows[0][iIssued] : null;
+      var waitH = oldest ? Math.max(0, (new Date(d.as_of) - new Date(oldest)) / 3600000) : null;
+      U.renderKpis(document.getElementById('veh-kpis'), [
+        U.adHoc({ name: 'Vehicles without an order', value: d.count, dp: 0, drill: false, provenance: 'system',
+          period: 'As of ' + plantDateTime(d.as_of) + ' (plant time)', targetNote: 'Live from Odoo' }),
+        U.adHoc({ name: 'Longest wait', value: waitH, dp: 1, unit: 'hours', drill: false, provenance: 'system',
+          emptyReason: 'No vehicle is waiting.', period: oldest ? 'Token issued ' + plantDateTime(oldest) : '',
+          targetNote: 'Since the token was issued' }),
+      ]);
+      document.getElementById('veh-sub').textContent = 'Sale tokens with no sale order linked and no gate-out yet · as of '
+        + plantDateTime(d.as_of) + ' plant time · refreshed ' + ageText(r.cached_at);
+      body.innerHTML = staleNote(r) + (rows.length
+        ? tableHTML(cols, rows, { format: { 'Token Issued': plantDateTime } })
+        : U.stateHTML({ kind: 'empty', title: 'No vehicles waiting without an order', compact: true }));
+      renderVehMail(d.email);
     });
   }
+  function renderVehMail(email) {
+    var s = scheduleFor('vehicles');
+    var h = '<dt>Schedule</dt><dd>' + esc(s ? s.schedule : 'Every 2 hours') + '</dd>'
+      + '<dt>Contents</dt><dd>' + esc(s ? s.content : 'HTML table in the body + Excel attachment') + '</dd>'
+      + '<dt>To</dt><dd>' + addresses(email && email.to) + '</dd>'
+      + '<dt>CC</dt><dd>' + addresses(email && email.cc) + '</dd>'
+      + '<dt>Sent from</dt><dd>' + esc(schedule ? schedule.sent_from : "The collaborator's Windows PC (Outlook)") + '</dd>';
+    document.getElementById('veh-mail').innerHTML = h;
+  }
+  document.getElementById('veh-refresh').addEventListener('click', loadVehicles);
 
-  function renderFinancials(f) {
-    /* The "Advance" tile was removed 2026-10-06 (asked for directly): it
-       summed every inbound customer receipt, not advances, and always read
-       "0 invoices" because it carried receipt_count, not invoice_count.
-       Advances now sit under "Sales Payable (Advances)". */
-    var labels = { received_uncollectable: 'Sales Receivable against Invoice', payable: 'Sales Payable (Advances)', agewise_outstanding: 'Agewise Outstanding' };
-    var html = Object.keys(labels).map(function (key) {
-      var r = f[key];
-      if (r.ok) {
-        return sk({ label: labels[key], value: tzs(r.total_tzs),
-                    status: (r.invoice_count || 0) + ' open invoices, aged by invoice date (Odoo sends no due date)' });
+  /* ── 2. Sales Dashboard (iframe, created once, kept alive) ────────── */
+  var saStarted = false, saTimer = null;
+  function issueSalesAppCookie() { return api('/sales-app-session', { method: 'POST' }); }
+  function loadSalesApp() {
+    saStarted = true;
+    var body = document.getElementById('sa-body');
+    U.renderState(body, { kind: 'loading', title: 'Opening the Sales Dashboard…', compact: true });
+    statusP.then(function (s) {
+      if (!s.sales_app || !s.sales_app.reachable) {
+        saStarted = false;
+        failState(body, { status: s.installed ? 'error' : 'not_installed', message: s.installed
+          ? 'The Sales Dashboard app is not running on this server right now.'
+          : 'The Sales Dashboard app has not been installed on this server yet.' }, function () { location.reload(); });
+        return;
       }
-      return sk({ label: labels[key], pending: true, pendingMsg: r.message });
-    }).join('');
-    document.getElementById('sd-financials').innerHTML = html;
-  }
-
-  function renderTarget(targets, mtd) {
-    var sub = document.getElementById('sd-target-sub');
-    var chipCls = targets.source === 'odoo' ? 'odoo' : '';
-    var chipLabel = targets.source === 'odoo' ? 'TARGET SOURCE: ODOO' : 'TARGET SOURCE: MANUAL (INTERIM)';
-    sub.innerHTML = '— <span class="target-source-chip ' + chipCls + '">' + chipLabel + '</span>';
-
-    var card = document.getElementById('sd-target-card');
-    if (!mtd.target_mt) {
-      card.innerHTML = '<div class="in-empty">No target set for this month yet.</div>';
-      return;
-    }
-    var pctVal = mtd.vs_target_pct;
-    var color = pctVal == null ? GRAY : pctVal >= 100 ? ST.good : pctVal >= 80 ? ST.warning : ST.bad;
-    card.innerHTML =
-      '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px">' +
-        '<span>' + (mtd.actual_mt == null ? 'Actual pending Odoo' : fmt(mtd.actual_mt) + ' MT actual') + '</span>' +
-        '<span style="font-weight:700;color:' + color + '">' + (pctVal != null ? pctVal.toFixed(1) + '%' : '—') + ' of ' + fmt(mtd.target_mt) + ' MT</span>' +
-      '</div>' +
-      '<div class="sk-bar" style="height:8px"><div class="sk-bar-fill" style="width:' + Math.min(pctVal || 0, 100) + '%;background:' + color + '"></div></div>';
-  }
-
-  function renderPerformance(perf) {
-    var tbody = document.getElementById('sd-performance');
-    var empty = document.getElementById('sd-perf-empty');
-    if (!perf.divisions.length) { empty.style.display = 'block'; tbody.innerHTML = ''; return; }
-    empty.style.display = 'none';
-    var html = '';
-    /* Same RAG thresholds already used for this page's MTD-vs-target
-       card (line ~447), and the same already-AA-safe status tokens
-       (--st-good/--st-warn/--st-bad, not the raw brand fills). */
-    function achColor(p) {
-      return p == null ? GRAY : p >= 100 ? ST.good : p >= 80 ? ST.warning : ST.bad;
-    }
-    perf.divisions.forEach(function (div) {
-      html += '<tr class="div-row"><td class="tl">' + esc(div.division) + '</td><td class="tl">' + esc(div.divisional_manager || '—') + '</td>' +
-        '<td class="num">' + fmt(div.projected_mt) + '</td><td class="num">' + (div.target_mt ? fmt(div.target_mt) : '—') + '</td>' +
-        '<td class="num" style="font-weight:700;color:' + achColor(div.achievement_pct) + '">' +
-          (div.achievement_pct != null ? div.achievement_pct.toFixed(1) + '%' : '—') + '</td></tr>';
-      div.zones.forEach(function (z) {
-        html += '<tr class="zone-row"><td class="tl">' + esc(z.zone) + '</td><td class="tl">' + esc(z.sales_officer) + '</td>' +
-          '<td class="num">' + fmt(z.projected_mt) + '</td><td class="num">' + (z.target_mt ? fmt(z.target_mt) : '—') + '</td>' +
-          '<td class="num" style="color:' + achColor(z.achievement_pct) + '">' +
-            (z.achievement_pct != null ? z.achievement_pct.toFixed(1) + '%' : '—') + '</td></tr>';
+      issueSalesAppCookie().then(function (r) {
+        if (!r.ok) { saStarted = false; failState(body, r, loadSalesApp); return; }
+        /* Keep the 12 h cookie fresh while the page stays open. */
+        saTimer = saTimer || setInterval(issueSalesAppCookie, 6 * 60 * 60 * 1000);
+        var wrap = document.createElement('div');
+        wrap.className = 'ip-frame-wrap';
+        var frame = document.createElement('iframe');
+        frame.className = 'ip-frame';
+        frame.title = 'Sales Dashboard';
+        frame.src = '/sales-app/?embed=true';
+        wrap.appendChild(frame);
+        body.innerHTML = '';
+        body.appendChild(wrap);
       });
     });
-    tbody.innerHTML = html;
+  }
+  document.getElementById('sa-open').addEventListener('click', function (e) {
+    /* The new window needs the same cookie; issue it first. */
+    e.preventDefault();
+    var w = window.open('about:blank', '_blank');
+    issueSalesAppCookie().then(function () { if (w) { w.opener = null; w.location = '/sales-app/'; } });
+  });
+
+  /* ── 3. Sales vs Target ───────────────────────────────────────────── */
+  var dateEl = document.getElementById('svt-date');
+  var personEl = document.getElementById('svt-person');
+  var svtData = null;
+  (function initDate() {
+    /* Plant time is UTC+3; the 08:00 e-mail reports yesterday. */
+    var plantNow = new Date(Date.now() + 3 * 3600000);
+    var y = new Date(plantNow.getTime() - 86400000).toISOString().slice(0, 10);
+    dateEl.max = plantNow.toISOString().slice(0, 10);
+    dateEl.value = y;
+  })();
+
+  function loadSvt() {
+    var people = document.getElementById('svt-people');
+    U.renderState(people, { kind: 'loading', title: 'Reading Odoo…', body: 'Sales and targets for every customer — this can take up to a minute.', compact: true });
+    document.getElementById('svt-customers').innerHTML = '';
+    Promise.all([api('/sales-vs-target?date=' + encodeURIComponent(dateEl.value)), statusP]).then(function (all) {
+      var r = all[0];
+      if (!r.ok) {
+        failState(people, r, loadSvt);
+        U.renderKpis(document.getElementById('svt-kpis'), []);
+        renderSvtMail(null);
+        return;
+      }
+      svtData = r.data;
+      renderSvt(r);
+    });
   }
 
-  function renderOfficerAchievement(oa) {
-    var tbody = document.getElementById('sd-oa-officers');
-    var tfoot = document.getElementById('sd-oa-divisions');
-    var empty = document.getElementById('sd-oa-empty');
-    var unassignedEl = document.getElementById('sd-oa-unassigned');
-    var sub = document.getElementById('sd-oa-sub');
+  function renderSvt(r) {
+    var d = r.data;
+    var t = d.totals;
+    var month = new Date(d.month_start + 'T00:00:00').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+    var upTo = new Date(d.report_date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    U.renderKpis(document.getElementById('svt-kpis'), [
+      U.adHoc({ name: 'Sales MTD', value: t.sales_mt, dp: 2, unit: 'MT', drill: false, provenance: 'system',
+        period: month + ', up to ' + upTo, targetNote: 'Day ' + d.day_of_month + ' of ' + d.days_in_month }),
+      U.adHoc({ name: 'Month target', value: t.target_mt, dp: 0, unit: 'MT', drill: false, provenance: 'system',
+        period: month, targetNote: 'From Odoo sales targets' }),
+      U.adHoc({ name: 'Achievement', value: t.achievement_pct, dp: 1, unit: '%', drill: false, provenance: 'system',
+        emptyReason: 'No target set for this month.', period: 'Sales ÷ target, month to date', targetNote: 'Of the full-month target' }),
+      U.adHoc({ name: 'E-mails for this date', value: d.mails.length, dp: 0, drill: false, provenance: 'system',
+        period: 'As the 08:00 run builds them', targetNote: 'One per salesperson' }),
+    ]);
 
-    if (!oa.ok) {
-      tbody.innerHTML = ''; tfoot.innerHTML = '';
-      empty.textContent = oa.message; empty.style.display = 'block';
-      unassignedEl.style.display = 'none';
-      sub.textContent = '— not available yet';
-      return;
+    /* Per salesperson: figures + exactly the e-mail they get. */
+    var cols = d.table.columns;
+    var iSp = cols.indexOf('Salesperson'), iS = cols.indexOf('Sales (MT)'), iT = cols.indexOf('Target (MT)');
+    var bySp = {};
+    d.table.rows.forEach(function (row) {
+      var k = row[iSp];
+      var o = bySp[k] || (bySp[k] = { customers: 0, sales: 0, target: 0 });
+      o.customers++; o.sales += row[iS] || 0; o.target += row[iT] || 0;
+    });
+    var mailBySp = {};
+    d.mails.forEach(function (m) { mailBySp[m.salesperson] = m; });
+    var h = '<div class="n-tbl-wrap"><table class="n-tbl"><thead><tr>'
+      + '<th class="n-tl">Salesperson</th><th>Customers</th><th>Sales (MT)</th><th>Target (MT)</th><th>Achievement</th>'
+      + '<th class="n-tl">E-mail To</th><th class="n-tl">CC</th></tr></thead><tbody>';
+    Object.keys(bySp).sort().forEach(function (sp) {
+      var o = bySp[sp], m = mailBySp[sp];
+      var pct = o.target ? (o.sales / o.target * 100) : null;
+      h += '<tr><td class="n-tl">' + esc(sp) + '</td><td>' + U.cell(o.customers, 0) + '</td><td>' + U.cell(o.sales, 2)
+        + '</td><td>' + U.cell(o.target, 2) + '</td><td>' + (pct == null ? '<span class="n-nodata">—</span>' : esc(U.fmt(pct, 0)) + '%')
+        + '</td><td class="n-tl" style="white-space:normal">' + (m ? addresses(splitAddrs(m.to)) : '<span style="color:var(--orange-ink)">No e-mail address — not sent</span>')
+        + '</td><td class="n-tl" style="white-space:normal">' + (m ? addresses(splitAddrs(m.cc)) : '') + '</td></tr>';
+    });
+    h += '</tbody></table></div>';
+    var admin = d.mails.filter(function (m) { return m.salesperson === '(admin)'; })[0];
+    if (admin) {
+      h += '<p class="ip-note" style="margin-top:var(--sp-3)"><strong>Also sent:</strong> ' + esc(admin.subject)
+        + ' → ' + addresses(splitAddrs(admin.to)) + '</p>';
     }
-    empty.style.display = 'none';
-    sub.textContent = '— actual sales vs target, from Odoo, attributed via each customer’s assigned officer';
+    document.getElementById('svt-people').innerHTML = staleNote(r) + h;
+    document.getElementById('svt-sub').textContent = 'One e-mail per salesperson at 08:00 · report date ' + upTo
+      + ' · refreshed ' + ageText(r.cached_at);
 
-    /* Ink tokens, not the raw brand/status hexes. --green (3.81:1) and
-       --orange (2.27:1) both fail AA for normal text — measured, not
-       assumed — which is exactly why this app keeps a separate *-ink
-       token for every colour that has to carry text: --green-ink
-       (6.15:1), --amber-ink (5.02:1), --red-ink (5.91:1). This
-       function was the one place in the app still reaching for the
-       fill colour instead of its ink pairing. */
-    function pctColor(p) {
-      if (p == null) return 'var(--text-muted)';
-      return p >= 90 ? 'var(--green-ink)' : p >= 60 ? 'var(--amber-ink)' : 'var(--red-ink)';
-    }
-
-    tbody.innerHTML = oa.officers.map(function (o) {
-      return '<tr><td class="tl">' + esc(o.salesperson || 'Unassigned') + '</td>' +
-        '<td class="tl">' + esc(o.division || '—') + ' / ' + esc(o.zone || '—') + '</td>' +
-        '<td class="num">' + fmt(o.customer_count) + '</td>' +
-        '<td class="num">' + fmt(o.target_mt) + '</td>' +
-        '<td class="num">' + fmt(o.actual_mt) + '</td>' +
-        '<td class="num" style="font-weight:700;color:' + pctColor(o.achievement_pct) + '">' +
-          (o.achievement_pct != null ? o.achievement_pct.toFixed(1) + '%' : '—') + '</td></tr>';
+    /* Salesperson filter for the customer table. */
+    var keep = personEl.value;
+    personEl.innerHTML = '<option value="">All</option>' + Object.keys(bySp).sort().map(function (sp) {
+      return '<option value="' + esc(sp) + '">' + esc(sp) + '</option>';
     }).join('');
+    if (bySp[keep]) personEl.value = keep;
+    renderCustomers();
 
-    tfoot.innerHTML = '<tr>' +
-      '<td class="tl" colspan="2">Company Total</td><td class="num">' + fmt(oa.customer_count) + '</td>' +
-      '<td class="num">' + fmt(oa.company_target_mt) + '</td><td class="num">' + fmt(oa.company_actual_mt) + '</td>' +
-      '<td class="num" style="color:' + pctColor(oa.company_target_mt ? (oa.company_actual_mt / oa.company_target_mt) * 100 : null) + '">' +
-        (oa.company_target_mt ? ((oa.company_actual_mt / oa.company_target_mt) * 100).toFixed(1) + '%' : '—') +
-      '</td></tr>';
-
-    if (oa.unassigned_order_count > 0) {
-      unassignedEl.style.display = 'block';
-      unassignedEl.textContent = fmt(oa.unassigned_mt) + ' MT across ' + oa.unassigned_order_count +
-        ' order(s) could not be attributed to an officer — the customer has no target line this month (new/one-off customer).';
-    } else {
-      unassignedEl.style.display = 'none';
-    }
+    /* The matrix the mails were built from. */
+    var src = d.matrix.source || {};
+    document.getElementById('svt-matrix-sub').innerHTML = 'From <strong>' + esc(src.file || '—') + '</strong> on this server · '
+      + (src.same_as_package === true ? 'unchanged since the package copy (14 Oct 2026)'
+        : src.same_as_package === false ? '<span style="color:var(--orange-ink)">edited since the package copy</span>' : 'version unknown')
+      + '. The e-mails are sent from the matrix on the collaborator\'s PC — keep the two in step.';
+    document.getElementById('svt-matrix').innerHTML = tableHTML(['Salesperson', 'To', 'CC'],
+      d.matrix.rows.map(function (m) { return [m.salesperson, m.to, m.cc]; }),
+      { format: { To: addresses, CC: addresses } });
+    renderSvtMail(d);
   }
 
-  function renderAlert(today) {
-    var el = document.getElementById('sd-alert');
-    if (today.missing_reporters && today.missing_reporters.length) {
-      el.style.display = 'block';
-      el.textContent = today.missing_reporters.length + ' officer(s) yet to submit today’s projection: ' + today.missing_reporters.join(', ');
-    } else {
-      el.style.display = 'none';
-    }
+  function renderCustomers() {
+    if (!svtData) return;
+    var cols = svtData.table.columns, iSp = cols.indexOf('Salesperson');
+    var rows = svtData.table.rows.filter(function (r) { return !personEl.value || r[iSp] === personEl.value; });
+    document.getElementById('svt-customers').innerHTML = rows.length
+      ? tableHTML(cols, rows, { numeric: { 'Sales (MT)': 2, 'Target (MT)': 2 } })
+      : U.stateHTML({ kind: 'empty', title: 'No customers with sales or a target', compact: true });
   }
 
-  async function load() {
-    var year = yearSel.value;
-    var month = monthSel.value;
-    document.getElementById('sd-source').textContent = 'Loading…';
-    try {
-      var d = await NyatiAPI.getSalesDashboard(year, month);
-      document.getElementById('sd-source').textContent = d.sources.sales_volume === 'not_configured'
-        ? 'Odoo not connected — showing manual projections only' : '';
-      renderAlert(d.today);
-      renderBasis(d);
-      renderHero(d);
-      renderGrades(d.grades);
-      renderTrend(d.daily_trend);
-      renderBestWorst(d.mtd);
-      renderGradeTrend(d.grade_trend, d.grades);
-      renderCustomers(d.mtd, d.top_customers, d.sources.sales_volume);
-      renderTerritory(d.territory, d.sources.sales_volume);
-      renderCollections(d.collections);
-      renderFinancials(d.financials);
-      renderTarget(d.targets, d.mtd);
-      renderOfficerAchievement(d.officer_achievement);
-      renderPerformance(d.performance);
-      if (window.lucide) window.lucide.createIcons();
-    } catch (e) {
-      document.getElementById('sd-source').textContent = '';
-      showLoadFailure(e);
+  function renderSvtMail(d) {
+    var s = scheduleFor('sales_vs_target'), x = scheduleFor('excel_dashboard');
+    var h = '<dt>Schedule</dt><dd>' + esc(s ? s.schedule : 'Daily at 08:00') + '</dd>'
+      + '<dt>Contents</dt><dd>' + esc(s ? s.content : 'One e-mail per salesperson') + '</dd>'
+      + '<dt>Recipients</dt><dd>' + esc(s ? s.recipients_source : 'From the e-mail matrix') + '</dd>'
+      + '<dt>Copy to</dt><dd>' + addresses(d && d.admin_copy ? [d.admin_copy] : []) + ' (administrator, on every e-mail)</dd>';
+    if (x) {
+      h += '<dt>Also daily</dt><dd>' + esc(x.title) + ' — ' + esc(x.schedule) + ' → ' + addresses(x.to) + '</dd>';
     }
+    h += '<dt>Sent from</dt><dd>' + esc(schedule ? schedule.sent_from : "The collaborator's Windows PC (Outlook)") + '</dd>';
+    document.getElementById('svt-mail').innerHTML = h;
   }
 
-  /* The upstream is Odoo via the API. When it cannot be reached there is
-     no partial answer worth showing, so the section scaffolding comes
-     down and one panel explains the situation and offers the retry. */
-  function showLoadFailure(err) {
-    var main = document.querySelector('.in-main');
-    var panel = document.getElementById('sd-failed');
-    if (!main || !panel) return;
-    Array.prototype.forEach.call(main.children, function (el) {
-      if (el !== panel) el.hidden = true;
+  var svtLoaded = false;
+  dateEl.addEventListener('change', function () { if (dateEl.value) loadSvt(); });
+  personEl.addEventListener('change', renderCustomers);
+
+  /* ── Tabs (URL hash per tab, so a link opens the right report) ───── */
+  var TABS = ['vehicles', 'sales-dashboard', 'sales-vs-target'];
+  var tabsEl = document.getElementById('ip-tabs');
+  function show(tab) {
+    if (TABS.indexOf(tab) < 0) tab = 'vehicles';
+    tabsEl.querySelectorAll('.n-seg-btn').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.getAttribute('data-value') === tab));
     });
-    panel.hidden = false;
-
-    /* A refusal is not an outage. This panel ignored the error it was
-       handed and always blamed the Odoo connection, so a reader whose
-       role simply does not include Sales was sent to chase an
-       infrastructure fault that did not exist — and offered a "Try
-       again" button that could only ever fail the same way. */
-    var raw = String((err && (err.message || err)) || '');
-    var denied = /\b403\b|forbidden|not permitted|access denied/i.test(raw);
-
-    panel.innerHTML = denied
-      ? '<div class="ds-state">' +
-          '<div class="ds-state-icon"><i data-lucide="lock"></i></div>' +
-          '<div class="ds-state-title">You do not have access to Sales</div>' +
-          '<div class="ds-state-body">This dashboard is limited to the commercial team. ' +
-            'Nothing is wrong with the connection — ask an administrator if you need it.</div>' +
-        '</div>'
-      : '<div class="ds-state is-error">' +
-          '<div class="ds-state-icon"><i data-lucide="alert-octagon"></i></div>' +
-          '<div class="ds-state-title">Sales data is unavailable</div>' +
-          '<div class="ds-state-body">The dashboard could not reach the sales service, so no figures are shown ' +
-            'rather than stale or partial ones. This is usually the Odoo connection rather than anything you did.</div>' +
-          '<button type="button" class="ds-state-act" id="sd-retry">Try again</button>' +
-        '</div>';
-    if (window.lucide) window.lucide.createIcons();
-    if (denied) return;
-    panel.querySelector('#sd-retry').addEventListener('click', function () {
-      Array.prototype.forEach.call(main.children, function (el) {
-        if (el !== panel) el.hidden = false;
-      });
-      panel.hidden = true; panel.innerHTML = '';
-      load();
-    });
-    if (window.lucide) window.lucide.createIcons();
+    document.querySelectorAll('.ip-panel').forEach(function (p) { p.hidden = p.getAttribute('data-panel') !== tab; });
+    if (tab === 'vehicles' && !vehLoaded) loadVehicles();
+    if (tab === 'sales-dashboard' && !saStarted) loadSalesApp();
+    if (tab === 'sales-vs-target' && !svtLoaded) { svtLoaded = true; loadSvt(); }
+    if (location.hash !== '#' + tab) history.replaceState(null, '', '#' + tab);
+    if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
   }
-
-  var _dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' });
-  var fEl = document.getElementById('footer-date');
-  if (fEl) fEl.textContent = _dateStr;
-
-  load();
-}());
+  U.wireSegmented(tabsEl, function (value) { show(value); });
+  window.addEventListener('hashchange', function () { show(location.hash.slice(1)); });
+  show(location.hash.slice(1));
+})();
 </script>
-
 </body>
 </html>

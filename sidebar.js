@@ -47,8 +47,8 @@ const _SB_KPI_ORDER = [
   { type:'dept', dept:'packing',        label:'Packing',          icon:'package' },
   { type:'dept', dept:'mechanical',     label:'Mechanical',       icon:'wrench' },
   { type:'dept', dept:'ei',             label:'E &amp; I',             icon:'zap' },
-  { type:'link', label:'Sales &amp; Dispatch', icon:'trending-up', page:'sales.html', visible: canViewSales },
-  { type:'link', label:'Integration Package', icon:'plug-zap', page:'integration-package.html', visible: canViewSales },
+  { type:'link', label:'Sales', icon:'trending-up', page:'sales.html', visible: canViewSales },
+  { type:'link', label:'Dispatch', icon:'truck', page:'dispatch.html', visible: canViewDispatch },
   { type:'dept', dept:'stores',         label:'Stores',           icon:'warehouse' },
   { type:'dept', dept:'powerplant',     label:'Power Plant',      icon:'cog' },
 ];

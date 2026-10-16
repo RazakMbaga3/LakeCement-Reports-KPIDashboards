@@ -79,7 +79,7 @@ test('the frontend, the API and certbot challenges are served', () => {
     '/forms/forms.css', '/vendor/xlsx-0.18.5/xlsx.full.min.js',
     '/api/health', '/api/mis/monthly/export.xlsx', '/api/compliance/items/12',
     '/api/compliance/documents/3/download', '/.well-known/acme-challenge/abc123',
-    '/integration-package.html',
+    '/sale-register.html', '/dispatch.html',
   ]) {
     assert.ok(!refused(uri), `must be served: ${uri}`);
   }

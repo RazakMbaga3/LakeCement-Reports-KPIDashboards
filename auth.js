@@ -60,7 +60,7 @@ const PERMISSIONS = {
     compliance: { certs:'view',    mlpl:'view',     legal:'view',       insurance:'view' },
     store:      { rawmat:'view',   spares:'view',   amc:'view' },
     kpi:        { depts:'all', editDepts:'all', daily:false },
-    commercial: { sales:null, purchase:null },
+    commercial: { sales:'view', purchase:'view' },   /* Added 2026-10-16 at Razak's request — see COMMERCIAL_VIEW_ROLES/PURCHASE_VIEW_ROLES in forms/access-registry.js */
     canViewAudit:  true,
     canManageUsers:true,
     canManageITAssets:true,
@@ -488,6 +488,18 @@ function canEditSales() { return _getPerms().commercial?.sales === 'edit'; }
    commercial.sales gate for lack of a check of its own). */
 function canViewPurchases() { const p = _getPerms().commercial?.purchase; return p === 'view' || p === 'edit'; }
 function canEditPurchases() { return _getPerms().commercial?.purchase === 'edit'; }
+
+/* dispatch.html's own gate (same file, canView) reads
+   getDailyAccessFor(role).nav for 'dispatch-form.html' directly rather than
+   a commercial.* permission — mirrored here, not reimplemented differently,
+   so the sidebar row can never show for a role the page itself would deny,
+   or hide for one it would allow. Added so dispatch.html has a sidebar
+   entry at all (2026-10-16): it previously had none and was reachable only
+   by a direct URL or a link from sales.html's report-switcher tab. */
+function canViewDispatch() {
+  const access = getMyDailyAccess();
+  return access.nav === 'all' || (access.nav || []).indexOf('dispatch-form.html') !== -1;
+}
 
 /* A commercial-only role: holds a Sales and/or Purchases grant but no
    plant KPI department beyond the shared 'summary' landing dept, and no
