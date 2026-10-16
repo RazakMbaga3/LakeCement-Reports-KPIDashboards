@@ -153,6 +153,9 @@ async function checkOdooSync() {
     && storesClient.isConfigured('grn')
     && storesClient.isConfigured('issues');
   const sales = require('./odooDashboardClient').isConfigured();
+  /* The direct read-only database login (2026-10-15) — CPP and overburden
+     read Odoo's tables through it rather than through a report URL. */
+  const odooDb = require('./odooDb').isConfigured();
 
   /* This list is the one place a pull can be forgotten and nobody notices:
      a pull missing here is simply absent from /api/health, so "is it
@@ -167,6 +170,9 @@ async function checkOdooSync() {
     production && 'production-report-autofill',
     stores     && 'stores-gate-grn-issues',
     sales      && 'sales-register',
+    odooDb     && 'cpp-autofill',
+    odooDb     && 'waste-material-entries',
+    odooDb     && 'production-stock-ledger',
   ].filter(Boolean);
   if (!wanted.length) return {};
 

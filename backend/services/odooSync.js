@@ -75,6 +75,9 @@ const { pullMiningTickets } = require('./odooMiningSync');
 const { pullAndAutofillProduction } = require('./odooProductionAutofill');
 const { pullAndAutofillMaterials } = require('./odooMaterialsAutofill');
 const { pullSalesRegisterLive } = require('./odooSalesSync');
+const { pullAndAutofillCpp } = require('./odooCppAutofill');
+const { pullWasteEntriesLive } = require('./odooWasteSync');
+const { pullStockLedger } = require('./odooStockLedger');
 
 // How many trailing days each scheduled run re-pulls — wide enough that a
 // skipped/failed run (server down, Odoo unreachable) self-heals within a
@@ -102,6 +105,12 @@ const PRODUCTION_LOOKBACK_DAYS = 7;
 // maximum lag with headroom; anything shorter would freeze some trucks as
 // permanently "pending GRN" once they fell out of the window.
 const STORES_LOOKBACK_DAYS = 7;
+
+// CPP entries (cpp_entry) are created the morning after the day and approved
+// within a day or two (2026-10 history lines: created 11-10 02:08, approved
+// 11-10 10:13 for the 10th). 7 days matches production's window with room
+// for a late approval; each day is one small row, so the cost is negligible.
+const CPP_LOOKBACK_DAYS = 7;
 
 function isoDate(d) { return d.toISOString().slice(0, 10); }
 
@@ -167,6 +176,42 @@ const PULLS = [
        persisted cursor — see odooSalesSync.pullSalesRegisterLive. */
     name: 'sales-register',
     run: () => pullSalesRegisterLive(),
+  },
+  {
+    /* Captive Power Plant daily report, read from Odoo's cpp_entry over the
+       read-only database login (services/odooDb.js) — no report URL carries
+       CPP data. Writes daily_reports form 'cpp' under the same convention as
+       the production/materials autofills; never touches a day a person
+       entered (services/odooCppAutofill.js). Returns { skipped } and touches
+       nothing when ODOO_PG_* is not set, so it is safe on a droplet that
+       has no database login yet. Same 7-day window as production: a CPP
+       entry is created the day after and approved the day after that. */
+    name: 'cpp-autofill',
+    run: () => {
+      const { from, to } = lookbackRange(CPP_LOOKBACK_DAYS);
+      return pullAndAutofillCpp(from, to);
+    },
+  },
+  {
+    /* Overburden — Odoo's Waste Material Entry, mirrored into
+       odoo_waste_material_entries (migration 041) over the same database
+       login. Its own 21-day window plus recent edits; see
+       services/odooWasteSync.js for why entries are not final for weeks. */
+    name: 'waste-material-entries',
+    run: () => pullWasteEntriesLive(),
+  },
+  {
+    /* Production Report stock ledgers — openings and receipts rolled forward
+       from the plant's own 30-Jun closing with Odoo's flows, plus CPP coal
+       burn; Odoo's live on-hand is snapshotted and compared every run
+       (services/odooStockLedger.js, config/odooStockLedger.js). LAST in this
+       list on purpose: it reads the consumption the production autofill
+       above has just written, so the report's closing is exactly tomorrow's
+       opening. Its own window: 14 days incremental, a full rebuild from the
+       anchor at most every 20 h. Returns { skipped } without touching Odoo
+       when ODOO_PG_* is not set. */
+    name: 'production-stock-ledger',
+    run: () => pullStockLedger({ mode: 'auto' }),
   },
 ];
 

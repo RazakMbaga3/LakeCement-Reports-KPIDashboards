@@ -9,6 +9,8 @@ const db       = require('../db');
 const engine   = require('./formulaEngine');
 const insights = require('./insights');
 const stores   = require('./stores');
+const overburden = require('./overburden');
+const crusher    = require('./crusher');
 const { RAWMAT_VIEW_ROLES, MINES_VIEW_ROLES } = require('../../forms/access-registry.js');
 const { REPORTED_STATUSES } = require('../config/forms');
 
@@ -206,7 +208,19 @@ async function gatherMonthly(year, month) {
        heading rather than mislabelled as the quarry figure.
 
      Mining       → weighbridge_tickets, keyed on the same movement-type
-       strings mines-report.html parses.
+       strings mines-report.html parses — for what is WEIGHED. Two things
+       on the plant head's Mining block are not weighed and come from
+       elsewhere (2026-10-15):
+       • Overburden → Odoo's Waste Material Entry, mirrored by
+         services/odooWasteSync.js (services/overburden.js reads it). The
+         old "South / North Mine to Dump" rows were keyed on weighbridge
+         movements no ticket has ever carried, so they were permanently
+         "unavailable" while the real figure sat in Odoo. Tonnage there is
+         trips × a fixed load per trip, and the section note says so.
+       • Crusher production, apron-feeder hours and TPH → the Production
+         Report's ls_crusher_prod_mt / ls_crusher_apron_hrs
+         (services/crusher.js). TPH for a period is Σproduction ÷ Σapron
+         hours over the days that carry both, never a mean of daily TPHs.
 
    Deliberately NOT sourced (returned as unavailable, never estimated):
      • Quarry stockyard stock — HG / LG / HGHMGO / Clay / ID Clay. Lives in
@@ -290,13 +304,18 @@ const MV = {
   Y_DP: 'Stock Yard to Direct Pile (Bypass Crusher)',
 };
 
+/* "South / North Mine to Dump" (MV.S_WD / MV.N_WD) were rows here until
+   2026-10-15. Not one weighbridge ticket has ever carried either movement —
+   overburden is hauled by trip count, not weighed — so both rows were
+   permanently "unavailable". They are replaced by the overburden rows built
+   from Odoo's Waste Material Entry in gatherDailySummary(); the mine split
+   is NOT carried over, because Odoo records the mine only in free-text
+   remarks and presenting a parsed split as fact would be inventing it. */
 const MINING_ROWS = [
   { key: 'south_pile', label: 'South Mine to Pile',       movements: [MV.S_CR, MV.S_DP] },
   { key: 'south_yard', label: 'South Mine to Stock Yard', movements: [MV.S_SY] },
-  { key: 'south_dump', label: 'South Mine to Dump',       movements: [MV.S_WD] },
   { key: 'north_pile', label: 'North Mine to Pile',       movements: [MV.N_CR, MV.N_DP] },
   { key: 'north_yard', label: 'North Mine to Stock Yard', movements: [MV.N_SY] },
-  { key: 'north_dump', label: 'North Mine to Dump',       movements: [MV.N_WD] },
   { key: 'yard_pile',  label: 'Stock Yard to Pile',       movements: [MV.Y_CR, MV.Y_DP] },
 ];
 
@@ -351,7 +370,7 @@ async function gatherDailySummary(date, role) {
   const fyFrom = fiscalYearStart(date);
   const moFrom = monthStart(date);
 
-  const [prodRows, matRow, mining] = await Promise.all([
+  const [prodRows, matRow, mining, ob] = await Promise.all([
     db.query(
       `SELECT record_date, data FROM daily_reports
        WHERE form_type = 'production' AND record_date BETWEEN $1 AND $2
@@ -377,6 +396,14 @@ async function gatherDailySummary(date, role) {
        GROUP BY movement_type`,
       [fyFrom, date, moFrom]
     ),
+    /* Overburden (Odoo Waste Material Entry, approved entries only). A
+       server whose database predates migration 041 has no mirror table:
+       that one case degrades to an explained "unavailable" row rather than
+       failing the whole summary. Every other error still propagates. */
+    overburden.overburdenTotals(date, moFrom, fyFrom).catch(err => {
+      if (err && err.code === '42P01') return null;
+      throw err;
+    }),
   ]);
 
   /* ── Production ── */
@@ -399,46 +426,108 @@ async function gatherDailySummary(date, role) {
     };
   });
 
-  /* ── Stock: Stores ledger (materials form) ──
-     Through stores._snapshotRows so closing stock here is arithmetically
-     the same figure the Stores dashboard shows, special cases included. */
-  const stockRows = matRow.rows.length ? stores._snapshotRows(matRow.rows[0].data || {}) : [];
-  const byField = Object.fromEntries(stockRows.map(r => [r.field, r]));
-  const pickStock = (field, label) => {
-    const r = byField[field];
-    return {
-      key: field, label,
-      closing: r ? round2(r.closing) : null,
-      min: r ? r.min : null,
-      max: r ? r.max : null,
-      status: r ? stockStatus(r.closing, r.min, r.max) : null,
-      available: !!r,
-    };
-  };
+  /* ── Stock: Stores ledger ──
+     The four lines the plant head reads first — Iron Ore, Coal (Kiln + CPP),
+     Clinker, Gypsum — and where each CLOSING figure comes from:
+
+       up to 2026-06-30   the Raw Material report (materials form) through
+                          stores._snapshotRows, as before — those days are
+                          the plant's own typed Excel ledger.
+       from 2026-07-01    the verified Production Report stock ledger
+                          (services/odooStockLedger.js): the plant's own
+                          30-Jun closing rolled forward with Odoo's flows.
+
+     Why the switch (2026-10-16): from 1 Jul the only materials rows are the
+     Odoo autofill's, whose opening chain starts from ZERO on 2026-08-31
+     (odooMaterialsAutofill.carryForwardOpening) — on 14 Oct it read clinker
+     4,898 t and coal ~19,300 t against a real pile of ~9,000 t, and this
+     section printed those numbers as stock. The verified ledger reproduces
+     the plant's own 30.08.2026 sheet — Iron Ore 3,148.95 (exact), Clinker
+     562.18 (562.21 = own 341.35 + purchased 220.86), Gypsum 1,036.52
+     (1,037.36), Coal 3,870.38 (3,839.76: one truck the plant booked a day
+     before Odoo validated it) — and lands on Odoo's live stock today. See
+     config/odooStockLedger.js for every check.
+
+     A line with no verified figure is returned unavailable WITH its reason
+     (an Odoo day not approved yet, a closing that would be negative, the
+     ledger not computed on this server) — never the materials chain as a
+     fallback for these dates, and never a zero. Min/max stay the officer's
+     thresholds from the Raw Material report: they are policy, not stock. */
+  const stockLedger = require('./odooStockLedger');
+  const { ANCHOR: STOCK_ANCHOR } = require('../config/odooStockLedger');
+
+  const matStockRows = matRow.rows.length ? stores._snapshotRows(matRow.rows[0].data || {}) : [];
+  const byField = Object.fromEntries(matStockRows.map(r => [r.field, r]));
 
   /* Coal is one line on the plant head's sheet but is entered per supplier
      across the kiln and CPP sections — the workbook's own "TOTAL RAW COAL"
      row. Its min/max are likewise the sum of whichever supplier thresholds
      were entered, which is how the sheet derives kiln's 10,000 / 18,000
      from two suppliers each carrying 5,000 / 9,000. */
-  const coalRows = stockRows.filter(r => r.category === 'coal' && r.closing !== null);
-  const coalMins = coalRows.map(r => r.min).filter(v => v !== null && v !== undefined);
-  const coalMaxs = coalRows.map(r => r.max).filter(v => v !== null && v !== undefined);
-  const coalClosing = coalRows.length ? coalRows.reduce((s, r) => s + num(r.closing), 0) : null;
-  const coalMin = coalMins.length ? coalMins.reduce((s, v) => s + v, 0) : null;
-  const coalMax = coalMaxs.length ? coalMaxs.reduce((s, v) => s + v, 0) : null;
+  const coalRows = matStockRows.filter(r => r.category === 'coal' && r.closing !== null);
+  const sumOrNull = vals => {
+    const v = vals.filter(x => x !== null && x !== undefined);
+    return v.length ? v.reduce((s, x) => s + x, 0) : null;
+  };
+  const thresholds = {
+    iron_ore:   { min: byField.iron_ore ? byField.iron_ore.min : null, max: byField.iron_ore ? byField.iron_ore.max : null },
+    coal_total: { min: sumOrNull(coalRows.map(r => r.min)), max: sumOrNull(coalRows.map(r => r.max)) },
+    clinker:    { min: byField.clinker ? byField.clinker.min : null, max: byField.clinker ? byField.clinker.max : null },
+    gypsum:     { min: byField.gypsum ? byField.gypsum.min : null, max: byField.gypsum ? byField.gypsum.max : null },
+  };
 
-  const storesStock = [
-    pickStock('iron_ore', 'Iron Ore'),
-    {
-      key: 'coal_total', label: 'Coal (Kiln + CPP)',
-      closing: round2(coalClosing), min: coalMin, max: coalMax,
-      status: stockStatus(coalClosing, coalMin, coalMax),
-      available: coalRows.length > 0,
-    },
-    pickStock('clinker', 'Clinker'),
-    pickStock('gypsum', 'Gypsum'),
+  /* line key -> label, the materials-form source (≤ anchor), and the
+     verified ledger(s) it is the sum of (> anchor). */
+  const STOCK_LINES = [
+    { key: 'iron_ore',   label: 'Iron Ore',          materials: () => (byField.iron_ore ? byField.iron_ore.closing : null), has: () => !!byField.iron_ore, ledgers: ['iron_ore'] },
+    { key: 'coal_total', label: 'Coal (Kiln + CPP)', materials: () => (coalRows.length ? coalRows.reduce((s, r) => s + num(r.closing), 0) : null), has: () => coalRows.length > 0, ledgers: ['coal'] },
+    { key: 'clinker',    label: 'Clinker',           materials: () => (byField.clinker ? byField.clinker.closing : null), has: () => !!byField.clinker, ledgers: ['clinker_own', 'clinker_purchased'] },
+    { key: 'gypsum',     label: 'Gypsum',            materials: () => (byField.gypsum ? byField.gypsum.closing : null), has: () => !!byField.gypsum, ledgers: ['gypsum'] },
   ];
+
+  const useLedger = date > STOCK_ANCHOR.date;
+  const ledgerDay = useLedger ? await stockLedger.closingsFor(date) : null;
+  const ledgerMissingReason = require('./odooDb').isConfigured()
+    ? 'The verified stock ledger has not been computed for this date yet (it runs with the Odoo sync every 30 minutes).'
+    : 'The verified stock ledger is rolled from Odoo\'s database, which this server is not connected to yet — no stock figure is shown rather than the unverified Raw Material chain.';
+
+  const storesStock = STOCK_LINES.map(line => {
+    const th = thresholds[line.key];
+    if (!useLedger) {
+      const closing = line.materials();
+      return {
+        key: line.key, label: line.label,
+        closing: round2(closing), min: th.min, max: th.max,
+        status: line.has() ? stockStatus(closing, th.min, th.max) : null,
+        available: line.has(),
+      };
+    }
+    const parts = line.ledgers.map(k => (ledgerDay ? ledgerDay[k] : null));
+    const missing = parts.findIndex(p => !p || p.closing === null);
+    if (missing >= 0) {
+      const p = parts[missing];
+      const why = !p ? ledgerMissingReason
+        : (line.ledgers.length > 1 ? `${p.label}: ${p.reason}` : p.reason);
+      return {
+        key: line.key, label: line.label,
+        closing: null, min: th.min, max: th.max, status: null,
+        available: false, reason: why || 'No verified closing for this date.',
+      };
+    }
+    const closing = parts.reduce((s, p) => s + p.closing, 0);
+    return {
+      key: line.key, label: line.label,
+      closing: round2(closing), min: th.min, max: th.max,
+      status: stockStatus(closing, th.min, th.max),
+      available: true,
+    };
+  });
+
+  /* The section's own available/note (below) test `stockRows.length`; from
+     1 Jul that must mean "a verified line is available", not "a Raw
+     Material row exists" — otherwise July and August (no materials rows at
+     all) would read "No data" over verified figures. */
+  const stockRows = useLedger ? storesStock.filter(r => r.available) : matStockRows;
 
   /* ── Stock: raw-mill pile (production form's own ledger) ── */
   const pileData = onDateProd ? (onDateProd.data || {}) : null;
@@ -496,13 +585,59 @@ async function gatherDailySummary(date, role) {
     onDate: null, mtd: null, ytd: null, closing: null, min: null, max: null, status: null,
   }));
 
+  /* ── Mining: overburden (Odoo Waste Material Entry) ──
+     A row is available when ANY approved entry falls in the fiscal year;
+     its on-date cell is still null on a day with no entry (entries arrive
+     days late — "not recorded yet" is not "nothing hauled"). Nothing in the
+     mirror at all reads as unavailable with the reason, not as zero. */
+  const obAvailable = !!ob && ob.daysWithEntries > 0;
+  const obReason = ob && ob.status.entriesStored
+    ? 'No approved Waste Material Entry in Odoo for this fiscal year.'
+    : 'Overburden is read from Odoo\'s Waste Material Entry, which has not been synced to this server yet.';
+  const obRow = (key, label, unit, v) => (obAvailable
+    ? { key, label, unit, onDate: v.onDate, mtd: v.mtd, ytd: v.ytd, available: true }
+    : unavailable([{ key, label }], obReason)[0]);
+  const overburdenRows = [
+    obRow('overburden_mt', 'Overburden removed (waste handling)', 'MT', ob && ob.mt),
+    /* No unit: the page appends it to the label, and "— trips trips" reads
+       as a typo. The label already says what is counted. */
+    obRow('overburden_trips', 'Overburden removed — truck trips', null, ob && ob.trips),
+  ];
+
+  /* ── Mining: crusher (Production Report facts) ──
+     Read from the fiscal-year production rows already loaded above, so no
+     second query. A row is available when any day in the year carries its
+     fact; until apron-feeder hours reach the Production Report, the hours
+     and TPH rows say so instead of printing a figure. */
+  const cr = crusher.crusherPeriod(crusher.crusherDays(prodRows.rows), date, moFrom);
+  const crRow = (key, label, unit, v, reason) => (v.ytd !== null
+    ? { key, label, unit, onDate: v.onDate, mtd: v.mtd, ytd: v.ytd, available: true }
+    : unavailable([{ key, label }], reason)[0]);
+  const noApron = 'Apron-feeder hours are not on any Production Report this fiscal year yet.';
+  const crusherRows = [
+    crRow('crusher_prod', 'Crusher production', 'MT', cr.prod,
+      'No crusher production on any Production Report this fiscal year.'),
+    crRow('crusher_apron_hrs', 'Crusher apron feeder hours', 'h', cr.apron, noApron),
+    crRow('crusher_tph', 'Crusher TPH (production ÷ apron feeder hours)', 'TPH', cr.tph, noApron),
+  ];
+
+  const miningNotes = [];
+  if (!miningAvailable) miningNotes.push('No weighbridge tickets loaded for this fiscal year — import them on the Quarry page.');
+  if (obAvailable) {
+    miningNotes.push(overburden.LOAD_FACTOR_NOTE + ' Approved entries only.');
+    if (ob && ob.pending.entries) {
+      miningNotes.push(`${ob.pending.entries} overburden entr${ob.pending.entries === 1 ? 'y' : 'ies'} `
+        + `(${ob.pending.mt.toLocaleString('en-GB')} t) still awaiting approval in Odoo — not counted.`);
+    }
+  }
+  if (cr.tph.ytd !== null) miningNotes.push('Crusher TPH = Σ production ÷ Σ apron-feeder hours over the days that report both.');
+
   const sections = [
     {
       key: 'mining', label: 'Mining Report', columns: ['onDate', 'mtd', 'ytd'],
-      available: miningAvailable,
-      note: miningAvailable ? null
-        : 'No weighbridge tickets loaded for this fiscal year — import them on the Quarry page.',
-      rows: miningRows.concat(unavailable(
+      available: miningAvailable || obAvailable || crusherRows.some(r => r.available),
+      note: miningNotes.length ? miningNotes.join(' ') : null,
+      rows: miningRows.concat(overburdenRows, crusherRows, unavailable(
         [{ key: 'ksm1_hours', label: 'Surface Miner KSM-1 — hours' },
          { key: 'ksm1_fuel',  label: 'Surface Miner KSM-1 — fuel (Ltr)' },
          { key: 'ksm2_hours', label: 'Surface Miner KSM-2 — hours' },

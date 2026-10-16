@@ -49,6 +49,19 @@ const LIVE_PULLS = Object.freeze([
   'production-report-autofill',
   'stores-gate-grn-issues',
   'sales-register',
+  /* 2026-10-15: the first two pulls over the direct read-only Odoo database
+     login (services/odooDb.js). Both are a single small query against the
+     live ERP — cpp_entry for 7 days (~7 rows), waste_material_entry for 21
+     days plus recent edits (~30 rows of a ~650-row table) — and both return
+     { skipped } without touching Odoo when ODOO_PG_* is unset. */
+  'cpp-autofill',
+  'waste-material-entries',
+  /* 2026-10-16: the Production Report stock ledger (services/
+     odooStockLedger.js). Incremental 14-day window, ~1.5 s of aggregate
+     queries on the ERP; a full rebuild from the 30-Jun anchor (~6 s,
+     measured 2026-10-16 for 108 days) at most once every 20 h. Returns
+     { skipped } without touching Odoo when ODOO_PG_* is unset. */
+  'production-stock-ledger',
 ]);
 
 module.exports = { LIVE_PULLS };
