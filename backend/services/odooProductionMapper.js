@@ -104,6 +104,15 @@ function contentHash(e) {
     e.state, e.approval_status, e.mill_type,
     e.consumed_items.map(i => [i.product, i.uom, i.input_quantity, i.final_qty_after_moisture,
       i.moisture, i.stock_available, i.cost]),
+    /* Added 2026-10-15 (migration 040), and appended ONLY when present, on
+       purpose. It must be in the hash: an apron-hours correction in Odoo
+       with an unchanged tonnage would otherwise read as "unchanged" and
+       never bump the revision. But it is null on every non-crusher entry,
+       and appending a bare null would change the hash of all ~9,100 of
+       those rows at once (the dev mirror on 2026-10-15), recording a fake revision on each the next time
+       they are pulled. Appended conditionally, only crusher rows hash
+       differently, exactly once: the pull after this change. */
+    ...(e.apron_feeder_hrs !== null && e.apron_feeder_hrs !== undefined ? [['apron', e.apron_feeder_hrs]] : []),
   ]);
   return crypto.createHash('sha256').update(canon).digest('hex').slice(0, 16);
 }
@@ -189,6 +198,17 @@ function normalizeEntry(pickingType, raw) {
     state:           raw.state ? String(raw.state).trim() : null,
     approval_status: raw.approval_status ? String(raw.approval_status).trim() : null,
     mill_type:       raw.mill_type ? String(raw.mill_type).trim() : null,
+
+    /* Crusher entries only: apron-feeder running hours, decimal (17.45 on
+       CRU/2026/00180, 2026-09-26). The divisor of crusher TPH (Razak,
+       2026-10-15) — see migration 040 and config/odooProductionMap.js.
+       In the payload since 2026-10-08 but dropped here until 2026-10-15.
+
+       Measured 2026-10-15 over 2026-04-01..2026-10-15: the API's 198
+       Crusher entries and Odoo's own crusher_production_entry table agree on
+       every one of the 189 days (production, running hours and apron hours),
+       so this is the complete figure, not a sample. */
+    apron_feeder_hrs: num(raw.apron_feeder_hrs),
   };
   row.content_hash = contentHash(row);
   return { row };
@@ -277,6 +297,20 @@ function mapDay(entries) {
     for (const rule of MAP.HEADER_FACTS) {
       if (rule.stage !== e.stage) continue;
       const v = e[rule.field];
+
+      /* `allOrNone` (2026-10-15, first used by ls_crusher_apron_hrs): the
+         fact is a DIVISOR, so a partial day is worse than no day. If one of
+         two crusher entries with tonnage lacks its apron hours, summing the
+         other's would divide the whole day's tonnage by half its hours and
+         report an inflated TPH. Such a day emits no apron figure at all.
+         Entries with no tonnage cannot bias the ratio and do not trigger it.
+         Not seen in practice (0 of 198 crusher entries, Apr-Oct 2026) —
+         this is the guard for the day it happens. */
+      const missing = v === null || v === undefined
+        || ((rule.agg === 'mean' || rule.zeroIsMissing) && Number(v) === 0);
+      if (missing && rule.allOrNone && headerAcc.has(rule.fact) && Number(e.produced_qty) > 0) {
+        headerAcc.get(rule.fact).incomplete = true;
+      }
       if (v === null || v === undefined) continue;
 
       /* Odoo sends 0 as a PLACEHOLDER for a measured property it has no
@@ -287,9 +321,12 @@ function mapDay(entries) {
          read 0 kcal/kg, a fabricated number on a plant head's screen, which
          is the exact failure mode logged in project-data-integrity-audit.
 
-         Only 'mean' facts get this treatment: a genuine 0 for a SUM (a mill
-         that ran 0 hours) is real information and must be kept. */
-      if (rule.agg === 'mean' && Number(v) === 0) continue;
+         Only 'mean' facts get this treatment by default: a genuine 0 for a
+         SUM (a mill that ran 0 hours) is real information and must be kept.
+         A sum rule opts in with `zeroIsMissing` when a 0 cannot be a real
+         reading — apron-feeder hours on an entry that crushed limestone
+         (see the rule in config/odooProductionMap.js). */
+      if ((rule.agg === 'mean' || rule.zeroIsMissing) && Number(v) === 0) continue;
 
       const acc = headerAcc.get(rule.fact);
       if (!acc) continue;
@@ -331,9 +368,9 @@ function mapDay(entries) {
      entries carried no value (weight 0) is dropped rather than emitted as 0:
      "Odoo reported no NCV today" is not "the coal had no calorific value",
      and a fabricated zero in a divisor is the bug class this codebase has
-     already been bitten by. */
+     already been bitten by. An `allOrNone` fact with a gap is dropped too. */
   for (const [fact, acc] of headerAcc) {
-    if (acc.weight <= 0) continue;
+    if (acc.weight <= 0 || acc.incomplete) continue;
     facts[fact] = acc.agg === 'mean' ? acc.sum / acc.weight : acc.sum;
   }
 

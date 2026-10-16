@@ -262,3 +262,36 @@ test('despatch-day v5: reads the Dispatch report, blank when there is none, ledg
   // The CM-1 stock ledger (v4's source) no longer moves it.
   assert.equal(d({ cm1_425r_cons_mt: 2000, cm1_425n_bm_cons_mt: 500 }), null);
 });
+
+test('ls-crusher-output: production ÷ APRON FEEDER hours; month = Σprod ÷ Σapron, never a mean of daily TPH', () => {
+  /* Crusher TPH basis decided 2026-10-15: divide by apron-feeder hours, not
+     running hours. Fixture = real Odoo Crusher Production Entry days:
+       2026-09-26  CRU/2026/00180           3,969.84 t, run 21.4 h, apron 17.45 h
+       2026-09-30  CRU/2026/00184 + 00185   3,889.78 t, run 22.77 h, apron 17.00 h
+     plus two days that must not count: no apron hours, and a 0. */
+  const f = FORMULAS['ls-crusher-output'];
+  const DAYS = [
+    { ls_crusher_prod_mt: 3969.84, ls_crusher_run_hrs: 21.4,  ls_crusher_apron_hrs: 17.45 },
+    { ls_crusher_prod_mt: 3889.78, ls_crusher_run_hrs: 22.77, ls_crusher_apron_hrs: 17 },
+    { ls_crusher_prod_mt: 2500,    ls_crusher_run_hrs: 15 },                              // apron not recorded
+    { ls_crusher_prod_mt: 2500,    ls_crusher_run_hrs: 15,    ls_crusher_apron_hrs: 0 },   // placeholder 0
+  ];
+
+  // The day Odoo's own screen shows: 227.5 t/h. Running hours must NOT be the divisor (185.5).
+  assert.ok(close(f.daily(DAYS[0]), 227.5, 0.05), `2026-09-26 should be 227.5, got ${f.daily(DAYS[0])}`);
+  assert.ok(!close(f.daily(DAYS[0]), 3969.84 / 21.4, 1), 'running hours are not the TPH basis');
+
+  // Missing or zero apron hours -> null, never 0 and never a division by zero.
+  assert.strictEqual(f.daily(DAYS[2]), null);
+  assert.strictEqual(f.daily(DAYS[3]), null);
+  assert.strictEqual(f.daily({ ls_crusher_apron_hrs: 17 }), null, 'hours with no tonnage are not a rate');
+  assert.strictEqual(f.daily({}), null);
+
+  // Month = (3969.84 + 3889.78) / (17.45 + 17) = 228.14 — the hours-weighted
+  // figure; the plain mean of the two daily rates would be 228.16, and the
+  // two null days must contribute neither tonnage nor hours.
+  const expected = (3969.84 + 3889.78) / (17.45 + 17);
+  assert.ok(close(monthlyValue('ls-crusher-output', DAYS), expected, 1e-9),
+    `monthly ${monthlyValue('ls-crusher-output', DAYS)} != Σprod/Σapron ${expected}`);
+  assert.deepEqual(f.inputs.slice().sort(), ['ls_crusher_apron_hrs', 'ls_crusher_prod_mt']);
+});

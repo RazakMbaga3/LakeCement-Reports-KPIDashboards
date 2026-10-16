@@ -169,6 +169,18 @@
        still type it on a day Odoo has no clinker entry. */
     kiln_coal_ncv:  { source: 'odoo', form: 'production', field: 'coal_ncv', unit: 'kcal/kg' },
 
+    /* LS Crusher — declared 2026-10-15 for ls-crusher-output (TPH). Both are
+       written into the production report by the Odoo production autofill
+       from Odoo's Crusher Production Entry (backend/config/
+       odooProductionMap.js, HEADER_FACTS), so they are 'odoo' like NCV
+       above; both are also real inputs on daily-report.html's LS CRUSHER
+       row, so an officer can still type them on a day Odoo has nothing.
+       Apr-Jun 2026 ls_crusher_prod_mt values came from the plant's Excel
+       instead (migration 015) — see the formula's notes for what that
+       means for TPH on those days. */
+    ls_crusher_prod_mt:   { source: 'odoo', form: 'production', field: 'ls_crusher_prod_mt',   unit: 'MT' },
+    ls_crusher_apron_hrs: { source: 'odoo', form: 'production', field: 'ls_crusher_apron_hrs', unit: 'Hrs' },
+
     // power consumption form
     pwr_crusher_kwh:   { source: 'manual', form: 'power-cons', field: 'pwr_crusher_kwh',   unit: 'kWh' },
     pwr_rawmill_kwh:   { source: 'manual', form: 'power-cons', field: 'pwr_rawmill_kwh',   unit: 'kWh' },
@@ -505,6 +517,32 @@
       inputs: CM2_GRADES,
       daily: function (f) { return pos(sumOf(CM2_GRADES, f)); },
       monthlyAgg: 'avg',
+    },
+
+    /* ── LS Crusher ───────────────────────────────────────────────────
+       Added 2026-10-15. Crusher TPH = crusher production ÷ APRON FEEDER
+       running hours, from Odoo's Crusher Production Entry (Razak's
+       decision, 2026-10-15). Before this, the only crusher TPH anywhere was
+       page arithmetic on daily-report.html and production.html, dividing by
+       running hours — so no dashboard, MIS pack or KPI tracker could read
+       it, and its basis was not the one the plant now uses.
+
+       Key deliberately NOT 'crusher-output'. That slug is index.html's
+       Quarry row "Crusher Output", which the Mines department fills by hand
+       every month (kpi_monthly mines/crusher-output, Jan-Jun 2026 stored).
+       Binding this formula to it would turn that row into an auto-
+       calculated cell and take manual entry away from Mines — a decision
+       for the plant, not a side effect of adding a formula. ─────────── */
+    'ls-crusher-output': {
+      label: 'LS Crusher Output', unit: 'TPH', dp: 1, version: 1,
+      target: null, signage: null, targetLabel: null,
+      notes: 'Limestone crusher throughput = limestone crushed that day (MT) ÷ apron feeder running hours that day, both from Odoo\'s Crusher Production Entry (facts ls_crusher_prod_mt and ls_crusher_apron_hrs on the Production Report, filled by the Odoo production autofill). Basis decided by the plant (Razak) on 2026-10-15: the apron feeder is what feeds limestone into the crusher, so its hours are the hours the crusher was actually producing; crusher running hours, still shown on the Production Report as before, include time the crusher turned with nothing on the feeder. Verified 2026-10-15 against Odoo\'s own screen for 2026-09-26 (CRU/2026/00180): 3,969.84 t ÷ 17.45 h = 227.5 t/h, and the stored facts for that day reproduce it.\n\nDIFFERENT FROM THE OLD EXCEL, ON PURPOSE: the plant\'s Production Report workbook divided by running hours (its crusher hours equal Odoo\'s running hours on 65 of 88 comparable Apr–Jun days and apron hours on 5), so this KPI reads roughly 20% higher than the workbook\'s TPH for the same day. Independent support for the apron basis: the Mines department\'s own monthly KPI report ("Crusher Output", kpi_monthly mines/crusher-output) reads 206.6 / 190.2 / 170.7 / 183.0 / 194.8 / 184.9 TPH for Jan–Jun 2026; Σproduction ÷ Σapron hours from Odoo gives 207.5 / 191.2 / 169.9 / 177.4 / 193.8 / 184.5 — within about 1 TPH in five of the six months — while the running-hours basis is 25–40 TPH lower in every month.\n\nMONTHLY FIGURE: the apron-hours-weighted mean of the daily rate, which is algebraically Σproduction ÷ Σapron hours over the days that have both — the period\'s own throughput, never a plain average of daily TPH figures, which would let a 2-hour day count as much as a 20-hour one. The Mines report tracks Σ÷Σ, not the plain average (June: 184.9 reported, 184.5 Σ÷Σ, 179.3 mean of daily rates).\n\nWHEN IT IS NULL: a day with no apron hours (0 or missing) or no tonnage is null, never 0. The Odoo mapping also refuses to emit apron hours that are 0, or that cover only part of a day\'s tonnage, so a fabricated or partial divisor cannot reach this formula.\n\nCOVERAGE (dev database, measured 2026-10-15): July to October 2026 are complete — every day with an Odoo crusher entry — and match Odoo\'s crusher_production_entry exactly: Jul 189.3, Aug 213.2, Sep 217.2, Oct (1–14) 212.1. April to June are PARTIAL. Those reports carry the plant\'s Excel crusher tonnage, which differs from the Crusher Production Entry on 50 of 88 days (May +6.2% for the month; 2026-05-01 reads 9,628 t against Odoo\'s 2,696 t), so apron hours were deliberately not written on those 50 days: Excel tonnage ÷ Odoo hours would be a ratio of two different measurements (May would read 205.7). April/May/June therefore compute from 8/17/13 days — 182.7 / 198.1 / 181.4 — against Odoo\'s full-month 177.4 / 193.8 / 184.5. Closing that gap needs the plant to decide whether Odoo\'s crusher tonnage should replace the Excel figure on those days.\n\nTARGET: none declared. The Mines KPI tracker carries 350 TPH for "Crusher Output", but the Production Report prints the crusher\'s rated capacity as 250 t/h and no month of 2026 has exceeded 218; the plant\'s two figures disagree, so neither is adopted until the plant confirms which is meant.',
+      inputs: ['ls_crusher_prod_mt', 'ls_crusher_apron_hrs'],
+      daily: function (f) {
+        var hrs = pos(f.ls_crusher_apron_hrs), prod = pos(f.ls_crusher_prod_mt);
+        return (hrs && prod) ? prod / hrs : null;
+      },
+      monthlyAgg: { type: 'weighted', weight: function (f) { return pos(f.ls_crusher_apron_hrs) || 0; } },
     },
 
     'specific-thermal-energy-consumption': {

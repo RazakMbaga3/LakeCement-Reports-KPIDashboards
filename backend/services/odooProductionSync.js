@@ -41,7 +41,9 @@ const INSERT_BATCH         = 200;
    config/odooProductionMap.js decides separately what becomes a fact. */
 const COLS = ['entry_ref', 'production_date', 'picking_type', 'stage', 'product_code',
   'product_name', 'uom', 'produced_qty', 'total_input_qty', 'consumed_items', 'content_hash',
-  'coal_ncv', 'running_hours', 'tph', 'kiln_feed_value', 'state', 'approval_status', 'mill_type'];
+  'coal_ncv', 'running_hours', 'tph', 'kiln_feed_value', 'state', 'approval_status', 'mill_type',
+  /* Migration 040 (2026-10-15): crusher apron-feeder hours, the TPH divisor. */
+  'apron_feeder_hrs'];
 
 /* Writes one window's entries and sweeps that window, in one transaction: a
    half-applied window would leave a day's tonnage wrong, which is worse than
@@ -77,7 +79,8 @@ async function storeEntries(rows, from, to, { alsoPresent = [] } = {}) {
         values.push(r.entry_ref, r.production_date, r.picking_type, r.stage, r.product_code,
           r.product_name, r.uom, r.produced_qty, r.total_input_qty, JSON.stringify(r.consumed_items), r.content_hash,
           r.coal_ncv ?? null, r.running_hours ?? null, r.tph ?? null, r.kiln_feed_value ?? null,
-          r.state ?? null, r.approval_status ?? null, r.mill_type ?? null);
+          r.state ?? null, r.approval_status ?? null, r.mill_type ?? null,
+          r.apron_feeder_hrs ?? null);
         const base = j * COLS.length;
         return '(' + COLS.map((c, k) => '$' + (base + k + 1) + (c === 'consumed_items' ? '::jsonb' : '')).join(',') + ')';
       });
@@ -101,6 +104,7 @@ async function storeEntries(rows, from, to, { alsoPresent = [] } = {}) {
           state           = EXCLUDED.state,
           approval_status = EXCLUDED.approval_status,
           mill_type       = EXCLUDED.mill_type,
+          apron_feeder_hrs = EXCLUDED.apron_feeder_hrs,
           revision   = CASE WHEN odoo_production_entries.content_hash IS DISTINCT FROM EXCLUDED.content_hash
                             THEN odoo_production_entries.revision + 1 ELSE odoo_production_entries.revision END,
           updated_at = CASE WHEN odoo_production_entries.content_hash IS DISTINCT FROM EXCLUDED.content_hash
@@ -200,7 +204,8 @@ async function loadRangeFacts(from, to) {
            coal_ncv::float8        AS coal_ncv,
            running_hours::float8   AS running_hours,
            tph::float8             AS tph,
-           kiln_feed_value::float8 AS kiln_feed_value
+           kiln_feed_value::float8 AS kiln_feed_value,
+           apron_feeder_hrs::float8 AS apron_feeder_hrs
     FROM odoo_production_entries
     WHERE production_date BETWEEN $1 AND $2 AND withdrawn_at IS NULL
     ORDER BY production_date, entry_ref
@@ -213,6 +218,7 @@ async function loadRangeFacts(from, to) {
       produced_qty: r.produced_qty, consumed_items: r.consumed_items,
       coal_ncv: r.coal_ncv, running_hours: r.running_hours,
       tph: r.tph, kiln_feed_value: r.kiln_feed_value,
+      apron_feeder_hrs: r.apron_feeder_hrs,
     });
   }
   const out = {};

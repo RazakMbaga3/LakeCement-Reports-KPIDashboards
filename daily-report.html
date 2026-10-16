@@ -366,7 +366,7 @@
     .ie-owner-tag { font-size:12px; color:rgba(255,255,255,.55); margin-left:6px; font-weight:500; }
   </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
-  <link rel="stylesheet" href="design-system.css?v=2" />
+  <link rel="stylesheet" href="design-system.css?v=3" />
   <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=3"></script>
   <script src="forms/mobile-entry.js?v=1"></script>
@@ -911,7 +911,26 @@
             <td class="cf"><div class="cv" data-roll-mtd="ls_crusher_cons_mt">—</div></td>
             <td class="cf"><div class="cv" data-roll-ytd="ls_crusher_cons_mt">—</div></td>
             <td class="cf"><div class="cv" data-kpi="ls_crusher_closing">—</div></td>
-            <td class="cf"><div class="cv" data-kpi="ls_crusher_tph">—</div></td>
+            <td class="cf"><div class="cv" data-kpi="ls_crusher_tph" title="Crusher production ÷ apron feeder running hours (the row below). Blank when apron hours are not recorded.">—</div></td>
+          </tr>
+          <!-- LS Crusher — apron feeder hours (2026-10-15). The divisor of
+               crusher TPH: Razak decided TPH = crusher production ÷ APRON
+               FEEDER running hours, from Odoo's Crusher Production Entry,
+               while the running hours above stay exactly as they were. Sits
+               under the Running Hours columns so On Date / MTD / YTD line up
+               with the hours they sit beside. Filled by the Odoo production
+               autofill (fact ls_crusher_apron_hrs, which the Daily MIS also
+               reads by that name). Its own empty SN cell rather than a
+               rowspan on the row above, so mobile-entry.js's card view maps
+               every cell to the right column heading. -->
+          <tr class="grow">
+            <td class="ts"></td>
+            <td class="tp" title="Apron feeder running hours, from Odoo's Crusher Production Entry. Crusher TPH divides by these hours, not by running hours.">Apron feeder hrs</td>
+            <td class="ts"></td>
+            <td class="cm"><input class="ci" type="number" value="0" step="0.01" min="0" max="24" data-field="ls_crusher_apron_hrs" aria-label="LS Crusher apron feeder running hours, on date" /></td>
+            <td class="cf"><div class="cv" data-roll-mtd="ls_crusher_apron_hrs">—</div></td>
+            <td class="cf"><div class="cv" data-roll-ytd="ls_crusher_apron_hrs">—</div></td>
+            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
           </tr>
 
           <!-- Raw Mill 1 — Excel sheet '30' row 31 tracks I(open)/J-L(production)/M-O(consumption)/P(closing) all populated;
@@ -1612,13 +1631,13 @@
      form-persist.js's _lockForm/_unlockForm) — this never affects what
      gets resubmitted if the report is later unlocked and re-edited. */
   window.NYATI_LOCKED_DISPLAY_FMT = function (field, value) {
-    var dp = /_run_hrs$/.test(field) ? 1 : 0;
+    var dp = /_(run|apron)_hrs$/.test(field) ? 1 : 0;   /* apron: ls_crusher_apron_hrs, 2026-10-15 */
     var scale = Math.pow(10, dp);
     var r = Math.round(value * scale) / scale;
     return Number.isInteger(r) ? String(r) : r.toFixed(dp);
   };
 </script>
-<script src="forms/form-persist.js?v=6"></script>
+<script src="forms/form-persist.js?v=8"></script>
 <script>initFormPersist('production');</script>
 <script src="forms/excel-import.js?v=4"></script>
 <script src="forms/nav-status.js?v=2"></script>
@@ -1660,8 +1679,16 @@ initKpiLive([
   { kpi:'ls_crusher_closing', fmt:'n0',
     compute: function(f,n){ return n(f.ls_crusher_open) + n(f.ls_crusher_prod_mt) - n(f.ls_crusher_cons_mt); }
   },
+  /* Crusher TPH = production ÷ APRON FEEDER hours (Razak, 2026-10-15), not
+     ÷ running hours as the plant's old Excel did — see the HEADER_FACTS rule
+     in backend/config/odooProductionMap.js for the measured comparison. The
+     same arithmetic is the registry KPI 'ls-crusher-output', whose monthly
+     figure is Σproduction ÷ Σapron hours. Null — shown as a dash, never 0 —
+     when apron hours are 0 or missing, or when there is no tonnage, so a
+     day Odoo has not reported yet cannot read as a crusher that stopped.
+     2026-09-26: 3,969.84 t ÷ 17.45 h = 227.5 t/h (Odoo's own screen). */
   { kpi:'ls_crusher_tph', fmt:'n1',
-    compute: function(f,n){ return n(f.ls_crusher_run_hrs) > 0 ? n(f.ls_crusher_prod_mt) / n(f.ls_crusher_run_hrs) : null; }
+    compute: function(f,n){ return (n(f.ls_crusher_apron_hrs) > 0 && n(f.ls_crusher_prod_mt) > 0) ? n(f.ls_crusher_prod_mt) / n(f.ls_crusher_apron_hrs) : null; }
   },
   { kpi:'rm1_closing', fmt:'n0',
     compute: function(f,n){ return n(f.rm1_open) + n(f.rm1_prod_mt) - n(f.rm1_cons_mt); }

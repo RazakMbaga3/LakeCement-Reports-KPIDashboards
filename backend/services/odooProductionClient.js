@@ -22,8 +22,17 @@
   Response: { message, status, code, data } where data is an object keyed by
   picking type — 'CEMENT: Raw Meal Production', '… Clinker Production',
   '… Fine Coal Production', '… Cement Production (CM1)' / '(CM2)' — each an
-  array of entries. There is no Crusher group, no approval status, no run
-  hours and no timestamps; the sync's design leans on those absences.
+  array of entries. As delivered on 2026-09-20 there was no Crusher group, no
+  approval status, no run hours and no timestamps; the sync's design leans on
+  those absences.
+
+  The 2026-10-08 deploy shortened the group keys ('Raw Meal', 'Cement',
+  'Clinker', 'Coal Mill', 'Crusher') and added state/approval_status,
+  running_hours, coal_ncv, write_date and the Crusher group, whose entries
+  also carry apron_feeder_hrs (stored since 2026-10-15, migration 040). Only
+  'Approved' entries have been seen: a 2026-04-01..2026-10-15 pull returned
+  198 Crusher entries, every one Approved, matching Odoo's own
+  crusher_production_entry rows in state 'complete' one for one.
 
   Speed and size: 0.3-0.9 s and up to ~0.7 MB for a month, no truncation seen
   up to Jan 2024 - Sep 2026. There is still no pagination, so callers pull a

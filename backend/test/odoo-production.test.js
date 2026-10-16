@@ -137,8 +137,24 @@ test('normalizeEntry refuses an entry it cannot trust, and says why', () => {
 });
 
 test('an unknown picking type is stored with stage null, not dropped', () => {
-  const { row } = mapper.normalizeEntry('CEMENT: Crusher Production', entry('CRU/1', '[WIP001] LIMESTONE MINING', 500));
+  /* Was 'CEMENT: Crusher Production' until 2026-10-14. That is now a MAPPED
+     stage (config/odooProductionMap.js), so it no longer demonstrates the
+     unknown-type path — a real unmapped name is used instead. */
+  const { row } = mapper.normalizeEntry('CEMENT: Packing Production', entry('PKG/1', '[WIP001] LIMESTONE MINING', 500));
   assert.equal(row.stage, null);
+});
+
+test('crusher maps from the long form as well as the group key', () => {
+  /* normalizeEntry prefers an entry's own picking_type over the group key, so
+     the day Odoo starts stamping crusher entries the long way, the group-key
+     fallback stops being consulted. Both spellings must land on 'crusher' or
+     the tonnage silently disappears. */
+  for (const pt of ['Crusher', 'CEMENT: Crusher Production']) {
+    const { row } = mapper.normalizeEntry(pt, entry('CRU/1', '[WIP001] LIMESTONE MINING', 2806.2));
+    assert.equal(row.stage, 'crusher', pt);
+    assert.equal(row.produced_qty, 2806.2, pt);
+    assert.deepEqual(row.consumed_items, [], 'crusher ticket lines are not consumption');
+  }
 });
 
 test('contentHash is stable, and changes when any quantity in the entry changes', () => {
@@ -224,12 +240,12 @@ test('mapDay: a stage with no entry contributes no facts — nothing is defaulte
 
 test('mapDay: anything no rule covers stays visible instead of vanishing', () => {
   const d = dayFrom({
-    'CEMENT: Crusher Production': [entry('CRU/1', '[WIP001] LIMESTONE MINING', 500)],
+    'CEMENT: Packing Production': [entry('PKG/1', '[WIP001] LIMESTONE MINING', 500)],
     [CM1]: [entry('CEM/9', '[FG099] CEMENT NEW GRADE', 40, [item(CLINKER, 30)])],
     'CEMENT: Raw Meal Production': [entry('RML/9', '[WIP002] RAW MEAL', 100, [item(LIME, 60), item('[RM000099] NEW ADDITIVE', 5), item('[RM000098] ZERO ITEM', 0)])],
   });
   const kinds = d.unmapped.map(u => `${u.kind}:${u.ref}`).sort();
-  assert.deepEqual(kinds, ['consumed:RML/9', 'product:CEM/9', 'stage:CRU/1']);
+  assert.deepEqual(kinds, ['consumed:RML/9', 'product:CEM/9', 'stage:PKG/1']);
   assert.equal(d.facts.cm1_425r_mt, 0, 'an unknown grade must not be filed under a known one');
   assert.equal(d.facts.cm_clinker_own_cons, 30, 'the clinker it used is still counted');
 });
@@ -408,6 +424,132 @@ test('a Crusher entry keeps its header output and drops its weighbridge lines', 
     consumed_items: [], running_hours: 18.866666666666667 }]);
   assert.equal(day.facts.ls_crusher_prod_mt, 2806.2);
   assert.equal(day.facts.ls_crusher_run_hrs, 18.87);
+});
+
+/* ── apron-feeder hours (2026-10-15, migration 040) ──────────────────────
+   Crusher TPH = production ÷ APRON FEEDER running hours (Razak, 2026-10-15).
+   The fixture is CRU/2026/00180 exactly as production_report returned it
+   for 2026-09-26 (header only; its 191 ticket lines are irrelevant here),
+   which is also the entry the user photographed on the Odoo screen:
+   3,969.84 t over 17.45 apron hours = 227.5 t/h. */
+const CRU_0926 = {
+  name: 'CRU/2026/00180', production_date: '26/09/2026', state: 'Approved', approval_status: 'Approved',
+  running_hours: 21.4, apron_feeder_hrs: 17.45, count: 191, production_qty: 3969.8399999999992,
+  picking_type: '', product: '', uom: '', line_items: [],
+};
+const crusherDay = (...es) => mapper.mapDay(es.map((e, i) => ({
+  ref: `CRU/T/${i}`, stage: 'crusher', consumed_items: [], ...e,
+})));
+
+test('a Crusher entry carries its apron-feeder hours; other stages carry null, never 0', () => {
+  const { row, reject } = mapper.normalizeEntry('Crusher', CRU_0926);
+  assert.equal(reject, undefined);
+  assert.equal(row.stage, 'crusher');
+  assert.equal(row.apron_feeder_hrs, 17.45);
+  assert.equal(row.running_hours, 21.4, 'running hours are kept exactly as they were');
+  assert.equal(row.produced_qty, 3969.8399999999992);
+
+  const clk = mapper.normalizeEntry('Clinker', entryWithPicking('CEMENT: Clinker Production', 'CLK/1', CLINKER, 1000)).row;
+  assert.equal(clk.apron_feeder_hrs, null);
+  // Odoo's JSON uses false for an empty field; that is "no reading", not 0.
+  assert.equal(mapper.normalizeEntry('Crusher', { ...CRU_0926, apron_feeder_hrs: false }).row.apron_feeder_hrs, null);
+});
+
+test('apron hours are hashed on crusher rows only, so no other stage records a fake revision', () => {
+  /* Both hashes pinned from the mapper as committed before this change
+     (HEAD 1c89c64). The clinker one must not move: if it did, the next pull
+     would bump `revision` on every non-crusher row in the mirror (~9,100 on
+     the dev DB) as though Odoo had edited them all. */
+  const clk = mapper.normalizeEntry('Clinker', {
+    name: 'CLK/2026/00182', production_date: '07/10/2026', picking_type: 'CEMENT: Clinker Production',
+    product_id: '[WIP003] CLINKER', uom_id: 'MT', production_qty: 1810, total_input_qty: 3065.5,
+    coal_ncv: 5598, running_hours: 23.833333333333332, tph: 75.944,
+    line_items: [{ product_id: '[WIP002] RAW MEAL', uom_id: 'MT', quantity: 2805.5, qty_available: 4723.56,
+      moisture_percent: 0, final_qty: 2805.5, standard_price: 5891.77 }],
+  }).row;
+  assert.equal(clk.content_hash, '00fc4c2c02739ed1', 'a non-crusher hash is unchanged by the new field');
+
+  const cru = mapper.normalizeEntry('Crusher', CRU_0926).row;
+  assert.notEqual(cru.content_hash, '4044b622ee4ae5c5',
+    'the crusher hash must move once, so the re-pull is counted as an update and the row is rewritten');
+
+  const corrected = mapper.normalizeEntry('Crusher', { ...CRU_0926, apron_feeder_hrs: 17.5 }).row;
+  assert.notEqual(corrected.content_hash, cru.content_hash, 'an apron-only correction in Odoo is a revision');
+});
+
+test('mapDay: apron hours become ls_crusher_apron_hrs, summed across a split day', () => {
+  const one = crusherDay({ produced_qty: 3969.8399999999992, running_hours: 21.4, apron_feeder_hrs: 17.45 });
+  assert.equal(one.facts.ls_crusher_apron_hrs, 17.45);
+  assert.equal(one.facts.ls_crusher_run_hrs, 21.4);
+  assert.equal(one.facts.ls_crusher_prod_mt, 3969.84);
+
+  // 2026-09-30 arrived as two entries, CRU/2026/00184 + 00185 (Odoo values).
+  const split = crusherDay(
+    { produced_qty: 2027.6400000000006, running_hours: 13.883333333333333, apron_feeder_hrs: 11.666666666666666 },
+    { produced_qty: 1862.1399999999987, running_hours: 8.883333333333333, apron_feeder_hrs: 5.333333333333333 });
+  assert.equal(split.facts.ls_crusher_apron_hrs, 17);
+  assert.equal(split.facts.ls_crusher_prod_mt, 3889.78);
+  assert.equal(split.facts.ls_crusher_run_hrs, 22.77);
+});
+
+test('mapDay: a missing, zero or partial apron reading leaves the fact absent — never a fabricated divisor', () => {
+  const none = crusherDay({ produced_qty: 2000, running_hours: 20, apron_feeder_hrs: null });
+  assert.equal('ls_crusher_apron_hrs' in none.facts, false, 'no reading is not 0 hours');
+  assert.equal(none.facts.ls_crusher_prod_mt, 2000, 'the rest of the entry still maps');
+  assert.equal(none.facts.ls_crusher_run_hrs, 20);
+
+  const zero = crusherDay({ produced_qty: 2000, running_hours: 20, apron_feeder_hrs: 0 });
+  assert.equal('ls_crusher_apron_hrs' in zero.facts, false, '0 apron hours on an entry that crushed 2,000 t is not a reading');
+
+  // One of two entries with tonnage lacks its hours: 3,000 t over 10 h would
+  // read 300 t/h. The day gets no apron figure instead.
+  const partial = crusherDay(
+    { produced_qty: 2000, running_hours: 12, apron_feeder_hrs: 10 },
+    { produced_qty: 1000, running_hours: 6, apron_feeder_hrs: null });
+  assert.equal('ls_crusher_apron_hrs' in partial.facts, false);
+  assert.equal(partial.facts.ls_crusher_prod_mt, 3000);
+
+  // An entry with no tonnage cannot bias the ratio, so it does not void the day.
+  const idleSplit = crusherDay(
+    { produced_qty: 2000, running_hours: 12, apron_feeder_hrs: 10 },
+    { produced_qty: 0, running_hours: 0.5, apron_feeder_hrs: null });
+  assert.equal(idleSplit.facts.ls_crusher_apron_hrs, 10);
+});
+
+test('apron backfill: fills blanks only, and only pairs apron hours with Odoo\'s own tonnage', () => {
+  /* scripts/odoo-crusher-apron-backfill.js — the one-off that put apron hours
+     on existing reports. Real days from the dev DB, 2026-10-15. */
+  const { planDay } = require('../scripts/odoo-crusher-apron-backfill');
+  const odoo = { ls_crusher_prod_mt: 3969.84, ls_crusher_run_hrs: 21.4, ls_crusher_apron_hrs: 17.45 };
+
+  // 2026-09-26: an Odoo-created report with no crusher figures yet -> all three filled.
+  assert.deepEqual(planDay({ kiln_prod_mt: 1800 }, odoo),
+    { write: { ls_crusher_prod_mt: 3969.84, ls_crusher_run_hrs: 21.4, ls_crusher_apron_hrs: 17.45 }, withheld: null });
+
+  // Report tonnage already equals Odoo's -> only the apron hours are new.
+  assert.deepEqual(planDay({ ls_crusher_prod_mt: 3969.84, ls_crusher_run_hrs: 21.4 }, odoo).write,
+    { ls_crusher_apron_hrs: 17.45 });
+
+  // 2026-05-01: the Excel figure (9,628.22 t) is not the Crusher Production
+  // Entry's (2,695.52 t). Nothing is overwritten, and apron hours are withheld
+  // rather than divided into a tonnage they do not describe.
+  const may1 = planDay({ ls_crusher_prod_mt: 9628.22, ls_crusher_run_hrs: 20 },
+    { ls_crusher_prod_mt: 2695.52, ls_crusher_run_hrs: 16.3, ls_crusher_apron_hrs: 13.1 });
+  assert.deepEqual(may1.write, {}, 'a stored human/Excel value is never overwritten');
+  assert.deepEqual(may1.withheld, { reportTonnage: 9628.22, odooTonnage: 2695.52, apron: 13.1 });
+
+  // A value someone already typed for apron hours is left alone.
+  assert.deepEqual(planDay({ ls_crusher_prod_mt: 3969.84, ls_crusher_apron_hrs: 17 }, odoo).write, { ls_crusher_run_hrs: 21.4 });
+  // Re-running after a fill finds nothing to do.
+  assert.deepEqual(planDay({ ...odoo }, odoo), { write: {}, withheld: null });
+});
+
+test('ls_crusher_apron_hrs is an emitted fact under exactly that name (Daily MIS contract)', () => {
+  // The Daily MIS Mining section reads this key by name. Renaming it here
+  // would silently blank that section, so the name is pinned.
+  assert.ok(mapper.emittableFactKeys().includes('ls_crusher_apron_hrs'));
+  const rule = MAP.HEADER_FACTS.find(h => h.fact === 'ls_crusher_apron_hrs');
+  assert.deepEqual([rule.stage, rule.field, rule.agg], ['crusher', 'apron_feeder_hrs', 'sum']);
 });
 
 test('a 0 calorific value is a placeholder, not a reading, and never dilutes a real one', () => {

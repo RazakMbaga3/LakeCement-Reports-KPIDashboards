@@ -16,7 +16,7 @@
   <script src="loader.js?v=4"></script>
   <script src="forms/date-picker.js"></script>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
-  <link rel="stylesheet" href="design-system.css?v=2" />
+  <link rel="stylesheet" href="design-system.css?v=3" />
   <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=3"></script>
 </head>
@@ -115,7 +115,7 @@
 
 <script src="lucide-icons.js?v=1"></script>
 <script src="forms/api-client.js?v=7"></script>
-<script src="forms/formula-registry.js?v=20261010b"></script>
+<script src="forms/formula-registry.js?v=20261015a"></script>
 <script src="components.js?v=1"></script>
 <script src="forms/latest-period.js"></script>
 <script>
@@ -336,7 +336,12 @@
     {
       sectionLabel: 'PYRO PROCESSING',
       rows: [
-        { label: 'LS Crusher',   cap: '250', run: 'ls_crusher_run_hrs', open: 'ls_crusher_open',   recv: 'ls_crusher_prod_mt', cons: 'ls_crusher_cons_mt' },
+        /* tphHrs (2026-10-15): crusher TPH divides by APRON FEEDER hours, not
+           running hours — Razak's decision, the same basis as the entry
+           form's ls_crusher_tph and the registry KPI 'ls-crusher-output'.
+           Running hours are still shown, unchanged, in their own column. */
+        { label: 'LS Crusher',   cap: '250', run: 'ls_crusher_run_hrs', open: 'ls_crusher_open',   recv: 'ls_crusher_prod_mt', cons: 'ls_crusher_cons_mt',
+          tphHrs: 'ls_crusher_apron_hrs', tphHrsLabel: 'apron' },
         { label: 'Raw Mill — 1', cap: '120', run: 'rm1_run_hrs',        open: 'rm1_open',           recv: 'rm1_prod_mt',        cons: 'rm1_cons_mt' },
         { label: 'Raw Mill — 2', cap: '20',  run: 'rm2_run_hrs',        open: null,                  recv: 'rm2_prod_mt',        cons: null,
           note: 'Opening balance and consumption are not tracked for Raw Mill 2 in the source report — only hours, production and TPH.' },
@@ -376,6 +381,23 @@
     return (hrs && hrs > 0) ? (prod || 0) / hrs : null;
   }
 
+  /* Σproduction ÷ Σhours over ONLY the days that carry both — for a divisor
+     that is not recorded on every day that has tonnage. Crusher apron hours
+     are absent on 50 Apr–Jun days whose tonnage is the plant's Excel figure
+     rather than Odoo's (deliberately: the two describe different crushing);
+     rateFigure() above would put those days' tonnage over the other days'
+     hours and overstate the period's TPH. Same days-with-both rule as the
+     registry's weighted monthly figure for 'ls-crusher-output', so the two
+     agree. Null, shown as a dash, when no day in the period has both. */
+  function pairedRate(rows, prodField, hrsField) {
+    var prod = 0, hrs = 0;
+    rows.forEach(function (r) {
+      var p = val(r, prodField), h = val(r, hrsField);
+      if (p !== null && p > 0 && h !== null && h > 0) { prod += p; hrs += h; }
+    });
+    return hrs > 0 ? prod / hrs : null;
+  }
+
   function plantOpsGroupTotal(group, rows) {
     var t = ledgerGroupTotal(group, rows); /* open/recv/cons/closing, reused verbatim */
     var hrsTotal = null;
@@ -398,10 +420,19 @@
       h += '<tr class="n-sec"><td colspan="8">' + U.esc(group.sectionLabel) + '</td></tr>';
       group.rows.forEach(function (rowDef) {
         var fig = ledgerFigures(rowDef, rows);
-        var tph = rateFigure(rows, rowDef.recv, rowDef.run);
+        var tph = rowDef.tphHrs ? pairedRate(rows, rowDef.recv, rowDef.tphHrs)
+                                : rateFigure(rows, rowDef.recv, rowDef.run);
+        /* A row whose TPH divides by something other than running hours
+           shows that divisor under its running hours, so the reader can see
+           what the TPH figure is built from. */
+        var tphHrsLine = rowDef.tphHrs
+          ? '<div style="color:var(--text-muted);font-size:var(--fs-xs);font-weight:var(--fw-normal)" '
+            + 'title="Apron feeder running hours — what this row\'s TPH divides by">'
+            + U.esc(rowDef.tphHrsLabel || 'TPH basis') + ' ' + U.cell(sumField(rows, rowDef.tphHrs), 1) + '</div>'
+          : '';
         h += '<tr><td class="n-tl n-rowhdr"' + (rowDef.note ? ' title="' + U.esc(rowDef.note) + '"' : '') + '>' + U.esc(rowDef.label) + '</td>'
            + '<td>' + U.esc(rowDef.cap) + '</td>'
-           + '<td>' + (rowDef.run ? U.cell(sumField(rows, rowDef.run), 1) : '<span class="n-nodata">n/a</span>') + '</td>'
+           + '<td>' + (rowDef.run ? U.cell(sumField(rows, rowDef.run), 1) : '<span class="n-nodata">n/a</span>') + tphHrsLine + '</td>'
            + '<td>' + ledgerCell(rowDef, 'open', fig.open) + '</td>'
            + '<td>' + ledgerCell(rowDef, 'recv', fig.recv) + '</td>'
            + '<td>' + ledgerCell(rowDef, 'cons', fig.cons) + '</td>'

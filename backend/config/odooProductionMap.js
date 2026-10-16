@@ -15,10 +15,11 @@
     in services/odooProductionMapper.js). "Odoo has nothing yet" and "Odoo
     says zero" are different things, and the caller decides which it is.
 
-  Not mapped on purpose, because Odoo cannot supply them: run hours, crusher
-  output, receipts, CPP coal, grinding aid / fly ash, finished-cement
-  dispatch, specific power, opening stocks. See the "Odoo Production
-  Autofill" doc for why each one is out.
+  Not mapped on purpose, because Odoo cannot supply them: receipts, CPP coal,
+  grinding aid / fly ash, finished-cement dispatch, specific power, opening
+  stocks. See the "Odoo Production Autofill" doc for why each one is out.
+  (Run hours and crusher output were on this list until the 2026-10-08 Odoo
+  deploy supplied them; they are now HEADER_FACTS below.)
 */
 
 /* Odoo's picking type -> our stage name.
@@ -37,9 +38,16 @@
    it reads 'CM1' on Clinker, Raw Meal and Coal Mill entries too, where it
    means nothing.
 
-   Crusher arrived in the same deploy (we had asked for it) and has NO
-   picking_type on its entries — only the group key 'Crusher' identifies it,
-   which is exactly why the group-key fallback is kept. */
+   Crusher arrived in the same deploy (we had asked for it). Every entry
+   pulled so far carries no picking_type of its own, so the group key
+   'Crusher' is what identifies it — which is exactly why the group-key
+   fallback is kept. The long form 'CEMENT: Crusher Production' is listed
+   too, because normalizeEntry() PREFERS an entry's own picking_type: the
+   day Odoo starts stamping crusher entries the way it stamps every other
+   stage, the group key stops being consulted, and without the long form
+   here the stage would silently fall to null and crusher tonnage would
+   vanish from the report with no rejected row to show for it. Mapping both
+   spellings to the same stage costs nothing and removes that cliff. */
 const STAGE_BY_PICKING_TYPE = Object.freeze({
   // Long form — the entry's own picking_type field (preferred).
   'CEMENT: Raw Meal Production':     'raw_meal',
@@ -47,6 +55,7 @@ const STAGE_BY_PICKING_TYPE = Object.freeze({
   'CEMENT: Fine Coal Production':    'fine_coal',
   'CEMENT: Cement Production (CM1)': 'cm1',
   'CEMENT: Cement Production (CM2)': 'cm2',
+  'CEMENT: Crusher Production':      'crusher',
 
   // Short form — the response group key, 2026-10-08 onward. 'Cement' is
   // deliberately absent: it cannot name a stage on its own (CM1 vs CM2).
@@ -88,6 +97,47 @@ const HEADER_FACTS = Object.freeze([
   { stage: 'fine_coal', field: 'running_hours', fact: 'coalmill_run_hrs',   agg: 'sum'  },
   { stage: 'crusher',   field: 'running_hours', fact: 'ls_crusher_run_hrs', agg: 'sum'  },
   { stage: 'crusher',   field: 'produced_qty',  fact: 'ls_crusher_prod_mt', agg: 'sum'  },
+
+  /* Apron-feeder running hours — the divisor of crusher TPH. Razak decided
+     on 2026-10-15 that TPH = CRUSHER PRODUCTION ÷ APRON FEEDER RUNNING HOURS,
+     from Odoo's Crusher Production Entry. Running hours above stay mapped
+     and shown as they are; they are simply no longer what TPH divides by.
+
+     The fact name `ls_crusher_apron_hrs` is a CONTRACT: the Daily MIS
+     Mining section reads it by that name. Do not rename it.
+
+     Why apron hours: the apron feeder is what puts limestone into the
+     crusher, so its hours are the hours the crusher was actually producing.
+     Over 2026-04-01..2026-10-14 apron hours ran 80-88% of running hours
+     each month. Monthly TPH on each basis (Σprod ÷ Σhours):
+       Apr 177.4 vs 145.7, May 193.8 vs 157.1, Jun 184.5 vs 147.6,
+       Jul 189.3 vs 163.8, Aug 213.2 vs 186.6, Sep 217.2 vs 180.8,
+       Oct (1-14) 212.1 vs 180.1   (apron vs running; rated cap 250 t/h).
+     Independent check: the Mines department's own monthly KPI report
+     ("Crusher Output", kpi_monthly mines/crusher-output) reads 206.6 /
+     190.2 / 170.7 / 183.0 / 194.8 / 184.9 for Jan-Jun 2026; the apron
+     basis gives 207.5 / 191.2 / 169.9 / 177.4 / 193.8 / 184.5 — within
+     ~1 TPH in five of six months — and the running basis is 25-40 TPH
+     below it in every month.
+
+     NOTE the plant's Production Report EXCEL divided by running hours:
+     its crusher hours equal Odoo's running_hours on 65 of 88 comparable
+     Apr-Jun days and apron hours on only 5. That is a deliberate change of
+     basis, not a reconciliation with the Excel — TPH on this report will
+     read ~20% higher than the old workbook's for the same day.
+
+     Summed, because two entries on one day (month-end splits: 30 Apr,
+     7 May, 31 May, 25 Jun, 30 Jun, 31 Jul ×3, 31 Aug, 30 Sep) are two
+     parts of the same day's feeding. zeroIsMissing because a crusher entry
+     that crushed limestone with 0 apron hours cannot be a real reading:
+     Odoo holds 0 such entries in 1,342 approved ones, apron hours on every
+     entry from 2023-08-19 and NULL on all 259 before it (the field did not
+     exist). Emitting 0 would put a fabricated zero in a divisor.
+     allOrNone because it IS a divisor: if one of a split day's entries had
+     tonnage but no apron hours, summing the rest would inflate TPH, so the
+     day gets no apron figure instead (see mapDay). */
+  { stage: 'crusher',   field: 'apron_feeder_hrs', fact: 'ls_crusher_apron_hrs', agg: 'sum',
+    zeroIsMissing: true, allOrNone: true },
 
   /* Deliberately NOT mapped: cement-mill run hours. Odoo reports one
      running_hours per production entry, but the report splits mill hours by

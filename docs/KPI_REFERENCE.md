@@ -7,7 +7,7 @@
 > `npm run docs:kpi` (in `backend/`) and commit both files together.
 
 This document defines every KPI the dashboards, MIS reports, and morning
-digest display: **32 KPIs** computed from **170 raw facts**.
+digest display: **33 KPIs** computed from **173 raw facts**.
 
 ## How a number gets onto a dashboard
 
@@ -34,13 +34,14 @@ formulas do not change when that happens.
 |---|---|---|---|---|
 | [Clinker Free Lime](#clinker-free-lime) | % | Spec 3.0% | Average | v1 |
 | [Clinker C3S](#clinker-c3s) | % | Target > 50% | Average | v1 |
-| [Despatch / Day](#despatch-day) | MT | — | Average | v4 |
+| [Despatch / Day](#despatch-day) | MT | — | Average | v5 |
 | [Kiln Output](#kiln-output) | MT | Target ≥ 2,000 MT/day | Average | v1 |
-| [Cement Produced (CM-1 + CM-2)](#cement-produced-day) | MT | — | Average | v1 |
+| [Cement Produced (CM-1 + CM-2)](#cement-produced-day) | MT | — | Average | v2 |
 | [Cement Mill 2 Output](#cement-mill-2-output) | TPH | Target ≥ 55 TPH | Weighted average | v1 |
 | [Cement Mill 2 Production](#cement-mill-2-production) | MT | — | Average | v1 |
+| [LS Crusher Output](#ls-crusher-output) | TPH | — | Weighted average | v1 |
 | [Specific Thermal Energy Consumption](#specific-thermal-energy-consumption) | kcal/kg | Target < 780 kcal/kg | Weighted average | v3 |
-| [Specific Power Consumption – Total](#specific-power-consumption-total) | kWh/MT eq. cement | — | Weighted average | v4 |
+| [Specific Power Consumption – Total](#specific-power-consumption-total) | kWh/MT eq. cement | — | Weighted average | v5 |
 | [Specific Power Consumption – Up to Clinker](#specific-power-consumption-up-to-clinker) | kWh/MT clinker | — | Weighted average | v3 |
 | [Specific Power Consumption – Cement Grinding](#specific-power-consumption-cement-grinding) | kWh/MT | — | Weighted average | v4 |
 | [Power Distribution Loss %](#power-distribution-loss-pct) | % | Keep < 2% | Weighted average | v2 |
@@ -124,21 +125,25 @@ function (f) { return pos(f.c3s_ck); }
 |---|---|
 | Unit | MT (shown to 0 decimal places) |
 | Target | Tracking only — no target |
-| Formula version | v4 |
+| Formula version | v5 |
 | Registry key | `despatch-day` |
 
-Cement dispatched for the day = CM-1's stock-ledger "Consumption" column, summed across its five grades (32.5N, 42.5R, 42.5N, OPC, 42.5N BM) — this is exactly the Production Report's Plant Operations table, TOTAL — CM-1 row, On Date Consumption cell (stock ledger: opening + production − consumption(dispatch) = closing, so that column is cement leaving stock, i.e. dispatch). v4 (2026-07-31): previously sourced from the separate Dispatch form's channel×grade breakdown (Regular Bags/Bulker/Big Bags), which drifted from what Operations actually reconciles against on the Production Report and was known to read 0 on days the Dispatch form went unfilled even though CM-1's ledger had real consumption entered. Re-pointed to the Production Report figure per Operations' direction so the two numbers can never disagree — the Dispatch form's channel×grade data still feeds its own report, just not this KPI.
+v5 (2026-10-10): cement leaving the plant that day, as recorded on the Dispatch & SO report — Regular Bags, Bulker and Big Bags by grade, plus clinker sold directly — the same total as the "Cement Dispatched" card on the Dispatch page. Filled automatically from Odoo's dispatch_report. Moved back from the CM-1 stock ledger (v4) because that ledger has not been recorded since 2026-07-01 — Odoo does not supply it — which left this KPI blank for three months; over the 91 days both sources exist they agree within 5% on every day (May and June exactly, April within 0.1%), so this is the same figure from a source that is still kept. A day with no Dispatch report is null, not zero.
+
+HISTORY (v4, 2026-07-31): Cement dispatched for the day = CM-1's stock-ledger "Consumption" column, summed across its five grades (32.5N, 42.5R, 42.5N, OPC, 42.5N BM) — this is exactly the Production Report's Plant Operations table, TOTAL — CM-1 row, On Date Consumption cell (stock ledger: opening + production − consumption(dispatch) = closing, so that column is cement leaving stock, i.e. dispatch). v4 (2026-07-31): previously sourced from the separate Dispatch form's channel×grade breakdown (Regular Bags/Bulker/Big Bags), which drifted from what Operations actually reconciles against on the Production Report and was known to read 0 on days the Dispatch form went unfilled even though CM-1's ledger had real consumption entered. Re-pointed to the Production Report figure per Operations' direction so the two numbers can never disagree — the Dispatch form's channel×grade data still feeds its own report, just not this KPI.
 
 **Inputs**
 
-- **production form:** cm1_325n_cons_mt (MT), cm1_425r_cons_mt (MT), cm1_425n_cons_mt (MT), cm1_opc_cons_mt (MT), cm1_425n_bm_cons_mt (MT)
+- **dispatch form:** dispatch_reg_425r (MT), dispatch_reg_425nbm (MT), dispatch_reg_425n (MT), dispatch_reg_325n (MT), dispatch_reg_opc425n (MT), dispatch_blk_425r (MT), dispatch_blk_425nbm (MT), dispatch_blk_425n (MT), dispatch_blk_325n (MT), dispatch_blk_opc425n (MT), dispatch_bag_425r (MT), dispatch_bag_425nbm (MT), dispatch_bag_425n (MT), dispatch_clinker (MT)
 
 **Daily calculation** (the exact code the engine runs)
 
 ```js
 function (f) {
-        var t = sumOf(CM1_DISPATCH, f);
-        return t > 0 ? t : null;
+        /* Null when the day has no Dispatch report at all, so a missing day
+           is never averaged in as a zero. A reported day that genuinely
+           loaded nothing stays 0. */
+        return anyReading(DISPATCH, f) ? sumOf(DISPATCH, f) : null;
       }
 ```
 
@@ -175,14 +180,16 @@ function (f) { return pos(f.kiln_prod_mt); }
 |---|---|
 | Unit | MT (shown to 0 decimal places) |
 | Target | Tracking only — no target |
-| Formula version | v1 |
+| Formula version | v2 |
 | Registry key | `cement-produced-day` |
 
-Cement produced that day by both cement mills combined, summed across every grade on the Production Report — CM-1 (32.5N, 42.5R, 42.5N, OPC, 42.5N BM) and CM-2 (32.5N, 42.5R, 42.5N, 42.5N BM) — matching the source Excel's J42+J48 total exactly, and the same CM_GRADES sum specific-power-consumption-total already uses for its clinker-factor arithmetic. No target is declared anywhere in the plant's reporting for total cement-mill throughput, so none is invented here (contrast Kiln Output, which does have a stated 2,000 MT/day target). Monthly figure is the mean of the days that reported — a rate, matching Kiln Output's and Despatch/Day's own convention — not a period total.
+v2 (2026-10-10): now sums all ten grades. v1 summed eight — CM-1 42.5N BM and CM-2 OPC were missing, although these notes already listed CM-1 42.5N BM — so on days either grade ran the card read below the Production Report's own TOTAL — CM-1 + TOTAL — CM-2 (2026-10-06: 1,785 shown against 2,580 actual). Apr–Jun values are unchanged (the plant's Excel never recorded those grades); Jul onward rises by exactly the BM and OPC tonnage Odoo reports.
+
+Cement produced that day by both cement mills combined, summed across every grade on the Production Report — CM-1 (32.5N, 42.5R, 42.5N, OPC, 42.5N BM) and CM-2 (32.5N, 42.5R, 42.5N, OPC, 42.5N BM) — matching the source Excel's J42+J48 total exactly, and the same CM_GRADES sum specific-power-consumption-total already uses for its clinker-factor arithmetic. No target is declared anywhere in the plant's reporting for total cement-mill throughput, so none is invented here (contrast Kiln Output, which does have a stated 2,000 MT/day target). Monthly figure is the mean of the days that reported — a rate, matching Kiln Output's and Despatch/Day's own convention — not a period total.
 
 **Inputs**
 
-- **production form:** cm1_425r_mt (MT), cm1_425n_mt (MT), cm1_325n_mt (MT), cm1_opc_mt (MT), cm2_425r_mt (MT), cm2_425n_mt (MT), cm2_425n_bm_mt (MT), cm2_325n_mt (MT)
+- **production form:** cm1_425r_mt (MT), cm1_425n_mt (MT), cm1_325n_mt (MT), cm1_opc_mt (MT), cm1_425n_bm_mt (MT), cm2_425r_mt (MT), cm2_425n_mt (MT), cm2_425n_bm_mt (MT), cm2_325n_mt (MT), cm2_opc_mt (MT)
 
 **Daily calculation** (the exact code the engine runs)
 
@@ -260,6 +267,47 @@ function (f) { return pos(sumOf(CM2_GRADES, f)); }
 
 **Monthly roll-up.** Average of the days that have a value (missing days are excluded, not counted as zero).
 
+<a id="ls-crusher-output"></a>
+### LS Crusher Output
+
+| | |
+|---|---|
+| Unit | TPH (shown to 1 decimal place) |
+| Target | Tracking only — no target |
+| Formula version | v1 |
+| Registry key | `ls-crusher-output` |
+
+Limestone crusher throughput = limestone crushed that day (MT) ÷ apron feeder running hours that day, both from Odoo's Crusher Production Entry (facts ls_crusher_prod_mt and ls_crusher_apron_hrs on the Production Report, filled by the Odoo production autofill). Basis decided by the plant (Razak) on 2026-10-15: the apron feeder is what feeds limestone into the crusher, so its hours are the hours the crusher was actually producing; crusher running hours, still shown on the Production Report as before, include time the crusher turned with nothing on the feeder. Verified 2026-10-15 against Odoo's own screen for 2026-09-26 (CRU/2026/00180): 3,969.84 t ÷ 17.45 h = 227.5 t/h, and the stored facts for that day reproduce it.
+
+DIFFERENT FROM THE OLD EXCEL, ON PURPOSE: the plant's Production Report workbook divided by running hours (its crusher hours equal Odoo's running hours on 65 of 88 comparable Apr–Jun days and apron hours on 5), so this KPI reads roughly 20% higher than the workbook's TPH for the same day. Independent support for the apron basis: the Mines department's own monthly KPI report ("Crusher Output", kpi_monthly mines/crusher-output) reads 206.6 / 190.2 / 170.7 / 183.0 / 194.8 / 184.9 TPH for Jan–Jun 2026; Σproduction ÷ Σapron hours from Odoo gives 207.5 / 191.2 / 169.9 / 177.4 / 193.8 / 184.5 — within about 1 TPH in five of the six months — while the running-hours basis is 25–40 TPH lower in every month.
+
+MONTHLY FIGURE: the apron-hours-weighted mean of the daily rate, which is algebraically Σproduction ÷ Σapron hours over the days that have both — the period's own throughput, never a plain average of daily TPH figures, which would let a 2-hour day count as much as a 20-hour one. The Mines report tracks Σ÷Σ, not the plain average (June: 184.9 reported, 184.5 Σ÷Σ, 179.3 mean of daily rates).
+
+WHEN IT IS NULL: a day with no apron hours (0 or missing) or no tonnage is null, never 0. The Odoo mapping also refuses to emit apron hours that are 0, or that cover only part of a day's tonnage, so a fabricated or partial divisor cannot reach this formula.
+
+COVERAGE (dev database, measured 2026-10-15): July to October 2026 are complete — every day with an Odoo crusher entry — and match Odoo's crusher_production_entry exactly: Jul 189.3, Aug 213.2, Sep 217.2, Oct (1–14) 212.1. April to June are PARTIAL. Those reports carry the plant's Excel crusher tonnage, which differs from the Crusher Production Entry on 50 of 88 days (May +6.2% for the month; 2026-05-01 reads 9,628 t against Odoo's 2,696 t), so apron hours were deliberately not written on those 50 days: Excel tonnage ÷ Odoo hours would be a ratio of two different measurements (May would read 205.7). April/May/June therefore compute from 8/17/13 days — 182.7 / 198.1 / 181.4 — against Odoo's full-month 177.4 / 193.8 / 184.5. Closing that gap needs the plant to decide whether Odoo's crusher tonnage should replace the Excel figure on those days.
+
+TARGET: none declared. The Mines KPI tracker carries 350 TPH for "Crusher Output", but the Production Report prints the crusher's rated capacity as 250 t/h and no month of 2026 has exceeded 218; the plant's two figures disagree, so neither is adopted until the plant confirms which is meant.
+
+**Inputs**
+
+- **production form:** ls_crusher_prod_mt (MT), ls_crusher_apron_hrs (Hrs)
+
+**Daily calculation** (the exact code the engine runs)
+
+```js
+function (f) {
+        var hrs = pos(f.ls_crusher_apron_hrs), prod = pos(f.ls_crusher_prod_mt);
+        return (hrs && prod) ? prod / hrs : null;
+      }
+```
+
+**Monthly roll-up.** Weighted average — Σ(daily value × weight) ÷ Σ(weight), where each day's weight is:
+
+```js
+function (f) { return pos(f.ls_crusher_apron_hrs) || 0; }
+```
+
 <a id="specific-thermal-energy-consumption"></a>
 ### Specific Thermal Energy Consumption
 
@@ -274,8 +322,7 @@ Heat input per kg of clinker: coal consumed (MT) × coal NCV (kcal/kg) ÷ clinke
 
 **Inputs**
 
-- **production form:** kiln_prod_mt (MT), kiln_coal_cons (MT)
-- **limestone form:** kiln_coal_ncv (kcal/kg)
+- **production form:** kiln_prod_mt (MT), kiln_coal_cons (MT), kiln_coal_ncv (kcal/kg)
 
 **Daily calculation** (the exact code the engine runs)
 
@@ -299,15 +346,17 @@ function (f) { return pos(f.kiln_prod_mt) || 0; }
 |---|---|
 | Unit | kWh/MT eq. cement (shown to 2 decimal places) |
 | Target | No fixed target — lower is better |
-| Formula version | v4 |
+| Formula version | v5 |
 | Registry key | `specific-power-consumption-total` |
+
+v5 (2026-10-10): cement produced now includes CM-1 42.5N BM and CM-2 OPC (see cement-produced-day v2). The clinker consumed in the numerator of the clinker factor was already summed over every cement entry, those batches included, so v4 divided their clinker by a cement total that left their tonnage out — overstating the clinker factor, and with it this KPI, on every day either grade ran.
 
 Mirrors the source Excel’s 3-layer build (M54): upstream-of-clinker kWh (crusher, raw mills, coal mill, kiln) is expressed per ton of clinker, then scaled to a per-ton-cement basis by the clinker factor (total clinker consumed, own + purchased, ÷ total cement produced by both mills); downstream kWh (cement mills, packing, lighting) is divided by cement produced directly and added. v4: Compressed Air/Utilities is no longer a tracked fact (removed from the power-cons form), so it no longer contributes here — this KPI now understates true total power by whatever utilities used to draw.
 
 **Inputs**
 
 - **power-cons form:** pwr_crusher_kwh (kWh), pwr_rawmill_kwh (kWh), pwr_rawmill2_kwh (kWh), pwr_coalmill_kwh (kWh), pwr_kiln_kwh (kWh), pwr_cm1_kwh (kWh), pwr_cm2_kwh (kWh), pwr_packing_kwh (kWh), pwr_packing2_kwh (kWh), pwr_lighting_kwh (kWh), pwr_kiln_prod_mt (MT)
-- **production form:** cm_clinker_own_cons (MT), cm_clinker_purch_cons (MT), cm1_425r_mt (MT), cm1_425n_mt (MT), cm1_325n_mt (MT), cm1_opc_mt (MT), cm2_425r_mt (MT), cm2_425n_mt (MT), cm2_425n_bm_mt (MT), cm2_325n_mt (MT)
+- **production form:** cm_clinker_own_cons (MT), cm_clinker_purch_cons (MT), cm1_425r_mt (MT), cm1_425n_mt (MT), cm1_325n_mt (MT), cm1_opc_mt (MT), cm1_425n_bm_mt (MT), cm2_425r_mt (MT), cm2_425n_mt (MT), cm2_425n_bm_mt (MT), cm2_325n_mt (MT), cm2_opc_mt (MT)
 
 **Daily calculation** (the exact code the engine runs)
 
@@ -315,6 +364,16 @@ Mirrors the source Excel’s 3-layer build (M54): upstream-of-clinker kWh (crush
 function (f) {
         var cementProd = totalCementProd(f);
         if (cementProd <= 0) return null;
+        /* Guard the POWER side too, not just production. cementProd comes from
+           the production form while every kWh input comes from power-cons, so
+           a day with production filed and no power reading used to fall
+           through: sumOf() read each missing kWh as 0, the kilnProd branch
+           below took its `: 0` fallback, and the KPI returned a hard 0 —
+           rendered as "0 kWh/MT eq. cement", which reads as perfect
+           efficiency rather than absent data. That is exactly what the whole
+           of Sep 2026 showed (no power-cons row exists after 2026-06-30)
+           while every sibling SPC/STE formula correctly returned null. */
+        if (!anyReading(KWH_CLINKER, f) && !anyReading(KWH_DOWNSTREAM, f)) return null;
         var clinkerFactor = totalClinkerCons(f) / cementProd;
         var kilnProd = pos(f.pwr_kiln_prod_mt);
         var upstreamPerTonClinker = kilnProd ? sumOf(KWH_CLINKER, f) / kilnProd : 0;
@@ -351,7 +410,13 @@ v3: back to upstream department kWh only (crusher, raw mills, coal mill, kiln) �
 ```js
 function (f) {
         var prod = pos(f.pwr_kiln_prod_mt);
-        return prod ? sumOf(KWH_CLINKER, f) / prod : null;
+        if (!prod) return null;
+        /* Same false-zero trap as specific-power-consumption-total: the guard
+           above only proves clinker tonnage was recorded, and sumOf() reads
+           every absent kWh as 0, so a day with tonnage and no meter reading
+           returned 0 kWh/MT clinker rather than "unknown". */
+        if (!anyReading(KWH_CLINKER, f)) return null;
+        return sumOf(KWH_CLINKER, f) / prod;
       }
 ```
 
@@ -1025,12 +1090,15 @@ that feed goes live).
 | `so_clinker` | MT | manual |
 | `dispatch_mtd_target` | MT | manual |
 
-### production form (23 facts)
+### production form (27 facts)
 
 | Fact key | Unit | Source |
 |---|---|---|
 | `kiln_prod_mt` | MT | manual |
 | `kiln_coal_cons` | MT | manual |
+| `kiln_coal_ncv` | kcal/kg | odoo |
+| `ls_crusher_prod_mt` | MT | odoo |
+| `ls_crusher_apron_hrs` | Hrs | odoo |
 | `cm_clinker_own_cons` | MT | manual |
 | `cm_clinker_purch_cons` | MT | manual |
 | `cm1_425r_mt` | MT | manual |
@@ -1041,6 +1109,7 @@ that feed goes live).
 | `cm2_425n_mt` | MT | manual |
 | `cm2_425n_bm_mt` | MT | manual |
 | `cm2_325n_mt` | MT | manual |
+| `cm1_425n_bm_mt` | MT | manual |
 | `cm2_opc_mt` | MT | manual |
 | `cm2_325n_run_hrs` | Hrs | manual |
 | `cm2_425r_run_hrs` | Hrs | manual |
@@ -1052,12 +1121,6 @@ that feed goes live).
 | `cm1_425n_cons_mt` | MT | manual |
 | `cm1_opc_cons_mt` | MT | manual |
 | `cm1_425n_bm_cons_mt` | MT | manual |
-
-### limestone form (1 fact)
-
-| Fact key | Unit | Source |
-|---|---|---|
-| `kiln_coal_ncv` | kcal/kg | manual |
 
 ### power-cons form (22 facts)
 
