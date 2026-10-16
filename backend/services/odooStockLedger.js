@@ -593,12 +593,31 @@ async function writeDay(date, dayResults, { client: given } = {}) {
   const summary = { created: false, updated: false, fieldsWritten: 0, fieldsRemoved: 0, keptOnRecheck: 0 };
   try {
     await client.query('BEGIN');
+    /* One ledger writer per day, across processes. The in-process _inFlight
+       guard in odooSync.js cannot see a second process — a backfill typed at
+       a prompt while the server's own tick runs — and two writers that each
+       compare the row against a stale "what the robot wrote last time"
+       snapshot would each see the other's figures as typed by a person, drop
+       them from `owned`, and freeze the ledger on them for good (security
+       review 2026-10-16, finding 2). Transaction-scoped, so it releases on
+       COMMIT/ROLLBACK and a crash can never leave it held. */
+    await client.query(`SELECT pg_advisory_xact_lock(7430, ($1::date - DATE '2000-01-01'))`, [date]);
     const ex = await client.query(
       `SELECT data, status, approved_by, approved_at FROM daily_reports
         WHERE form_type = $1 AND record_date = $2 AND shift = $3 FOR UPDATE`,
       [FORM_TYPE, date, SHIFT]);
     const row = ex.rows[0] || null;
     const data = row ? row.data || {} : {};
+
+    /* What the robot owns is re-read HERE, under the lock, not taken from
+       the snapshot loaded once before the per-day loop: that snapshot is
+       exactly what goes stale when another run commits in between. */
+    const freshOwned = await client.query(
+      `SELECT ledger_key, written FROM odoo_stock_ledger WHERE record_date = $1`, [date]);
+    const freshByLedger = Object.fromEntries(freshOwned.rows.map(r => [r.ledger_key, r.written || {}]));
+    for (const res of dayResults) {
+      if (Object.prototype.hasOwnProperty.call(freshByLedger, res.ledger)) res.mineBefore = freshByLedger[res.ledger];
+    }
 
     const patch = {}, remove = [];
     for (const res of dayResults) {
