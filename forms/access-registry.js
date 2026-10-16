@@ -158,8 +158,11 @@
      only because it already existed is exactly what Least Privilege
      forbids. Each dashboard is now its own department plus management.
 
-     `admin` is deliberately absent from both. It is the IT/system account,
-     not a commercial one, and it has never had these rights.
+     `admin` was absent from both until 2026-10-16, on the same reasoning
+     that kept it off: the IT/system account, not a commercial one, had
+     never needed these rights. Added 2026-10-16 at Razak's explicit
+     request, as a break-glass read grant alongside its existing
+     KPI_EDIT_DEPTS 'all' — not because admin became a commercial role.
 
      `stores` reads Purchases as of 2026-09-14. This is not the same shape
      of grant as the `sales` one removed above: Stores receives the goods
@@ -168,8 +171,8 @@
      what is on order and when it lands to plan space and raise the GRN.
      Read-only, like every other role on this list; Purchase still owns
      the data and is still the only department that raises a PO. */
-  var COMMERCIAL_VIEW_ROLES = ['management', 'md', 'sales'];
-  var PURCHASE_VIEW_ROLES   = ['management', 'md', 'purchase', 'stores'];
+  var COMMERCIAL_VIEW_ROLES = ['management', 'md', 'sales', 'admin'];
+  var PURCHASE_VIEW_ROLES   = ['management', 'md', 'purchase', 'stores', 'admin'];
 
   /* The MIS Dashboard (mis.html — the sidebar's "Management Info." group)
      is management-only as of 2026-09-03. It aggregates HR strength,
