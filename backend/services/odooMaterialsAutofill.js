@@ -58,21 +58,32 @@
   tonnes a week. A zero is written ONLY where Odoo positively reported one
   (the mills ran and took none), never to fill a silence.
 
-  ── Status: 'pending_approval', mirroring decision B′ ──────────────────
-  A day this writer CREATES lands as 'pending_approval', not 'draft'. The
-  reasoning is odooProductionAutofill.js's, and it applies verbatim here:
+  ── Status: 'approved' with approved_by NULL, decision B″ ──────────────
+  (2026-10-14, replacing B′'s 'pending_approval'.) A day this writer CREATES
+  lands as 'approved' with approved_by IS NULL — the same shape
+  odooDispatchSync.js has used since DEC-008.
+
+  The reasoning is odooProductionAutofill.js's and applies verbatim here:
   these receipts are already approved in Odoo by the plant's own Purchase &
   Stores people before the API returns them, so holding them behind a
   second local approval asks the same question twice — and 'draft' is not
   in REPORTED_STATUSES (config/forms.js), so a drafted day shows as "No
   data" on every surface while real tonnage sits in the table.
 
-  What it does NOT do, exactly as the production writer:
-    - never marks anything 'approved' — nothing here claims a human signed
+  B′ parked them in 'pending_approval' instead, which counted correctly but
+  flooded the approvals queue: 44 raw-material days of the 143 machine-filled
+  rows that were queued on 2026-10-14, against ZERO human submissions.
+
+  What it does NOT do:
+    - never claims a HUMAN signed: approved_by stays NULL, and that NULL is
+      what the write-lock tests (DEC-008), so an officer or HOD can still
+      open and correct an Odoo day without a correction window
     - never changes the status of an EXISTING row, in any status
     - never touches a day a human has started (submitted_by/updated_by set)
       beyond the two Odoo-owned columns
     - never overwrites a figure an officer typed; see reconcileDay()
+  'approved' and 'pending_approval' are both in REPORTED_STATUSES, so this
+  moves no KPI, MIS or entry-completeness figure.
 */
 
 const db = require('../db');
@@ -366,13 +377,15 @@ async function upsertDay(date, receipts, consumption = {}, production = {}, { dr
     let action = 'unchanged';
     if (Object.keys(toWrite).length && !dryRun) {
       if (!row) {
-        /* 'pending_approval', not 'draft' — see the header. The day counts
-           immediately and still appears in the HOD's queue. */
+        /* 'approved' with approved_by IS NULL — see the header (B″). The day
+           counts immediately, exactly as before, and no longer sits in the
+           HOD's queue asking for a signature nobody was ever going to give.
+           Both statuses are in REPORTED_STATUSES, so no figure moves. */
         await client.query(
           `INSERT INTO daily_reports (form_type, record_date, shift, data, status)
-           VALUES ($1, $2, $3, $4::jsonb, 'pending_approval')`,
+           VALUES ($1, $2, $3, $4::jsonb, 'approved')`,
           [FORM_TYPE, date, SHIFT, JSON.stringify(toWrite)]);
-        action = 'created_pending';
+        action = 'created_approved';
       } else {
         /* Only `data`/`updated_at` move — status, approved_by, approved_at
            and submitted_by are untouched. A correction is not a
@@ -454,7 +467,7 @@ async function syncMaterialsRangeToReports(from, to, { dryRun = false } = {}) {
     ]);
     const r = await upsertDay(date, receipts, consumption, production, { dryRun });
 
-    if (r.action === 'created_pending' || r.action === 'would_create_pending') summary.created++;
+    if (r.action === 'created_approved' || r.action === 'created_pending' || r.action === 'would_create_pending') summary.created++;
     else if (r.action === 'filled_blanks' || r.action === 'would_fill_blanks') summary.updated++;
     else if (r.action === 'no_receipts') summary.noReceipts++;
     else summary.unchanged++;

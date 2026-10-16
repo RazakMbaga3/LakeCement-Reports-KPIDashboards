@@ -87,12 +87,16 @@ async function main() {
   const s1 = await sync();
   check('one day created, no overrides (nothing existed before)', s1.created === 1 && s1.overrides === 0, JSON.stringify(s1));
   const rep1 = await reportOf(DAY1);
-  /* 'pending_approval', not 'draft' — decision B′ (2026-10-07). An untouched
-     Odoo day must COUNT immediately (REPORTED_STATUSES) while still sitting
-     in the HOD queue. submitted_by stays null: nothing here claims a person
-     submitted it. */
-  check('report exists, status pending_approval, no human author',
-    rep1 && rep1.status === 'pending_approval' && rep1.submitted_by === null);
+  /* 'approved' with approved_by NULL — decision B″ (2026-10-14), replacing
+     B′'s 'pending_approval'. An untouched Odoo day must COUNT immediately
+     (both statuses are in REPORTED_STATUSES, so this moved no figure) WITHOUT
+     queueing a signature nobody will give: B′ left 143 machine-filled rows in
+     the HOD queue against zero human ones. approved_by/submitted_by stay null
+     — nothing here claims a person submitted or signed it, and that NULL is
+     what keeps the day correctable under DEC-008. */
+  check('report exists, status approved, but NO human author and NO human signature',
+    rep1 && rep1.status === 'approved' && rep1.submitted_by === null && rep1.approved_by === null,
+    rep1 && JSON.stringify({ status: rep1.status, submitted_by: rep1.submitted_by, approved_by: rep1.approved_by }));
   check('kiln_prod_mt = 1300 from Odoo', Number(rep1.data.kiln_prod_mt) === 1300);
   check('decision C: raw_meal_prod_mt present, rm1_prod_mt/rm2_prod_mt absent', Number(rep1.data.raw_meal_prod_mt) === 2000 && !('rm1_prod_mt' in rep1.data) && !('rm2_prod_mt' in rep1.data));
   check('decision C: raw_meal_cons_mt present (kiln feed), rm1_cons_mt absent', Number(rep1.data.raw_meal_cons_mt) === 2000 && !('rm1_cons_mt' in rep1.data));
@@ -126,10 +130,12 @@ async function main() {
   // the mirror's withdrawal sweep treat DAY1's two entries as gone from
   // Odoo (Phase 1's own, correctly tested, behaviour) and withdraw them.
   await pull([[CLK, clinkerDay1], [RM, rawMealDay1], [CLK, clinkerDay2]]);
-  await sync(); // creates DAY2 as a draft with kiln_prod_mt=900 so there is a real row to approve next
+  await sync(); // creates DAY2 (approved, unsigned) with kiln_prod_mt=900 so there is a real row to approve next
   const created2 = await reportOf(DAY2);
-  check('DAY2 exists as pending_approval before being approved',
-    created2 && created2.status === 'pending_approval' && Number(created2.data.kiln_prod_mt) === 900);
+  check('DAY2 exists as approved-but-unsigned before a human signs it',
+    created2 && created2.status === 'approved' && created2.approved_by === null
+      && Number(created2.data.kiln_prod_mt) === 900,
+    created2 && JSON.stringify({ status: created2.status, approved_by: created2.approved_by }));
 
   await db.query(`
     UPDATE daily_reports SET status='approved', approved_by=NULL, approved_at='1997-04-12 08:00:00',

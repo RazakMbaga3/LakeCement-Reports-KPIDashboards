@@ -97,3 +97,108 @@ test('the message is addressed from SMTP_FROM', async () => {
     assert.match(r.message.from.address, /digital@lakecement\.co\.tz/);
   });
 });
+
+/* ── the plain-text alternative ───────────────────────────────────────────
+   Every account email carries one. It is what a text-mode client, a screen
+   reader and the spam gateway read, and an HTML-only message scores worse
+   at the gateway — so "the HTML looks right" is not enough. These assert
+   the text part EXISTS, carries the same working link, and never leaks
+   markup, because a text part built by hand is exactly the thing that
+   rots silently when the HTML next changes. */
+test('every account email carries a plain-text alternative with the same link', async () => {
+  await withAppUrl('https://mis.lakecement.co.tz', async () => {
+    const sends = [
+      ['invite',     () => authMail.sendInvite({ to: TO, fullName: 'Godhania Natha', username: 'production_officer', token: TOKEN })],
+      ['reminder',   () => authMail.sendActivationReminder({ to: TO, fullName: 'Sophia Mkassi', username: 'finance_officer', token: TOKEN })],
+      ['reset',      () => authMail.sendReset({ to: TO, fullName: 'X', token: TOKEN })],
+      ['verify',     () => authMail.sendVerify({ to: TO, fullName: 'X', token: TOKEN })],
+    ];
+    for (const [name, send] of sends) {
+      const { message: m } = await send();
+      assert.ok(m.text && m.text.length > 100, `${name}: a text part must exist and say something`);
+      assert.ok(m.text.includes('https://mis.lakecement.co.tz/'),
+        `${name}: the text part must carry the link, or it is useless to a text-mode reader`);
+      assert.ok(m.text.includes(TOKEN), `${name}: the link in the text part must carry the token`);
+      assert.ok(!/<[a-z/]/i.test(m.text), `${name}: the text part must not contain HTML tags`);
+      assert.ok(!m.text.includes('&amp;') && !m.text.includes('&middot;'),
+        `${name}: the text part must not contain HTML entities`);
+      /* Nothing but the URL may exceed 72 columns, or Outlook's plain-text
+         reader re-wraps the body into a ragged mess on a phone. */
+      for (const line of m.text.split('\n')) {
+        if (line.includes('://')) continue;
+        assert.ok(line.length <= 72, `${name}: line over 72 cols: ${line}`);
+      }
+    }
+  });
+});
+
+/* ── the welcome email ────────────────────────────────────────────────────
+   This is the first thing ~47 staff ever see of the system (RAID I-45: 27
+   of 50 real accounts have never been logged into), so the content is a
+   requirement, not a preference. */
+test('the welcome email answers what to do, in what name, and who to ask', async () => {
+  await withAppUrl('https://mis.lakecement.co.tz', async () => {
+    const { message: m } = await authMail.sendInvite({
+      to: TO, fullName: 'Godhania Natha', username: 'production_officer', token: TOKEN });
+
+    for (const part of [m.html, m.text]) {
+      assert.ok(part.includes('production_officer'), 'tells them the name they sign in with');
+      assert.ok(/draft/i.test(part) && /submit/i.test(part),
+        'the draft-vs-submit trap is the single most costly thing a new user can get wrong');
+      assert.ok(/department head/i.test(part), 'names a route to help that exists today');
+    }
+    /* Exactly one call to action. A second button splits the one decision
+       this email exists to produce. */
+    assert.equal((m.html.match(/set-password\.html/g) || []).length, 2,
+      'one button plus one copy-paste fallback — no second competing action');
+  });
+});
+
+test('a support contact, when confirmed, replaces the department-head fallback', async () => {
+  await withAppUrl('https://mis.lakecement.co.tz', async () => {
+    const { message: m } = await authMail.sendInvite({
+      to: TO, fullName: 'X', username: 'y', token: TOKEN, supportLine: 'the IT Helpdesk on extension 214' });
+    assert.ok(m.html.includes('the IT Helpdesk on extension 214'));
+    assert.ok(m.text.includes('the IT Helpdesk on extension 214'));
+  });
+});
+
+/* ── the activation reminder ──────────────────────────────────────────────
+   A nudge, not a scolding. The wording is the deliverable here: this goes
+   to someone who has already ignored one email, and blaming them is the
+   one thing guaranteed to lose them. */
+test('the activation reminder nudges without blaming, and repeats the whole instruction', async () => {
+  await withAppUrl('https://mis.lakecement.co.tz', async () => {
+    const { message: m } = await authMail.sendActivationReminder({
+      to: TO, fullName: 'Sophia Mkassi', username: 'finance_officer', token: TOKEN });
+
+    assert.ok(m.html.includes('p=invite'),
+      'an activation reminder re-issues the invite, not a reset — the purposes have different lifetimes');
+    assert.ok(m.html.includes('finance_officer'),
+      'repeats the sign-in name rather than saying "see my previous email" — that email may be in junk');
+    assert.ok(/you (can )?ignore this/i.test(m.html),
+      'someone who has already activated must be told no action is needed');
+    for (const scold of [/you (have )?(failed|did not|have not responded)/i, /reminder:/i, /urgent/i, /immediately/i]) {
+      assert.ok(!scold.test(m.html), `blaming or shouting language must not appear: ${scold}`);
+    }
+  });
+});
+
+test('a second activation reminder changes its opening, not its instructions', async () => {
+  await withAppUrl('https://mis.lakecement.co.tz', async () => {
+    const first  = (await authMail.sendActivationReminder({ to: TO, fullName: 'X', username: 'y', token: TOKEN })).message;
+    const second = (await authMail.sendActivationReminder({ to: TO, fullName: 'X', username: 'y', token: TOKEN, attempt: 2 })).message;
+    assert.notEqual(first.html, second.html, 'the opening acknowledges this is not the first nudge');
+    assert.equal(first.subject, second.subject);
+    assert.ok(!/expired/i.test(second.html),
+      'the second nudge cannot claim the previous link expired — it may not have');
+  });
+});
+
+test('the activation reminder refuses to send without APP_URL, like every other account email', async () => {
+  await withAppUrl(null, async () => {
+    const r = await authMail.sendActivationReminder({ to: TO, fullName: 'X', username: 'y', token: TOKEN });
+    assert.equal(r.sent, false);
+    assert.match(r.reason, /APP_URL/);
+  });
+});

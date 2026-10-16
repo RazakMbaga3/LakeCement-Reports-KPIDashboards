@@ -516,9 +516,16 @@
   html body .sb-item-icon i, html body .sb-item-icon svg { width: 15px; height: 15px; }
   html body .sb-item-label { font-size: var(--fs-base); }
   html body .sb-group-label { font-size: var(--fs-xs); margin: var(--sp-4) var(--sp-3) var(--sp-2); }
+  /* --fs-xs, not 10px. These three sat at 10px inside the file whose
+     first rule is that nothing renders below the 12px floor — the drawer
+     is the one place the floor was broken by the design system itself,
+     and the nine "VIEW" badges in the sidebar were the only sub-floor
+     text left on the KPI dashboard, the MD's most-opened screen. The
+     floor exists because below ~12px size stops working as hierarchy at
+     all; these badges are read in a plant, often in daylight. */
   html body .sb-badge-fill,
   html body .sb-badge-view,
-  html body .sb-stub-tag { font-size: 10px; padding: 2px 6px; }
+  html body .sb-stub-tag { font-size: var(--fs-xs); padding: 2px 6px; }
 }
 
 /* Desktop keeps the drawer machinery inert. */
@@ -1795,3 +1802,70 @@ body.is-readonly .fill-monthly-btn { display: none !important; }
 .ld-m { background: var(--amber-ink); }
 .ld-s { background: var(--series-1); }
 .ld-f { background: var(--green-ink); }
+
+/* ══════════════════════════════════════════════════════════════════════
+   THE EMPTY FIGURE — an absent number must not look like a redacted one
+   ──────────────────────────────────────────────────────────────────────
+   Two thirds of this plant's KPI tiles read "no data" on a normal day,
+   because several departments have stopped filing. That makes the EMPTY
+   state the common case, not an edge case, and it has to look deliberate
+   and honest — an empty state that looks like a bug makes management
+   conclude the system itself does not work.
+
+   The remaining defect (DESIGN_AUDIT_2026-09 §8, left open) was the
+   GLYPH, not the colour. Earlier passes correctly muted the weight and
+   ink of a placeholder, but left it at the slot's display size, and an
+   em-dash at 22-31px is a solid horizontal bar whatever colour it is:
+   on the Executive Summary the eight "Department Achievement Rates"
+   tiles rendered as eight black bars in a row, which reads as redaction.
+
+   A placeholder is not a figure, so it does not wear a figure's size.
+   It drops to body size, sits on the text baseline the real number would
+   have used, and keeps the slot's height so a row of tiles does not
+   change geometry between a reported month and an unreported one — the
+   one thing a KPI strip exists to prevent.
+
+   Applied by the glyph's own marker class where one exists (.is-empty),
+   and by :has() for the slots whose JS writes a bare dash. Both are
+   presentation only; no code path and no value changes.
+   ══════════════════════════════════════════════════════════════════════ */
+html body .sk-value.is-empty,
+html body .kt-val.is-empty,
+html body .sc-chip.untracked .sc-chip-pct,
+html body .n-kpi-val.is-empty {
+  font-size: var(--fs-base);
+  font-weight: var(--fw-medium);
+  color: var(--text-muted);
+  letter-spacing: .02em;
+  /* Hold the line box the real figure occupied so the tile does not
+     resize when a department starts (or stops) reporting. */
+  min-height: 1.6em;
+  display: flex;
+  align-items: center;
+}
+
+/* The scorecard tile centres its figure, so its placeholder does too. */
+html body .sc-chip.untracked .sc-chip-pct { justify-content: center; }
+
+/* A placeholder never carries a status ink — "not reported" is not a
+   grade. The neutral is asserted here so a later status rule on the same
+   element cannot repaint an absence as a failure. */
+html body .sk-card.sk-nodata .sk-value,
+html body .sc-chip.untracked .sc-chip-pct,
+html body .sc-chip.untracked .sc-chip-status { color: var(--text-muted); }
+
+/* ── The no-data status line is a statement, not an alert ──────────────
+   "NO DATA SUBMITTED FOR OCTOBER 2026" was set in the same uppercase
+   700 / .8px-tracked style as "CONCERN" — so on a dashboard where most
+   tiles are empty, the absences shouted at exactly the volume of the two
+   real problems, and the eye had no way to find the genuine alerts.
+   An absence is normal here; a concern is not. Same slot, lower voice:
+   sentence case, medium weight, no tracking, muted ink. The dot stays
+   neutral (already set above), so nothing reads as a grade. */
+html body .sk-card.sk-nodata .sk-status,
+html body .kt.is-nodata .kt-status {
+  text-transform: none;
+  font-weight: var(--fw-medium);
+  letter-spacing: 0;
+  color: var(--text-muted);
+}

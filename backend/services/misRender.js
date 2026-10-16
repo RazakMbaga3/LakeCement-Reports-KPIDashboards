@@ -5,6 +5,8 @@
   dependency on the plant server.
 */
 
+const meta = require('./misFieldMeta');
+
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -41,6 +43,9 @@ const CSS = `
   td { padding:5px 8px; border:1px solid #E8EDF3; }
   tr { page-break-inside:avoid; }
   td.num { text-align:right; font-variant-numeric:tabular-nums; }
+  .unit { color:#64748B; font-weight:400; font-size:10px; text-transform:none; letter-spacing:0; }
+  td.unit { color:#64748B; font-size:10px; }
+  .blanknote { color:#64748B; font-size:10px; font-style:italic; margin:6px 0 14px; }
   .ok  { color:#239557; font-weight:700; }
   .bad { color:#DC2626; font-weight:700; }
   .ov  { color:#B45309; font-weight:700; }
@@ -94,9 +99,12 @@ function kpiTable(kpis, valueHeader, benchmarks) {
   return `<table><tr><th>KPI</th><th>Unit</th><th>Target</th><th>${esc(valueHeader)}</th>${benchHead}<th>Status</th><th>Override note</th></tr>${rows}</table>`;
 }
 
+const BLANK_NOTE = '<div class="blanknote">A blank or — cell means the figure was '
+  + 'not reported — it does not mean zero.</div>';
+
 /* ── Daily ─────────────────────────────────────────────────── */
 function renderDailyHtml(p) {
-  let body = '<h2>Key Performance Indicators</h2>' + kpiTable(p.kpis, 'Value');
+  let body = '<h2>Key Performance Indicators</h2>' + kpiTable(p.kpis, 'Value') + BLANK_NOTE;
 
   if (p.missing.length) {
     body += `<div class="missing">⚠ No submission received for: <strong>${p.missing.map(esc).join(', ')}</strong></div>`;
@@ -105,9 +113,16 @@ function renderDailyHtml(p) {
   for (const f of p.forms) {
     body += `<h2>${esc(f.label)}${f.shift && f.shift !== 'day' ? ' — ' + esc(f.shift) + ' shift' : ''}</h2>`;
     body += `<div class="meta">Submitted by ${esc(f.submittedBy || '—')} · status: ${esc(f.status)}</div>`;
-    const rows = f.fields.map(fl =>
-      `<tr><td>${esc(fl.label)}</td><td class="num">${fmt(fl.value)}</td></tr>`).join('');
-    body += `<table><tr><th style="width:60%">Field</th><th>Value</th></tr>${rows}</table>`;
+    /* Same readable label + unit the Excel export uses (services/
+       misFieldMeta.js), so the two exports of one report never disagree
+       about what a row is called or what it is measured in. */
+    const rows = f.fields.map(fl => {
+      const m = meta.fieldMeta(fl.key);
+      return `<tr><td>${esc(m.label || fl.label)}</td><td class="unit">${esc(m.unit)}</td>` +
+             `<td class="num">${fmt(fl.value, m.dp)}</td></tr>`;
+    }).join('');
+    body += `<table><tr><th style="width:58%">Measure</th><th style="width:14%">Unit</th>` +
+            `<th>Value</th></tr>${rows}</table>`;
   }
 
   return page(`Daily MIS Report — ${p.date}`, 'All department submissions and computed KPIs for the day', body);
@@ -115,14 +130,16 @@ function renderDailyHtml(p) {
 
 /* ── Monthly ───────────────────────────────────────────────── */
 function renderMonthlyHtml(p) {
-  let body = '<h2>Monthly KPI Summary</h2>' + kpiTable(p.kpis, 'Actual (month)', p.benchmarks);
+  let body = '<h2>Monthly KPI Summary</h2>' + kpiTable(p.kpis, 'Actual (month)', p.benchmarks) + BLANK_NOTE;
 
   for (const f of p.forms) {
     body += `<h2>${esc(f.label)} — day by day</h2>`;
-    const head = '<tr><th>Date</th>' + f.fields.map(fl => `<th>${esc(fl.label)}</th>`).join('') + '</tr>';
+    const metas = f.fields.map(fl => ({ ...meta.fieldMeta(fl.key), fallback: fl.label }));
+    const head = '<tr><th>Date</th>' + metas.map(m => `<th>${esc(m.label || m.fallback)}</th>`).join('') + '</tr>'
+               + '<tr><th></th>' + metas.map(m => `<th class="unit">${esc(m.unit)}</th>`).join('') + '</tr>';
     const rows = f.days.map(d =>
       `<tr><td>${esc(d.date)}${d.shift !== 'day' ? ' (' + esc(d.shift) + ')' : ''}</td>` +
-      d.values.map(v => `<td class="num">${fmt(v)}</td>`).join('') + '</tr>').join('');
+      d.values.map((v, i) => `<td class="num">${fmt(v, metas[i].dp)}</td>`).join('') + '</tr>').join('');
     body += `<div style="overflow-x:auto"><table>${head}${rows}</table></div>`;
   }
 

@@ -66,7 +66,7 @@ if (from > to) {
     const a = result.autofill;
     if (dryRun) {
       console.log(`\nDRY RUN — nothing was written. Would create ${a.created} day(s) as `
-        + `pending_approval, update ${a.updated} existing day(s), and touch `
+        + `approved (unsigned), update ${a.updated} existing day(s), and touch `
         + `${a.fieldsWritten} field(s).`);
     }
     /* Both of these mean a printed number is knowably incomplete. Saying so

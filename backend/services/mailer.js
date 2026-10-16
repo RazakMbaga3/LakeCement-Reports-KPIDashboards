@@ -63,6 +63,12 @@ async function graphToken({ tenant, clientId, secret }) {
 
 function graphTransport(cfg) {
   return { kind: 'graph', t: {
+    /* Graph takes ONE body, not a multipart alternative — `contentType:
+       HTML` or `Text`, never both. So the plain-text part cannot ride along
+       on this transport the way it does over SMTP; `text` is accepted and
+       ignored here rather than silently changing the body type. The HTML is
+       built to degrade to readable text on its own (table layout, real
+       text, no image dependency), which is why that is survivable. */
     async sendMail({ from, fromName, to, subject, html }) {
       const token = await graphToken(cfg);
       const r = await graphFetch(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(from)}/sendMail`, {
@@ -136,8 +142,15 @@ function mailConfigured() {
    logged here and goes no further, since three callers hand their whole
    result straight to res.json(). */
 /* `fromName` (optional) is the sender's display name — "Compliance Master
-   System" for the compliance reminders; the address is always SMTP_FROM. */
-async function sendMail({ subject, html, to, fromName }) {
+   System" for the compliance reminders; the address is always SMTP_FROM.
+
+   `text` (optional) is the plain-text alternative. Over SMTP it becomes the
+   text/plain part of a multipart/alternative — read by text-mode clients
+   and screen readers, and weighed by spam gateways, which mark an
+   HTML-only message down. Microsoft Graph carries a single body and cannot
+   take it (see graphTransport above), so it is passed and dropped there;
+   pass it anyway, so the day the transport changes nothing needs editing. */
+async function sendMail({ subject, html, text, to, fromName }) {
   const list = (to || '').split(',').map(s => s.trim()).filter(Boolean);
   if (!list.length) return { sent: false, reason: 'no recipients configured' };
 
@@ -149,7 +162,8 @@ async function sendMail({ subject, html, to, fromName }) {
     const address = process.env.SMTP_FROM || DEFAULT_FROM;
     info = await transport.t.sendMail(transport.kind === 'graph'
       ? { from: address, fromName, to: list, subject, html }
-      : { from: fromName ? { name: fromName, address } : address, to: list, subject, html });
+      : { from: fromName ? { name: fromName, address } : address, to: list, subject, html,
+          ...(text ? { text } : {}) });
   } catch (err) {
     /* Required lazily: services/logger.js opens pino's rotating-file
        transport on require, and mailer.js is pulled into `node --test`

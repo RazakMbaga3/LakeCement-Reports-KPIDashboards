@@ -262,7 +262,7 @@
     }
   </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
-  <link rel="stylesheet" href="design-system.css?v=2" />
+  <link rel="stylesheet" href="design-system.css?v=3" />
   <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=3"></script>
   <script src="forms/mobile-entry.js?v=1"></script>
@@ -793,10 +793,12 @@
       </div>
     </div>
     <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;">
-      <span style="font-size:12px;color:var(--text-muted)">
-        Status: <strong style="color:var(--orange-ink)">DRAFT</strong> &nbsp;·&nbsp;
-        Date: <strong>06 May 2026</strong>
-      </span>
+      <!-- The real status and date are shown by the live status chip at the top of
+           the page. A second, hardcoded copy here said "DRAFT · 06 May 2026" on every
+           report regardless of its actual state, telling an officer a submitted report
+           was still a draft (RAID I-62). Removed rather than re-wired: one live source
+           for a report's status is correct, two is how they drift apart. -->
+      <span></span>
       <div style="display:flex;gap:8px">
         <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
         <button class="btn btn-sub"><i data-lucide="lock" class="btn-icon"></i> Submit &amp; Lock</button>
@@ -829,7 +831,7 @@
 <script src="forms/api-client.js?v=7"></script>
   <script src="forms/offline-queue.js?v=2"></script>
   <script src="forms/client-errors.js"></script>
-<script src="forms/form-persist.js?v=6"></script>
+<script src="forms/form-persist.js?v=8"></script>
 <script>initFormPersist('cpp');</script>
 <script src="forms/excel-import.js?v=4"></script>
 <script src="forms/nav-status.js?v=2"></script>

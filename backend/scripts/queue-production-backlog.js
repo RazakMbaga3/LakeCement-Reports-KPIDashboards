@@ -1,4 +1,19 @@
 /*
+  ⚠ SPENT / DO NOT RE-RUN WITHOUT READING THIS (2026-10-14).
+  This script's target status, 'pending_approval', is no longer where
+  machine-filled days belong. DEC-012 (2026-10-14) moved the Odoo autofill
+  writers to 'approved' with approved_by IS NULL, because parking robot rows
+  in the HOD queue filled it with 143 machine-filled reports against zero
+  human ones and buried the real submissions. Re-running this would put
+  untouched Odoo drafts straight back into that queue.
+
+  As of 2026-10-14 there are NO 'draft' rows left for it to act on, so it is
+  a no-op; it is kept for the audit trail of the 2026-09-23 remediation. If a
+  future backlog of untouched Odoo drafts ever needs clearing, change the
+  target status to 'approved' (approved_by left NULL) to match DEC-012 —
+  both statuses count in REPORTED_STATUSES, so the KPI effect is identical.
+  The original rationale follows, unchanged.
+
   scripts/queue-production-backlog.js — one-time remediation for the
   2026-09-23 finding (docs/pm/RAID_LOG.md, R-1 investigation): 78 days of
   the daily Production report (2026-07-01..2026-09-22 in the dev DB; the

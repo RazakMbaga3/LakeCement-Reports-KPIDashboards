@@ -24,7 +24,19 @@
      cannot supply (run hours, receipts, opening stock) and submit it
      through the normal HOD approval step.
 
-  B′. (Razak, 2026-10-07) A day Odoo filled that NO HUMAN HAS TOUCHED is
+  B″. (2026-10-14, see DEC-012) A day Odoo filled that NO HUMAN HAS TOUCHED
+     is created as 'approved' with approved_by IS NULL — the shape
+     odooDispatchSync.js has used since DEC-008. B′ (below) was right that
+     the day must count and wrong about where to park it: 'pending_approval'
+     put the robot's rows in the HOD's approval queue, and this writer walks
+     every day Odoo has, so the queue became 143 machine-filled rows against
+     zero human ones. See the INSERT in upsertDay() for the full reasoning.
+     approved_by stays NULL, so nothing here claims a human signed and the
+     DEC-008 write-lock still leaves the day correctable.
+
+  B′. (Razak, 2026-10-07 — SUPERSEDED by B″ above, kept because its
+     diagnosis stands and only the status changed.) A day Odoo filled that
+     NO HUMAN HAS TOUCHED is
      created as 'pending_approval', not 'draft', so its figures count
      immediately. The reasoning that replaced B: these entries are already
      approved in Odoo by the plant's own people before the API ever returns
@@ -150,16 +162,45 @@ async function upsertDay(date, dayResult, { dryRun = false } = {}) {
     let action = 'unchanged';
     if (Object.keys(toWrite).length && !dryRun) {
       if (!row) {
-        /* 'pending_approval', not 'draft' — decision B′ in the header. These
-           figures are already approved in Odoo, and 'draft' is not in
-           REPORTED_STATUSES, so a draft would leave the Production Report
-           reading "No data" over real tonnage. It still lands in the HOD
-           queue; it is simply counted while it sits there. */
+        /* 'approved' with approved_by IS NULL — decision B″ (2026-10-14),
+           replacing B′'s 'pending_approval'. This is the SAME shape
+           odooDispatchSync.js has used since DEC-008, not a new convention.
+
+           B′ was right that the day must COUNT (so 'draft' is wrong: it is
+           outside REPORTED_STATUSES and left the Production Report reading
+           "No data" over real tonnage). It was wrong about where to park it.
+           'pending_approval' put the robot's rows in the HOD's approval
+           queue, and because this writer walks every day Odoo has, the queue
+           filled with them: on 2026-10-14 it held 143 machine-filled rows
+           (99 production + 44 materials) and ZERO human ones. An officer's
+           own CPP report was reported "missing" because it was row 138 of
+           138 under them. A queue of 143 items no human wrote and nobody
+           needs to read trains HODs to ignore the queue, which destroys the
+           control the queue exists to be.
+
+           'approved' here is a statement about the DATA, not about a person:
+           these entries are approved in Odoo by the plant's own people
+           before the API returns them. approved_by stays NULL, which is the
+           truth — nobody signed locally — and that NULL is load-bearing:
+             • the write-lock keys on approved_by (DEC-008,
+               routes/reports.js), so an HOD or officer can still open and
+               correct an Odoo day with no correction window needed;
+             • the audit trail reads 'odoo-sync' / actorId NULL on the
+               ODOO_AUTOFILL revision below, so the row can never be
+               mistaken for a human approval.
+           Both 'approved' and 'pending_approval' are already in
+           REPORTED_STATUSES (config/forms.js), so NO KPI, MIS or entry-
+           completeness figure moves — verified by a full day x formula
+           replay (7,264 evaluations, 0 diffs).
+
+           This deliberately does NOT widen what counts as approved for a
+           human-signed report: nothing sets approved_by, so the lock's
+           humanSigned test is untouched. */
         await client.query(
           `INSERT INTO daily_reports (form_type, record_date, shift, data, status)
-           VALUES ($1, $2, $3, $4::jsonb, 'pending_approval')`,
+           VALUES ($1, $2, $3, $4::jsonb, 'approved')`,
           [FORM_TYPE, date, SHIFT, JSON.stringify(toWrite)]);
-        action = 'created_pending';
+        action = 'created_approved';
       } else {
         // Only `data`/`updated_at` move. status/approved_by/approved_at/
         // submitted_by are untouched — see decision A in the header.
@@ -247,7 +288,7 @@ async function syncProductionRangeToReports(from, to, { dryRun = false } = {}) {
 
   for (const date of dates) {
     const r = await upsertDay(date, byDay[date], { dryRun });
-    if (r.action === 'created_pending' || r.action === 'would_create_pending') summary.created++;
+    if (r.action === 'created_approved' || r.action === 'created_pending' || r.action === 'would_create_pending') summary.created++;
     else if (r.action === 'overrode' || r.action === 'filled_blanks'
            || r.action === 'would_override' || r.action === 'would_fill_blanks') summary.updated++;
     else summary.unchanged++;

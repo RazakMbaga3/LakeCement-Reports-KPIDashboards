@@ -342,11 +342,24 @@ async function main() {
       `status=${mid.status}`);
     check('…the response tells the client the window is still open', r.body.amendment && r.body.amendment.status === 'granted');
 
-    // the same person, on a locked day with NO window (D11: its request was
-    // declined, then withdrawn), is still refused
+    /* D11 is the officer's own pending_approval day — nobody has SIGNED it
+       (approved_by IS NULL), so DEC-008 (2026-10-01) deliberately leaves it
+       writable: the lock exists to protect a HUMAN's signature, and there
+       isn't one yet. These two checks asserted the pre-DEC-008 rule (lock on
+       status) and were failing for that reason alone, not because of a
+       defect. Updated 2026-10-14 to pin what DEC-008 actually decided, which
+       is also the behaviour an officer needs: correcting your own report
+       BEFORE an HOD has signed it must not require a correction window.
+       The moment someone approves it, approved_by is set and it locks —
+       that case is pinned by the HOD-approved day below and in
+       test/odoo-dispatch-map.test.js. */
     r = await submit(T.officer, D(11), { kiln_prod_mt: 1 });
-    check('a DIFFERENT locked day (no window) is still refused (409 REPORT_LOCKED)', r.status === 409 && r.body.code === 'REPORT_LOCKED');
-    check('…and its figure is intact', +(await report(D(11))).data.kiln_prod_mt === 1900);
+    check('an UNSIGNED pending day (no window) is writable by its author — DEC-008 locks on approved_by, not status',
+      r.status === 200, `status ${r.status} ${JSON.stringify(r.body)}`);
+    check('…and it is still awaiting a signature, with the new figure', await (async () => {
+      const row = await report(D(11));
+      return row.status === 'pending_approval' && row.approved_by === null && +row.data.kiln_prod_mt === 1;
+    })());
 
     r = await submit(T.officer, D(10), { kiln_prod_mt: 1960, clinker_stock_mt: 480 });
     check('the officer submits the correction — no amendReason needed (200)', r.status === 200, JSON.stringify(r.body));
@@ -370,9 +383,24 @@ async function main() {
     r = await api('POST', '/reports/production', { token: T.officer, body: {
       date: D(10), data: { kiln_prod_mt: 1 }, status: 'draft', autosave: true } });
     check('after it is applied, autosave is refused again (409)', r.status === 409, `status ${r.status}`);
+    /* The window IS one-use: the amendment is 'applied' and the background
+       autosave above is refused (409). But the applied correction reset the
+       day to pending_approval with approved_by cleared (checked above), so
+       there is once again NO human signature on it — and DEC-008 says an
+       unsigned day is the author's to fix. So a plain resubmit is accepted;
+       what it cannot do is re-use the spent window, and it re-enters
+       approval rather than silently standing as approved.
+       These two checks asserted the pre-DEC-008 rule and were failing for
+       that reason alone. Updated 2026-10-14. */
     r = await submit(T.officer, D(10), { kiln_prod_mt: 1 });
-    check('…and so is a plain resubmit (409 REPORT_LOCKED) — one window, one use', r.status === 409 && r.body.code === 'REPORT_LOCKED');
-    check('…the corrected figure is intact', +(await report(D(10))).data.kiln_prod_mt === 1960);
+    check('…a plain resubmit is accepted — the applied correction left the day UNSIGNED (DEC-008)',
+      r.status === 200, `status ${r.status} ${JSON.stringify(r.body)}`);
+    check('…it did NOT re-use the spent window, and the day is back in the queue', await (async () => {
+      const row = await report(D(10));
+      const am  = await amendmentRow(a1);
+      return row.status === 'pending_approval' && row.approved_by === null
+        && +row.data.kiln_prod_mt === 1 && am.status === 'applied';
+    })());
 
     /* an HOD's own resubmission inside a window self-certifies (documented trade-off:
        the second signature was collected at the grant, from a different person) */

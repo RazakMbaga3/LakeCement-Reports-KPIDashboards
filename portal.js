@@ -8,8 +8,11 @@
 /* ── Category metadata ────────────────────────────────────────── */
 const _CATS = {
   kpi:        { label: 'KPI & Analytics',   accent: '#173158' },
-  reports:    { label: 'Daily Reports',     accent: '#239557' },
-  forms:      { label: 'Daily Reports',     accent: '#F49545' },
+  /* These two were both labelled 'Daily Reports', told apart only by accent colour
+     (RAID I-63). A new officer saw "DAILY REPORTS" twice and nothing on screen said
+     which one to fill in. Named for what the user does in each instead. */
+  reports:    { label: 'View Reports',      accent: '#239557' },
+  forms:      { label: 'Enter Daily Data',  accent: '#F49545' },
   mis:        { label: 'Management Info.',  accent: '#173158' },
   commercial: { label: 'Sales & Purchases', accent: '#6D5DD3' },
 };

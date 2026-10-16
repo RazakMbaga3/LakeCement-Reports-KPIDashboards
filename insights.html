@@ -45,7 +45,7 @@
     .in-empty { text-align: center; padding: 30px 20px; color: var(--text-muted); font-size: 12px; }
   </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
-  <link rel="stylesheet" href="design-system.css?v=2" />
+  <link rel="stylesheet" href="design-system.css?v=3" />
   <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=3"></script>
 </head>
@@ -87,7 +87,7 @@
   </div>
   <div class="in-card">
     <div class="in-card-title">Kiln Output &amp; Total Stoppage Minutes</div>
-    <div class="in-card-sub">Left axis: clinker output (MT). Right axis: total logged stoppage minutes that day (all sections, all categories).
+    <div class="in-card-sub"><span id="axis-note">Left axis: clinker output (MT). Right axis: total logged stoppage minutes that day (all sections, all categories).</span>
       For availability (NAI), MTBF, downtime-cause Pareto and RCFA flags, see the
       <a href="reliability.html" style="color:var(--orange-ink);font-weight:700;text-decoration:none">Equipment Reliability &amp; Downtime Report →</a>
       — this chart only answers whether a stoppage day coincides with an output dip.</div>
@@ -216,44 +216,99 @@
       return;
     }
     empty.style.display = hasDowntime ? 'none' : 'block';
-    if (!hasDowntime) empty.textContent = 'No stoppage minutes logged in this range yet — output shown alone.';
+    if (!hasDowntime) empty.textContent = 'No stoppage minutes logged in this range — the Sectional Stoppage report has not been filed, so only kiln output is plotted.';
+
+    /* The caption must not describe an axis the chart is not drawing. */
+    var axisNote = document.getElementById('axis-note');
+    if (axisNote) {
+      axisNote.textContent = hasDowntime
+        ? 'Left axis: clinker output (MT). Right axis: total logged stoppage minutes that day (all sections, all categories).'
+        : 'Clinker output (MT) per day.';
+    }
 
     var ctx = document.getElementById('chart-output-downtime');
     destroyChart('output-downtime');
+
+    /* When no stoppage minutes exist, the second axis described nothing:
+       the chart still drew a right-hand "minutes" scale with 11 ticks
+       and a legend entry for a series with no marks, so the reader was
+       given a fully-dressed axis for data that was never filed. Only
+       build the downtime dataset and its scale when there IS downtime —
+       a single-series chart also needs no legend, since the title names
+       it (dataviz: a legend is for >= 2 series). */
+    var datasets = [{
+      type: 'line', label: 'Kiln Output (MT)', data: outputVals, yAxisID: 'y',
+      borderColor: '#EB6834', backgroundColor: 'rgba(235,104,52,0.10)',
+      borderWidth: 2, pointRadius: 2, fill: true, tension: 0.3, spanGaps: true,
+    }];
+    var scales = {
+      x: { grid: { display: false }, ticks: { font: { size: 12 }, color: '#9CA3AF', maxTicksLimit: 12, maxRotation: 0 } },
+      y: { position: 'left', title: { display: true, text: 'MT', font: { size: 12 } }, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 12 } } },
+    };
+    if (hasDowntime) {
+      datasets.push({
+        type: 'bar', label: 'Stoppage Minutes', data: downtimeVals, yAxisID: 'y1',
+        backgroundColor: 'rgba(31,95,168,0.45)', borderRadius: 2, barPercentage: 0.6,
+      });
+      scales.y1 = { position: 'right', title: { display: true, text: 'minutes', font: { size: 12 } }, grid: { display: false }, ticks: { font: { size: 12 } }, beginAtZero: true };
+    }
+
     _charts['output-downtime'] = new Chart(ctx, {
-      data: {
-        labels: dates.map(fmtDate),
-        datasets: [
-          {
-            type: 'line', label: 'Kiln Output (MT)', data: outputVals, yAxisID: 'y',
-            borderColor: '#EB6834', backgroundColor: 'rgba(235,104,52,0.10)',
-            borderWidth: 2, pointRadius: 2, fill: true, tension: 0.3, spanGaps: true,
-          },
-          {
-            type: 'bar', label: 'Stoppage Minutes', data: downtimeVals, yAxisID: 'y1',
-            backgroundColor: 'rgba(31,95,168,0.45)', borderRadius: 2, barPercentage: 0.6,
-          },
-        ],
-      },
+      data: { labels: dates.map(fmtDate), datasets: datasets },
       options: {
         responsive: true, maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
-        plugins: { legend: { position: 'top', labels: { font: { size: 12, weight: '600' }, boxWidth: 12 } } },
-        scales: {
-          x: { grid: { display: false }, ticks: { font: { size: 12 }, color: '#9CA3AF', maxTicksLimit: 12, maxRotation: 0 } },
-          y:  { position: 'left',  title: { display: true, text: 'MT', font: { size: 12 } }, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 12 } } },
-          y1: { position: 'right', title: { display: true, text: 'minutes', font: { size: 12 } }, grid: { display: false }, ticks: { font: { size: 12 } }, beginAtZero: true },
-        },
+        plugins: { legend: { display: hasDowntime, position: 'top', labels: { font: { size: 12, weight: '600' }, boxWidth: 12 } } },
+        scales: scales,
       },
     });
   }
 
+  /* ── "This panel has nothing to plot" ──────────────────────────
+     A small multiple with no data used to render as a blank white
+     rectangle the exact size of its neighbours' charts, with only a
+     title above it. Two of the three Energy/Quality panels are empty
+     on a normal day, so a manager saw a row of voids and read it as a
+     rendering fault rather than as a department that has not filed.
+     The row-level .in-empty note could never fix that: it sits below
+     all three panels and cannot say WHICH one is missing.
+
+     So each panel now explains itself in the slot its chart would have
+     occupied, using the design system's .ds-state.is-compact — the
+     pattern written for exactly this ("a card whose chart has no data
+     explains itself where the chart was", design-system.css §STATE).
+     No number is invented; the panel states the stream and the reason. */
+  function panelEmpty(canvasId, reason) {
+    var ctx = document.getElementById(canvasId);
+    if (!ctx) return;
+    var slot = ctx.parentNode;                 // .in-mult-chart
+    var prev = slot.querySelector('.ds-state');
+    if (prev) prev.remove();
+    ctx.style.display = 'none';
+    var el = document.createElement('div');
+    el.className = 'ds-state is-compact';
+    var body = document.createElement('div');
+    body.className = 'ds-state-body';
+    body.textContent = reason;
+    el.appendChild(body);
+    slot.appendChild(el);
+  }
+
+  function panelHasData(canvasId) {
+    var ctx = document.getElementById(canvasId);
+    if (!ctx) return;
+    var prev = ctx.parentNode.querySelector('.ds-state');
+    if (prev) prev.remove();
+    ctx.style.display = '';
+  }
+
   /* ── Small-multiple line chart (no target/anomaly overlay) ────── */
-  function renderSimpleLine(canvasId, dates, values, color, unit) {
+  function renderSimpleLine(canvasId, dates, values, color, unit, reason) {
     var hasData = values.some(function (v) { return v !== null; });
     var ctx = document.getElementById(canvasId);
     destroyChart(canvasId);
-    if (!hasData) return false;
+    if (!hasData) { panelEmpty(canvasId, reason || 'Not reported for this period.'); return false; }
+    panelHasData(canvasId);
     _charts[canvasId] = new Chart(ctx, {
       type: 'line',
       data: {
@@ -300,32 +355,33 @@
 
     renderOutputDowntime(dates, seriesFor('kiln-output'), await stoppageMinutes(from, to, dates));
 
-    var okPower = renderSimpleLine('chart-mult-power', dates, seriesFor('specific-power-consumption-total'), '#1BAF7A', 'kWh/MT');
-    var okHeat  = renderSimpleLine('chart-mult-heat', dates, seriesFor('specific-thermal-energy-consumption'), '#4A3AA7', 'kcal/kg');
-    var okLime  = renderSimpleLine('chart-mult-freelime', dates, seriesFor('clinker-free-lime'), '#E34948', '%');
+    /* Each panel names the form that feeds it, so "empty" points at the
+       action that fills it rather than reading as a fault. Colours come
+       from the validated palette via LCL_CHART rather than raw hex. */
+    var S = (window.LCL_CHART && LCL_CHART.series) || ['#1F5FA8','#EB6834','#1BAF7A','#EDA100','#E87BA4','#008300','#4A3AA7','#E34948'];
+    var okPower = renderSimpleLine('chart-mult-power', dates, seriesFor('specific-power-consumption-total'), S[2], 'kWh/MT',
+      'Not reported for this period — this comes from the Power Consumption report.');
+    var okHeat  = renderSimpleLine('chart-mult-heat', dates, seriesFor('specific-thermal-energy-consumption'), S[6], 'kcal/kg',
+      'Not reported for this period — this comes from the Production report.');
+    var okLime  = renderSimpleLine('chart-mult-freelime', dates, seriesFor('clinker-free-lime'), S[7], '%',
+      'Not reported for this period — this comes from the Quality / Lab report.');
 
+    /* The row-level note now only speaks when the whole row is empty;
+       anything narrower is said by the panel itself. The old cascade
+       stayed silent whenever Power was missing but Free Lime was not,
+       which is the common case and left a blank panel unexplained. */
     var emptyM = document.getElementById('empty-multiples');
-    if (!okPower && !okHeat && !okLime) {
-      emptyM.style.display = 'block';
-      emptyM.textContent = 'No data for any of these three KPIs in this range.';
-    } else if (!okLime) {
-      emptyM.style.display = 'block';
-      emptyM.textContent = 'Clinker Free Lime has no data in this range — Quality form entry is sparse in the current backfill.';
-    } else {
-      emptyM.style.display = 'none';
-    }
+    emptyM.style.display = 'none';
 
-    var okClinkerCons = renderSimpleLine('chart-mult-clinkercons', dates, seriesFor('clinker-consumption-day'), '#1F5FA8', 'MT');
-    var okCoalCons     = renderSimpleLine('chart-mult-coalcons', dates, seriesFor('coal-kiln-consumption-day'), '#1F5FA8', 'MT');
-    var okGypsumCons   = renderSimpleLine('chart-mult-gypsumcons', dates, seriesFor('gypsum-consumption-day'), '#1F5FA8', 'MT');
+    var okClinkerCons = renderSimpleLine('chart-mult-clinkercons', dates, seriesFor('clinker-consumption-day'), S[0], 'MT',
+      'Not reported for this period — this comes from the Raw Materials report.');
+    var okCoalCons     = renderSimpleLine('chart-mult-coalcons', dates, seriesFor('coal-kiln-consumption-day'), S[0], 'MT',
+      'Not reported for this period — this comes from the Raw Materials report.');
+    var okGypsumCons   = renderSimpleLine('chart-mult-gypsumcons', dates, seriesFor('gypsum-consumption-day'), S[0], 'MT',
+      'Not reported for this period — this comes from the Raw Materials report.');
 
     var emptyMat = document.getElementById('empty-materials');
-    if (!okClinkerCons && !okCoalCons && !okGypsumCons) {
-      emptyMat.style.display = 'block';
-      emptyMat.textContent = 'No Raw Materials data in this range.';
-    } else {
-      emptyMat.style.display = 'none';
-    }
+    emptyMat.style.display = 'none';
   }
 
   /* Raw stoppage minutes aren't a formula-registry KPI (no target/spec) —

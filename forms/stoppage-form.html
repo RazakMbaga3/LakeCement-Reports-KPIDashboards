@@ -13,7 +13,7 @@
   <script src="date-picker.js"></script>
   <link rel="stylesheet" href="forms.css" />
   <!-- Design system — loaded last so it settles equal-specificity ties -->
-  <link rel="stylesheet" href="../design-system.css?v=2" />
+  <link rel="stylesheet" href="../design-system.css?v=3" />
   <script src="../a11y.js?v=1"></script>
   <script src="../mobile-shell.js?v=3"></script>
   <script src="mobile-entry.js?v=1"></script>
@@ -368,10 +368,10 @@
       </div>
     </div>
     <div style="background:#F1F5FB;border-top:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <span style="font-size:12px;color:var(--text-muted)">
-        Status: <strong style="color:var(--orange-ink)">DRAFT</strong> &nbsp;·&nbsp;
-        Date: <strong>21 April 2026</strong>
-      </span>
+      <!-- Removed a hardcoded "DRAFT · 21 April 2026" that showed on every report
+           whatever its real state (RAID I-62). The live status chip at the top of the
+           form is the single source of truth for this. -->
+      <span></span>
       <div style="display:flex;gap:8px">
         <button class="btn btn-save"><i data-lucide="save" class="btn-icon"></i> Save Draft</button>
         <button class="btn btn-sub"><i data-lucide="lock" class="btn-icon"></i> Submit &amp; Lock</button>
@@ -445,7 +445,7 @@
 <script src="api-client.js?v=7"></script>
 <script src="offline-queue.js?v=2"></script>
 <script src="client-errors.js"></script>
-<script src="form-persist.js?v=6"></script>
+<script src="form-persist.js?v=8"></script>
 <script src="stoppage-reasons.js?v=2"></script>
 <script>
   /* Render the reason catalogue BEFORE form-persist starts: its restore

@@ -100,36 +100,119 @@
 
     var rows = [];
 
-    /* company header */
+    /* ── Company / report header, as every plant workbook carries ──── */
     rows.push(['LAKE CEMENT LTD — NYATI CEMENT']);
     rows.push([title]);
     rows.push(['Date:', friendlyDate(dateKey)]);
     rows.push(['Status:', status]);
+    rows.push(['Exported:', new Date().toLocaleString('en-GB')]);
+    /* State what an empty cell means. A blank that gets read as a real
+       zero in a management meeting is the exact failure this project's
+       data-integrity rule exists to prevent. */
+    rows.push(['Note:', 'A blank cell means the figure was not reported — it does not mean zero.']);
     rows.push([]);
 
-    /* walk visible rcard sections */
+    /* ── Walk each report card, keeping the form's own table shape ────
+       The form's tables ARE the plant's report layout (same columns, same
+       order, same captions as the workbook each form replaced), so the
+       export reproduces them instead of flattening everything to
+       label/value pairs. The previous version emitted one row per input
+       with the row's label repeated, which made a two-input row such as
+       "Crusher | kWh" + "Crusher | MT" two identical-looking lines, and
+       dropped every COMPUTED column (specific power, target, variance,
+       MTD/YTD) because it only ever looked at [data-field] inputs. On the
+       power report that is most of the report. */
+
+    /* Text of one cell: a typed input's saved value, a computed .cv/.cf
+       cell's rendered text, or the cell's own label text. Returns '' for
+       anything not reported — never a zero, never a placeholder. */
+    function cellValue(td) {
+      var inp = td.querySelector('input[data-field], select[data-field], textarea[data-field]');
+      if (inp) {
+        var key = inp.dataset.field;
+        var v = (key && data[key] !== undefined && data[key] !== '') ? data[key] : inp.value;
+        return (v === undefined || v === null) ? '' : v;
+      }
+      /* Computed cells render '—' (or '-') when there is no value; export
+         those as a genuinely empty cell rather than carrying the dash. */
+      var cv = td.querySelector('.cv');
+      var txt = (cv || td).textContent.trim().replace(/\s+/g, ' ');
+      if (txt === '—' || txt === '-' || txt === '–') return '';
+      return txt;
+    }
+
+    /* Header captions for a table: the <thead> cells, with their <br>
+       unit lines flattened to "Energy (kWh)" so the unit survives.
+       textContent alone would give "Energy(kWh)" — the <br> carries no
+       whitespace of its own, so it is replaced with a space first. */
+    function headerCells(table) {
+      var head = table.querySelector('thead');
+      if (!head) return null;
+      var hrow = head.querySelectorAll('tr');
+      if (!hrow.length) return null;
+      var out = [];
+      hrow[hrow.length - 1].querySelectorAll('th').forEach(function (th) {
+        var clone = th.cloneNode(true);
+        clone.querySelectorAll('br').forEach(function (br) {
+          br.parentNode.replaceChild(document.createTextNode(' '), br);
+        });
+        out.push(clone.textContent.trim().replace(/\s+/g, ' '));
+      });
+      return out.length ? out : null;
+    }
+
+    function numberish(v) {
+      if (typeof v !== 'string' || v === '') return v;
+      var t = v.replace(/,/g, '');
+      return (/^-?\d+(\.\d+)?$/.test(t)) ? Number(t) : v;
+    }
+
     document.querySelectorAll('.rcard').forEach(function (card) {
+      /* Skip a card the user has collapsed/hidden — the export should match
+         what the page shows. */
+      if (card.offsetParent === null && card.getClientRects().length === 0) return;
+
       var titleEl = card.querySelector('.rcard-title');
       var sec = titleEl ? titleEl.textContent.trim().replace(/\s+/g, ' ') : 'Section';
-      rows.push([sec.toUpperCase()]);
+      rows.push([sec]);
 
-      card.querySelectorAll('tr').forEach(function (tr) {
-        var labelEl = tr.querySelector('.tp');
-        var inputs  = tr.querySelectorAll('input[data-field], select[data-field], textarea[data-field]');
-        if (!labelEl || !inputs.length) return;
+      var tables = card.querySelectorAll('table');
+      if (!tables.length) {
+        rows.push([]);
+        return;
+      }
 
-        var label = labelEl.textContent.trim();
-        inputs.forEach(function (inp) {
-          var key = inp.dataset.field;
-          var val = (data[key] !== undefined && data[key] !== '') ? data[key] : inp.value;
-          if (key) rows.push(['', label, val]);
+      tables.forEach(function (table) {
+        var hdr = headerCells(table);
+        if (hdr) rows.push(hdr);
+
+        table.querySelectorAll('tbody tr, tr').forEach(function (tr) {
+          if (tr.closest('thead')) return;
+
+          /* A section divider row (one spanning cell, no inputs). */
+          var tds = tr.querySelectorAll('td');
+          if (!tds.length) return;
+          var hasField = tr.querySelector('[data-field], [data-kpi], [data-var]');
+          if (tds.length === 1 || (tds.length && tds[0].hasAttribute('colspan') && !hasField)) {
+            var t = tds[0].textContent.trim().replace(/\s+/g, ' ');
+            if (t) rows.push([t]);
+            return;
+          }
+          /* A row with no inputs and no computed cells carries no data. */
+          if (!hasField) return;
+
+          var line = [];
+          tds.forEach(function (td) { line.push(numberish(cellValue(td))); });
+          /* Trailing empties add nothing. */
+          while (line.length && (line[line.length - 1] === '' || line[line.length - 1] === null)) line.pop();
+          if (line.length) rows.push(line);
         });
-      });
 
-      rows.push([]);
+        rows.push([]);
+      });
     });
 
-    /* sign-off fields */
+    /* ── Sign-off ─────────────────────────────────────────────────── */
     var soInputs = document.querySelectorAll('.so-in[data-field], .so-time[data-field]');
     if (soInputs.length) {
       rows.push(['SIGN-OFF']);
@@ -137,7 +220,7 @@
         var key = inp.dataset.field;
         var val = (data[key] !== undefined && data[key] !== '') ? data[key] : inp.value;
         var label = inp.placeholder || key;
-        rows.push(['', label, val]);
+        rows.push([label, val]);
       });
       rows.push([]);
     }
@@ -145,9 +228,20 @@
     loadXLSX(function () {
       var wb = window.XLSX.utils.book_new();
       var ws = window.XLSX.utils.aoa_to_sheet(rows);
-      ws['!cols'] = [{ wch: 2 }, { wch: 42 }, { wch: 22 }];
+
+      /* Column widths: a readable first column for the section/equipment
+         name, then even columns for the figures. */
+      var widest = 0;
+      rows.forEach(function (r) { if (r.length > widest) widest = r.length; });
+      var cols = [{ wch: 34 }];
+      for (var i = 1; i < widest; i++) cols.push({ wch: 16 });
+      ws['!cols'] = cols;
+      /* Freeze the header block so the captions stay visible while
+         scrolling a long report. */
+      ws['!freeze'] = { xSplit: 1, ySplit: 7 };
+
       window.XLSX.utils.book_append_sheet(wb, ws, 'Report');
-      window.XLSX.writeFile(wb, formId + '-' + dateKey + '.xlsx');
+      window.XLSX.writeFile(wb, 'Nyati-' + formId + '-' + dateKey + '.xlsx');
     });
   }
 

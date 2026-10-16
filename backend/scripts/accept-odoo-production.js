@@ -41,6 +41,10 @@ const CM2 = 'CEMENT: Cement Production (CM2)';
 const RM  = 'CEMENT: Raw Meal Production';
 const CLK = 'CEMENT: Clinker Production';
 const FC  = 'CEMENT: Fine Coal Production';
+/* The group key, which is how Odoo has identified crusher since 2026-10-08.
+   Its line_items are weighbridge tickets, not consumption, so the fixture
+   gives it a header quantity only — see normalizeEntry. */
+const CRU = 'Crusher';
 const item = (product, qty, dry = qty, uom = 'MT') => ({ product, uom, input_quantity: qty, stock_available: 50, moisture: 0, final_qty_after_moisture: dry, cost: 1 });
 let seq = 0;
 const raw = (day, product, produced, items = [], name = 'ACCEPT/' + String(++seq).padStart(3, '0')) => ({
@@ -66,6 +70,10 @@ const BASE = [
   [CM2, raw(10, '[FG001] CEMENT 42.5 R', 294, [item('[WIP003] CLINKER', 250)])],
   [CM2, raw(10, '[FG005] CEMENT B-M 42.5 N', 100, [item('[WIP003] CLINKER', 60), item('[RM000014] CLINKER SPG', 5)])],
   [CM1, cm1Extra],
+  /* Crusher joined ALL_STAGES on 2026-10-08. Without an entry here, the
+     'every stage present' check below counted 5 of 6 and failed — the
+     fixture, not the mapping, was stale. */
+  [CRU, raw(10, '[WIP001] LIMESTONE MINING', 2806.2)],
 ];
 const FROM = '1997-03-01', TO = '1997-03-31';
 const N = BASE.length;
@@ -95,7 +103,8 @@ async function main() {
   check('gypsum uses the wet quantity (13, not 12.35)', day.facts.cm_gypsum_cons === 13);
   check('purchased clinker = 5; own clinker = 660', day.facts.cm_clinker_purch_cons === 5 && day.facts.cm_clinker_own_cons === 660);
   check('power units are ignored, not reported as unmapped', day.unmapped.length === 0);
-  check('all five stages present that day', day.stagesPresent.length === 5 && day.missingStages.length === 0);
+  check('all six stages present that day', day.stagesPresent.length === 6 && day.missingStages.length === 0, JSON.stringify({ present: day.stagesPresent, missing: day.missingStages }));
+  check('crusher output lands in ls_crusher_prod_mt', day.facts.ls_crusher_prod_mt === 2806.2, JSON.stringify(day.facts.ls_crusher_prod_mt));
   const range = await loadRangeFacts(FROM, TO);
   check('the range read has exactly the two days that have entries', Object.keys(range).sort().join() === '1997-03-10,1997-03-11');
   check('a day with only a cement entry emits no kiln fact', !('kiln_prod_mt' in range['1997-03-11'].facts) && range['1997-03-11'].missingStages.includes('clinker'));
@@ -141,13 +150,18 @@ async function main() {
   check('the stored copy was not withdrawn', r7.withdrawn === 0 && (await rowOf(BASE[3][1].name)).withdrawn_at === null);
 
   console.log('8. an unknown picking type');
-  const crusher = raw(10, '[WIP001] LIMESTONE MINING', 500);
-  const r8 = await pull([...amended, ...extras.slice(0, 27), ['CEMENT: Crusher Production', crusher]]);
-  check('reported by picking type', r8.unmappedPickingTypes['CEMENT: Crusher Production'] === 1, JSON.stringify(r8.unmappedPickingTypes));
-  const cru = await rowOf(crusher.name);
+  /* 'CEMENT: Crusher Production' was the example here until 2026-10-14, when
+     it became a MAPPED stage — normalizeEntry prefers an entry's own
+     picking_type, so leaving the long form unmapped meant crusher tonnage
+     would vanish the day Odoo started stamping it. A name no rule covers is
+     used instead, so this still exercises the unmapped path. */
+  const unknown = raw(10, '[WIP001] LIMESTONE MINING', 500);
+  const r8 = await pull([...amended, ...extras.slice(0, 27), ['CEMENT: Packing Production', unknown]]);
+  check('reported by picking type', r8.unmappedPickingTypes['CEMENT: Packing Production'] === 1, JSON.stringify(r8.unmappedPickingTypes));
+  const cru = await rowOf(unknown.name);
   check('stored with stage NULL', cru && cru.stage === null && cru.q === 500);
   const d8 = await loadDayFacts(DAY);
-  check('it feeds no fact and is listed as unmapped', d8.facts.kiln_prod_mt === 1310 && d8.unmapped.some(u => u.kind === 'stage' && u.ref === crusher.name));
+  check('it feeds no fact and is listed as unmapped', d8.facts.kiln_prod_mt === 1310 && d8.unmapped.some(u => u.kind === 'stage' && u.ref === unknown.name));
 
   console.log('9. windows and failures');
   const calls = [];

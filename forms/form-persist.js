@@ -302,6 +302,46 @@
     return STATUS_META[status] ? status : 'draft';
   }
 
+  /* ── Is this report actually LOCKED? ─────────────────────────────────
+     STATUS_META above says a status is lockable. It is not the whole test,
+     and treating it as one made this layer disagree with the server.
+
+     The server locks on a HUMAN SIGNATURE, not on status — `approved_by`,
+     not `status` (DEC-008, 2026-10-01; routes/reports.js computes
+     `humanSigned = !!prior.approved_by`). Two rows carry a lockable status
+     with NOBODY having signed them:
+
+       • a machine-filled day. Since DEC-012 (2026-10-14) the Odoo autofill
+         writers create 'approved' with approved_by NULL, meaning "this is
+         ERP fact", not "a person signed it". There are ~330 such days
+         (production, materials, dispatch). This layer greyed the whole form
+         out and offered "Request a correction" — a request an approver must
+         grant — for an edit the server would simply have accepted.
+       • an officer's OWN report still awaiting sign-off
+         ('pending_approval', approved_by NULL). Correcting a figure you
+         filed yesterday, before anyone has signed it, must not cost a
+         correction request; the server already accepts it.
+
+     So: lockable status AND a real signature. `approved_by` is absent from
+     the offline localStorage mirror (and from any cached copy), so an
+     unknown value is treated as SIGNED — the safe direction: the form stays
+     read-only and the server remains the only authority that can refuse a
+     write. Nothing here widens what the server allows; it stops the UI
+     refusing what the server allows. */
+  function _isLocked(status, approvedBy) {
+    const meta = STATUS_META[_normaliseStatus(status)];
+    if (!meta || !meta.locked) return false;       // draft, rejected
+    return approvedBy === undefined ? true : !!approvedBy;
+  }
+
+  /* Records who signed the report currently on screen. Called only where a
+     SERVER row has been read — a value absent from the response leaves S
+     untouched rather than silently unlocking the form. Submitting locally
+     sets it to null (nobody has signed the thing we just sent), which is
+     what lets an author fix a figure they just filed without a correction
+     request; the server agrees, and refuses if it does not. */
+  function _setApprovedBy(v) { if (v !== undefined) S.approvedBy = v; }
+
   /* ── Correction requests ─────────────────────────────────────────
      A report that is approved or awaiting sign-off is locked. The way through
      is a request that an approver (never the requester) grants, which opens a
@@ -352,6 +392,13 @@
     loadedDate: null,     // the day whose report is on screen right now
     loadToken: 0,         // bumped per load, so a slow load that was superseded is ignored
     status: 'draft', editable: true,
+    /* Who SIGNED the loaded report: a user id, or null for nobody. The
+       server's own lock test is `approved_by`, not status (DEC-008), so
+       this layer carries it too — see _isLocked. `undefined` means "not
+       known on this device" (an offline cache, which never stores it) and
+       is read as signed, so the form stays read-only and only the server
+       can decide. Reset per day by _loadDay. */
+    approvedBy: undefined,
     dirty: false,         // typed since the last confirmed save to the server
     dirtySince: 0, editVersion: 0,
     inflight: false,
@@ -466,17 +513,21 @@
       const at     = record.updated_at || record.submitted_at;
       const amendment     = _stampAmendment(record.amendment);
       const lastAmendment = record.last_amendment || null;
+      /* approved_by rides along so this layer can apply the server's own
+         lock test (a human signature, not a status — see _isLocked).
+         `null` from the server is a real answer: nobody signed. */
+      const approvedBy = record.approved_by || null;
       const meta   = { formId, date, savedAt: at, status, rejectionReason: record.rejection_reason || null, unsynced: false,
-                       amendment, lastAmendment };
+                       approvedBy, amendment, lastAmendment };
       /* Typed-but-unsent work is put back when the report is editable — and a
          report inside an open correction window IS editable, whatever its
          status says. Without this, work typed in a window and never confirmed
          was thrown away in favour of the older server copy on the next visit. */
-      const editable = !STATUS_META[status].locked || _winOpen(amendment);
+      const editable = !_isLocked(status, approvedBy) || _winOpen(amendment);
       if (snap && snap._m.unsynced && editable
           && (Date.parse(snap._m.savedAt) || 0) > (Date.parse(at) || 0)) {
         return { source: 'recovered', payload: snap, reached, serverRow: true,
-                 meta: Object.assign({}, snap._m, { status, rejectionReason: meta.rejectionReason, amendment, lastAmendment }) };
+                 meta: Object.assign({}, snap._m, { status, rejectionReason: meta.rejectionReason, approvedBy, amendment, lastAmendment }) };
       }
       return { source: 'server', payload: { _m: meta, inputs: [], data: record.data }, meta, reached, serverRow: true };
     }
@@ -528,7 +579,12 @@
       }
       /* The server's answer is authoritative: an Officer's submission comes
          back 'pending_approval', not 'approved'. */
+      /* approvedBy comes straight from the stored row, so the form's lock
+         matches the server's (see _isLocked). An HOD's self-certifying
+         submission returns their own id here and the form locks; an
+         Officer's returns null and stays correctable until someone signs. */
       return { ok: true, status: (res && res.record && res.record.status) || null,
+               approvedBy: (res && res.record) ? (res.record.approved_by || null) : undefined,
                amendment: res ? res.amendment : undefined };
     } catch (e) {
       const retryable = !e.status || e.status === 401 || e.status >= 500;
@@ -935,9 +991,17 @@
          correct it" — the button existed, at the far end of the toolbar,
          and nothing pointed at it. Not said to a role that cannot file this
          form: _paintAmendUI offers them no button either. */
-      if (meta.locked && !(amendment && amendment.status === 'requested') &&
-          !document.getElementById('dr-view-only-banner')) {
+      const viewOnly = !!document.getElementById('dr-view-only-banner');
+      if (_isLocked(st, S.approvedBy) && !(amendment && amendment.status === 'requested') && !viewOnly) {
         text += '  Found a mistake? Use “Request a correction” in the toolbar.';
+      } else if (meta.locked && !_isLocked(st, S.approvedBy) && !viewOnly) {
+        /* Lockable status, but NOBODY has signed it — so this form is still
+           directly editable and the "request a correction" detour does not
+           apply. Two real cases: your own report before your HOD signs it,
+           and a day Odoo filled (DEC-012: 'approved' means ERP fact, not a
+           signature). Saying nothing here left a form that LOOKED final but
+           was editable, which is its own kind of confusing. */
+        text += '  No one has signed this off yet, so you can still correct the figures and submit again.';
       }
     }
 
@@ -960,8 +1024,19 @@
     close.addEventListener('click', () => banner.remove());
     banner.appendChild(close);
 
+    /* `position: sticky`, NOT `fixed` (RAID I-64). Fixed took the banner out of
+       the layout, so it painted on top of the page header: measured with
+       elementFromPoint(), the Home link, the logo and Logout all returned the
+       banner instead of themselves — unclickable on desktop (64px header) and on
+       a phone (56px header, ~75px eaten). A user who had just submitted could not
+       navigate away except via the small ×, immediately after the single most
+       important action in the app.
+
+       Sticky keeps the "always visible while scrolling" behaviour the banner was
+       reaching for, but the element still occupies its own space in the flow, so
+       the header is pushed down and stays reachable. */
     Object.assign(banner.style, {
-      position: 'fixed', top: '0', left: '0', right: '0', zIndex: '9997',
+      position: 'sticky', top: '0', zIndex: '9997',
       background: bg, color: 'white', padding: '9px 48px 9px 16px',
       textAlign: 'center', fontFamily: 'Inter,sans-serif',
       fontSize: '12px', fontWeight: '700', letterSpacing: '.3px',
@@ -975,6 +1050,11 @@
      `amendment` / `lastAmendment`: undefined keeps what is already known, null
      clears it. A caller that is loading a DIFFERENT day must pass them
      explicitly, or the previous day's window would follow the user across. */
+  /* `approvedBy` is deliberately NOT a parameter: _applyStatus has 11 call
+     sites, most of which (a window closing, an autosave reply, a local
+     draft) have no opinion about who signed the report and must not reset
+     it. It lives on S instead, set by _setApprovedBy() wherever a server
+     row is read, and defaults to undefined = "unknown, assume signed". */
   function _applyStatus(status, reason, amendment, lastAmendment) {
     const st = _normaliseStatus(status);
     S.status = st;
@@ -985,7 +1065,7 @@
     /* A report is editable when its STATUS says so, or when an approver has
        opened a correction window on it. The status itself never changed: only
        who may write to it, and until when. */
-    S.editable = !STATUS_META[st].locked || windowOpen;
+    S.editable = !_isLocked(st, S.approvedBy) || windowOpen;
 
     clearTimeout(S.amendTimer);
     if (windowOpen) {
@@ -1032,8 +1112,11 @@
     document.getElementById('_ny-amend-wd')?.remove();
     clearTimeout(S.amendPoll);
 
-    const meta = STATUS_META[S.status];
-    if (!meta || !meta.locked) return;                                  // drafts and rejected reports are already editable
+    /* Only when the report is REALLY locked — a human signed it. An
+       unsigned day (an Odoo row, or your own report before sign-off) is
+       directly editable, so offering "Request a correction" there would send
+       someone to ask permission for something they can already do. */
+    if (!_isLocked(S.status, S.approvedBy)) return;                     // drafts, rejected, and unsigned reports are already editable
     if (document.getElementById('dr-view-only-banner')) return;         // this role cannot submit this form (the server refuses it too)
     const host = document.querySelector('.btn-grp') || document.querySelector('.toolbar');
     if (!host) return;
@@ -1141,6 +1224,7 @@
       if (rec) {
         const a = rec.amendment || null;
         if (!a || a.id !== id || a.status !== 'requested') {
+          _setApprovedBy(rec.approved_by || null);
           _applyStatus(_normaliseStatus(rec.status), null, a, rec.last_amendment || null);
           if (S.amendment && S.amendment.status === 'granted') {
             _toast('Your correction request was approved — you can edit until ' + _hhmm(S.amendment._closesAt) + '.', 'ok', 10000);
@@ -1522,9 +1606,11 @@
         if (!initial) {
           _toast(`Loaded ${STATUS_META[_normaliseStatus(meta.status)].pill.toLowerCase()} — ${meta.date || date}${kept ? "." + kept : ""}`, 'ok', kept ? 6000 : 0);
         }
+        _setApprovedBy(meta.approvedBy);
         _applyStatus(meta.status, meta.rejectionReason, meta.amendment || null, meta.lastAmendment || null);
       } else {
         _clearForm(body);
+        _setApprovedBy(null);
         _applyStatus('draft', undefined, null, null);
         if (kept) _toast(kept.trim(), 'ok', 6000);
       }
@@ -1651,6 +1737,7 @@
         document.body.removeChild(a);
         URL.revokeObjectURL(a.href);
 
+        _setApprovedBy(null);                          // nobody has signed what we are only now sending
         _applyStatus('pending_approval', null, null);   // provisional until the server answers — null: a window's use ends here
         _setChip('submitted');
         document.dispatchEvent(new CustomEvent('nyati:submitted', { detail: { formId, date } }));
@@ -1663,6 +1750,7 @@
              report is signed off when it is still sitting in a queue. */
           const st = _normaliseStatus(sync.status || 'approved');
           S.serverHasRow = true;
+          _setApprovedBy(sync.approvedBy);
           _markSynced(formId, date);
           // A correction submitted inside a window CLOSES it (the server marks it applied
           // in the same transaction), so the answer carries no open amendment.
@@ -1700,6 +1788,11 @@
            to the next day while the new one is still loading. */
         clearTimeout(S.amendTimer); clearTimeout(S.amendPoll);
         S.amendment = null; S.lastAmendment = null;
+        /* …and neither must the previous day's SIGNATURE: leaving it set
+           would carry one day's lock onto the next. undefined, not null —
+           unknown reads as locked until the new day's row says otherwise,
+           so the form never opens on a guess. */
+        S.approvedBy = undefined;
         _unlockForm();
         await loadDay(next, false);
       });
