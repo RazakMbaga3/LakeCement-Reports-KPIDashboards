@@ -171,6 +171,21 @@
     .chart-tip .ct-d { font-weight:800; margin-bottom:2px; }
     .bar-hit { cursor:pointer; }
 
+    /* ══ OVERBURDEN & CRUSHER — Odoo feeds that are not weighbridge tickets ══
+       Two panels in the existing .sum-layout grid, tables in the existing
+       .tk-tbl style; only the bits those classes don't cover are here. */
+    .obc-hd { background:#173158; color:#fff; font-weight:700; font-size:12px; letter-spacing:1px;
+              text-transform:uppercase; padding:6px 14px; }
+    .obc-scroll { max-height:300px; overflow:auto; }
+    .obc-tbl th.r, .obc-tbl td.r { text-align:right; }
+    .obc-tbl tr.sel td { background:#FFF8F0; }
+    .obc-tbl tr.pend td { color:var(--text-muted); font-style:italic; }
+    .obc-tbl tfoot td { font-weight:800; color:var(--navy); border-top:2px solid var(--navy); background:#F7F8FA;
+                        position:sticky; bottom:0; }
+    .obc-foot { padding:8px 14px 12px; font-size:12px; color:var(--text-muted); line-height:1.5; }
+    .obc-empty { padding:18px 14px; font-size:12px; color:var(--text-muted); }
+    @media print { .obc-scroll { overflow:visible; max-height:none; } }
+
     /* ══ SUMMARY TABLES ══ */
     .sum-layout { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:#C8D6E5; }
     .sum-panel { background:#fff; }
@@ -313,7 +328,7 @@
     }
   </style>
   <!-- Design system — loaded last so it settles equal-specificity ties -->
-  <link rel="stylesheet" href="design-system.css?v=2" />
+  <link rel="stylesheet" href="design-system.css?v=3" />
   <script src="a11y.js?v=1"></script>
   <script src="mobile-shell.js?v=3"></script>
 </head>
@@ -383,9 +398,19 @@
         </div>
         <div class="chart-legend">
           <div class="cl-item"><div class="cl-sw" style="background:var(--chart-a)"></div> Limestone + OB/Clay</div>
-          <div class="cl-item"><div class="cl-sw" style="background:var(--chart-b)"></div> Overburden (waste to dump)</div>
+          <div class="cl-item"><div class="cl-sw" style="background:var(--chart-b)"></div> Overburden — Odoo Waste Material Entry (trips × 20 t, not weighed)</div>
         </div>
         <div class="chart-wrap"><svg id="tmh-chart" width="100%" height="180" role="img" aria-label="Daily total material hauled, stacked bar chart"></svg></div>
+      </div>
+
+      <!-- overburden + crusher: the two mining figures that are not weighbridge
+           tickets (Odoo Waste Material Entry; Production Report crusher facts) -->
+      <div class="sc">
+        <div class="sc-hdr">
+          <h3><i data-lucide="mountain" class="title-icon"></i> Overburden &amp; Crusher<span id="obc-month-lbl"></span></h3>
+          <span class="sc-note">Odoo Waste Material Entry · Production Report crusher figures</span>
+        </div>
+        <div class="sum-layout" id="obc-body"></div>
       </div>
 
       <!-- detailed data (collapsed by default — the matrix/ledger/royalty detail
@@ -460,6 +485,8 @@
       <div class="sc">
         <div class="sc-hdr"><h3><i data-lucide="info" class="title-icon"></i> Method Notes &amp; Differences vs Excel Workbook</h3></div>
         <ul class="fn-list">
+          <li><strong>Overburden comes from Odoo's Waste Material Entry, not the weighbridge.</strong> Overburden is hauled by trip count and never weighed — not one weighbridge ticket has carried the "… to Golani Waste dump" movements the workbook's waste columns (X, AB) were keyed on, so those columns stay in the matrix for audit but no longer feed the headline. Odoo records trips and a tonnage of trips × a fixed load per trip (20 t), so this figure is an estimate by load factor, not a weight. Only entries approved in Odoo are counted; one awaiting approval is listed but not added in. The mine is recorded only in each entry's free-text remarks, so no North/South split is shown. Entries are dated as Odoo dates them — the day-1 carry-over rule applies to weighbridge tickets only.</li>
+          <li><strong>Crusher TPH</strong> = crusher production ÷ apron-feeder hours, from the Production Report. Month-to-date TPH is Σ production ÷ Σ apron hours over the days that report both — never an average of daily TPHs. A day without apron hours shows no TPH rather than zero.</li>
           <li><strong>Total Material Handling (the two headline cards + chart) counts each ticket once.</strong> Stock-Yard reissues (material already counted once when it moved mine→stock) are excluded from TMH when that material also has a direct mine-sourced route — otherwise a tonne mined into stock and later reclaimed to the crusher was counted twice. Limestone SPG and Gypsum have no mine-sourced route at all, so their Stock Yard movement is kept as their only handling record. This is a one-time methodology fix — if this month's TMH reads lower than a month reported before this change, that's the double-count coming out, not less material moved. The detailed Movement Matrix below still shows every route, including the reissues, for audit.</li>
           <li><strong>Closing stock</strong> = opening + <em>all</em> receipts into the stock yard (South, North) − issues out of stock. The Excel MIS omitted North receipts from closing while the "Supply to date" ledger included them; this report follows the ledger, so closing always equals the next day's opening.</li>
           <li><strong>Deliver to Plant</strong> counts every flow reaching the pile (South + North + Stock Yard, through-crusher and bypass). The Excel column omitted North mine direct deliveries.</li>
@@ -859,7 +886,64 @@
         await saveMonthConfig('2026-04').catch(function () {});
       }
     }
+
+    await loadFeeds(today);
   }
+
+  /* ── Odoo feeds that are not weighbridge tickets ─────────────────
+     Overburden (GET /api/quarry/overburden — Odoo Waste Material Entry,
+     approved entries only) and the crusher's production / apron-feeder
+     hours (GET /api/quarry/crusher — Production Report facts).
+
+     Failure-isolated on purpose: either feed failing (an older cached
+     api-client, a role the server refuses, the mirror not synced yet) leaves
+     the weighbridge report exactly as it was and shows the reason in the
+     Overburden & Crusher card — never a red toast over a working report,
+     and never a 0 standing in for a feed that did not load.
+
+     The window is capped at ~3 years (the server refuses wider ranges);
+     the whole Waste Material Entry history is ~650 rows, so this is small. */
+  var feeds = { ob:null, obErr:null, cr:null, crErr:null };
+  var obIdx = {}, crIdx = {};   /* date -> day row, from the two feeds */
+  function feedFrom(todayISO) {
+    var d = dateOf(todayISO); d.setDate(d.getDate() - 1090);
+    var f = isoOf(d);
+    return f > DATA_EPOCH ? f : DATA_EPOCH;
+  }
+  async function loadFeeds(today) {
+    feeds = { ob:null, obErr:null, cr:null, crErr:null }; obIdx = {}; crIdx = {};
+    if (!window.NyatiAPI || typeof NyatiAPI.request !== 'function') {
+      feeds.obErr = feeds.crErr = 'this page needs reloading to load the Odoo feeds';
+      return;
+    }
+    var qs = '?from=' + feedFrom(today) + '&to=' + today;
+    var res = await Promise.allSettled([
+      NyatiAPI.request('GET', '/quarry/overburden' + qs),
+      NyatiAPI.request('GET', '/quarry/crusher' + qs)
+    ]);
+    if (res[0].status === 'fulfilled') {
+      feeds.ob = res[0].value;
+      feeds.ob.days.forEach(function (d) { obIdx[d.date] = d; });
+    } else feeds.obErr = feedError(res[0].reason, 'the overburden feed');
+    if (res[1].status === 'fulfilled') {
+      feeds.cr = res[1].value;
+      feeds.cr.days.forEach(function (d) { crIdx[d.date] = d; });
+    } else feeds.crErr = feedError(res[1].reason, 'the crusher feed');
+  }
+  /* humanError() phrases a 403 as "you cannot change this", which is wrong
+     for a read; everything else it words well. No trailing full stop — the
+     card adds its own. */
+  function feedError(err, what) {
+    if (err && err.status === 403) return 'your role does not have access to ' + what;
+    return humanError(err, what + ' could not be loaded').replace(/\.$/, '');
+  }
+  /* Approved overburden MT for one date, or null when Odoo has no approved
+     entry for it — "not recorded" is not "nothing hauled". */
+  function obMt(dateISO) {
+    var d = obIdx[dateISO];
+    return d && d.mt !== null && d.mt !== undefined ? +d.mt : null;
+  }
+  function obSum(days) { var s = 0; days.forEach(function (d) { s += obMt(d) || 0; }); return s; }
 
   function monthCfg(ym) {
     var m = store.manual.monthly[ym];
@@ -944,12 +1028,22 @@
   }
   function sumSet(set, dateISO) { var s = 0; set.forEach(function (c) { s += dayVal(c, dateISO); }); return s; }
 
-  /* derived per-day metrics. total = SET_TMH (the headline TMH set — see
-     comment above SET_TMH for what's in/out); waste is a subset of it. */
+  /* derived per-day metrics. woOb = the weighed part of SET_TMH (the
+     headline TMH set — see the comment above SET_TMH) without its waste
+     columns; waste = overburden from Odoo's Waste Material Entry (obMt);
+     total = the two together.
+
+     Waste used to be SET_WASTE (weighbridge columns X/AB), a subset of
+     SET_TMH. No ticket has ever carried those movements — overburden is
+     counted in trips, not weighed — so the chart's overburden series and the
+     Overburden card were permanently empty while Odoo held 128,062 t for
+     September 2026 alone. X/AB stay in the matrix for audit but are no longer
+     the source here; taking both would count the same material twice if
+     the weighbridge ever did start recording it. */
   function dayTotals(dateISO) {
-    var total = sumSet(SET_TMH, dateISO);
-    var waste = sumSet(SET_WASTE, dateISO);
-    return { total:total, waste:waste, woOb:total - waste, viaCr:sumSet(SET_VIA_CR, dateISO) };
+    var weighed = sumSet(SET_TMH, dateISO) - sumSet(SET_WASTE, dateISO);
+    var waste = obMt(dateISO) || 0;
+    return { total:weighed + waste, waste:waste, woOb:weighed, viaCr:sumSet(SET_VIA_CR, dateISO) };
   }
 
   /* iterate all days of month ym up to (and incl.) limitISO if given */
@@ -1031,6 +1125,7 @@
     renderDataChip();
     renderHero();
     renderChart();
+    renderObc();
     renderMatrix();
     renderSummary();
     renderContractors();
@@ -1067,23 +1162,31 @@
       '<div class="hero-stats">' +
         '<div class="hero-stat"><div class="hs-lbl">Today</div><div class="hs-val">' + fmt(today, false) + '</div><div class="hs-unit">MT &middot; ' + selDate + '</div></div>' +
         '<div class="hero-stat"><div class="hs-lbl">MTD</div><div class="hs-val">' + fmt(mtd, false) + '</div><div class="hs-unit">MT this month</div></div>' +
-        '<div class="hero-stat"><div class="hs-lbl">MTD Avg / Day</div><div class="hs-val">' + fmt(dayN ? mtd / dayN : 0, false) + '</div><div class="hs-unit">MT / day</div></div>' +
+        '<div class="hero-stat"><div class="hs-lbl">MTD Avg / Day</div><div class="hs-val">' + fmt(dayN && mtd !== null ? mtd / dayN : null, false) + '</div><div class="hs-unit">MT / day</div></div>' +
       '</div>' +
       '<div class="hero-mix">' + mixHtml + '</div>' +
     '</div>';
   }
   function renderHero() {
     var t = dayTotals(selDate);
-    var mtdTot = mtdSet(SET_TMH, selDate), mtdWaste = mtdSet(SET_WASTE, selDate);
-    var mtdMat = mtdTot - mtdWaste;
+    /* Weighed material from the ticket log; overburden from Odoo's Waste
+       Material Entry (see dayTotals). */
+    var mtdMat = mtdSet(SET_TMH, selDate) - mtdSet(SET_WASTE, selDate);
+    var mtdWaste = obSum(monthDays(ymOf(selDate), selDate));
+    var mtdTot = mtdMat + mtdWaste;
     var dayN = +selDate.slice(8);
     var matPct   = mtdTot > 0 ? (100 * mtdMat   / mtdTot).toFixed(1) : '–';
     var wastePct = mtdTot > 0 ? (100 * mtdWaste / mtdTot).toFixed(1) : '–';
+    /* Today is null (shown as –) when Odoo has no approved entry for the
+       date: entries arrive days late, and a 0.00 would claim nothing was
+       hauled. The feed failing says so instead of printing zeros. */
+    var wasteMix = feeds.obErr
+      ? 'Overburden feed unavailable &mdash; ' + escHtml(feeds.obErr)
+      : '<strong>' + wastePct + '%</strong> of MTD Total Material Handling &mdash; Odoo Waste Material Entry, trips × 20 t (not weighed)';
     $('hero-strip').innerHTML =
       heroCard('', 'Limestone + OB/Clay', t.woOb, mtdMat, dayN,
-        '<strong>' + matPct + '%</strong> of MTD Total Material Handling') +
-      heroCard('waste', 'Overburden', t.waste, mtdWaste, dayN,
-        '<strong>' + wastePct + '%</strong> of MTD Total Material Handling &mdash; waste to Golani dump');
+        '<strong>' + matPct + '%</strong> of MTD Total Material Handling (weighbridge)') +
+      heroCard('waste', 'Overburden', feeds.obErr ? null : obMt(selDate), feeds.obErr ? null : mtdWaste, dayN, wasteMix);
   }
 
   /* ── chart (stacked bars: material + waste) ── */
@@ -1138,7 +1241,8 @@
         tip.style.top = (e.clientY + 14) + 'px';
         tip.innerHTML = '<div class="ct-d">' + dateOf(x.d).toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' }) + '</div>' +
           'Total: <strong>' + fmt(x.total, false) + '</strong> MT<br>' +
-          'Limestone + OB/Clay: ' + fmt(x.mat, false) + ' · Overburden: ' + fmt(x.waste, false) + '<br>' +
+          'Limestone + OB/Clay: ' + fmt(x.mat, false) + ' · Overburden: ' +
+          (obMt(x.d) !== null ? fmt(x.waste, false) + ' (Odoo, trips × 20 t)' : 'no Odoo entry') + '<br>' +
           'Via crusher: ' + fmt(x.via, false) + ' MT';
       });
       r.addEventListener('mouseleave', function () { tip.style.display = 'none'; });
@@ -1148,6 +1252,72 @@
         renderAll();
       });
     });
+  }
+
+  /* ── Overburden & Crusher card ──
+     Left: the month's Waste Material Entries up to the selected date
+     (newest first), approved total in the footer, entries awaiting approval
+     listed but not added in. Right: crusher production, apron-feeder hours
+     and TPH per day, with month-to-date TPH = Σ production ÷ Σ apron hours
+     over the days that report both. A missing figure is "–", never 0. */
+  function renderObc() {
+    var ym = ymOf(selDate);
+    var shortDate = function (iso) { return dateOf(iso).toLocaleDateString('en-GB', { day:'2-digit', month:'short' }); };
+    $('obc-month-lbl').textContent = ' — ' + monthLabel(ym) + ', to ' + shortDate(selDate);
+
+    /* overburden */
+    var left = '<div class="obc-hd">Overburden removed — Odoo Waste Material Entry</div>';
+    if (feeds.obErr) {
+      left += '<div class="obc-empty">Not available: ' + escHtml(feeds.obErr) + '.</div>';
+    } else {
+      var ents = (feeds.ob ? feeds.ob.entries : []).filter(function (e) { return ymOf(e.date) === ym && e.date <= selDate; });
+      var tMt = 0, tTrips = 0, pending = 0;
+      var rows = ents.slice().reverse().map(function (e) {
+        if (e.counted) { tMt += +e.mt || 0; tTrips += +e.trips || 0; } else pending++;
+        return '<tr class="' + (e.counted ? '' : 'pend ') + (e.date === selDate ? 'sel' : '') + '"' +
+          (e.remarks ? ' title="' + escHtml(e.name + ' — ' + e.remarks) + '"' : '') + '>' +
+          '<td>' + shortDate(e.date) + '</td>' +
+          '<td>' + escHtml(e.contractor || '—') + (e.counted ? '' : '<span class="spill-tag">awaiting approval</span>') + '</td>' +
+          '<td class="r">' + (e.trips === null ? '–' : (+e.trips).toLocaleString('en-GB')) + '</td>' +
+          '<td class="r">' + fmt(e.mt, false) + '</td></tr>';
+      }).join('');
+      left += ents.length
+        ? '<div class="obc-scroll"><table class="tk-tbl obc-tbl"><thead><tr><th>Date</th><th>Contractor</th><th class="r">Trips</th><th class="r">MT</th></tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+          '<tfoot><tr><td colspan="2">Approved, month to date</td><td class="r">' + tTrips.toLocaleString('en-GB') + '</td><td class="r">' + fmt(tMt, false) + '</td></tr></tfoot></table></div>'
+        : '<div class="obc-empty">No Waste Material Entry in Odoo for ' + monthLabel(ym) + ' up to this date.</div>';
+      left += '<div class="obc-foot">' + escHtml((feeds.ob && feeds.ob.basis) || '') +
+        ' Approved entries only' + (pending ? ' — ' + pending + ' awaiting approval in Odoo, listed but not counted' : '') + '.' +
+        ' The mine is recorded only in free-text remarks (hover a row), so no North/South split is shown.</div>';
+    }
+
+    /* crusher */
+    var right = '<div class="obc-hd">Crusher — production ÷ apron-feeder hours</div>';
+    if (feeds.crErr) {
+      right += '<div class="obc-empty">Not available: ' + escHtml(feeds.crErr) + '.</div>';
+    } else {
+      var cdays = monthDays(ym, selDate).filter(function (d) { return crIdx[d]; });
+      var sp = 0, sa = 0, pp = 0, pa = 0, anyApron = false, anyProd = false;
+      var crow = cdays.slice().reverse().map(function (d) {
+        var c = crIdx[d];
+        if (c.prodMt !== null) { sp += +c.prodMt; anyProd = true; }
+        if (c.apronHrs !== null) { sa += +c.apronHrs; anyApron = true; }
+        if (c.prodMt !== null && c.apronHrs !== null && c.apronHrs > 0) { pp += +c.prodMt; pa += +c.apronHrs; }
+        return '<tr class="' + (d === selDate ? 'sel' : '') + '"><td>' + shortDate(d) + '</td>' +
+          '<td class="r">' + fmt(c.prodMt, false) + '</td><td class="r">' + fmt(c.apronHrs, false) + '</td>' +
+          '<td class="r">' + fmt(c.tph, false) + '</td></tr>';
+      }).join('');
+      right += cdays.length
+        ? '<div class="obc-scroll"><table class="tk-tbl obc-tbl"><thead><tr><th>Date</th><th class="r">Production MT</th><th class="r">Apron h</th><th class="r">TPH</th></tr></thead>' +
+          '<tbody>' + crow + '</tbody>' +
+          '<tfoot><tr><td>Month to date</td><td class="r">' + fmt(anyProd ? sp : null, false) + '</td><td class="r">' + fmt(anyApron ? sa : null, false) +
+          '</td><td class="r">' + fmt(pa > 0 ? pp / pa : null, false) + '</td></tr></tfoot></table></div>'
+        : '<div class="obc-empty">No crusher figures on the Production Report for ' + monthLabel(ym) + ' up to this date.</div>';
+      right += '<div class="obc-foot">From the Production Report. Month-to-date TPH = Σ production ÷ Σ apron-feeder hours over the days that report both.' +
+        (cdays.length && !anyApron ? ' Apron-feeder hours are not on the Production Report for this month yet, so TPH is not shown.' : '') + '</div>';
+    }
+
+    $('obc-body').innerHTML = '<div class="sum-panel">' + left + '</div><div class="sum-panel">' + right + '</div>';
   }
 
   /* ── TMH matrix ── */
@@ -1295,6 +1465,7 @@
       '<tr class="sum-grp"><td colspan="2">Waste Disposal</td></tr>' +
       row('Waste to Dump — Remieli (South → Golani)', wasteS) +
       row('Waste to Dump — North → Golani', wasteN) +
+      row('Overburden removed — Odoo Waste Material Entry (trips × 20 t)', obSum(monthDays(ym))) +
       mrow('Waste to Dump — Amin (manual)', 'wasteAmin', cfg.wasteAmin) +
       mrow('Waste to Dump — Digalla (manual)', 'wasteDigalla', cfg.wasteDigalla) +
       row('Hauled by LCL Truck', lcl) +

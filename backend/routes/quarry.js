@@ -10,6 +10,11 @@
   GET  /api/quarry/tickets         → all tickets, or ?from=&to= a date range
   GET  /api/quarry/tickets/summary → per (date, movement, product, vendor)
                                       sums — see that route's comment
+  GET  /api/quarry/overburden?from=&to= → Odoo Waste Material Entry
+                                      (overburden): entries, per-day and
+                                      per-contractor totals — see below
+  GET  /api/quarry/crusher?from=&to=    → crusher production, apron-feeder
+                                      hours and TPH per day
 
   I-19 / I-32 (RAID_LOG.md, 2026-09-15 → 2026-10-07): mines-report.html
   used to call GET /tickets with no range on every load — fine at 3,909
@@ -25,6 +30,9 @@ const express = require('express');
 const db      = require('../db');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { validate, z, zDate } = require('../middleware/validate');
+const { MINES_VIEW_ROLES } = require('../../forms/access-registry.js');
+const overburden = require('../services/overburden');
+const crusher    = require('../services/crusher');
 
 const router = express.Router();
 
@@ -197,6 +205,46 @@ router.get('/tickets/summary',
 
       const result = await db.query(query, params);
       res.json(result.rows);
+    } catch (err) { next(err); }
+  });
+
+/* Both feeds below are ranged reads of small server-side aggregates, gated
+   on MINES_VIEW_ROLES — the same audience the Daily MIS summary's Mining
+   section uses (services/misReport.js), so the Quarry page cannot show a
+   figure the summary withholds or the other way round. A range is required
+   and capped at ~3 years: unranged reads are how RAID I-19 happened. */
+const MAX_RANGE_DAYS = 1100;
+const rangeQuery = z.object({ from: zDate, to: zDate })
+  .refine(q => q.from <= q.to, { message: 'from must not be after to', path: ['from'] })
+  .refine(q => (Date.parse(q.to) - Date.parse(q.from)) / 86400000 <= MAX_RANGE_DAYS,
+    { message: `range must be at most ${MAX_RANGE_DAYS} days`, path: ['to'] });
+
+/* GET /api/quarry/overburden?from=&to= — Odoo's Waste Material Entry,
+   mirrored by services/odooWasteSync.js. Overburden is not weighed: Odoo
+   records trips and a tonnage of trips × a fixed load per trip, and the
+   payload's `basis` sentence says so for the page to show. Approved entries
+   are the totals; an entry still awaiting approval in Odoo is in `entries`
+   with counted:false and in the day's pending figures, never in the totals. */
+router.get('/overburden',
+  requireAuth, requireRole(...MINES_VIEW_ROLES),
+  validate(rangeQuery, 'query'),
+  async (req, res, next) => {
+    try {
+      const { from, to } = req.validated.query;
+      res.json(await overburden.overburdenRange(from, to));
+    } catch (err) { next(err); }
+  });
+
+/* GET /api/quarry/crusher?from=&to= — per day: crusher production (MT),
+   apron-feeder hours and TPH, from the Production Report's two facts only
+   (services/crusher.js). A day without apron hours has tph null, never 0. */
+router.get('/crusher',
+  requireAuth, requireRole(...MINES_VIEW_ROLES),
+  validate(rangeQuery, 'query'),
+  async (req, res, next) => {
+    try {
+      const { from, to } = req.validated.query;
+      res.json({ from, to, days: await crusher.crusherRange(from, to) });
     } catch (err) { next(err); }
   });
 
