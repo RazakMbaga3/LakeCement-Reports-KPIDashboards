@@ -76,17 +76,26 @@ Suites: formulas 4/4 · facts 2/2 · access 8/8 · approval 5/5 · stores 5/5 ·
 ## KPI Dashboard / Formula Layer  [WBS-DATA-2]
 
 **Status:** 🟡 **Partial**
-**Owner:** `kpi-data-analyst` · **Last verified:** 2026-09-13 via `validate`
+**Owner:** `kpi-data-analyst` · **Last verified:** **2026-10-14** via KPI-mapping audit (dev DB)
 
 **What "done" means:** every dashboard number renders only from `/api/formula` (zero page-JS math); overrides carry reason + audit trail; `docs/KPI_REFERENCE.md` matches the live registry.
 
 | # | Criterion | Evidence source | Last verified | Result |
 |---|---|---|---|---|
-| 1 | KPI reference current | `npm run docs:kpi` + `git diff` | 2026-09-13 | ✅ clean — 20 KPIs, 149 facts, registry v1 |
-| 2 | Formula suites | 5 `test:*` suites | 2026-09-13 | ✅ all green |
-| 3 | Phase 3 acceptance | `npm run accept:phase3` | 2026-09-13 | ✅ 27 passed, 0 failed |
+| 1 | KPI reference current | `npm run docs:kpi` + `git diff` | **2026-10-14** | 🔴 **was STALE — 170 facts / `despatch-day` v4 committed against a live registry of 171 facts / v5** (43 insertions, 24 deletions, registry untouched). Regenerated; working copy now correct but **uncommitted** — RAID **I-53** |
+| 2 | Formula suites | `test:formulas` 6, `test:facts` 2, `test:kpi-keys` 5, `test:form-facts` 4, `test:kpi-level` 8, `test:engine-shifts` 7 | **2026-10-14** | ✅ all green, 32/32 checks |
+| 3 | Phase 3 acceptance | `npm run accept:phase3` | **2026-10-14** | ✅ 27 passed, 0 failed |
+| 4 | Odoo production mapping | `npm run accept:odoo-production` | **2026-10-14** | ✅ **33 passed, 0 failed** (was 31/1 — the 1 failure was a fixture stale since crusher joined `ALL_STAGES` on 2026-10-08, proven pre-existing by stashing; fixture now seeds crusher and asserts `ls_crusher_prod_mt`) |
+| 5 | `anyReading()` fabricated-zero guard | read + re-verified at all 3 call sites | **2026-10-14** | ✅ intact at `despatch-day`, `specific-power-consumption-total`, `-up-to-clinker`. Real zeros preserved — `purchased-clinker-share` still returns a true 0 when the plant ran own clinker |
+| 6 | **Every filed field reaches a KPI** (mapping, both directions) | proxy-instrumented trace of all 32 `daily()` fns over all 171 facts + per-field non-null counts on the dev DB | **2026-10-14** | 🔴 **~12 Odoo-filled production fields (98–192 days each) are not declared FACTS, so no KPI can read them** — RAID **I-51**. Separately, 20 declared facts are read by no formula; **18 of those 20 are intentional** (7 superseded `dispatch_legacy_*` + `dispatch_mtd_target` = 0 rows ever; 5 `cm1_*_cons_mt` = superseded `despatch-day` v4 inputs; 6 `pwr_tanesco/cpp_*` = a decomposition of totals already in use, verified summing to `pwr_tanesco_kwh`/`pwr_cpp_kwh` within 1 kWh; `cpp_coal_gcv` = context, as SFC is deliberately mass-based and heat rate enthalpy-based) |
+| 7 | Regression proof for this audit's changes | snapshot → change → recompute → diff, all (day × formula) + (month × formula) | **2026-10-14** | ✅ **8,000 values compared, 0 changed**; 3,326 non-null day-rows before and after. The crusher map fix is forward-looking only, as intended |
 
-**Known gap keeping this Partial:** **Quality KPI** validated against only **1 day** of source data, vs. 91/91 days for production and power-cons (no `verify-quality.py` exists). One KPI's thin validation holds the whole entry at Partial rather than rounding up — RAID I-2.
+**Known gaps keeping this Partial** (per-KPI, not rounded up):
+- **Quality KPI — still 1 day only.** ✅ re-confirmed 2026-10-14: `quality` has exactly **one row ever** (2026-04-21) on the dev DB, so `clinker-free-lime`, `clinker-c3s`, `blaine-425r` and `strength-28d` remain validated against a single day vs. 91/91 for production and power-cons. Unchanged since 2026-09-13 — RAID I-2.
+- **~12 production fields filed but undeclared** — RAID **I-51**. The one genuinely fixable mapping class found; everything else that reads null is data-arrival (RAID I-37/I-44).
+- **`pwr_lighting_kwh` never filled (0/91)** while sitting inside `KWH_ALL`/`KWH_DOWNSTREAM`, silently understating 3 power KPIs and overstating `power-distribution-loss-pct`, undocumented — RAID **I-52**.
+- **Validation coverage is per-KPI and uneven; this entry does not claim full coverage.** Verified against real source data this audit: `ls_crusher_cons_mt` = 1423.66 for 2026-07-01 matches `Production Report 01.07.2026.xlsx` R32C13 exactly, and crusher throughput averages 168 TPH against the sheet's rated 250 MT/hr. All other KPIs carry the coverage stated in `KPI_REFERENCE.md`; where a figure's day-count is not recorded there, treat it as **PARTIAL — unverified** rather than assuming the 91-day production baseline.
+- **Measured on the dev DB only.** The droplet may differ — RAID I-27 notes a Production backlog that was dev-only — so re-measure before promising coverage to users.
 
 ## Stoppage / Reliability Report  [WBS-DATA-1]
 

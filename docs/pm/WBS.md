@@ -25,6 +25,13 @@ boot, so no other item can be verified, let alone shipped.
 | WBS-DATA-2 | Quality KPI multi-month validation — build `verify-quality.py` | Source Excel access | 🟡 Open | RAID I-2. Every other KPI got 91/91-day verification; Quality got 1 day |
 | WBS-DATA-3 | Odoo Phase 4 — move off the TEST instance onto production | Odoo Team (R-1) | 🔴 Blocked | `crit` once unblocked. Blocker is the *instance*, not the key. 2026-09-20: partly unblocked — production, sales and purchases answer on the production ERP; dispatch and mining are still test-only |
 | WBS-DATA-4 | Confirm Purchases category-grid field names, unstub `fetchCategoryGrid()` | Odoo Team (D-1) | 🔴 Blocked | |
+| WBS-DATA-7 | **Crusher TPH = production ÷ apron-feeder hours** (user decision 2026-10-15; old basis was running hours, new reads ~15–20% higher). Store `apron_feeder_hrs` from the production_report feed → fact `ls_crusher_apron_hrs` | — | 🟠 In progress (2026-10-15) | Check: 26-Sep 3,969.84 t ÷ 17.45 h = 227.5 t/h |
+| WBS-DATA-8 | **CPP report autofilled from Odoo `cpp_entry`; overburden from Odoo Waste Material Entry; both + crusher TPH in the Daily MIS Mining section and the Quarry page** | WBS-DEPLOY-3 for production | 🟠 In progress (2026-10-15) | CPP: 4 core fields = plant Excel 77/77 days. Overburden tonnes = trips × 20 t (not weighed) |
+| WBS-DATA-9 | **Production-report stock ledgers (opening/received/closing) + Coal for CPP**, rolled from the plant's 30-Jun closing with Odoo flows; nightly check against Odoo live stock; fix the MIS Stores-ledger stock lines (materials chain started from 0 on 31-Aug) | WBS-DEPLOY-3; Production/Stores answers (I-61) for limestone, clay, own clinker | 🟠 In progress (2026-10-15) | Replay Apr–Jun exact for 6 of 9 materials; 30-Jun→14-Oct lands exactly on Odoo live stock for coal/iron ore/bauxite/purch. clinker/fine coal |
+| WBS-DATA-10 | **Production-report power row copied from the Electrical Power Consumption form** (Odoo has no meter data since Dec 2025) | Electrical resuming entry (I-62) | 🟠 In progress (2026-10-15) | 5 sections match 82–88/91 days; rm1/rm2/others/losses under investigation |
+| WBS-DATA-11 | Quality report from Odoo lab entries (cement/clinker/kiln-feed/LS-pile/mined-LS sample analysis) — backfill to 30-Sep, live once the lab keeps entering in Odoo | WBS-DEPLOY-3 | ⚪ Planned | Verify cell-for-cell against the QC DAILY REPORT workbook first (I-2) |
+| WBS-DATA-12 | Packing-plant stoppages from Odoo `packing_plant_stoppage_entry` (11k rows, current) into the stoppage report's packing section | WBS-DEPLOY-3 | ⚪ Planned | Delegate to `stoppage-report-designer`. Kiln/mill stoppages are NOT in Odoo |
+| WBS-DATA-13 | Quarry stockyard stock (HG/LG/HGHMGO/clay) server-side | Plant opening balances | ⚪ Planned | Odoo's yard figures are not usable (LG1 566,428 t) |
 | WBS-DATA-5 | Fix or retire `npm run odoo:test` so it reports per-connector health | — | 🟡 Open | RAID I-6 — currently misreports the live connectors as unconfigured |
 | WBS-DATA-1 | Stoppage / Reliability report — close the deferred items | WBS-CODE-2 (to verify) | 🟡 Partial | Deferred: insights UI page, cost-of-stoppage (needs Finance TZS/hr rate), EN/SW labels |
 
@@ -57,6 +64,7 @@ boot, so no other item can be verified, let alone shipped.
 
 | ID | Item | Depends on | Status | Notes |
 |---|---|---|---|---|
+| WBS-DEPLOY-3 | **Connect the droplet to Odoo's database**: Odoo admin allows the droplet IP on 5432 and issues a narrower read-only login (I-60); set `ODOO_PG_*` in the droplet `.env`; `npm run odoo:db-test` there; confirm the new pulls go `ok` in `/api/health` | Odoo admin (I-60) | 🔴 Blocked on Odoo team | Every WBS-DATA-8/9/11/12 pull skips cleanly until this is done |
 | WBS-DEPLOY-2 | Set `BACKUP_DIR`, run one backup + one `restore:drill`, record the evidence | — | 🟡 Open | RAID I-7 — no backups run locally today. Confirm the droplet's own backup state separately |
 | WBS-DEPLOY-1 | Refresh `RUNBOOK.md`/`GO_LIVE_CHECKLIST.md` banners, then rewrite for the DigitalOcean path; fix the `npm ci` line in `DEPLOYMENT_DIGITALOCEAN.md:267` | — | 🟡 Open | RAID I-1, I-10 — banners still say the platform is "unconfirmed" 3+ weeks after it was decided |
 

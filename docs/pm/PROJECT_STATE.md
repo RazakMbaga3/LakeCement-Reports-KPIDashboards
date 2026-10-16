@@ -8,8 +8,102 @@ in any session.** Maintained by the `project-manager` skill
 - **Last hardening run:** 2026-09-24 — thirteen commits, every one gated on a real command's real output before it was made
 - **Last UI measurement:** 2026-09-24 — **responsive 88/88 checks pass** (22 pages x 4 viewports: 0 overflow, 0 text below the 12px floor of 5,649 nodes, 0 tap targets under 44px, 0 iOS-zoom triggers), **a11y 0 violations** across every page including all 5 correction-request UI states, perf 2 pages over budget (both pre-existing: `daily-report` 1404KB, `quarry` 12876KB / RAID I-19), design-consistency 4 inventory findings and 0 collisions
 - **Last feature gate:** 2026-10-12 — Compliance Master (see Current focus)
-- **Last validation gate:** 2026-09-24 — backend 17 unit suites + smoke green; acceptance **phase1 19, phase2 18, phase3 27, phase5 10, phase7 9, phase8 21, quarry 15, amendments 92** = 211 checks, 0 failed; the five e2e failures logged earlier tonight as "pre-existing" (I-28) were re-diagnosed and fixed same-night — see below; a fresh full e2e run is in progress as the closing gate
-- **Overall health:** 🟡 **Amber** — the write path is materially safer than it was yesterday and the correction-request workflow (I-29) is built and tested; remaining open items are the risks owned outside this repo (R-4, R-6, R-7) and I-19 (quarry payload)
+- **Last validation gate:** **2026-10-13** — backend **327 assertions across 29 suites, 0 failed**, `eslint` clean, `smoke` OK (`npm test`, run twice). This supersedes the 2026-09-24 figure of "17 suites / 211 acceptance checks": ~25 commits landed between those dates (Compliance Master, the Sale Register re-source, the new Odoo production payload, two-level sign-off, corrections/reopen) and the test base grew with them. Acceptance + e2e re-measurement was dispatched the same day — see **Inspection 2026-10-13** below
+- **Overall health:** 🟡 **Amber** — unchanged verdict, materially changed reasons. Code and integration are in good shape (production stable, all five Odoo pulls `ok`); the open items are **(a) secrets leaked by I-42 that are still valid and unrotated**, **(b) I-38 security headers never actually deployed**, and **(c) human report filing has stopped almost entirely** (see below). R-7 and R-6 are closed; I-19 and I-35 are closed
+
+### Inspection 2026-10-13 (`project-manager status`, every claim command-verified)
+
+Run because this file had gone 13 days and ~25 commits stale. Three findings
+change the plan; two correct this file in the project's favour.
+
+**🔴 I-38 is NOT deployed, 13 days after being recorded as fixed in tree.**
+`curl -sS -D - https://smr.lakecement.co.tz/login.html` returns
+`X-Content-Type-Options` and *nothing else* — no HSTS, CSP, X-Frame-Options or
+Referrer-Policy — while `/api/health` carries the full helmet set. The page
+where credentials are typed is the least protected page on the site. Root
+cause is deeper than a missed reload: login.html returns **no `Cache-Control`
+at all**, so the running config predates even the `.html` caching block —
+`/etc/nginx/` has drifted from the repo, and `deploy.sh` does not copy nginx
+configs, so **deploying can never apply this fix**. Sudo-gated. See I-38.
+
+**🔴 I-42's access is closed but its leaked secrets are still live.**
+`/backend/.env`, `/.git/config` and `/backend/db/seed.js` all now return 404
+(verified). But tokens are symmetric HMAC on `JWT_SECRET`
+(`routes/auth.js:42`), so anyone who downloaded `.env` during the window can
+still **forge an admin/MD session with no password**, and a password reset
+does not revoke it — only rotating the secret does. `db/seed.js:24-47`
+published every account's plaintext password on a guessable `Role@LCL2026`
+pattern (partially mitigated: `seed.js:135` sets `must_change_password=true`,
+so never-used accounts are gated). The Graph client secret posts to
+`/users/{from}/sendMail` (`services/mailer.js:68`) — with application
+`Mail.Send` that is **send-as-any-mailbox**, MD included. **Perishable
+action: grep the nginx access logs for `.env`/`.git` hits** — that single
+answer decides breach vs near-miss, and logs rotate.
+
+**🔴 Human data entry has stopped almost completely — this is now the
+launch-gating fact.** Rows filed since 2026-08-01, by author:
+production 67 / dispatch 67 / materials 41 are **100% Odoo-filled
+(`submitted_by IS NULL`)**; the only human-typed stream, **cpp, stopped
+2026-09-20 (23 days)**. Staleness: materials/production/dispatch 3 days;
+cpp 23; stoppage/power-cons/limestone **105**; quality **175** (one row ever).
+KPI nulls therefore improved only 21/32 → **18/32** for Aug and Sep, and
+October is **worse at 24/32** because CPP's silence alone cost 7 KPIs.
+**Odoo automation cannot close this** — it feeds none of the silent streams;
+15 of the 18 nulls sit behind power-cons, stoppage, limestone and quality.
+Already distorting the system: `despatch-day` was re-sourced to v5 precisely
+because the CM-1 ledger stopped being recorded on 2026-07-01. See I-37.
+
+**🔴 And the reason why, found by following that thread — I-45, the root
+cause: 27 of the 50 real accounts have never logged in.** The named-user
+migration (43 shared dept logins → named users, L1 approves / L2–L3 enter)
+was built and deployed, but **nobody was onboarded onto it.** Entire
+departments are at zero — HR & ADMIN 3/3 never, FINANCE 3/3 never — and in
+*every* operational department only the shared HOD login has ever been
+active, with `*_officer` and `*_senior` unused. CPP proves the pattern: all
+77 of its filed days came from the shared `cpp` login (whose own
+`last_login` is 2026-07-28, last submit 2026-09-23), while `cpp_officer` and
+`cpp_senior` read `NEVER`. **So the access model is not in force anywhere in
+practice** — separation of duties, per-person attribution and the approval
+chain all currently rest on shared logins. This reframes the data gap from a
+discipline problem into an **onboarding** problem, which is tractable: the
+fix is handing out accounts, not asking people to try harder. Sequence it
+**after** the I-42 `JWT_SECRET` rotation, which signs everyone out and
+forces a fresh login anyway — the two combine into one clean cutover.
+
+**✅ Two corrections in this project's favour, previously unrecorded:**
+- **I-35 / launch blocker B-2 is CLOSED.** `daily_reports` holds
+  `approved 844, pending_approval 137` and **zero drafts table-wide**. The
+  ~210 invisible dispatch days now reach every KPI.
+- **Production is healthy.** Uptime 6.3 h and climbing monotonically (no I-32
+  crash-loop signature); **all five Odoo pulls `ok`**, last success 6–7 min
+  ago. Health reads `degraded` for exactly one reason: `same_disk_as_app:
+  true`, backups 10.2 h old (I-39 confirmed open).
+
+**Acceptance + e2e, re-measured in full 2026-10-13 — 14 of 16 gates green:**
+**512 acceptance checks, 507 pass, 5 fail across 16 suites** (supersedes "211
+checks"). Green: phase1 19, phase2 18, phase3 27, phase5 10, phase6 16,
+phase7 9, phase8 21, quarry 22, sales 24, purchases 22, corrections 67,
+compliance 65, it-assets 53, odoo-production-autofill 24. **RED:**
+`accept:odoo-production` 31/32 (**I-46 — a real defect**) and
+`accept:amendments` 88/92 (**I-48 — a stale test, lock is correct**).
+e2e **185 pass / 2 fail / 1 skipped** — both failures are
+`stores-odoo-feed.spec.js` breaking the harness's own date isolation
+(**I-49**), flake ruled out by re-running alone. a11y **0 violations** across
+25 pages × 4 viewports. responsive **96/100**, a one-line 11px regression at
+`purchases.html:85` — **fixed in this pass**. perf (informational):
+**I-19 CLOSED — `quarry` is 834 KB and in budget, from 12,876 KB**, confirmed
+in a real throttled browser; `daily-report` still over at 1497 KB; `mis` and
+`compliance` marginally over on FCP only (~0.6%).
+
+Also verified: CI gate intact — `deploy: needs: test`
+(`.github/workflows/deploy.yml:93`), running 12 acceptance suites. **But four
+suites run outside it — and they are exactly the two that are RED, which is
+why nobody noticed (I-47):** `accept:amendments`, `accept:it-assets`,
+`accept:odoo-production`, `accept:odoo-production-autofill`.
+`docs/KPI_REFERENCE.md` was **drifted** (documented despatch-day v4 vs actual
+v5, cement-produced v1 vs v2, SPC-total v4 vs v5; said 170 facts vs 171) and
+has been regenerated. Caveat: all data figures are the **dev DB, not the
+droplet** — droplet KPI coverage is unverified.
 
 ---
 
@@ -179,7 +273,7 @@ Full log: [`RAID_LOG.md`](RAID_LOG.md) — 14 open, 2 assumptions, 4 closed/corr
 
 ## Go-live blockers owned outside this repo
 
-- **Lake Cement IT:** restrict the Graph app to `digital@lakecement.co.tz` with an application access policy (it can currently send as any mailbox), then rotate the client secret, which was shared over chat
+- ~~**Lake Cement IT:** restrict the Graph app to `digital@lakecement.co.tz` with an application access policy~~ — **DONE, confirmed by Razak 2026-10-14.** The app can no longer send as any other mailbox, so the tenant-wide impersonation risk from the I-42 secret exposure is closed. Still outstanding from that exposure: **rotating the Graph client secret** (it was both in the publicly-readable `.env` and shared over chat). Note the mail route is settled — **Microsoft Graph, permanently; SMTP AUTH will not be enabled** (decided 2026-10-14), which is already how `services/mailer.js` is built, so no code change follows from it
 - **Odoo Team:** approval status, run hours and a crusher group on `production_report`; a Dispatch-report field for the "CEMENT B-M 42.5 N" (Duramax 42) grade; Purchases field names; network path droplet↔Odoo (D-1). (`dispatch_report`/`mining_report` on production — done 2026-09-23, see R-1.)
 - **Management / Plant Head:** who receives the daily digest and alerts (D-2); confirm the E&I approval decision (DEC-003)
 - **Whoever admins the Odoo-bundled Postgres:** `openpg` rotation (R-4)

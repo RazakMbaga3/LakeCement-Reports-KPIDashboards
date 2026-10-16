@@ -11,6 +11,36 @@ because the e2e harness is single-tenant — shared `e2e_<role>` accounts and
 fixed sandbox years (2001 / 1999) mean two suites running at once interfere
 and produce false failures. Only one agent holds the sandbox at a time.
 
+## Planned 2026-10-15 — completing the Production report & Daily MIS from Odoo
+
+Unlocked by the read-only Odoo database login (verified 2026-10-15; shared
+connector `backend/services/odooDb.js`, committed). Order: build → validate →
+connect the server → people actions → next data streams.
+
+**Built and pushed 2026-10-16** (backend `npm test`: 37 suites, 452 assertions, 0 failed; eslint clean; smoke OK — run on the full tree before commit):
+- [x] [WBS-DATA-7] Crusher TPH on apron-feeder hours (403616f) — live via the production_report feed; history needs `node scripts/odoo-crusher-apron-backfill.js 2026-04-01 <today>` on the droplet
+- [x] [WBS-DATA-8] CPP autofill + overburden + Quarry page (ad54dd3) — needs WBS-DEPLOY-3 on the droplet
+- [x] [WBS-DATA-9] Stock ledgers + Coal for CPP + MIS stock/mining lines (e9fe1ea) — needs WBS-DEPLOY-3; until then the MIS stock lines from 1 Jul say "not connected"
+- [x] [WBS-DATA-10] Power row copied from the Power Consumption form (b236356) — live; idle until Electrical resumes entry
+- [ ] Security + load review of the new pulls — dispatched 2026-10-16, result pending; apply its fixes before WBS-DEPLOY-3
+
+**To Do — next, in order:**
+- [ ] [WBS-QA] Validation gate on the four: full `npm test`, `accept:odoo-production-autofill`, scoped e2e on daily forms (one suite at a time), page check of Production report / Daily MIS / Quarry / CPP pages
+- [ ] [WBS-SEC] Security + load review of `odooDb.js` and the new pulls (`security-performance-auditor`) — live ERP, measure query time and memory before scheduling (lesson of I-32)
+- [ ] Commit in reviewed, self-contained commits; push to `main` (auto-deploys; new pulls are inert on the droplet until WBS-DEPLOY-3)
+- [ ] [WBS-DEPLOY-3] Droplet → Odoo DB (blocked on I-60)
+
+**Waiting on people:**
+- [ ] I-60 Odoo admin: narrower login, firewall, revoke CREATE (owner: Razak → Odoo team)
+- [ ] I-61 Production/Stores: limestone rule, clay source, approve 7 stuck Odoo entries, confirm clinker stock
+- [ ] I-62 Electrical: resume Power Consumption entry, catch up Jul–Oct
+- [ ] Plant head: told that crusher TPH now uses apron-feeder hours (~15–20% higher than the old report)
+
+**Next data streams (after the above):**
+- [ ] [WBS-DATA-11] Quality from Odoo lab entries
+- [ ] [WBS-DATA-12] Packing-plant stoppages from Odoo
+- [ ] [WBS-DATA-13] Quarry stockyard stock
+
 ## In Progress
 
 _Nothing in flight. The overnight run of 2026-09-14/15 cleared wave 1 and 2
