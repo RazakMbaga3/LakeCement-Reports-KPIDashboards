@@ -19,12 +19,14 @@ this repo at all (`PROVENANCE.json`). Keep those two Windows tasks enabled.
   (from the repo root). Git keeps their bytes (`.gitattributes: -text`).
 - Added here: `web_extract.py` (read-only bridge), `sitecustomize_pg_ssl.py` (encrypts the Odoo
   connection), `email-schedule.json` (schedule facts), `PROVENANCE.json`, `SHA256SUMS`, this file.
+- Added here: `run_sales_app.py` — starts Streamlit and silently signs visitors in as the user named by `SALES_APP_AUTO_USER`, so the dashboard shows no User ID / Password form (nginx's gate on the MIS login is the only sign-in).
 - Private, never in git: `.env` (Odoo DB password), `users.toml` (Sales Dashboard logins), `.venv/`.
 
 ## Server setup (once)
 
 1. Put `.env` (from `.env.example`; add `PG_PASSWORD`, `REFRESH_SECONDS=3600`, `PG_SSLMODE=require`)
    and the collaborator's `users.toml` in this folder.
+   Also add `SALES_APP_AUTO_USER=<a user id from users.toml, e.g. the Management one>` to `.env`.
 2. As `deploy`: `bash deploy/setup-sales-app.sh`
 3. With sudo: `sudo bash deploy/enable-sales-app-nginx.sh`
 

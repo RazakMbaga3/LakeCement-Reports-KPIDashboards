@@ -20,7 +20,9 @@ module.exports = {
       script: path.join(dir, '.venv/bin/python'),
       interpreter: 'none',
       args: [
-        '-m', 'streamlit', 'run', 'app.py',
+        // run_sales_app.py = streamlit's CLI + a silent sign-in as
+        // SALES_APP_AUTO_USER (nginx's gate is the login) — see that file.
+        'run_sales_app.py', 'run', 'app.py',
         '--server.address', '127.0.0.1',   // only nginx reaches it
         '--server.port', '8501',
         '--server.baseUrlPath', 'sales-app',
