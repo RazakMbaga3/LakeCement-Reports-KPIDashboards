@@ -33,6 +33,25 @@ val()  { grep -E "^[[:space:]]*$1=" "$DIR/.env" | tail -1 | cut -d= -f2- | tr -d
 [ "$(id -u)" -ne 0 ] || fail "run as the deploy user, not root (pm2 and the files belong to deploy)"
 [ -f "$DIR/app.py" ] || fail "$DIR/app.py not found — is the checkout up to date?"
 
+# Same freshness check as deploy/enable-sales-app-nginx.sh — see its comment
+# for the production incident (2026-10-16) that this is here to catch.
+if command -v git >/dev/null && git -C "$APP_DIR" rev-parse --git-dir >/dev/null 2>&1; then
+  if git -C "$APP_DIR" fetch -q origin main 2>/dev/null; then
+    LOCAL="$(git -C "$APP_DIR" rev-parse HEAD)"
+    REMOTE="$(git -C "$APP_DIR" rev-parse origin/main)"
+    if [ "$LOCAL" != "$REMOTE" ]; then
+      echo "WARNING: $APP_DIR is not on the latest origin/main."
+      echo "         local:  $LOCAL"
+      echo "         origin: $REMOTE"
+      echo "         Run 'git pull' first, or this may install outdated code."
+      read -r -p "Continue anyway? [y/N] " ans
+      case "$ans" in [Yy]*) ;; *) fail "stopped — run 'cd $APP_DIR && git pull' then re-run this script" ;; esac
+    fi
+  else
+    echo "   (could not reach origin to check freshness — continuing)"
+  fi
+fi
+
 # ── 1. The two private files ────────────────────────────────────────────────
 say "Private files"
 [ -f "$DIR/.env" ] || fail "missing $DIR/.env — copy .env.example to .env and fill in PG_PASSWORD"

@@ -33,6 +33,27 @@ fail() { printf '\nFAILED: %s\n' "$*" >&2; exit 1; }
 
 [ "$(id -u)" -eq 0 ] || fail "run with sudo"
 [ -f "$SNIPPET_SRC" ] || fail "nginx-public-allowlist.conf must sit next to this script ($SNIPPET_SRC)"
+
+# Same freshness check as deploy/enable-sales-app-nginx.sh — see its comment
+# for the production incident (2026-10-16) this class of check is for. Worth
+# having here too: this script installs the security allowlist itself, and a
+# stale copy of IT is a worse silent failure than a stale feature redirect.
+if command -v git >/dev/null && git -C "$APP_DIR" rev-parse --git-dir >/dev/null 2>&1; then
+  if git -C "$APP_DIR" fetch -q origin main 2>/dev/null; then
+    LOCAL="$(git -C "$APP_DIR" rev-parse HEAD)"
+    REMOTE="$(git -C "$APP_DIR" rev-parse origin/main)"
+    if [ "$LOCAL" != "$REMOTE" ]; then
+      echo "WARNING: $APP_DIR is not on the latest origin/main."
+      echo "         local:  $LOCAL"
+      echo "         origin: $REMOTE"
+      echo "         Run 'git pull' first, or this may install an outdated allowlist."
+      read -r -p "Continue anyway? [y/N] " ans
+      case "$ans" in [Yy]*) ;; *) fail "stopped — run 'cd $APP_DIR && git pull' then re-run this script" ;; esac
+    fi
+  else
+    echo "   (could not reach origin to check freshness — continuing)"
+  fi
+fi
 command -v nginx >/dev/null || fail "nginx not found"
 
 # ── 1. Which enabled site files serve the checkout? ─────────────────────────

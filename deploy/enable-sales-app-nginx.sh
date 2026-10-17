@@ -28,6 +28,30 @@ fail() { printf '\nFAILED: %s\n' "$*" >&2; exit 1; }
 
 [ "$(id -u)" -eq 0 ] || fail "run with sudo"
 [ -f "$SNIPPET_SRC" ] || fail "$SNIPPET_SRC not found — is the checkout up to date?"
+
+# Caught in production 2026-10-16: this script ran BEFORE `git pull`, so it
+# copied an nginx-sales-app.conf that still redirected to the page's old
+# filename — the file existed (the check above passed) but was stale, and
+# nothing caught it until a user clicked a dead link. `git fetch` needs
+# network and a moment, so this only warns rather than failing outright —
+# an admin with a deliberately pinned/offline checkout can still proceed.
+if command -v git >/dev/null && git -C "$APP_DIR" rev-parse --git-dir >/dev/null 2>&1; then
+  if git -C "$APP_DIR" fetch -q origin main 2>/dev/null; then
+    LOCAL="$(git -C "$APP_DIR" rev-parse HEAD)"
+    REMOTE="$(git -C "$APP_DIR" rev-parse origin/main)"
+    if [ "$LOCAL" != "$REMOTE" ]; then
+      echo "WARNING: $APP_DIR is not on the latest origin/main."
+      echo "         local:  $LOCAL"
+      echo "         origin: $REMOTE"
+      echo "         Run 'git pull' first, or this may install an outdated nginx config."
+      read -r -p "Continue anyway? [y/N] " ans
+      case "$ans" in [Yy]*) ;; *) fail "stopped — run 'cd $APP_DIR && git pull' then re-run this script" ;; esac
+    fi
+  else
+    echo "   (could not reach origin to check freshness — continuing)"
+  fi
+fi
+
 command -v nginx >/dev/null || fail "nginx not found"
 nginx -V 2>&1 | grep -q -- '--with-http_auth_request_module' \
   || fail "this nginx lacks the auth_request module the login gate needs (install nginx-full / nginx-extras)"
